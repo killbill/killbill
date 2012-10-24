@@ -192,7 +192,6 @@ public abstract class TestMigration extends TestApiBase {
             assertEquals(subscription.getCurrentPlan().getName(), "assault-rifle-monthly");
             assertEquals(subscription.getChargedThroughDate(), trialDate.plusDays(30));
 
-            testListener.pushExpectedEvent(NextEvent.MIGRATE_BILLING);
             testListener.pushExpectedEvent(NextEvent.PHASE);
 
             final Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(30));

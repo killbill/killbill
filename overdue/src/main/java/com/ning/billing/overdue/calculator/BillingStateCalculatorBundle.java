@@ -24,6 +24,7 @@ import java.util.UUID;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 
+import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -60,13 +61,14 @@ public class BillingStateCalculatorBundle extends BillingStateCalculator<Subscri
         this.accountApi = accountApi;
     }
 
+
     @Override
     public BillingStateBundle calculateBillingState(final SubscriptionBundle bundle, final InternalTenantContext context) throws OverdueException {
         try {
             final Account account = accountApi.getAccountById(bundle.getAccountId(), context);
             final SortedSet<Invoice> unpaidInvoices = unpaidInvoicesForBundle(bundle.getId(), bundle.getAccountId(), account.getTimeZone(), context);
 
-            final Subscription basePlan = entitlementApi.getBaseSubscription(bundle.getId(), context);
+            final Subscription basePlan = getBasePlanIfExist(bundle.getId(), context);
 
             final UUID id = bundle.getId();
             final int numberOfUnpaidInvoices = unpaidInvoices.size();
@@ -131,6 +133,19 @@ public class BillingStateCalculatorBundle extends BillingStateCalculator<Subscri
         return result;
     }
 
+    private Subscription getBasePlanIfExist(UUID bundleId, final InternalTenantContext context) throws EntitlementUserApiException {
+        try {
+            final Subscription basePlan = entitlementApi.getBaseSubscription(bundleId, context);
+            return basePlan;
+        } catch (EntitlementUserApiException e) {
+            if (e.getCode() == ErrorCode.ENT_GET_NO_SUCH_BASE_SUBSCRIPTION.getCode()) {
+                // No base plan probably a STANDALONE subscription in a bundle
+                return null;
+            }
+            throw e;
+        }
+    }
+
     private boolean invoiceHasAnItemFromBundle(final Invoice invoice, final UUID bundleId) {
         for (final InvoiceItem item : invoice.getInvoiceItems()) {
             if (item.getBundleId() != null && item.getBundleId().equals(bundleId)) {
@@ -139,6 +154,4 @@ public class BillingStateCalculatorBundle extends BillingStateCalculator<Subscri
         }
         return false;
     }
-
-
 }

@@ -60,7 +60,7 @@ public enum ErrorCode {
     ENT_GET_INVALID_BUNDLE_ID(1081, "Could not find a bundle matching id %s"),
     ENT_INVALID_SUBSCRIPTION_ID(1082, "Unknown subscription %s"),
     ENT_GET_INVALID_BUNDLE_KEY(1083, "Could not find a bundle matching key %s"),
-    ENT_GET_NO_SUCH_BASE_SUBSCRIPTION(1084, "Could not base subscription for bundle %s"),
+    ENT_GET_NO_SUCH_BASE_SUBSCRIPTION(1084, "Could not find base subscription for bundle %s"),
 
     /* Repair */
     ENT_REPAIR_INVALID_DELETE_SET(1091, "Event %s is not deleted for subscription %s but prior events were"),
@@ -81,6 +81,9 @@ public enum ErrorCode {
 
     ENT_BUNDLE_IS_OVERDUE_BLOCKED(1090, "Changes to this bundle are blocked by overdue enforcement (%s :  %s)"),
     ENT_ACCOUNT_IS_OVERDUE_BLOCKED(1091, "Changes to this account are blocked by overdue enforcement (%s)"),
+
+    /* Transfer */
+    ENT_TRANSFER_INVALID_EFF_DATE(1106, "Invalid effective date for transfer: %s"),
 
     /*
     *

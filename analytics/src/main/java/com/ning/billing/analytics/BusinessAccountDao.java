@@ -86,6 +86,7 @@ public class BusinessAccountDao {
     public void updateAccountInTransaction(final BusinessAccount bac, final BusinessAccountSqlDao transactional, final InternalCallContext context) {
         log.info("ACCOUNT UPDATE " + bac);
         transactional.deleteAccount(bac.getAccountId().toString(), context);
+        // Note! There is a window of doom here since we use read committed transactional level by default
         transactional.createAccount(bac, context);
     }
 

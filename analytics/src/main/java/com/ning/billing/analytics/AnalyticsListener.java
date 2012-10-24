@@ -42,11 +42,16 @@ import com.ning.billing.util.events.UserTagCreationInternalEvent;
 import com.ning.billing.util.events.UserTagDefinitionCreationInternalEvent;
 import com.ning.billing.util.events.UserTagDefinitionDeletionInternalEvent;
 import com.ning.billing.util.events.UserTagDeletionInternalEvent;
+import com.ning.billing.util.globallocker.GlobalLock;
+import com.ning.billing.util.globallocker.GlobalLocker;
+import com.ning.billing.util.globallocker.GlobalLocker.LockerType;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
 
 public class AnalyticsListener {
+
+    private static final int NB_LOCK_TRY = 5;
 
     private final BusinessSubscriptionTransitionDao bstDao;
     private final BusinessAccountDao bacDao;
@@ -54,6 +59,7 @@ public class AnalyticsListener {
     private final BusinessOverdueStatusDao bosDao;
     private final BusinessInvoicePaymentDao bipDao;
     private final BusinessTagDao tagDao;
+    private final GlobalLocker locker;
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
@@ -63,6 +69,7 @@ public class AnalyticsListener {
                              final BusinessOverdueStatusDao bosDao,
                              final BusinessInvoicePaymentDao bipDao,
                              final BusinessTagDao tagDao,
+                             final GlobalLocker locker,
                              final InternalCallContextFactory internalCallContextFactory) {
         this.bstDao = bstDao;
         this.bacDao = bacDao;
@@ -70,6 +77,8 @@ public class AnalyticsListener {
         this.bosDao = bosDao;
         this.bipDao = bipDao;
         this.tagDao = tagDao;
+        // TODO: use accountRecordId when switching to internal events and acquire the lock for all refreshes
+        this.locker = locker;
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
@@ -93,7 +102,15 @@ public class AnalyticsListener {
 
     @Subscribe
     public void handleAccountCreation(final AccountCreationInternalEvent event) {
-        bacDao.accountUpdated(event.getId(), createCallContext(event));
+        GlobalLock lock = null;
+        try {
+            lock = locker.lockWithNumberOfTries(LockerType.ACCOUNT_FOR_ANALYTICS, event.getId().toString(), NB_LOCK_TRY);
+            bacDao.accountUpdated(event.getId(), createCallContext(event));
+        } finally {
+            if (lock != null) {
+                lock.release();
+            }
+        }
     }
 
     @Subscribe
@@ -102,7 +119,15 @@ public class AnalyticsListener {
             return;
         }
 
-        bacDao.accountUpdated(event.getAccountId(), createCallContext(event));
+        GlobalLock lock = null;
+        try {
+            lock = locker.lockWithNumberOfTries(LockerType.ACCOUNT_FOR_ANALYTICS, event.getAccountId().toString(), NB_LOCK_TRY);
+            bacDao.accountUpdated(event.getAccountId(), createCallContext(event));
+        } finally {
+            if (lock != null) {
+                lock.release();
+            }
+        }
     }
 
     @Subscribe

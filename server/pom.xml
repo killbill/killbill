@@ -13,7 +13,7 @@
     <parent>
         <groupId>com.ning.billing</groupId>
         <artifactId>killbill</artifactId>
-        <version>0.1.40-SNAPSHOT</version>
+        <version>0.1.41-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>killbill-server</artifactId>
@@ -27,7 +27,7 @@
         <jetty.version>8.1.2.v20120308</jetty.version>
         <logback.version>1.0.1</logback.version>
         <metrics.version>2.1.2</metrics.version>
-        <skeleton.version>0.1.4</skeleton.version>
+        <skeleton.version>0.1.7</skeleton.version>
         <async-http-client.version>1.7.1</async-http-client.version>
     </properties>
 
@@ -292,6 +292,18 @@
             </resource>
         </resources>
         <plugins>
+            <plugin>
+                <groupId>io.tesla.jettyconsole</groupId>
+                <artifactId>jetty-console-maven-plugin</artifactId>
+                <version>1.47</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>createconsole</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>

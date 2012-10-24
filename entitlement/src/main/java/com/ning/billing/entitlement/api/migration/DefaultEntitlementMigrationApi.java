@@ -170,10 +170,13 @@ public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
     private List<EntitlementEvent> toEvents(final SubscriptionData subscriptionData, final DateTime now, final DateTime ctd, final TimedMigration[] migrationEvents, final CallContext context) {
         ApiEventMigrateEntitlement creationEvent = null;
         final List<EntitlementEvent> events = new ArrayList<EntitlementEvent>(migrationEvents.length);
-        DateTime subsciptionCancelledDate = null;
+
+        // The first event date after the MIGRATE_ENTITLEMENT event
+        DateTime nextEventDate = null;
         for (final TimedMigration cur : migrationEvents) {
 
             if (cur.getEventType() == EventType.PHASE) {
+                nextEventDate = nextEventDate != null && nextEventDate.compareTo(cur.getEventTime()) < 0 ? nextEventDate : cur.getEventTime();
                 final PhaseEvent nextPhaseEvent = PhaseEventData.createNextPhaseEvent(cur.getPhase().getName(), subscriptionData, now, cur.getEventTime());
                 events.add(nextPhaseEvent);
 
@@ -198,10 +201,11 @@ public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
                         break;
 
                     case CHANGE:
+                        nextEventDate = nextEventDate != null && nextEventDate.compareTo(cur.getEventTime()) < 0 ? nextEventDate : cur.getEventTime();
                         events.add(new ApiEventChange(builder));
                         break;
                     case CANCEL:
-                        subsciptionCancelledDate = cur.getEventTime();
+                        nextEventDate = nextEventDate != null && nextEventDate.compareTo(cur.getEventTime()) < 0 ? nextEventDate : cur.getEventTime();
                         events.add(new ApiEventCancel(builder));
                         break;
                     default:
@@ -214,7 +218,8 @@ public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
         if (creationEvent == null || ctd == null) {
             throw new EntitlementError(String.format("Could not create migration billing event ctd = %s", ctd));
         }
-        if (subsciptionCancelledDate == null || subsciptionCancelledDate.isAfter(ctd)) {
+        // Only add the MIGRATE_BILLING event if there is no event prior to that that will trigger the first invoice.
+        if (nextEventDate == null || nextEventDate.isAfter(ctd)) {
             events.add(new ApiEventMigrateBilling(creationEvent, ctd));
         }
         Collections.sort(events, new Comparator<EntitlementEvent>() {

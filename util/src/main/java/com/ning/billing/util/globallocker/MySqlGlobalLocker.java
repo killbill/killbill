@@ -27,7 +27,8 @@ public class MySqlGlobalLocker implements GlobalLocker {
 
     private static final Logger logger = LoggerFactory.getLogger(MySqlGlobalLocker.class);
 
-    private static final long DEFAULT_TIMEOUT = 5L; // 5 seconds
+    // Note that we could hold the lock while talking to the payment gateway, hence be generous in the timeout length
+    private static final long DEFAULT_TIMEOUT = 10L; // 10 seconds
 
     private final IDBI dbi;
     private long timeout;
@@ -58,7 +59,6 @@ public class MySqlGlobalLocker implements GlobalLocker {
     }
 
     private GlobalLock lock(final String lockName) throws LockFailedException {
-
         final Handle h = dbi.open();
         final MySqlGlobalLockerDao dao = h.attach(MySqlGlobalLockerDao.class);
 
@@ -70,13 +70,13 @@ public class MySqlGlobalLocker implements GlobalLocker {
                     try {
                         dao.releaseLock(lockName);
                     } finally {
-                        if (h != null) {
-                            h.close();
-                        }
+                        h.close();
                     }
                 }
             };
         } else {
+            // Make sure to close the handle if we couldn't obtain the lock (otherwise we would leak connections)
+            h.close();
             return null;
         }
     }

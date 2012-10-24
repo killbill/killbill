@@ -24,15 +24,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ning.billing.analytics.utils.Rounder;
+import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.catalog.api.Duration;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.catalog.api.TimeUnit;
 import com.ning.billing.entitlement.api.user.Subscription;
 
 import static com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
@@ -44,8 +43,6 @@ public class BusinessSubscription {
 
     private static final Logger log = LoggerFactory.getLogger(BusinessSubscription.class);
 
-    private static final BigDecimal DAYS_IN_MONTH = BigDecimal.valueOf(30);
-    private static final BigDecimal MONTHS_IN_YEAR = BigDecimal.valueOf(12);
     private static final Currency USD = Currency.valueOf("USD");
 
     private final String productName;
@@ -145,7 +142,7 @@ public class BusinessSubscription {
                     tmpPrice = new BigDecimal(0);
                 }
                 price = tmpPrice;
-                mrr = getMrrFromISubscription(thePhase.getDuration(), price);
+                mrr = getMrrFromBillingPeriod(thePhase.getBillingPeriod(), price);
             } else {
                 price = BigDecimal.ZERO;
                 mrr = BigDecimal.ZERO;
@@ -210,7 +207,7 @@ public class BusinessSubscription {
                     tmpPrice = new BigDecimal(0);
                 }
                 price = tmpPrice;
-                mrr = getMrrFromISubscription(currentPhase.getDuration(), price);
+                mrr = getMrrFromBillingPeriod(currentPhase.getBillingPeriod(), price);
             } else {
                 price = BigDecimal.ZERO;
                 mrr = BigDecimal.ZERO;
@@ -289,23 +286,12 @@ public class BusinessSubscription {
         return state;
     }
 
-    static BigDecimal getMrrFromISubscription(final Duration duration, final BigDecimal price) {
-        if (duration == null || duration.getUnit() == null || duration.getNumber() == 0) {
+    static BigDecimal getMrrFromBillingPeriod(final BillingPeriod period, final BigDecimal price) {
+        if (period == null || period.getNumberOfMonths() == 0) {
             return BigDecimal.ZERO;
         }
 
-        if (duration.getUnit().equals(TimeUnit.UNLIMITED)) {
-            return BigDecimal.ZERO;
-        } else if (duration.getUnit().equals(TimeUnit.DAYS)) {
-            return price.multiply(DAYS_IN_MONTH).multiply(BigDecimal.valueOf(duration.getNumber()));
-        } else if (duration.getUnit().equals(TimeUnit.MONTHS)) {
-            return price.divide(BigDecimal.valueOf(duration.getNumber()), Rounder.SCALE, BigDecimal.ROUND_HALF_UP);
-        } else if (duration.getUnit().equals(TimeUnit.YEARS)) {
-            return price.divide(BigDecimal.valueOf(duration.getNumber()), Rounder.SCALE, RoundingMode.HALF_UP).divide(MONTHS_IN_YEAR, Rounder.SCALE, RoundingMode.HALF_UP);
-        } else {
-            log.error("Unknown duration [" + duration + "], can't compute mrr");
-            return null;
-        }
+        return price.divide(BigDecimal.valueOf(period.getNumberOfMonths()), Rounder.SCALE, RoundingMode.HALF_UP);
     }
 
     @Override
