@@ -8,12 +8,13 @@ layout: default
             <ul class="nav nav-list bs-docs-sidenav affix">
                 <li><a href="#5_minutes">Killbill in 5 minutes</a></li>
                 <li><a href="#prod_deployment">Production deployment</a></li>
-                <ul class="nav nav-list bs-docs-sidenav affix">
+                <ul class="nav nav-list bs-docs-sidenav">
                     <li><a href="#common_steps">Common steps</a></li>
                     <li><a href="#installation_in_jetty">Installation in Jetty</a></li>
                     <li><a href="#installation_in_tomcat">Installation in Tomcat</a></li>
                     <li><a href="#installation_in_glassfish">Installation in GlassFish</a></li>
                 </ul>
+                <li><a href="#kaui_deployment">Kaui deployment</a></li>
             </ul>
         </div>
 
@@ -144,6 +145,29 @@ curl 'https://gist.github.com/3931646' | mysql -ukillbill -pkillbill killbill</p
                     </p>
                     <p>In the glassfish directory of the unzipped GlasshFish distribution, run the following command: <pre>./bin/asadmin start-domain ; ./bin/asadmin deploy --contextroot "/" /path/to/killbill.war</pre> You should now be all set!</p>
                 </section>
+            </section>
+
+            <section id="kaui_deployment">
+                <div class="page-header">
+                    <h1>Kaui deployment</h1>
+                </div>
+                <p class="lead">Kaui, the Killbill Admin UI, is a Rails mountable engine that can be deployed in any Rails app. We provide a mountable engine to integrate more easily in existing companies internal tools, although it can be as easily deployed in a brand new Rails app.</p>
+
+                <p>Kaui is being continuously tested against various versions of Ruby and JRuby. Its only requirement is Rails 3.2.3 (or later) and Bundler 1.1.4 (or later).</p>
+
+                <p>The following guide will help you setup a brand new Rails app running Kaui. The first step is to generate a standard Rails application: <pre>rails new kbadmin --skip-bundle --skip-active-record</pre> Kaui doesn't have any database dependency, it interacts instead with Killbill over HTTP (Rest APIs) to fetch and update billing data.</p>
+
+                <p>The next step is to get the Kaui gem via Rubygems: <pre>gem install kaui</pre></p>
+                <p>Finally, install Killbill in your new Rails app: <pre>cd kbadmin ; kaui</pre> You're now ready to start Kaui: <pre>rails server</pre></p>
+
+                <p>The kaui install script has various options, see <pre>kaui --help</pre> Among useful switches:
+<pre>
+# To specify the path to your app
+kaui /path/to/rails/app
+# For development
+kaui /path/to/rails/app --path=/path/to/kaui/gem
+</pre>
+                </p>
             </section>
         </div>
     </div>
