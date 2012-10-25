@@ -58,6 +58,8 @@ import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 import com.ning.billing.util.svcapi.tag.TagInternalApi;
+import com.ning.billing.util.tag.Tag;
+import com.ning.billing.util.tag.TagDefinition;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
@@ -234,11 +236,21 @@ public class DefaultAnalyticsUserApi implements AnalyticsUserApi {
 
     private void updateTags(final Account account, final InternalCallContext internalCallContext) {
         // Find the current state of tags from util
-        final Collection<String> utilTags = Collections2.transform(tagInternalApi.getTags(account.getId(), ObjectType.ACCOUNT, internalCallContext).keySet(),
-                                                                   new Function<String, String>() {
+        final List<TagDefinition> tagDefinitions = tagInternalApi.getTagDefinitions(internalCallContext);
+        final Collection<String> utilTags = Collections2.transform(tagInternalApi.getTags(account.getId(), ObjectType.ACCOUNT, internalCallContext).values(),
+                                                                   new Function<Tag, String>() {
                                                                        @Override
-                                                                       public String apply(@Nullable final String input) {
-                                                                           return input;
+                                                                       public String apply(@Nullable final Tag input) {
+                                                                           if (input == null) {
+                                                                               return "";
+                                                                           }
+
+                                                                           for (final TagDefinition tagDefinition : tagDefinitions) {
+                                                                               if (tagDefinition.getId().equals(input.getTagDefinitionId())) {
+                                                                                   return tagDefinition.getName();
+                                                                               }
+                                                                           }
+                                                                           return "";
                                                                        }
                                                                    });
 
