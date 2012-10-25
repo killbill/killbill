@@ -66,7 +66,7 @@ import com.ning.billing.util.events.PaymentErrorInternalEvent;
 import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.tag.TagInternalApi;
-import com.ning.billing.util.svcsapi.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.InternalBus;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
@@ -99,7 +99,7 @@ public class PaymentProcessor extends ProcessorBase {
                             final PluginFailureRetryServiceScheduler pluginFailureRetryService,
                             final AutoPayRetryServiceScheduler autoPayoffRetryService,
                             final PaymentDao paymentDao,
-                            final Bus eventBus,
+                            final InternalBus eventBus,
                             final Clock clock,
                             final GlobalLocker locker,
                             final PaymentConfig paymentConfig,

@@ -27,14 +27,14 @@ import org.slf4j.LoggerFactory;
 
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.events.BusInternalEvent;
-import com.ning.billing.util.svcsapi.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.InternalBus;
 
 import com.google.common.eventbus.AsyncEventBus;
 
-public class InMemoryBus implements Bus {
+public class InMemoryInternalBus implements InternalBus {
 
 
-    private static final Logger log = LoggerFactory.getLogger(InMemoryBus.class);
+    private static final Logger log = LoggerFactory.getLogger(InMemoryInternalBus.class);
 
     private final EventBusDelegate delegate;
     private final AtomicBoolean isInitialized;
@@ -64,7 +64,7 @@ public class InMemoryBus implements Bus {
         }
     }
 
-    public InMemoryBus() {
+    public InMemoryInternalBus() {
 
         final ThreadGroup group = new ThreadGroup(DefaultBusService.EVENT_BUS_GROUP_NAME);
         final Executor executor = Executors.newCachedThreadPool(new ThreadFactory() {

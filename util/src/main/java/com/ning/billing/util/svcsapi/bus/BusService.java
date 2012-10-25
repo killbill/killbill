@@ -20,5 +20,6 @@ import com.ning.billing.lifecycle.KillbillService;
 
 public interface BusService extends KillbillService {
 
-    public Bus getBus();
+   // API_FIX should be removed and server should only use public bus
+   public InternalBus getBus();
 }

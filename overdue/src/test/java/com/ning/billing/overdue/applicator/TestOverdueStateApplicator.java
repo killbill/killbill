@@ -33,7 +33,7 @@ import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.OverdueTestBase;
 import com.ning.billing.overdue.config.OverdueConfig;
-import com.ning.billing.util.svcsapi.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.config.XMLLoader;
 import com.ning.billing.util.events.OverdueChangeInternalEvent;
 import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
@@ -49,7 +49,7 @@ public class TestOverdueStateApplicator extends OverdueTestBase {
     OverdueBusListenerTester listener;
 
     @Inject
-    Bus bus;
+    InternalBus bus;
 
     @Test(groups = "slow")
     public void testApplicator() throws Exception {

@@ -36,18 +36,18 @@ import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.user.DefaultInvoiceCreationEvent;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.svcsapi.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.InternalBus;
 
 import com.google.inject.Inject;
 
 public class MockInvoiceDao implements InvoiceDao {
 
-    private final Bus eventBus;
+    private final InternalBus eventBus;
     private final Object monitor = new Object();
     private final Map<UUID, Invoice> invoices = new LinkedHashMap<UUID, Invoice>();
 
     @Inject
-    public MockInvoiceDao(final Bus eventBus) {
+    public MockInvoiceDao(final InternalBus eventBus) {
         this.eventBus = eventBus;
     }
 
@@ -60,7 +60,7 @@ public class MockInvoiceDao implements InvoiceDao {
             eventBus.post(new DefaultInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
                                                           invoice.getBalance(), invoice.getCurrency(),
                                                           null, 1L, 1L), context);
-        } catch (Bus.EventBusException ex) {
+        } catch (InternalBus.EventBusException ex) {
             throw new RuntimeException(ex);
         }
     }

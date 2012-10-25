@@ -51,8 +51,8 @@ public class DefaultOverdueChangeEvent extends DefaultBusInternalEvent implement
 
     @JsonIgnore
     @Override
-    public BusEventType getBusEventType() {
-        return BusEventType.OVERDUE_CHANGE;
+    public BusInternalEventType getBusEventType() {
+        return BusInternalEventType.OVERDUE_CHANGE;
     }
 
     @Override

@@ -43,8 +43,8 @@ import com.ning.billing.util.globallocker.GlobalLocker.LockerType;
 import com.ning.billing.util.globallocker.LockFailedException;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.tag.TagInternalApi;
-import com.ning.billing.util.svcsapi.bus.Bus;
-import com.ning.billing.util.svcsapi.bus.Bus.EventBusException;
+import com.ning.billing.util.svcsapi.bus.InternalBus;
+import com.ning.billing.util.svcsapi.bus.InternalBus.EventBusException;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.Tag;
 
@@ -54,7 +54,7 @@ public abstract class ProcessorBase {
 
     protected final PaymentProviderPluginRegistry pluginRegistry;
     protected final AccountInternalApi accountInternalApi;
-    protected final Bus eventBus;
+    protected final InternalBus eventBus;
     protected final GlobalLocker locker;
     protected final ExecutorService executor;
     protected final PaymentDao paymentDao;
@@ -64,7 +64,7 @@ public abstract class ProcessorBase {
 
     public ProcessorBase(final PaymentProviderPluginRegistry pluginRegistry,
                          final AccountInternalApi accountInternalApi,
-                         final Bus eventBus,
+                         final InternalBus eventBus,
                          final PaymentDao paymentDao,
                          final TagInternalApi tagInternalApi,
                          final GlobalLocker locker,

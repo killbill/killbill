@@ -56,7 +56,7 @@ import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
 import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
-import com.ning.billing.util.svcsapi.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.InternalBus;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -69,7 +69,7 @@ public class OverdueStateApplicator<T extends Blockable> {
     private final BlockingInternalApi blockingApi;
     private final Clock clock;
     private final OverdueCheckPoster poster;
-    private final Bus bus;
+    private final InternalBus bus;
     private final AccountInternalApi accountApi;
     private final EntitlementInternalApi entitlementUserApi;
     private final OverdueEmailGenerator overdueEmailGenerator;
@@ -78,7 +78,7 @@ public class OverdueStateApplicator<T extends Blockable> {
     @Inject
     public OverdueStateApplicator(final BlockingInternalApi accessApi, final AccountInternalApi accountApi, final EntitlementInternalApi entitlementUserApi,
                                   final Clock clock, final OverdueCheckPoster poster, final OverdueEmailGenerator overdueEmailGenerator,
-                                  final EmailConfig config, final Bus bus) {
+                                  final EmailConfig config, final InternalBus bus) {
         this.blockingApi = accessApi;
         this.accountApi = accountApi;
         this.entitlementUserApi = entitlementUserApi;

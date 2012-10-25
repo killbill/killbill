@@ -1,0 +1,104 @@
+group ExtBusSqlDao;
+          
+CHECK_TENANT() ::= "tenant_record_id = :tenantRecordId"
+AND_CHECK_TENANT() ::= "AND <CHECK_TENANT()>"
+
+getNextBusExtEventEntry() ::= <<
+    select
+      record_id
+      , event_type
+      , object_id
+      , object_type
+      , created_date
+      , creating_owner
+      , processing_owner
+      , processing_available_date
+      , processing_state
+      , account_record_id
+      , tenant_record_id
+    from bus_ext_events
+    where
+      processing_state != 'PROCESSED'
+      and processing_state != 'REMOVED'
+      and (processing_owner IS NULL OR processing_available_date \<= :now)
+    order by
+      record_id asc
+    limit :max
+    ;
+>>
+
+
+claimBusExtEvent() ::= <<
+    update bus_ext_events
+    set
+      processing_owner = :owner
+      , processing_available_date = :nextAvailable
+      , processing_state = 'IN_PROCESSING'
+    where
+      record_id = :recordId
+      and processing_state != 'PROCESSED'
+      and processing_state != 'REMOVED'
+      and (processing_owner IS NULL OR processing_available_date \<= :now)
+    ;
+>>
+
+clearBusExtEvent() ::= <<
+    update bus_ext_events
+    set
+      processing_state = 'PROCESSED'
+    where
+      record_id = :recordId
+    ;
+>>
+
+removeBusExtEventsById() ::= <<
+    update bus_ext_events
+    set
+      processing_state = 'REMOVED'
+    where
+      record_id = :recordId
+    ;
+>>
+
+
+insertBusExtEvent() ::= <<
+    insert into bus_ext_events (
+     event_type
+    , object_id
+    , object_type
+    , created_date
+    , creating_owner
+    , processing_owner
+    , processing_available_date
+    , processing_state
+    , account_record_id
+    , tenant_record_id
+    ) values (
+      :eventType
+    , :objectId
+    , :objectType    
+    , :createdDate
+    , :creatingOwner
+    , :processingOwner
+    , :processingAvailableDate
+    , :processingState
+    , :accountRecordId
+    , :tenantRecordId
+    );
+>>
+
+insertClaimedExtHistory() ::= <<
+    insert into claimed_bus_ext_events (
+          owner_id
+        , claimed_date
+        , bus_event_id
+        , account_record_id
+        , tenant_record_id
+      ) values (
+          :ownerId
+        , :claimedDate
+        , :busEventId
+        , :accountRecordId
+        , :tenantRecordId
+      );
+>>

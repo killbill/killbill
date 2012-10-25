@@ -48,8 +48,8 @@ public class DefaultRepairEntitlementEvent extends DefaultBusInternalEvent imple
 
     @JsonIgnore
     @Override
-    public BusEventType getBusEventType() {
-        return BusEventType.BUNDLE_REPAIR;
+    public BusInternalEventType getBusEventType() {
+        return BusInternalEventType.BUNDLE_REPAIR;
     }
 
     @Override

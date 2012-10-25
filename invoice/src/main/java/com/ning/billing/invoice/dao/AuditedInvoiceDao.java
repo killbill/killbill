@@ -58,8 +58,8 @@ import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.dao.EntityAudit;
 import com.ning.billing.util.dao.TableName;
-import com.ning.billing.util.svcsapi.bus.Bus;
-import com.ning.billing.util.svcsapi.bus.Bus.EventBusException;
+import com.ning.billing.util.svcsapi.bus.InternalBus;
+import com.ning.billing.util.svcsapi.bus.InternalBus.EventBusException;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
@@ -77,13 +77,13 @@ public class AuditedInvoiceDao implements InvoiceDao {
     private final NextBillingDatePoster nextBillingDatePoster;
     private final InvoiceItemSqlDao invoiceItemSqlDao;
     private final Clock clock;
-    private final Bus eventBus;
+    private final InternalBus eventBus;
 
     @Inject
     public AuditedInvoiceDao(final IDBI dbi,
             final NextBillingDatePoster nextBillingDatePoster,
             final Clock clock,
-            final Bus eventBus) {
+            final InternalBus eventBus) {
         this.invoiceSqlDao = dbi.onDemand(InvoiceSqlDao.class);
         this.invoicePaymentSqlDao = dbi.onDemand(InvoicePaymentSqlDao.class);
         this.invoiceItemSqlDao = dbi.onDemand(InvoiceItemSqlDao.class);

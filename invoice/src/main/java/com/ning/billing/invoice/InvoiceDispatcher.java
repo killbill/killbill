@@ -61,8 +61,8 @@ import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 import com.ning.billing.util.svcapi.junction.BillingEventSet;
 import com.ning.billing.util.svcapi.junction.BillingInternalApi;
-import com.ning.billing.util.svcsapi.bus.Bus;
-import com.ning.billing.util.svcsapi.bus.Bus.EventBusException;
+import com.ning.billing.util.svcsapi.bus.InternalBus;
+import com.ning.billing.util.svcsapi.bus.InternalBus.EventBusException;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
@@ -80,7 +80,7 @@ public class InvoiceDispatcher {
     private final InvoiceDao invoiceDao;
     private final InvoiceNotifier invoiceNotifier;
     private final GlobalLocker locker;
-    private final Bus eventBus;
+    private final InternalBus eventBus;
     private final Clock clock;
     private final InternalCallContextFactory internalCallContextFactory;
 
@@ -91,7 +91,7 @@ public class InvoiceDispatcher {
                              final InvoiceDao invoiceDao,
                              final InvoiceNotifier invoiceNotifier,
                              final GlobalLocker locker,
-                             final Bus eventBus,
+                             final InternalBus eventBus,
                              final Clock clock,
                              final InternalCallContextFactory internalCallContextFactory) {
         this.generator = generator;

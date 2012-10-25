@@ -54,8 +54,8 @@ public class DefaultUserTagDefinitionDeletionEvent extends DefaultBusInternalEve
 
     @JsonIgnore
     @Override
-    public BusEventType getBusEventType() {
-        return BusEventType.USER_TAGDEFINITION_DELETION;
+    public BusInternalEventType getBusEventType() {
+        return BusInternalEventType.USER_TAGDEFINITION_DELETION;
     }
 
 

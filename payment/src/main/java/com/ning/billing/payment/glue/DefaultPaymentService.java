@@ -29,7 +29,7 @@ import com.ning.billing.payment.bus.TagHandler;
 import com.ning.billing.payment.retry.AutoPayRetryService;
 import com.ning.billing.payment.retry.FailedPaymentRetryService;
 import com.ning.billing.payment.retry.PluginFailureRetryService;
-import com.ning.billing.util.svcsapi.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
 
@@ -41,7 +41,7 @@ public class DefaultPaymentService implements PaymentService {
 
     private final InvoiceHandler invoiceHandler;
     private final TagHandler tagHandler;
-    private final Bus eventBus;
+    private final InternalBus eventBus;
     private final PaymentApi api;
     private final FailedPaymentRetryService failedRetryService;
     private final PluginFailureRetryService timedoutRetryService;
@@ -50,7 +50,7 @@ public class DefaultPaymentService implements PaymentService {
     @Inject
     public DefaultPaymentService(final InvoiceHandler invoiceHandler,
             final TagHandler tagHandler,
-            final PaymentApi api, final Bus eventBus,
+            final PaymentApi api, final InternalBus eventBus,
             final FailedPaymentRetryService failedRetryService,
             final PluginFailureRetryService timedoutRetryService,
             final AutoPayRetryService autoPayoffRetryService) {
@@ -80,7 +80,7 @@ public class DefaultPaymentService implements PaymentService {
         try {
             eventBus.register(invoiceHandler);
             eventBus.register(tagHandler);
-        } catch (Bus.EventBusException e) {
+        } catch (InternalBus.EventBusException e) {
             log.error("Unable to register with the EventBus!", e);
         }
     }

@@ -43,7 +43,7 @@ import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.collection.dao.UpdatableEntityCollectionSqlDao;
 import com.ning.billing.util.events.TagInternalEvent;
-import com.ning.billing.util.svcsapi.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.DefaultTagDefinition;
 import com.ning.billing.util.tag.Tag;
@@ -58,10 +58,10 @@ public class AuditedTagDao extends AuditedCollectionDaoBase<Tag, Tag> implements
 
     private final TagSqlDao tagSqlDao;
     private final TagEventBuilder tagEventBuilder;
-    private final Bus bus;
+    private final InternalBus bus;
 
     @Inject
-    public AuditedTagDao(final IDBI dbi, final TagEventBuilder tagEventBuilder, final Bus bus) {
+    public AuditedTagDao(final IDBI dbi, final TagEventBuilder tagEventBuilder, final InternalBus bus) {
         this.tagEventBuilder = tagEventBuilder;
         this.bus = bus;
         this.tagSqlDao = dbi.onDemand(TagSqlDao.class);
@@ -131,7 +131,7 @@ public class AuditedTagDao extends AuditedCollectionDaoBase<Tag, Tag> implements
                 }
                 try {
                     bus.postFromTransaction(tagEvent, tagSqlDao, context);
-                } catch (Bus.EventBusException e) {
+                } catch (InternalBus.EventBusException e) {
                     log.warn("Failed to post tag creation event for tag " + tag.getId().toString(), e);
                 }
                 return null;
@@ -181,7 +181,7 @@ public class AuditedTagDao extends AuditedCollectionDaoBase<Tag, Tag> implements
                     }
                     try {
                         bus.postFromTransaction(tagEvent, tagSqlDao, context);
-                    } catch (Bus.EventBusException e) {
+                    } catch (InternalBus.EventBusException e) {
                         log.warn("Failed to post tag deletion event for tag " + tag.getId().toString(), e);
                     }
                     return null;

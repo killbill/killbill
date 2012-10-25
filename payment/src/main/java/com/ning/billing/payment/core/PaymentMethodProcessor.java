@@ -47,7 +47,7 @@ import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.tag.TagInternalApi;
-import com.ning.billing.util.svcsapi.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.InternalBus;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
@@ -64,7 +64,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
     @Inject
     public PaymentMethodProcessor(final PaymentProviderPluginRegistry pluginRegistry,
                                   final AccountInternalApi accountInternalApi,
-                                  final Bus eventBus,
+                                  final InternalBus eventBus,
                                   final PaymentDao paymentDao,
                                   final TagInternalApi tagUserApi,
                                   final GlobalLocker locker,

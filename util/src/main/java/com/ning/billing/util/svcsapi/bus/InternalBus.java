@@ -31,7 +31,7 @@ import com.google.common.eventbus.Subscribe;
  * the transaction completes. If the implementation is not based on a
  * DB, this API is behaves the same as the regular post() call.
  */
-public interface Bus {
+public interface InternalBus {
 
     public class EventBusException extends Exception {
 

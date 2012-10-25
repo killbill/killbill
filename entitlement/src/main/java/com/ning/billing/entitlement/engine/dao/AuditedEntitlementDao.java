@@ -76,8 +76,8 @@ import com.ning.billing.util.notificationq.NotificationKey;
 import com.ning.billing.util.notificationq.NotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotificationQueue;
-import com.ning.billing.util.svcsapi.bus.Bus;
-import com.ning.billing.util.svcsapi.bus.Bus.EventBusException;
+import com.ning.billing.util.svcsapi.bus.InternalBus;
+import com.ning.billing.util.svcsapi.bus.InternalBus.EventBusException;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
@@ -93,11 +93,11 @@ public class AuditedEntitlementDao implements EntitlementDao {
     private final EntitlementEventSqlDao eventsDao;
     private final NotificationQueueService notificationQueueService;
     private final AddonUtils addonUtils;
-    private final Bus eventBus;
+    private final InternalBus eventBus;
 
     @Inject
     public AuditedEntitlementDao(final IDBI dbi, final Clock clock, final AddonUtils addonUtils,
-                                 final NotificationQueueService notificationQueueService, final Bus eventBus, final CatalogService catalogService) {
+                                 final NotificationQueueService notificationQueueService, final InternalBus eventBus, final CatalogService catalogService) {
         this.clock = clock;
         this.subscriptionsDao = dbi.onDemand(SubscriptionSqlDao.class);
         this.eventsDao = dbi.onDemand(EntitlementEventSqlDao.class);

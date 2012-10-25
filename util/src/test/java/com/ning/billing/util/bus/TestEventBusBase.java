@@ -26,9 +26,9 @@ import org.testng.annotations.BeforeClass;
 
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.events.BusInternalEvent;
-import com.ning.billing.util.events.BusInternalEvent.BusEventType;
+import com.ning.billing.util.events.BusInternalEvent.BusInternalEventType;
 import com.ning.billing.util.events.DefaultBusInternalEvent;
-import com.ning.billing.util.svcsapi.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.InternalBus;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -40,7 +40,7 @@ public abstract class TestEventBusBase extends UtilTestSuiteWithEmbeddedDB {
     protected static final Logger log = LoggerFactory.getLogger(TestEventBusBase.class);
 
     @Inject
-    protected Bus eventBus;
+    protected InternalBus eventBus;
 
     @BeforeClass(groups = "slow")
     public void setup() throws Exception {
@@ -72,8 +72,8 @@ public abstract class TestEventBusBase extends UtilTestSuiteWithEmbeddedDB {
 
         @JsonIgnore
         @Override
-        public BusEventType getBusEventType() {
-            return BusEventType.valueOf(type);
+        public BusInternalEventType getBusEventType() {
+            return BusInternalEventType.valueOf(type);
         }
 
         public String getName() {
@@ -123,8 +123,8 @@ public abstract class TestEventBusBase extends UtilTestSuiteWithEmbeddedDB {
 
         @JsonIgnore
         @Override
-        public BusEventType getBusEventType() {
-            return BusEventType.valueOf(type);
+        public BusInternalEventType getBusEventType() {
+            return BusInternalEventType.valueOf(type);
         }
 
 
@@ -199,7 +199,7 @@ public abstract class TestEventBusBase extends UtilTestSuiteWithEmbeddedDB {
             final MyEventHandler handler = new MyEventHandler(1);
             eventBus.register(handler);
 
-            eventBus.post(new MyEventWithException("my-event", 1L, UUID.randomUUID(), BusEventType.ACCOUNT_CHANGE.toString(), 1L, 1L), internalCallContext);
+            eventBus.post(new MyEventWithException("my-event", 1L, UUID.randomUUID(), BusInternalEventType.ACCOUNT_CHANGE.toString(), 1L, 1L), internalCallContext);
 
             Thread.sleep(50000);
         } catch (Exception ignored) {
@@ -213,7 +213,7 @@ public abstract class TestEventBusBase extends UtilTestSuiteWithEmbeddedDB {
             eventBus.register(handler);
 
             for (int i = 0; i < nbEvents; i++) {
-                eventBus.post(new MyEvent("my-event", (long) i, UUID.randomUUID(), BusEventType.ACCOUNT_CHANGE.toString(), 1L, 1L), internalCallContext);
+                eventBus.post(new MyEvent("my-event", (long) i, UUID.randomUUID(), BusInternalEventType.ACCOUNT_CHANGE.toString(), 1L, 1L), internalCallContext);
             }
 
             final boolean completed = handler.waitForCompletion(10000);
@@ -229,9 +229,9 @@ public abstract class TestEventBusBase extends UtilTestSuiteWithEmbeddedDB {
             eventBus.register(handler);
 
             for (int i = 0; i < 5; i++) {
-                eventBus.post(new MyOtherEvent("my-other-event", (double) i, UUID.randomUUID(), BusEventType.BUNDLE_REPAIR.toString(), 1L, 1L), internalCallContext);
+                eventBus.post(new MyOtherEvent("my-other-event", (double) i, UUID.randomUUID(), BusInternalEventType.BUNDLE_REPAIR.toString(), 1L, 1L), internalCallContext);
             }
-            eventBus.post(new MyEvent("my-event", 11l, UUID.randomUUID(), BusEventType.ACCOUNT_CHANGE.toString(), 1L, 1L), internalCallContext);
+            eventBus.post(new MyEvent("my-event", 11l, UUID.randomUUID(), BusInternalEventType.ACCOUNT_CHANGE.toString(), 1L, 1L), internalCallContext);
 
             final boolean completed = handler.waitForCompletion(10000);
             Assert.assertEquals(completed, true);

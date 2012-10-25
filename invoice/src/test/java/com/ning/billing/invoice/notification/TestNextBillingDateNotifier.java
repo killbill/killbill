@@ -66,7 +66,7 @@ import com.ning.billing.util.notificationq.DummySqlTest;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
-import com.ning.billing.util.svcsapi.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.InternalBus;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
@@ -79,7 +79,7 @@ public class TestNextBillingDateNotifier extends InvoiceTestSuiteWithEmbeddedDB 
     private Clock clock;
     private DefaultNextBillingDateNotifier notifier;
     private DummySqlTest dao;
-    private Bus eventBus;
+    private InternalBus eventBus;
     private InvoiceListenerMock listener;
     private NotificationQueueService notificationQueueService;
     private InternalCallContextFactory internalCallContextFactory;
@@ -152,7 +152,7 @@ public class TestNextBillingDateNotifier extends InvoiceTestSuiteWithEmbeddedDB 
         clock = g.getInstance(Clock.class);
         final IDBI dbi = g.getInstance(IDBI.class);
         dao = dbi.onDemand(DummySqlTest.class);
-        eventBus = g.getInstance(Bus.class);
+        eventBus = g.getInstance(InternalBus.class);
         notificationQueueService = g.getInstance(NotificationQueueService.class);
         final InvoiceDispatcher dispatcher = g.getInstance(InvoiceDispatcher.class);
 

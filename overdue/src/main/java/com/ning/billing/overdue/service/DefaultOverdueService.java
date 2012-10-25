@@ -32,7 +32,7 @@ import com.ning.billing.overdue.api.DefaultOverdueUserApi;
 import com.ning.billing.overdue.config.OverdueConfig;
 import com.ning.billing.overdue.listener.OverdueListener;
 import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
-import com.ning.billing.util.svcsapi.bus.Bus.EventBusException;
+import com.ning.billing.util.svcsapi.bus.InternalBus.EventBusException;
 import com.ning.billing.util.svcsapi.bus.BusService;
 import com.ning.billing.util.config.XMLLoader;
 

@@ -16,6 +16,10 @@
 
 package com.ning.billing.beatrix.integration;
 
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
+
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
@@ -43,6 +47,7 @@ import com.ning.billing.api.TestApiListener;
 import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.api.TestListenerStatus;
 import com.ning.billing.beatrix.BeatrixTestSuiteWithEmbeddedDB;
+import com.ning.billing.beatrix.bus.ExternalBus;
 import com.ning.billing.beatrix.lifecycle.Lifecycle;
 import com.ning.billing.beatrix.util.InvoiceChecker;
 import com.ning.billing.beatrix.util.PaymentChecker;
@@ -76,17 +81,13 @@ import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.payment.provider.MockPaymentProviderPlugin;
 import com.ning.billing.util.api.TagUserApi;
-import com.ning.billing.util.svcsapi.bus.BusService;
 import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.svcsapi.bus.BusService;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.fail;
 
 public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implements TestListenerStatus {
 
@@ -171,6 +172,10 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
     @Inject
     protected PaymentChecker paymentChecker;
+
+
+    @Inject
+    protected ExternalBus externalBus;
 
     protected TestApiListener busHandler;
 

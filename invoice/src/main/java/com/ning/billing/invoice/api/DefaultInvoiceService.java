@@ -21,7 +21,7 @@ import com.ning.billing.invoice.TagHandler;
 import com.ning.billing.invoice.notification.NextBillingDateNotifier;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
-import com.ning.billing.util.svcsapi.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
 
@@ -33,10 +33,10 @@ public class DefaultInvoiceService implements InvoiceService {
     private final NextBillingDateNotifier dateNotifier;
     private final InvoiceListener invoiceListener;
     private final TagHandler tagHandler;
-    private final Bus eventBus;
+    private final InternalBus eventBus;
 
     @Inject
-    public DefaultInvoiceService(final InvoiceListener invoiceListener, final TagHandler tagHandler, final Bus eventBus, final NextBillingDateNotifier dateNotifier) {
+    public DefaultInvoiceService(final InvoiceListener invoiceListener, final TagHandler tagHandler, final InternalBus eventBus, final NextBillingDateNotifier dateNotifier) {
         this.invoiceListener = invoiceListener;
         this.tagHandler = tagHandler;
         this.eventBus = eventBus;
@@ -63,7 +63,7 @@ public class DefaultInvoiceService implements InvoiceService {
         try {
             eventBus.register(invoiceListener);
             eventBus.register(tagHandler);
-        } catch (Bus.EventBusException e) {
+        } catch (InternalBus.EventBusException e) {
             throw new RuntimeException("Unable to register to the EventBus!", e);
         }
     }
@@ -73,7 +73,7 @@ public class DefaultInvoiceService implements InvoiceService {
         try {
             eventBus.unregister(invoiceListener);
             eventBus.unregister(tagHandler);
-        } catch (Bus.EventBusException e) {
+        } catch (InternalBus.EventBusException e) {
             throw new RuntimeException("Unable to unregister to the EventBus!", e);
         }
     }

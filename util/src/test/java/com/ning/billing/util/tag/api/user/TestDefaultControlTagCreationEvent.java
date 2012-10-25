@@ -42,7 +42,7 @@ public class TestDefaultControlTagCreationEvent extends UtilTestSuite {
         final UUID userToken = UUID.randomUUID();
 
         final DefaultControlTagCreationEvent event = new DefaultControlTagCreationEvent(tagId, objectId, objectType, tagDefinition, userToken, 1L, 1L);
-        Assert.assertEquals(event.getBusEventType(), BusInternalEvent.BusEventType.CONTROL_TAG_CREATION);
+        Assert.assertEquals(event.getBusEventType(), BusInternalEvent.BusInternalEventType.CONTROL_TAG_CREATION);
 
         Assert.assertEquals(event.getTagId(), tagId);
         Assert.assertEquals(event.getObjectId(), objectId);

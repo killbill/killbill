@@ -42,8 +42,8 @@ import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.events.InvoiceCreationInternalEvent;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcsapi.bus.Bus;
-import com.ning.billing.util.svcsapi.bus.Bus.EventBusException;
+import com.ning.billing.util.svcsapi.bus.InternalBus;
+import com.ning.billing.util.svcsapi.bus.InternalBus.EventBusException;
 
 import com.google.inject.Inject;
 
@@ -52,13 +52,13 @@ public class TestHelper {
     protected final InvoicePaymentApi invoicePaymentApi;
     protected PaymentApi paymentApi;
     private final CallContext context;
-    private final Bus eventBus;
+    private final InternalBus eventBus;
     private final Clock clock;
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
     public TestHelper(final CallContextFactory factory, final AccountInternalApi AccountApi, final InvoicePaymentApi invoicePaymentApi,
-                      final PaymentApi paymentApi, final Bus eventBus, final Clock clock, final InternalCallContextFactory internalCallContextFactory) {
+                      final PaymentApi paymentApi, final InternalBus eventBus, final Clock clock, final InternalCallContextFactory internalCallContextFactory) {
         this.eventBus = eventBus;
         this.AccountApi = AccountApi;
         this.invoicePaymentApi = invoicePaymentApi;

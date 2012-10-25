@@ -36,7 +36,7 @@ import com.ning.billing.account.dao.AccountEmailDao;
 import com.ning.billing.account.dao.MockAccountDao;
 import com.ning.billing.account.dao.MockAccountEmailDao;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.util.svcsapi.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
@@ -55,7 +55,7 @@ public class TestDefaultAccountUserApi extends AccountTestSuite {
 
     @BeforeMethod(groups = "fast")
     public void setUp() throws Exception {
-        accountDao = new MockAccountDao(Mockito.mock(Bus.class));
+        accountDao = new MockAccountDao(Mockito.mock(InternalBus.class));
         accountEmailDao = new MockAccountEmailDao();
         accountUserApi = new DefaultAccountUserApi(factory, internalFactory, accountDao, accountEmailDao);
     }

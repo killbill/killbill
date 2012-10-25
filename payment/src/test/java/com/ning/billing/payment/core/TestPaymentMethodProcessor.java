@@ -36,7 +36,7 @@ import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.tag.TagInternalApi;
-import com.ning.billing.util.svcsapi.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.InternalBus;
 
 public class TestPaymentMethodProcessor extends PaymentTestSuite {
 
@@ -48,7 +48,7 @@ public class TestPaymentMethodProcessor extends PaymentTestSuite {
         pluginRegistry.register(new ExternalPaymentProviderPlugin(new ClockMock()), ExternalPaymentProviderPlugin.PLUGIN_NAME);
 
         final AccountInternalApi accountUserApi = Mockito.mock(AccountInternalApi.class);
-        final Bus bus = Mockito.mock(Bus.class);
+        final InternalBus bus = Mockito.mock(InternalBus.class);
         final MockPaymentDao paymentDao = new MockPaymentDao();
         final GlobalLocker globalLocker = Mockito.mock(GlobalLocker.class);
         final ExecutorService executorService = Mockito.mock(ExecutorService.class);

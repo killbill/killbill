@@ -54,8 +54,8 @@ public class MockInvoiceCreationEvent implements InvoiceCreationInternalEvent {
 
     @JsonIgnore
     @Override
-    public BusEventType getBusEventType() {
-        return BusEventType.INVOICE_CREATION;
+    public BusInternalEventType getBusEventType() {
+        return BusInternalEventType.INVOICE_CREATION;
     }
 
     @Override

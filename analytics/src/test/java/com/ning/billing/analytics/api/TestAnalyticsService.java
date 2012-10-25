@@ -83,7 +83,7 @@ import com.ning.billing.util.events.AccountCreationInternalEvent;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 import com.ning.billing.util.events.InvoiceCreationInternalEvent;
 import com.ning.billing.util.events.PaymentInfoInternalEvent;
-import com.ning.billing.util.svcsapi.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.InternalBus;
 
 import com.google.inject.Inject;
 
@@ -119,7 +119,7 @@ public class TestAnalyticsService extends AnalyticsTestSuiteWithEmbeddedDB {
     private DefaultAnalyticsService service;
 
     @Inject
-    private Bus bus;
+    private InternalBus bus;
 
     @Inject
     private BusinessSubscriptionTransitionSqlDao subscriptionSqlDao;

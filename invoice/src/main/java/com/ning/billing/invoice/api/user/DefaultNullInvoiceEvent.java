@@ -45,8 +45,8 @@ public class DefaultNullInvoiceEvent extends DefaultBusInternalEvent implements 
 
     @JsonIgnore
     @Override
-    public BusEventType getBusEventType() {
-        return BusEventType.INVOICE_EMPTY;
+    public BusInternalEventType getBusEventType() {
+        return BusInternalEventType.INVOICE_EMPTY;
     }
 
 

@@ -22,7 +22,7 @@ import org.testng.annotations.Test;
 public class TestEventBus extends TestEventBusBase {
     @BeforeClass(groups = "slow")
     public void setup() throws Exception {
-        eventBus = new InMemoryBus();
+        eventBus = new InMemoryInternalBus();
         super.setup();
     }
 

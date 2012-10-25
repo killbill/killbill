@@ -59,8 +59,8 @@ public class DefaultAccountChangeEvent extends DefaultBusInternalEvent implement
 
     @JsonIgnore
     @Override
-    public BusEventType getBusEventType() {
-        return BusEventType.ACCOUNT_CHANGE;
+    public BusInternalEventType getBusEventType() {
+        return BusInternalEventType.ACCOUNT_CHANGE;
     }
 
     @Override

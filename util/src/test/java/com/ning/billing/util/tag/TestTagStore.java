@@ -37,7 +37,7 @@ import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagDefinitionApiException;
-import com.ning.billing.util.svcsapi.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.tag.dao.TagDao;
@@ -71,7 +71,7 @@ public class TestTagStore extends UtilTestSuiteWithEmbeddedDB {
     private Clock clock;
 
     @Inject
-    private Bus bus;
+    private InternalBus bus;
 
     private TagDefinition testTag;
 

@@ -51,8 +51,8 @@ public class DefaultInvoiceCreationEvent extends DefaultBusInternalEvent impleme
 
     @JsonIgnore
     @Override
-    public BusEventType getBusEventType() {
-        return BusEventType.INVOICE_CREATION;
+    public BusInternalEventType getBusEventType() {
+        return BusInternalEventType.INVOICE_CREATION;
     }
 
 

@@ -96,8 +96,8 @@ public class DefaultPaymentInfoEvent extends DefaultBusInternalEvent implements 
 
     @JsonIgnore
     @Override
-    public BusEventType getBusEventType() {
-        return BusEventType.PAYMENT_INFO;
+    public BusInternalEventType getBusEventType() {
+        return BusInternalEventType.PAYMENT_INFO;
     }
 
     @Override

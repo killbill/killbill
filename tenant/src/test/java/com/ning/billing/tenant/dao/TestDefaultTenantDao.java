@@ -28,13 +28,13 @@ import org.testng.annotations.Test;
 import com.ning.billing.tenant.TenantTestSuiteWithEmbeddedDb;
 import com.ning.billing.tenant.api.DefaultTenant;
 import com.ning.billing.tenant.security.KillbillCredentialsMatcher;
-import com.ning.billing.util.svcsapi.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.InternalBus;
 
 public class TestDefaultTenantDao extends TenantTestSuiteWithEmbeddedDb {
 
     @Test(groups = "slow")
     public void testWeCanStoreAndMatchCredentials() throws Exception {
-        final DefaultTenantDao tenantDao = new DefaultTenantDao(getMysqlTestingHelper().getDBI(), Mockito.mock(Bus.class));
+        final DefaultTenantDao tenantDao = new DefaultTenantDao(getMysqlTestingHelper().getDBI(), Mockito.mock(InternalBus.class));
 
         final DefaultTenant tenant = new DefaultTenant(UUID.randomUUID(), null, null, UUID.randomUUID().toString(),
                                                        UUID.randomUUID().toString(), UUID.randomUUID().toString());

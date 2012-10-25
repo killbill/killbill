@@ -30,7 +30,7 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
-import com.ning.billing.util.svcsapi.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.events.BusInternalEvent;
 import com.ning.billing.util.events.TagDefinitionInternalEvent;
@@ -53,7 +53,7 @@ public class TestDefaultTagDefinitionDao extends UtilTestSuiteWithEmbeddedDB {
     private Clock clock;
 
     @Inject
-    private Bus bus;
+    private InternalBus bus;
 
     private EventsListener eventsListener;
 
@@ -63,7 +63,7 @@ public class TestDefaultTagDefinitionDao extends UtilTestSuiteWithEmbeddedDB {
     }
 
     @BeforeMethod(groups = "slow")
-    public void cleanupBeforeMethod() throws Bus.EventBusException {
+    public void cleanupBeforeMethod() throws InternalBus.EventBusException {
         eventsListener = new EventsListener();
         bus.register(eventsListener);
     }
@@ -98,7 +98,7 @@ public class TestDefaultTagDefinitionDao extends UtilTestSuiteWithEmbeddedDB {
         Assert.assertEquals(eventsListener.getEvents().get(0), tagDefinitionFirstEventReceived);
         Assert.assertEquals(tagDefinitionFirstEventReceived.getTagDefinitionId(), createdTagDefinition.getId());
         Assert.assertEquals(tagDefinitionFirstEventReceived.getTagDefinition(), createdTagDefinition);
-        Assert.assertEquals(tagDefinitionFirstEventReceived.getBusEventType(), BusInternalEvent.BusEventType.USER_TAGDEFINITION_CREATION);
+        Assert.assertEquals(tagDefinitionFirstEventReceived.getBusEventType(), BusInternalEvent.BusInternalEventType.USER_TAGDEFINITION_CREATION);
         Assert.assertEquals(tagDefinitionFirstEventReceived.getUserToken(), internalCallContext.getUserToken());
 
         // Delete the tag definition
@@ -114,7 +114,7 @@ public class TestDefaultTagDefinitionDao extends UtilTestSuiteWithEmbeddedDB {
         Assert.assertEquals(eventsListener.getEvents().get(1), tagDefinitionSecondEventReceived);
         Assert.assertEquals(tagDefinitionSecondEventReceived.getTagDefinitionId(), createdTagDefinition.getId());
         Assert.assertEquals(tagDefinitionSecondEventReceived.getTagDefinition(), createdTagDefinition);
-        Assert.assertEquals(tagDefinitionSecondEventReceived.getBusEventType(), BusInternalEvent.BusEventType.USER_TAGDEFINITION_DELETION);
+        Assert.assertEquals(tagDefinitionSecondEventReceived.getBusEventType(), BusInternalEvent.BusInternalEventType.USER_TAGDEFINITION_DELETION);
         Assert.assertEquals(tagDefinitionSecondEventReceived.getUserToken(), internalCallContext.getUserToken());
     }
 

@@ -41,8 +41,8 @@ import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.EntityPersistenceException;
 import com.ning.billing.util.events.AccountChangeInternalEvent;
 import com.ning.billing.util.events.AccountCreationInternalEvent;
-import com.ning.billing.util.svcsapi.bus.Bus;
-import com.ning.billing.util.svcsapi.bus.Bus.EventBusException;
+import com.ning.billing.util.svcsapi.bus.InternalBus;
+import com.ning.billing.util.svcsapi.bus.InternalBus.EventBusException;
 
 import com.google.inject.Inject;
 
@@ -51,11 +51,11 @@ public class AuditedAccountDao implements AccountDao {
     private static final Logger log = LoggerFactory.getLogger(AuditedAccountDao.class);
 
     private final AccountSqlDao accountSqlDao;
-    private final Bus eventBus;
+    private final InternalBus eventBus;
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
-    public AuditedAccountDao(final IDBI dbi, final Bus eventBus, final InternalCallContextFactory internalCallContextFactory) {
+    public AuditedAccountDao(final IDBI dbi, final InternalBus eventBus, final InternalCallContextFactory internalCallContextFactory) {
         this.eventBus = eventBus;
         this.accountSqlDao = dbi.onDemand(AccountSqlDao.class);
         this.internalCallContextFactory = internalCallContextFactory;
@@ -95,7 +95,7 @@ public class AuditedAccountDao implements AccountDao {
         try {
             accountSqlDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
                 @Override
-                public Void inTransaction(final AccountSqlDao transactionalDao, final TransactionStatus status) throws AccountApiException, Bus.EventBusException {
+                public Void inTransaction(final AccountSqlDao transactionalDao, final TransactionStatus status) throws AccountApiException, InternalBus.EventBusException {
                     final Account currentAccount = transactionalDao.getAccountByKey(key, context);
                     if (currentAccount != null) {
                         throw new AccountApiException(ErrorCode.ACCOUNT_ALREADY_EXISTS, key);
@@ -144,7 +144,7 @@ public class AuditedAccountDao implements AccountDao {
         try {
             accountSqlDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
                 @Override
-                public Void inTransaction(final AccountSqlDao transactional, final TransactionStatus status) throws EntityPersistenceException, Bus.EventBusException {
+                public Void inTransaction(final AccountSqlDao transactional, final TransactionStatus status) throws EntityPersistenceException, InternalBus.EventBusException {
                     final UUID accountId = specifiedAccount.getId();
                     final Account currentAccount = transactional.getById(accountId.toString(), context);
                     if (currentAccount == null) {
@@ -199,7 +199,7 @@ public class AuditedAccountDao implements AccountDao {
         try {
             accountSqlDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
                 @Override
-                public Void inTransaction(final AccountSqlDao transactional, final TransactionStatus status) throws EntityPersistenceException, Bus.EventBusException {
+                public Void inTransaction(final AccountSqlDao transactional, final TransactionStatus status) throws EntityPersistenceException, InternalBus.EventBusException {
 
                     final Account currentAccount = transactional.getById(accountId.toString(), context);
                     if (currentAccount == null) {

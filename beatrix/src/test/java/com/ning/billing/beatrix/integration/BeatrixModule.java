@@ -16,6 +16,8 @@
 
 package com.ning.billing.beatrix.integration;
 
+import static org.testng.Assert.assertNotNull;
+
 import java.io.IOException;
 import java.net.URL;
 import java.util.Set;
@@ -23,14 +25,14 @@ import java.util.Set;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.IDBI;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
-import com.google.inject.Injector;
 import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.account.api.AccountService;
 import com.ning.billing.account.glue.DefaultAccountModule;
 import com.ning.billing.analytics.setup.AnalyticsModule;
+import com.ning.billing.beatrix.DefaultBeatrixService;
+import com.ning.billing.beatrix.bus.ExternalBus;
+import com.ning.billing.beatrix.extbus.BeatrixListener;
+import com.ning.billing.beatrix.extbus.PersistentExternalBus;
 import com.ning.billing.beatrix.integration.overdue.IntegrationTestOverdueModule;
 import com.ning.billing.beatrix.lifecycle.DefaultLifecycle;
 import com.ning.billing.beatrix.lifecycle.Lifecycle;
@@ -52,7 +54,6 @@ import com.ning.billing.overdue.OverdueService;
 import com.ning.billing.payment.api.PaymentService;
 import com.ning.billing.payment.glue.PaymentModule;
 import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
-import com.ning.billing.util.svcsapi.bus.BusService;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.email.EmailModule;
@@ -63,8 +64,12 @@ import com.ning.billing.util.glue.CustomFieldModule;
 import com.ning.billing.util.glue.GlobalLockerModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.TagStoreModule;
+import com.ning.billing.util.svcsapi.bus.BusService;
 
-import static org.testng.Assert.assertNotNull;
+import com.google.common.collect.ImmutableSet;
+import com.google.inject.AbstractModule;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
 
 
 public class BeatrixModule extends AbstractModule {
@@ -110,6 +115,14 @@ public class BeatrixModule extends AbstractModule {
 
         bind(InvoiceChecker.class).asEagerSingleton();
         bind(PaymentChecker.class).asEagerSingleton();
+
+        installPublicBus();
+    }
+
+    private void installPublicBus() {
+        bind(ExternalBus.class).to(PersistentExternalBus.class).asEagerSingleton();
+        bind(BeatrixListener.class).asEagerSingleton();
+        bind(DefaultBeatrixService.class).asEagerSingleton();
     }
 
     private static final class PaymentPluginMockModule extends PaymentModule {
@@ -146,6 +159,7 @@ public class BeatrixModule extends AbstractModule {
                     .add(injector.getInstance(InvoiceService.class))
                     .add(injector.getInstance(PaymentService.class))
                     .add(injector.getInstance(OverdueService.class))
+                    .add(injector.getInstance(DefaultBeatrixService.class))
                     .build();
             return services;
         }

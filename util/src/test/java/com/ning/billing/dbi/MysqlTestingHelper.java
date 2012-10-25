@@ -227,7 +227,7 @@ public class MysqlTestingHelper {
         initDb("drop table if exists subscriptions; create table subscriptions(record_id int(11) unsigned not null auto_increment, id char(36) not null, " +
                "account_record_id int(11) unsigned not null, tenant_record_id int(11) unsigned default 0, primary key(record_id)) engine=innodb;");
 
-        for (final String pack : new String[]{"account", "analytics", "entitlement", "util", "payment", "invoice", "junction", "tenant"}) {
+        for (final String pack : new String[]{"account", "analytics", "beatrix", "entitlement", "util", "payment", "invoice", "junction", "tenant"}) {
             final String ddl;
             try {
                 ddl = IOUtils.toString(Resources.getResource("com/ning/billing/" + pack + "/ddl.sql").openStream());

@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.Inject;
 import com.ning.billing.analytics.AnalyticsListener;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
-import com.ning.billing.util.svcsapi.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.InternalBus;
 
 public class DefaultAnalyticsService implements AnalyticsService {
     private static final Logger log = LoggerFactory.getLogger(DefaultAnalyticsService.class);
@@ -30,10 +30,10 @@ public class DefaultAnalyticsService implements AnalyticsService {
     private static final String ANALYTICS_SERVICE = "analytics-service";
 
     private final AnalyticsListener listener;
-    private final Bus eventBus;
+    private final InternalBus eventBus;
 
     @Inject
-    public DefaultAnalyticsService(final AnalyticsListener listener, final Bus eventBus) {
+    public DefaultAnalyticsService(final AnalyticsListener listener, final InternalBus eventBus) {
         this.listener = listener;
         this.eventBus = eventBus;
     }
@@ -47,7 +47,7 @@ public class DefaultAnalyticsService implements AnalyticsService {
     public void registerForNotifications() {
         try {
             eventBus.register(listener);
-        } catch (Bus.EventBusException e) {
+        } catch (InternalBus.EventBusException e) {
             log.error("Unable to register to the EventBus!", e);
         }
     }

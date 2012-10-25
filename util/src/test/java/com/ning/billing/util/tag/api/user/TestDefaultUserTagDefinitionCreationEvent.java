@@ -38,7 +38,7 @@ public class TestDefaultUserTagDefinitionCreationEvent extends UtilTestSuite {
         final UUID userToken = UUID.randomUUID();
 
         final DefaultUserTagDefinitionCreationEvent event = new DefaultUserTagDefinitionCreationEvent(tagDefinitionId, tagDefinition, userToken, 1L, 1L);
-        Assert.assertEquals(event.getBusEventType(), BusInternalEvent.BusEventType.USER_TAGDEFINITION_CREATION);
+        Assert.assertEquals(event.getBusEventType(), BusInternalEvent.BusInternalEventType.USER_TAGDEFINITION_CREATION);
 
         Assert.assertEquals(event.getTagDefinitionId(), tagDefinitionId);
         Assert.assertEquals(event.getTagDefinition(), tagDefinition);

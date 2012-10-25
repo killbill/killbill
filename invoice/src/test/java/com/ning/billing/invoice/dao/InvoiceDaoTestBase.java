@@ -35,10 +35,10 @@ import com.ning.billing.invoice.glue.InvoiceModuleWithEmbeddedDb;
 import com.ning.billing.invoice.notification.MockNextBillingDatePoster;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.invoice.tests.InvoicingTestBase;
-import com.ning.billing.util.bus.InMemoryBus;
+import com.ning.billing.util.bus.InMemoryInternalBus;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
-import com.ning.billing.util.svcsapi.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.tag.api.user.TagEventBuilder;
 
 public class InvoiceDaoTestBase extends InvoicingTestBase {
@@ -50,7 +50,7 @@ public class InvoiceDaoTestBase extends InvoicingTestBase {
     protected InvoicePaymentSqlDao invoicePaymentDao;
     protected Clock clock;
     protected InvoiceGenerator generator;
-    protected Bus bus;
+    protected InternalBus bus;
 
     private final InvoiceConfig invoiceConfig = new InvoiceConfig() {
         @Override
@@ -94,7 +94,7 @@ public class InvoiceDaoTestBase extends InvoicingTestBase {
 
         clock = new ClockMock();
 
-        bus = new InMemoryBus();
+        bus = new InMemoryInternalBus();
         bus.start();
 
         final NextBillingDatePoster nextBillingDatePoster = new MockNextBillingDatePoster();

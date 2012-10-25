@@ -54,8 +54,8 @@ public class DefaultControlTagDefinitionDeletionEvent extends DefaultBusInternal
 
     @JsonIgnore
     @Override
-    public BusEventType getBusEventType() {
-        return BusEventType.CONTROL_TAGDEFINITION_DELETION;
+    public BusInternalEventType getBusEventType() {
+        return BusInternalEventType.CONTROL_TAGDEFINITION_DELETION;
     }
 
     @Override

@@ -13,15 +13,12 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.ning.billing.util.bus;
+package com.ning.billing.beatrix.bus;
 
-import java.util.UUID;
 
-public interface BusEvent {
+public interface ExternalBus {
 
-    public UUID getUserToken();
+    public void register(final Object handlerInstance); /* throws EventBusException */
 
-    public UUID getAccountId();
-
-    public UUID getTenantId();
+    public void unregister(final Object handlerInstance); /* throws EventBusException */
 }

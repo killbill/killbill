@@ -33,7 +33,7 @@ import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.server.ServerTestSuiteWithEmbeddedDB;
 import com.ning.billing.tenant.api.DefaultTenant;
 import com.ning.billing.tenant.dao.DefaultTenantDao;
-import com.ning.billing.util.svcsapi.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.InternalBus;
 
 import com.jolbox.bonecp.BoneCPConfig;
 import com.jolbox.bonecp.BoneCPDataSource;
@@ -46,7 +46,7 @@ public class TestKillbillJdbcRealm extends ServerTestSuiteWithEmbeddedDB {
     @BeforeMethod(groups = "slow")
     public void setUp() throws Exception {
         // Create the tenant
-        final DefaultTenantDao tenantDao = new DefaultTenantDao(getMysqlTestingHelper().getDBI(), Mockito.mock(Bus.class));
+        final DefaultTenantDao tenantDao = new DefaultTenantDao(getMysqlTestingHelper().getDBI(), Mockito.mock(InternalBus.class));
         tenant = new DefaultTenant(UUID.randomUUID(), null, null, UUID.randomUUID().toString(),
                                    UUID.randomUUID().toString(), UUID.randomUUID().toString());
         tenantDao.create(tenant, internalCallContext);

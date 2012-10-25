@@ -70,8 +70,8 @@ public class DefaultUserTagDeletionEvent extends DefaultBusInternalEvent impleme
 
     @JsonIgnore
     @Override
-    public BusEventType getBusEventType() {
-        return BusEventType.USER_TAG_DELETION;
+    public BusInternalEventType getBusEventType() {
+        return BusInternalEventType.USER_TAG_DELETION;
     }
 
 

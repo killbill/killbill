@@ -52,8 +52,8 @@ import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.tag.TagInternalApi;
-import com.ning.billing.util.svcsapi.bus.Bus;
-import com.ning.billing.util.svcsapi.bus.Bus.EventBusException;
+import com.ning.billing.util.svcsapi.bus.InternalBus;
+import com.ning.billing.util.svcsapi.bus.InternalBus.EventBusException;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.Tag;
 
@@ -69,10 +69,10 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     private final TagInternalApi tagApi;
     private final HtmlInvoiceGenerator generator;
     private final InternalCallContextFactory internalCallContextFactory;
-    private final Bus eventBus;
+    private final InternalBus eventBus;
 
     @Inject
-    public DefaultInvoiceUserApi(final InvoiceDao dao, final InvoiceDispatcher dispatcher, final AccountInternalApi accountUserApi, final Bus eventBus,
+    public DefaultInvoiceUserApi(final InvoiceDao dao, final InvoiceDispatcher dispatcher, final AccountInternalApi accountUserApi, final InternalBus eventBus,
                                  final TagInternalApi tagApi, final HtmlInvoiceGenerator generator, final InternalCallContextFactory internalCallContextFactory) {
         this.dao = dao;
         this.dispatcher = dispatcher;

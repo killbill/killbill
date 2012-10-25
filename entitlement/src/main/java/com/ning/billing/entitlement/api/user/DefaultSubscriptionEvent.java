@@ -113,8 +113,8 @@ public abstract class DefaultSubscriptionEvent extends DefaultBusInternalEvent i
 
     @JsonIgnore
     @Override
-    public BusEventType getBusEventType() {
-        return BusEventType.SUBSCRIPTION_TRANSITION;
+    public BusInternalEventType getBusEventType() {
+        return BusInternalEventType.SUBSCRIPTION_TRANSITION;
     }
 
     @JsonProperty("eventId")

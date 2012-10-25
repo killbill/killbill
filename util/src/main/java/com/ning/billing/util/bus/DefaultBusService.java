@@ -18,8 +18,8 @@ package com.ning.billing.util.bus;
 
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
-import com.ning.billing.util.svcsapi.bus.Bus;
 import com.ning.billing.util.svcsapi.bus.BusService;
+import com.ning.billing.util.svcsapi.bus.InternalBus;
 
 import com.google.inject.Inject;
 
@@ -32,10 +32,10 @@ public class DefaultBusService implements BusService {
     public static final String EVENT_BUS_SERVICE = "bus-service";
     public static final String EVENT_BUS_IDENTIFIER = EVENT_BUS_SERVICE;
 
-    private final Bus eventBus;
+    private final InternalBus eventBus;
 
     @Inject
-    public DefaultBusService(final Bus eventBus) {
+    public DefaultBusService(final InternalBus eventBus) {
         this.eventBus = eventBus;
     }
 
@@ -55,8 +55,7 @@ public class DefaultBusService implements BusService {
     }
 
     @Override
-    public Bus getBus() {
+    public InternalBus getBus() {
         return eventBus;
     }
-
 }

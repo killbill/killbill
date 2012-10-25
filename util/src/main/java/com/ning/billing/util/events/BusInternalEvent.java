@@ -20,7 +20,7 @@ import java.util.UUID;
 
 public interface BusInternalEvent {
 
-    public enum BusEventType {
+    public enum BusInternalEventType {
         ACCOUNT_CREATE,
         ACCOUNT_CHANGE,
         SUBSCRIPTION_TRANSITION,
@@ -41,7 +41,7 @@ public interface BusInternalEvent {
         OVERDUE_CHANGE
     }
 
-    public BusEventType getBusEventType();
+    public BusInternalEventType getBusEventType();
 
     public UUID getUserToken();
 

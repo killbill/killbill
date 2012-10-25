@@ -50,7 +50,7 @@ import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
-import com.ning.billing.util.svcsapi.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.InternalBus;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -80,7 +80,7 @@ public class TestDefaultInvoicePaymentApi extends InvoiceTestSuiteWithEmbeddedDB
 
         final NextBillingDatePoster nextBillingDatePoster = new MockNextBillingDatePoster();
         internalCallContextFactory = new InternalCallContextFactory(dbi, clock);
-        final InvoiceDao invoiceDao = new AuditedInvoiceDao(dbi, nextBillingDatePoster, clock, Mockito.mock(Bus.class));
+        final InvoiceDao invoiceDao = new AuditedInvoiceDao(dbi, nextBillingDatePoster, clock, Mockito.mock(InternalBus.class));
         invoicePaymentApi = new DefaultInvoicePaymentApi(invoiceDao, internalCallContextFactory);
     }
 

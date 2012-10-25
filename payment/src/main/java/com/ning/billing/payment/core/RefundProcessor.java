@@ -57,7 +57,7 @@ import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.tag.TagInternalApi;
-import com.ning.billing.util.svcsapi.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.InternalBus;
 
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
@@ -77,7 +77,7 @@ public class RefundProcessor extends ProcessorBase {
     public RefundProcessor(final PaymentProviderPluginRegistry pluginRegistry,
                            final AccountInternalApi accountApi,
                            final InvoicePaymentApi invoicePaymentApi,
-                           final Bus eventBus,
+                           final InternalBus eventBus,
                            final InternalCallContextFactory internalCallContextFactory,
                            final TagInternalApi tagUserApi,
                            final PaymentDao paymentDao,

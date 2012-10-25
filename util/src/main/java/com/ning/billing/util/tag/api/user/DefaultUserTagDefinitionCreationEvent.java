@@ -54,8 +54,8 @@ public class DefaultUserTagDefinitionCreationEvent extends DefaultBusInternalEve
 
     @JsonIgnore
     @Override
-    public BusEventType getBusEventType() {
-        return BusEventType.USER_TAGDEFINITION_CREATION;
+    public BusInternalEventType getBusEventType() {
+        return BusInternalEventType.USER_TAGDEFINITION_CREATION;
     }
 
 

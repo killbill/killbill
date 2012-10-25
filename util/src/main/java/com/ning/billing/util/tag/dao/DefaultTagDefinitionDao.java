@@ -33,7 +33,7 @@ import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.events.TagDefinitionInternalEvent;
-import com.ning.billing.util.svcsapi.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.DefaultTagDefinition;
 import com.ning.billing.util.tag.TagDefinition;
@@ -49,10 +49,10 @@ public class DefaultTagDefinitionDao implements TagDefinitionDao {
 
     private final TagDefinitionSqlDao tagDefinitionSqlDao;
     private final TagEventBuilder tagEventBuilder;
-    private final Bus bus;
+    private final InternalBus bus;
 
     @Inject
-    public DefaultTagDefinitionDao(final IDBI dbi, final TagEventBuilder tagEventBuilder, final Bus bus) {
+    public DefaultTagDefinitionDao(final IDBI dbi, final TagEventBuilder tagEventBuilder, final InternalBus bus) {
         this.tagEventBuilder = tagEventBuilder;
         this.bus = bus;
         this.tagDefinitionSqlDao = dbi.onDemand(TagDefinitionSqlDao.class);
@@ -145,7 +145,7 @@ public class DefaultTagDefinitionDao implements TagDefinitionDao {
                     }
                     try {
                         bus.postFromTransaction(tagDefinitionEvent, tagDefinitionSqlDao, context);
-                    } catch (Bus.EventBusException e) {
+                    } catch (InternalBus.EventBusException e) {
                         log.warn("Failed to post tag definition creation event for tag " + tagDefinition.getId(), e);
                     }
 
@@ -200,7 +200,7 @@ public class DefaultTagDefinitionDao implements TagDefinitionDao {
                     }
                     try {
                         bus.postFromTransaction(tagDefinitionEvent, tagDefinitionSqlDao, context);
-                    } catch (Bus.EventBusException e) {
+                    } catch (InternalBus.EventBusException e) {
                         log.warn("Failed to post tag definition deletion event for tag " + tagDefinition.getId(), e);
                     }
 

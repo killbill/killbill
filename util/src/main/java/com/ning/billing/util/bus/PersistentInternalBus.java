@@ -39,17 +39,17 @@ import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.events.BusInternalEvent;
 import com.ning.billing.util.queue.PersistentQueueBase;
-import com.ning.billing.util.svcsapi.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.InternalBus;
 
 import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
 
-public class PersistentBus extends PersistentQueueBase implements Bus {
+public class PersistentInternalBus extends PersistentQueueBase implements InternalBus {
 
     private static final long DELTA_IN_PROCESSING_TIME_MS = 1000L * 60L * 5L; // 5 minutes
     private static final int MAX_BUS_EVENTS = 1;
 
-    private static final Logger log = LoggerFactory.getLogger(PersistentBus.class);
+    private static final Logger log = LoggerFactory.getLogger(PersistentInternalBus.class);
 
     private final PersistentBusSqlDao dao;
 
@@ -80,7 +80,7 @@ public class PersistentBus extends PersistentQueueBase implements Bus {
     }
 
     @Inject
-    public PersistentBus(final IDBI dbi, final Clock clock, final PersistentBusConfig config, final InternalCallContextFactory internalCallContextFactory) {
+    public PersistentInternalBus(final IDBI dbi, final Clock clock, final PersistentBusConfig config, final InternalCallContextFactory internalCallContextFactory) {
         super("Bus", Executors.newFixedThreadPool(config.getNbThreads(), new ThreadFactory() {
             @Override
             public Thread newThread(final Runnable r) {
@@ -109,7 +109,7 @@ public class PersistentBus extends PersistentQueueBase implements Bus {
     @Override
     public int doProcessEvents() {
 
-        // TODO Retrieving and clearing bus events is not done per tenant so pass default INTERNAL_TENANT_RECORD_ID; not sure this is something we want to do anyway ?
+        // TODO API_FIX Retrieving and clearing bus events is not done per tenant so pass default INTERNAL_TENANT_RECORD_ID; not sure this is something we want to do anyway ?
         final InternalCallContext context = internalCallContextFactory.createInternalCallContext(InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID, null, "PersistentBus", CallOrigin.INTERNAL, UserType.SYSTEM, null);
         final List<BusEventEntry> events = getNextBusEvent(context);
         if (events.size() == 0) {

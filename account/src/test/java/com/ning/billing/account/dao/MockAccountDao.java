@@ -29,18 +29,18 @@ import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.entity.EntityPersistenceException;
 import com.ning.billing.util.events.AccountChangeInternalEvent;
-import com.ning.billing.util.svcsapi.bus.Bus;
-import com.ning.billing.util.svcsapi.bus.Bus.EventBusException;
+import com.ning.billing.util.svcsapi.bus.InternalBus;
+import com.ning.billing.util.svcsapi.bus.InternalBus.EventBusException;
 
 import com.google.inject.Inject;
 
 public class MockAccountDao implements AccountDao {
 
-    private final Bus eventBus;
+    private final InternalBus eventBus;
     private final Map<UUID, Account> accounts = new ConcurrentHashMap<UUID, Account>();
 
     @Inject
-    public MockAccountDao(final Bus eventBus) {
+    public MockAccountDao(final InternalBus eventBus) {
         this.eventBus = eventBus;
     }
 

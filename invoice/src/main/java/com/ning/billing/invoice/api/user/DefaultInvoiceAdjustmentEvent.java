@@ -53,8 +53,8 @@ public class DefaultInvoiceAdjustmentEvent extends DefaultBusInternalEvent imple
 
     @JsonIgnore
     @Override
-    public BusEventType getBusEventType() {
-        return BusEventType.INVOICE_ADJUSTMENT;
+    public BusInternalEventType getBusEventType() {
+        return BusInternalEventType.INVOICE_ADJUSTMENT;
     }
 
 

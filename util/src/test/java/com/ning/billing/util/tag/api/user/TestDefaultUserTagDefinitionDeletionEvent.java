@@ -38,7 +38,7 @@ public class TestDefaultUserTagDefinitionDeletionEvent extends UtilTestSuite {
         final UUID userToken = UUID.randomUUID();
 
         final DefaultUserTagDefinitionDeletionEvent event = new DefaultUserTagDefinitionDeletionEvent(tagDefinitionId, tagDefinition, userToken, 1L, 1L);
-        Assert.assertEquals(event.getBusEventType(), BusInternalEvent.BusEventType.USER_TAGDEFINITION_DELETION);
+        Assert.assertEquals(event.getBusEventType(), BusInternalEvent.BusInternalEventType.USER_TAGDEFINITION_DELETION);
 
         Assert.assertEquals(event.getTagDefinitionId(), tagDefinitionId);
         Assert.assertEquals(event.getTagDefinition(), tagDefinition);

@@ -56,8 +56,8 @@ public class DefaultAccountCreationEvent  extends DefaultBusInternalEvent implem
 
     @JsonIgnore
     @Override
-    public BusEventType getBusEventType() {
-        return BusEventType.ACCOUNT_CREATE;
+    public BusInternalEventType getBusEventType() {
+        return BusInternalEventType.ACCOUNT_CREATE;
     }
 
     @Override

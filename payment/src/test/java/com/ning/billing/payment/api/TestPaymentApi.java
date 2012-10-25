@@ -52,8 +52,8 @@ import com.ning.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.glue.CallContextModule;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcsapi.bus.Bus;
-import com.ning.billing.util.svcsapi.bus.Bus.EventBusException;
+import com.ning.billing.util.svcsapi.bus.InternalBus;
+import com.ning.billing.util.svcsapi.bus.InternalBus.EventBusException;
 
 import com.google.inject.Inject;
 
@@ -62,7 +62,7 @@ public class TestPaymentApi extends PaymentTestSuite {
     private static final Logger log = LoggerFactory.getLogger(TestPaymentApi.class);
 
     @Inject
-    private Bus eventBus;
+    private InternalBus eventBus;
     @Inject
     protected PaymentApi paymentApi;
     @Inject

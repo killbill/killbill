@@ -71,8 +71,8 @@ public class DefaultControlTagCreationEvent extends DefaultBusInternalEvent impl
 
     @JsonIgnore
     @Override
-    public BusEventType getBusEventType() {
-        return BusEventType.CONTROL_TAG_CREATION;
+    public BusInternalEventType getBusEventType() {
+        return BusInternalEventType.CONTROL_TAG_CREATION;
     }
 
 

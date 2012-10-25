@@ -29,7 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ning.billing.tenant.api.Tenant;
-import com.ning.billing.util.svcsapi.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.entity.EntityPersistenceException;
@@ -44,10 +44,10 @@ public class DefaultTenantDao implements TenantDao {
     private final RandomNumberGenerator rng = new SecureRandomNumberGenerator();
 
     private final TenantSqlDao tenantSqlDao;
-    private final Bus eventBus;
+    private final InternalBus eventBus;
 
     @Inject
-    public DefaultTenantDao(final IDBI dbi, final Bus eventBus) {
+    public DefaultTenantDao(final IDBI dbi, final InternalBus eventBus) {
         this.eventBus = eventBus;
         this.tenantSqlDao = dbi.onDemand(TenantSqlDao.class);
     }

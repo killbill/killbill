@@ -24,10 +24,10 @@ import org.testng.annotations.BeforeClass;
 import com.ning.billing.account.AccountTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.ClockMock;
-import com.ning.billing.util.svcsapi.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.svcsapi.bus.BusService;
 import com.ning.billing.util.bus.DefaultBusService;
-import com.ning.billing.util.bus.InMemoryBus;
+import com.ning.billing.util.bus.InMemoryInternalBus;
 import com.ning.billing.util.tag.api.user.TagEventBuilder;
 
 import static org.testng.Assert.fail;
@@ -39,14 +39,14 @@ public abstract class AccountDaoTestBase extends AccountTestSuiteWithEmbeddedDB 
     protected AccountDao accountDao;
     protected AccountEmailDao accountEmailDao;
     protected IDBI dbi;
-    protected Bus bus;
+    protected InternalBus bus;
 
     @BeforeClass(groups = "slow")
     protected void setup() throws IOException {
         try {
             dbi = helper.getDBI();
 
-            bus = new InMemoryBus();
+            bus = new InMemoryInternalBus();
             final BusService busService = new DefaultBusService(bus);
             ((DefaultBusService) busService).startBus();
 

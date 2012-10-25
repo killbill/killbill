@@ -73,7 +73,7 @@ import com.ning.billing.util.notificationq.DefaultNotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
-import com.ning.billing.util.svcsapi.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.tag.dao.AuditedTagDao;
 import com.ning.billing.util.tag.dao.TagDao;
 
@@ -85,7 +85,7 @@ public class TestOverdueCheckNotifier extends OverdueTestSuiteWithEmbeddedDB {
     private Clock clock;
     private DefaultOverdueCheckNotifier notifier;
 
-    private Bus eventBus;
+    private InternalBus eventBus;
     private OverdueListenerMock listener;
     private NotificationQueueService notificationQueueService;
 
@@ -147,7 +147,7 @@ public class TestOverdueCheckNotifier extends OverdueTestSuiteWithEmbeddedDB {
 
         clock = g.getInstance(Clock.class);
 
-        eventBus = g.getInstance(Bus.class);
+        eventBus = g.getInstance(InternalBus.class);
         notificationQueueService = g.getInstance(NotificationQueueService.class);
 
         final OverdueProperties properties = g.getInstance(OverdueProperties.class);

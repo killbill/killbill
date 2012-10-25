@@ -63,8 +63,8 @@ import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
-import com.ning.billing.util.svcsapi.bus.Bus;
-import com.ning.billing.util.svcsapi.bus.Bus.EventBusException;
+import com.ning.billing.util.svcsapi.bus.InternalBus;
+import com.ning.billing.util.svcsapi.bus.InternalBus.EventBusException;
 
 import com.google.inject.Inject;
 
@@ -79,7 +79,7 @@ public class Engine implements EventListener, EntitlementService {
     private final EntitlementDao dao;
     private final PlanAligner planAligner;
     private final AddonUtils addonUtils;
-    private final Bus eventBus;
+    private final InternalBus eventBus;
     private final EntitlementConfig config;
     private final NotificationQueueService notificationQueueService;
     private final SubscriptionFactory subscriptionFactory;
@@ -90,7 +90,7 @@ public class Engine implements EventListener, EntitlementService {
     @Inject
     public Engine(final Clock clock, final EntitlementDao dao, final PlanAligner planAligner,
                   final EntitlementConfig config,
-                  final AddonUtils addonUtils, final Bus eventBus,
+                  final AddonUtils addonUtils, final InternalBus eventBus,
                   final NotificationQueueService notificationQueueService,
                   final SubscriptionFactory subscriptionFactory,
                   final InternalCallContextFactory internalCallContextFactory) {

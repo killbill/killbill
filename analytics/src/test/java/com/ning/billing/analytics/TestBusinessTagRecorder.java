@@ -53,7 +53,7 @@ import com.ning.billing.entitlement.engine.addon.AddonUtils;
 import com.ning.billing.entitlement.engine.dao.AuditedEntitlementDao;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.mock.MockAccountBuilder;
-import com.ning.billing.util.bus.InMemoryBus;
+import com.ning.billing.util.bus.InMemoryInternalBus;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.ClockMock;
@@ -67,7 +67,7 @@ public class TestBusinessTagRecorder extends AnalyticsTestSuiteWithEmbeddedDB {
 
     private BusinessAccountTagSqlDao accountTagSqlDao;
     private BusinessSubscriptionTransitionTagSqlDao subscriptionTransitionTagSqlDao;
-    private InMemoryBus eventBus;
+    private InMemoryInternalBus eventBus;
     private DefaultCallContextFactory callContextFactory;
     private AccountInternalApi accountApi;
     private AccountUserApi accountUserApi;
@@ -82,7 +82,7 @@ public class TestBusinessTagRecorder extends AnalyticsTestSuiteWithEmbeddedDB {
         final BusinessInvoiceTagSqlDao invoiceTagSqlDao = dbi.onDemand(BusinessInvoiceTagSqlDao.class);
         final BusinessInvoicePaymentTagSqlDao invoicePaymentTagSqlDao = dbi.onDemand(BusinessInvoicePaymentTagSqlDao.class);
         subscriptionTransitionTagSqlDao = dbi.onDemand(BusinessSubscriptionTransitionTagSqlDao.class);
-        eventBus = new InMemoryBus();
+        eventBus = new InMemoryInternalBus();
         final AccountDao accountDao = new AuditedAccountDao(dbi, eventBus, new InternalCallContextFactory(dbi, new ClockMock()));
         final AccountEmailDao accountEmailDao = new AuditedAccountEmailDao(dbi);
         final DefaultClock clock = new DefaultClock();

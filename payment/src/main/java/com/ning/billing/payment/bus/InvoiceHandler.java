@@ -30,7 +30,6 @@ import com.ning.billing.util.callcontext.DefaultCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.UserType;
-import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.events.InvoiceCreationInternalEvent;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 
@@ -41,17 +40,14 @@ public class InvoiceHandler {
 
     private final PaymentProcessor paymentProcessor;
     private final AccountInternalApi accountApi;
-    private final Clock clock;
     private final InternalCallContextFactory internalCallContextFactory;
 
     private static final Logger log = LoggerFactory.getLogger(InvoiceHandler.class);
 
     @Inject
-    public InvoiceHandler(final Clock clock,
-                          final AccountInternalApi accountApi,
+    public InvoiceHandler(final AccountInternalApi accountApi,
                           final PaymentProcessor paymentProcessor,
                           final InternalCallContextFactory internalCallContextFactory) {
-        this.clock = clock;
         this.accountApi = accountApi;
         this.paymentProcessor = paymentProcessor;
         this.internalCallContextFactory = internalCallContextFactory;
