@@ -24,9 +24,9 @@ import org.slf4j.LoggerFactory;
 
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.invoice.api.InvoiceApiException;
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 import com.ning.billing.util.events.RepairEntitlementInternalEvent;
@@ -38,19 +38,18 @@ public class InvoiceListener {
 
     private static final Logger log = LoggerFactory.getLogger(InvoiceListener.class);
     private final InvoiceDispatcher dispatcher;
-    private final CallContextFactory factory;
+    private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
-    public InvoiceListener(final CallContextFactory factory, final InvoiceDispatcher dispatcher) {
+    public InvoiceListener(final InternalCallContextFactory internalCallContextFactory, final InvoiceDispatcher dispatcher) {
         this.dispatcher = dispatcher;
-        this.factory = factory;
+        this.internalCallContextFactory = internalCallContextFactory;
     }
 
     @Subscribe
     public void handleRepairEntitlementEvent(final RepairEntitlementInternalEvent repairEvent) {
         try {
-            // TODO retrieve tenantId?
-            final CallContext context = factory.createCallContext(null, "RepairBundle", CallOrigin.INTERNAL, UserType.SYSTEM, repairEvent.getUserToken());
+            final InternalCallContext context = internalCallContextFactory.createInternalCallContext(repairEvent.getTenantRecordId(), repairEvent.getAccountRecordId(), "RepairBundle", CallOrigin.INTERNAL, UserType.SYSTEM, repairEvent.getUserToken());
             dispatcher.processAccount(repairEvent.getAccountId(), repairEvent.getEffectiveDate(), false, context);
         } catch (InvoiceApiException e) {
             log.error(e.getMessage());
@@ -67,19 +66,16 @@ public class InvoiceListener {
                 || transition.getRemainingEventsForUserOperation() > 0) {
                 return;
             }
-
-            // TODO retrieve tenantId?
-            final CallContext context = factory.createCallContext(null, "Transition", CallOrigin.INTERNAL, UserType.SYSTEM, transition.getUserToken());
+            final InternalCallContext context = internalCallContextFactory.createInternalCallContext(transition.getTenantRecordId(), transition.getAccountRecordId(), "Transition", CallOrigin.INTERNAL, UserType.SYSTEM, transition.getUserToken());
             dispatcher.processSubscription(transition, context);
         } catch (InvoiceApiException e) {
             log.error(e.getMessage());
         }
     }
 
-    public void handleNextBillingDateEvent(final UUID subscriptionId, final DateTime eventDateTime) {
+    public void handleNextBillingDateEvent(final UUID subscriptionId, final DateTime eventDateTime, final Long accountRecordId, final Long tenantRecordId) {
         try {
-            // TODO retrieve tenantId?
-            final CallContext context = factory.createCallContext(null, "Next Billing Date", CallOrigin.INTERNAL, UserType.SYSTEM);
+            final InternalCallContext context = internalCallContextFactory.createInternalCallContext(tenantRecordId, accountRecordId, "Next Billing Date", CallOrigin.INTERNAL, UserType.SYSTEM, null);
             dispatcher.processSubscription(subscriptionId, eventDateTime, context);
         } catch (InvoiceApiException e) {
             log.error(e.getMessage());

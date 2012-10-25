@@ -143,13 +143,13 @@ public abstract class InvoiceApiTestBase extends InvoicingTestBase {
                                                                    invoiceDao, invoiceNotifier, locker, busService.getBus(),
                                                                    clock, internalCallContextFactory);
 
-        Invoice invoice = dispatcher.processAccount(account.getId(), targetDate, true, callContext);
+        Invoice invoice = dispatcher.processAccount(account.getId(), targetDate, true, internalCallContext);
         Assert.assertNotNull(invoice);
 
         List<Invoice> invoices = invoiceDao.getInvoicesByAccount(account.getId(), internalCallContext);
         Assert.assertEquals(invoices.size(), 0);
 
-        invoice = dispatcher.processAccount(account.getId(), targetDate, false, callContext);
+        invoice = dispatcher.processAccount(account.getId(), targetDate, false, internalCallContext);
         Assert.assertNotNull(invoice);
 
         invoices = invoiceDao.getInvoicesByAccount(account.getId(), internalCallContext);

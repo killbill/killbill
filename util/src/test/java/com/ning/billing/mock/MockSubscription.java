@@ -32,6 +32,7 @@ import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
@@ -212,5 +213,17 @@ public class MockSubscription implements Subscription {
 
     public void setPlan(final Plan plan) {
         this.plan = plan;
+    }
+
+    @Override
+    public SubscriptionTransition getPendingTransition() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public SubscriptionTransition getPreviousTransition() {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

@@ -21,9 +21,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ning.billing.invoice.api.InvoiceApiException;
-import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallOrigin;
-import com.ning.billing.util.callcontext.DefaultCallContext;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.dao.ObjectType;
@@ -39,26 +39,28 @@ public class TagHandler {
 
     private final Clock clock;
     private final InvoiceDispatcher dispatcher;
+    private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
     public TagHandler(final Clock clock,
-            final InvoiceDispatcher dispatcher) {
+            final InvoiceDispatcher dispatcher,
+            final InternalCallContextFactory internalCallContextFactory) {
         this.clock = clock;
         this.dispatcher = dispatcher;
+        this.internalCallContextFactory = internalCallContextFactory;
     }
 
     @Subscribe
     public void process_AUTO_INVOICING_OFF_removal(final ControlTagDeletionInternalEvent event) {
         if (event.getTagDefinition().getName().equals(ControlTagType.AUTO_INVOICING_OFF.toString()) && event.getObjectType() ==  ObjectType.ACCOUNT) {
             final UUID accountId = event.getObjectId();
-            processUnpaid_AUTO_INVOICING_OFF_invoices(accountId, event.getUserToken());
+            final InternalCallContext context = internalCallContextFactory.createInternalCallContext(event.getTenantRecordId(), event.getAccountRecordId(), "InvoiceTagHandler", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
+            processUnpaid_AUTO_INVOICING_OFF_invoices(accountId, context);
         }
     }
 
-    private void processUnpaid_AUTO_INVOICING_OFF_invoices(final UUID accountId, final UUID userToken) {
+    private void processUnpaid_AUTO_INVOICING_OFF_invoices(final UUID accountId, final InternalCallContext context) {
         try {
-            // TODO retrieve tenantId?
-            final CallContext context = new DefaultCallContext(null, "InvoiceTagHandler", CallOrigin.INTERNAL, UserType.SYSTEM, userToken, clock);
             dispatcher.processAccount(accountId, clock.getUTCNow(), false, context);
         } catch (InvoiceApiException e) {
             log.warn(String.format("Failed to process process removal AUTO_INVOICING_OFF for account %s", accountId), e);

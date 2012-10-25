@@ -35,7 +35,7 @@ import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
-import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
+import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 import com.ning.billing.entitlement.engine.addon.AddonUtils;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.events.EntitlementEvent;
@@ -126,7 +126,7 @@ public class SubscriptionDataRepair extends SubscriptionData {
             return;
         }
 
-        final SubscriptionTransitionData pendingTransition = getPendingTransitionData();
+        final SubscriptionTransition pendingTransition = getPendingTransition();
         if (pendingTransition == null) {
             return;
         }

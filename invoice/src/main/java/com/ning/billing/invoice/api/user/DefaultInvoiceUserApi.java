@@ -130,6 +130,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     @Override
     public Invoice triggerInvoiceGeneration(final UUID accountId, final LocalDate targetDate, final boolean dryRun,
                                             final CallContext context) throws InvoiceApiException {
+
         final Account account;
         try {
             account = accountUserApi.getAccountById(accountId, internalCallContextFactory.createInternalTenantContext(context));
@@ -137,8 +138,10 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
             throw new InvoiceApiException(e, ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, e.toString());
         }
 
+        // API_FIX Could we avoid the first call to createInternalTenantContext
+        final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(accountId, context);
         final DateTime processingDateTime = targetDate.toDateTimeAtCurrentTime(account.getTimeZone());
-        final Invoice result = dispatcher.processAccount(accountId, processingDateTime, dryRun, context);
+        final Invoice result = dispatcher.processAccount(accountId, processingDateTime, dryRun, internalContext);
         if (result == null) {
             throw new InvoiceApiException(ErrorCode.INVOICE_NOTHING_TO_DO, accountId, targetDate);
         } else {

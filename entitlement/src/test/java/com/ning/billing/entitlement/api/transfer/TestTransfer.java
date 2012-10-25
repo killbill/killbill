@@ -132,7 +132,7 @@ public class TestTransfer extends TestApiBase {
         // CREATE BP
         final Subscription baseSubscription = createSubscription(baseProduct, baseTerm, basePriceList);
 
-        final DateTime evergreenPhaseDate = ((SubscriptionData) baseSubscription).getPendingTransitionData().getEffectiveTransitionTime();
+        final DateTime evergreenPhaseDate = ((SubscriptionData) baseSubscription).getPendingTransition().getEffectiveTransitionTime();
 
         // MOVE A LITTLE, STILL IN TRIAL
         clock.addDays(20);
@@ -186,7 +186,7 @@ public class TestTransfer extends TestApiBase {
 
         entitlementInternalApi.setChargedThroughDate(baseSubscription.getId(), ctd.toLocalDate(), internalCallContext);
 
-        final DateTime evergreenPhaseDate = ((SubscriptionData) baseSubscription).getPendingTransitionData().getEffectiveTransitionTime();
+        final DateTime evergreenPhaseDate = ((SubscriptionData) baseSubscription).getPendingTransition().getEffectiveTransitionTime();
 
         // MOVE A LITTLE, STILL IN TRIAL
         clock.addDays(20);
@@ -344,8 +344,8 @@ public class TestTransfer extends TestApiBase {
         assertEquals(newPlan.getProduct().getName(), newBaseProduct1);
         assertEquals(newBaseSubscriptionWithCtd.getCurrentPhase().getPhaseType(), PhaseType.EVERGREEN);
 
-        assertNotNull(((SubscriptionData) newBaseSubscriptionWithCtd).getPendingTransitionData());
-        assertEquals(((SubscriptionData) newBaseSubscriptionWithCtd).getPendingTransitionData().getEffectiveTransitionTime(), newCtd);
+        assertNotNull(((SubscriptionData) newBaseSubscriptionWithCtd).getPendingTransition());
+        assertEquals(((SubscriptionData) newBaseSubscriptionWithCtd).getPendingTransition().getEffectiveTransitionTime(), newCtd);
     }
 
     @Test(groups = "slow")
@@ -403,15 +403,15 @@ public class TestTransfer extends TestApiBase {
             if (curProduct.getName().equals(baseProduct)) {
                 foundBP = true;
                 assertTrue(((SubscriptionData) cur).getAlignStartDate().compareTo(((SubscriptionData) baseSubscription).getAlignStartDate()) == 0);
-                assertNull(((SubscriptionData) cur).getPendingTransitionData());
+                assertNull(((SubscriptionData) cur).getPendingTransition());
             } else if (curProduct.getName().equals(aoProduct1)) {
                 foundAO1 = true;
                 assertTrue(((SubscriptionData) cur).getAlignStartDate().compareTo((aoSubscription1).getAlignStartDate()) == 0);
-                assertNull(((SubscriptionData) cur).getPendingTransitionData());
+                assertNull(((SubscriptionData) cur).getPendingTransition());
             } else if (curProduct.getName().equals(aoProduct2)) {
                 foundAO2 = true;
                 assertTrue(((SubscriptionData) cur).getAlignStartDate().compareTo((aoSubscription2).getAlignStartDate()) == 0);
-                assertNotNull(((SubscriptionData) cur).getPendingTransitionData());
+                assertNotNull(((SubscriptionData) cur).getPendingTransition());
             } else {
                 Assert.fail("Unexpected product " + curProduct.getName());
             }

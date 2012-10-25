@@ -361,7 +361,7 @@ public class TestUserApiAddOn extends TestApiBase {
             assertEquals(aoSubscription.getBundleStartDate(), baseSubscription.getBundleStartDate());
 
             // CHECK next AO PHASE EVENT IS INDEED A MONTH AFTER BP STARTED => BUNDLE ALIGNMENT
-            SubscriptionTransitionData aoPendingTranstion = aoSubscription.getPendingTransitionData();
+            SubscriptionTransition aoPendingTranstion = aoSubscription.getPendingTransition();
             if (expAlignement == PlanAlignmentCreate.START_OF_BUNDLE) {
                 assertEquals(aoPendingTranstion.getEffectiveTransitionTime(), baseSubscription.getStartDate().plusMonths(1));
             } else {
@@ -392,7 +392,7 @@ public class TestUserApiAddOn extends TestApiBase {
             assertEquals(aoCurrentPhase.getPhaseType(), PhaseType.EVERGREEN);
 
             aoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId(), callContext);
-            aoPendingTranstion = aoSubscription.getPendingTransitionData();
+            aoPendingTranstion = aoSubscription.getPendingTransition();
             assertNull(aoPendingTranstion);
         } catch (EntitlementUserApiException e) {
             Assert.fail(e.getMessage());

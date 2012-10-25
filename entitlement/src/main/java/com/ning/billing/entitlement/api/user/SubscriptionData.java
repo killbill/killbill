@@ -114,8 +114,8 @@ public class SubscriptionData extends EntityBase implements Subscription {
 
     @Override
     public SubscriptionState getState() {
-        return (getPreviousTransitionData()  == null) ? null
-                : getPreviousTransitionData().getNextState();
+        return (getPreviousTransition()  == null) ? null
+                : getPreviousTransition().getNextState();
     }
 
     @Override
@@ -137,26 +137,26 @@ public class SubscriptionData extends EntityBase implements Subscription {
 
     @Override
     public PlanPhase getCurrentPhase() {
-        return (getPreviousTransitionData() == null) ? null
-                : getPreviousTransitionData().getNextPhase();
+        return (getPreviousTransition() == null) ? null
+                : getPreviousTransition().getNextPhase();
     }
 
     @Override
     public Plan getCurrentPlan() {
-        return (getPreviousTransitionData() == null) ? null
-                : getPreviousTransitionData().getNextPlan();
+        return (getPreviousTransition() == null) ? null
+                : getPreviousTransition().getNextPlan();
     }
 
     @Override
     public PriceList getCurrentPriceList() {
-        return (getPreviousTransitionData() == null) ? null :
-            getPreviousTransitionData().getNextPriceList();
+        return (getPreviousTransition() == null) ? null :
+            getPreviousTransition().getNextPriceList();
 
     }
 
     @Override
     public DateTime getEndDate() {
-        final SubscriptionTransitionData latestTransition = getPreviousTransitionData();
+        final SubscriptionTransition latestTransition = getPreviousTransition();
         if (latestTransition.getNextState() == SubscriptionState.CANCELLED) {
             return latestTransition.getEffectiveTransitionTime();
         }
@@ -219,7 +219,8 @@ public class SubscriptionData extends EntityBase implements Subscription {
         throw new UnsupportedOperationException();
     }
 
-    public SubscriptionTransitionData getPendingTransitionData() {
+    @Override
+    public SubscriptionTransition getPendingTransition() {
         if (transitions == null) {
             return null;
         }
@@ -229,12 +230,10 @@ public class SubscriptionData extends EntityBase implements Subscription {
         return it.hasNext() ? it.next() : null;
     }
 
-
-
     @Override
     public String getLastActiveProductName() {
         if (getState() == SubscriptionState.CANCELLED) {
-            final SubscriptionTransitionData data = getPreviousTransitionData();
+            final SubscriptionTransition data = getPreviousTransition();
             return data.getPreviousPlan().getProduct().getName();
         } else {
             return getCurrentPlan().getProduct().getName();
@@ -244,7 +243,7 @@ public class SubscriptionData extends EntityBase implements Subscription {
     @Override
     public String getLastActivePriceListName() {
         if (getState() == SubscriptionState.CANCELLED) {
-            final SubscriptionTransitionData data = getPreviousTransitionData();
+            final SubscriptionTransition data = getPreviousTransition();
             return data.getPreviousPriceList().getName();
         } else {
             return getCurrentPriceList().getName();
@@ -254,7 +253,7 @@ public class SubscriptionData extends EntityBase implements Subscription {
     @Override
     public String getLastActiveCategoryName() {
         if (getState() == SubscriptionState.CANCELLED) {
-            final SubscriptionTransitionData data = getPreviousTransitionData();
+            final SubscriptionTransition data = getPreviousTransition();
             return data.getPreviousPlan().getProduct().getCategory().name();
         } else {
             return getCurrentPlan().getProduct().getCategory().name();
@@ -264,7 +263,7 @@ public class SubscriptionData extends EntityBase implements Subscription {
     @Override
     public Plan getLastActivePlan() {
         if (getState() == SubscriptionState.CANCELLED) {
-            final SubscriptionTransitionData data = getPreviousTransitionData();
+            final SubscriptionTransition data = getPreviousTransition();
             return data.getPreviousPlan();
         } else {
             return getCurrentPlan();
@@ -274,14 +273,15 @@ public class SubscriptionData extends EntityBase implements Subscription {
     @Override
     public String getLastActiveBillingPeriod() {
         if (getState() == SubscriptionState.CANCELLED) {
-            final SubscriptionTransitionData data = getPreviousTransitionData();
+            final SubscriptionTransition data = getPreviousTransition();
             return data.getPreviousPlan().getBillingPeriod().name();
         } else {
             return getCurrentPlan().getBillingPeriod().name();
         }
     }
 
-    protected SubscriptionTransitionData getPreviousTransitionData() {
+    @Override
+    public SubscriptionTransition getPreviousTransition() {
         if (transitions == null) {
             return null;
         }
@@ -581,4 +581,6 @@ public class SubscriptionData extends EntityBase implements Subscription {
             previousPriceList = nextPriceList;
         }
     }
+
+
 }

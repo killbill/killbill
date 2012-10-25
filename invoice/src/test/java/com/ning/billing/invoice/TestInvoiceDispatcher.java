@@ -170,7 +170,7 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
                                                                    invoiceNotifier, locker, busService.getBus(),
                                                                    clock, new InternalCallContextFactory(getMysqlTestingHelper().getDBI(), clock));
 
-        Invoice invoice = dispatcher.processAccount(accountId, target, true, callContext);
+        Invoice invoice = dispatcher.processAccount(accountId, target, true, internalCallContext);
         Assert.assertNotNull(invoice);
 
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(callContext);
@@ -178,14 +178,14 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
         Assert.assertEquals(invoices.size(), 0);
 
         // Try it again to double check
-        invoice = dispatcher.processAccount(accountId, target, true, callContext);
+        invoice = dispatcher.processAccount(accountId, target, true, internalCallContext);
         Assert.assertNotNull(invoice);
 
         invoices = invoiceDao.getInvoicesByAccount(accountId, internalTenantContext);
         Assert.assertEquals(invoices.size(), 0);
 
         // This time no dry run
-        invoice = dispatcher.processAccount(accountId, target, false, callContext);
+        invoice = dispatcher.processAccount(accountId, target, false, internalCallContext);
         Assert.assertNotNull(invoice);
 
         invoices = invoiceDao.getInvoicesByAccount(accountId, internalTenantContext);
@@ -224,7 +224,7 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
                                                                    invoiceNotifier, locker, busService.getBus(),
                                                                    clock, internalCallContextFactory);
 
-        final Invoice invoice = dispatcher.processAccount(account.getId(), new DateTime("2012-07-30T00:00:00.000Z"), false, callContext);
+        final Invoice invoice = dispatcher.processAccount(account.getId(), new DateTime("2012-07-30T00:00:00.000Z"), false, internalCallContext);
         Assert.assertNotNull(invoice);
 
         final List<InvoiceItem> invoiceItems = invoice.getInvoiceItems();
