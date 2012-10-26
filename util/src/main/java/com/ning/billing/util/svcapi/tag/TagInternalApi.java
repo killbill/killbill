@@ -13,8 +13,10 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.util.svcapi.tag;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -23,9 +25,20 @@ import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.tag.Tag;
+import com.ning.billing.util.tag.TagDefinition;
 
 public interface TagInternalApi {
 
+    public List<TagDefinition> getTagDefinitions(InternalTenantContext context);
+
+    /**
+     * Return tags for a given object
+     *
+     * @param objectId   the object id
+     * @param objectType the object type
+     * @param context    call context
+     * @return mapping tag id -> tag
+     */
     public Map<String, Tag> getTags(UUID objectId, ObjectType objectType, InternalTenantContext context);
 
     public void addTag(UUID objectId, ObjectType objectType, UUID tagDefinitionId, InternalCallContext context) throws TagApiException;

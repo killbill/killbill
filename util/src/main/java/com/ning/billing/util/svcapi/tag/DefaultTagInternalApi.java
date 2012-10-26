@@ -15,6 +15,7 @@
  */
 package com.ning.billing.util.svcapi.tag;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -25,15 +26,25 @@ import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.tag.Tag;
+import com.ning.billing.util.tag.TagDefinition;
 import com.ning.billing.util.tag.dao.TagDao;
+import com.ning.billing.util.tag.dao.TagDefinitionDao;
 
 public class DefaultTagInternalApi implements TagInternalApi {
 
     private final TagDao tagDao;
+    private final TagDefinitionDao tagDefinitionDao;
 
     @Inject
-    public DefaultTagInternalApi(final TagDao tagDao) {
+    public DefaultTagInternalApi(final TagDao tagDao,
+                                 final TagDefinitionDao tagDefinitionDao) {
         this.tagDao = tagDao;
+        this.tagDefinitionDao = tagDefinitionDao;
+    }
+
+    @Override
+    public List<TagDefinition> getTagDefinitions(final InternalTenantContext context) {
+        return tagDefinitionDao.getTagDefinitions(context);
     }
 
     @Override

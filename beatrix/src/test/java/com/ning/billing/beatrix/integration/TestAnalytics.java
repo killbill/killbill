@@ -137,6 +137,21 @@ public class TestAnalytics extends TestIntegrationBase {
     }
 
     @Test(groups = "slow")
+    public void testVerifyRefresh() throws Exception {
+        // Create a tag
+        final TagDefinition tagDefinition = tagUserApi.create(UUID.randomUUID().toString().substring(0, 10), UUID.randomUUID().toString(), callContext);
+        tagUserApi.addTag(account.getId(), ObjectType.ACCOUNT, tagDefinition.getId(), callContext);
+
+        // Refresh
+        analyticsUserApi.rebuildAnalyticsForAccount(account, callContext);
+
+        // Check the tag
+        final List<BusinessAccountTag> tagsForAccount = analyticsUserApi.getTagsForAccount(account.getExternalKey(), callContext);
+        Assert.assertEquals(tagsForAccount.size(), 1);
+        Assert.assertEquals(tagsForAccount.get(0).getName(), tagDefinition.getName());
+    }
+
+    @Test(groups = "slow")
     public void testCreateAndCancelSubscription() throws Exception {
 
         // Create a bundle
