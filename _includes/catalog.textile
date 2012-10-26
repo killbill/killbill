@@ -1,0 +1,50 @@
+
+Core system objects:
+<ul>
+<li><span style="font-weight: bold;">Account</span> –
+represents an customer account<br>
+</li>
+<li><span style="font-weight: bold;">Subscription</span> – is
+a relationship between an account and a plan<br>
+</li>
+<li><span style="font-weight: bold;">Subscription Bundle</span>
+– is a set of subscriptions representing associations
+between one account, a single base plan and one or more
+add-on plans.</li>
+</ul>
+Catalog objects<br>
+<ul>
+<li><span style="font-weight: bold;">Product</span><span
+style="font-weight: bold;"></span> – What&nbsp; the
+customer buys </li>
+<ul>
+<li>Laser cutting torch pen<br>
+</li>
+</ul>
+<li><span style="font-weight: bold;">Plan</span><span
+style="font-weight: bold;"></span><span
+style="font-weight: bold;"></span> – How the customer
+paysfor a product<br>
+</li>
+<ul>
+<li>$100 per month, with a 30 day free trial</li>
+</ul>
+<li><span style="font-weight: bold;">Pricelists</span><span
+style="font-weight: bold;"></span><span
+style="font-weight: bold;"></span> – Grouping of plans
+presented to a customer<br>
+</li>
+<ul>
+<li>Discount prices offered to friendly governments e.g. CIA<br>
+</li>
+</ul>
+<li><span style="font-weight: bold;">Rules</span><span
+style="font-weight: bold;"></span><span
+style="font-weight: bold;"></span> – How changes should be
+made<br>
+</li>
+<ul>
+<li>Cancel end-of-term except for Trials</li>
+Cancel end-of-term except for Trials
+</ul>
+</ul>
