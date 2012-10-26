@@ -22,15 +22,16 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import com.ning.billing.beatrix.BeatrixTestSuite;
+import com.ning.billing.lifecycle.KillbillService;
+import com.ning.billing.lifecycle.LifecycleHandlerType;
+import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
+
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
-import com.ning.billing.beatrix.BeatrixTestSuite;
-import com.ning.billing.lifecycle.KillbillService;
-import com.ning.billing.lifecycle.LifecycleHandlerType;
-import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
 
 public class TestLifecycle extends BeatrixTestSuite {
     private static final Logger log = LoggerFactory.getLogger(TestLifecycle.class);
@@ -60,7 +61,11 @@ public class TestLifecycle extends BeatrixTestSuite {
         }
     }
 
-    public static class Service1 extends ServiceBase implements KillbillService {
+    public interface Service1Interface extends KillbillService {
+
+    }
+
+    public static class Service1 extends ServiceBase implements Service1Interface {
         @LifecycleHandlerType(LifecycleLevel.INIT_BUS)
         public void initBus() {
             log.info("Service1 : got INIT_BUS");
@@ -85,7 +90,11 @@ public class TestLifecycle extends BeatrixTestSuite {
         }
     }
 
-    public static class Service2 extends ServiceBase implements KillbillService {
+    public interface Service2Interface extends KillbillService {
+
+    }
+
+    public static class Service2 extends ServiceBase implements Service2Interface {
         @LifecycleHandlerType(LifecycleLevel.LOAD_CATALOG)
         public void loadCatalog() {
             log.info("Service2 : got LOAD_CATALOG");
@@ -162,8 +171,10 @@ public class TestLifecycle extends BeatrixTestSuite {
         @Override
         protected void configure() {
             bind(DefaultLifecycle.class).to(LifecycleNoWarn.class).asEagerSingleton();
+            bind(Service1Interface.class).to(Service1.class);
             bind(Service1.class).asEagerSingleton();
             bind(Service2.class).asEagerSingleton();
+            bind(Service2Interface.class).to(Service2.class);
         }
     }
 }
