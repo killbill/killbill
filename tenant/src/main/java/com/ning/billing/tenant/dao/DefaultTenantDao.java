@@ -29,10 +29,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ning.billing.tenant.api.Tenant;
-import com.ning.billing.util.svcsapi.bus.InternalBus;
+import com.ning.billing.tenant.api.TenantKV;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.entity.EntityPersistenceException;
+import com.ning.billing.util.svcsapi.bus.InternalBus;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -44,12 +45,14 @@ public class DefaultTenantDao implements TenantDao {
     private final RandomNumberGenerator rng = new SecureRandomNumberGenerator();
 
     private final TenantSqlDao tenantSqlDao;
+    private final TenantKVSqlDao tenantKVSqlDao;
     private final InternalBus eventBus;
 
     @Inject
     public DefaultTenantDao(final IDBI dbi, final InternalBus eventBus) {
         this.eventBus = eventBus;
         this.tenantSqlDao = dbi.onDemand(TenantSqlDao.class);
+        this.tenantKVSqlDao = dbi.onDemand(TenantKVSqlDao.class);
     }
 
     @Override
@@ -91,5 +94,24 @@ public class DefaultTenantDao implements TenantDao {
     @VisibleForTesting
     AuthenticationInfo getAuthenticationInfoForTenant(final UUID id) {
         return tenantSqlDao.getSecrets(id.toString()).toAuthenticationInfo();
+    }
+
+    @Override
+    public String getTenantValueForKey(final UUID tenantId, final String key) {
+        final TenantKV tenantKV = tenantKVSqlDao.getTenantValueForKey(tenantId.toString(), key);
+        if (tenantKV == null) {
+            return null;
+        }
+        return tenantKV.getValue();
+    }
+
+    @Override
+    public void addTenantKeyValue(final UUID tenantId, final String key, final String value, final InternalCallContext context) {
+        tenantKVSqlDao.insertTenantKeyValue(tenantId.toString(), key, value, context);
+    }
+
+    @Override
+    public void deleteTenantKey(final UUID tenantId, final String key) {
+        tenantKVSqlDao.deleteTenantKey(tenantId.toString(), key);
     }
 }

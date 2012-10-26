@@ -16,10 +16,19 @@
 
 package com.ning.billing.tenant.dao;
 
+import java.util.UUID;
+
 import com.ning.billing.tenant.api.Tenant;
+import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.entity.dao.EntityDao;
 
 public interface TenantDao extends EntityDao<Tenant> {
 
-    public Tenant getTenantByApiKey(String key);
+    public Tenant getTenantByApiKey(final String key);
+
+    public String getTenantValueForKey(final UUID tenantId, final String key);
+
+    public void addTenantKeyValue(final UUID tenantId, final String key, final String value, final InternalCallContext context);
+
+    public void deleteTenantKey(final UUID tenantId, final String key);
 }

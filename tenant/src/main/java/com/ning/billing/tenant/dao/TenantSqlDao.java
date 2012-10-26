@@ -47,4 +47,5 @@ public interface TenantSqlDao extends EntitySqlDao<Tenant>, Transactional<Tenant
     @SqlQuery
     @Mapper(TenantSecretsMapper.class)
     public TenantSecrets getSecrets(@Bind("id") final String id);
+
 }

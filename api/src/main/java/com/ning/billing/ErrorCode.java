@@ -285,6 +285,7 @@ public enum ErrorCode {
     TENANT_DOES_NOT_EXIST_FOR_API_KEY(10003, "Tenant does not exist for api key %s"),
     TENANT_CREATION_FAILED(10004, "Tenant creation failed."),
     TENANT_UPDATE_FAILED(10005, "Tenant update failed."),
+    TENANT_NO_SUCH_KEY(10006, "Tenant %s does not have a key %s"),
 
     __UNKNOWN_ERROR_CODE(-1, "Unknown ErrorCode");
 

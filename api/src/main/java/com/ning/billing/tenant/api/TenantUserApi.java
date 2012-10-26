@@ -22,9 +22,15 @@ import com.ning.billing.util.callcontext.CallContext;
 
 public interface TenantUserApi {
 
-    public Tenant createTenant(TenantData data, CallContext context) throws TenantApiException;
+    public Tenant createTenant(final TenantData data, final CallContext context) throws TenantApiException;
 
-    public Tenant getTenantByApiKey(String key) throws TenantApiException;
+    public Tenant getTenantByApiKey(final String key) throws TenantApiException;
 
-    public Tenant getTenantById(UUID tenantId) throws TenantApiException;
+    public Tenant getTenantById(final UUID tenantId) throws TenantApiException;
+
+    public String getTenantValueForKey(final UUID tenantId, final String key) throws TenantApiException;
+
+    public void addTenantKeyValue(final UUID tenantId, final String key, final String value, final CallContext context) throws TenantApiException;
+
+    public void deleteTenantKey(final UUID tenantId, final String key) throws TenantApiException;
 }

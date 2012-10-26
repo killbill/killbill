@@ -37,7 +37,7 @@ public class TestDefaultTenantDao extends TenantTestSuiteWithEmbeddedDb {
         final DefaultTenantDao tenantDao = new DefaultTenantDao(getMysqlTestingHelper().getDBI(), Mockito.mock(InternalBus.class));
 
         final DefaultTenant tenant = new DefaultTenant(UUID.randomUUID(), null, null, UUID.randomUUID().toString(),
-                                                       UUID.randomUUID().toString(), UUID.randomUUID().toString());
+                UUID.randomUUID().toString(), UUID.randomUUID().toString());
         tenantDao.create(tenant, internalCallContext);
 
         // Verify we can retrieve it
@@ -53,5 +53,21 @@ public class TestDefaultTenantDao extends TenantTestSuiteWithEmbeddedDb {
         // Bad combo
         final AuthenticationToken badToken = new UsernamePasswordToken(tenant.getApiKey(), tenant.getApiSecret() + "T");
         Assert.assertFalse(KillbillCredentialsMatcher.getCredentialsMatcher().doCredentialsMatch(badToken, authenticationInfo));
+    }
+
+    @Test(groups = "slow")
+    public void testTenantKeyValue() throws Exception {
+
+        final DefaultTenantDao tenantDao = new DefaultTenantDao(getMysqlTestingHelper().getDBI(), Mockito.mock(InternalBus.class));
+        final DefaultTenant tenant = new DefaultTenant(UUID.randomUUID(), null, null, UUID.randomUUID().toString(),
+                UUID.randomUUID().toString(), UUID.randomUUID().toString());
+        tenantDao.create(tenant, internalCallContext);
+
+        tenantDao.addTenantKeyValue(tenant.getId(), "TheKey", "TheValue", internalCallContext);
+
+        final String value  = tenantDao.getTenantValueForKey(tenant.getId(), "TheKey");
+        Assert.assertEquals(value, "TheValue");
+
+        tenantDao.deleteTenantKey(tenant.getId(), "TheKey");
     }
 }

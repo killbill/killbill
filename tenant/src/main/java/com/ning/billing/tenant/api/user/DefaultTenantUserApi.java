@@ -26,6 +26,7 @@ import com.ning.billing.tenant.api.TenantData;
 import com.ning.billing.tenant.api.TenantUserApi;
 import com.ning.billing.tenant.dao.TenantDao;
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.entity.EntityPersistenceException;
@@ -49,7 +50,7 @@ public class DefaultTenantUserApi implements TenantUserApi {
 
         try {
             tenantDao.create(tenant, internalCallContextFactory.createInternalCallContext(context));
-        } catch (EntityPersistenceException e) {
+        } catch (final EntityPersistenceException e) {
             throw new TenantApiException(e, ErrorCode.TENANT_CREATION_FAILED);
         }
 
@@ -73,5 +74,38 @@ public class DefaultTenantUserApi implements TenantUserApi {
             throw new TenantApiException(ErrorCode.TENANT_DOES_NOT_EXIST_FOR_ID, id);
         }
         return tenant;
+    }
+
+    @Override
+    public String getTenantValueForKey(final UUID tenantId, final String key)
+            throws TenantApiException {
+        final String value = tenantDao.getTenantValueForKey(tenantId, key);
+        if (value == null) {
+            throw new TenantApiException(ErrorCode.TENANT_NO_SUCH_KEY, tenantId, key);
+        }
+        return value;
+    }
+
+    @Override
+    public void addTenantKeyValue(final UUID tenantId, final String key, final String value, final CallContext context)
+            throws TenantApiException {
+
+        final InternalCallContext internalContext = new InternalCallContext(null, null, context);
+        final Tenant tenant = tenantDao.getById(tenantId, internalContext);
+        if (tenant == null) {
+            throw new TenantApiException(ErrorCode.TENANT_DOES_NOT_EXIST_FOR_ID, tenantId);
+        }
+        tenantDao.addTenantKeyValue(tenantId, key, value, internalContext);
+    }
+
+
+    @Override
+    public void deleteTenantKey(final UUID tenantId, final String key)
+            throws TenantApiException {
+        final Tenant tenant = tenantDao.getById(tenantId, new InternalTenantContext(null, null));
+        if (tenant == null) {
+            throw new TenantApiException(ErrorCode.TENANT_DOES_NOT_EXIST_FOR_ID, tenantId);
+        }
+        tenantDao.deleteTenantKey(tenantId, key);
     }
 }
