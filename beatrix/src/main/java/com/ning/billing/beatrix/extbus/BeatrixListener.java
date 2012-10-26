@@ -22,8 +22,8 @@ import javax.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ning.billing.beatrix.bus.ExtBusEventType;
-import com.ning.billing.beatrix.bus.ExternalBus;
+import com.ning.billing.beatrix.bus.api.ExtBusEventType;
+import com.ning.billing.beatrix.bus.api.ExternalBus;
 import com.ning.billing.beatrix.extbus.dao.ExtBusEventEntry;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.util.Hostname;
@@ -114,7 +114,8 @@ public class BeatrixListener {
             SubscriptionInternalEvent realEventST  = (SubscriptionInternalEvent) event;
             objectType = ObjectType.SUBSCRIPTION;
             objectId = realEventST.getSubscriptionId();
-            if (realEventST.getTransitionType() == SubscriptionTransitionType.CREATE) {
+            if (realEventST.getTransitionType() == SubscriptionTransitionType.CREATE ||
+                    realEventST.getTransitionType() == SubscriptionTransitionType.RE_CREATE) {
                 eventBusType = ExtBusEventType.SUBSCRIPTION_CREATION;
             } else if (realEventST.getTransitionType() == SubscriptionTransitionType.CANCEL) {
                 eventBusType = ExtBusEventType.SUBSCRIPTION_CANCEL;

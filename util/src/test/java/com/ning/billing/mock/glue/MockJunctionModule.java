@@ -59,4 +59,5 @@ public class MockJunctionModule extends AbstractModule implements JunctionModule
     public void installEntitlementUserApi() {
         bind(EntitlementUserApi.class).toInstance(entUserApi);
     }
+
 }

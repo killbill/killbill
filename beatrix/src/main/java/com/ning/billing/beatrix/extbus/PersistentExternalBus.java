@@ -27,8 +27,8 @@ import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ning.billing.beatrix.bus.BusEvent;
-import com.ning.billing.beatrix.bus.ExternalBus;
+import com.ning.billing.beatrix.bus.api.BusEvent;
+import com.ning.billing.beatrix.bus.api.ExternalBus;
 import com.ning.billing.beatrix.extbus.dao.ExtBusEventEntry;
 import com.ning.billing.beatrix.extbus.dao.ExtBusSqlDao;
 import com.ning.billing.util.Hostname;

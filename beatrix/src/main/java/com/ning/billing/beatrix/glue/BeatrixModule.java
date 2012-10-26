@@ -17,7 +17,8 @@
 package com.ning.billing.beatrix.glue;
 
 import com.ning.billing.beatrix.DefaultBeatrixService;
-import com.ning.billing.beatrix.bus.ExternalBus;
+import com.ning.billing.beatrix.bus.api.BeatrixService;
+import com.ning.billing.beatrix.bus.api.ExternalBus;
 import com.ning.billing.beatrix.extbus.BeatrixListener;
 import com.ning.billing.beatrix.extbus.PersistentExternalBus;
 import com.ning.billing.beatrix.lifecycle.DefaultLifecycle;
@@ -30,9 +31,13 @@ public class BeatrixModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(Lifecycle.class).to(DefaultLifecycle.class).asEagerSingleton();
+        installExternalBus();
+    }
+
+    protected void installExternalBus() {
+        bind(BeatrixService.class).to(DefaultBeatrixService.class);
         bind(DefaultBeatrixService.class).asEagerSingleton();
         bind(ExternalBus.class).to(PersistentExternalBus.class).asEagerSingleton();
         bind(BeatrixListener.class).asEagerSingleton();
     }
-
 }

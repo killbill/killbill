@@ -17,23 +17,22 @@ package com.ning.billing.beatrix;
 
 import javax.inject.Inject;
 
-import com.ning.billing.beatrix.bus.ExternalBus;
+import com.ning.billing.beatrix.bus.api.BeatrixService;
+import com.ning.billing.beatrix.bus.api.ExternalBus;
 import com.ning.billing.beatrix.extbus.BeatrixListener;
 import com.ning.billing.beatrix.extbus.PersistentExternalBus;
-import com.ning.billing.lifecycle.KillbillService;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
 import com.ning.billing.util.svcsapi.bus.InternalBus;
 
 
-public class DefaultBeatrixService implements KillbillService {
+public class DefaultBeatrixService implements BeatrixService {
 
     public static final String BEATRIX_SERVICE_NAME = "beatrix-service";
 
     private final BeatrixListener beatrixListener;
     private final InternalBus eventBus;
     private final ExternalBus externalBus;
-
 
     @Inject
     public DefaultBeatrixService(final InternalBus eventBus, final ExternalBus externalBus, final BeatrixListener beatrixListener) {

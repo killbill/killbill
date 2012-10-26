@@ -30,7 +30,7 @@ import com.ning.billing.account.api.AccountService;
 import com.ning.billing.account.glue.DefaultAccountModule;
 import com.ning.billing.analytics.setup.AnalyticsModule;
 import com.ning.billing.beatrix.DefaultBeatrixService;
-import com.ning.billing.beatrix.bus.ExternalBus;
+import com.ning.billing.beatrix.bus.api.ExternalBus;
 import com.ning.billing.beatrix.extbus.BeatrixListener;
 import com.ning.billing.beatrix.extbus.PersistentExternalBus;
 import com.ning.billing.beatrix.integration.overdue.IntegrationTestOverdueModule;

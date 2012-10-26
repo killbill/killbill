@@ -28,6 +28,11 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ning.billing.lifecycle.KillbillService;
+import com.ning.billing.lifecycle.LifecycleHandlerType;
+import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
+import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel.Sequence;
+
 import com.google.common.base.Supplier;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
@@ -35,10 +40,6 @@ import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.ning.billing.lifecycle.KillbillService;
-import com.ning.billing.lifecycle.LifecycleHandlerType;
-import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
-import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel.Sequence;
 
 
 public class DefaultLifecycle implements Lifecycle {
@@ -93,10 +94,10 @@ public class DefaultLifecycle implements Lifecycle {
         final Set<KillbillService> result = new HashSet<KillbillService>();
         final Set<Class<? extends KillbillService>> services = serviceFinder.getServices();
         for (final Class<? extends KillbillService> cur : services) {
-            log.debug("Found service {}", cur.getName());
+            log.info("Found service {}", cur.getName());
             try {
                 final KillbillService instance = injector.getInstance(cur);
-                log.debug("got instance {}", instance.getName());
+                log.info("got instance {}", instance.getName());
                 result.add(instance);
             } catch (Exception e) {
                 logWarn("Failed to inject " + cur.getName(), e);

@@ -217,7 +217,7 @@ public class BlockingSubscription implements Subscription {
 
     @Override
     public SubscriptionTransition getPreviousTransition() {
-        return subscription.getPendingTransition();
+        return subscription.getPreviousTransition();
     }
 
     public Subscription getDelegateSubscription() {

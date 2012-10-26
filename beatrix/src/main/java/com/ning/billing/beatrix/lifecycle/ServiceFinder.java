@@ -147,7 +147,7 @@ public class ServiceFinder {
                     } catch (NoClassDefFoundError e) {
                         continue;
                     }
-                    if (theClass.isInterface()) {
+                    if (!theClass.isInterface()) {
                         continue;
                     }
                     final Class<?>[] classInterfaces = getAllInterfaces(theClass);
