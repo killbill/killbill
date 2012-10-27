@@ -16,6 +16,7 @@
 
 package com.ning.billing.tenant.dao;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.apache.shiro.authc.AuthenticationInfo;
@@ -63,11 +64,18 @@ public class TestDefaultTenantDao extends TenantTestSuiteWithEmbeddedDb {
                 UUID.randomUUID().toString(), UUID.randomUUID().toString());
         tenantDao.create(tenant, internalCallContext);
 
-        tenantDao.addTenantKeyValue(tenant.getId(), "TheKey", "TheValue", internalCallContext);
+        tenantDao.addTenantKeyValue("TheKey", "TheValue", internalCallContext);
 
-        final String value  = tenantDao.getTenantValueForKey(tenant.getId(), "TheKey");
-        Assert.assertEquals(value, "TheValue");
+        List<String> value  = tenantDao.getTenantValueForKey("TheKey", internalCallContext);
+        Assert.assertEquals(value.size(), 1);
+        Assert.assertEquals(value.get(0), "TheValue");
 
-        tenantDao.deleteTenantKey(tenant.getId(), "TheKey");
+        tenantDao.addTenantKeyValue("TheKey", "TheSecondValue", internalCallContext);
+        value  = tenantDao.getTenantValueForKey("TheKey", internalCallContext);
+        Assert.assertEquals(value.size(), 2);
+
+        tenantDao.deleteTenantKey("TheKey", internalCallContext);
+        value = tenantDao.getTenantValueForKey("TheKey", internalCallContext);
+        Assert.assertEquals(value.size(), 0);
     }
 }

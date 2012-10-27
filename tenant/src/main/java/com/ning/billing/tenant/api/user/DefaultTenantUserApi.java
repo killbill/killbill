@@ -16,6 +16,7 @@
 
 package com.ning.billing.tenant.api.user;
 
+import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.ErrorCode;
@@ -29,6 +30,7 @@ import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.entity.EntityPersistenceException;
 
 import com.google.inject.Inject;
@@ -43,6 +45,7 @@ public class DefaultTenantUserApi implements TenantUserApi {
         this.tenantDao = tenantDao;
         this.internalCallContextFactory = internalCallContextFactory;
     }
+
 
     @Override
     public Tenant createTenant(final TenantData data, final CallContext context) throws TenantApiException {
@@ -77,35 +80,39 @@ public class DefaultTenantUserApi implements TenantUserApi {
     }
 
     @Override
-    public String getTenantValueForKey(final UUID tenantId, final String key)
+    public List<String> getTenantValueForKey(final String key, final TenantContext context)
             throws TenantApiException {
-        final String value = tenantDao.getTenantValueForKey(tenantId, key);
-        if (value == null) {
-            throw new TenantApiException(ErrorCode.TENANT_NO_SUCH_KEY, tenantId, key);
-        }
+        final InternalTenantContext internalContext =  internalCallContextFactory.createInternalTenantContext(context);
+        final List<String> value = tenantDao.getTenantValueForKey(key, internalContext);
         return value;
     }
 
     @Override
-    public void addTenantKeyValue(final UUID tenantId, final String key, final String value, final CallContext context)
+    public void addTenantKeyValue(final String key, final String value, final CallContext context)
             throws TenantApiException {
 
-        final InternalCallContext internalContext = new InternalCallContext(null, null, context);
-        final Tenant tenant = tenantDao.getById(tenantId, internalContext);
+        final InternalCallContext internalContext =  internalCallContextFactory.createInternalCallContext(context);
+        // TODO Figure out the exact verification if nay
+        /*
+        final Tenant tenant = tenantDao.getById(context.getTenantId(), internalContext);
         if (tenant == null) {
             throw new TenantApiException(ErrorCode.TENANT_DOES_NOT_EXIST_FOR_ID, tenantId);
         }
-        tenantDao.addTenantKeyValue(tenantId, key, value, internalContext);
+        */
+        tenantDao.addTenantKeyValue(key, value, internalContext);
     }
 
 
     @Override
-    public void deleteTenantKey(final UUID tenantId, final String key)
+    public void deleteTenantKey(final String key, final CallContext context)
             throws TenantApiException {
+        /*
         final Tenant tenant = tenantDao.getById(tenantId, new InternalTenantContext(null, null));
         if (tenant == null) {
             throw new TenantApiException(ErrorCode.TENANT_DOES_NOT_EXIST_FOR_ID, tenantId);
         }
-        tenantDao.deleteTenantKey(tenantId, key);
+        */
+        final InternalCallContext internalContext =  internalCallContextFactory.createInternalCallContext(context);
+        tenantDao.deleteTenantKey(key, internalContext);
     }
 }

@@ -31,7 +31,6 @@ import com.ning.billing.overdue.applicator.OverdueEmailGenerator;
 import com.ning.billing.overdue.applicator.formatters.DefaultOverdueEmailFormatterFactory;
 import com.ning.billing.overdue.applicator.formatters.OverdueEmailFormatterFactory;
 import com.ning.billing.overdue.service.DefaultOverdueService;
-import com.ning.billing.overdue.service.ExtendedOverdueService;
 import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
 
 import com.google.inject.AbstractModule;
@@ -49,7 +48,7 @@ public class DefaultOverdueModule extends AbstractModule implements OverdueModul
 
         final OverdueProperties config = new ConfigurationObjectFactory(System.getProperties()).build(OverdueProperties.class);
         bind(OverdueProperties.class).toInstance(config);
-        bind(ExtendedOverdueService.class).to(DefaultOverdueService.class).asEagerSingleton();
+        //bind(ExtendedOverdueService.class).to(DefaultOverdueService.class).asEagerSingleton();
         bind(OverdueCheckNotifier.class).to(DefaultOverdueCheckNotifier.class).asEagerSingleton();
         bind(OverdueCheckPoster.class).to(DefaultOverdueCheckPoster.class).asEagerSingleton();
     }

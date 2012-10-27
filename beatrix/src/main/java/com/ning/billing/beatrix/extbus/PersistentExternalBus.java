@@ -27,7 +27,7 @@ import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ning.billing.beatrix.bus.api.BusEvent;
+import com.ning.billing.beatrix.bus.api.ExtBusEvent;
 import com.ning.billing.beatrix.bus.api.ExternalBus;
 import com.ning.billing.beatrix.extbus.dao.ExtBusEventEntry;
 import com.ning.billing.beatrix.extbus.dao.ExtBusSqlDao;
@@ -121,7 +121,7 @@ public class PersistentExternalBus extends PersistentQueueBase implements Extern
             // API_FIX How do we get UUID from recordId ?
             final UUID accountId  = null;
             final UUID tenantId  = null;
-            final BusEvent event = new DefaultBusEvent(cur.getExtBusType(), cur.getObjectType(), cur.getObjectId(), accountId, tenantId);
+            final ExtBusEvent event = new DefaultBusEvent(cur.getExtBusType(), cur.getObjectType(), cur.getObjectId(), accountId, tenantId);
             result++;
             // STEPH exception handling is done by GUAVA-- logged a bug Issue-780
             eventBusDelegate.post(event);

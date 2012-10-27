@@ -16,9 +16,11 @@
 
 package com.ning.billing.tenant.api;
 
+import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.TenantContext;
 
 public interface TenantUserApi {
 
@@ -28,9 +30,9 @@ public interface TenantUserApi {
 
     public Tenant getTenantById(final UUID tenantId) throws TenantApiException;
 
-    public String getTenantValueForKey(final UUID tenantId, final String key) throws TenantApiException;
+    public List<String> getTenantValueForKey(final String key, final TenantContext context) throws TenantApiException;
 
-    public void addTenantKeyValue(final UUID tenantId, final String key, final String value, final CallContext context) throws TenantApiException;
+    public void addTenantKeyValue(final String key, final String value, final CallContext context) throws TenantApiException;
 
-    public void deleteTenantKey(final UUID tenantId, final String key) throws TenantApiException;
+    public void deleteTenantKey(final String key, final CallContext context) throws TenantApiException;
 }

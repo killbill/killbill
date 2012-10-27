@@ -13,17 +13,32 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.ning.billing.tenant.api;
+
+package com.ning.billing.jaxrs.json;
+
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+public class TenantKeyJson {
+
+    private final String key;
+    private final List<String> values;
 
 
-public interface TenantKV {
+    @JsonCreator
+    public TenantKeyJson(@JsonProperty("key")  final String key,
+            @JsonProperty("values") final List<String> values) {
+        this.key = key;
+        this.values = values;
+    }
 
-    public String getKey();
+    public String getKey() {
+        return key;
+    }
 
-    public String getValue();
-
-    public enum TenantKey {
-        // Key for push notification callback
-        PUSH_NOTIFICATION_CB
+    public List<String> getValues() {
+        return values;
     }
 }

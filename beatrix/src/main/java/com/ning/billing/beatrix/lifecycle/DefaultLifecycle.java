@@ -99,7 +99,7 @@ public class DefaultLifecycle implements Lifecycle {
                 final KillbillService instance = injector.getInstance(cur);
                 log.info("got instance {}", instance.getName());
                 result.add(instance);
-            } catch (Exception e) {
+            } catch (final Exception e) {
                 logWarn("Failed to inject " + cur.getName(), e);
             }
 
@@ -132,7 +132,7 @@ public class DefaultLifecycle implements Lifecycle {
                 final KillbillService target = cur.getTarget();
                 log.info("Killbill lifecycle calling handler {} for service {}", cur.getMethod().getName(), target.getName());
                 method.invoke(target);
-            } catch (Exception e) {
+            } catch (final Exception e) {
                 logWarn("Killbill lifecycle failed to invoke lifecycle handler", e);
             }
         }
@@ -142,7 +142,7 @@ public class DefaultLifecycle implements Lifecycle {
 
     // Used to disable valid injection failure from unit tests
     protected void logWarn(final String msg, final Exception e) {
-        log.warn(msg, e);
+        log.warn(msg);
     }
 
     private Multimap<LifecycleLevel, LifecycleHandler<? extends KillbillService>> findAllHandlers(final KillbillService service) {

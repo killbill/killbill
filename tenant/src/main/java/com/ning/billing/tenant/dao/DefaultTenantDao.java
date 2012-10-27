@@ -19,6 +19,8 @@ package com.ning.billing.tenant.dao;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.crypto.RandomNumberGenerator;
 import org.apache.shiro.crypto.SecureRandomNumberGenerator;
@@ -36,6 +38,9 @@ import com.ning.billing.util.entity.EntityPersistenceException;
 import com.ning.billing.util.svcsapi.bus.InternalBus;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
 public class DefaultTenantDao implements TenantDao {
@@ -97,21 +102,24 @@ public class DefaultTenantDao implements TenantDao {
     }
 
     @Override
-    public String getTenantValueForKey(final UUID tenantId, final String key) {
-        final TenantKV tenantKV = tenantKVSqlDao.getTenantValueForKey(tenantId.toString(), key);
-        if (tenantKV == null) {
-            return null;
-        }
-        return tenantKV.getValue();
+    public List<String> getTenantValueForKey(final String key, final InternalTenantContext context) {
+        final List<TenantKV> tenantKV = tenantKVSqlDao.getTenantValueForKey(key, context.getTenantRecordId());
+        return ImmutableList.copyOf(Collections2.transform(tenantKV, new Function<TenantKV, String>() {
+            @Override
+            @Nullable
+            public String apply(final @Nullable TenantKV in) {
+                return in.getValue();
+            }
+        }));
     }
 
     @Override
-    public void addTenantKeyValue(final UUID tenantId, final String key, final String value, final InternalCallContext context) {
-        tenantKVSqlDao.insertTenantKeyValue(tenantId.toString(), key, value, context);
+    public void addTenantKeyValue(final String key, final String value, final InternalCallContext context) {
+        tenantKVSqlDao.insertTenantKeyValue(key, value, context.getTenantRecordId(), context);
     }
 
     @Override
-    public void deleteTenantKey(final UUID tenantId, final String key) {
-        tenantKVSqlDao.deleteTenantKey(tenantId.toString(), key);
+    public void deleteTenantKey(final String key, final InternalCallContext context) {
+        tenantKVSqlDao.deleteTenantKey(key, context.getTenantRecordId());
     }
 }

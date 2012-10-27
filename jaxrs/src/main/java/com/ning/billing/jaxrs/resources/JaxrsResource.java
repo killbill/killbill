@@ -25,6 +25,7 @@ public interface JaxrsResource {
     public static final String PREFIX = API_PREFIX + API_VERSION + API_POSTFIX;
 
     public static final String TIMELINE = "timeline";
+    public static final String REGISTER_NOTIFICATION_CALLBACK = "registerNotificationCallback";
 
     /*
      * Metadata Additional headers
@@ -75,6 +76,8 @@ public interface JaxrsResource {
     public static final String QUERY_DELETE_DEFAULT_PM_WITH_AUTO_PAY_OFF = "deleteDefaultPmWithAutoPayOff";
 
     public static final String QUERY_AUDIT = "audit";
+
+    public static final String QUERY_NOTIFICATION_CALLBACK = "cb";
 
     public static final String ACCOUNTS = "accounts";
     public static final String ACCOUNTS_PATH = PREFIX + "/" + ACCOUNTS;

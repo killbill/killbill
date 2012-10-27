@@ -16,8 +16,9 @@
 
 package com.ning.billing.jaxrs;
 
+import static org.testng.Assert.assertNotNull;
+
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.EventListener;
 import java.util.HashMap;
@@ -77,8 +78,6 @@ import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Module;
 
-import static org.testng.Assert.assertNotNull;
-
 public class TestJaxrsBase extends KillbillClient {
 
     protected static final String PLUGIN_NAME = "noop";
@@ -97,7 +96,7 @@ public class TestJaxrsBase extends KillbillClient {
         assertNotNull(url);
         try {
             System.getProperties().load(url.openStream());
-        } catch (IOException e) {
+        } catch (final IOException e) {
             throw new RuntimeException(e);
         }
     }
@@ -202,7 +201,7 @@ public class TestJaxrsBase extends KillbillClient {
     }
 
     @BeforeMethod(groups = "slow")
-    public void cleanupBeforeMethod(final Method method) {
+    public void cleanupBeforeMethod() {
         busHandler.reset();
         clock.reset();
         clock.setDay(new LocalDate(2012, 8, 25));
@@ -264,7 +263,7 @@ public class TestJaxrsBase extends KillbillClient {
     public void tearDown() {
         try {
             server.stop();
-        } catch (Exception ignored) {
+        } catch (final Exception ignored) {
         }
     }
 }

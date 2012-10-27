@@ -70,7 +70,7 @@ public class MysqlTestingHelper {
                 socket = new ServerSocket(0);
                 port = socket.getLocalPort();
                 socket.close();
-            } catch (IOException e) {
+            } catch (final IOException e) {
                 Assert.fail();
             }
         }
@@ -172,7 +172,7 @@ public class MysqlTestingHelper {
                 deleteRecursive(dbDir);
                 log.info("MySQLd stopped");
             }
-        } catch (Exception ex) {
+        } catch (final Exception ex) {
             //fail silently
         }
     }
@@ -231,7 +231,7 @@ public class MysqlTestingHelper {
             final String ddl;
             try {
                 ddl = IOUtils.toString(Resources.getResource("com/ning/billing/" + pack + "/ddl.sql").openStream());
-            } catch (IllegalArgumentException ignored) {
+            } catch (final IllegalArgumentException ignored) {
                 // The test doesn't have this module ddl in the classpath - that's fine
                 continue;
             }
@@ -247,7 +247,7 @@ public class MysqlTestingHelper {
         dbi.withHandle(new HandleCallback<Void>() {
             @Override
             public Void withHandle(final Handle handle) throws Exception {
-                log.debug("Executing DDL script: " + ddl);
+                log.info("Executing DDL script: " + ddl);
                 handle.createScript(ddl).execute();
                 return null;
             }

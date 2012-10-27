@@ -3,7 +3,7 @@ group TenantKVSqlDao;
 
 tenantKVFields(prefix) ::= <<
     <prefix>record_id,
-    <prefix>id,
+    <prefix>tenant_record_id,
     <prefix>t_key,
     <prefix>t_value,
     <prefix>created_date,
@@ -14,7 +14,7 @@ tenantKVFields(prefix) ::= <<
 
 insertTenantKeyValue() ::= <<
    INSERT INTO tenant_kvs (
-        id
+        tenant_record_id
       , t_key
       , t_value
       , created_date
@@ -22,7 +22,7 @@ insertTenantKeyValue() ::= <<
       , updated_date
       , updated_by
     ) VALUES (
-        :id
+        :tenantRecordId
       , :key
       , :value
       , :createdDate
@@ -37,7 +37,7 @@ getTenantValueForKey() ::= <<
     SELECT <tenantKVFields()>
     FROM tenant_kvs
     WHERE
-        id = :id AND t_key = :key
+        tenant_record_id = :tenantRecordId AND t_key = :key
     ;
 >>
 
@@ -45,7 +45,7 @@ getTenantValueForKey() ::= <<
 deleteTenantKey() ::= <<
     DELETE FROM tenant_kvs
     WHERE
-        id = :id AND t_key = :key
+        tenant_record_id = :tenantRecordId AND t_key = :key
     ;
 >>
 

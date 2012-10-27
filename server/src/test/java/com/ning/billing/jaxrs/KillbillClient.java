@@ -16,6 +16,13 @@
 
 package com.ning.billing.jaxrs;
 
+import static com.ning.billing.jaxrs.resources.JaxrsResource.ACCOUNTS;
+import static com.ning.billing.jaxrs.resources.JaxrsResource.BUNDLES;
+import static com.ning.billing.jaxrs.resources.JaxrsResource.QUERY_PAYMENT_METHOD_PLUGIN_INFO;
+import static com.ning.billing.jaxrs.resources.JaxrsResource.SUBSCRIPTIONS;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -76,13 +83,6 @@ import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableMap;
 
-import static com.ning.billing.jaxrs.resources.JaxrsResource.ACCOUNTS;
-import static com.ning.billing.jaxrs.resources.JaxrsResource.BUNDLES;
-import static com.ning.billing.jaxrs.resources.JaxrsResource.QUERY_PAYMENT_METHOD_PLUGIN_INFO;
-import static com.ning.billing.jaxrs.resources.JaxrsResource.SUBSCRIPTIONS;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-
 public abstract class KillbillClient extends ServerTestSuiteWithEmbeddedDB {
 
     protected static final String PLUGIN_NAME = "noop";
@@ -142,10 +142,21 @@ public abstract class KillbillClient extends ServerTestSuiteWithEmbeddedDB {
     // TENANT UTILITIES
     //
 
-    protected void createTenant(final String apiKey, final String apiSecret) throws Exception {
+    protected String createTenant(final String apiKey, final String apiSecret) throws Exception {
         final String baseJson = mapper.writeValueAsString(new TenantJson(null, null, apiKey, apiSecret));
         final Response response = doPost(JaxrsResource.TENANTS_PATH, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
+        return response.getHeader("Location");
+    }
+
+
+    protected String registerCallbackNotificationForTenant(final String callback)  throws Exception {
+        final Map<String, String> queryParams = new HashMap<String, String>();
+        queryParams.put(JaxrsResource.QUERY_NOTIFICATION_CALLBACK, callback);
+        final String uri = JaxrsResource.TENANTS_PATH + "/" + JaxrsResource.REGISTER_NOTIFICATION_CALLBACK ;
+        final Response response = doPost(uri, null, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
+        return response.getHeader("Location");
     }
 
     //
@@ -841,7 +852,7 @@ public abstract class KillbillClient extends ServerTestSuiteWithEmbeddedDB {
                         }
                     });
             response = futureStatus.get(timeoutSec, TimeUnit.SECONDS);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             Assert.fail(e.getMessage());
         }
         Assert.assertNotNull(response);

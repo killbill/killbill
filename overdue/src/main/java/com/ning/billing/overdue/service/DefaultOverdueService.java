@@ -22,21 +22,23 @@ import java.net.URISyntaxException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
 import com.ning.billing.ovedue.notification.OverdueCheckNotifier;
 import com.ning.billing.overdue.OverdueProperties;
+import com.ning.billing.overdue.OverdueService;
 import com.ning.billing.overdue.OverdueUserApi;
 import com.ning.billing.overdue.api.DefaultOverdueUserApi;
 import com.ning.billing.overdue.config.OverdueConfig;
 import com.ning.billing.overdue.listener.OverdueListener;
 import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
-import com.ning.billing.util.svcsapi.bus.InternalBus.EventBusException;
-import com.ning.billing.util.svcsapi.bus.BusService;
 import com.ning.billing.util.config.XMLLoader;
+import com.ning.billing.util.svcsapi.bus.BusService;
+import com.ning.billing.util.svcsapi.bus.InternalBus.EventBusException;
 
-public class DefaultOverdueService implements ExtendedOverdueService {
+import com.google.inject.Inject;
+
+public class DefaultOverdueService implements OverdueService {
     private static final Logger log = LoggerFactory.getLogger(DefaultOverdueService.class);
 
     public static final String OVERDUE_SERVICE_NAME = "overdue-service";
@@ -48,7 +50,7 @@ public class DefaultOverdueService implements ExtendedOverdueService {
     private final OverdueWrapperFactory factory;
 
     private OverdueConfig overdueConfig;
-    private boolean isInitialized;
+    private boolean isConfigLoaded;
 
     @Inject
     public DefaultOverdueService(
@@ -64,6 +66,7 @@ public class DefaultOverdueService implements ExtendedOverdueService {
         this.busService = busService;
         this.listener = listener;
         this.factory = factory;
+        this.isConfigLoaded = false;
     }
 
     @Override
@@ -76,14 +79,14 @@ public class DefaultOverdueService implements ExtendedOverdueService {
         return userApi;
     }
 
-    @Override
+    //@Override
     public OverdueConfig getOverdueConfig() {
         return overdueConfig;
     }
 
-    @LifecycleHandlerType(LifecycleLevel.INIT_SERVICE)
+    @LifecycleHandlerType(LifecycleLevel.LOAD_CATALOG)
     public synchronized void loadConfig() throws ServiceException {
-        if (!isInitialized) {
+        if (!isConfigLoaded) {
             try {
                 final URI u = new URI(properties.getConfigURI());
                 overdueConfig = XMLLoader.getObjectFromUri(u, OverdueConfig.class);
@@ -93,12 +96,12 @@ public class DefaultOverdueService implements ExtendedOverdueService {
                     overdueConfig = new OverdueConfig();
                 }
 
-                isInitialized = true;
-            } catch (URISyntaxException e) {
+                isConfigLoaded = true;
+            } catch (final URISyntaxException e) {
                 overdueConfig = new OverdueConfig();
-            } catch (IllegalArgumentException e) {
+            } catch (final IllegalArgumentException e) {
                 overdueConfig = new OverdueConfig();
-            } catch (Exception e) {
+            } catch (final Exception e) {
                 throw new ServiceException(e);
             }
 
@@ -121,7 +124,7 @@ public class DefaultOverdueService implements ExtendedOverdueService {
     public void registerForBus() {
         try {
             busService.getBus().register(listener);
-        } catch (EventBusException e) {
+        } catch (final EventBusException e) {
             log.error("Problem encountered registering OverdueListener on the Event Bus", e);
         }
     }
@@ -130,7 +133,7 @@ public class DefaultOverdueService implements ExtendedOverdueService {
     public void unregisterForBus() {
         try {
             busService.getBus().unregister(listener);
-        } catch (EventBusException e) {
+        } catch (final EventBusException e) {
             log.error("Problem encountered registering OverdueListener on the Event Bus", e);
         }
     }

@@ -17,9 +17,8 @@ package com.ning.billing.tenant.dao;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.UUID;
+import java.util.List;
 
-import org.joda.time.DateTime;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
@@ -36,33 +35,28 @@ import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 import com.ning.billing.util.dao.MapperBase;
 import com.ning.billing.util.dao.UuidMapper;
-import com.ning.billing.util.entity.dao.EntitySqlDao;
 
 @ExternalizedSqlViaStringTemplate3
 @RegisterMapper({UuidMapper.class, TenantKVMapper.class})
-public interface TenantKVSqlDao extends EntitySqlDao<TenantKV>, Transactional<TenantKVSqlDao> {
+public interface TenantKVSqlDao extends Transactional<TenantKVSqlDao> {
 
     @SqlQuery
-    public TenantKV getTenantValueForKey(@Bind("id") final String tenantId, @Bind("key") final String key);
+    public List<TenantKV> getTenantValueForKey(@Bind("key") final String key, @Bind("tenantRecordId") Long tenantRecordId);
 
     @SqlUpdate
-    public void insertTenantKeyValue(@Bind("id") final String tenantId, @Bind("key") final String key, @Bind("value") final String value,
-            @InternalTenantContextBinder final InternalCallContext context);
+    public void insertTenantKeyValue(@Bind("key") final String key, @Bind("value") final String value, @Bind("tenantRecordId") Long tenantRecordId, @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
-    public void deleteTenantKey(@Bind("id") final String tenantId, @Bind("key") final String key);
+    public void deleteTenantKey(@Bind("key") final String key, @Bind("tenantRecordId") Long tenantRecordId);
 
 
     public class TenantKVMapper extends MapperBase implements ResultSetMapper<TenantKV> {
 
         @Override
         public TenantKV map(final int index, final ResultSet result, final StatementContext context) throws SQLException {
-            final UUID id = getUUID(result, "id");
             final String key = result.getString("t_key");
             final String value = result.getString("t_value");
-            final DateTime createdDate = getDateTime(result, "created_date");
-            final DateTime updatedDate = getDateTime(result, "updated_date");
-            return new DefaultTenantKV(id, key, value, createdDate, updatedDate);
+            return new DefaultTenantKV(key, value);
         }
     }
 }

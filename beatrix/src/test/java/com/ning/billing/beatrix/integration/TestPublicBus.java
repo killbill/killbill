@@ -27,7 +27,7 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.api.TestApiListener.NextEvent;
-import com.ning.billing.beatrix.bus.api.BusEvent;
+import com.ning.billing.beatrix.bus.api.ExtBusEvent;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
@@ -45,7 +45,7 @@ public class TestPublicBus extends TestIntegrationBase {
 
     public class PublicListener {
         @Subscribe
-        public void handleExternalEvents(final BusEvent event) {
+        public void handleExternalEvents(final ExtBusEvent event) {
             log.info("GOT EXT EVENT " + event.toString());
         }
     }

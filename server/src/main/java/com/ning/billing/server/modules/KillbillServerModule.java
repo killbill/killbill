@@ -40,6 +40,9 @@ import com.ning.billing.jaxrs.util.KillbillEventHandler;
 import com.ning.billing.junction.glue.DefaultJunctionModule;
 import com.ning.billing.overdue.glue.DefaultOverdueModule;
 import com.ning.billing.payment.glue.PaymentModule;
+import com.ning.billing.server.DefaultServerService;
+import com.ning.billing.server.ServerService;
+import com.ning.billing.server.notifications.PushNotificationListener;
 import com.ning.billing.tenant.glue.TenantModule;
 import com.ning.billing.util.email.EmailModule;
 import com.ning.billing.util.email.templates.TemplateModule;
@@ -62,6 +65,13 @@ public class KillbillServerModule extends AbstractModule {
         configureDao();
         configureResources();
         installKillbillModules();
+        configurePushNotification();
+    }
+
+
+    protected void configurePushNotification() {
+        bind(ServerService.class).to(DefaultServerService.class).asEagerSingleton();
+        bind(PushNotificationListener.class).asEagerSingleton();
     }
 
 
@@ -69,7 +79,7 @@ public class KillbillServerModule extends AbstractModule {
         // Load mysql driver if needed
         try {
             Class.forName ("com.mysql.jdbc.Driver").newInstance ();
-        } catch (Exception ignore) {
+        } catch (final Exception ignore) {
         }
         bind(IDBI.class).to(DBI.class).asEagerSingleton();
         bind(DBI.class).toProvider(DBIProvider.class).asEagerSingleton();

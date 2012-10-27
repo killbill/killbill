@@ -13,14 +13,10 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+package com.ning.billing.server;
 
-package com.ning.billing.overdue.service;
+import com.ning.billing.lifecycle.KillbillService;
 
-import com.ning.billing.overdue.OverdueService;
-import com.ning.billing.overdue.config.OverdueConfig;
-
-public interface ExtendedOverdueService extends OverdueService {
-
-    public OverdueConfig getOverdueConfig();
+public interface ServerService extends KillbillService {
 
 }

@@ -19,7 +19,7 @@ import java.util.UUID;
 
 import com.ning.billing.util.dao.ObjectType;
 
-public interface BusEvent {
+public interface ExtBusEvent {
 
     public ExtBusEventType getEventType();
 
