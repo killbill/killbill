@@ -29,13 +29,17 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.ning.billing.jaxrs.json.NotificationJson;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.CharStreams;
 
-public class TestTenant extends TestJaxrsBase {
+public class TestPushNotification extends TestJaxrsBase {
 
 
     private CallbackServer callbackServer;
@@ -43,57 +47,59 @@ public class TestTenant extends TestJaxrsBase {
     private final static int SERVER_PORT = 8087;
     private final static String CALLBACK_ENDPPOINT = "/callmeback";
 
+    private volatile boolean callbackCompleted;
+
 
     @BeforeMethod(groups = "slow")
     public void startServer() throws Exception {
-        callbackServer = new CallbackServer(SERVER_PORT, CALLBACK_ENDPPOINT, null);
-        //callbackServer.startServer();
+        callbackServer = new CallbackServer(this, SERVER_PORT, CALLBACK_ENDPPOINT);
+        callbackCompleted = false;
+        callbackServer.startServer();
     }
 
     @AfterMethod(groups = "slow")
     public void stopServer() throws Exception {
-        //callbackServer.stopServer();
+        final boolean success = waitForCallbacksToComplete();
+       callbackServer.stopServer();
+       if (!success) {
+           Assert.fail("Fail to see push notification callbacks after 5 sec");
+       }
+    }
+
+    private boolean waitForCallbacksToComplete() throws InterruptedException {
+
+        long remainingMs = 5000;
+        do {
+            if (callbackCompleted) {
+                break;
+            }
+            Thread.sleep(100);
+            remainingMs -= 100;
+        } while (remainingMs > 0);
+        return (remainingMs > 0);
     }
 
     @Test(groups = "slow")
     public void testTenant() throws Exception {
-
-        /*
-        final String apiKeyTenant = "yoyo";
-        final String apiSecretTenant = "yoyoisf3ommars";
-
-        final String location = createTenant(apiKeyTenant, apiSecretTenant);
-        Assert.assertNotNull(location);
-
-        final String tenantId = extractTenantIdFromLocation(location);
-
-        // Retrieves by Id based on Location returned
-        final Response response = doGetWithUrl(location, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
-*/
-
+        // Register tenant for callback
         registerCallbackNotificationForTenant("http://127.0.0.1:" + SERVER_PORT + CALLBACK_ENDPPOINT);
-
-        // Excellent, now create an account and check that callback is called
+        // Create account to trigger a push notification
         createAccount();
-
     }
 
-    private String extractTenantIdFromLocation(final String location) {
-        final String [] parts = location.split("/");
-        return parts[parts.length - 1];
+    public void setCompleted() {
+        callbackCompleted = true;
     }
 
-
-    public class CallbackServer {
+    public static class CallbackServer {
 
         private final Server server;
         private final String callbackEndpoint;
-        private final String expectedTenantId;
+        private final TestPushNotification test;
 
-        public CallbackServer(final int port, final String callbackEndpoint, final String expectedTenantId) {
+        public CallbackServer(final TestPushNotification test, final int port, final String callbackEndpoint) {
             this.callbackEndpoint =  callbackEndpoint;
-            this.expectedTenantId = expectedTenantId;
+            this.test = test;
             this.server = new Server(port);
         }
 
@@ -101,9 +107,8 @@ public class TestTenant extends TestJaxrsBase {
             final ServletContextHandler context = new ServletContextHandler();
             context.setContextPath("/");
             server.setHandler(context);
-            context.addServlet(new ServletHolder(new CallmebackServlet(server, expectedTenantId, 1)), callbackEndpoint);
+            context.addServlet(new ServletHolder(new CallmebackServlet(test,  1)), callbackEndpoint);
             server.start();
-            server.join();
         }
 
         public void stopServer() throws Exception {
@@ -118,25 +123,29 @@ public class TestTenant extends TestJaxrsBase {
 
         private final static Logger log = LoggerFactory.getLogger(CallmebackServlet.class);
 
-        private final Server server;
-        private final String expectedTenantId;
         private final int expectedNbCalls;
         private final AtomicInteger receivedCalls;
+        private final TestPushNotification test;
+        private final ObjectMapper objectMapper = new ObjectMapper();
 
-        public CallmebackServlet(final Server server, final String expectedTenantId, final int expectedNbCalls) {
-            this.server = server;
-            this.expectedTenantId = expectedTenantId;
+        public CallmebackServlet(final TestPushNotification test, final int expectedNbCalls) {
             this.expectedNbCalls = expectedNbCalls;
+            this.test = test;
             this.receivedCalls = new AtomicInteger(0);
         }
 
         @Override
-        protected void doPost(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException
-        {
-
+        protected void doPost(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
             final int current = receivedCalls.incrementAndGet();
 
             final String body = CharStreams.toString( new InputStreamReader(request.getInputStream(), "UTF-8" ));
+
+            log.info("Got body {}", body);
+
+            final NotificationJson notification =  objectMapper.readValue(body, NotificationJson.class);
+            Assert.assertEquals(notification.getEventType(), "ACCOUNT_CREATION");
+            Assert.assertEquals(notification.getObjectType(), "ACCOUNT");
+            // Not checking the ID returned we we should
 
             log.info("CallmebackServlet received {} calls , current = {}", current, body);
 
@@ -149,12 +158,8 @@ public class TestTenant extends TestJaxrsBase {
 
         private void stopServerWhenComplete(final int current) {
             if (current == expectedNbCalls) {
-                try {
-                    server.stop();
-                    log.info("Callmeback server stopped succesfully");
-                } catch (final Exception e) {
-                    log.warn("Failed to stop jetty Callmeback server");
-                }
+                log.info("Excellent, we are done!");
+                test.setCompleted();
             }
         }
     }
