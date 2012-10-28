@@ -46,7 +46,7 @@ public class DefaultAccountInternalApi implements AccountInternalApi {
     }
 
     @Override
-    public Account getAccountById(UUID accountId, InternalTenantContext context)
+    public Account getAccountById(final UUID accountId, final InternalTenantContext context)
             throws AccountApiException {
         final Account account = accountDao.getById(accountId, context);
         if (account == null) {
@@ -56,25 +56,31 @@ public class DefaultAccountInternalApi implements AccountInternalApi {
     }
 
     @Override
-    public void updateAccount(String externalKey, AccountData accountData,
-            InternalCallContext context) throws AccountApiException {
+    public Account getAccountByRecordId(final Long recordId,
+            final InternalTenantContext context) throws AccountApiException {
+        return accountDao.getByRecordId(recordId, context);
+    }
+
+    @Override
+    public void updateAccount(final String externalKey, final AccountData accountData,
+            final InternalCallContext context) throws AccountApiException {
         final Account account = getAccountByKey(externalKey, context);
         try {
             final Account updatedAccount = new DefaultAccount(account.getId(), accountData);
             accountDao.update(updatedAccount,context);
-        } catch (EntityPersistenceException e) {
+        } catch (final EntityPersistenceException e) {
             throw new AccountApiException(e, ErrorCode.ACCOUNT_UPDATE_FAILED);
         }
     }
 
     @Override
-    public List<AccountEmail> getEmails(UUID accountId,
-            InternalTenantContext context)  {
+    public List<AccountEmail> getEmails(final UUID accountId,
+            final InternalTenantContext context)  {
         return accountEmailDao.getEmails(accountId, context);
     }
 
     @Override
-    public Account getAccountByKey(String key, InternalTenantContext context)
+    public Account getAccountByKey(final String key, final InternalTenantContext context)
             throws AccountApiException {
         final Account account = accountDao.getAccountByKey(key, context);
         if (account == null) {
@@ -84,17 +90,17 @@ public class DefaultAccountInternalApi implements AccountInternalApi {
     }
 
     @Override
-    public void removePaymentMethod(UUID accountId, InternalCallContext context)
+    public void removePaymentMethod(final UUID accountId, final InternalCallContext context)
             throws AccountApiException {
         updatePaymentMethod(accountId, null, context);
     }
 
     @Override
-    public void updatePaymentMethod(UUID accountId, UUID paymentMethodId,
-            InternalCallContext context) throws AccountApiException {
+    public void updatePaymentMethod(final UUID accountId, final UUID paymentMethodId,
+            final InternalCallContext context) throws AccountApiException {
         try {
             accountDao.updatePaymentMethod(accountId, paymentMethodId, context);
-        } catch (EntityPersistenceException e) {
+        } catch (final EntityPersistenceException e) {
             throw new AccountApiException(e, e.getCode(), e.getMessage());
         }
     }

@@ -27,6 +27,8 @@ import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.beatrix.bus.api.ExtBusEvent;
 import com.ning.billing.beatrix.bus.api.ExternalBus;
 import com.ning.billing.beatrix.extbus.dao.ExtBusEventEntry;
@@ -40,6 +42,7 @@ import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.queue.PersistentQueueBase;
+import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcsapi.bus.InternalBus.EventBusException;
 
 import com.google.common.eventbus.EventBus;
@@ -58,6 +61,7 @@ public class PersistentExternalBus extends PersistentQueueBase implements Extern
     private final Clock clock;
     private final String hostname;
     private final InternalCallContextFactory internalCallContextFactory;
+    private final AccountInternalApi accountApi;
 
     private static final class EventBusDelegate extends EventBus {
 
@@ -67,7 +71,7 @@ public class PersistentExternalBus extends PersistentQueueBase implements Extern
     }
 
     @Inject
-    public PersistentExternalBus(final IDBI dbi, final Clock clock, final PersistentBusConfig config, final InternalCallContextFactory internalCallContextFactory) {
+    public PersistentExternalBus(final AccountInternalApi accountApi, final IDBI dbi, final Clock clock, final PersistentBusConfig config, final InternalCallContextFactory internalCallContextFactory) {
         super("Bus", Executors.newFixedThreadPool(config.getNbThreads(), new ThreadFactory() {
             @Override
             public Thread newThread(final Runnable r) {
@@ -81,6 +85,7 @@ public class PersistentExternalBus extends PersistentQueueBase implements Extern
         this.eventBusDelegate = new EventBusDelegate("Killbill EventBus");
         this.hostname = Hostname.get();
         this.internalCallContextFactory = internalCallContextFactory;
+        this.accountApi = accountApi;
     }
 
     public void start() {
@@ -103,11 +108,8 @@ public class PersistentExternalBus extends PersistentQueueBase implements Extern
 
         int result = 0;
         for (final ExtBusEventEntry cur : events) {
-
-            // API_FIX How do we get UUID from recordId ?
-            final UUID accountId  = null;
-            final UUID tenantId  = null;
-            final ExtBusEvent event = new DefaultBusEvent(cur.getExtBusType(), cur.getObjectType(), cur.getObjectId(), accountId, tenantId);
+            final UUID accountId = getAccountIdFromRecordId(cur.getAccountRecordId(), context);
+            final ExtBusEvent event = new DefaultBusEvent(cur.getExtBusType(), cur.getObjectType(), cur.getObjectId(), accountId, null);
             result++;
             // STEPH exception handling is done by GUAVA-- logged a bug Issue-780
             eventBusDelegate.post(event);
@@ -115,6 +117,16 @@ public class PersistentExternalBus extends PersistentQueueBase implements Extern
             dao.clearBusExtEvent(cur.getId(), hostname, rehydratedContext);
         }
         return result;
+    }
+
+    private final UUID getAccountIdFromRecordId(final Long recordId, final InternalCallContext context) {
+        try {
+            final Account account = accountApi.getAccountByRecordId(recordId, context);
+            return account.getId();
+        } catch (final AccountApiException e) {
+            log.warn("Failed to retrieve acount from recordId {}", recordId);
+            return null;
+        }
     }
 
     private List<ExtBusEventEntry> getNextBusEvent(final InternalCallContext context) {

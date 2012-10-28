@@ -55,7 +55,7 @@ public class MockAccountDao implements AccountDao {
 
         try {
             eventBus.post(new DefaultAccountCreationEvent(account, null, 1L, 1L), context);
-        } catch (EventBusException ex) {
+        } catch (final EventBusException ex) {
             throw new RuntimeException(ex);
         }
     }
@@ -98,7 +98,7 @@ public class MockAccountDao implements AccountDao {
         if (changeEvent.hasChanges()) {
             try {
                 eventBus.post(changeEvent, context);
-            } catch (EventBusException ex) {
+            } catch (final EventBusException ex) {
                 throw new RuntimeException(ex);
             }
         }
@@ -106,5 +106,10 @@ public class MockAccountDao implements AccountDao {
 
     @Override
     public void updatePaymentMethod(final UUID accountId, final UUID paymentMethodId, final InternalCallContext context) throws EntityPersistenceException {
+    }
+
+    @Override
+    public Account getByRecordId(final Long recordId, final InternalTenantContext context) {
+        return null;
     }
 }

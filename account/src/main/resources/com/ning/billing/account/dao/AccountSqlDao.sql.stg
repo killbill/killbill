@@ -98,6 +98,12 @@ getRecordId() ::= <<
     WHERE id = :id <AND_CHECK_TENANT()>;
 >>
 
+getByRecordId() ::= <<
+    SELECT <accountFields()>
+    FROM accounts
+    WHERE record_id = :recordId <AND_CHECK_TENANT()>;
+>>
+
 getHistoryRecordId() ::= <<
     SELECT MAX(history_record_id)
     FROM account_history

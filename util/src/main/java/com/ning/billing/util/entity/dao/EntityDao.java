@@ -30,6 +30,8 @@ public interface EntityDao<T extends Entity> {
 
     public Long getRecordId(UUID id, InternalTenantContext context);
 
+    public T getByRecordId(Long recordId, InternalTenantContext context);
+
     public T getById(UUID id, InternalTenantContext context);
 
     public List<T> get(InternalTenantContext context);

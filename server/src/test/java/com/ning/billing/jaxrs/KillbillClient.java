@@ -163,6 +163,18 @@ public abstract class KillbillClient extends ServerTestSuiteWithEmbeddedDB {
     // ACCOUNT UTILITIES
     //
 
+    protected AccountJson getAccountById(final String id) throws Exception {
+        final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + id;
+        final Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+
+        final String baseJson = response.getResponseBody();
+        final AccountJson objFromJson = mapper.readValue(baseJson, AccountJson.class);
+        Assert.assertNotNull(objFromJson);
+
+        return objFromJson;
+    }
+
     protected AccountJson getAccountByExternalKey(final String externalKey) throws Exception {
         final Response response = getAccountByExternalKeyNoValidation(externalKey);
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());

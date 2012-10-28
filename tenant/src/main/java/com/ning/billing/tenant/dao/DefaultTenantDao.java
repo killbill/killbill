@@ -122,4 +122,9 @@ public class DefaultTenantDao implements TenantDao {
     public void deleteTenantKey(final String key, final InternalCallContext context) {
         tenantKVSqlDao.deleteTenantKey(key, context.getTenantRecordId());
     }
+
+    @Override
+    public Tenant getByRecordId(final Long recordId, final InternalTenantContext context) {
+        throw new UnsupportedOperationException();
+    }
 }

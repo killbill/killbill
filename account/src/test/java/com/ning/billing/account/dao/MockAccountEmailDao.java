@@ -94,4 +94,10 @@ public class MockAccountEmailDao implements AccountEmailDao {
     @Override
     public void test(final InternalTenantContext context) {
     }
+
+    @Override
+    public AccountEmail getByRecordId(final Long recordId,
+            final InternalTenantContext context) {
+        return null;
+    }
 }

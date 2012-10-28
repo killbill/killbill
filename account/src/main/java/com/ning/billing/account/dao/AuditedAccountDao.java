@@ -80,6 +80,12 @@ public class AuditedAccountDao implements AccountDao {
     }
 
     @Override
+    public Account getByRecordId(final Long recordId, final InternalTenantContext context) {
+        return accountSqlDao.getByRecordId(recordId, context);
+    }
+
+
+    @Override
     public List<Account> get(final InternalTenantContext context) {
         return accountSqlDao.get(context);
     }
@@ -122,13 +128,13 @@ public class AuditedAccountDao implements AccountDao {
                             context.getTenantRecordId());
                     try {
                         eventBus.postFromTransaction(creationEvent, transactionalDao, rehydratedContext);
-                    } catch (EventBusException e) {
+                    } catch (final EventBusException e) {
                         log.warn("Failed to post account creation event for account " + account.getId(), e);
                     }
                     return null;
                 }
             });
-        } catch (RuntimeException re) {
+        } catch (final RuntimeException re) {
             if (re.getCause() instanceof EntityPersistenceException) {
                 throw (EntityPersistenceException) re.getCause();
             } else if (re.getCause() instanceof DataTruncation) {
@@ -173,14 +179,14 @@ public class AuditedAccountDao implements AccountDao {
                     if (changeEvent.hasChanges()) {
                         try {
                             eventBus.postFromTransaction(changeEvent, transactional, context);
-                        } catch (EventBusException e) {
+                        } catch (final EventBusException e) {
                             log.warn("Failed to post account change event for account " + accountId, e);
                         }
                     }
                     return null;
                 }
             });
-        } catch (RuntimeException re) {
+        } catch (final RuntimeException re) {
             if (re.getCause() instanceof EntityPersistenceException) {
                 throw (EntityPersistenceException) re.getCause();
             } else {
@@ -224,14 +230,14 @@ public class AuditedAccountDao implements AccountDao {
                     if (changeEvent.hasChanges()) {
                         try {
                             eventBus.postFromTransaction(changeEvent, transactional, context);
-                        } catch (EventBusException e) {
+                        } catch (final EventBusException e) {
                             log.warn("Failed to post account change event for account " + accountId, e);
                         }
                     }
                     return null;
                 }
             });
-        } catch (RuntimeException re) {
+        } catch (final RuntimeException re) {
             if (re.getCause() instanceof EntityPersistenceException) {
                 throw (EntityPersistenceException) re.getCause();
             } else {

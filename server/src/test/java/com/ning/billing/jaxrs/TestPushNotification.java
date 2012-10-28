@@ -48,22 +48,20 @@ public class TestPushNotification extends TestJaxrsBase {
     private final static String CALLBACK_ENDPPOINT = "/callmeback";
 
     private volatile boolean callbackCompleted;
+    private volatile boolean callbackCompletedWithError;
 
 
     @BeforeMethod(groups = "slow")
     public void startServer() throws Exception {
         callbackServer = new CallbackServer(this, SERVER_PORT, CALLBACK_ENDPPOINT);
         callbackCompleted = false;
+        callbackCompletedWithError = false;
         callbackServer.startServer();
     }
 
     @AfterMethod(groups = "slow")
     public void stopServer() throws Exception {
-        final boolean success = waitForCallbacksToComplete();
-       callbackServer.stopServer();
-       if (!success) {
-           Assert.fail("Fail to see push notification callbacks after 5 sec");
-       }
+        callbackServer.stopServer();
     }
 
     private boolean waitForCallbacksToComplete() throws InterruptedException {
@@ -79,16 +77,35 @@ public class TestPushNotification extends TestJaxrsBase {
         return (remainingMs > 0);
     }
 
+    public void retrieveAccountWithAsserts(final String accountId) {
+        try {
+            // Just check we can retrieve the account with the id from the callback
+            /* final AccountJson account = */ getAccountById(accountId);
+        } catch(final Exception e) {
+            Assert.fail(e.getMessage());
+        }
+    }
+
     @Test(groups = "slow")
-    public void testTenant() throws Exception {
+    public void testPushNotification() throws Exception {
         // Register tenant for callback
         registerCallbackNotificationForTenant("http://127.0.0.1:" + SERVER_PORT + CALLBACK_ENDPPOINT);
         // Create account to trigger a push notification
         createAccount();
+
+        final boolean success = waitForCallbacksToComplete();
+        if (!success) {
+            Assert.fail("Fail to see push notification callbacks after 5 sec");
+        }
+
+        if (callbackCompletedWithError) {
+            Assert.fail("Assertion during callback failed...");
+        }
     }
 
-    public void setCompleted() {
+    public void setCompleted(final boolean withError) {
         callbackCompleted = true;
+        callbackCompletedWithError = withError;
     }
 
     public static class CallbackServer {
@@ -128,10 +145,13 @@ public class TestPushNotification extends TestJaxrsBase {
         private final TestPushNotification test;
         private final ObjectMapper objectMapper = new ObjectMapper();
 
+        private boolean withError;
+
         public CallmebackServlet(final TestPushNotification test, final int expectedNbCalls) {
             this.expectedNbCalls = expectedNbCalls;
             this.test = test;
             this.receivedCalls = new AtomicInteger(0);
+            this.withError = false;
         }
 
         @Override
@@ -140,26 +160,33 @@ public class TestPushNotification extends TestJaxrsBase {
 
             final String body = CharStreams.toString( new InputStreamReader(request.getInputStream(), "UTF-8" ));
 
-            log.info("Got body {}", body);
-
-            final NotificationJson notification =  objectMapper.readValue(body, NotificationJson.class);
-            Assert.assertEquals(notification.getEventType(), "ACCOUNT_CREATION");
-            Assert.assertEquals(notification.getObjectType(), "ACCOUNT");
-            // Not checking the ID returned we we should
-
-            log.info("CallmebackServlet received {} calls , current = {}", current, body);
-
             response.setContentType("application/json");
             response.setStatus(HttpServletResponse.SC_OK);
 
-            stopServerWhenComplete(current);
+            log.info("Got body {}", body);
+
+            try {
+                final NotificationJson notification =  objectMapper.readValue(body, NotificationJson.class);
+                Assert.assertEquals(notification.getEventType(), "ACCOUNT_CREATION");
+                Assert.assertEquals(notification.getObjectType(), "ACCOUNT");
+                Assert.assertNotNull(notification.getObjectId());
+                Assert.assertNotNull(notification.getAccountId());
+                Assert.assertEquals(notification.getObjectId(), notification.getAccountId());
+
+                test.retrieveAccountWithAsserts(notification.getObjectId());
+            } catch (final AssertionError e) {
+                withError = true;
+            }
+
+            log.info("CallmebackServlet received {} calls , current = {}", current, body);
+            stopServerWhenComplete(current, withError);
         }
 
 
-        private void stopServerWhenComplete(final int current) {
+        private void stopServerWhenComplete(final int current, final boolean withError) {
             if (current == expectedNbCalls) {
                 log.info("Excellent, we are done!");
-                test.setCompleted();
+                test.setCompleted(withError);
             }
         }
     }
