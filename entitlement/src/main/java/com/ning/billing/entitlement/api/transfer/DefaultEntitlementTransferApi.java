@@ -54,7 +54,6 @@ import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
@@ -131,25 +130,18 @@ public class DefaultEntitlementTransferApi implements EntitlementTransferApi {
         return newEvent;
     }
 
-    @VisibleForTesting
-    List<EntitlementEvent> toEvents(final List<ExistingEvent> existingEvents, final SubscriptionData subscription,
+    private List<EntitlementEvent> toEvents(final List<ExistingEvent> existingEvents, final SubscriptionData subscription,
                                             final DateTime transferDate, final CallContext context) throws EntitlementTransferApiException {
+
         try {
             final List<EntitlementEvent> result = new LinkedList<EntitlementEvent>();
 
-            EntitlementEvent event;
+            EntitlementEvent event = null;
             ExistingEvent prevEvent = null;
-            EntitlementEvent prevEntitlementEvent = null;
             boolean firstEvent = true;
             for (ExistingEvent cur : existingEvents) {
                 // Skip all events prior to the transferDate
                 if (cur.getEffectiveDate().isBefore(transferDate)) {
-                    if (prevEvent != null) {
-                        final EntitlementEvent tmpPrevEntitlementEvent = createEvent(firstEvent, prevEvent, subscription, transferDate, context);
-                        if (tmpPrevEntitlementEvent != null) {
-                            prevEntitlementEvent = tmpPrevEntitlementEvent;
-                        }
-                    }
                     prevEvent = cur;
                     continue;
                 }
@@ -176,10 +168,8 @@ public class DefaultEntitlementTransferApi implements EntitlementTransferApi {
                 event = createEvent(firstEvent, prevEvent, subscription, transferDate, context);
                 if (event != null) {
                     result.add(event);
-                } else if (prevEntitlementEvent != null) {
-                    // No event at all so far, use the last non-null entitlement event we were able to build
-                    result.add(prevEntitlementEvent);
                 }
+                prevEvent = null;
             }
 
             return result;
