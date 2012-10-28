@@ -65,6 +65,12 @@ public class AuditedAccountEmailDao extends AuditedCollectionDaoBase<AccountEmai
     }
 
     @Override
+    public AccountEmail getByRecordId(final Long recordId, final InternalTenantContext context) {
+        throw new UnsupportedOperationException();
+    }
+
+
+    @Override
     public List<AccountEmail> get(final InternalTenantContext context) {
         throw new UnsupportedOperationException();
     }

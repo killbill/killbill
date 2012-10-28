@@ -31,6 +31,8 @@ public interface AccountInternalApi {
 
     public Account getAccountById(UUID accountId, InternalTenantContext context) throws AccountApiException;
 
+    public Account getAccountByRecordId(Long recordId, InternalTenantContext context) throws AccountApiException;
+
     public void updateAccount(String key, AccountData accountData, InternalCallContext context) throws AccountApiException;
 
     public List<AccountEmail> getEmails(UUID accountId, InternalTenantContext context);
