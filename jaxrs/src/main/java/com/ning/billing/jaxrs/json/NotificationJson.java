@@ -44,7 +44,8 @@ public class NotificationJson {
 
 
     public NotificationJson(final ExtBusEvent event) {
-        this(event.getEventType().toString(), event.getAccountId().toString(), event.getObjectType().toString(), event.getObjectId().toString());
+        // API_FIX accountId NULL
+        this(event.getEventType().toString(), null /* event.getAccountId().toString() */, event.getObjectType().toString(), event.getObjectId().toString());
     }
 
 

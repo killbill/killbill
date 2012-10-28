@@ -64,20 +64,6 @@ public class PersistentExternalBus extends PersistentQueueBase implements Extern
         public EventBusDelegate(final String busName) {
             super(busName);
         }
-
-        // STEPH we can't override the method because EventHandler is package private scope
-        // Logged a bug against guava (Issue 981)
-        /*
-        @Override
-        protected void dispatch(Object event, EventHandler wrapper) {
-            try {
-              wrapper.handleEvent(event);
-            } catch (InvocationTargetException e) {
-              logger.log(Level.SEVERE,
-                  "Could not dispatch event: " + event + " to handler " + wrapper, e);
-            }
-          }
-         */
     }
 
     @Inject
@@ -160,7 +146,7 @@ public class PersistentExternalBus extends PersistentQueueBase implements Extern
         eventBusDelegate.unregister(handlerInstance);
     }
 
-    public void post(final ExtBusEventEntry event, InternalCallContext context) throws EventBusException{
+    public void post(final ExtBusEventEntry event, final InternalCallContext context) throws EventBusException{
         dao.insertBusExtEvent(event, context);
     }
 }
