@@ -54,6 +54,7 @@ import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
@@ -119,10 +120,13 @@ public class DefaultEntitlementTransferApi implements EntitlementTransferApi {
                            PhaseEventData.createNextPhaseEvent(currentPhase.getName(), subscription, clock.getUTCNow(), effectiveDate);
                 break;
 
-            // Ignore
+            // Ignore these events except if it's the first event for the new subscription
             case CANCEL:
             case UNCANCEL:
             case MIGRATE_BILLING:
+                if (firstEvent) {
+                    newEvent = new ApiEventTransfer(apiBuilder);
+                }
                 break;
             default:
                 throw new EntitlementError(String.format("Unepxected transitionType %s", existingEvent.getSubscriptionTransitionType()));
@@ -130,8 +134,9 @@ public class DefaultEntitlementTransferApi implements EntitlementTransferApi {
         return newEvent;
     }
 
-    private List<EntitlementEvent> toEvents(final List<ExistingEvent> existingEvents, final SubscriptionData subscription,
-                                            final DateTime transferDate, final CallContext context) throws EntitlementTransferApiException {
+    @VisibleForTesting
+    List<EntitlementEvent> toEvents(final List<ExistingEvent> existingEvents, final SubscriptionData subscription,
+                                    final DateTime transferDate, final CallContext context) throws EntitlementTransferApiException {
 
         try {
             final List<EntitlementEvent> result = new LinkedList<EntitlementEvent>();
