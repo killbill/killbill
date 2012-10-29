@@ -18,7 +18,6 @@ package com.ning.billing.util.audit;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.util.ChangeType;
 
 public interface AuditLog {
 

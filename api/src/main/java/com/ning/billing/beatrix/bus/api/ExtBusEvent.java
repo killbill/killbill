@@ -17,7 +17,7 @@ package com.ning.billing.beatrix.bus.api;
 
 import java.util.UUID;
 
-import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.ObjectType;
 
 public interface ExtBusEvent {
 

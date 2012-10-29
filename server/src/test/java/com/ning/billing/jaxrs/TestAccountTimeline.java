@@ -34,8 +34,8 @@ import com.ning.billing.jaxrs.json.InvoiceJsonSimple;
 import com.ning.billing.jaxrs.json.PaymentJsonSimple;
 import com.ning.billing.jaxrs.json.PaymentJsonWithBundleKeys;
 import com.ning.billing.jaxrs.json.RefundJson;
-import com.ning.billing.util.ChangeType;
 import com.ning.billing.util.api.AuditLevel;
+import com.ning.billing.util.audit.ChangeType;
 
 public class TestAccountTimeline extends TestJaxrsBase {
 

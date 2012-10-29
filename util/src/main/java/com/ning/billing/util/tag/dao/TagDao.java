@@ -18,10 +18,10 @@ package com.ning.billing.util.tag.dao;
 
 import java.util.UUID;
 
+import com.ning.billing.ObjectType;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.dao.AuditedCollectionDao;
-import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.tag.Tag;
 
 public interface TagDao extends AuditedCollectionDao<Tag> {

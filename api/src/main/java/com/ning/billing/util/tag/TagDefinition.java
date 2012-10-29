@@ -18,7 +18,7 @@ package com.ning.billing.util.tag;
 
 import java.util.List;
 
-import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.ObjectType;
 import com.ning.billing.util.entity.Entity;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;

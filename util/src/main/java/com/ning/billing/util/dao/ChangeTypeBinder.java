@@ -27,7 +27,7 @@ import org.skife.jdbi.v2.sqlobject.Binder;
 import org.skife.jdbi.v2.sqlobject.BinderFactory;
 import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
 
-import com.ning.billing.util.ChangeType;
+import com.ning.billing.util.audit.ChangeType;
 
 @BindingAnnotation(ChangeTypeBinder.ChangeTypeBinderFactory.class)
 @Retention(RetentionPolicy.RUNTIME)

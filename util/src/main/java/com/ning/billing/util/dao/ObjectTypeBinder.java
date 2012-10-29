@@ -27,6 +27,8 @@ import org.skife.jdbi.v2.sqlobject.Binder;
 import org.skife.jdbi.v2.sqlobject.BinderFactory;
 import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
 
+import com.ning.billing.ObjectType;
+
 @BindingAnnotation(ObjectTypeBinder.ObjectTypeBinderFactory.class)
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.PARAMETER})

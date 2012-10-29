@@ -20,8 +20,8 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.ObjectType;
 import com.ning.billing.beatrix.bus.api.ExtBusEventType;
-import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.queue.PersistentQueueEntryLifecycle;
 
 public class ExtBusEventEntry implements PersistentQueueEntryLifecycle {

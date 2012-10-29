@@ -27,11 +27,11 @@ import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 
+import com.ning.billing.ObjectType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 import com.ning.billing.util.dao.Mapper;
-import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.dao.ObjectTypeBinder;
 import com.ning.billing.util.dao.RecordIdMapper;
 import com.ning.billing.util.entity.Entity;

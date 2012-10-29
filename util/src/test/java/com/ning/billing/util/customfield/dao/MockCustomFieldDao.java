@@ -23,10 +23,10 @@ import java.util.UUID;
 
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
+import com.ning.billing.ObjectType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.customfield.CustomField;
-import com.ning.billing.util.dao.ObjectType;
 
 public class MockCustomFieldDao implements CustomFieldDao {
 

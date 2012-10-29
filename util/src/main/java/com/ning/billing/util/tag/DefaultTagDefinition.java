@@ -19,7 +19,7 @@ package com.ning.billing.util.tag;
 import java.util.List;
 import java.util.UUID;
 
-import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.ObjectType;
 import com.ning.billing.util.entity.EntityBase;
 
 import com.fasterxml.jackson.annotation.JsonCreator;

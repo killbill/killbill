@@ -38,6 +38,7 @@ import javax.ws.rs.core.UriInfo;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.ObjectType;
 import com.ning.billing.entitlement.api.transfer.EntitlementTransferApi;
 import com.ning.billing.entitlement.api.transfer.EntitlementTransferApiException;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
@@ -56,7 +57,6 @@ import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TenantContext;
-import com.ning.billing.util.dao.ObjectType;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;

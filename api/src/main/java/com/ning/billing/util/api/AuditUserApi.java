@@ -19,6 +19,7 @@ package com.ning.billing.util.api;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.ObjectType;
 import com.ning.billing.entitlement.api.timeline.BundleTimeline;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoicePayment;
@@ -31,7 +32,6 @@ import com.ning.billing.util.audit.AuditLogsForInvoices;
 import com.ning.billing.util.audit.AuditLogsForPayments;
 import com.ning.billing.util.audit.AuditLogsForRefunds;
 import com.ning.billing.util.callcontext.TenantContext;
-import com.ning.billing.util.dao.ObjectType;
 
 public interface AuditUserApi {
 

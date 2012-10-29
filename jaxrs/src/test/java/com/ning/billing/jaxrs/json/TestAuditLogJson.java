@@ -23,8 +23,8 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.jaxrs.JaxrsTestSuite;
-import com.ning.billing.util.ChangeType;
 import com.ning.billing.util.audit.AuditLog;
+import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.audit.DefaultAuditLog;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;

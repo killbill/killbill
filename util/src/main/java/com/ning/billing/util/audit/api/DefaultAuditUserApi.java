@@ -23,6 +23,7 @@ import java.util.UUID;
 
 import javax.inject.Inject;
 
+import com.ning.billing.ObjectType;
 import com.ning.billing.entitlement.api.timeline.BundleTimeline;
 import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline;
 import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline.ExistingEvent;
@@ -47,7 +48,6 @@ import com.ning.billing.util.audit.DefaultAuditLogsForRefunds;
 import com.ning.billing.util.audit.dao.AuditDao;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.TenantContext;
-import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.dao.TableName;
 
 import com.google.common.collect.ImmutableList;

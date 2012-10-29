@@ -25,9 +25,9 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.ning.billing.ObjectType;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.clock.ClockMock;
-import com.ning.billing.util.dao.ObjectType;
 
 public class TestInternalCallContextFactory extends UtilTestSuiteWithEmbeddedDB {
 
