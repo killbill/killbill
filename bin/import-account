@@ -35,6 +35,13 @@ rm -f xa*
 curl $KILLBILL_URL/1.0/kb/export/$1 -H"X-Killbill-CreatedBy: $WHO" | split -p '--'  --
 for i in `ls xa*`; do
     table_name=$(cat $i | head -1 | awk '{print $2}')
-    mv $i $table_name
+    # Put \N for empty columns to set values to NULL, not ''
+    tmp=${table_name}.tmp
+    grep ',,' $table_name > /dev/null
+    while [[ $? = 0 ]]; do
+        cat $table_name | sed s/,,/,\\\\N,/ > $tmp
+        mv $tmp $table_name
+        grep ',,' $table_name > /dev/null
+    done
     mysqlimport --ignore-lines=1 --fields-terminated-by=, --fields-enclosed-by=\" --verbose -u$USERNAME -p$PASSWORD $DATABASE $TMP_DIR/$table_name
 done

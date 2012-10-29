@@ -17,10 +17,10 @@
     <groupId>com.ning.billing</groupId>
     <artifactId>killbill</artifactId>
     <packaging>pom</packaging>
-    <version>0.1.42-SNAPSHOT</version>
+    <version>0.1.43-SNAPSHOT</version>
     <name>killbill</name>
     <description>Library for managing recurring subscriptions and the associated billing</description>
-    <url>http://github.com/ning/killbill</url>
+    <url>http://github.com/killbill/killbill</url>
     <licenses>
         <license>
             <name>Apache License 2.0</name>
@@ -29,9 +29,9 @@
         </license>
     </licenses>
     <scm>
-        <connection>scm:git:git://github.com/ning/killbill.git</connection>
-        <developerConnection>scm:git:git@github.com:ning/killbill.git</developerConnection>
-        <url>http://github.com/ning/killbill/tree/master</url>
+        <connection>scm:git:git://github.com/killbill/killbill.git</connection>
+        <developerConnection>scm:git:git@github.com:killbill/killbill.git</developerConnection>
+        <url>http://github.com/killbill/killbill/tree/master</url>
     </scm>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
