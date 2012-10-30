@@ -35,7 +35,7 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.analytics.dao.BusinessAccountSqlDao;
 import com.ning.billing.analytics.dao.BusinessInvoiceItemSqlDao;
 import com.ning.billing.analytics.dao.BusinessInvoiceSqlDao;
-import com.ning.billing.analytics.model.BusinessAccount;
+import com.ning.billing.analytics.model.BusinessAccountModelDao;
 import com.ning.billing.analytics.model.BusinessInvoice;
 import com.ning.billing.analytics.model.BusinessInvoiceItem;
 import com.ning.billing.catalog.api.CatalogApiException;
@@ -111,7 +111,7 @@ public class BusinessInvoiceDao {
         }
 
         // Update the account record
-        final BusinessAccount bac = businessAccountDao.createBusinessAccountFromAccount(account, context);
+        final BusinessAccountModelDao bac = businessAccountDao.createBusinessAccountFromAccount(account, context);
 
         // Delete and recreate invoice and invoice items in the transaction
         sqlDao.inTransaction(new Transaction<Void, BusinessInvoiceSqlDao>() {

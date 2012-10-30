@@ -39,7 +39,7 @@ import com.ning.billing.analytics.BusinessSubscriptionTransitionDao;
 import com.ning.billing.analytics.BusinessTagDao;
 import com.ning.billing.analytics.api.TimeSeriesData;
 import com.ning.billing.analytics.dao.AnalyticsDao;
-import com.ning.billing.analytics.model.BusinessAccount;
+import com.ning.billing.analytics.model.BusinessAccountModelDao;
 import com.ning.billing.analytics.model.BusinessAccountTag;
 import com.ning.billing.analytics.model.BusinessInvoice;
 import com.ning.billing.analytics.model.BusinessInvoiceItem;
@@ -280,7 +280,7 @@ public class DefaultAnalyticsUserApi implements AnalyticsUserApi {
 
     // Note: the following is not exposed in api yet, as the models need to be extracted first
 
-    public BusinessAccount getAccountByKey(final String accountKey, final TenantContext context) {
+    public BusinessAccountModelDao getAccountByKey(final String accountKey, final TenantContext context) {
         return analyticsDao.getAccountByKey(accountKey, internalCallContextFactory.createInternalTenantContext(context));
     }
 

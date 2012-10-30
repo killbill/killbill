@@ -30,7 +30,7 @@ import org.skife.jdbi.v2.sqlobject.Binder;
 import org.skife.jdbi.v2.sqlobject.BinderFactory;
 import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
 
-import com.ning.billing.analytics.model.BusinessAccount;
+import com.ning.billing.analytics.model.BusinessAccountModelDao;
 
 @BindingAnnotation(BusinessAccountBinder.BacBinderFactory.class)
 @Retention(RetentionPolicy.RUNTIME)
@@ -38,8 +38,8 @@ import com.ning.billing.analytics.model.BusinessAccount;
 public @interface BusinessAccountBinder {
     public static class BacBinderFactory implements BinderFactory {
         public Binder build(final Annotation annotation) {
-            return new Binder<BusinessAccountBinder, BusinessAccount>() {
-                public void bind(final SQLStatement q, final BusinessAccountBinder bind, final BusinessAccount account) {
+            return new Binder<BusinessAccountBinder, BusinessAccountModelDao>() {
+                public void bind(final SQLStatement q, final BusinessAccountBinder bind, final BusinessAccountModelDao account) {
                     final DateTime dateTimeNow = new DateTime(DateTimeZone.UTC);
 
                     if (account.getCreatedDt() != null) {

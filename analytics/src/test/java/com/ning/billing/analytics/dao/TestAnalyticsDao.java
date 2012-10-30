@@ -33,7 +33,7 @@ import com.ning.billing.analytics.AnalyticsTestSuiteWithEmbeddedDB;
 import com.ning.billing.analytics.MockDuration;
 import com.ning.billing.analytics.MockPhase;
 import com.ning.billing.analytics.MockProduct;
-import com.ning.billing.analytics.model.BusinessAccount;
+import com.ning.billing.analytics.model.BusinessAccountModelDao;
 import com.ning.billing.analytics.model.BusinessSubscription;
 import com.ning.billing.analytics.model.BusinessSubscriptionEvent;
 import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
@@ -69,7 +69,7 @@ public class TestAnalyticsDao extends AnalyticsTestSuiteWithEmbeddedDB {
     private BusinessSubscriptionTransitionSqlDao businessSubscriptionTransitionSqlDao;
     private BusinessSubscriptionTransition transition;
     private BusinessAccountSqlDao businessAccountSqlDao;
-    private BusinessAccount account;
+    private BusinessAccountModelDao account;
 
     private final CatalogService catalogService = Mockito.mock(CatalogService.class);
     private final Catalog catalog = Mockito.mock(Catalog.class);
@@ -106,7 +106,7 @@ public class TestAnalyticsDao extends AnalyticsTestSuiteWithEmbeddedDB {
     }
 
     private void setupBusinessAccount() {
-        account = new BusinessAccount(UUID.randomUUID(), ACCOUNT_KEY, UUID.randomUUID().toString(), BigDecimal.ONE, clock.getUTCToday(),
+        account = new BusinessAccountModelDao(UUID.randomUUID(), ACCOUNT_KEY, UUID.randomUUID().toString(), BigDecimal.ONE, clock.getUTCToday(),
                                       BigDecimal.TEN, "ERROR_NOT_ENOUGH_FUNDS", "CreditCard", "Visa", "FRANCE", CURRENCY, clock.getUTCNow(), clock.getUTCNow());
 
         final IDBI dbi = helper.getDBI();
@@ -277,7 +277,7 @@ public class TestAnalyticsDao extends AnalyticsTestSuiteWithEmbeddedDB {
     public void testCreateSaveAndRetrieveAccounts() {
         // Create and retrieve an account
         businessAccountSqlDao.createAccount(account, internalCallContext);
-        final BusinessAccount foundAccount = businessAccountSqlDao.getAccountByKey(ACCOUNT_KEY, internalCallContext);
+        final BusinessAccountModelDao foundAccount = businessAccountSqlDao.getAccountByKey(ACCOUNT_KEY, internalCallContext);
         Assert.assertEquals(foundAccount.getCreatedDt().getMillis(), account.getCreatedDt().getMillis());
         Assert.assertEquals(foundAccount.getUpdatedDt().getMillis(), account.getUpdatedDt().getMillis());
         Assert.assertTrue(foundAccount.equals(account));

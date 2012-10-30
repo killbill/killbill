@@ -19,7 +19,7 @@ package com.ning.billing.analytics.dao;
 import java.util.List;
 
 import com.ning.billing.analytics.api.TimeSeriesData;
-import com.ning.billing.analytics.model.BusinessAccount;
+import com.ning.billing.analytics.model.BusinessAccountModelDao;
 import com.ning.billing.analytics.model.BusinessAccountTag;
 import com.ning.billing.analytics.model.BusinessInvoice;
 import com.ning.billing.analytics.model.BusinessInvoiceItem;
@@ -34,7 +34,7 @@ public interface AnalyticsDao {
 
     TimeSeriesData getSubscriptionsCreatedOverTime(String productType, String slug, InternalTenantContext context);
 
-    BusinessAccount getAccountByKey(String accountKey, InternalTenantContext context);
+    BusinessAccountModelDao getAccountByKey(String accountKey, InternalTenantContext context);
 
     List<BusinessSubscriptionTransition> getTransitionsByKey(String externalKey, InternalTenantContext context);
 

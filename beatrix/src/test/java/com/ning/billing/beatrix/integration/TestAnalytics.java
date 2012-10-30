@@ -34,7 +34,7 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.MutableAccountData;
-import com.ning.billing.analytics.model.BusinessAccount;
+import com.ning.billing.analytics.model.BusinessAccountModelDao;
 import com.ning.billing.analytics.model.BusinessAccountTag;
 import com.ning.billing.analytics.model.BusinessInvoice;
 import com.ning.billing.analytics.model.BusinessInvoiceItem;
@@ -350,7 +350,7 @@ public class TestAnalytics extends TestIntegrationBase {
         waitALittle();
 
         // Verify Analytics got the account creation event
-        final BusinessAccount businessAccount = analyticsUserApi.getAccountByKey(account.getExternalKey(), callContext);
+        final BusinessAccountModelDao businessAccount = analyticsUserApi.getAccountByKey(account.getExternalKey(), callContext);
         Assert.assertNotNull(businessAccount);
         // No balance yet
         Assert.assertEquals(businessAccount.getBalance().doubleValue(), Rounder.round(BigDecimal.ZERO));
@@ -387,7 +387,7 @@ public class TestAnalytics extends TestIntegrationBase {
         waitALittle();
 
         // Verify Analytics got the account update event
-        final BusinessAccount businessAccount = analyticsUserApi.getAccountByKey(mutableAccountData.getExternalKey(), callContext);
+        final BusinessAccountModelDao businessAccount = analyticsUserApi.getAccountByKey(mutableAccountData.getExternalKey(), callContext);
         Assert.assertNotNull(businessAccount);
         // No balance yet
         Assert.assertEquals(businessAccount.getBalance().doubleValue(), Rounder.round(BigDecimal.ZERO));
@@ -452,7 +452,7 @@ public class TestAnalytics extends TestIntegrationBase {
         verifyBSTWithTrialAndEvergreenPhases(account, bundle, subscription);
 
         // Make sure the account balance is still zero
-        final BusinessAccount businessAccount = analyticsUserApi.getAccountByKey(account.getExternalKey(), callContext);
+        final BusinessAccountModelDao businessAccount = analyticsUserApi.getAccountByKey(account.getExternalKey(), callContext);
         Assert.assertEquals(businessAccount.getBalance().doubleValue(), Rounder.round(BigDecimal.ZERO));
         Assert.assertEquals(businessAccount.getTotalInvoiceBalance().doubleValue(), Rounder.round(BigDecimal.ZERO));
 

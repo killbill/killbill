@@ -32,7 +32,7 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.analytics.dao.BusinessAccountSqlDao;
 import com.ning.billing.analytics.dao.BusinessInvoicePaymentSqlDao;
 import com.ning.billing.analytics.dao.BusinessInvoiceSqlDao;
-import com.ning.billing.analytics.model.BusinessAccount;
+import com.ning.billing.analytics.model.BusinessAccountModelDao;
 import com.ning.billing.analytics.model.BusinessInvoicePayment;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
@@ -167,7 +167,7 @@ public class BusinessInvoicePaymentDao {
                 linkedInvoicePaymentId);
 
         // Update the account record
-        final BusinessAccount bac = accountDao.createBusinessAccountFromAccount(account, context);
+        final BusinessAccountModelDao bac = accountDao.createBusinessAccountFromAccount(account, context);
 
         // Make sure to limit the scope of the transaction to avoid InnoDB deadlocks
         invoicePaymentSqlDao.inTransaction(new Transaction<Void, BusinessInvoicePaymentSqlDao>() {

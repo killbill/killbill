@@ -33,11 +33,11 @@ public class TestBusinessAccount extends AnalyticsTestSuite {
 
     private final Clock clock = new DefaultClock();
 
-    private BusinessAccount account;
+    private BusinessAccountModelDao account;
 
     @BeforeMethod(groups = "fast")
     public void setUp() throws Exception {
-        account = new BusinessAccount(UUID.randomUUID(), "pierre", UUID.randomUUID().toString(), BigDecimal.ONE, clock.getUTCToday(),
+        account = new BusinessAccountModelDao(UUID.randomUUID(), "pierre", UUID.randomUUID().toString(), BigDecimal.ONE, clock.getUTCToday(),
                                       BigDecimal.TEN, "ERROR_NOT_ENOUGH_FUNDS", "CreditCard", "Visa", "", UUID.randomUUID().toString(),
                                       clock.getUTCNow(), clock.getUTCNow());
     }
@@ -48,7 +48,7 @@ public class TestBusinessAccount extends AnalyticsTestSuite {
         Assert.assertEquals(account, account);
         Assert.assertTrue(account.equals(account));
 
-        final BusinessAccount otherAccount = new BusinessAccount(UUID.randomUUID(), "pierre cardin", UUID.randomUUID().toString(),
+        final BusinessAccountModelDao otherAccount = new BusinessAccountModelDao(UUID.randomUUID(), "pierre cardin", UUID.randomUUID().toString(),
                                                                  BigDecimal.ONE, clock.getUTCToday(),
                                                                  BigDecimal.TEN, "ERROR_NOT_ENOUGH_FUNDS", "CreditCard", "Visa",
                                                                  "", UUID.randomUUID().toString(), clock.getUTCNow(), clock.getUTCNow());
@@ -58,7 +58,7 @@ public class TestBusinessAccount extends AnalyticsTestSuite {
     @Test(groups = "fast")
     public void testDefaultBigDecimalValues() throws Exception {
         final Account account = Mockito.mock(Account.class);
-        final BusinessAccount bac = new BusinessAccount(account);
+        final BusinessAccountModelDao bac = new BusinessAccountModelDao(account);
         Assert.assertEquals(bac.getBalance(), BigDecimal.ZERO);
         Assert.assertEquals(bac.getTotalInvoiceBalance(), BigDecimal.ZERO);
 

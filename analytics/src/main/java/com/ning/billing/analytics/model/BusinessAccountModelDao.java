@@ -27,7 +27,7 @@ import com.ning.billing.analytics.utils.Rounder;
 
 import com.google.common.base.Objects;
 
-public class BusinessAccount {
+public class BusinessAccountModelDao {
 
     private final UUID accountId;
     private String key;
@@ -43,10 +43,10 @@ public class BusinessAccount {
     private DateTime createdDt;
     private DateTime updatedDt;
 
-    public BusinessAccount(final UUID accountId, final String key, final String name, final BigDecimal balance,
-                           final LocalDate lastInvoiceDate, final BigDecimal totalInvoiceBalance, final String lastPaymentStatus,
-                           final String paymentMethod, final String creditCardType, final String billingAddressCountry,
-                           final String currency, final DateTime createdDt, final DateTime updatedDt) {
+    public BusinessAccountModelDao(final UUID accountId, final String key, final String name, final BigDecimal balance,
+                                   final LocalDate lastInvoiceDate, final BigDecimal totalInvoiceBalance, final String lastPaymentStatus,
+                                   final String paymentMethod, final String creditCardType, final String billingAddressCountry,
+                                   final String currency, final DateTime createdDt, final DateTime updatedDt) {
         this.accountId = accountId;
         this.key = key;
         this.balance = balance;
@@ -62,7 +62,7 @@ public class BusinessAccount {
         this.updatedDt = updatedDt;
     }
 
-    public BusinessAccount(final Account account) {
+    public BusinessAccountModelDao(final Account account) {
         this.accountId = account.getId();
         this.name = account.getName();
         this.key = account.getExternalKey();
@@ -184,7 +184,7 @@ public class BusinessAccount {
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
-        sb.append("BusinessAccount");
+        sb.append("BusinessAccountModelDao");
         sb.append("{balance=").append(balance);
         sb.append(", createdDt=").append(createdDt);
         sb.append(", updatedDt=").append(updatedDt);
@@ -211,7 +211,7 @@ public class BusinessAccount {
             return false;
         }
 
-        final BusinessAccount that = (BusinessAccount) o;
+        final BusinessAccountModelDao that = (BusinessAccountModelDao) o;
 
         if (balance == null ? that.balance != null : balance.compareTo(that.balance) != 0) {
             return false;
