@@ -39,7 +39,7 @@ import com.ning.billing.analytics.model.BusinessAccountTagModelDao;
 import com.ning.billing.analytics.model.BusinessInvoiceItemModelDao;
 import com.ning.billing.analytics.model.BusinessInvoiceModelDao;
 import com.ning.billing.analytics.model.BusinessInvoicePaymentModelDao;
-import com.ning.billing.analytics.model.BusinessOverdueStatus;
+import com.ning.billing.analytics.model.BusinessOverdueStatusModelDao;
 import com.ning.billing.analytics.model.BusinessSubscriptionEvent;
 import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
 import com.ning.billing.analytics.utils.Rounder;
@@ -277,7 +277,7 @@ public class TestAnalytics extends TestIntegrationBase {
         waitALittle();
 
         // Verify overdue status - we should be in OD1
-        final List<BusinessOverdueStatus> od1Bundle = analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey(), callContext);
+        final List<BusinessOverdueStatusModelDao> od1Bundle = analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey(), callContext);
         Assert.assertEquals(od1Bundle.size(), 1);
         Assert.assertEquals(od1Bundle.get(0).getStatus(), "OD1");
         Assert.assertEquals(od1Bundle.get(0).getBundleId(), bundle.getId());
@@ -288,7 +288,7 @@ public class TestAnalytics extends TestIntegrationBase {
         assertTrue(busHandler.isCompleted(DELAY));
         waitALittle();
         // Verify overdue status - we should still be in OD1
-        final List<BusinessOverdueStatus> stillOd1Bundle = analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey(), callContext);
+        final List<BusinessOverdueStatusModelDao> stillOd1Bundle = analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey(), callContext);
         Assert.assertEquals(stillOd1Bundle.size(), 1);
         Assert.assertEquals(stillOd1Bundle.get(0).getStatus(), "OD1");
         Assert.assertEquals(stillOd1Bundle.get(0).getBundleId(), bundle.getId());
@@ -299,7 +299,7 @@ public class TestAnalytics extends TestIntegrationBase {
         assertTrue(busHandler.isCompleted(DELAY));
         waitALittle();
         // Verify overdue status - we should be in OD2
-        final List<BusinessOverdueStatus> od2Bundle = analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey(), callContext);
+        final List<BusinessOverdueStatusModelDao> od2Bundle = analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey(), callContext);
         Assert.assertEquals(od2Bundle.size(), 2);
         Assert.assertEquals(od2Bundle.get(0).getStatus(), "OD1");
         Assert.assertEquals(od2Bundle.get(1).getStatus(), "OD2");
@@ -316,7 +316,7 @@ public class TestAnalytics extends TestIntegrationBase {
         assertTrue(busHandler.isCompleted(DELAY));
         waitALittle();
         // Verify overdue status - we should be in OD3
-        final List<BusinessOverdueStatus> od3Bundle = analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey(), callContext);
+        final List<BusinessOverdueStatusModelDao> od3Bundle = analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey(), callContext);
         Assert.assertEquals(od3Bundle.size(), 3);
         Assert.assertEquals(od3Bundle.get(0).getStatus(), "OD1");
         Assert.assertEquals(od3Bundle.get(1).getStatus(), "OD2");

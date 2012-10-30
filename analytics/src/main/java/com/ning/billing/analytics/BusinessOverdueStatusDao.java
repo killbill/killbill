@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.analytics.dao.BusinessOverdueStatusSqlDao;
-import com.ning.billing.analytics.model.BusinessOverdueStatus;
+import com.ning.billing.analytics.model.BusinessOverdueStatusModelDao;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.api.Blockable;
@@ -103,7 +103,7 @@ public class BusinessOverdueStatusDao {
 
                     DateTime previousStartDate = null;
                     for (final BlockingState state : overdueStatesReversed) {
-                        final BusinessOverdueStatus overdueStatus = new BusinessOverdueStatus(accountKey, bundleId, previousStartDate,
+                        final BusinessOverdueStatusModelDao overdueStatus = new BusinessOverdueStatusModelDao(accountKey, bundleId, previousStartDate,
                                                                                               externalKey, state.getTimestamp(), state.getStateName());
                         log.info("Adding overdue state {}", overdueStatus);
                         overdueStatusSqlDao.createOverdueStatus(overdueStatus, context);

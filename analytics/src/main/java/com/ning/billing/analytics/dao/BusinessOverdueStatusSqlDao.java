@@ -26,7 +26,7 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 
-import com.ning.billing.analytics.model.BusinessOverdueStatus;
+import com.ning.billing.analytics.model.BusinessOverdueStatusModelDao;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.InternalTenantContextBinder;
@@ -36,11 +36,11 @@ import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 public interface BusinessOverdueStatusSqlDao extends Transactional<BusinessOverdueStatusSqlDao>, Transmogrifier {
 
     @SqlQuery
-    List<BusinessOverdueStatus> getOverdueStatusesForBundleByKey(@Bind("external_key") final String externalKey,
+    List<BusinessOverdueStatusModelDao> getOverdueStatusesForBundleByKey(@Bind("external_key") final String externalKey,
                                                                  @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlUpdate
-    int createOverdueStatus(@BusinessOverdueStatusBinder final BusinessOverdueStatus status,
+    int createOverdueStatus(@BusinessOverdueStatusBinder final BusinessOverdueStatusModelDao status,
                             @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate

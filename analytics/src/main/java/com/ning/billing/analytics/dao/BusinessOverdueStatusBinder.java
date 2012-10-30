@@ -28,7 +28,7 @@ import org.skife.jdbi.v2.sqlobject.Binder;
 import org.skife.jdbi.v2.sqlobject.BinderFactory;
 import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
 
-import com.ning.billing.analytics.model.BusinessOverdueStatus;
+import com.ning.billing.analytics.model.BusinessOverdueStatusModelDao;
 
 @BindingAnnotation(BusinessOverdueStatusBinder.BosBinderFactory.class)
 @Retention(RetentionPolicy.RUNTIME)
@@ -36,8 +36,8 @@ import com.ning.billing.analytics.model.BusinessOverdueStatus;
 public @interface BusinessOverdueStatusBinder {
     public static class BosBinderFactory implements BinderFactory {
         public Binder build(final Annotation annotation) {
-            return new Binder<BusinessOverdueStatusBinder, BusinessOverdueStatus>() {
-                public void bind(final SQLStatement q, final BusinessOverdueStatusBinder bind, final BusinessOverdueStatus overdueStatus) {
+            return new Binder<BusinessOverdueStatusBinder, BusinessOverdueStatusModelDao>() {
+                public void bind(final SQLStatement q, final BusinessOverdueStatusBinder bind, final BusinessOverdueStatusModelDao overdueStatus) {
                     q.bind("account_key", overdueStatus.getAccountKey());
                     q.bind("bundle_id", overdueStatus.getBundleId().toString());
                     q.bind("external_key", overdueStatus.getExternalKey());
