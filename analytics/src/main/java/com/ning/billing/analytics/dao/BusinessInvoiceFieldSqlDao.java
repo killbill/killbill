@@ -24,7 +24,7 @@ import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 
-import com.ning.billing.analytics.model.BusinessInvoiceField;
+import com.ning.billing.analytics.model.BusinessInvoiceFieldModelDao;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.InternalTenantContextBinder;
@@ -34,7 +34,7 @@ import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 public interface BusinessInvoiceFieldSqlDao {
 
     @SqlQuery
-    List<BusinessInvoiceField> getFieldsForInvoice(@Bind("invoice_id") final String invoiceId,
+    List<BusinessInvoiceFieldModelDao> getFieldsForInvoice(@Bind("invoice_id") final String invoiceId,
                                                    @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlUpdate

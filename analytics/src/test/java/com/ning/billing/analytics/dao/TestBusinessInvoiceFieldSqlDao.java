@@ -25,7 +25,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.analytics.AnalyticsTestSuiteWithEmbeddedDB;
-import com.ning.billing.analytics.model.BusinessInvoiceField;
+import com.ning.billing.analytics.model.BusinessInvoiceFieldModelDao;
 
 public class TestBusinessInvoiceFieldSqlDao extends AnalyticsTestSuiteWithEmbeddedDB {
     private BusinessInvoiceFieldSqlDao invoiceFieldSqlDao;
@@ -48,11 +48,11 @@ public class TestBusinessInvoiceFieldSqlDao extends AnalyticsTestSuiteWithEmbedd
 
         // Add an entry
         Assert.assertEquals(invoiceFieldSqlDao.addField(invoiceId, name, value, internalCallContext), 1);
-        final List<BusinessInvoiceField> fieldsForInvoice = invoiceFieldSqlDao.getFieldsForInvoice(invoiceId, internalCallContext);
+        final List<BusinessInvoiceFieldModelDao> fieldsForInvoice = invoiceFieldSqlDao.getFieldsForInvoice(invoiceId, internalCallContext);
         Assert.assertEquals(fieldsForInvoice.size(), 1);
 
         // Retrieve it
-        final BusinessInvoiceField invoiceField = fieldsForInvoice.get(0);
+        final BusinessInvoiceFieldModelDao invoiceField = fieldsForInvoice.get(0);
         Assert.assertEquals(invoiceField.getInvoiceId().toString(), invoiceId);
         Assert.assertEquals(invoiceField.getName(), name);
         Assert.assertEquals(invoiceField.getValue(), value);

@@ -18,10 +18,10 @@ package com.ning.billing.analytics.model;
 
 import java.util.UUID;
 
-public class BusinessInvoiceField extends BusinessFieldModelDao {
+public class BusinessInvoiceFieldModelDao extends BusinessFieldModelDao {
     private final UUID invoiceId;
 
-    public BusinessInvoiceField(final UUID invoiceId, final String name, final String value) {
+    public BusinessInvoiceFieldModelDao(final UUID invoiceId, final String name, final String value) {
         super(name, value);
         this.invoiceId = invoiceId;
     }
@@ -33,7 +33,7 @@ public class BusinessInvoiceField extends BusinessFieldModelDao {
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
-        sb.append("BusinessInvoiceField");
+        sb.append("BusinessInvoiceFieldModelDao");
         sb.append("{invoiceId='").append(invoiceId).append('\'');
         sb.append(", name='").append(getName()).append('\'');
         sb.append(", value='").append(getValue()).append('\'');
@@ -50,7 +50,7 @@ public class BusinessInvoiceField extends BusinessFieldModelDao {
             return false;
         }
 
-        final BusinessInvoiceField that = (BusinessInvoiceField) o;
+        final BusinessInvoiceFieldModelDao that = (BusinessInvoiceFieldModelDao) o;
 
         if (invoiceId != null ? !invoiceId.equals(that.invoiceId) : that.invoiceId != null) {
             return false;
