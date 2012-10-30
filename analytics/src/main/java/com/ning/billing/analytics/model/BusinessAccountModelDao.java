@@ -167,8 +167,8 @@ public class BusinessAccountModelDao extends EntityBase {
         final StringBuilder sb = new StringBuilder();
         sb.append("BusinessAccountModelDao");
         sb.append("{balance=").append(balance);
-        sb.append(", createdDt=").append(getCreatedDate());
-        sb.append(", updatedDt=").append(getUpdatedDate());
+        sb.append(", createdDate=").append(createdDate);
+        sb.append(", updatedDate=").append(updatedDate);
         sb.append(", accountId='").append(accountId).append('\'');
         sb.append(", key='").append(key).append('\'');
         sb.append(", name='").append(name).append('\'');
@@ -200,7 +200,7 @@ public class BusinessAccountModelDao extends EntityBase {
         if (billingAddressCountry != null ? !billingAddressCountry.equals(that.billingAddressCountry) : that.billingAddressCountry != null) {
             return false;
         }
-        if (getCreatedDate() != null ? !getCreatedDate().equals(that.getCreatedDate()) : that.getCreatedDate() != null) {
+        if (createdDate != null ? !createdDate.equals(that.createdDate) : that.createdDate != null) {
             return false;
         }
         if (creditCardType != null ? !creditCardType.equals(that.creditCardType) : that.creditCardType != null) {
@@ -230,7 +230,7 @@ public class BusinessAccountModelDao extends EntityBase {
         if (totalInvoiceBalance == null ? that.totalInvoiceBalance != null : totalInvoiceBalance.compareTo(that.totalInvoiceBalance) != 0) {
             return false;
         }
-        if (getUpdatedDate() != null ? getUpdatedDate().compareTo(that.getUpdatedDate()) != 0 : that.getUpdatedDate() != null) {
+        if (updatedDate != null ? updatedDate.compareTo(that.updatedDate) != 0 : that.updatedDate != null) {
             return false;
         }
 
@@ -239,8 +239,8 @@ public class BusinessAccountModelDao extends EntityBase {
 
     @Override
     public int hashCode() {
-        int result = getCreatedDate() != null ? getCreatedDate().hashCode() : 0;
-        result = 31 * result + (getUpdatedDate() != null ? getUpdatedDate().hashCode() : 0);
+        int result = createdDate != null ? createdDate.hashCode() : 0;
+        result = 31 * result + (updatedDate != null ? updatedDate.hashCode() : 0);
         result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
         result = 31 * result + (key != null ? key.hashCode() : 0);
         result = 31 * result + (name != null ? name.hashCode() : 0);
