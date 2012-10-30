@@ -29,7 +29,7 @@ public class TestBusinessInvoicePaymentField extends AnalyticsTestSuite {
         final UUID paymentId = UUID.randomUUID();
         final String name = UUID.randomUUID().toString();
         final String value = UUID.randomUUID().toString();
-        final BusinessInvoicePaymentField invoiceField = new BusinessInvoicePaymentField(paymentId,
+        final BusinessInvoicePaymentFieldModelDao invoiceField = new BusinessInvoicePaymentFieldModelDao(paymentId,
                                                                                          name,
                                                                                          value);
         Assert.assertSame(invoiceField, invoiceField);
@@ -39,7 +39,7 @@ public class TestBusinessInvoicePaymentField extends AnalyticsTestSuite {
         Assert.assertEquals(invoiceField.getName(), name);
         Assert.assertEquals(invoiceField.getValue(), value);
 
-        final BusinessInvoicePaymentField otherInvoicePaymentField = new BusinessInvoicePaymentField(UUID.randomUUID(),
+        final BusinessInvoicePaymentFieldModelDao otherInvoicePaymentField = new BusinessInvoicePaymentFieldModelDao(UUID.randomUUID(),
                                                                                                      UUID.randomUUID().toString(),
                                                                                                      UUID.randomUUID().toString());
         Assert.assertFalse(invoiceField.equals(otherInvoicePaymentField));
