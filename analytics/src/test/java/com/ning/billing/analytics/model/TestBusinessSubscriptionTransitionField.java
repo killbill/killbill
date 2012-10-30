@@ -31,7 +31,7 @@ public class TestBusinessSubscriptionTransitionField extends AnalyticsTestSuite 
         final String externalKey = UUID.randomUUID().toString();
         final String name = UUID.randomUUID().toString();
         final String value = UUID.randomUUID().toString();
-        final BusinessSubscriptionTransitionField subscriptionTransitionField = new BusinessSubscriptionTransitionField(accountKey,
+        final BusinessSubscriptionTransitionFieldModelDao subscriptionTransitionField = new BusinessSubscriptionTransitionFieldModelDao(accountKey,
                                                                                                                         bundleId,
                                                                                                                         externalKey,
                                                                                                                         name,
@@ -45,7 +45,7 @@ public class TestBusinessSubscriptionTransitionField extends AnalyticsTestSuite 
         Assert.assertEquals(subscriptionTransitionField.getName(), name);
         Assert.assertEquals(subscriptionTransitionField.getValue(), value);
 
-        final BusinessSubscriptionTransitionField otherSubscriptionField = new BusinessSubscriptionTransitionField(UUID.randomUUID().toString(),
+        final BusinessSubscriptionTransitionFieldModelDao otherSubscriptionField = new BusinessSubscriptionTransitionFieldModelDao(UUID.randomUUID().toString(),
                                                                                                                    UUID.randomUUID(),
                                                                                                                    UUID.randomUUID().toString(),
                                                                                                                    UUID.randomUUID().toString(),

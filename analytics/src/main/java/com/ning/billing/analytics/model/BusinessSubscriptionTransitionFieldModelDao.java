@@ -18,13 +18,13 @@ package com.ning.billing.analytics.model;
 
 import java.util.UUID;
 
-public class BusinessSubscriptionTransitionField extends BusinessFieldModelDao {
+public class BusinessSubscriptionTransitionFieldModelDao extends BusinessFieldModelDao {
     private final String accountKey;
     private final UUID bundleId;
     private final String externalKey;
 
-    public BusinessSubscriptionTransitionField(final String accountKey, final UUID bundleId, final String externalKey,
-                                               final String name, final String value) {
+    public BusinessSubscriptionTransitionFieldModelDao(final String accountKey, final UUID bundleId, final String externalKey,
+                                                       final String name, final String value) {
         super(name, value);
         this.accountKey = accountKey;
         this.bundleId = bundleId;
@@ -46,7 +46,7 @@ public class BusinessSubscriptionTransitionField extends BusinessFieldModelDao {
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
-        sb.append("BusinessSubscriptionTransitionField");
+        sb.append("BusinessSubscriptionTransitionFieldModelDao");
         sb.append("{accountKey='").append(accountKey).append('\'');
         sb.append(", bundleId='").append(bundleId).append('\'');
         sb.append(", externalKey='").append(externalKey).append('\'');
@@ -65,7 +65,7 @@ public class BusinessSubscriptionTransitionField extends BusinessFieldModelDao {
             return false;
         }
 
-        final BusinessSubscriptionTransitionField that = (BusinessSubscriptionTransitionField) o;
+        final BusinessSubscriptionTransitionFieldModelDao that = (BusinessSubscriptionTransitionFieldModelDao) o;
 
         if (accountKey != null ? !accountKey.equals(that.accountKey) : that.accountKey != null) {
             return false;
