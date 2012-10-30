@@ -40,7 +40,7 @@ import com.ning.billing.analytics.BusinessTagDao;
 import com.ning.billing.analytics.api.TimeSeriesData;
 import com.ning.billing.analytics.dao.AnalyticsDao;
 import com.ning.billing.analytics.model.BusinessAccountModelDao;
-import com.ning.billing.analytics.model.BusinessAccountTag;
+import com.ning.billing.analytics.model.BusinessAccountTagModelDao;
 import com.ning.billing.analytics.model.BusinessInvoice;
 import com.ning.billing.analytics.model.BusinessInvoiceItem;
 import com.ning.billing.analytics.model.BusinessInvoicePayment;
@@ -256,9 +256,9 @@ public class DefaultAnalyticsUserApi implements AnalyticsUserApi {
 
         // Find the current state of tags in analytics
         final Collection<String> analyticsTags = Collections2.transform(analyticsDao.getTagsForAccount(account.getExternalKey(), internalCallContext),
-                                                                        new Function<BusinessAccountTag, String>() {
+                                                                        new Function<BusinessAccountTagModelDao, String>() {
                                                                             @Override
-                                                                            public String apply(@Nullable final BusinessAccountTag input) {
+                                                                            public String apply(@Nullable final BusinessAccountTagModelDao input) {
                                                                                 if (input == null) {
                                                                                     return null;
                                                                                 } else {
@@ -292,7 +292,7 @@ public class DefaultAnalyticsUserApi implements AnalyticsUserApi {
         return analyticsDao.getInvoicesByKey(accountKey, internalCallContextFactory.createInternalTenantContext(context));
     }
 
-    public List<BusinessAccountTag> getTagsForAccount(final String accountKey, final TenantContext context) {
+    public List<BusinessAccountTagModelDao> getTagsForAccount(final String accountKey, final TenantContext context) {
         return analyticsDao.getTagsForAccount(accountKey, internalCallContextFactory.createInternalTenantContext(context));
     }
 

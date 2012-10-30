@@ -23,7 +23,7 @@ import javax.inject.Inject;
 import com.ning.billing.analytics.api.DefaultTimeSeriesData;
 import com.ning.billing.analytics.api.TimeSeriesData;
 import com.ning.billing.analytics.model.BusinessAccountModelDao;
-import com.ning.billing.analytics.model.BusinessAccountTag;
+import com.ning.billing.analytics.model.BusinessAccountTagModelDao;
 import com.ning.billing.analytics.model.BusinessInvoice;
 import com.ning.billing.analytics.model.BusinessInvoiceItem;
 import com.ning.billing.analytics.model.BusinessInvoicePayment;
@@ -89,7 +89,7 @@ public class DefaultAnalyticsDao implements AnalyticsDao {
     }
 
     @Override
-    public List<BusinessAccountTag> getTagsForAccount(final String accountKey, final InternalTenantContext context) {
+    public List<BusinessAccountTagModelDao> getTagsForAccount(final String accountKey, final InternalTenantContext context) {
         return accountTagSqlDao.getTagsForAccountByKey(accountKey, context);
     }
 

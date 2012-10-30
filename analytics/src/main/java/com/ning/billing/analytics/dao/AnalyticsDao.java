@@ -20,7 +20,7 @@ import java.util.List;
 
 import com.ning.billing.analytics.api.TimeSeriesData;
 import com.ning.billing.analytics.model.BusinessAccountModelDao;
-import com.ning.billing.analytics.model.BusinessAccountTag;
+import com.ning.billing.analytics.model.BusinessAccountTagModelDao;
 import com.ning.billing.analytics.model.BusinessInvoice;
 import com.ning.billing.analytics.model.BusinessInvoiceItem;
 import com.ning.billing.analytics.model.BusinessInvoicePayment;
@@ -42,7 +42,7 @@ public interface AnalyticsDao {
 
     List<BusinessInvoice> getInvoicesByKey(String accountKey, InternalTenantContext context);
 
-    List<BusinessAccountTag> getTagsForAccount(String accountKey, InternalTenantContext context);
+    List<BusinessAccountTagModelDao> getTagsForAccount(String accountKey, InternalTenantContext context);
 
     List<BusinessInvoiceItem> getInvoiceItemsForInvoice(String invoiceId, InternalTenantContext context);
 

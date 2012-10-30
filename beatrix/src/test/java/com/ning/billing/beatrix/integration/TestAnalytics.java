@@ -35,7 +35,7 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.MutableAccountData;
 import com.ning.billing.analytics.model.BusinessAccountModelDao;
-import com.ning.billing.analytics.model.BusinessAccountTag;
+import com.ning.billing.analytics.model.BusinessAccountTagModelDao;
 import com.ning.billing.analytics.model.BusinessInvoice;
 import com.ning.billing.analytics.model.BusinessInvoiceItem;
 import com.ning.billing.analytics.model.BusinessInvoicePayment;
@@ -146,7 +146,7 @@ public class TestAnalytics extends TestIntegrationBase {
         analyticsUserApi.rebuildAnalyticsForAccount(account, callContext);
 
         // Check the tag
-        final List<BusinessAccountTag> tagsForAccount = analyticsUserApi.getTagsForAccount(account.getExternalKey(), callContext);
+        final List<BusinessAccountTagModelDao> tagsForAccount = analyticsUserApi.getTagsForAccount(account.getExternalKey(), callContext);
         Assert.assertEquals(tagsForAccount.size(), 1);
         Assert.assertEquals(tagsForAccount.get(0).getName(), tagDefinition.getName());
     }
@@ -416,7 +416,7 @@ public class TestAnalytics extends TestIntegrationBase {
 
         waitALittle();
 
-        final List<BusinessAccountTag> tagsForAccount = analyticsUserApi.getTagsForAccount(account.getExternalKey(), callContext);
+        final List<BusinessAccountTagModelDao> tagsForAccount = analyticsUserApi.getTagsForAccount(account.getExternalKey(), callContext);
         Assert.assertEquals(tagsForAccount.size(), 1);
         Assert.assertEquals(tagsForAccount.get(0).getName(), tagDefinition.getName());
     }

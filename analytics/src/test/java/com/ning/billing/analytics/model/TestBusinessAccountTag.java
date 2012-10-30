@@ -29,7 +29,7 @@ public class TestBusinessAccountTag extends AnalyticsTestSuite {
         final UUID accountId = UUID.randomUUID();
         final String accountKey = UUID.randomUUID().toString();
         final String name = UUID.randomUUID().toString();
-        final BusinessAccountTag accountTag = new BusinessAccountTag(accountId, accountKey, name);
+        final BusinessAccountTagModelDao accountTag = new BusinessAccountTagModelDao(accountId, accountKey, name);
         Assert.assertSame(accountTag, accountTag);
         Assert.assertEquals(accountTag, accountTag);
         Assert.assertTrue(accountTag.equals(accountTag));
@@ -37,7 +37,7 @@ public class TestBusinessAccountTag extends AnalyticsTestSuite {
         Assert.assertEquals(accountTag.getAccountKey(), accountKey);
         Assert.assertEquals(accountTag.getName(), name);
 
-        final BusinessAccountTag otherAccountTag = new BusinessAccountTag(UUID.randomUUID(), UUID.randomUUID().toString(), UUID.randomUUID().toString());
+        final BusinessAccountTagModelDao otherAccountTag = new BusinessAccountTagModelDao(UUID.randomUUID(), UUID.randomUUID().toString(), UUID.randomUUID().toString());
         Assert.assertFalse(accountTag.equals(otherAccountTag));
     }
 }
