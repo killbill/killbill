@@ -16,11 +16,11 @@
 
 package com.ning.billing.analytics.model;
 
-public abstract class BusinessField {
+public abstract class BusinessFieldModelDao {
     private final String name;
     private final String value;
 
-    public BusinessField(final String name, final String value) {
+    public BusinessFieldModelDao(final String name, final String value) {
         this.name = name;
         this.value = value;
     }

@@ -18,7 +18,7 @@ package com.ning.billing.analytics.model;
 
 import java.util.UUID;
 
-public class BusinessSubscriptionTransitionField extends BusinessField {
+public class BusinessSubscriptionTransitionField extends BusinessFieldModelDao {
     private final String accountKey;
     private final UUID bundleId;
     private final String externalKey;
