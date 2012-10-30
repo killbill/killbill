@@ -34,7 +34,9 @@ import com.ning.billing.analytics.model.BusinessOverdueStatusModelDao;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.PARAMETER})
 public @interface BusinessOverdueStatusBinder {
+
     public static class BosBinderFactory implements BinderFactory {
+
         public Binder build(final Annotation annotation) {
             return new Binder<BusinessOverdueStatusBinder, BusinessOverdueStatusModelDao>() {
                 public void bind(final SQLStatement q, final BusinessOverdueStatusBinder bind, final BusinessOverdueStatusModelDao overdueStatus) {

@@ -37,15 +37,15 @@ public interface BusinessInvoiceItemSqlDao extends Transactional<BusinessInvoice
 
     @SqlQuery
     BusinessInvoiceItemModelDao getInvoiceItem(@Bind("item_id") final String itemId,
-                                       @InternalTenantContextBinder final InternalTenantContext context);
+                                               @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
     List<BusinessInvoiceItemModelDao> getInvoiceItemsForInvoice(@Bind("invoice_id") final String invoiceId,
-                                                        @InternalTenantContextBinder final InternalTenantContext context);
+                                                                @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
     List<BusinessInvoiceItemModelDao> getInvoiceItemsForBundleByKey(@Bind("external_key") final String externalKey,
-                                                            @InternalTenantContextBinder final InternalTenantContext context);
+                                                                    @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlUpdate
     int createInvoiceItem(@BusinessInvoiceItemBinder final BusinessInvoiceItemModelDao invoiceItem,

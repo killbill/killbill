@@ -24,6 +24,7 @@ import org.testng.annotations.Test;
 import com.ning.billing.analytics.AnalyticsTestSuite;
 
 public class TestRounder extends AnalyticsTestSuite {
+
     @Test(groups = "fast")
     public void testRound() throws Exception {
         Assert.assertEquals(Rounder.round(null), 0.0);

@@ -35,7 +35,7 @@ public interface BusinessSubscriptionTransitionTagSqlDao {
 
     @SqlQuery
     List<BusinessSubscriptionTransitionTagModelDao> getTagsForBusinessSubscriptionTransitionByKey(@Bind("external_key") final String externalKey,
-                                                                                          @InternalTenantContextBinder final InternalTenantContext context);
+                                                                                                  @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlUpdate
     int addTag(@Bind("account_key") final String accountKey,

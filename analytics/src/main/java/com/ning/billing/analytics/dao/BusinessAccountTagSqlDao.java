@@ -35,7 +35,7 @@ public interface BusinessAccountTagSqlDao {
 
     @SqlQuery
     List<BusinessAccountTagModelDao> getTagsForAccountByKey(@Bind("account_key") final String accountKey,
-                                                    @InternalTenantContextBinder final InternalTenantContext context);
+                                                            @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlUpdate
     int addTag(@Bind("account_id") final String accountId,

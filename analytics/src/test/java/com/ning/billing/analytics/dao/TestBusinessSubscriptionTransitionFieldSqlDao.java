@@ -28,6 +28,7 @@ import com.ning.billing.analytics.AnalyticsTestSuiteWithEmbeddedDB;
 import com.ning.billing.analytics.model.BusinessSubscriptionTransitionFieldModelDao;
 
 public class TestBusinessSubscriptionTransitionFieldSqlDao extends AnalyticsTestSuiteWithEmbeddedDB {
+
     private BusinessSubscriptionTransitionFieldSqlDao subscriptionTransitionFieldSqlDao;
 
     @BeforeMethod(groups = "slow")

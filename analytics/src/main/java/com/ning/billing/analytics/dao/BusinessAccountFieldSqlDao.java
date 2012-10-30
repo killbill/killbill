@@ -35,7 +35,7 @@ public interface BusinessAccountFieldSqlDao {
 
     @SqlQuery
     List<BusinessAccountFieldModelDao> getFieldsForAccountByKey(@Bind("account_key") final String accountKey,
-                                                        @InternalTenantContextBinder final InternalTenantContext context);
+                                                                @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlUpdate
     int addField(@Bind("account_id") final String accountId,

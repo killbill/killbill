@@ -38,8 +38,8 @@ public class TestBusinessAccount extends AnalyticsTestSuite {
     @BeforeMethod(groups = "fast")
     public void setUp() throws Exception {
         account = new BusinessAccountModelDao(UUID.randomUUID(), "pierre", UUID.randomUUID().toString(), BigDecimal.ONE, clock.getUTCToday(),
-                                      BigDecimal.TEN, "ERROR_NOT_ENOUGH_FUNDS", "CreditCard", "Visa", "", UUID.randomUUID().toString(),
-                                      clock.getUTCNow(), clock.getUTCNow());
+                                              BigDecimal.TEN, "ERROR_NOT_ENOUGH_FUNDS", "CreditCard", "Visa", "", UUID.randomUUID().toString(),
+                                              clock.getUTCNow(), clock.getUTCNow());
     }
 
     @Test(groups = "fast")
@@ -49,9 +49,9 @@ public class TestBusinessAccount extends AnalyticsTestSuite {
         Assert.assertTrue(account.equals(account));
 
         final BusinessAccountModelDao otherAccount = new BusinessAccountModelDao(UUID.randomUUID(), "pierre cardin", UUID.randomUUID().toString(),
-                                                                 BigDecimal.ONE, clock.getUTCToday(),
-                                                                 BigDecimal.TEN, "ERROR_NOT_ENOUGH_FUNDS", "CreditCard", "Visa",
-                                                                 "", UUID.randomUUID().toString(), clock.getUTCNow(), clock.getUTCNow());
+                                                                                 BigDecimal.ONE, clock.getUTCToday(),
+                                                                                 BigDecimal.TEN, "ERROR_NOT_ENOUGH_FUNDS", "CreditCard", "Visa",
+                                                                                 "", UUID.randomUUID().toString(), clock.getUTCNow(), clock.getUTCNow());
         Assert.assertFalse(account.equals(otherAccount));
     }
 

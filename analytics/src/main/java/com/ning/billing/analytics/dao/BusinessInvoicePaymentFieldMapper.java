@@ -26,6 +26,7 @@ import org.skife.jdbi.v2.tweak.ResultSetMapper;
 import com.ning.billing.analytics.model.BusinessInvoicePaymentFieldModelDao;
 
 public class BusinessInvoicePaymentFieldMapper implements ResultSetMapper<BusinessInvoicePaymentFieldModelDao> {
+
     @Override
     public BusinessInvoicePaymentFieldModelDao map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
         return new BusinessInvoicePaymentFieldModelDao(UUID.fromString(r.getString(1)), r.getString(2), r.getString(3));

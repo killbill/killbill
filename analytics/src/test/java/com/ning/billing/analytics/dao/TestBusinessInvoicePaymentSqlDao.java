@@ -31,6 +31,7 @@ import com.ning.billing.analytics.model.BusinessInvoicePaymentModelDao;
 import com.ning.billing.catalog.api.Currency;
 
 public class TestBusinessInvoicePaymentSqlDao extends AnalyticsTestSuiteWithEmbeddedDB {
+
     private BusinessInvoicePaymentSqlDao invoicePaymentSqlDao;
 
     @BeforeMethod(groups = "slow")
@@ -73,7 +74,7 @@ public class TestBusinessInvoicePaymentSqlDao extends AnalyticsTestSuiteWithEmbe
         final String extFirstPaymentRefId2 = UUID.randomUUID().toString();
         final String extSecondPaymentRefId2 = UUID.randomUUID().toString();
         final String accountKey2 = UUID.randomUUID().toString();
-        final BusinessInvoicePaymentModelDao invoicePayment2 = createInvoicePayment(extFirstPaymentRefId2, extSecondPaymentRefId2,  accountKey2);
+        final BusinessInvoicePaymentModelDao invoicePayment2 = createInvoicePayment(extFirstPaymentRefId2, extSecondPaymentRefId2, accountKey2);
 
         // Create both invoice payments
         Assert.assertEquals(invoicePaymentSqlDao.createInvoicePayment(invoicePayment1, internalCallContext), 1);
@@ -123,11 +124,11 @@ public class TestBusinessInvoicePaymentSqlDao extends AnalyticsTestSuiteWithEmbe
         final UUID linkedInvoicePaymentId = UUID.randomUUID();
 
         return new BusinessInvoicePaymentModelDao(accountKey, amount, extFirstPaymentRefId, extSecondPaymentRefId,
-                                          cardCountry, cardType, createdDate,
-                                          currency, effectiveDate, invoiceId,
-                                          paymentError, paymentId, paymentMethod,
-                                          paymentType, pluginName, processingStatus,
-                                          requestedAmount, updatedDate, invoicePaymentType,
-                                          linkedInvoicePaymentId);
+                                                  cardCountry, cardType, createdDate,
+                                                  currency, effectiveDate, invoiceId,
+                                                  paymentError, paymentId, paymentMethod,
+                                                  paymentType, pluginName, processingStatus,
+                                                  requestedAmount, updatedDate, invoicePaymentType,
+                                                  linkedInvoicePaymentId);
     }
 }

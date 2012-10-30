@@ -26,6 +26,7 @@ import org.testng.annotations.Test;
 import com.ning.billing.analytics.AnalyticsTestSuite;
 
 public class TestBusinessOverdueStatus extends AnalyticsTestSuite {
+
     @Test(groups = "fast")
     public void testEquals() throws Exception {
         final String accountKey = UUID.randomUUID().toString();
@@ -46,11 +47,11 @@ public class TestBusinessOverdueStatus extends AnalyticsTestSuite {
         Assert.assertEquals(overdueStatus.getStatus(), status);
 
         final BusinessOverdueStatusModelDao otherOverdueStatus = new BusinessOverdueStatusModelDao(UUID.randomUUID().toString(),
-                                                                                   UUID.randomUUID(),
-                                                                                   new DateTime(DateTimeZone.UTC),
-                                                                                   UUID.randomUUID().toString(),
-                                                                                   new DateTime(DateTimeZone.UTC),
-                                                                                   UUID.randomUUID().toString());
+                                                                                                   UUID.randomUUID(),
+                                                                                                   new DateTime(DateTimeZone.UTC),
+                                                                                                   UUID.randomUUID().toString(),
+                                                                                                   new DateTime(DateTimeZone.UTC),
+                                                                                                   UUID.randomUUID().toString());
         Assert.assertFalse(overdueStatus.equals(otherOverdueStatus));
     }
 }

@@ -24,6 +24,7 @@ import org.testng.annotations.Test;
 import com.ning.billing.analytics.AnalyticsTestSuite;
 
 public class TestBusinessAccountTag extends AnalyticsTestSuite {
+
     @Test(groups = "fast")
     public void testEquals() throws Exception {
         final UUID accountId = UUID.randomUUID();

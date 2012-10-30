@@ -50,13 +50,13 @@ public class MockBusinessSubscriptionTransitionSqlDao implements BusinessSubscri
 
     @Override
     public List<BusinessSubscriptionTransitionModelDao> getTransitionsByKey(@Bind("event_key") final String key,
-                                                                    @InternalTenantContextBinder final InternalTenantContext context) {
+                                                                            @InternalTenantContextBinder final InternalTenantContext context) {
         return content.get(key);
     }
 
     @Override
     public List<BusinessSubscriptionTransitionModelDao> getTransitionForSubscription(@Bind("subscription_id") final String subscriptionId,
-                                                                             @InternalTenantContextBinder final InternalTenantContext context) {
+                                                                                     @InternalTenantContextBinder final InternalTenantContext context) {
         return ImmutableList.<BusinessSubscriptionTransitionModelDao>of();
     }
 

@@ -30,6 +30,7 @@ import com.ning.billing.analytics.model.BusinessInvoicePaymentModelDao;
 import com.ning.billing.catalog.api.Currency;
 
 public class BusinessInvoicePaymentMapper implements ResultSetMapper<BusinessInvoicePaymentModelDao> {
+
     @Override
     public BusinessInvoicePaymentModelDao map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
         final UUID paymentId = UUID.fromString(r.getString(1));
@@ -61,8 +62,8 @@ public class BusinessInvoicePaymentMapper implements ResultSetMapper<BusinessInv
         }
 
         return new BusinessInvoicePaymentModelDao(accountKey, amount, extFirstPaymentRefId, extSecondPaymentRefId, cardCountry, cardType, createdDate, currency,
-                                          effectiveDate, invoiceId, paymentError, paymentId, paymentMethod, paymentType,
-                                          pluginName, processingStatus, requestedAmount, updatedDate, invoicePaymentType,
-                                          linkedInvoicePaymentId);
+                                                  effectiveDate, invoiceId, paymentError, paymentId, paymentMethod, paymentType,
+                                                  pluginName, processingStatus, requestedAmount, updatedDate, invoicePaymentType,
+                                                  linkedInvoicePaymentId);
     }
 }

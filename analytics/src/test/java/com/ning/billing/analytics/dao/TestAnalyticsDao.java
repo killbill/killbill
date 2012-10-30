@@ -92,7 +92,7 @@ public class TestAnalyticsDao extends AnalyticsTestSuiteWithEmbeddedDB {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionCancelled(plan.getName(), catalog, requestedTimestamp, requestedTimestamp);
 
         transition = new BusinessSubscriptionTransitionModelDao(TOTAL_ORDERING, BUNDLE_ID, EXTERNAL_KEY, ACCOUNT_ID, ACCOUNT_KEY,
-                                                        UUID.randomUUID(), requestedTimestamp, event, prevSubscription, nextSubscription);
+                                                                UUID.randomUUID(), requestedTimestamp, event, prevSubscription, nextSubscription);
 
         final IDBI dbi = helper.getDBI();
         businessSubscriptionTransitionSqlDao = dbi.onDemand(BusinessSubscriptionTransitionSqlDao.class);
@@ -107,7 +107,7 @@ public class TestAnalyticsDao extends AnalyticsTestSuiteWithEmbeddedDB {
 
     private void setupBusinessAccount() {
         account = new BusinessAccountModelDao(UUID.randomUUID(), ACCOUNT_KEY, UUID.randomUUID().toString(), BigDecimal.ONE, clock.getUTCToday(),
-                                      BigDecimal.TEN, "ERROR_NOT_ENOUGH_FUNDS", "CreditCard", "Visa", "FRANCE", CURRENCY, clock.getUTCNow(), clock.getUTCNow());
+                                              BigDecimal.TEN, "ERROR_NOT_ENOUGH_FUNDS", "CreditCard", "Visa", "FRANCE", CURRENCY, clock.getUTCNow(), clock.getUTCNow());
 
         final IDBI dbi = helper.getDBI();
         businessAccountSqlDao = dbi.onDemand(BusinessAccountSqlDao.class);

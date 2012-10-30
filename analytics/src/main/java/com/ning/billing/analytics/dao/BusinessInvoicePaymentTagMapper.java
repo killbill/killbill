@@ -26,6 +26,7 @@ import org.skife.jdbi.v2.tweak.ResultSetMapper;
 import com.ning.billing.analytics.model.BusinessInvoicePaymentTagModelDao;
 
 public class BusinessInvoicePaymentTagMapper implements ResultSetMapper<BusinessInvoicePaymentTagModelDao> {
+
     @Override
     public BusinessInvoicePaymentTagModelDao map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
         return new BusinessInvoicePaymentTagModelDao(UUID.fromString(r.getString(1)), r.getString(2));

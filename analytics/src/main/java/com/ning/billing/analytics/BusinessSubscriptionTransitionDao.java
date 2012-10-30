@@ -242,7 +242,7 @@ public class BusinessSubscriptionTransitionDao {
     }
 
     private BusinessSubscriptionTransitionModelDao getPreviousBusinessSubscriptionTransitionForEvent(final EffectiveSubscriptionInternalEvent event,
-                                                                                             final ArrayList<BusinessSubscriptionTransitionModelDao> transitions) {
+                                                                                                     final ArrayList<BusinessSubscriptionTransitionModelDao> transitions) {
         BusinessSubscriptionTransitionModelDao transition = null;
         for (final BusinessSubscriptionTransitionModelDao candidate : transitions) {
             final BusinessSubscription nextSubscription = candidate.getNextSubscription();

@@ -38,7 +38,9 @@ import com.ning.billing.analytics.utils.Rounder;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.PARAMETER})
 public @interface BusinessInvoicePaymentBinder {
+
     public static class BipBinderFactory implements BinderFactory {
+
         @Override
         public Binder build(final Annotation annotation) {
             return new Binder<BusinessInvoicePaymentBinder, BusinessInvoicePaymentModelDao>() {

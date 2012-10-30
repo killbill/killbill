@@ -19,6 +19,7 @@ package com.ning.billing.analytics.model;
 import java.util.UUID;
 
 public class BusinessInvoicePaymentTagModelDao extends BusinessTagModelDao {
+
     private final UUID paymentId;
 
     public BusinessInvoicePaymentTagModelDao(final UUID paymentId, final String name) {

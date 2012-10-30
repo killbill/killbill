@@ -26,6 +26,7 @@ import com.ning.billing.util.entity.EntityBase;
  * Describe a state change between two BusinessSubscription
  */
 public class BusinessSubscriptionTransitionModelDao extends EntityBase {
+
     private final long totalOrdering;
     private final UUID bundleId;
     private final String externalKey;

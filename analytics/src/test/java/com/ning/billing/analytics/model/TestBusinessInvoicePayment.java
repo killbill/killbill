@@ -28,6 +28,7 @@ import com.ning.billing.analytics.AnalyticsTestSuite;
 import com.ning.billing.catalog.api.Currency;
 
 public class TestBusinessInvoicePayment extends AnalyticsTestSuite {
+
     @Test(groups = "fast")
     public void testEquals() throws Exception {
         final String accountKey = UUID.randomUUID().toString();
@@ -51,12 +52,12 @@ public class TestBusinessInvoicePayment extends AnalyticsTestSuite {
         final String invoicePaymentType = UUID.randomUUID().toString();
         final UUID linkedInvoicePaymentId = UUID.randomUUID();
         final BusinessInvoicePaymentModelDao invoicePayment = new BusinessInvoicePaymentModelDao(accountKey, amount, extFirstPaymentRefId, extSecondPaymentRefId,
-                                                                                 cardCountry, cardType, createdDate,
-                                                                                 currency, effectiveDate, invoiceId,
-                                                                                 paymentError, paymentId, paymentMethod,
-                                                                                 paymentType, pluginName, processingStatus,
-                                                                                 requestedAmount, updatedDate, invoicePaymentType,
-                                                                                 linkedInvoicePaymentId);
+                                                                                                 cardCountry, cardType, createdDate,
+                                                                                                 currency, effectiveDate, invoiceId,
+                                                                                                 paymentError, paymentId, paymentMethod,
+                                                                                                 paymentType, pluginName, processingStatus,
+                                                                                                 requestedAmount, updatedDate, invoicePaymentType,
+                                                                                                 linkedInvoicePaymentId);
         Assert.assertSame(invoicePayment, invoicePayment);
         Assert.assertEquals(invoicePayment, invoicePayment);
         Assert.assertTrue(invoicePayment.equals(invoicePayment));
@@ -82,8 +83,8 @@ public class TestBusinessInvoicePayment extends AnalyticsTestSuite {
         Assert.assertEquals(invoicePayment.getLinkedInvoicePaymentId(), linkedInvoicePaymentId);
 
         final BusinessInvoicePaymentModelDao otherInvoicePayment = new BusinessInvoicePaymentModelDao(null, null, extFirstPaymentRefId, extSecondPaymentRefId, null, null, createdDate,
-                                                                                      null, null, null, null, paymentId, null,
-                                                                                      null, null, null, null, null, null, null);
+                                                                                                      null, null, null, null, paymentId, null,
+                                                                                                      null, null, null, null, null, null, null);
         Assert.assertFalse(invoicePayment.equals(otherInvoicePayment));
     }
 }

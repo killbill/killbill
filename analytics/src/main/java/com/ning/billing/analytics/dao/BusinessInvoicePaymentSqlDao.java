@@ -37,11 +37,11 @@ public interface BusinessInvoicePaymentSqlDao extends Transactional<BusinessInvo
 
     @SqlQuery
     BusinessInvoicePaymentModelDao getInvoicePayment(@Bind("payment_id") final String paymentId,
-                                             @InternalTenantContextBinder final InternalTenantContext context);
+                                                     @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
     List<BusinessInvoicePaymentModelDao> getInvoicePaymentsForAccountByKey(@Bind("account_key") final String accountKey,
-                                                                   @InternalTenantContextBinder final InternalTenantContext context);
+                                                                           @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlUpdate
     int createInvoicePayment(@BusinessInvoicePaymentBinder final BusinessInvoicePaymentModelDao payment,

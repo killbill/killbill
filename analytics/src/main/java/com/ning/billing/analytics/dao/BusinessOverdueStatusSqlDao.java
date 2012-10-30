@@ -37,7 +37,7 @@ public interface BusinessOverdueStatusSqlDao extends Transactional<BusinessOverd
 
     @SqlQuery
     List<BusinessOverdueStatusModelDao> getOverdueStatusesForBundleByKey(@Bind("external_key") final String externalKey,
-                                                                 @InternalTenantContextBinder final InternalTenantContext context);
+                                                                         @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlUpdate
     int createOverdueStatus(@BusinessOverdueStatusBinder final BusinessOverdueStatusModelDao status,

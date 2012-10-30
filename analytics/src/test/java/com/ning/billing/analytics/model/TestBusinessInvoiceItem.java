@@ -53,9 +53,9 @@ public class TestBusinessInvoiceItem extends AnalyticsTestSuite {
         final LocalDate startDate = clock.getUTCToday();
         final DateTime updatedDate = clock.getUTCNow();
         final BusinessInvoiceItemModelDao invoiceItem = new BusinessInvoiceItemModelDao(amount, billingPeriod, createdDate, currency,
-                                                                        endDate, externalKey, invoiceId, itemId, linkedItemId,
-                                                                        itemType, phase, productCategory, productName, productType,
-                                                                        slug, startDate, updatedDate);
+                                                                                        endDate, externalKey, invoiceId, itemId, linkedItemId,
+                                                                                        itemType, phase, productCategory, productName, productType,
+                                                                                        slug, startDate, updatedDate);
         Assert.assertSame(invoiceItem, invoiceItem);
         Assert.assertEquals(invoiceItem, invoiceItem);
         Assert.assertTrue(invoiceItem.equals(invoiceItem));
@@ -78,7 +78,7 @@ public class TestBusinessInvoiceItem extends AnalyticsTestSuite {
         Assert.assertEquals(invoiceItem.getUpdatedDate(), updatedDate);
 
         final BusinessInvoiceItemModelDao otherInvoiceItem = new BusinessInvoiceItemModelDao(null, null, createdDate, null, null, null, null, itemId,
-                                                                             linkedItemId, null, null, null, null, null, null, null, null);
+                                                                                             linkedItemId, null, null, null, null, null, null, null, null);
         Assert.assertFalse(invoiceItem.equals(otherInvoiceItem));
     }
 }

@@ -35,7 +35,7 @@ public interface BusinessInvoicePaymentFieldSqlDao {
 
     @SqlQuery
     List<BusinessInvoicePaymentFieldModelDao> getFieldsForInvoicePayment(@Bind("payment_id") final String paymentId,
-                                                                 @InternalTenantContextBinder final InternalTenantContext context);
+                                                                         @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlUpdate
     int addField(@Bind("payment_id") final String paymentId,

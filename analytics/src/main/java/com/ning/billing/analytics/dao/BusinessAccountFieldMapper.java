@@ -26,6 +26,7 @@ import org.skife.jdbi.v2.tweak.ResultSetMapper;
 import com.ning.billing.analytics.model.BusinessAccountFieldModelDao;
 
 public class BusinessAccountFieldMapper implements ResultSetMapper<BusinessAccountFieldModelDao> {
+
     @Override
     public BusinessAccountFieldModelDao map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
         final UUID accountId = UUID.fromString(r.getString(1));

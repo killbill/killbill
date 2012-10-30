@@ -16,8 +16,6 @@
 
 package com.ning.billing.analytics.api;
 
-import static org.testng.Assert.fail;
-
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.SQLException;
@@ -86,6 +84,8 @@ import com.ning.billing.util.events.PaymentInfoInternalEvent;
 import com.ning.billing.util.svcsapi.bus.InternalBus;
 
 import com.google.inject.Inject;
+
+import static org.testng.Assert.fail;
 
 @Guice(modules = {AnalyticsTestModule.class})
 public class TestAnalyticsService extends AnalyticsTestSuiteWithEmbeddedDB {

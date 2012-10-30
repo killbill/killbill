@@ -54,7 +54,7 @@ public class BusinessInvoiceItemMapper extends MapperBase implements ResultSetMa
         final Currency currency = Currency.valueOf(r.getString("currency"));
 
         return new BusinessInvoiceItemModelDao(amount, billingPeriod, createdDate, currency, endDate, externalKey, invoiceId,
-                                       itemId, linkedItemId, itemType, phase, productCategory, productName, productType, slug,
-                                       startDate, updatedDate);
+                                               itemId, linkedItemId, itemType, phase, productCategory, productName, productType, slug,
+                                               startDate, updatedDate);
     }
 }

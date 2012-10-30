@@ -24,6 +24,7 @@ import org.testng.annotations.Test;
 import com.ning.billing.analytics.AnalyticsTestSuite;
 
 public class TestBusinessSubscriptionTransitionTag extends AnalyticsTestSuite {
+
     @Test(groups = "fast")
     public void testEquals() throws Exception {
         final String accountKey = UUID.randomUUID().toString();
@@ -31,9 +32,9 @@ public class TestBusinessSubscriptionTransitionTag extends AnalyticsTestSuite {
         final String externalKey = UUID.randomUUID().toString();
         final String name = UUID.randomUUID().toString();
         final BusinessSubscriptionTransitionTagModelDao subscriptionTransitionTag = new BusinessSubscriptionTransitionTagModelDao(accountKey,
-                                                                                                                  bundleId,
-                                                                                                                  externalKey,
-                                                                                                                  name);
+                                                                                                                                  bundleId,
+                                                                                                                                  externalKey,
+                                                                                                                                  name);
         Assert.assertSame(subscriptionTransitionTag, subscriptionTransitionTag);
         Assert.assertEquals(subscriptionTransitionTag, subscriptionTransitionTag);
         Assert.assertTrue(subscriptionTransitionTag.equals(subscriptionTransitionTag));
@@ -43,9 +44,9 @@ public class TestBusinessSubscriptionTransitionTag extends AnalyticsTestSuite {
         Assert.assertEquals(subscriptionTransitionTag.getName(), name);
 
         final BusinessSubscriptionTransitionTagModelDao otherTransitionTag = new BusinessSubscriptionTransitionTagModelDao(UUID.randomUUID().toString(),
-                                                                                                           UUID.randomUUID(),
-                                                                                                           UUID.randomUUID().toString(),
-                                                                                                           UUID.randomUUID().toString());
+                                                                                                                           UUID.randomUUID(),
+                                                                                                                           UUID.randomUUID().toString(),
+                                                                                                                           UUID.randomUUID().toString());
         Assert.assertFalse(subscriptionTransitionTag.equals(otherTransitionTag));
     }
 }

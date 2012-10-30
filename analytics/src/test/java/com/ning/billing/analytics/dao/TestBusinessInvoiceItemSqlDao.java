@@ -126,6 +126,6 @@ public class TestBusinessInvoiceItemSqlDao extends AnalyticsTestSuiteWithEmbedde
         final DateTime updatedDate = clock.getUTCNow();
 
         return new BusinessInvoiceItemModelDao(amount, billingPeriod, createdDate, currency, endDate, externalKey, invoiceId, itemId,
-                                       linkedItemId, itemType, phase, productCategory, productName, productType, slug, startDate, updatedDate);
+                                               linkedItemId, itemType, phase, productCategory, productName, productType, slug, startDate, updatedDate);
     }
 }

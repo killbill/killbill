@@ -116,6 +116,6 @@ public class TestBusinessInvoiceSqlDao extends AnalyticsTestSuiteWithEmbeddedDB 
         final DateTime updatedDate = clock.getUTCNow();
 
         return new BusinessInvoiceModelDao(accountId, accountKey, amountCharged, amountCredited, amountPaid, balance,
-                                   createdDate, currency, invoiceDate, invoiceId, 12, targetDate, updatedDate);
+                                           createdDate, currency, invoiceDate, invoiceId, 12, targetDate, updatedDate);
     }
 }

@@ -35,7 +35,9 @@ import com.ning.billing.analytics.model.BusinessSubscriptionTransitionModelDao;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.PARAMETER})
 public @interface BusinessSubscriptionTransitionBinder {
+
     public static class BstBinderFactory implements BinderFactory {
+
         public Binder build(final Annotation annotation) {
             return new Binder<BusinessSubscriptionTransitionBinder, BusinessSubscriptionTransitionModelDao>() {
                 public void bind(final SQLStatement q, final BusinessSubscriptionTransitionBinder bind, final BusinessSubscriptionTransitionModelDao arg) {

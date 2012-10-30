@@ -35,7 +35,7 @@ public interface BusinessInvoiceFieldSqlDao {
 
     @SqlQuery
     List<BusinessInvoiceFieldModelDao> getFieldsForInvoice(@Bind("invoice_id") final String invoiceId,
-                                                   @InternalTenantContextBinder final InternalTenantContext context);
+                                                           @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlUpdate
     int addField(@Bind("invoice_id") final String invoiceId,

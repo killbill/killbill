@@ -24,6 +24,7 @@ import org.testng.annotations.Test;
 import com.ning.billing.analytics.AnalyticsTestSuite;
 
 public class TestBusinessAccountField extends AnalyticsTestSuite {
+
     @Test(groups = "fast")
     public void testEquals() throws Exception {
         final UUID accountId = UUID.randomUUID();
@@ -31,9 +32,9 @@ public class TestBusinessAccountField extends AnalyticsTestSuite {
         final String name = UUID.randomUUID().toString();
         final String value = UUID.randomUUID().toString();
         final BusinessAccountFieldModelDao accountField = new BusinessAccountFieldModelDao(accountId,
-                                                                           accountKey,
-                                                                           name,
-                                                                           value);
+                                                                                           accountKey,
+                                                                                           name,
+                                                                                           value);
         Assert.assertSame(accountField, accountField);
         Assert.assertEquals(accountField, accountField);
         Assert.assertTrue(accountField.equals(accountField));
@@ -43,9 +44,9 @@ public class TestBusinessAccountField extends AnalyticsTestSuite {
         Assert.assertEquals(accountField.getValue(), value);
 
         final BusinessAccountFieldModelDao otherAccountField = new BusinessAccountFieldModelDao(UUID.randomUUID(),
-                                                                                UUID.randomUUID().toString(),
-                                                                                UUID.randomUUID().toString(),
-                                                                                UUID.randomUUID().toString());
+                                                                                                UUID.randomUUID().toString(),
+                                                                                                UUID.randomUUID().toString(),
+                                                                                                UUID.randomUUID().toString());
         Assert.assertFalse(accountField.equals(otherAccountField));
     }
 }

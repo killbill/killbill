@@ -29,6 +29,7 @@ import com.ning.billing.analytics.AnalyticsTestSuiteWithEmbeddedDB;
 import com.ning.billing.analytics.model.BusinessOverdueStatusModelDao;
 
 public class TestBusinessOverdueStatusSqlDao extends AnalyticsTestSuiteWithEmbeddedDB {
+
     private BusinessOverdueStatusSqlDao overdueStatusSqlDao;
 
     @BeforeMethod(groups = "slow")

@@ -19,6 +19,7 @@ package com.ning.billing.analytics.model;
 import java.util.UUID;
 
 public class BusinessInvoiceFieldModelDao extends BusinessFieldModelDao {
+
     private final UUID invoiceId;
 
     public BusinessInvoiceFieldModelDao(final UUID invoiceId, final String name, final String value) {

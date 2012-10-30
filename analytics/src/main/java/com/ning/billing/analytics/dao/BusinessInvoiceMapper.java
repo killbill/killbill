@@ -32,6 +32,7 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.dao.MapperBase;
 
 public class BusinessInvoiceMapper extends MapperBase implements ResultSetMapper<BusinessInvoiceModelDao> {
+
     @Override
     public BusinessInvoiceModelDao map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
         final UUID invoiceId = UUID.fromString(r.getString(1));
@@ -49,6 +50,6 @@ public class BusinessInvoiceMapper extends MapperBase implements ResultSetMapper
         final BigDecimal amountCredited = BigDecimal.valueOf(r.getDouble(13));
 
         return new BusinessInvoiceModelDao(accountId, accountKey, amountCharged, amountCredited, amountPaid, balance, createdDate, currency,
-                                   invoiceDate, invoiceId, invoiceNumber, targetDate, updatedDate);
+                                           invoiceDate, invoiceId, invoiceNumber, targetDate, updatedDate);
     }
 }

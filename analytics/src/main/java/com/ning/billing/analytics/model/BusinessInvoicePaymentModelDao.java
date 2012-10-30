@@ -28,6 +28,7 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.entity.EntityBase;
 
 public class BusinessInvoicePaymentModelDao extends EntityBase {
+
     private final UUID paymentId;
     private final String extFirstPaymentRefId;
     private final String extSecondPaymentRefId;

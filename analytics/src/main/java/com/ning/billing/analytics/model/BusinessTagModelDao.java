@@ -19,6 +19,7 @@ package com.ning.billing.analytics.model;
 import com.ning.billing.util.entity.EntityBase;
 
 public abstract class BusinessTagModelDao extends EntityBase {
+
     private final String name;
 
     public BusinessTagModelDao(final String name) {

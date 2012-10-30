@@ -104,7 +104,7 @@ public class BusinessOverdueStatusDao {
                     DateTime previousStartDate = null;
                     for (final BlockingState state : overdueStatesReversed) {
                         final BusinessOverdueStatusModelDao overdueStatus = new BusinessOverdueStatusModelDao(accountKey, bundleId, previousStartDate,
-                                                                                              externalKey, state.getTimestamp(), state.getStateName());
+                                                                                                              externalKey, state.getTimestamp(), state.getStateName());
                         log.info("Adding overdue state {}", overdueStatus);
                         overdueStatusSqlDao.createOverdueStatus(overdueStatus, context);
 

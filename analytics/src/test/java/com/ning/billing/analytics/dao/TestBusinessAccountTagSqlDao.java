@@ -28,6 +28,7 @@ import com.ning.billing.analytics.AnalyticsTestSuiteWithEmbeddedDB;
 import com.ning.billing.analytics.model.BusinessAccountTagModelDao;
 
 public class TestBusinessAccountTagSqlDao extends AnalyticsTestSuiteWithEmbeddedDB {
+
     private BusinessAccountTagSqlDao accountTagSqlDao;
 
     @BeforeMethod(groups = "slow")

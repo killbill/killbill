@@ -26,6 +26,7 @@ import org.skife.jdbi.v2.tweak.ResultSetMapper;
 import com.ning.billing.analytics.model.BusinessSubscriptionTransitionFieldModelDao;
 
 public class BusinessSubscriptionTransitionFieldMapper implements ResultSetMapper<BusinessSubscriptionTransitionFieldModelDao> {
+
     @Override
     public BusinessSubscriptionTransitionFieldModelDao map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
         final UUID bundleId = UUID.fromString(r.getString(1));

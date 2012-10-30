@@ -35,7 +35,7 @@ public interface BusinessSubscriptionTransitionFieldSqlDao {
 
     @SqlQuery
     List<BusinessSubscriptionTransitionFieldModelDao> getFieldsForBusinessSubscriptionTransitionByKey(@Bind("external_key") final String externalKey,
-                                                                                              @InternalTenantContextBinder final InternalTenantContext context);
+                                                                                                      @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlUpdate
     int addField(@Bind("account_key") final String accountKey,

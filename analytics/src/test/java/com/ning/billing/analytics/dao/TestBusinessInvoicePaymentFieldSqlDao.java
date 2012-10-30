@@ -28,6 +28,7 @@ import com.ning.billing.analytics.AnalyticsTestSuiteWithEmbeddedDB;
 import com.ning.billing.analytics.model.BusinessInvoicePaymentFieldModelDao;
 
 public class TestBusinessInvoicePaymentFieldSqlDao extends AnalyticsTestSuiteWithEmbeddedDB {
+
     private BusinessInvoicePaymentFieldSqlDao invoicePaymentFieldSqlDao;
 
     @BeforeMethod(groups = "slow")

@@ -26,6 +26,7 @@ import org.skife.jdbi.v2.tweak.ResultSetMapper;
 import com.ning.billing.analytics.model.BusinessAccountTagModelDao;
 
 public class BusinessAccountTagMapper implements ResultSetMapper<BusinessAccountTagModelDao> {
+
     @Override
     public BusinessAccountTagModelDao map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
         final UUID accountId = UUID.fromString(r.getString(1));

@@ -24,14 +24,15 @@ import org.testng.annotations.Test;
 import com.ning.billing.analytics.AnalyticsTestSuite;
 
 public class TestBusinessInvoiceField extends AnalyticsTestSuite {
+
     @Test(groups = "fast")
     public void testEquals() throws Exception {
         final UUID invoiceId = UUID.randomUUID();
         final String name = UUID.randomUUID().toString();
         final String value = UUID.randomUUID().toString();
         final BusinessInvoiceFieldModelDao invoiceField = new BusinessInvoiceFieldModelDao(invoiceId,
-                                                                           name,
-                                                                           value);
+                                                                                           name,
+                                                                                           value);
         Assert.assertSame(invoiceField, invoiceField);
         Assert.assertEquals(invoiceField, invoiceField);
         Assert.assertTrue(invoiceField.equals(invoiceField));
@@ -40,8 +41,8 @@ public class TestBusinessInvoiceField extends AnalyticsTestSuite {
         Assert.assertEquals(invoiceField.getValue(), value);
 
         final BusinessInvoiceFieldModelDao otherInvoiceField = new BusinessInvoiceFieldModelDao(UUID.randomUUID(),
-                                                                                UUID.randomUUID().toString(),
-                                                                                UUID.randomUUID().toString());
+                                                                                                UUID.randomUUID().toString(),
+                                                                                                UUID.randomUUID().toString());
         Assert.assertFalse(invoiceField.equals(otherInvoiceField));
     }
 }

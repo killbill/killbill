@@ -34,6 +34,7 @@ import com.ning.billing.catalog.api.ProductCategory;
 import static com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 
 public class BusinessSubscriptionTransitionMapper implements ResultSetMapper<BusinessSubscriptionTransitionModelDao> {
+
     @Override
     public BusinessSubscriptionTransitionModelDao map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
         BusinessSubscription prev = new BusinessSubscription(

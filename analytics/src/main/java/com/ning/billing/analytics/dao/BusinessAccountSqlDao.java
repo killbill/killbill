@@ -40,11 +40,11 @@ public interface BusinessAccountSqlDao extends Transactional<BusinessAccountSqlD
 
     @SqlQuery
     BusinessAccountModelDao getAccount(@Bind("account_id") final String accountId,
-                               @InternalTenantContextBinder final InternalTenantContext context);
+                                       @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
     BusinessAccountModelDao getAccountByKey(@Bind("account_key") String accountKey,
-                                    @InternalTenantContextBinder final InternalTenantContext context);
+                                            @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlUpdate
     int createAccount(@BusinessAccountBinder final BusinessAccountModelDao account,

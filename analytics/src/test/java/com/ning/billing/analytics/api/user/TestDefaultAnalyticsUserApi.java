@@ -110,7 +110,7 @@ public class TestDefaultAnalyticsUserApi extends AnalyticsTestSuiteWithEmbeddedD
     @Test(groups = "slow")
     public void testAccountsCreatedOverTime() throws Exception {
         final BusinessAccountModelDao account = new BusinessAccountModelDao(UUID.randomUUID(), UUID.randomUUID().toString(), UUID.randomUUID().toString(), BigDecimal.ONE, clock.getUTCToday(),
-                                                            BigDecimal.TEN, "ERROR_NOT_ENOUGH_FUNDS", "CreditCard", "Visa", "FRANCE", "USD", clock.getUTCNow(), clock.getUTCNow());
+                                                                            BigDecimal.TEN, "ERROR_NOT_ENOUGH_FUNDS", "CreditCard", "Visa", "FRANCE", "USD", clock.getUTCNow(), clock.getUTCNow());
         accountSqlDao.createAccount(account, internalCallContext);
 
         final TimeSeriesData data = analyticsUserApi.getAccountsCreatedOverTime(tenantContext);

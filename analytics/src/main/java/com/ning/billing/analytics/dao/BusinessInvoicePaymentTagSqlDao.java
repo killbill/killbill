@@ -35,7 +35,7 @@ public interface BusinessInvoicePaymentTagSqlDao {
 
     @SqlQuery
     List<BusinessInvoicePaymentTagModelDao> getTagsForInvoicePayment(@Bind("payment_id") final String paymentId,
-                                                             @InternalTenantContextBinder final InternalTenantContext context);
+                                                                     @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlUpdate
     int addTag(@Bind("payment_id") final String paymentId,

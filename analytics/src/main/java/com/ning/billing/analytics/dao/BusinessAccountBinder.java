@@ -36,7 +36,9 @@ import com.ning.billing.analytics.model.BusinessAccountModelDao;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.PARAMETER})
 public @interface BusinessAccountBinder {
+
     public static class BacBinderFactory implements BinderFactory {
+
         public Binder build(final Annotation annotation) {
             return new Binder<BusinessAccountBinder, BusinessAccountModelDao>() {
                 public void bind(final SQLStatement q, final BusinessAccountBinder bind, final BusinessAccountModelDao account) {
