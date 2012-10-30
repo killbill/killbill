@@ -30,7 +30,7 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionSqlDao;
 import com.ning.billing.analytics.model.BusinessSubscription;
 import com.ning.billing.analytics.model.BusinessSubscriptionEvent;
-import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
+import com.ning.billing.analytics.model.BusinessSubscriptionTransitionModelDao;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
@@ -96,7 +96,7 @@ public class BusinessSubscriptionTransitionDao {
                 log.info("Started rebuilding transitions for bundle id {}", bundleId);
                 transactional.deleteTransitionsForBundle(bundleId.toString(), context);
 
-                final ArrayList<BusinessSubscriptionTransition> transitions = new ArrayList<BusinessSubscriptionTransition>();
+                final ArrayList<BusinessSubscriptionTransitionModelDao> transitions = new ArrayList<BusinessSubscriptionTransitionModelDao>();
                 for (final Subscription subscription : subscriptions) {
                     // TODO remove API call from within transaction, although this is NOT a real issue as this call wil not hit the DB
                     for (final EffectiveSubscriptionInternalEvent event : entitlementApi.getAllTransitions(subscription, context)) {
@@ -107,7 +107,7 @@ public class BusinessSubscriptionTransitionDao {
 
                         final BusinessSubscription prevSubscription = createPreviousBusinessSubscription(event, businessEvent, transitions, currency);
                         final BusinessSubscription nextSubscription = createNextBusinessSubscription(event, businessEvent, currency);
-                        final BusinessSubscriptionTransition transition = new BusinessSubscriptionTransition(
+                        final BusinessSubscriptionTransitionModelDao transition = new BusinessSubscriptionTransitionModelDao(
                                 event.getTotalOrdering(),
                                 bundleId,
                                 bundle.getKey(),
@@ -127,7 +127,7 @@ public class BusinessSubscriptionTransitionDao {
                         // We need to manually add the system cancel event
                         if (SubscriptionTransitionType.CANCEL.equals(event.getTransitionType()) &&
                             clock.getUTCNow().isAfter(event.getEffectiveTransitionTime())) {
-                            final BusinessSubscriptionTransition systemCancelTransition = new BusinessSubscriptionTransition(
+                            final BusinessSubscriptionTransitionModelDao systemCancelTransition = new BusinessSubscriptionTransitionModelDao(
                                     event.getTotalOrdering(),
                                     bundleId,
                                     bundle.getKey(),
@@ -226,7 +226,7 @@ public class BusinessSubscriptionTransitionDao {
 
     private BusinessSubscription createPreviousBusinessSubscription(final EffectiveSubscriptionInternalEvent event,
                                                                     final BusinessSubscriptionEvent businessEvent,
-                                                                    final ArrayList<BusinessSubscriptionTransition> transitions,
+                                                                    final ArrayList<BusinessSubscriptionTransitionModelDao> transitions,
                                                                     final Currency currency) {
         if (BusinessSubscriptionEvent.EventType.MIGRATE.equals(businessEvent.getEventType()) ||
             BusinessSubscriptionEvent.EventType.ADD.equals(businessEvent.getEventType()) ||
@@ -235,16 +235,16 @@ public class BusinessSubscriptionTransitionDao {
             return null;
         }
 
-        final BusinessSubscriptionTransition prevTransition = getPreviousBusinessSubscriptionTransitionForEvent(event, transitions);
+        final BusinessSubscriptionTransitionModelDao prevTransition = getPreviousBusinessSubscriptionTransitionForEvent(event, transitions);
         return new BusinessSubscription(event.getPreviousPriceList(), event.getPreviousPlan(), event.getPreviousPhase(),
                                         currency, prevTransition.getNextSubscription().getStartDate(), event.getPreviousState(),
                                         catalogService.getFullCatalog());
     }
 
-    private BusinessSubscriptionTransition getPreviousBusinessSubscriptionTransitionForEvent(final EffectiveSubscriptionInternalEvent event,
-                                                                                             final ArrayList<BusinessSubscriptionTransition> transitions) {
-        BusinessSubscriptionTransition transition = null;
-        for (final BusinessSubscriptionTransition candidate : transitions) {
+    private BusinessSubscriptionTransitionModelDao getPreviousBusinessSubscriptionTransitionForEvent(final EffectiveSubscriptionInternalEvent event,
+                                                                                             final ArrayList<BusinessSubscriptionTransitionModelDao> transitions) {
+        BusinessSubscriptionTransitionModelDao transition = null;
+        for (final BusinessSubscriptionTransitionModelDao candidate : transitions) {
             final BusinessSubscription nextSubscription = candidate.getNextSubscription();
             if (nextSubscription == null || !nextSubscription.getStartDate().isBefore(event.getEffectiveTransitionTime())) {
                 continue;

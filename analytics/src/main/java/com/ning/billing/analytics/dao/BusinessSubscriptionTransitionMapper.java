@@ -28,14 +28,14 @@ import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import com.ning.billing.analytics.model.BusinessSubscription;
 import com.ning.billing.analytics.model.BusinessSubscriptionEvent;
-import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
+import com.ning.billing.analytics.model.BusinessSubscriptionTransitionModelDao;
 import com.ning.billing.catalog.api.ProductCategory;
 
 import static com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 
-public class BusinessSubscriptionTransitionMapper implements ResultSetMapper<BusinessSubscriptionTransition> {
+public class BusinessSubscriptionTransitionMapper implements ResultSetMapper<BusinessSubscriptionTransitionModelDao> {
     @Override
-    public BusinessSubscriptionTransition map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
+    public BusinessSubscriptionTransitionModelDao map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
         BusinessSubscription prev = new BusinessSubscription(
                 r.getString(9), // productName
                 r.getString(10), // productType
@@ -78,7 +78,7 @@ public class BusinessSubscriptionTransitionMapper implements ResultSetMapper<Bus
 
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.valueOf(r.getString(8));
 
-        return new BusinessSubscriptionTransition(
+        return new BusinessSubscriptionTransitionModelDao(
                 r.getLong(1),
                 UUID.fromString(r.getString(2)),
                 r.getString(3),

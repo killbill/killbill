@@ -25,7 +25,7 @@ import com.ning.billing.analytics.model.BusinessInvoiceItemModelDao;
 import com.ning.billing.analytics.model.BusinessInvoiceModelDao;
 import com.ning.billing.analytics.model.BusinessInvoicePaymentModelDao;
 import com.ning.billing.analytics.model.BusinessOverdueStatusModelDao;
-import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
+import com.ning.billing.analytics.model.BusinessSubscriptionTransitionModelDao;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 
 public interface AnalyticsDao {
@@ -36,9 +36,9 @@ public interface AnalyticsDao {
 
     BusinessAccountModelDao getAccountByKey(String accountKey, InternalTenantContext context);
 
-    List<BusinessSubscriptionTransition> getTransitionsByKey(String externalKey, InternalTenantContext context);
+    List<BusinessSubscriptionTransitionModelDao> getTransitionsByKey(String externalKey, InternalTenantContext context);
 
-    List<BusinessSubscriptionTransition> getTransitionsForAccount(String accountKey, InternalTenantContext context);
+    List<BusinessSubscriptionTransitionModelDao> getTransitionsForAccount(String accountKey, InternalTenantContext context);
 
     List<BusinessInvoiceModelDao> getInvoicesByKey(String accountKey, InternalTenantContext context);
 

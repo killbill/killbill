@@ -41,7 +41,7 @@ import com.ning.billing.analytics.model.BusinessInvoiceModelDao;
 import com.ning.billing.analytics.model.BusinessInvoicePaymentModelDao;
 import com.ning.billing.analytics.model.BusinessOverdueStatusModelDao;
 import com.ning.billing.analytics.model.BusinessSubscriptionEvent;
-import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
+import com.ning.billing.analytics.model.BusinessSubscriptionTransitionModelDao;
 import com.ning.billing.analytics.utils.Rounder;
 import com.ning.billing.api.TestApiListener;
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -491,7 +491,7 @@ public class TestAnalytics extends TestIntegrationBase {
 
     private void verifyBSTWithTrialAndEvergreenPhases(final Account account, final SubscriptionBundle bundle, final Subscription subscription) throws CatalogApiException {
         // BST should have two transitions
-        final List<BusinessSubscriptionTransition> transitions = analyticsUserApi.getTransitionsForBundle(bundle.getKey(), callContext);
+        final List<BusinessSubscriptionTransitionModelDao> transitions = analyticsUserApi.getTransitionsForBundle(bundle.getKey(), callContext);
         Assert.assertEquals(transitions.size(), 2);
 
         verifyTrialAndEvergreenPhases(account, bundle, subscription);
@@ -499,7 +499,7 @@ public class TestAnalytics extends TestIntegrationBase {
 
     private void verifyBSTWithTrialAndEvergreenPhasesAndCancellation(final Account account, final SubscriptionBundle bundle, final Subscription subscription) throws CatalogApiException {
         // BST should have three transitions
-        final List<BusinessSubscriptionTransition> transitions = analyticsUserApi.getTransitionsForBundle(bundle.getKey(), callContext);
+        final List<BusinessSubscriptionTransitionModelDao> transitions = analyticsUserApi.getTransitionsForBundle(bundle.getKey(), callContext);
         Assert.assertEquals(transitions.size(), 3);
 
         verifyTrialAndEvergreenPhases(account, bundle, subscription);
@@ -508,7 +508,7 @@ public class TestAnalytics extends TestIntegrationBase {
 
     private void verifyBSTWithTrialAndEvergreenPhasesAndCancellationAndSystemCancellation(final Account account, final SubscriptionBundle bundle, final Subscription subscription) throws CatalogApiException {
         // BST should have four transitions
-        final List<BusinessSubscriptionTransition> transitions = analyticsUserApi.getTransitionsForBundle(bundle.getKey(), callContext);
+        final List<BusinessSubscriptionTransitionModelDao> transitions = analyticsUserApi.getTransitionsForBundle(bundle.getKey(), callContext);
         Assert.assertEquals(transitions.size(), 4);
 
         verifyTrialAndEvergreenPhases(account, bundle, subscription);
@@ -518,10 +518,10 @@ public class TestAnalytics extends TestIntegrationBase {
 
     private void verifyTrialAndEvergreenPhases(final Account account, final SubscriptionBundle bundle, final Subscription subscription) throws CatalogApiException {
         final Product currentProduct = subscriptionPlan.getProduct();
-        final List<BusinessSubscriptionTransition> transitions = analyticsUserApi.getTransitionsForBundle(bundle.getKey(), callContext);
+        final List<BusinessSubscriptionTransitionModelDao> transitions = analyticsUserApi.getTransitionsForBundle(bundle.getKey(), callContext);
 
         // Check the first transition (into trial phase)
-        final BusinessSubscriptionTransition initialTransition = transitions.get(0);
+        final BusinessSubscriptionTransitionModelDao initialTransition = transitions.get(0);
         Assert.assertEquals(initialTransition.getBundleId(), bundle.getId());
         Assert.assertEquals(initialTransition.getExternalKey(), bundle.getKey());
         Assert.assertEquals(initialTransition.getAccountId(), account.getId());
@@ -547,7 +547,7 @@ public class TestAnalytics extends TestIntegrationBase {
         Assert.assertEquals(initialTransition.getNextSubscription().getState(), Subscription.SubscriptionState.ACTIVE);
 
         // Check the second transition (from trial to evergreen)
-        final BusinessSubscriptionTransition futureTransition = transitions.get(1);
+        final BusinessSubscriptionTransitionModelDao futureTransition = transitions.get(1);
         Assert.assertEquals(futureTransition.getExternalKey(), bundle.getKey());
         Assert.assertEquals(futureTransition.getAccountKey(), account.getExternalKey());
         Assert.assertEquals(futureTransition.getEvent().getCategory(), currentProduct.getCategory());
@@ -573,9 +573,9 @@ public class TestAnalytics extends TestIntegrationBase {
 
     private void verifyCancellationTransition(final Account account, final SubscriptionBundle bundle) throws CatalogApiException {
         final Product currentProduct = subscriptionPlan.getProduct();
-        final List<BusinessSubscriptionTransition> transitions = analyticsUserApi.getTransitionsForBundle(bundle.getKey(), callContext);
+        final List<BusinessSubscriptionTransitionModelDao> transitions = analyticsUserApi.getTransitionsForBundle(bundle.getKey(), callContext);
 
-        final BusinessSubscriptionTransition cancellationRequest = transitions.get(2);
+        final BusinessSubscriptionTransitionModelDao cancellationRequest = transitions.get(2);
         Assert.assertEquals(cancellationRequest.getExternalKey(), bundle.getKey());
         Assert.assertEquals(cancellationRequest.getAccountKey(), account.getExternalKey());
         Assert.assertEquals(cancellationRequest.getEvent().getCategory(), currentProduct.getCategory());
@@ -587,9 +587,9 @@ public class TestAnalytics extends TestIntegrationBase {
     }
 
     private void verifySystemCancellationTransition(final Account account, final SubscriptionBundle bundle) throws CatalogApiException {
-        final List<BusinessSubscriptionTransition> transitions = analyticsUserApi.getTransitionsForBundle(bundle.getKey(), callContext);
+        final List<BusinessSubscriptionTransitionModelDao> transitions = analyticsUserApi.getTransitionsForBundle(bundle.getKey(), callContext);
 
-        final BusinessSubscriptionTransition systemCancellation = transitions.get(3);
+        final BusinessSubscriptionTransitionModelDao systemCancellation = transitions.get(3);
         Assert.assertEquals(systemCancellation.getExternalKey(), bundle.getKey());
         Assert.assertEquals(systemCancellation.getAccountKey(), account.getExternalKey());
         Assert.assertEquals(systemCancellation.getEvent().getCategory(), ProductCategory.BASE);
@@ -610,10 +610,10 @@ public class TestAnalytics extends TestIntegrationBase {
         waitALittle();
 
         // BST should have three transitions (a ADD_BASE, CHANGE_BASE and SYSTEM_CHANGE_BASE)
-        final List<BusinessSubscriptionTransition> transitions = analyticsUserApi.getTransitionsForBundle(bundle.getKey(), callContext);
+        final List<BusinessSubscriptionTransitionModelDao> transitions = analyticsUserApi.getTransitionsForBundle(bundle.getKey(), callContext);
         Assert.assertEquals(transitions.size(), 3);
-        final BusinessSubscriptionTransition previousTransition = transitions.get(0);
-        final BusinessSubscriptionTransition transition = transitions.get(1);
+        final BusinessSubscriptionTransitionModelDao previousTransition = transitions.get(0);
+        final BusinessSubscriptionTransitionModelDao transition = transitions.get(1);
         Assert.assertEquals(transition.getBundleId(), bundle.getId());
         Assert.assertEquals(transition.getExternalKey(), bundle.getKey());
         Assert.assertEquals(transition.getAccountId(), account.getId());

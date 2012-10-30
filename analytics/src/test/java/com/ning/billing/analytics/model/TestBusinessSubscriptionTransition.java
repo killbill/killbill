@@ -53,7 +53,7 @@ public class TestBusinessSubscriptionTransition extends AnalyticsTestSuite {
     private UUID accountId;
     private String accountKey;
     private UUID subscriptionId;
-    private BusinessSubscriptionTransition transition;
+    private BusinessSubscriptionTransitionModelDao transition;
 
     private final CatalogService catalogService = Mockito.mock(CatalogService.class);
     private final Catalog catalog = Mockito.mock(Catalog.class);
@@ -82,7 +82,7 @@ public class TestBusinessSubscriptionTransition extends AnalyticsTestSuite {
         accountId = UUID.randomUUID();
         accountKey = "pierre-1234";
         subscriptionId = UUID.randomUUID();
-        transition = new BusinessSubscriptionTransition(totalOrdering, bundleId, externalKey, accountId, accountKey,
+        transition = new BusinessSubscriptionTransitionModelDao(totalOrdering, bundleId, externalKey, accountId, accountKey,
                                                         subscriptionId, requestedTimestamp, event, prevSubscription, nextSubscription);
     }
 
@@ -100,25 +100,25 @@ public class TestBusinessSubscriptionTransition extends AnalyticsTestSuite {
         Assert.assertEquals(transition, transition);
         Assert.assertTrue(transition.equals(transition));
 
-        BusinessSubscriptionTransition otherTransition;
+        BusinessSubscriptionTransitionModelDao otherTransition;
 
-        otherTransition = new BusinessSubscriptionTransition(totalOrdering, bundleId, externalKey, accountId, accountKey,
+        otherTransition = new BusinessSubscriptionTransitionModelDao(totalOrdering, bundleId, externalKey, accountId, accountKey,
                                                              subscriptionId, new DateTime(), event, prevSubscription, nextSubscription);
         Assert.assertTrue(!transition.equals(otherTransition));
 
-        otherTransition = new BusinessSubscriptionTransition(totalOrdering, bundleId, "12345", accountId, accountKey,
+        otherTransition = new BusinessSubscriptionTransitionModelDao(totalOrdering, bundleId, "12345", accountId, accountKey,
                                                              subscriptionId, requestedTimestamp, event, prevSubscription, nextSubscription);
         Assert.assertTrue(!transition.equals(otherTransition));
 
-        otherTransition = new BusinessSubscriptionTransition(totalOrdering, bundleId, externalKey, accountId, accountKey,
+        otherTransition = new BusinessSubscriptionTransitionModelDao(totalOrdering, bundleId, externalKey, accountId, accountKey,
                                                              subscriptionId, requestedTimestamp, event, prevSubscription, prevSubscription);
         Assert.assertTrue(!transition.equals(otherTransition));
 
-        otherTransition = new BusinessSubscriptionTransition(totalOrdering, bundleId, externalKey, accountId, accountKey,
+        otherTransition = new BusinessSubscriptionTransitionModelDao(totalOrdering, bundleId, externalKey, accountId, accountKey,
                                                              subscriptionId, requestedTimestamp, event, nextSubscription, nextSubscription);
         Assert.assertTrue(!transition.equals(otherTransition));
 
-        otherTransition = new BusinessSubscriptionTransition(totalOrdering, bundleId, externalKey, accountId, accountKey,
+        otherTransition = new BusinessSubscriptionTransitionModelDao(totalOrdering, bundleId, externalKey, accountId, accountKey,
                                                              subscriptionId, requestedTimestamp, event, nextSubscription, prevSubscription);
         Assert.assertTrue(!transition.equals(otherTransition));
     }
@@ -126,7 +126,7 @@ public class TestBusinessSubscriptionTransition extends AnalyticsTestSuite {
     @Test(groups = "fast")
     public void testRejectInvalidTransitions() throws Exception {
         try {
-            new BusinessSubscriptionTransition(null, bundleId, externalKey, accountId, accountKey,
+            new BusinessSubscriptionTransitionModelDao(null, bundleId, externalKey, accountId, accountKey,
                                                subscriptionId, requestedTimestamp, event, prevSubscription, nextSubscription);
             Assert.fail();
         } catch (IllegalArgumentException e) {
@@ -134,7 +134,7 @@ public class TestBusinessSubscriptionTransition extends AnalyticsTestSuite {
         }
 
         try {
-            new BusinessSubscriptionTransition(totalOrdering, bundleId, null, accountId, accountKey,
+            new BusinessSubscriptionTransitionModelDao(totalOrdering, bundleId, null, accountId, accountKey,
                                                subscriptionId, requestedTimestamp, event, prevSubscription, nextSubscription);
             Assert.fail();
         } catch (IllegalArgumentException e) {
@@ -142,7 +142,7 @@ public class TestBusinessSubscriptionTransition extends AnalyticsTestSuite {
         }
 
         try {
-            new BusinessSubscriptionTransition(totalOrdering, bundleId, externalKey, accountId, accountKey,
+            new BusinessSubscriptionTransitionModelDao(totalOrdering, bundleId, externalKey, accountId, accountKey,
                                                subscriptionId, null, event, prevSubscription, nextSubscription);
             Assert.fail();
         } catch (IllegalArgumentException e) {
@@ -150,7 +150,7 @@ public class TestBusinessSubscriptionTransition extends AnalyticsTestSuite {
         }
 
         try {
-            new BusinessSubscriptionTransition(totalOrdering, bundleId, externalKey, accountId, accountKey,
+            new BusinessSubscriptionTransitionModelDao(totalOrdering, bundleId, externalKey, accountId, accountKey,
                                                subscriptionId, requestedTimestamp, null, prevSubscription, nextSubscription);
             Assert.fail();
         } catch (IllegalArgumentException e) {

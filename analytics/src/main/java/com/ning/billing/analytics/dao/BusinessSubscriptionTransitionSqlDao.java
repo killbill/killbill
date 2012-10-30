@@ -25,7 +25,7 @@ import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 
-import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
+import com.ning.billing.analytics.model.BusinessSubscriptionTransitionModelDao;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.InternalTenantContextBinder;
@@ -40,19 +40,19 @@ public interface BusinessSubscriptionTransitionSqlDao extends Transactional<Busi
                                                           @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
-    List<BusinessSubscriptionTransition> getTransitionsByKey(@Bind("external_key") final String externalKey,
+    List<BusinessSubscriptionTransitionModelDao> getTransitionsByKey(@Bind("external_key") final String externalKey,
                                                              @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
-    List<BusinessSubscriptionTransition> getTransitionForSubscription(@Bind("subscription_id") final String subscriptionId,
+    List<BusinessSubscriptionTransitionModelDao> getTransitionForSubscription(@Bind("subscription_id") final String subscriptionId,
                                                                       @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
-    List<BusinessSubscriptionTransition> getTransitionsForAccount(@Bind("account_key") final String accountKey,
+    List<BusinessSubscriptionTransitionModelDao> getTransitionsForAccount(@Bind("account_key") final String accountKey,
                                                                   @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlUpdate
-    int createTransition(@BusinessSubscriptionTransitionBinder final BusinessSubscriptionTransition transition,
+    int createTransition(@BusinessSubscriptionTransitionBinder final BusinessSubscriptionTransitionModelDao transition,
                          @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate

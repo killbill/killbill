@@ -45,7 +45,7 @@ import com.ning.billing.analytics.model.BusinessInvoiceModelDao;
 import com.ning.billing.analytics.model.BusinessInvoiceItemModelDao;
 import com.ning.billing.analytics.model.BusinessInvoicePaymentModelDao;
 import com.ning.billing.analytics.model.BusinessOverdueStatusModelDao;
-import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
+import com.ning.billing.analytics.model.BusinessSubscriptionTransitionModelDao;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.api.Blockable.Type;
 import com.ning.billing.payment.api.Payment;
@@ -164,9 +164,9 @@ public class DefaultAnalyticsUserApi implements AnalyticsUserApi {
 
         // Find the current state of bundles in analytics
         final Collection<UUID> analyticsBundlesId = Collections2.transform(analyticsDao.getTransitionsForAccount(account.getExternalKey(), internalCallContext),
-                                                                           new Function<BusinessSubscriptionTransition, UUID>() {
+                                                                           new Function<BusinessSubscriptionTransitionModelDao, UUID>() {
                                                                                @Override
-                                                                               public UUID apply(@Nullable final BusinessSubscriptionTransition input) {
+                                                                               public UUID apply(@Nullable final BusinessSubscriptionTransitionModelDao input) {
                                                                                    if (input == null) {
                                                                                        return null;
                                                                                    } else {
@@ -284,7 +284,7 @@ public class DefaultAnalyticsUserApi implements AnalyticsUserApi {
         return analyticsDao.getAccountByKey(accountKey, internalCallContextFactory.createInternalTenantContext(context));
     }
 
-    public List<BusinessSubscriptionTransition> getTransitionsForBundle(final String externalKey, final TenantContext context) {
+    public List<BusinessSubscriptionTransitionModelDao> getTransitionsForBundle(final String externalKey, final TenantContext context) {
         return analyticsDao.getTransitionsByKey(externalKey, internalCallContextFactory.createInternalTenantContext(context));
     }
 
