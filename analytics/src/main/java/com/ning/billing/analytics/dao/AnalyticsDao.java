@@ -23,7 +23,7 @@ import com.ning.billing.analytics.model.BusinessAccountModelDao;
 import com.ning.billing.analytics.model.BusinessAccountTagModelDao;
 import com.ning.billing.analytics.model.BusinessInvoiceItemModelDao;
 import com.ning.billing.analytics.model.BusinessInvoiceModelDao;
-import com.ning.billing.analytics.model.BusinessInvoicePayment;
+import com.ning.billing.analytics.model.BusinessInvoicePaymentModelDao;
 import com.ning.billing.analytics.model.BusinessOverdueStatus;
 import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
 import com.ning.billing.util.callcontext.InternalTenantContext;
@@ -48,5 +48,5 @@ public interface AnalyticsDao {
 
     List<BusinessOverdueStatus> getOverdueStatusesForBundleByKey(String externalKey, InternalTenantContext context);
 
-    List<BusinessInvoicePayment> getInvoicePaymentsForAccountByKey(String accountKey, InternalTenantContext context);
+    List<BusinessInvoicePaymentModelDao> getInvoicePaymentsForAccountByKey(String accountKey, InternalTenantContext context);
 }

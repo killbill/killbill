@@ -50,7 +50,7 @@ public class TestBusinessInvoicePayment extends AnalyticsTestSuite {
         final DateTime updatedDate = new DateTime(DateTimeZone.UTC);
         final String invoicePaymentType = UUID.randomUUID().toString();
         final UUID linkedInvoicePaymentId = UUID.randomUUID();
-        final BusinessInvoicePayment invoicePayment = new BusinessInvoicePayment(accountKey, amount, extFirstPaymentRefId, extSecondPaymentRefId,
+        final BusinessInvoicePaymentModelDao invoicePayment = new BusinessInvoicePaymentModelDao(accountKey, amount, extFirstPaymentRefId, extSecondPaymentRefId,
                                                                                  cardCountry, cardType, createdDate,
                                                                                  currency, effectiveDate, invoiceId,
                                                                                  paymentError, paymentId, paymentMethod,
@@ -81,7 +81,7 @@ public class TestBusinessInvoicePayment extends AnalyticsTestSuite {
         Assert.assertEquals(invoicePayment.getInvoicePaymentType(), invoicePaymentType);
         Assert.assertEquals(invoicePayment.getLinkedInvoicePaymentId(), linkedInvoicePaymentId);
 
-        final BusinessInvoicePayment otherInvoicePayment = new BusinessInvoicePayment(null, null, extFirstPaymentRefId, extSecondPaymentRefId, null, null, createdDate,
+        final BusinessInvoicePaymentModelDao otherInvoicePayment = new BusinessInvoicePaymentModelDao(null, null, extFirstPaymentRefId, extSecondPaymentRefId, null, null, createdDate,
                                                                                       null, null, null, null, paymentId, null,
                                                                                       null, null, null, null, null, null, null);
         Assert.assertFalse(invoicePayment.equals(otherInvoicePayment));

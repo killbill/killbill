@@ -38,7 +38,7 @@ import com.ning.billing.analytics.model.BusinessAccountModelDao;
 import com.ning.billing.analytics.model.BusinessAccountTagModelDao;
 import com.ning.billing.analytics.model.BusinessInvoiceItemModelDao;
 import com.ning.billing.analytics.model.BusinessInvoiceModelDao;
-import com.ning.billing.analytics.model.BusinessInvoicePayment;
+import com.ning.billing.analytics.model.BusinessInvoicePaymentModelDao;
 import com.ning.billing.analytics.model.BusinessOverdueStatus;
 import com.ning.billing.analytics.model.BusinessSubscriptionEvent;
 import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
@@ -240,7 +240,7 @@ public class TestAnalytics extends TestIntegrationBase {
         verifyBSTWithTrialAndEvergreenPhases(account, bundle, subscription);
 
         // Verify the payments - we should have received one
-        final List<BusinessInvoicePayment> invoicePaymentsForAccount = analyticsUserApi.getInvoicePaymentsForAccount(account.getExternalKey(), callContext);
+        final List<BusinessInvoicePaymentModelDao> invoicePaymentsForAccount = analyticsUserApi.getInvoicePaymentsForAccount(account.getExternalKey(), callContext);
         Assert.assertEquals(invoicePaymentsForAccount.size(), 1);
         Assert.assertEquals(invoicePaymentsForAccount.get(0).getAccountKey(), account.getExternalKey());
         Assert.assertTrue(invoicePaymentsForAccount.get(0).getAmount().compareTo(BigDecimal.ZERO) > 0);

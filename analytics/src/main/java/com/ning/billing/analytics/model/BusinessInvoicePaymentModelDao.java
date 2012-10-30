@@ -25,7 +25,7 @@ import org.joda.time.DateTime;
 import com.ning.billing.analytics.utils.Rounder;
 import com.ning.billing.catalog.api.Currency;
 
-public class BusinessInvoicePayment {
+public class BusinessInvoicePaymentModelDao {
     private final UUID paymentId;
     private final DateTime createdDate;
     private final String extFirstPaymentRefId;
@@ -47,13 +47,13 @@ public class BusinessInvoicePayment {
     private final String invoicePaymentType;
     private final UUID linkedInvoicePaymentId;
 
-    public BusinessInvoicePayment(final String accountKey, final BigDecimal amount, final String extFirstPaymentRefId, final String extSecondPaymentRefId,
-                                  final String cardCountry, final String cardType, final DateTime createdDate,
-                                  final Currency currency, final DateTime effectiveDate, final UUID invoiceId,
-                                  final String paymentError, final UUID paymentId, final String paymentMethod,
-                                  final String paymentType, final String pluginName, final String processingStatus,
-                                  final BigDecimal requestedAmount, final DateTime updatedDate, @Nullable final String invoicePaymentType,
-                                  @Nullable final UUID linkedInvoicePaymentId) {
+    public BusinessInvoicePaymentModelDao(final String accountKey, final BigDecimal amount, final String extFirstPaymentRefId, final String extSecondPaymentRefId,
+                                          final String cardCountry, final String cardType, final DateTime createdDate,
+                                          final Currency currency, final DateTime effectiveDate, final UUID invoiceId,
+                                          final String paymentError, final UUID paymentId, final String paymentMethod,
+                                          final String paymentType, final String pluginName, final String processingStatus,
+                                          final BigDecimal requestedAmount, final DateTime updatedDate, @Nullable final String invoicePaymentType,
+                                          @Nullable final UUID linkedInvoicePaymentId) {
         this.accountKey = accountKey;
         this.amount = amount;
         this.extFirstPaymentRefId = extFirstPaymentRefId;
@@ -159,7 +159,7 @@ public class BusinessInvoicePayment {
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
-        sb.append("BusinessInvoicePayment");
+        sb.append("BusinessInvoicePaymentModelDao");
         sb.append("{accountKey='").append(accountKey).append('\'');
         sb.append(", paymentId=").append(paymentId);
         sb.append(", createdDate=").append(createdDate);
@@ -192,7 +192,7 @@ public class BusinessInvoicePayment {
             return false;
         }
 
-        final BusinessInvoicePayment that = (BusinessInvoicePayment) o;
+        final BusinessInvoicePaymentModelDao that = (BusinessInvoicePaymentModelDao) o;
 
         if (accountKey != null ? !accountKey.equals(that.accountKey) : that.accountKey != null) {
             return false;

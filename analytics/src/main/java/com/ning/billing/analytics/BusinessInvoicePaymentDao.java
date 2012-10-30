@@ -33,7 +33,7 @@ import com.ning.billing.analytics.dao.BusinessAccountSqlDao;
 import com.ning.billing.analytics.dao.BusinessInvoicePaymentSqlDao;
 import com.ning.billing.analytics.dao.BusinessInvoiceSqlDao;
 import com.ning.billing.analytics.model.BusinessAccountModelDao;
-import com.ning.billing.analytics.model.BusinessInvoicePayment;
+import com.ning.billing.analytics.model.BusinessInvoicePaymentModelDao;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoicePayment;
@@ -144,7 +144,7 @@ public class BusinessInvoicePaymentDao {
             updatedDate = createdDate;
         }
 
-        final BusinessInvoicePayment businessInvoicePayment = new BusinessInvoicePayment(
+        final BusinessInvoicePaymentModelDao businessInvoicePayment = new BusinessInvoicePaymentModelDao(
                 account.getExternalKey(),
                 payment.getAmount(),
                 extFirstPaymentRefId,

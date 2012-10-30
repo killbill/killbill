@@ -26,7 +26,7 @@ import com.ning.billing.analytics.model.BusinessAccountModelDao;
 import com.ning.billing.analytics.model.BusinessAccountTagModelDao;
 import com.ning.billing.analytics.model.BusinessInvoiceModelDao;
 import com.ning.billing.analytics.model.BusinessInvoiceItemModelDao;
-import com.ning.billing.analytics.model.BusinessInvoicePayment;
+import com.ning.billing.analytics.model.BusinessInvoicePaymentModelDao;
 import com.ning.billing.analytics.model.BusinessOverdueStatus;
 import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
 import com.ning.billing.util.callcontext.InternalTenantContext;
@@ -104,7 +104,7 @@ public class DefaultAnalyticsDao implements AnalyticsDao {
     }
 
     @Override
-    public List<BusinessInvoicePayment> getInvoicePaymentsForAccountByKey(final String accountKey, final InternalTenantContext context) {
+    public List<BusinessInvoicePaymentModelDao> getInvoicePaymentsForAccountByKey(final String accountKey, final InternalTenantContext context) {
         return invoicePaymentSqlDao.getInvoicePaymentsForAccountByKey(accountKey, context);
     }
 }

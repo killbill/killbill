@@ -43,7 +43,7 @@ import com.ning.billing.analytics.model.BusinessAccountModelDao;
 import com.ning.billing.analytics.model.BusinessAccountTagModelDao;
 import com.ning.billing.analytics.model.BusinessInvoiceModelDao;
 import com.ning.billing.analytics.model.BusinessInvoiceItemModelDao;
-import com.ning.billing.analytics.model.BusinessInvoicePayment;
+import com.ning.billing.analytics.model.BusinessInvoicePaymentModelDao;
 import com.ning.billing.analytics.model.BusinessOverdueStatus;
 import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
@@ -208,9 +208,9 @@ public class DefaultAnalyticsUserApi implements AnalyticsUserApi {
 
         // Find the current state of payments in analytics
         final Collection<UUID> analyticsPaymentsId = Collections2.transform(analyticsDao.getInvoicePaymentsForAccountByKey(account.getExternalKey(), internalCallContext),
-                                                                            new Function<BusinessInvoicePayment, UUID>() {
+                                                                            new Function<BusinessInvoicePaymentModelDao, UUID>() {
                                                                                 @Override
-                                                                                public UUID apply(@Nullable final BusinessInvoicePayment input) {
+                                                                                public UUID apply(@Nullable final BusinessInvoicePaymentModelDao input) {
                                                                                     if (input == null) {
                                                                                         return null;
                                                                                     } else {
@@ -304,7 +304,7 @@ public class DefaultAnalyticsUserApi implements AnalyticsUserApi {
         return analyticsDao.getInvoiceItemsForInvoice(invoiceId.toString(), internalCallContextFactory.createInternalTenantContext(context));
     }
 
-    public List<BusinessInvoicePayment> getInvoicePaymentsForAccount(final String accountKey, final TenantContext context) {
+    public List<BusinessInvoicePaymentModelDao> getInvoicePaymentsForAccount(final String accountKey, final TenantContext context) {
         return analyticsDao.getInvoicePaymentsForAccountByKey(accountKey, internalCallContextFactory.createInternalTenantContext(context));
     }
 }
