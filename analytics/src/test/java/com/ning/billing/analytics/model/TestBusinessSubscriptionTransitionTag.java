@@ -30,7 +30,7 @@ public class TestBusinessSubscriptionTransitionTag extends AnalyticsTestSuite {
         final UUID bundleId = UUID.randomUUID();
         final String externalKey = UUID.randomUUID().toString();
         final String name = UUID.randomUUID().toString();
-        final BusinessSubscriptionTransitionTag subscriptionTransitionTag = new BusinessSubscriptionTransitionTag(accountKey,
+        final BusinessSubscriptionTransitionTagModelDao subscriptionTransitionTag = new BusinessSubscriptionTransitionTagModelDao(accountKey,
                                                                                                                   bundleId,
                                                                                                                   externalKey,
                                                                                                                   name);
@@ -42,7 +42,7 @@ public class TestBusinessSubscriptionTransitionTag extends AnalyticsTestSuite {
         Assert.assertEquals(subscriptionTransitionTag.getExternalKey(), externalKey);
         Assert.assertEquals(subscriptionTransitionTag.getName(), name);
 
-        final BusinessSubscriptionTransitionTag otherTransitionTag = new BusinessSubscriptionTransitionTag(UUID.randomUUID().toString(),
+        final BusinessSubscriptionTransitionTagModelDao otherTransitionTag = new BusinessSubscriptionTransitionTagModelDao(UUID.randomUUID().toString(),
                                                                                                            UUID.randomUUID(),
                                                                                                            UUID.randomUUID().toString(),
                                                                                                            UUID.randomUUID().toString());

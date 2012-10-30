@@ -18,12 +18,12 @@ package com.ning.billing.analytics.model;
 
 import java.util.UUID;
 
-public class BusinessSubscriptionTransitionTag extends BusinessTagModelDao {
+public class BusinessSubscriptionTransitionTagModelDao extends BusinessTagModelDao {
     private final String accountKey;
     private final UUID bundleId;
     private final String externalKey;
 
-    public BusinessSubscriptionTransitionTag(final String accountKey, final UUID bundleId, final String externalKey, final String name) {
+    public BusinessSubscriptionTransitionTagModelDao(final String accountKey, final UUID bundleId, final String externalKey, final String name) {
         super(name);
         this.accountKey = accountKey;
         this.bundleId = bundleId;
@@ -45,7 +45,7 @@ public class BusinessSubscriptionTransitionTag extends BusinessTagModelDao {
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
-        sb.append("BusinessSubscriptionTransitionTag");
+        sb.append("BusinessSubscriptionTransitionTagModelDao");
         sb.append("{accountKey='").append(accountKey).append('\'');
         sb.append(", bundleId='").append(bundleId).append('\'');
         sb.append(", externalKey='").append(externalKey).append('\'');
@@ -63,7 +63,7 @@ public class BusinessSubscriptionTransitionTag extends BusinessTagModelDao {
             return false;
         }
 
-        final BusinessSubscriptionTransitionTag that = (BusinessSubscriptionTransitionTag) o;
+        final BusinessSubscriptionTransitionTagModelDao that = (BusinessSubscriptionTransitionTagModelDao) o;
 
         if (accountKey != null ? !accountKey.equals(that.accountKey) : that.accountKey != null) {
             return false;

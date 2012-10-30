@@ -25,7 +25,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.analytics.AnalyticsTestSuiteWithEmbeddedDB;
-import com.ning.billing.analytics.model.BusinessSubscriptionTransitionTag;
+import com.ning.billing.analytics.model.BusinessSubscriptionTransitionTagModelDao;
 
 public class TestBusinessSubscriptionTransitionTagSqlDao extends AnalyticsTestSuiteWithEmbeddedDB {
     private BusinessSubscriptionTransitionTagSqlDao subscriptionTransitionTagSqlDao;
@@ -49,11 +49,11 @@ public class TestBusinessSubscriptionTransitionTagSqlDao extends AnalyticsTestSu
 
         // Add an entry
         Assert.assertEquals(subscriptionTransitionTagSqlDao.addTag(accountKey, bundleId.toString(), externalKey, name, internalCallContext), 1);
-        final List<BusinessSubscriptionTransitionTag> tagsForBusinessSubscriptionTransition = subscriptionTransitionTagSqlDao.getTagsForBusinessSubscriptionTransitionByKey(externalKey, internalCallContext);
+        final List<BusinessSubscriptionTransitionTagModelDao> tagsForBusinessSubscriptionTransition = subscriptionTransitionTagSqlDao.getTagsForBusinessSubscriptionTransitionByKey(externalKey, internalCallContext);
         Assert.assertEquals(tagsForBusinessSubscriptionTransition.size(), 1);
 
         // Retrieve it
-        final BusinessSubscriptionTransitionTag subscriptionTransitionTag = tagsForBusinessSubscriptionTransition.get(0);
+        final BusinessSubscriptionTransitionTagModelDao subscriptionTransitionTag = tagsForBusinessSubscriptionTransition.get(0);
         Assert.assertEquals(subscriptionTransitionTag.getBundleId(), bundleId);
         Assert.assertEquals(subscriptionTransitionTag.getExternalKey(), externalKey);
         Assert.assertEquals(subscriptionTransitionTag.getName(), name);
