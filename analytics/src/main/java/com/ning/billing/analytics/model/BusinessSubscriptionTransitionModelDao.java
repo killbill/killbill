@@ -20,10 +20,12 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.util.entity.EntityBase;
+
 /**
  * Describe a state change between two BusinessSubscription
  */
-public class BusinessSubscriptionTransitionModelDao {
+public class BusinessSubscriptionTransitionModelDao extends EntityBase {
     private final long totalOrdering;
     private final UUID bundleId;
     private final String externalKey;
