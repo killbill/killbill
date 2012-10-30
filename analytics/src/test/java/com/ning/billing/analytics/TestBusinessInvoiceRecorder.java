@@ -25,7 +25,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.analytics.dao.BusinessInvoiceSqlDao;
-import com.ning.billing.analytics.model.BusinessInvoiceItem;
+import com.ning.billing.analytics.model.BusinessInvoiceItemModelDao;
 import com.ning.billing.catalog.MockCatalog;
 import com.ning.billing.catalog.MockCatalogService;
 import com.ning.billing.catalog.api.Currency;
@@ -59,7 +59,7 @@ public class TestBusinessInvoiceRecorder extends AnalyticsTestSuite {
         Mockito.when(invoiceItem.getStartDate()).thenReturn(new LocalDate(1985, 9, 10));
         Mockito.when(invoiceItem.getInvoiceItemType()).thenReturn(InvoiceItemType.CREDIT_ADJ);
 
-        final BusinessInvoiceItem bii = dao.createBusinessInvoiceItem(invoiceItem, internalCallContext);
+        final BusinessInvoiceItemModelDao bii = dao.createBusinessInvoiceItem(invoiceItem, internalCallContext);
         Assert.assertNotNull(bii);
         Assert.assertEquals(bii.getAmount(), invoiceItem.getAmount());
         Assert.assertEquals(bii.getCurrency(), invoiceItem.getCurrency());

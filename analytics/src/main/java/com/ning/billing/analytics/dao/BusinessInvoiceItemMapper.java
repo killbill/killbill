@@ -27,14 +27,14 @@ import org.joda.time.LocalDate;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import com.ning.billing.analytics.model.BusinessInvoiceItem;
+import com.ning.billing.analytics.model.BusinessInvoiceItemModelDao;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.dao.MapperBase;
 
-public class BusinessInvoiceItemMapper extends MapperBase implements ResultSetMapper<BusinessInvoiceItem> {
+public class BusinessInvoiceItemMapper extends MapperBase implements ResultSetMapper<BusinessInvoiceItemModelDao> {
 
     @Override
-    public BusinessInvoiceItem map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
+    public BusinessInvoiceItemModelDao map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
         final UUID itemId = getUUID(r, "item_id");
         final UUID linkedItemId = getUUID(r, "linked_item_id");
         final DateTime createdDate = new DateTime(r.getLong("created_date"), DateTimeZone.UTC);
@@ -53,7 +53,7 @@ public class BusinessInvoiceItemMapper extends MapperBase implements ResultSetMa
         final BigDecimal amount = BigDecimal.valueOf(r.getDouble("amount"));
         final Currency currency = Currency.valueOf(r.getString("currency"));
 
-        return new BusinessInvoiceItem(amount, billingPeriod, createdDate, currency, endDate, externalKey, invoiceId,
+        return new BusinessInvoiceItemModelDao(amount, billingPeriod, createdDate, currency, endDate, externalKey, invoiceId,
                                        itemId, linkedItemId, itemType, phase, productCategory, productName, productType, slug,
                                        startDate, updatedDate);
     }

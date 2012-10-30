@@ -27,7 +27,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.analytics.AnalyticsTestSuiteWithEmbeddedDB;
-import com.ning.billing.analytics.model.BusinessInvoiceItem;
+import com.ning.billing.analytics.model.BusinessInvoiceItemModelDao;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
@@ -48,7 +48,7 @@ public class TestBusinessInvoiceItemSqlDao extends AnalyticsTestSuiteWithEmbedde
     public void testCRUD() throws Exception {
         final UUID invoiceId = UUID.randomUUID();
         final String externalKey = UUID.randomUUID().toString();
-        final BusinessInvoiceItem invoiceItem = createInvoiceItem(invoiceId, externalKey);
+        final BusinessInvoiceItemModelDao invoiceItem = createInvoiceItem(invoiceId, externalKey);
 
         // Verify initial state
         Assert.assertNull(invoiceItemSqlDao.getInvoiceItem(invoiceItem.getItemId().toString(), internalCallContext));
@@ -75,10 +75,10 @@ public class TestBusinessInvoiceItemSqlDao extends AnalyticsTestSuiteWithEmbedde
     public void testSegmentation() throws Exception {
         final UUID invoiceId1 = UUID.randomUUID();
         final String externalKey1 = UUID.randomUUID().toString();
-        final BusinessInvoiceItem invoiceItem1 = createInvoiceItem(invoiceId1, externalKey1);
+        final BusinessInvoiceItemModelDao invoiceItem1 = createInvoiceItem(invoiceId1, externalKey1);
         final UUID invoiceId2 = UUID.randomUUID();
         final String externalKey2 = UUID.randomUUID().toString();
-        final BusinessInvoiceItem invoiceItem2 = createInvoiceItem(invoiceId2, externalKey2);
+        final BusinessInvoiceItemModelDao invoiceItem2 = createInvoiceItem(invoiceId2, externalKey2);
 
         // Create both invoice items
         Assert.assertEquals(invoiceItemSqlDao.createInvoiceItem(invoiceItem1, internalCallContext), 1);
@@ -108,7 +108,7 @@ public class TestBusinessInvoiceItemSqlDao extends AnalyticsTestSuiteWithEmbedde
         }
     }
 
-    private BusinessInvoiceItem createInvoiceItem(final UUID invoiceId, final String externalKey) {
+    private BusinessInvoiceItemModelDao createInvoiceItem(final UUID invoiceId, final String externalKey) {
         final BigDecimal amount = BigDecimal.TEN;
         final String billingPeriod = UUID.randomUUID().toString().substring(0, 20);
         final DateTime createdDate = clock.getUTCNow();
@@ -125,7 +125,7 @@ public class TestBusinessInvoiceItemSqlDao extends AnalyticsTestSuiteWithEmbedde
         final LocalDate startDate = clock.getUTCToday();
         final DateTime updatedDate = clock.getUTCNow();
 
-        return new BusinessInvoiceItem(amount, billingPeriod, createdDate, currency, endDate, externalKey, invoiceId, itemId,
+        return new BusinessInvoiceItemModelDao(amount, billingPeriod, createdDate, currency, endDate, externalKey, invoiceId, itemId,
                                        linkedItemId, itemType, phase, productCategory, productName, productType, slug, startDate, updatedDate);
     }
 }

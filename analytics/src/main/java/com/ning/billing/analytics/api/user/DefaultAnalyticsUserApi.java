@@ -42,7 +42,7 @@ import com.ning.billing.analytics.dao.AnalyticsDao;
 import com.ning.billing.analytics.model.BusinessAccountModelDao;
 import com.ning.billing.analytics.model.BusinessAccountTagModelDao;
 import com.ning.billing.analytics.model.BusinessInvoiceModelDao;
-import com.ning.billing.analytics.model.BusinessInvoiceItem;
+import com.ning.billing.analytics.model.BusinessInvoiceItemModelDao;
 import com.ning.billing.analytics.model.BusinessInvoicePayment;
 import com.ning.billing.analytics.model.BusinessOverdueStatus;
 import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
@@ -300,7 +300,7 @@ public class DefaultAnalyticsUserApi implements AnalyticsUserApi {
         return analyticsDao.getOverdueStatusesForBundleByKey(externalKey, internalCallContextFactory.createInternalTenantContext(context));
     }
 
-    public List<BusinessInvoiceItem> getInvoiceItemsForInvoice(final UUID invoiceId, final TenantContext context) {
+    public List<BusinessInvoiceItemModelDao> getInvoiceItemsForInvoice(final UUID invoiceId, final TenantContext context) {
         return analyticsDao.getInvoiceItemsForInvoice(invoiceId.toString(), internalCallContextFactory.createInternalTenantContext(context));
     }
 

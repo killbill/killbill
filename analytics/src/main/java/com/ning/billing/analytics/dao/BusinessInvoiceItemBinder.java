@@ -30,7 +30,7 @@ import org.skife.jdbi.v2.sqlobject.Binder;
 import org.skife.jdbi.v2.sqlobject.BinderFactory;
 import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
 
-import com.ning.billing.analytics.model.BusinessInvoiceItem;
+import com.ning.billing.analytics.model.BusinessInvoiceItemModelDao;
 import com.ning.billing.analytics.utils.Rounder;
 
 @BindingAnnotation(BusinessInvoiceItemBinder.BiiBinderFactory.class)
@@ -41,8 +41,8 @@ public @interface BusinessInvoiceItemBinder {
     public static class BiiBinderFactory implements BinderFactory {
 
         public Binder build(final Annotation annotation) {
-            return new Binder<BusinessInvoiceItemBinder, BusinessInvoiceItem>() {
-                public void bind(final SQLStatement q, final BusinessInvoiceItemBinder bind, final BusinessInvoiceItem invoiceItem) {
+            return new Binder<BusinessInvoiceItemBinder, BusinessInvoiceItemModelDao>() {
+                public void bind(final SQLStatement q, final BusinessInvoiceItemBinder bind, final BusinessInvoiceItemModelDao invoiceItem) {
                     q.bind("item_id", invoiceItem.getItemId().toString());
                     if (invoiceItem.getLinkedItemId() != null) {
                         q.bind("linked_item_id", invoiceItem.getLinkedItemId().toString());

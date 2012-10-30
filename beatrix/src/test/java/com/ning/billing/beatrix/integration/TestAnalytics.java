@@ -36,8 +36,8 @@ import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.MutableAccountData;
 import com.ning.billing.analytics.model.BusinessAccountModelDao;
 import com.ning.billing.analytics.model.BusinessAccountTagModelDao;
+import com.ning.billing.analytics.model.BusinessInvoiceItemModelDao;
 import com.ning.billing.analytics.model.BusinessInvoiceModelDao;
-import com.ning.billing.analytics.model.BusinessInvoiceItem;
 import com.ning.billing.analytics.model.BusinessInvoicePayment;
 import com.ning.billing.analytics.model.BusinessOverdueStatus;
 import com.ning.billing.analytics.model.BusinessSubscriptionEvent;
@@ -467,9 +467,9 @@ public class TestAnalytics extends TestIntegrationBase {
         Assert.assertEquals(invoice.getCurrency(), account.getCurrency());
 
         // The invoice should have a single item associated to it
-        final List<BusinessInvoiceItem> invoiceItems = analyticsUserApi.getInvoiceItemsForInvoice(invoice.getInvoiceId(), callContext);
+        final List<BusinessInvoiceItemModelDao> invoiceItems = analyticsUserApi.getInvoiceItemsForInvoice(invoice.getInvoiceId(), callContext);
         Assert.assertEquals(invoiceItems.size(), 1);
-        final BusinessInvoiceItem invoiceItem = invoiceItems.get(0);
+        final BusinessInvoiceItemModelDao invoiceItem = invoiceItems.get(0);
         Assert.assertEquals(invoiceItem.getAmount().doubleValue(), 0.0);
         // No billing period for the trial item
         Assert.assertEquals(invoiceItem.getBillingPeriod(), subscription.getCurrentPhase().getBillingPeriod().toString());

@@ -52,7 +52,7 @@ public class TestBusinessInvoiceItem extends AnalyticsTestSuite {
         final String slug = UUID.randomUUID().toString();
         final LocalDate startDate = clock.getUTCToday();
         final DateTime updatedDate = clock.getUTCNow();
-        final BusinessInvoiceItem invoiceItem = new BusinessInvoiceItem(amount, billingPeriod, createdDate, currency,
+        final BusinessInvoiceItemModelDao invoiceItem = new BusinessInvoiceItemModelDao(amount, billingPeriod, createdDate, currency,
                                                                         endDate, externalKey, invoiceId, itemId, linkedItemId,
                                                                         itemType, phase, productCategory, productName, productType,
                                                                         slug, startDate, updatedDate);
@@ -77,7 +77,7 @@ public class TestBusinessInvoiceItem extends AnalyticsTestSuite {
         Assert.assertEquals(invoiceItem.getStartDate(), startDate);
         Assert.assertEquals(invoiceItem.getUpdatedDate(), updatedDate);
 
-        final BusinessInvoiceItem otherInvoiceItem = new BusinessInvoiceItem(null, null, createdDate, null, null, null, null, itemId,
+        final BusinessInvoiceItemModelDao otherInvoiceItem = new BusinessInvoiceItemModelDao(null, null, createdDate, null, null, null, null, itemId,
                                                                              linkedItemId, null, null, null, null, null, null, null, null);
         Assert.assertFalse(invoiceItem.equals(otherInvoiceItem));
     }
