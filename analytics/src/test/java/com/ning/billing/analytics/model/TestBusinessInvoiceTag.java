@@ -28,14 +28,14 @@ public class TestBusinessInvoiceTag extends AnalyticsTestSuite {
     public void testEquals() throws Exception {
         final UUID invoiceId = UUID.randomUUID();
         final String name = UUID.randomUUID().toString();
-        final BusinessInvoiceTag invoiceTag = new BusinessInvoiceTag(invoiceId, name);
+        final BusinessInvoiceTagModelDao invoiceTag = new BusinessInvoiceTagModelDao(invoiceId, name);
         Assert.assertSame(invoiceTag, invoiceTag);
         Assert.assertEquals(invoiceTag, invoiceTag);
         Assert.assertTrue(invoiceTag.equals(invoiceTag));
         Assert.assertEquals(invoiceTag.getInvoiceId(), invoiceId);
         Assert.assertEquals(invoiceTag.getName(), name);
 
-        final BusinessInvoiceTag otherInvoiceTag = new BusinessInvoiceTag(UUID.randomUUID(), UUID.randomUUID().toString());
+        final BusinessInvoiceTagModelDao otherInvoiceTag = new BusinessInvoiceTagModelDao(UUID.randomUUID(), UUID.randomUUID().toString());
         Assert.assertFalse(invoiceTag.equals(otherInvoiceTag));
     }
 }
