@@ -16,10 +16,10 @@
 
 package com.ning.billing.analytics.model;
 
-public abstract class BusinessTag {
+public abstract class BusinessTagModelDao {
     private final String name;
 
-    public BusinessTag(final String name) {
+    public BusinessTagModelDao(final String name) {
         this.name = name;
     }
 

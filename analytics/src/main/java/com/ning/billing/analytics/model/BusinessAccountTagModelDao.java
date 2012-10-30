@@ -18,7 +18,7 @@ package com.ning.billing.analytics.model;
 
 import java.util.UUID;
 
-public class BusinessAccountTagModelDao extends BusinessTag {
+public class BusinessAccountTagModelDao extends BusinessTagModelDao {
     private final UUID accountId;
     private final String accountKey;
 
