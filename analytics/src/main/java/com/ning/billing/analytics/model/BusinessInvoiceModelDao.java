@@ -25,13 +25,12 @@ import org.joda.time.LocalDate;
 import com.ning.billing.analytics.utils.Rounder;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.util.entity.EntityBase;
 
-public class BusinessInvoiceModelDao {
+public class BusinessInvoiceModelDao extends EntityBase {
 
     private final UUID invoiceId;
     private final Integer invoiceNumber;
-    private final DateTime createdDate;
-    private final DateTime updatedDate;
     private final UUID accountId;
     private final String accountKey;
     private final LocalDate invoiceDate;
@@ -46,19 +45,18 @@ public class BusinessInvoiceModelDao {
                                    final BigDecimal amountPaid, final BigDecimal balance, final DateTime createdDate,
                                    final Currency currency, final LocalDate invoiceDate, final UUID invoiceId, final Integer invoiceNumber,
                                    final LocalDate targetDate, final DateTime updatedDate) {
+        super(invoiceId, createdDate, updatedDate);
         this.accountId = accountId;
         this.accountKey = accountKey;
         this.amountCharged = amountCharged;
         this.amountCredited = amountCredited;
         this.amountPaid = amountPaid;
         this.balance = balance;
-        this.createdDate = createdDate;
         this.currency = currency;
         this.invoiceDate = invoiceDate;
         this.invoiceId = invoiceId;
         this.invoiceNumber = invoiceNumber;
         this.targetDate = targetDate;
-        this.updatedDate = updatedDate;
     }
 
     public BusinessInvoiceModelDao(final String accountKey, final Invoice invoice) {
@@ -91,10 +89,6 @@ public class BusinessInvoiceModelDao {
         return balance;
     }
 
-    public DateTime getCreatedDate() {
-        return createdDate;
-    }
-
     public Currency getCurrency() {
         return currency;
     }
@@ -113,10 +107,6 @@ public class BusinessInvoiceModelDao {
 
     public LocalDate getTargetDate() {
         return targetDate;
-    }
-
-    public DateTime getUpdatedDate() {
-        return updatedDate;
     }
 
     @Override
