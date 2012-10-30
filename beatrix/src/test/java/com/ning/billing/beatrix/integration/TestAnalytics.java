@@ -36,7 +36,7 @@ import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.MutableAccountData;
 import com.ning.billing.analytics.model.BusinessAccountModelDao;
 import com.ning.billing.analytics.model.BusinessAccountTagModelDao;
-import com.ning.billing.analytics.model.BusinessInvoice;
+import com.ning.billing.analytics.model.BusinessInvoiceModelDao;
 import com.ning.billing.analytics.model.BusinessInvoiceItem;
 import com.ning.billing.analytics.model.BusinessInvoicePayment;
 import com.ning.billing.analytics.model.BusinessOverdueStatus;
@@ -457,9 +457,9 @@ public class TestAnalytics extends TestIntegrationBase {
         Assert.assertEquals(businessAccount.getTotalInvoiceBalance().doubleValue(), Rounder.round(BigDecimal.ZERO));
 
         // The account should have one invoice for the trial phase
-        final List<BusinessInvoice> invoices = analyticsUserApi.getInvoicesForAccount(account.getExternalKey(), callContext);
+        final List<BusinessInvoiceModelDao> invoices = analyticsUserApi.getInvoicesForAccount(account.getExternalKey(), callContext);
         Assert.assertEquals(invoices.size(), 1);
-        final BusinessInvoice invoice = invoices.get(0);
+        final BusinessInvoiceModelDao invoice = invoices.get(0);
         Assert.assertEquals(invoice.getBalance().doubleValue(), 0.0);
         Assert.assertEquals(invoice.getAmountCharged().doubleValue(), 0.0);
         Assert.assertEquals(invoice.getAmountCredited().doubleValue(), 0.0);
@@ -642,7 +642,7 @@ public class TestAnalytics extends TestIntegrationBase {
         Assert.assertEquals(transition.getNextSubscription().getState(), Subscription.SubscriptionState.ACTIVE);
 
         // The account should have two invoices for the trial phase of both subscriptions
-        final List<BusinessInvoice> invoicesForAccount = analyticsUserApi.getInvoicesForAccount(account.getExternalKey(), callContext);
+        final List<BusinessInvoiceModelDao> invoicesForAccount = analyticsUserApi.getInvoicesForAccount(account.getExternalKey(), callContext);
         Assert.assertEquals(invoicesForAccount.size(), 2);
         Assert.assertEquals(invoicesForAccount.get(0).getBalance().doubleValue(), 0.0);
         Assert.assertEquals(invoicesForAccount.get(0).getAmountCharged().doubleValue(), 0.0);

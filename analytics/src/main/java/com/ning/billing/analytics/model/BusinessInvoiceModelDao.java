@@ -26,7 +26,7 @@ import com.ning.billing.analytics.utils.Rounder;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 
-public class BusinessInvoice {
+public class BusinessInvoiceModelDao {
 
     private final UUID invoiceId;
     private final Integer invoiceNumber;
@@ -42,10 +42,10 @@ public class BusinessInvoice {
     private final BigDecimal amountCharged;
     private final BigDecimal amountCredited;
 
-    public BusinessInvoice(final UUID accountId, final String accountKey, final BigDecimal amountCharged, final BigDecimal amountCredited,
-                           final BigDecimal amountPaid, final BigDecimal balance, final DateTime createdDate,
-                           final Currency currency, final LocalDate invoiceDate, final UUID invoiceId, final Integer invoiceNumber,
-                           final LocalDate targetDate, final DateTime updatedDate) {
+    public BusinessInvoiceModelDao(final UUID accountId, final String accountKey, final BigDecimal amountCharged, final BigDecimal amountCredited,
+                                   final BigDecimal amountPaid, final BigDecimal balance, final DateTime createdDate,
+                                   final Currency currency, final LocalDate invoiceDate, final UUID invoiceId, final Integer invoiceNumber,
+                                   final LocalDate targetDate, final DateTime updatedDate) {
         this.accountId = accountId;
         this.accountKey = accountKey;
         this.amountCharged = amountCharged;
@@ -61,7 +61,7 @@ public class BusinessInvoice {
         this.updatedDate = updatedDate;
     }
 
-    public BusinessInvoice(final String accountKey, final Invoice invoice) {
+    public BusinessInvoiceModelDao(final String accountKey, final Invoice invoice) {
         this(invoice.getAccountId(), accountKey, invoice.getChargedAmount(), invoice.getCreditAdjAmount(), invoice.getPaidAmount(), invoice.getBalance(),
              invoice.getCreatedDate(), invoice.getCurrency(), invoice.getInvoiceDate(), invoice.getId(), invoice.getInvoiceNumber(), invoice.getTargetDate(),
              invoice.getUpdatedDate());
@@ -122,7 +122,7 @@ public class BusinessInvoice {
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
-        sb.append("BusinessInvoice");
+        sb.append("BusinessInvoiceModelDao");
         sb.append("{accountId=").append(accountId);
         sb.append(", invoiceId=").append(invoiceId);
         sb.append(", invoiceNumber=").append(invoiceNumber);
@@ -149,7 +149,7 @@ public class BusinessInvoice {
             return false;
         }
 
-        final BusinessInvoice that = (BusinessInvoice) o;
+        final BusinessInvoiceModelDao that = (BusinessInvoiceModelDao) o;
 
         if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
             return false;

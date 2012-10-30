@@ -36,7 +36,7 @@ import com.ning.billing.analytics.dao.BusinessAccountSqlDao;
 import com.ning.billing.analytics.dao.BusinessInvoiceItemSqlDao;
 import com.ning.billing.analytics.dao.BusinessInvoiceSqlDao;
 import com.ning.billing.analytics.model.BusinessAccountModelDao;
-import com.ning.billing.analytics.model.BusinessInvoice;
+import com.ning.billing.analytics.model.BusinessInvoiceModelDao;
 import com.ning.billing.analytics.model.BusinessInvoiceItem;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
@@ -95,9 +95,9 @@ public class BusinessInvoiceDao {
         final Collection<Invoice> invoices = invoiceApi.getInvoicesByAccountId(account.getId(), context);
 
         // Create the business invoice and associated business invoice items
-        final Map<BusinessInvoice, Collection<BusinessInvoiceItem>> businessInvoices = new HashMap<BusinessInvoice, Collection<BusinessInvoiceItem>>();
+        final Map<BusinessInvoiceModelDao, Collection<BusinessInvoiceItem>> businessInvoices = new HashMap<BusinessInvoiceModelDao, Collection<BusinessInvoiceItem>>();
         for (final Invoice invoice : invoices) {
-            final BusinessInvoice businessInvoice = new BusinessInvoice(account.getExternalKey(), invoice);
+            final BusinessInvoiceModelDao businessInvoice = new BusinessInvoiceModelDao(account.getExternalKey(), invoice);
 
             final List<BusinessInvoiceItem> businessInvoiceItems = new ArrayList<BusinessInvoiceItem>();
             for (final InvoiceItem invoiceItem : invoice.getInvoiceItems()) {
@@ -134,15 +134,15 @@ public class BusinessInvoiceDao {
         transactional.deleteInvoice(invoice.getId().toString(), context);
 
         // Re-create it - this will update the various amounts
-        transactional.createInvoice(new BusinessInvoice(accountKey, invoice), context);
+        transactional.createInvoice(new BusinessInvoiceModelDao(accountKey, invoice), context);
     }
 
-    private void rebuildInvoicesForAccountInTransaction(final Account account, final Map<BusinessInvoice, Collection<BusinessInvoiceItem>> businessInvoices,
+    private void rebuildInvoicesForAccountInTransaction(final Account account, final Map<BusinessInvoiceModelDao, Collection<BusinessInvoiceItem>> businessInvoices,
                                                         final BusinessInvoiceSqlDao transactional, final InternalCallContext context) {
         log.info("Started rebuilding invoices for account id {}", account.getId());
         deleteInvoicesAndInvoiceItemsForAccountInTransaction(transactional, account.getId(), context);
 
-        for (final BusinessInvoice businessInvoice : businessInvoices.keySet()) {
+        for (final BusinessInvoiceModelDao businessInvoice : businessInvoices.keySet()) {
             createInvoiceInTransaction(transactional, businessInvoice, businessInvoices.get(businessInvoice), context);
         }
 
@@ -162,7 +162,7 @@ public class BusinessInvoiceDao {
         transactional.deleteInvoicesForAccount(accountId.toString(), context);
     }
 
-    private void createInvoiceInTransaction(final BusinessInvoiceSqlDao transactional, final BusinessInvoice invoice,
+    private void createInvoiceInTransaction(final BusinessInvoiceSqlDao transactional, final BusinessInvoiceModelDao invoice,
                                             final Iterable<BusinessInvoiceItem> invoiceItems, final InternalCallContext context) {
         // Create the invoice
         log.info("Adding invoice {}", invoice);

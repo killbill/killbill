@@ -21,7 +21,7 @@ import java.util.List;
 import com.ning.billing.analytics.api.TimeSeriesData;
 import com.ning.billing.analytics.model.BusinessAccountModelDao;
 import com.ning.billing.analytics.model.BusinessAccountTagModelDao;
-import com.ning.billing.analytics.model.BusinessInvoice;
+import com.ning.billing.analytics.model.BusinessInvoiceModelDao;
 import com.ning.billing.analytics.model.BusinessInvoiceItem;
 import com.ning.billing.analytics.model.BusinessInvoicePayment;
 import com.ning.billing.analytics.model.BusinessOverdueStatus;
@@ -40,7 +40,7 @@ public interface AnalyticsDao {
 
     List<BusinessSubscriptionTransition> getTransitionsForAccount(String accountKey, InternalTenantContext context);
 
-    List<BusinessInvoice> getInvoicesByKey(String accountKey, InternalTenantContext context);
+    List<BusinessInvoiceModelDao> getInvoicesByKey(String accountKey, InternalTenantContext context);
 
     List<BusinessAccountTagModelDao> getTagsForAccount(String accountKey, InternalTenantContext context);
 

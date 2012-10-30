@@ -27,13 +27,13 @@ import org.joda.time.LocalDate;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import com.ning.billing.analytics.model.BusinessInvoice;
+import com.ning.billing.analytics.model.BusinessInvoiceModelDao;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.dao.MapperBase;
 
-public class BusinessInvoiceMapper extends MapperBase implements ResultSetMapper<BusinessInvoice> {
+public class BusinessInvoiceMapper extends MapperBase implements ResultSetMapper<BusinessInvoiceModelDao> {
     @Override
-    public BusinessInvoice map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
+    public BusinessInvoiceModelDao map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
         final UUID invoiceId = UUID.fromString(r.getString(1));
         final Integer invoiceNumber = r.getInt(2);
         final DateTime createdDate = new DateTime(r.getLong(3), DateTimeZone.UTC);
@@ -48,7 +48,7 @@ public class BusinessInvoiceMapper extends MapperBase implements ResultSetMapper
         final BigDecimal amountCharged = BigDecimal.valueOf(r.getDouble(12));
         final BigDecimal amountCredited = BigDecimal.valueOf(r.getDouble(13));
 
-        return new BusinessInvoice(accountId, accountKey, amountCharged, amountCredited, amountPaid, balance, createdDate, currency,
+        return new BusinessInvoiceModelDao(accountId, accountKey, amountCharged, amountCredited, amountPaid, balance, createdDate, currency,
                                    invoiceDate, invoiceId, invoiceNumber, targetDate, updatedDate);
     }
 }
