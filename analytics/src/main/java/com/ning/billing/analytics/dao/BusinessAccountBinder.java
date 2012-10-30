@@ -42,14 +42,14 @@ public @interface BusinessAccountBinder {
                 public void bind(final SQLStatement q, final BusinessAccountBinder bind, final BusinessAccountModelDao account) {
                     final DateTime dateTimeNow = new DateTime(DateTimeZone.UTC);
 
-                    if (account.getCreatedDt() != null) {
-                        q.bind("created_date", account.getCreatedDt().getMillis());
+                    if (account.getCreatedDate() != null) {
+                        q.bind("created_date", account.getCreatedDate().getMillis());
                     } else {
                         q.bind("created_date", dateTimeNow.getMillis());
                     }
 
-                    if (account.getUpdatedDt() != null) {
-                        q.bind("updated_date", account.getUpdatedDt().getMillis());
+                    if (account.getUpdatedDate() != null) {
+                        q.bind("updated_date", account.getUpdatedDate().getMillis());
                     } else {
                         q.bind("updated_date", dateTimeNow.getMillis());
                     }

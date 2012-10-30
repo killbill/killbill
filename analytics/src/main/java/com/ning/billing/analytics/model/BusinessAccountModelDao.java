@@ -24,10 +24,11 @@ import org.joda.time.LocalDate;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.analytics.utils.Rounder;
+import com.ning.billing.util.entity.EntityBase;
 
 import com.google.common.base.Objects;
 
-public class BusinessAccountModelDao {
+public class BusinessAccountModelDao extends EntityBase {
 
     private final UUID accountId;
     private String key;
@@ -40,13 +41,12 @@ public class BusinessAccountModelDao {
     private String creditCardType;
     private String billingAddressCountry;
     private String currency;
-    private DateTime createdDt;
-    private DateTime updatedDt;
 
     public BusinessAccountModelDao(final UUID accountId, final String key, final String name, final BigDecimal balance,
                                    final LocalDate lastInvoiceDate, final BigDecimal totalInvoiceBalance, final String lastPaymentStatus,
                                    final String paymentMethod, final String creditCardType, final String billingAddressCountry,
                                    final String currency, final DateTime createdDt, final DateTime updatedDt) {
+        super(accountId, createdDt, updatedDt);
         this.accountId = accountId;
         this.key = key;
         this.balance = balance;
@@ -58,19 +58,16 @@ public class BusinessAccountModelDao {
         this.paymentMethod = paymentMethod;
         this.totalInvoiceBalance = totalInvoiceBalance;
         this.currency = currency;
-        this.createdDt = createdDt;
-        this.updatedDt = updatedDt;
     }
 
     public BusinessAccountModelDao(final Account account) {
+        super(account.getId(), account.getCreatedDate(), account.getUpdatedDate());
         this.accountId = account.getId();
         this.name = account.getName();
         this.key = account.getExternalKey();
         if (account.getCurrency() != null) {
             this.currency = account.getCurrency().toString();
         }
-        this.createdDt = account.getCreatedDate();
-        this.updatedDt = account.getUpdatedDate();
     }
 
     public UUID getAccountId() {
@@ -103,14 +100,6 @@ public class BusinessAccountModelDao {
 
     public void setBillingAddressCountry(final String billingAddressCountry) {
         this.billingAddressCountry = billingAddressCountry;
-    }
-
-    public DateTime getCreatedDt() {
-        return createdDt;
-    }
-
-    public void setCreatedDt(final DateTime createdDt) {
-        this.createdDt = createdDt;
     }
 
     public String getCreditCardType() {
@@ -173,21 +162,13 @@ public class BusinessAccountModelDao {
         this.totalInvoiceBalance = totalInvoiceBalance;
     }
 
-    public DateTime getUpdatedDt() {
-        return updatedDt;
-    }
-
-    public void setUpdatedDt(final DateTime updatedDt) {
-        this.updatedDt = updatedDt;
-    }
-
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
         sb.append("BusinessAccountModelDao");
         sb.append("{balance=").append(balance);
-        sb.append(", createdDt=").append(createdDt);
-        sb.append(", updatedDt=").append(updatedDt);
+        sb.append(", createdDt=").append(getCreatedDate());
+        sb.append(", updatedDt=").append(getUpdatedDate());
         sb.append(", accountId='").append(accountId).append('\'');
         sb.append(", key='").append(key).append('\'');
         sb.append(", name='").append(name).append('\'');
@@ -219,7 +200,7 @@ public class BusinessAccountModelDao {
         if (billingAddressCountry != null ? !billingAddressCountry.equals(that.billingAddressCountry) : that.billingAddressCountry != null) {
             return false;
         }
-        if (createdDt != null ? !createdDt.equals(that.createdDt) : that.createdDt != null) {
+        if (getCreatedDate() != null ? !getCreatedDate().equals(that.getCreatedDate()) : that.getCreatedDate() != null) {
             return false;
         }
         if (creditCardType != null ? !creditCardType.equals(that.creditCardType) : that.creditCardType != null) {
@@ -249,7 +230,7 @@ public class BusinessAccountModelDao {
         if (totalInvoiceBalance == null ? that.totalInvoiceBalance != null : totalInvoiceBalance.compareTo(that.totalInvoiceBalance) != 0) {
             return false;
         }
-        if (updatedDt != null ? updatedDt.compareTo(that.updatedDt) != 0 : that.updatedDt != null) {
+        if (getUpdatedDate() != null ? getUpdatedDate().compareTo(that.getUpdatedDate()) != 0 : that.getUpdatedDate() != null) {
             return false;
         }
 
@@ -258,8 +239,8 @@ public class BusinessAccountModelDao {
 
     @Override
     public int hashCode() {
-        int result = createdDt != null ? createdDt.hashCode() : 0;
-        result = 31 * result + (updatedDt != null ? updatedDt.hashCode() : 0);
+        int result = getCreatedDate() != null ? getCreatedDate().hashCode() : 0;
+        result = 31 * result + (getUpdatedDate() != null ? getUpdatedDate().hashCode() : 0);
         result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
         result = 31 * result + (key != null ? key.hashCode() : 0);
         result = 31 * result + (name != null ? name.hashCode() : 0);

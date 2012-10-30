@@ -278,8 +278,8 @@ public class TestAnalyticsDao extends AnalyticsTestSuiteWithEmbeddedDB {
         // Create and retrieve an account
         businessAccountSqlDao.createAccount(account, internalCallContext);
         final BusinessAccountModelDao foundAccount = businessAccountSqlDao.getAccountByKey(ACCOUNT_KEY, internalCallContext);
-        Assert.assertEquals(foundAccount.getCreatedDt().getMillis(), account.getCreatedDt().getMillis());
-        Assert.assertEquals(foundAccount.getUpdatedDt().getMillis(), account.getUpdatedDt().getMillis());
+        Assert.assertEquals(foundAccount.getCreatedDate().getMillis(), account.getCreatedDate().getMillis());
+        Assert.assertEquals(foundAccount.getUpdatedDate().getMillis(), account.getUpdatedDate().getMillis());
         Assert.assertTrue(foundAccount.equals(account));
 
         // Try to update the account
