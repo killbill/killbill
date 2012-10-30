@@ -16,7 +16,9 @@
 
 package com.ning.billing.analytics.model;
 
-public abstract class BusinessFieldModelDao {
+import com.ning.billing.util.entity.EntityBase;
+
+public abstract class BusinessFieldModelDao extends EntityBase {
     private final String name;
     private final String value;
 
