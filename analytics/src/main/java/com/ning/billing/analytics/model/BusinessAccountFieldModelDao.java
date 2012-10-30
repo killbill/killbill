@@ -18,11 +18,11 @@ package com.ning.billing.analytics.model;
 
 import java.util.UUID;
 
-public class BusinessAccountField extends BusinessField {
+public class BusinessAccountFieldModelDao extends BusinessField {
     private final UUID accountId;
     private final String accountKey;
 
-    public BusinessAccountField(final UUID accountId, final String accountKey, final String name, final String value) {
+    public BusinessAccountFieldModelDao(final UUID accountId, final String accountKey, final String name, final String value) {
         super(name, value);
         this.accountId = accountId;
         this.accountKey = accountKey;
@@ -39,7 +39,7 @@ public class BusinessAccountField extends BusinessField {
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
-        sb.append("BusinessAccountField");
+        sb.append("BusinessAccountFieldModelDao");
         sb.append("{accountId='").append(accountId).append('\'');
         sb.append(", accountKey='").append(accountKey).append('\'');
         sb.append(", name='").append(getName()).append('\'');
@@ -57,7 +57,7 @@ public class BusinessAccountField extends BusinessField {
             return false;
         }
 
-        final BusinessAccountField that = (BusinessAccountField) o;
+        final BusinessAccountFieldModelDao that = (BusinessAccountFieldModelDao) o;
 
         if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
             return false;

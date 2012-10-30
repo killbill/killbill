@@ -30,7 +30,7 @@ public class TestBusinessAccountField extends AnalyticsTestSuite {
         final String accountKey = UUID.randomUUID().toString();
         final String name = UUID.randomUUID().toString();
         final String value = UUID.randomUUID().toString();
-        final BusinessAccountField accountField = new BusinessAccountField(accountId,
+        final BusinessAccountFieldModelDao accountField = new BusinessAccountFieldModelDao(accountId,
                                                                            accountKey,
                                                                            name,
                                                                            value);
@@ -42,7 +42,7 @@ public class TestBusinessAccountField extends AnalyticsTestSuite {
         Assert.assertEquals(accountField.getName(), name);
         Assert.assertEquals(accountField.getValue(), value);
 
-        final BusinessAccountField otherAccountField = new BusinessAccountField(UUID.randomUUID(),
+        final BusinessAccountFieldModelDao otherAccountField = new BusinessAccountFieldModelDao(UUID.randomUUID(),
                                                                                 UUID.randomUUID().toString(),
                                                                                 UUID.randomUUID().toString(),
                                                                                 UUID.randomUUID().toString());
