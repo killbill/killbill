@@ -20,7 +20,9 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
-public class BusinessOverdueStatusModelDao {
+import com.ning.billing.util.entity.EntityBase;
+
+public class BusinessOverdueStatusModelDao extends EntityBase {
     private final String accountKey;
     private final UUID bundleId;
     private final String externalKey;
