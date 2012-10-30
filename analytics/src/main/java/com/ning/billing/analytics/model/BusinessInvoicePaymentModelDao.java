@@ -16,21 +16,21 @@
 
 package com.ning.billing.analytics.model;
 
-import javax.annotation.Nullable;
 import java.math.BigDecimal;
 import java.util.UUID;
+
+import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 
 import com.ning.billing.analytics.utils.Rounder;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.util.entity.EntityBase;
 
-public class BusinessInvoicePaymentModelDao {
+public class BusinessInvoicePaymentModelDao extends EntityBase {
     private final UUID paymentId;
-    private final DateTime createdDate;
     private final String extFirstPaymentRefId;
     private final String extSecondPaymentRefId;
-    private final DateTime updatedDate;
     private final String accountKey;
     private final UUID invoiceId;
     private final DateTime effectiveDate;
@@ -54,13 +54,13 @@ public class BusinessInvoicePaymentModelDao {
                                           final String paymentType, final String pluginName, final String processingStatus,
                                           final BigDecimal requestedAmount, final DateTime updatedDate, @Nullable final String invoicePaymentType,
                                           @Nullable final UUID linkedInvoicePaymentId) {
+        super(paymentId, createdDate, updatedDate);
         this.accountKey = accountKey;
         this.amount = amount;
         this.extFirstPaymentRefId = extFirstPaymentRefId;
         this.extSecondPaymentRefId = extSecondPaymentRefId;
         this.cardCountry = cardCountry;
         this.cardType = cardType;
-        this.createdDate = createdDate;
         this.currency = currency;
         this.effectiveDate = effectiveDate;
         this.invoiceId = invoiceId;
@@ -71,7 +71,6 @@ public class BusinessInvoicePaymentModelDao {
         this.pluginName = pluginName;
         this.processingStatus = processingStatus;
         this.requestedAmount = requestedAmount;
-        this.updatedDate = updatedDate;
         this.invoicePaymentType = invoicePaymentType;
         this.linkedInvoicePaymentId = linkedInvoicePaymentId;
     }
@@ -82,10 +81,6 @@ public class BusinessInvoicePaymentModelDao {
 
     public String getExtSecondPaymentRefId() {
         return extSecondPaymentRefId;
-    }
-
-    public DateTime getCreatedDate() {
-        return createdDate;
     }
 
     public UUID getPaymentId() {
@@ -142,10 +137,6 @@ public class BusinessInvoicePaymentModelDao {
 
     public BigDecimal getRequestedAmount() {
         return requestedAmount;
-    }
-
-    public DateTime getUpdatedDate() {
-        return updatedDate;
     }
 
     public String getInvoicePaymentType() {
