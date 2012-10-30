@@ -23,11 +23,11 @@ import java.util.UUID;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import com.ning.billing.analytics.model.BusinessInvoicePaymentTag;
+import com.ning.billing.analytics.model.BusinessInvoicePaymentTagModelDao;
 
-public class BusinessInvoicePaymentTagMapper implements ResultSetMapper<BusinessInvoicePaymentTag> {
+public class BusinessInvoicePaymentTagMapper implements ResultSetMapper<BusinessInvoicePaymentTagModelDao> {
     @Override
-    public BusinessInvoicePaymentTag map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
-        return new BusinessInvoicePaymentTag(UUID.fromString(r.getString(1)), r.getString(2));
+    public BusinessInvoicePaymentTagModelDao map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
+        return new BusinessInvoicePaymentTagModelDao(UUID.fromString(r.getString(1)), r.getString(2));
     }
 }

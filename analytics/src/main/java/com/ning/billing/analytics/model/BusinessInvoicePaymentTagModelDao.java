@@ -18,10 +18,10 @@ package com.ning.billing.analytics.model;
 
 import java.util.UUID;
 
-public class BusinessInvoicePaymentTag extends BusinessTagModelDao {
+public class BusinessInvoicePaymentTagModelDao extends BusinessTagModelDao {
     private final UUID paymentId;
 
-    public BusinessInvoicePaymentTag(final UUID paymentId, final String name) {
+    public BusinessInvoicePaymentTagModelDao(final UUID paymentId, final String name) {
         super(name);
         this.paymentId = paymentId;
     }
@@ -49,7 +49,7 @@ public class BusinessInvoicePaymentTag extends BusinessTagModelDao {
             return false;
         }
 
-        final BusinessInvoicePaymentTag that = (BusinessInvoicePaymentTag) o;
+        final BusinessInvoicePaymentTagModelDao that = (BusinessInvoicePaymentTagModelDao) o;
 
         if (paymentId != null ? !paymentId.equals(that.paymentId) : that.paymentId != null) {
             return false;
