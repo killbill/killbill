@@ -29,12 +29,11 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.util.entity.EntityBase;
 
-public class BusinessInvoiceItemModelDao {
+public class BusinessInvoiceItemModelDao extends EntityBase {
 
     private final UUID itemId;
-    private final DateTime createdDate;
-    private final DateTime updatedDate;
     private final UUID invoiceId;
     private final String itemType;
     private final String externalKey;
@@ -55,9 +54,9 @@ public class BusinessInvoiceItemModelDao {
                                        final UUID invoiceId, final UUID itemId, @Nullable final UUID linkedItemId, final String itemType,
                                        @Nullable final String phase, @Nullable final String productCategory, @Nullable final String productName,
                                        @Nullable final String productType, @Nullable final String slug, final LocalDate startDate, final DateTime updatedDate) {
+        super(itemId, createdDate, updatedDate);
         this.amount = amount;
         this.billingPeriod = billingPeriod;
-        this.createdDate = createdDate;
         this.currency = currency;
         this.endDate = endDate;
         this.externalKey = externalKey;
@@ -71,7 +70,6 @@ public class BusinessInvoiceItemModelDao {
         this.productType = productType;
         this.slug = slug;
         this.startDate = startDate;
-        this.updatedDate = updatedDate;
     }
 
     public BusinessInvoiceItemModelDao(@Nullable final String externalKey, final InvoiceItem invoiceItem, @Nullable final Plan plan, @Nullable final PlanPhase planPhase) {
@@ -82,10 +80,6 @@ public class BusinessInvoiceItemModelDao {
              planPhase != null ? planPhase.getPhaseType().toString() : null, plan != null ? plan.getProduct().getCategory().toString() : null,
              plan != null ? plan.getProduct().getName() : null, plan != null ? plan.getProduct().getCatalogName() : null,
              planPhase != null ? planPhase.getName() : null, invoiceItem.getStartDate(), invoiceItem.getUpdatedDate());
-    }
-
-    public DateTime getCreatedDate() {
-        return createdDate;
     }
 
     public UUID getItemId() {
@@ -146,10 +140,6 @@ public class BusinessInvoiceItemModelDao {
 
     public LocalDate getStartDate() {
         return startDate;
-    }
-
-    public DateTime getUpdatedDate() {
-        return updatedDate;
     }
 
     @Override
