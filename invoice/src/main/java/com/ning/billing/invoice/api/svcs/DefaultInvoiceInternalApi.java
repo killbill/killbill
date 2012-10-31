@@ -36,7 +36,6 @@ import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.InvoicePayment.InvoicePaymentType;
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.model.DefaultInvoicePayment;
-import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
@@ -83,8 +82,6 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
 
     @Override
     public void notifyOfPayment(final InvoicePayment invoicePayment, final InternalCallContext context) throws InvoiceApiException {
-        // Retrieve the account id for the internal call context
-        final UUID accountId = dao.getAccountIdFromInvoicePaymentId(invoicePayment.getId(), context);
         dao.notifyOfPayment(invoicePayment, context);
     }
 
@@ -130,11 +127,13 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
     // Allow to safely catch TransactionFailedException exceptions and rethrow the correct InvoiceApiException exception
     //
     private interface WithInvoiceApiExceptionCallback<T> {
+
         public T doHandle() throws InvoiceApiException;
     }
 
     private static final class WithInvoiceApiException<T> {
-        public T executeAndThrow(final WithInvoiceApiExceptionCallback<T> callback) throws InvoiceApiException  {
+
+        public T executeAndThrow(final WithInvoiceApiExceptionCallback<T> callback) throws InvoiceApiException {
 
             try {
                 return callback.doHandle();
