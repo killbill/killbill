@@ -16,6 +16,14 @@
 
 package com.ning.billing.lifecycle;
 
+/**
+ * The interface <code>KillbillService<code/> represents a service that will go through the Killbill lifecyle.
+ * <p>
+ * A <code>KillbillService<code> can register handlers for the various phases of the lifecycle, so
+ * that its proper initialization/shutdown sequence occurs at the right time with regard
+ * to other <code>KillbillService</code>.
+ *
+ */
 public interface KillbillService {
 
     public static class ServiceException extends Exception {

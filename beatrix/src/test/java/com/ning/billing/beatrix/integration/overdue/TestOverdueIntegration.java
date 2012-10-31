@@ -198,7 +198,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
         // Make sure the account doesn't have any payment method
-        accountUserApi.removePaymentMethod(account.getId(), callContext);
+        accountInternalApi.removePaymentMethod(account.getId(), internalCallContext);
 
         // Create subscription
         final Subscription baseSubscription = createSubscriptionAndCheckForCompletion(bundle.getId(), productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);

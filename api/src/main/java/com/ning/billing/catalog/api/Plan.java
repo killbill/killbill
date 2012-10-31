@@ -21,30 +21,86 @@ import java.util.Iterator;
 
 import org.joda.time.DateTime;
 
+/**
+ * The interface {@code Plan}
+ */
 public interface Plan {
 
-    public abstract PlanPhase[] getInitialPhases();
+    /**
+     * 
+     * @return an array of {@code PlanPhase}
+     */
+    public PlanPhase[] getInitialPhases();
 
-    public abstract Product getProduct();
+    /**
+     *
+     * @return the {@code Product} associated with that {@code Plan}
+     */
+    public Product getProduct();
 
-    public abstract String getName();
+    /**
+     *
+     * @return the name of the {@code Plan}
+     */
+    public String getName();
 
-    public abstract boolean isRetired();
+    /**
+     *
+     * @return whether the {@code Plan} has been retired
+     */
+    public boolean isRetired();
 
-    public abstract Iterator<PlanPhase> getInitialPhaseIterator();
+    /**
+     *
+     * @return an iterator through the {@code PlanPhase}
+     */
+    public Iterator<PlanPhase> getInitialPhaseIterator();
 
-    public abstract PlanPhase getFinalPhase();
+    /**
+     *
+     * @return the final {@code PlanPhase}
+     */
+    public PlanPhase getFinalPhase();
 
-    public abstract BillingPeriod getBillingPeriod();
+    /**
+     *
+     * @return the {@code BillingPeriod}
+     */
+    public BillingPeriod getBillingPeriod();
 
-    public abstract int getPlansAllowedInBundle();
+    /**
+     *
+     * @return the number of instance of subscriptions in a bundle with that {@code Plan}
+     */
+    public int getPlansAllowedInBundle();
 
-    public abstract PlanPhase[] getAllPhases();
+    /**
+     *
+     * @return an array of {@code PlanPhase}
+     */
+    public PlanPhase[] getAllPhases();
 
-    public abstract Date getEffectiveDateForExistingSubscriptons();
+    /**
+     *
+     * @return the date for which existing subscriptions become effective with that {@code Plan}
+     */
+    public Date getEffectiveDateForExistingSubscriptons();
 
-    public abstract PlanPhase findPhase(String name) throws CatalogApiException;
+    /**
+     *
+     * @param name  the name of the {@code PlanPhase}
+     * @return      the {@code PlanPhase}
+     *
+     * @throws CatalogApiException if there is not such {@code PlanPhase}
+     */
+    public PlanPhase findPhase(String name) throws CatalogApiException;
 
-    public abstract DateTime dateOfFirstRecurringNonZeroCharge(DateTime subscriptionStartDate, PhaseType intialPhaseType);
+    /**
+     *
+     * @param subscriptionStartDate the subscriptionStartDate
+     * @param intialPhaseType       the type of the initial phase
+     * @return                      the date at which we see the first recurring non zero charge
+     */
+    public DateTime dateOfFirstRecurringNonZeroCharge(DateTime subscriptionStartDate, PhaseType intialPhaseType);
 
 }

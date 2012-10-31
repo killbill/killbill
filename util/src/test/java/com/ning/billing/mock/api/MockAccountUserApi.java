@@ -129,11 +129,6 @@ public class MockAccountUserApi implements AccountUserApi {
     }
 
     @Override
-    public void saveEmails(final UUID accountId, final List<AccountEmail> emails, final CallContext context) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public void addEmail(final UUID accountId, final AccountEmail email, final CallContext context) {
         throw new UnsupportedOperationException();
     }
@@ -165,16 +160,6 @@ public class MockAccountUserApi implements AccountUserApi {
     @Override
     public void updateAccount(final UUID accountId, final AccountData accountData, final CallContext context)
             throws AccountApiException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void updatePaymentMethod(final UUID accountId, final UUID paymentMethodId, final CallContext context) throws AccountApiException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void removePaymentMethod(final UUID accountId, final CallContext context) throws AccountApiException {
         throw new UnsupportedOperationException();
     }
 }

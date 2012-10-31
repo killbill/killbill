@@ -21,8 +21,18 @@ import java.math.BigDecimal;
 
 public interface Price {
 
-    public abstract Currency getCurrency();
+    /**
+     *
+     * @return the {@code Currency}
+     */
+    public Currency getCurrency();
 
-    public abstract BigDecimal getValue() throws CurrencyValueNull;
+    /**
+     *
+     * @return the price amount
+     *
+     * @throws CurrencyValueNull
+     */
+    public BigDecimal getValue() throws CurrencyValueNull;
 
 }

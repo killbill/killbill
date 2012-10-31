@@ -20,8 +20,15 @@ import java.util.List;
 
 import org.joda.time.DateTime;
 
+/**
+ * The interface {@code MigrationAccountData}
+ */
 public interface MigrationAccountData extends AccountData {
 
+    /**
+     *
+     * @return the createdDate for
+     */
     public DateTime getCreatedDate();
 
     public DateTime getUpdatedDate();

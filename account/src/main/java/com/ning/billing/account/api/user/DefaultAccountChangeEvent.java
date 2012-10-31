@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.ChangedField;
+import com.ning.billing.util.events.ChangedField;
 import com.ning.billing.account.api.DefaultChangedField;
 import com.ning.billing.util.events.AccountChangeInternalEvent;
 import com.ning.billing.util.events.DefaultBusInternalEvent;

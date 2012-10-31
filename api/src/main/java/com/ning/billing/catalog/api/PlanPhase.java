@@ -17,21 +17,52 @@
 package com.ning.billing.catalog.api;
 
 
+/**
+ * The interface {@code PlanPhase} is used to express the various phases available on a given {@code Plan}
+ * 
+ * @see com.ning.billing.catalog.api.Plan
+  */
 public interface PlanPhase {
 
-    public abstract InternationalPrice getRecurringPrice();
+    /**
+     *
+     * @return the recurring {@code InternationalPrice} for that {@code Phase} if defined
+     */
+    public InternationalPrice getRecurringPrice();
 
-    public abstract InternationalPrice getFixedPrice();
+    /**
+     *
+     * @return the fixed {@code InternationalPrice} for that {@code Phase} if defined
+     */
+    public InternationalPrice getFixedPrice();
 
-    public abstract BillingPeriod getBillingPeriod();
+    /**
+     *
+     * @return the {@code BillingPeriod}
+     */
+    public BillingPeriod getBillingPeriod();
 
-    public abstract String getName();
+    /**
+     *
+     * @return the unique name for that {@code Phase}
+     */
+    public String getName();
 
-    public abstract Plan getPlan();
+    /**
+     *
+     * @return the parent {@code Plan}
+     */
+    public Plan getPlan();
 
-    public abstract Duration getDuration();
+    /**
+     *
+     * @return the duration of that {@code PlanPhase}
+     */
+    public Duration getDuration();
 
-    public abstract PhaseType getPhaseType();
-
-
+    /**
+     *
+     * @return  the {@code PhaseType}
+     */
+    public PhaseType getPhaseType();
 }

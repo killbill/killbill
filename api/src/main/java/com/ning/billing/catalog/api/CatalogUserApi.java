@@ -18,7 +18,16 @@ package com.ning.billing.catalog.api;
 
 import com.ning.billing.util.callcontext.TenantContext;
 
+/**
+ * The interface {@code CatalogUserApi} to retrieve catalog information
+ */
 public interface CatalogUserApi {
 
+    /**
+     *
+     * @param catalogName   the name of the catalog
+     * @param context       the user context that specifies the enant information
+     * @return              the {@code Catalog}
+     */
     Catalog getCatalog(String catalogName, TenantContext context);
 }

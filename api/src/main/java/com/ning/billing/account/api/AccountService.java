@@ -18,6 +18,11 @@ package com.ning.billing.account.api;
 
 import com.ning.billing.lifecycle.KillbillService;
 
+/**
+ * The interface {@code AccountService} is a {@code KillbillService} required to handle account operations
+ *
+ * @see KillbillService
+ */
 public interface AccountService extends KillbillService {
 
 }

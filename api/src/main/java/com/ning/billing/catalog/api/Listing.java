@@ -18,7 +18,15 @@ package com.ning.billing.catalog.api;
 
 public interface Listing {
 
+    /**
+     *
+     * @return the {@code Plan}
+     */
     Plan getPlan();
 
+    /**
+     *
+     * @return the {@code PriceList}
+     */
     PriceList getPriceList();
 }

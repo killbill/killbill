@@ -14,11 +14,12 @@
  * under the License.
  */
 
-package com.ning.billing.account.api;
+package com.ning.billing.util.events;
 
 import org.joda.time.DateTime;
 
 public interface ChangedField {
+
     public DateTime getChangeDate();
 
     public String getFieldName();

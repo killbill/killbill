@@ -155,11 +155,6 @@ public class DefaultAccountUserApi implements AccountUserApi {
     }
 
     @Override
-    public void saveEmails(final UUID accountId, final List<AccountEmail> newEmails, final CallContext context) {
-        accountEmailDao.saveEmails(accountId, newEmails, internalCallContextFactory.createInternalCallContext(accountId, context));
-    }
-
-    @Override
     public void addEmail(final UUID accountId, final AccountEmail email, final CallContext context) {
         accountEmailDao.addEmail(accountId, email, internalCallContextFactory.createInternalCallContext(accountId, context));
     }
@@ -167,19 +162,5 @@ public class DefaultAccountUserApi implements AccountUserApi {
     @Override
     public void removeEmail(final UUID accountId, final AccountEmail email, final CallContext context) {
         accountEmailDao.removeEmail(accountId, email, internalCallContextFactory.createInternalCallContext(accountId, context));
-    }
-
-    @Override
-    public void removePaymentMethod(final UUID accountId, final CallContext context) throws AccountApiException {
-        updatePaymentMethod(accountId, null, context);
-    }
-
-    @Override
-    public void updatePaymentMethod(final UUID accountId, @Nullable final UUID paymentMethodId, final CallContext context) throws AccountApiException {
-        try {
-            accountDao.updatePaymentMethod(accountId, paymentMethodId, internalCallContextFactory.createInternalCallContext(accountId, context));
-        } catch (EntityPersistenceException e) {
-            throw new AccountApiException(e, e.getCode(), e.getMessage());
-        }
     }
 }

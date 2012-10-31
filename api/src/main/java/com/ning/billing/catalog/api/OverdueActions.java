@@ -16,6 +16,9 @@
 
 package com.ning.billing.catalog.api;
 
+/**
+ * The enum {@code OverdueActions} specifies the policies that should be taken when a specific object becomes overdue
+ */
 public enum OverdueActions {
     CANCEL,
     PAYMENT_RETRY
