@@ -101,9 +101,9 @@ public class BusinessInvoicePaymentJson extends JsonBase {
              businessInvoicePayment.getPaymentType(),
              businessInvoicePayment.getPaymentMethod(),
              businessInvoicePayment.getCardType(),
+             businessInvoicePayment.getCardCountry(),
              businessInvoicePayment.getInvoicePaymentType(),
-             businessInvoicePayment.getInvoicePaymentType(),
-             businessInvoicePayment.getLinkedInvoicePaymentId().toString());
+             businessInvoicePayment.getLinkedInvoicePaymentId() == null ? null : businessInvoicePayment.getLinkedInvoicePaymentId().toString());
     }
 
     public String getPaymentId() {
