@@ -24,7 +24,7 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.overdue.EmailNotification;
 import com.ning.billing.overdue.OverdueTestSuite;
-import com.ning.billing.util.config.XMLLoader;
+import com.ning.billing.util.config.catalog.XMLLoader;
 
 public class TestOverdueConfig extends OverdueTestSuite {
 

@@ -18,7 +18,7 @@ package com.ning.billing.util.bus;
 import org.skife.config.Config;
 import org.skife.config.Default;
 
-import com.ning.billing.config.PersistentQueueConfig;
+import com.ning.billing.util.config.PersistentQueueConfig;
 
 public interface PersistentBusConfig extends PersistentQueueConfig {
 

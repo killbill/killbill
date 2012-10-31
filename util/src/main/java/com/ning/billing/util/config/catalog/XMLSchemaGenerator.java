@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.util.config;
+package com.ning.billing.util.config.catalog;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

@@ -20,7 +20,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.Writer;
 
-import com.ning.billing.util.config.XMLSchemaGenerator;
+import com.ning.billing.util.config.catalog.XMLSchemaGenerator;
 
 public class CreateOverdueConfigSchema {
     public static void main(final String[] args) throws Exception {

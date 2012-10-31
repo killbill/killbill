@@ -22,7 +22,7 @@ import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.config.SimplePropertyConfigSource;
 
-import com.ning.billing.config.UsageConfig;
+import com.ning.billing.util.config.UsageConfig;
 import com.ning.billing.usage.timeline.codec.DefaultSampleCoder;
 import com.ning.billing.usage.timeline.codec.SampleCoder;
 import com.ning.billing.usage.timeline.persistent.FileBackedBuffer;

@@ -25,7 +25,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.util.config.ValidationErrors;
+import com.ning.billing.util.config.catalog.ValidationErrors;
 
 public class TestPlan extends CatalogTestSuite {
     private static final Logger log = LoggerFactory.getLogger(TestPlan.class);

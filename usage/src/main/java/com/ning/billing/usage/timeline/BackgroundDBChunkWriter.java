@@ -31,7 +31,7 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ning.billing.config.UsageConfig;
+import com.ning.billing.util.config.UsageConfig;
 import com.ning.billing.usage.timeline.chunks.TimelineChunk;
 import com.ning.billing.usage.timeline.persistent.TimelineDao;
 import com.ning.billing.util.callcontext.CallOrigin;

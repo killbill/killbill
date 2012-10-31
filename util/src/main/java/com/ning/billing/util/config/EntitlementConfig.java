@@ -16,29 +16,17 @@
 
 package com.ning.billing.util.config;
 
-import java.net.URI;
+import org.skife.config.Config;
+import org.skife.config.Default;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
+public interface EntitlementConfig extends NotificationConfig, KillbillConfig {
+    @Override
+    @Config("killbill.entitlement.engine.notifications.sleep")
+    @Default("500")
+    public long getSleepTimeMs();
 
-@XmlAccessorType(XmlAccessType.NONE)
-public abstract class ValidatingConfig<Context> {
-    /**
-     * All must implement validation
-     *
-     * @param root
-     * @param errors
-     * @return
-     */
-    public abstract ValidationErrors validate(Context root, ValidationErrors errors);
-
-
-    /**
-     * Override  to initialize
-     *
-     * @param root
-     */
-    public void initialize(final Context root, final URI uri) {
-    }
-
+    @Override
+    @Config("killbill.entitlement.engine.notifications.off")
+    @Default("false")
+    public boolean isNotificationProcessingOff();
 }

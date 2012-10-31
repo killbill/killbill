@@ -31,9 +31,9 @@ import com.ning.billing.overdue.EmailNotification;
 import com.ning.billing.overdue.OverdueApiException;
 import com.ning.billing.overdue.OverdueCancellationPolicicy;
 import com.ning.billing.overdue.OverdueState;
-import com.ning.billing.util.config.ValidatingConfig;
-import com.ning.billing.util.config.ValidationError;
-import com.ning.billing.util.config.ValidationErrors;
+import com.ning.billing.util.config.catalog.ValidatingConfig;
+import com.ning.billing.util.config.catalog.ValidationError;
+import com.ning.billing.util.config.catalog.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultOverdueState<T extends Blockable> extends ValidatingConfig<OverdueConfig> implements OverdueState<T> {

@@ -47,9 +47,9 @@ import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.catalog.api.StaticCatalog;
 import com.ning.billing.catalog.rules.PlanRules;
-import com.ning.billing.util.config.ValidatingConfig;
-import com.ning.billing.util.config.ValidationError;
-import com.ning.billing.util.config.ValidationErrors;
+import com.ning.billing.util.config.catalog.ValidatingConfig;
+import com.ning.billing.util.config.catalog.ValidationError;
+import com.ning.billing.util.config.catalog.ValidationErrors;
 
 @XmlRootElement(name = "catalog")
 @XmlAccessorType(XmlAccessType.NONE)

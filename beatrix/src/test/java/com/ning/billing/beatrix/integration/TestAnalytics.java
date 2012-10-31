@@ -60,7 +60,7 @@ import com.ning.billing.overdue.config.OverdueConfig;
 import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagDefinitionApiException;
-import com.ning.billing.util.config.XMLLoader;
+import com.ning.billing.util.config.catalog.XMLLoader;
 import com.ning.billing.util.tag.TagDefinition;
 
 import static org.testng.Assert.assertTrue;

@@ -28,7 +28,7 @@ import org.skife.config.SimplePropertyConfigSource;
 import org.skife.jdbi.v2.IDBI;
 
 import com.ning.billing.ObjectType;
-import com.ning.billing.config.PaymentConfig;
+import com.ning.billing.util.config.PaymentConfig;
 import com.ning.billing.mock.glue.MockInvoiceModule;
 import com.ning.billing.mock.glue.MockNotificationQueueModule;
 import com.ning.billing.payment.dao.MockPaymentDao;

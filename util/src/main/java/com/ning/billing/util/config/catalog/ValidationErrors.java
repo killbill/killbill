@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.util.config;
+package com.ning.billing.util.config.catalog;
 
 import java.net.URI;
 import java.util.ArrayList;

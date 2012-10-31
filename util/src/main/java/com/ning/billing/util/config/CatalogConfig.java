@@ -16,25 +16,12 @@
 
 package com.ning.billing.util.config;
 
-import java.io.PrintStream;
+import org.skife.config.Config;
+import org.skife.config.Default;
 
-public class ValidationException extends Exception {
-    private final ValidationErrors errors;
-
-    ValidationException(final ValidationErrors errors) {
-        this.errors = errors;
-    }
-
-    public ValidationErrors getErrors() {
-        return errors;
-    }
-
-    @Override
-    public void printStackTrace(final PrintStream arg0) {
-        arg0.print(errors.toString());
-        super.printStackTrace(arg0);
-    }
-
+public interface CatalogConfig extends KillbillConfig {
+    @Config("killbill.catalog.uri")
+    @Default("jar:///com/ning/billing/irs/catalog/Catalog.xml")
+    String getCatalogURI();
 
 }
-

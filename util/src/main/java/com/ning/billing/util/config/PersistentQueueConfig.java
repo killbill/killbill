@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.ning.billing.config;
+package com.ning.billing.util.config;
 
 public interface PersistentQueueConfig {
     public long getSleepTimeMs();

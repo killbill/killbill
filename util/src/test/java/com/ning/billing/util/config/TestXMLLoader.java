@@ -30,6 +30,8 @@ import org.xml.sax.SAXException;
 
 import com.ning.billing.catalog.api.InvalidConfigException;
 import com.ning.billing.util.UtilTestSuite;
+import com.ning.billing.util.config.catalog.ValidationException;
+import com.ning.billing.util.config.catalog.XMLLoader;
 
 import static org.testng.Assert.assertEquals;
 

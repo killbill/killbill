@@ -24,8 +24,8 @@ import java.math.BigDecimal;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.CurrencyValueNull;
 import com.ning.billing.catalog.api.Price;
-import com.ning.billing.util.config.ValidatingConfig;
-import com.ning.billing.util.config.ValidationErrors;
+import com.ning.billing.util.config.catalog.ValidatingConfig;
+import com.ning.billing.util.config.catalog.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultPrice extends ValidatingConfig<StandaloneCatalog> implements Price {

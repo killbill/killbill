@@ -61,12 +61,12 @@ public class DefaultBusEvent implements ExtBusEvent {
     public UUID getAccountId() {
         return accountId;
     }
-
+/*
     @Override
     public UUID getTenantId() {
         return tenantId;
     }
-
+*/
     @Override
     public String toString() {
         return "DefaultBusEvent [eventType=" + eventType + ", objectType="

@@ -16,7 +16,7 @@
 
 package com.ning.billing.util.notificationq;
 
-import com.ning.billing.config.NotificationConfig;
+import com.ning.billing.util.config.NotificationConfig;
 import com.ning.billing.util.clock.Clock;
 
 import com.google.inject.Inject;

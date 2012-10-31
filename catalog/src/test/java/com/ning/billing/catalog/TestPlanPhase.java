@@ -24,7 +24,7 @@ import org.testng.annotations.Test;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.PhaseType;
-import com.ning.billing.util.config.ValidationErrors;
+import com.ning.billing.util.config.catalog.ValidationErrors;
 
 public class TestPlanPhase extends CatalogTestSuite {
     private final Logger log = LoggerFactory.getLogger(TestPlanPhase.class);
