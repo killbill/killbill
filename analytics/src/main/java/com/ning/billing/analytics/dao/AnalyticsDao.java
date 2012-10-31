@@ -42,11 +42,11 @@ public interface AnalyticsDao {
 
     List<BusinessInvoiceModelDao> getInvoicesByKey(String accountKey, InternalTenantContext context);
 
-    List<BusinessAccountTagModelDao> getTagsForAccount(String accountKey, InternalTenantContext context);
-
     List<BusinessInvoiceItemModelDao> getInvoiceItemsForInvoice(String invoiceId, InternalTenantContext context);
+
+    List<BusinessInvoicePaymentModelDao> getInvoicePaymentsForAccountByKey(String accountKey, InternalTenantContext context);
 
     List<BusinessOverdueStatusModelDao> getOverdueStatusesForBundleByKey(String externalKey, InternalTenantContext context);
 
-    List<BusinessInvoicePaymentModelDao> getInvoicePaymentsForAccountByKey(String accountKey, InternalTenantContext context);
+    List<BusinessAccountTagModelDao> getTagsForAccount(String accountKey, InternalTenantContext context);
 }

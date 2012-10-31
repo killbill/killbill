@@ -73,7 +73,11 @@ public class DefaultBusinessSubscriptionTransition extends EntityBase implements
 
         this.requestedTimestamp = bstModelDao.getRequestedTimestamp();
         this.eventType = bstModelDao.getEvent().getEventType().toString();
-        this.category = bstModelDao.getEvent().getCategory().toString();
+        if (bstModelDao.getEvent().getCategory() != null) {
+            this.category = bstModelDao.getEvent().getCategory().toString();
+        } else {
+            this.category = null;
+        }
 
         if (bstModelDao.getPreviousSubscription() != null) {
             this.prevProductName = bstModelDao.getPreviousSubscription().getProductName();
