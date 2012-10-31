@@ -23,7 +23,7 @@ public class BusinessInvoicePaymentFieldModelDao extends BusinessFieldModelDao {
     private final UUID paymentId;
 
     public BusinessInvoicePaymentFieldModelDao(final UUID paymentId, final String name, final String value) {
-        super(name, value);
+        super(paymentId, name, value);
         this.paymentId = paymentId;
     }
 

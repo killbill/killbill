@@ -14,28 +14,25 @@
  * under the License.
  */
 
-package com.ning.billing.analytics.model;
+package com.ning.billing.analytics.api;
 
-import java.util.UUID;
+import org.joda.time.DateTime;
 
-import com.ning.billing.util.entity.EntityBase;
+import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.util.entity.Entity;
 
-public abstract class BusinessFieldModelDao extends EntityBase {
+public interface BusinessOverdueStatus extends Entity {
 
-    private final String name;
-    private final String value;
+    /**
+     * @return applicable object type
+     */
+    public ObjectType getObjectType();
 
-    public BusinessFieldModelDao(final UUID id, final String name, final String value) {
-        super(id);
-        this.name = name;
-        this.value = value;
-    }
+    public String getAccountKey();
 
-    public String getName() {
-        return name;
-    }
+    public String getStatus();
 
-    public String getValue() {
-        return value;
-    }
+    public DateTime getStartDate();
+
+    public DateTime getEndDate();
 }

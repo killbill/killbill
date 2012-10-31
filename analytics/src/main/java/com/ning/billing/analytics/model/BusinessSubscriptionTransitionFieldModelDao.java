@@ -26,7 +26,7 @@ public class BusinessSubscriptionTransitionFieldModelDao extends BusinessFieldMo
 
     public BusinessSubscriptionTransitionFieldModelDao(final String accountKey, final UUID bundleId, final String externalKey,
                                                        final String name, final String value) {
-        super(name, value);
+        super(bundleId, name, value);
         this.accountKey = accountKey;
         this.bundleId = bundleId;
         this.externalKey = externalKey;

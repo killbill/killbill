@@ -14,28 +14,23 @@
  * under the License.
  */
 
-package com.ning.billing.analytics.model;
+package com.ning.billing.analytics.api;
 
-import java.util.UUID;
+import java.util.Collection;
 
-import com.ning.billing.util.entity.EntityBase;
+public interface BusinessSnapshot {
 
-public abstract class BusinessFieldModelDao extends EntityBase {
+    public BusinessAccount getBusinessAccount();
 
-    private final String name;
-    private final String value;
+    public Collection<BusinessSubscriptionTransition> getBusinessSubscriptionTransitions();
 
-    public BusinessFieldModelDao(final UUID id, final String name, final String value) {
-        super(id);
-        this.name = name;
-        this.value = value;
-    }
+    public Collection<BusinessInvoice> getBusinessInvoices();
 
-    public String getName() {
-        return name;
-    }
+    public Collection<BusinessInvoicePayment> getBusinessInvoicePayments();
 
-    public String getValue() {
-        return value;
-    }
+    public Collection<BusinessOverdueStatus> getBusinessOverdueStatuses();
+
+    public Collection<BusinessTag> getBusinessTags();
+
+    public Collection<BusinessField> getBusinessFields();
 }

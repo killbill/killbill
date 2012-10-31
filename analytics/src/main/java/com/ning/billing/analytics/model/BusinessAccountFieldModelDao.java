@@ -24,7 +24,7 @@ public class BusinessAccountFieldModelDao extends BusinessFieldModelDao {
     private final String accountKey;
 
     public BusinessAccountFieldModelDao(final UUID accountId, final String accountKey, final String name, final String value) {
-        super(name, value);
+        super(accountId, name, value);
         this.accountId = accountId;
         this.accountKey = accountKey;
     }

@@ -14,28 +14,20 @@
  * under the License.
  */
 
-package com.ning.billing.analytics.model;
+package com.ning.billing.analytics.api;
 
-import java.util.UUID;
+import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.util.entity.Entity;
 
-import com.ning.billing.util.entity.EntityBase;
+public interface BusinessTag extends Entity {
 
-public abstract class BusinessFieldModelDao extends EntityBase {
+    /**
+     * @return applicable object type
+     */
+    public ObjectType getObjectType();
 
-    private final String name;
-    private final String value;
-
-    public BusinessFieldModelDao(final UUID id, final String name, final String value) {
-        super(id);
-        this.name = name;
-        this.value = value;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getValue() {
-        return value;
-    }
+    /**
+     * @return tag name
+     */
+    public String getName();
 }
