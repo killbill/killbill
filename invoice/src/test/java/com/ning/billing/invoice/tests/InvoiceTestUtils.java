@@ -34,8 +34,10 @@ import com.ning.billing.invoice.dao.InvoiceItemSqlDao;
 import com.ning.billing.invoice.dao.InvoiceSqlDao;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
 
 import com.google.common.collect.ImmutableList;
 
@@ -90,12 +92,12 @@ public class InvoiceTestUtils {
                                          "charge back test", "charge back phase", clock.getUTCToday(), amount, currency);
     }
 
-    public static InvoicePayment createAndPersistPayment(final InvoicePaymentApi invoicePaymentApi,
+    public static InvoicePayment createAndPersistPayment(final InvoiceInternalApi invoicePaymentApi,
                                                          final Clock clock,
                                                          final UUID invoiceId,
                                                          final BigDecimal amount,
                                                          final Currency currency,
-                                                         final CallContext callContext) throws InvoiceApiException {
+                                                         final InternalCallContext callContext) throws InvoiceApiException {
         final InvoicePayment payment = Mockito.mock(InvoicePayment.class);
         Mockito.when(payment.getId()).thenReturn(UUID.randomUUID());
         Mockito.when(payment.getType()).thenReturn(InvoicePaymentType.ATTEMPT);

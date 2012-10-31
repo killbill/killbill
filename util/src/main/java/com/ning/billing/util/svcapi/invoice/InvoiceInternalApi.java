@@ -18,12 +18,18 @@ package com.ning.billing.util.svcapi.invoice;
 
 import java.math.BigDecimal;
 import java.util.Collection;
+import java.util.Map;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 
+import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
+import com.ning.billing.invoice.api.InvoicePayment;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 
 public interface InvoiceInternalApi {
@@ -35,4 +41,28 @@ public interface InvoiceInternalApi {
     public Collection<Invoice> getInvoicesByAccountId(UUID accountId, InternalTenantContext context);
 
     public BigDecimal getAccountBalance(UUID accountId, InternalTenantContext context);
+
+    public void notifyOfPayment(UUID invoiceId, BigDecimal amountOutstanding, Currency currency, UUID paymentId, DateTime paymentDate, InternalCallContext context) throws InvoiceApiException;
+
+    public void notifyOfPayment(InvoicePayment invoicePayment, InternalCallContext context) throws InvoiceApiException;
+
+    public InvoicePayment getInvoicePaymentForAttempt(UUID paymentId, InternalTenantContext context) throws InvoiceApiException;
+
+    public Invoice getInvoiceForPaymentId(UUID paymentId, InternalTenantContext context) throws InvoiceApiException;
+
+    /**
+     * Create a refund.
+     *
+     * @param paymentId                 payment associated with that refund
+     * @param amount                    amount to refund
+     * @param isInvoiceAdjusted         whether the refund should trigger an invoice or invoice item adjustment
+     * @param invoiceItemIdsWithAmounts invoice item ids and associated amounts to adjust
+     * @param paymentCookieId           payment cookie id
+     * @param context                   the call context
+     * @return the created invoice payment object associated with this refund
+     * @throws InvoiceApiException
+     */
+    public InvoicePayment createRefund(UUID paymentId, BigDecimal amount, boolean isInvoiceAdjusted, final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts,
+                                       UUID paymentCookieId, InternalCallContext context) throws InvoiceApiException;
+
 }

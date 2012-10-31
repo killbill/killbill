@@ -65,6 +65,7 @@ import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
+import com.ning.billing.util.svcapi.payment.PaymentInternalApi;
 import com.ning.billing.util.svcapi.tag.TagInternalApi;
 
 public class TestDefaultAnalyticsUserApi extends AnalyticsTestSuiteWithEmbeddedDB {
@@ -102,7 +103,7 @@ public class TestDefaultAnalyticsUserApi extends AnalyticsTestSuiteWithEmbeddedD
                                                        Mockito.mock(BusinessInvoicePaymentDao.class),
                                                        Mockito.mock(BusinessTagDao.class),
                                                        Mockito.mock(EntitlementInternalApi.class),
-                                                       Mockito.mock(PaymentApi.class),
+                                                       Mockito.mock(PaymentInternalApi.class),
                                                        Mockito.mock(TagInternalApi.class),
                                                        new InternalCallContextFactory(dbi, clock));
     }

@@ -38,7 +38,6 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.payment.api.DefaultRefund;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.Refund;
@@ -56,6 +55,7 @@ import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
+import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
 import com.ning.billing.util.svcapi.tag.TagInternalApi;
 import com.ning.billing.util.svcsapi.bus.InternalBus;
 
@@ -70,13 +70,13 @@ public class RefundProcessor extends ProcessorBase {
 
     private static final Logger log = LoggerFactory.getLogger(RefundProcessor.class);
 
-    private final InvoicePaymentApi invoicePaymentApi;
+    private final InvoiceInternalApi invoiceApi;
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
     public RefundProcessor(final PaymentProviderPluginRegistry pluginRegistry,
                            final AccountInternalApi accountApi,
-                           final InvoicePaymentApi invoicePaymentApi,
+                           final InvoiceInternalApi invoiceApi,
                            final InternalBus eventBus,
                            final InternalCallContextFactory internalCallContextFactory,
                            final TagInternalApi tagUserApi,
@@ -84,7 +84,7 @@ public class RefundProcessor extends ProcessorBase {
                            final GlobalLocker locker,
                            @Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor) {
         super(pluginRegistry, accountApi, eventBus, paymentDao, tagUserApi, locker, executor);
-        this.invoicePaymentApi = invoicePaymentApi;
+        this.invoiceApi = invoiceApi;
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
@@ -166,7 +166,7 @@ public class RefundProcessor extends ProcessorBase {
                     }
                     paymentDao.updateRefundStatus(refundInfo.getId(), RefundStatus.PLUGIN_COMPLETED, context);
 
-                    invoicePaymentApi.createRefund(paymentId, refundAmount, isAdjusted, invoiceItemIdsWithAmounts, refundInfo.getId(), context.toCallContext());
+                    invoiceApi.createRefund(paymentId, refundAmount, isAdjusted, invoiceItemIdsWithAmounts, refundInfo.getId(), context);
 
                     paymentDao.updateRefundStatus(refundInfo.getId(), RefundStatus.COMPLETED, context);
 
@@ -194,7 +194,7 @@ public class RefundProcessor extends ProcessorBase {
                                            final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts, final InternalTenantContext context)
             throws PaymentApiException {
         try {
-            final List<InvoiceItem> items = invoicePaymentApi.getInvoiceForPaymentId(paymentId, context.toTenantContext()).getInvoiceItems();
+            final List<InvoiceItem> items = invoiceApi.getInvoiceForPaymentId(paymentId, context).getInvoiceItems();
 
             BigDecimal amountFromItems = BigDecimal.ZERO;
             for (final UUID itemId : invoiceItemIdsWithAmounts.keySet()) {
@@ -304,7 +304,7 @@ public class RefundProcessor extends ProcessorBase {
                     try {
                         for (final RefundModelDao cur : refundsToBeFixed) {
                             // TODO - we currently don't save the items to be adjusted. If we crash, they won't be adjusted...
-                            invoicePaymentApi.createRefund(cur.getPaymentId(), cur.getAmount(), cur.isAdjsuted(), ImmutableMap.<UUID, BigDecimal>of(), cur.getId(), context.toCallContext());
+                            invoiceApi.createRefund(cur.getPaymentId(), cur.getAmount(), cur.isAdjsuted(), ImmutableMap.<UUID, BigDecimal>of(), cur.getId(), context);
                             paymentDao.updateRefundStatus(cur.getId(), RefundStatus.COMPLETED, context);
                         }
                     } catch (InvoiceApiException e) {

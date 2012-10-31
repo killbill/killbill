@@ -37,30 +37,9 @@ public interface InvoicePaymentApi {
 
     public Invoice getInvoice(UUID invoiceId, TenantContext context) throws InvoiceApiException;
 
-    public Invoice getInvoiceForPaymentId(UUID paymentId, TenantContext context) throws InvoiceApiException;
-
     public List<InvoicePayment> getInvoicePayments(UUID paymentId, TenantContext context);
 
     public InvoicePayment getInvoicePaymentForAttempt(UUID paymentId, TenantContext context);
-
-    public void notifyOfPayment(InvoicePayment invoicePayment, CallContext context) throws InvoiceApiException;
-
-    public void notifyOfPayment(UUID invoiceId, BigDecimal amountOutstanding, Currency currency, UUID paymentId, DateTime paymentDate, CallContext context) throws InvoiceApiException;
-
-    /**
-     * Create a refund.
-     *
-     * @param paymentId                 payment associated with that refund
-     * @param amount                    amount to refund
-     * @param isInvoiceAdjusted         whether the refund should trigger an invoice or invoice item adjustment
-     * @param invoiceItemIdsWithAmounts invoice item ids and associated amounts to adjust
-     * @param paymentCookieId           payment cookie id
-     * @param context                   the call context
-     * @return the created invoice payment object associated with this refund
-     * @throws InvoiceApiException
-     */
-    public InvoicePayment createRefund(UUID paymentId, BigDecimal amount, boolean isInvoiceAdjusted, final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts,
-                                       UUID paymentCookieId, CallContext context) throws InvoiceApiException;
 
     public InvoicePayment createChargeback(UUID invoicePaymentId, BigDecimal amount, CallContext context) throws InvoiceApiException;
 

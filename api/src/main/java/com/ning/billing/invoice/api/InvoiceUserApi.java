@@ -87,13 +87,6 @@ public interface InvoiceUserApi {
      */
     public Invoice getInvoiceByNumber(Integer number, TenantContext context) throws InvoiceApiException;
 
-    /**
-     * Record a payment for an invoice.
-     *
-     * @param invoicePayment invoice payment
-     * @param context        call context
-     */
-    public void notifyOfPayment(InvoicePayment invoicePayment, CallContext context) throws InvoiceApiException;
 
     /**
      * Find unpaid invoices for a given account, up to a given day.

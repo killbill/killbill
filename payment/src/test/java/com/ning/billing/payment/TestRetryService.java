@@ -34,7 +34,6 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.config.PaymentConfig;
 import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.mock.glue.MockClockModule;
 import com.ning.billing.mock.glue.MockJunctionModule;
 import com.ning.billing.payment.api.Payment;
@@ -48,9 +47,10 @@ import com.ning.billing.payment.provider.MockPaymentProviderPlugin;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
 import com.ning.billing.payment.retry.FailedPaymentRetryService;
 import com.ning.billing.payment.retry.PluginFailureRetryService;
-import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.glue.CallContextModule;
+import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
+import com.ning.billing.util.svcsapi.bus.InternalBus;
 
 import com.google.inject.Inject;
 
@@ -69,7 +69,7 @@ public class TestRetryService extends PaymentTestSuite {
     @Inject
     private PaymentProcessor paymentProcessor;
     @Inject
-    private InvoicePaymentApi invoicePaymentApi;
+    private InvoiceInternalApi invoiceApi;
     @Inject
     private TestHelper testHelper;
     @Inject

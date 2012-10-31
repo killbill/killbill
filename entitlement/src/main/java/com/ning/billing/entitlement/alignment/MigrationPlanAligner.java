@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2012 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -47,13 +47,13 @@ public class MigrationPlanAligner {
             throws EntitlementMigrationApiException {
 
         try {
-            TimedMigration[] events = null;
+            TimedMigration[] events;
             final Plan plan0 = catalogService.getFullCatalog().findPlan(input[0].getPlanPhaseSpecifier().getProductName(),
-                                                                  input[0].getPlanPhaseSpecifier().getBillingPeriod(), input[0].getPlanPhaseSpecifier().getPriceListName(), now);
+                                                                        input[0].getPlanPhaseSpecifier().getBillingPeriod(), input[0].getPlanPhaseSpecifier().getPriceListName(), now);
 
             final Plan plan1 = (input.length > 1) ? catalogService.getFullCatalog().findPlan(input[1].getPlanPhaseSpecifier().getProductName(),
-                                                                                       input[1].getPlanPhaseSpecifier().getBillingPeriod(), input[1].getPlanPhaseSpecifier().getPriceListName(), now) :
-                    null;
+                                                                                             input[1].getPlanPhaseSpecifier().getBillingPeriod(), input[1].getPlanPhaseSpecifier().getPriceListName(), now) :
+                               null;
 
             DateTime migrationStartDate = input[0].getEffectiveDate();
 
@@ -194,8 +194,8 @@ public class MigrationPlanAligner {
 
     private boolean isSamePlan(final PlanPhaseSpecifier plan0, final PlanPhaseSpecifier plan1) {
         if (plan0.getPriceListName().equals(plan1.getPriceListName()) &&
-                plan0.getProductName().equals(plan1.getProductName()) &&
-                plan0.getBillingPeriod() == plan1.getBillingPeriod()) {
+            plan0.getProductName().equals(plan1.getProductName()) &&
+            plan0.getBillingPeriod() == plan1.getBillingPeriod()) {
             return true;
         }
         return false;

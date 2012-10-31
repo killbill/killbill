@@ -57,14 +57,6 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
     }
 
     @Override
-    public void notifyOfPayment(final InvoicePayment invoicePayment, final CallContext context) throws InvoiceApiException {
-        // Retrieve the account id for the internal call context
-        final Invoice invoice = dao.getById(invoicePayment.getInvoiceId(), internalCallContextFactory.createInternalTenantContext(context));
-        final UUID accountId = invoice.getAccountId();
-        dao.notifyOfPayment(invoicePayment, internalCallContextFactory.createInternalCallContext(accountId, context));
-    }
-
-    @Override
     public List<Invoice> getAllInvoicesByAccount(final UUID accountId, final TenantContext context) {
         return dao.getAllInvoicesByAccount(accountId, internalCallContextFactory.createInternalTenantContext(context));
     }
@@ -75,17 +67,9 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
     }
 
     @Override
-    public Invoice getInvoiceForPaymentId(final UUID paymentId, final TenantContext context) throws InvoiceApiException {
-        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(context);
-        final UUID invoiceIdStr = dao.getInvoiceIdByPaymentId(paymentId, internalTenantContext);
-        return invoiceIdStr == null ? null : dao.getById(invoiceIdStr, internalTenantContext);
-    }
-
-    @Override
     public List<InvoicePayment> getInvoicePayments(final UUID paymentId, final TenantContext context) {
         return dao.getInvoicePayments(paymentId, internalCallContextFactory.createInternalTenantContext(context));
     }
-
 
     @Override
     public InvoicePayment getInvoicePaymentForAttempt(final UUID paymentId, final TenantContext context) {
@@ -101,16 +85,6 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
         }).iterator().next();
     }
 
-    @Override
-    public void notifyOfPayment(final UUID invoiceId, final BigDecimal amount, final Currency currency, final UUID paymentId, final DateTime paymentDate, final CallContext context) throws InvoiceApiException {
-        final InvoicePayment invoicePayment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentId, invoiceId, paymentDate, amount, currency);
-
-        // Retrieve the account id for the internal call context
-        final Invoice invoice = dao.getById(invoiceId, internalCallContextFactory.createInternalTenantContext(context));
-        final UUID accountId = invoice.getAccountId();
-
-        dao.notifyOfPayment(invoicePayment, internalCallContextFactory.createInternalCallContext(accountId, context));
-    }
 
     @Override
     public BigDecimal getRemainingAmountPaid(final UUID invoicePaymentId, final TenantContext context) {
@@ -137,28 +111,6 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
         return dao.getAccountIdFromInvoicePaymentId(invoicePaymentId, internalCallContextFactory.createInternalTenantContext(context));
     }
 
-    @Override
-    public InvoicePayment createRefund(final UUID paymentId, final BigDecimal amount, final boolean isInvoiceAdjusted,
-                                       final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts, final UUID paymentCookieId,
-                                       final CallContext context) throws InvoiceApiException {
-
-        return invoicePaymentWithException.executeAndThrow(new WithInvoiceApiExceptionCallback<InvoicePayment>() {
-
-            @Override
-            public InvoicePayment doHandle() throws InvoiceApiException {
-                if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-                    throw new InvoiceApiException(ErrorCode.PAYMENT_REFUND_AMOUNT_NEGATIVE_OR_NULL);
-                }
-
-                // Retrieve the account id for the internal call context
-                final InternalTenantContext internalCallContextNoAccountId = internalCallContextFactory.createInternalTenantContext(context);
-                final List<InvoicePayment> invoicePayments = dao.getInvoicePayments(paymentId, internalCallContextNoAccountId);
-                final UUID accountId = dao.getAccountIdFromInvoicePaymentId(invoicePayments.get(0).getId(), internalCallContextNoAccountId);
-
-                return dao.createRefund(paymentId, amount, isInvoiceAdjusted, invoiceItemIdsWithAmounts, paymentCookieId, internalCallContextFactory.createInternalCallContext(accountId, context));
-            }
-        });
-    }
 
     @Override
     public InvoicePayment createChargeback(final UUID invoicePaymentId, final CallContext context) throws InvoiceApiException {

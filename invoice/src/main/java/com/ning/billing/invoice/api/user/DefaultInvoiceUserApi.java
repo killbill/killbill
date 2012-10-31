@@ -94,13 +94,6 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
     @Override
-    public void notifyOfPayment(final InvoicePayment invoicePayment, final CallContext context) throws InvoiceApiException {
-        // Retrieve the account id for the internal call context
-        final UUID accountId = dao.getAccountIdFromInvoicePaymentId(invoicePayment.getId(), internalCallContextFactory.createInternalTenantContext(context));
-        dao.notifyOfPayment(invoicePayment, internalCallContextFactory.createInternalCallContext(accountId, context));
-    }
-
-    @Override
     public BigDecimal getAccountBalance(final UUID accountId, final TenantContext context) {
         final BigDecimal result = dao.getAccountBalance(accountId, internalCallContextFactory.createInternalTenantContext(context));
         return result == null ? BigDecimal.ZERO : result;

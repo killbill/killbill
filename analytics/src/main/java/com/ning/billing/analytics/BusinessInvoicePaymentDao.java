@@ -37,15 +37,14 @@ import com.ning.billing.analytics.model.BusinessInvoicePayment;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoicePayment;
-import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.payment.api.Payment;
-import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.PaymentMethod;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
+import com.ning.billing.util.svcapi.payment.PaymentInternalApi;
 import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
 
 public class BusinessInvoicePaymentDao {
@@ -54,20 +53,18 @@ public class BusinessInvoicePaymentDao {
 
     private final BusinessInvoicePaymentSqlDao invoicePaymentSqlDao;
     private final AccountInternalApi accountApi;
-    private final InvoicePaymentApi invoicePaymentApi;
     private final InvoiceInternalApi invoiceApi;
-    private final PaymentApi paymentApi;
+    private final PaymentInternalApi paymentApi;
     private final Clock clock;
     private final BusinessInvoiceDao invoiceDao;
     private final BusinessAccountDao accountDao;
 
     @Inject
     public BusinessInvoicePaymentDao(final BusinessInvoicePaymentSqlDao invoicePaymentSqlDao, final AccountInternalApi accountApi,
-                                     final InvoicePaymentApi invoicePaymentApi, final InvoiceInternalApi invoiceApi, final PaymentApi paymentApi,
+                                     final InvoiceInternalApi invoiceApi, final PaymentInternalApi paymentApi,
                                      final Clock clock, final BusinessInvoiceDao invoiceDao, final BusinessAccountDao accountDao) {
         this.invoicePaymentSqlDao = invoicePaymentSqlDao;
         this.accountApi = accountApi;
-        this.invoicePaymentApi = invoicePaymentApi;
         this.invoiceApi = invoiceApi;
         this.paymentApi = paymentApi;
         this.clock = clock;
@@ -92,7 +89,7 @@ public class BusinessInvoicePaymentDao {
 
         final Payment payment;
         try {
-            payment = paymentApi.getPayment(paymentId, context.toCallContext());
+            payment = paymentApi.getPayment(paymentId, context);
         } catch (PaymentApiException e) {
             log.warn("Ignoring payment {}: payment does not exist", paymentId);
             return;
@@ -100,20 +97,22 @@ public class BusinessInvoicePaymentDao {
 
         final PaymentMethod paymentMethod;
         try {
-            paymentMethod = paymentApi.getPaymentMethod(account, payment.getPaymentMethodId(), true, context.toCallContext());
+            paymentMethod = paymentApi.getPaymentMethod(account, payment.getPaymentMethodId(), true, context);
         } catch (PaymentApiException e) {
             log.warn("Ignoring payment {}: payment method {} does not exist", paymentId, payment.getPaymentMethodId());
             return;
         }
 
-        final InvoicePayment invoicePayment = invoicePaymentApi.getInvoicePaymentForAttempt(paymentId, context.toCallContext());
         Invoice invoice = null;
-        if (invoicePayment != null) {
-            try {
+        InvoicePayment invoicePayment = null;
+        try {
+            invoicePayment = invoiceApi.getInvoicePaymentForAttempt(paymentId, context);
+            if (invoicePayment != null) {
                 invoice = invoiceApi.getInvoiceById(invoicePayment.getInvoiceId(), context);
-            } catch (InvoiceApiException e) {
-                log.warn("Unable to find invoice {} for payment {}", invoicePayment.getInvoiceId(), paymentId);
             }
+        } catch (InvoiceApiException e) {
+            log.warn("Unable to find invoice {} for payment {}",
+                     invoicePayment != null ? invoicePayment.getInvoiceId() : "unknown", paymentId);
         }
 
         createPayment(account, invoice, invoicePayment, payment, paymentMethod, extFirstPaymentRefId, extSecondPaymentRefId, message, context);

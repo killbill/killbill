@@ -26,7 +26,6 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.mock.api.MockBillCycleDay;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
@@ -37,11 +36,11 @@ import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.events.InvoiceCreationInternalEvent;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
+import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
 import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.svcsapi.bus.InternalBus.EventBusException;
 
@@ -49,7 +48,7 @@ import com.google.inject.Inject;
 
 public class TestHelper {
     protected final AccountInternalApi AccountApi;
-    protected final InvoicePaymentApi invoicePaymentApi;
+    protected final InvoiceInternalApi invoiceApi;
     protected PaymentApi paymentApi;
     private final CallContext context;
     private final InternalBus eventBus;
@@ -57,11 +56,11 @@ public class TestHelper {
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
-    public TestHelper(final CallContextFactory factory, final AccountInternalApi AccountApi, final InvoicePaymentApi invoicePaymentApi,
+    public TestHelper(final CallContextFactory factory, final AccountInternalApi AccountApi, final InvoiceInternalApi invoiceApi,
                       final PaymentApi paymentApi, final InternalBus eventBus, final Clock clock, final InternalCallContextFactory internalCallContextFactory) {
         this.eventBus = eventBus;
         this.AccountApi = AccountApi;
-        this.invoicePaymentApi = invoicePaymentApi;
+        this.invoiceApi = invoiceApi;
         this.paymentApi = paymentApi;
         this.clock = clock;
         this.internalCallContextFactory = internalCallContextFactory;
@@ -92,7 +91,7 @@ public class TestHelper {
             }
         }
 
-        Mockito.when(invoicePaymentApi.getInvoice(Mockito.eq(invoice.getId()), Mockito.<TenantContext>any())).thenReturn(invoice);
+        Mockito.when(invoiceApi.getInvoiceById(Mockito.eq(invoice.getId()), Mockito.<InternalTenantContext>any())).thenReturn(invoice);
         final InvoiceCreationInternalEvent event = new MockInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
                                                                         invoice.getBalance(), invoice.getCurrency(),
                                                                         invoice.getInvoiceDate(),

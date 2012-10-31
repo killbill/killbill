@@ -29,6 +29,7 @@ import com.ning.billing.config.PaymentConfig;
 import com.ning.billing.payment.api.DefaultPaymentApi;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentService;
+import com.ning.billing.payment.api.svcs.DefaultPaymentInternalApi;
 import com.ning.billing.payment.bus.InvoiceHandler;
 import com.ning.billing.payment.bus.TagHandler;
 import com.ning.billing.payment.core.PaymentMethodProcessor;
@@ -43,6 +44,7 @@ import com.ning.billing.payment.retry.FailedPaymentRetryService;
 import com.ning.billing.payment.retry.FailedPaymentRetryService.FailedPaymentRetryServiceScheduler;
 import com.ning.billing.payment.retry.PluginFailureRetryService;
 import com.ning.billing.payment.retry.PluginFailureRetryService.PluginFailureRetryServiceScheduler;
+import com.ning.billing.util.svcapi.payment.PaymentInternalApi;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.AbstractModule;
@@ -109,6 +111,7 @@ public class PaymentModule extends AbstractModule {
         bind(PaymentConfig.class).toInstance(paymentConfig);
         bind(PaymentProviderPluginRegistry.class).toProvider(DefaultPaymentProviderPluginRegistryProvider.class).asEagerSingleton();
 
+        bind(PaymentInternalApi.class).to(DefaultPaymentInternalApi.class).asEagerSingleton();
         bind(PaymentApi.class).to(DefaultPaymentApi.class).asEagerSingleton();
         bind(InvoiceHandler.class).asEagerSingleton();
         bind(TagHandler.class).asEagerSingleton();

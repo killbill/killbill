@@ -39,7 +39,6 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.config.PaymentConfig;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
-import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.payment.api.DefaultPayment;
 import com.ning.billing.payment.api.DefaultPaymentErrorEvent;
 import com.ning.billing.payment.api.DefaultPaymentInfoEvent;
@@ -65,6 +64,7 @@ import com.ning.billing.util.events.BusInternalEvent;
 import com.ning.billing.util.events.PaymentErrorInternalEvent;
 import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
+import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
 import com.ning.billing.util.svcapi.tag.TagInternalApi;
 import com.ning.billing.util.svcsapi.bus.InternalBus;
 
@@ -75,7 +75,7 @@ import com.google.inject.name.Named;
 public class PaymentProcessor extends ProcessorBase {
 
     private final PaymentMethodProcessor paymentMethodProcessor;
-    private final InvoicePaymentApi invoicePaymentApi;
+    private final InvoiceInternalApi invoiceApi;
     private final FailedPaymentRetryServiceScheduler failedPaymentRetryService;
     private final PluginFailureRetryServiceScheduler pluginFailureRetryService;
     private final AutoPayRetryServiceScheduler autoPayoffRetryService;
@@ -93,7 +93,7 @@ public class PaymentProcessor extends ProcessorBase {
     public PaymentProcessor(final PaymentProviderPluginRegistry pluginRegistry,
                             final PaymentMethodProcessor paymentMethodProcessor,
                             final AccountInternalApi accountUserApi,
-                            final InvoicePaymentApi invoicePaymentApi,
+                            final InvoiceInternalApi invoiceApi,
                             final TagInternalApi tagUserApi,
                             final FailedPaymentRetryServiceScheduler failedPaymentRetryService,
                             final PluginFailureRetryServiceScheduler pluginFailureRetryService,
@@ -106,7 +106,7 @@ public class PaymentProcessor extends ProcessorBase {
                             @Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor) {
         super(pluginRegistry, accountUserApi, eventBus, paymentDao, tagUserApi, locker, executor);
         this.paymentMethodProcessor = paymentMethodProcessor;
-        this.invoicePaymentApi = invoicePaymentApi;
+        this.invoiceApi = invoiceApi;
         this.failedPaymentRetryService = failedPaymentRetryService;
         this.pluginFailureRetryService = pluginFailureRetryService;
         this.autoPayoffRetryService = autoPayoffRetryService;
@@ -229,7 +229,7 @@ public class PaymentProcessor extends ProcessorBase {
 
 
                     try {
-                        final Invoice invoice = invoicePaymentApi.getInvoice(invoiceId, context.toCallContext());
+                        final Invoice invoice = invoiceApi.getInvoiceById(invoiceId, context);
 
                         if (invoice.isMigrationInvoice()) {
                             log.error("Received invoice for payment that is a migration invoice - don't know how to handle those yet: {}", invoice);
@@ -353,7 +353,7 @@ public class PaymentProcessor extends ProcessorBase {
                             return null;
                         }
 
-                        final Invoice invoice = invoicePaymentApi.getInvoice(payment.getInvoiceId(), context.toCallContext());
+                        final Invoice invoice = invoiceApi.getInvoiceById(payment.getInvoiceId(), context);
                         if (invoice.isMigrationInvoice()) {
                             return null;
                         }
@@ -434,12 +434,12 @@ public class PaymentProcessor extends ProcessorBase {
                 allAttempts = paymentDao.getAttemptsForPayment(paymentInput.getId(), context);
 
                 payment = paymentDao.getPayment(paymentInput.getId(), context);
-                invoicePaymentApi.notifyOfPayment(invoice.getId(),
+                invoiceApi.notifyOfPayment(invoice.getId(),
                         payment.getAmount(),
                         paymentStatus == PaymentStatus.SUCCESS ? payment.getCurrency() : null,
                                 payment.getId(),
                                 payment.getEffectiveDate(),
-                                context.toCallContext());
+                                context);
 
                 // Create Bus event
                 event = new DefaultPaymentInfoEvent(account.getId(),
