@@ -24,37 +24,98 @@ import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.util.callcontext.CallContext;
 
+/**
+ * The interface {@code EntitlementMigrationApi} is used to migrate entitlement data from third party system
+ * in an atomic way.
+ */
 public interface EntitlementMigrationApi {
 
 
+    /**
+     * The interface {@code EntitlementAccountMigration} captures all the {@code SubscriptionBundle} associated with
+     * that account.
+     */
     public interface EntitlementAccountMigration {
+
+        /**
+         *
+         * @return the unique id for the account
+         */
         public UUID getAccountKey();
 
+        /**
+         *
+         * @return an array of {@code EntitlementBundleMigration}
+         */
         public EntitlementBundleMigration[] getBundles();
     }
 
+    /**
+     * The interface {@code EntitlementBundleMigration} captures all the {@code Subscription} asociated with a given
+     * {@code SubscriptionBundle}
+     */
     public interface EntitlementBundleMigration {
+
+        /**
+         *
+         * @return the bundle external key
+         */
         public String getBundleKey();
 
+        /**
+         *
+         * @return an array of {@code Subscription}
+         */
         public EntitlementSubscriptionMigration[] getSubscriptions();
     }
 
+    /**
+     * The interface {@code EntitlementSubscriptionMigration} captures the detail for each {@code Subscription} to be
+     * migrated.
+     */
     public interface EntitlementSubscriptionMigration {
+
+        /**
+         *
+         * @return the {@code ProductCategory}
+         */
         public ProductCategory getCategory();
 
+        /**
+         *
+         * @return the chargeTroughDate for that {@code Subscription}
+         */
         public DateTime getChargedThroughDate();
 
+        /**
+         *
+         * @return the various phase information for that {@code Subscription}
+         */
         public EntitlementSubscriptionMigrationCase[] getSubscriptionCases();
     }
 
     /**
-     * Each case is either a PHASE or a different PlanSpecifier
+     * The interface {@code EntitlementSubscriptionMigrationCase} captures the details of
+     * phase for a {@code Subscription}.
+     *
      */
     public interface EntitlementSubscriptionMigrationCase {
+        /**
+         *
+         * @return the {@code PlanPhaseSpecifier}
+         */
         public PlanPhaseSpecifier getPlanPhaseSpecifier();
 
+        /**
+         *
+         * @return the date at which this phase starts.
+         */
         public DateTime getEffectiveDate();
 
+        /**
+         *
+         * @return the date at which this phase is stopped.
+         */
         public DateTime getCancelledDate();
     }
 

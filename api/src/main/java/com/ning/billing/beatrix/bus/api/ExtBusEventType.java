@@ -16,7 +16,7 @@
 package com.ning.billing.beatrix.bus.api;
 
 /**
- * User visible bus event types.
+ * The enum {@code ExtBusEventType} rerpesents the user visible bus event types.
  */
 public enum ExtBusEventType {
     ACCOUNT_CREATION,
