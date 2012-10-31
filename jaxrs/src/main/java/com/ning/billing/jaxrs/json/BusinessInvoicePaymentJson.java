@@ -32,6 +32,7 @@ public class BusinessInvoicePaymentJson extends JsonBase {
     private final String extSecondPaymentRefId;
     private final String accountKey;
     private final String invoiceId;
+    private final Integer invoiceNumber;
     private final DateTime effectiveDate;
     private final BigDecimal amount;
     private final String currency;
@@ -52,6 +53,7 @@ public class BusinessInvoicePaymentJson extends JsonBase {
                                       @JsonProperty("extSecondPaymentRefId") final String extSecondPaymentRefId,
                                       @JsonProperty("accountKey") final String accountKey,
                                       @JsonProperty("invoiceId") final String invoiceId,
+                                      @JsonProperty("invoiceNumber") final Integer invoiceNumber,
                                       @JsonProperty("effectiveDate") final DateTime effectiveDate,
                                       @JsonProperty("amount") final BigDecimal amount,
                                       @JsonProperty("currency") final String currency,
@@ -70,6 +72,7 @@ public class BusinessInvoicePaymentJson extends JsonBase {
         this.extSecondPaymentRefId = extSecondPaymentRefId;
         this.accountKey = accountKey;
         this.invoiceId = invoiceId;
+        this.invoiceNumber = invoiceNumber;
         this.effectiveDate = effectiveDate;
         this.amount = amount;
         this.currency = currency;
@@ -85,12 +88,14 @@ public class BusinessInvoicePaymentJson extends JsonBase {
         this.linkedInvoicePaymentId = linkedInvoicePaymentId;
     }
 
-    public BusinessInvoicePaymentJson(final BusinessInvoicePayment businessInvoicePayment) {
+    public BusinessInvoicePaymentJson(final BusinessInvoicePayment businessInvoicePayment, final Integer invoiceNumber) {
+        // The bip table doesn't contain the invoice number, but we export it in here for convenience
         this(businessInvoicePayment.getPaymentId().toString(),
              businessInvoicePayment.getExtFirstPaymentRefId(),
              businessInvoicePayment.getExtSecondPaymentRefId(),
              businessInvoicePayment.getAccountKey(),
              businessInvoicePayment.getInvoiceId().toString(),
+             invoiceNumber,
              businessInvoicePayment.getEffectiveDate(),
              businessInvoicePayment.getAmount(),
              businessInvoicePayment.getCurrency().toString(),
@@ -124,6 +129,10 @@ public class BusinessInvoicePaymentJson extends JsonBase {
 
     public String getInvoiceId() {
         return invoiceId;
+    }
+
+    public Integer getInvoiceNumber() {
+        return invoiceNumber;
     }
 
     public DateTime getEffectiveDate() {
@@ -187,6 +196,7 @@ public class BusinessInvoicePaymentJson extends JsonBase {
         sb.append(", extSecondPaymentRefId='").append(extSecondPaymentRefId).append('\'');
         sb.append(", accountKey='").append(accountKey).append('\'');
         sb.append(", invoiceId='").append(invoiceId).append('\'');
+        sb.append(", invoiceNumber='").append(invoiceNumber).append('\'');
         sb.append(", effectiveDate=").append(effectiveDate);
         sb.append(", amount=").append(amount);
         sb.append(", currency='").append(currency).append('\'');
@@ -242,6 +252,9 @@ public class BusinessInvoicePaymentJson extends JsonBase {
         if (invoiceId != null ? !invoiceId.equals(that.invoiceId) : that.invoiceId != null) {
             return false;
         }
+        if (invoiceNumber != null ? !invoiceNumber.equals(that.invoiceNumber) : that.invoiceNumber != null) {
+            return false;
+        }
         if (invoicePaymentType != null ? !invoicePaymentType.equals(that.invoicePaymentType) : that.invoicePaymentType != null) {
             return false;
         }
@@ -280,6 +293,7 @@ public class BusinessInvoicePaymentJson extends JsonBase {
         result = 31 * result + (extSecondPaymentRefId != null ? extSecondPaymentRefId.hashCode() : 0);
         result = 31 * result + (accountKey != null ? accountKey.hashCode() : 0);
         result = 31 * result + (invoiceId != null ? invoiceId.hashCode() : 0);
+        result = 31 * result + (invoiceNumber != null ? invoiceNumber.hashCode() : 0);
         result = 31 * result + (effectiveDate != null ? effectiveDate.hashCode() : 0);
         result = 31 * result + (amount != null ? amount.hashCode() : 0);
         result = 31 * result + (currency != null ? currency.hashCode() : 0);

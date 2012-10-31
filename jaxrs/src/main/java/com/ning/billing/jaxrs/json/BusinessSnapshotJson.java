@@ -17,6 +17,9 @@
 package com.ning.billing.jaxrs.json;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -62,6 +65,8 @@ public class BusinessSnapshotJson extends JsonBase {
     }
 
     public BusinessSnapshotJson(final BusinessSnapshot businessSnapshot) {
+        final Map<UUID, Integer> invoiceIdToNumber = new HashMap<UUID, Integer>();
+
         this.businessAccount = new BusinessAccountJson(businessSnapshot.getBusinessAccount());
         this.businessSubscriptionTransitions = ImmutableList.<BusinessSubscriptionTransitionJson>copyOf(Collections2.transform(businessSnapshot.getBusinessSubscriptionTransitions(), new Function<BusinessSubscriptionTransition, BusinessSubscriptionTransitionJson>() {
             @Override
@@ -71,14 +76,15 @@ public class BusinessSnapshotJson extends JsonBase {
         }));
         this.businessInvoices = ImmutableList.<BusinessInvoiceJson>copyOf(Collections2.transform(businessSnapshot.getBusinessInvoices(), new Function<BusinessInvoice, BusinessInvoiceJson>() {
             @Override
-            public BusinessInvoiceJson apply(@Nullable final BusinessInvoice input) {
+            public BusinessInvoiceJson apply(final BusinessInvoice input) {
+                invoiceIdToNumber.put(input.getInvoiceId(), input.getInvoiceNumber());
                 return new BusinessInvoiceJson(input);
             }
         }));
         this.businessInvoicePayments = ImmutableList.<BusinessInvoicePaymentJson>copyOf(Collections2.transform(businessSnapshot.getBusinessInvoicePayments(), new Function<BusinessInvoicePayment, BusinessInvoicePaymentJson>() {
             @Override
-            public BusinessInvoicePaymentJson apply(@Nullable final BusinessInvoicePayment input) {
-                return new BusinessInvoicePaymentJson(input);
+            public BusinessInvoicePaymentJson apply(final BusinessInvoicePayment input) {
+                return new BusinessInvoicePaymentJson(input, invoiceIdToNumber.get(input.getInvoiceId()));
             }
         }));
         this.businessOverdueStatuses = ImmutableList.<BusinessOverdueStatusJson>copyOf(Collections2.transform(businessSnapshot.getBusinessOverdueStatuses(), new Function<BusinessOverdueStatus, BusinessOverdueStatusJson>() {
