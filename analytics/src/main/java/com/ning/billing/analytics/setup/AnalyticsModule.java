@@ -22,9 +22,12 @@ import com.ning.billing.analytics.BusinessSubscriptionTransitionDao;
 import com.ning.billing.analytics.BusinessTagDao;
 import com.ning.billing.analytics.api.AnalyticsService;
 import com.ning.billing.analytics.api.DefaultAnalyticsService;
+import com.ning.billing.analytics.api.sanity.AnalyticsSanityApi;
+import com.ning.billing.analytics.api.sanity.DefaultAnalyticsSanityApi;
 import com.ning.billing.analytics.api.user.AnalyticsUserApi;
 import com.ning.billing.analytics.api.user.DefaultAnalyticsUserApi;
 import com.ning.billing.analytics.dao.AnalyticsDao;
+import com.ning.billing.analytics.dao.AnalyticsSanityDao;
 import com.ning.billing.analytics.dao.BusinessAccountSqlDao;
 import com.ning.billing.analytics.dao.BusinessAccountTagSqlDao;
 import com.ning.billing.analytics.dao.BusinessInvoiceFieldSqlDao;
@@ -40,6 +43,7 @@ import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionFieldSqlDao;
 import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionSqlDao;
 import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionTagSqlDao;
 import com.ning.billing.analytics.dao.DefaultAnalyticsDao;
+import com.ning.billing.analytics.dao.DefaultAnalyticsSanityDao;
 
 import com.google.inject.AbstractModule;
 
@@ -67,9 +71,11 @@ public class AnalyticsModule extends AbstractModule {
         bind(AnalyticsListener.class).asEagerSingleton();
 
         bind(AnalyticsDao.class).to(DefaultAnalyticsDao.class).asEagerSingleton();
+        bind(AnalyticsSanityDao.class).to(DefaultAnalyticsSanityDao.class).asEagerSingleton();
         bind(AnalyticsService.class).to(DefaultAnalyticsService.class).asEagerSingleton();
 
         bind(DefaultAnalyticsUserApi.class).asEagerSingleton();
+        bind(AnalyticsSanityApi.class).to(DefaultAnalyticsSanityApi.class).asEagerSingleton();
         bind(AnalyticsUserApi.class).to(DefaultAnalyticsUserApi.class).asEagerSingleton();
     }
 }

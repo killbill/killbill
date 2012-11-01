@@ -16,6 +16,7 @@
 
 package com.ning.billing.jaxrs.resources;
 
+import java.util.Collection;
 import java.util.UUID;
 
 import javax.inject.Inject;
@@ -35,7 +36,9 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.analytics.api.BusinessSnapshot;
 import com.ning.billing.analytics.api.TimeSeriesData;
+import com.ning.billing.analytics.api.sanity.AnalyticsSanityApi;
 import com.ning.billing.analytics.api.user.AnalyticsUserApi;
+import com.ning.billing.jaxrs.json.AnalyticsSanityJson;
 import com.ning.billing.jaxrs.json.BusinessSnapshotJson;
 import com.ning.billing.jaxrs.json.TimeSeriesDataJson;
 import com.ning.billing.jaxrs.util.Context;
@@ -56,10 +59,12 @@ public class AnalyticsResource extends JaxRsResourceBase {
 
     private final AccountUserApi accountUserApi;
     private final AnalyticsUserApi analyticsUserApi;
+    private final AnalyticsSanityApi analyticsSanityApi;
 
     @Inject
     public AnalyticsResource(final AccountUserApi accountUserApi,
                              final AnalyticsUserApi analyticsUserApi,
+                             final AnalyticsSanityApi analyticsSanityApi,
                              final JaxrsUriBuilder uriBuilder,
                              final TagUserApi tagUserApi,
                              final CustomFieldUserApi customFieldUserApi,
@@ -68,6 +73,26 @@ public class AnalyticsResource extends JaxRsResourceBase {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, context);
         this.accountUserApi = accountUserApi;
         this.analyticsUserApi = analyticsUserApi;
+        this.analyticsSanityApi = analyticsSanityApi;
+    }
+
+    @GET
+    @Path("/sanity")
+    @Produces(APPLICATION_JSON)
+    public Response checkSanity(@javax.ws.rs.core.Context final HttpServletRequest request) {
+        final TenantContext tenantContext = context.createContext(request);
+        final Collection<UUID> checkEntitlement = analyticsSanityApi.checkAnalyticsInSyncWithEntitlement(tenantContext);
+        final Collection<UUID> checkInvoice = analyticsSanityApi.checkAnalyticsInSyncWithInvoice(tenantContext);
+        final Collection<UUID> checkPayment = analyticsSanityApi.checkAnalyticsInSyncWithPayment(tenantContext);
+        final Collection<UUID> checkTag = analyticsSanityApi.checkAnalyticsInSyncWithTag(tenantContext);
+        final Collection<UUID> checkConsistency = analyticsSanityApi.checkAnalyticsConsistency(tenantContext);
+
+        final AnalyticsSanityJson json = new AnalyticsSanityJson(checkEntitlement,
+                                                                 checkInvoice,
+                                                                 checkPayment,
+                                                                 checkTag,
+                                                                 checkConsistency);
+        return Response.status(Status.OK).entity(json).build();
     }
 
     @GET
