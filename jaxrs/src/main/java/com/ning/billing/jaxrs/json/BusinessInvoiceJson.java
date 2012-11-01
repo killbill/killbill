@@ -159,7 +159,7 @@ public class BusinessInvoiceJson extends JsonBase {
                  businessInvoiceItem.getEndDate(),
                  businessInvoiceItem.getAmount(),
                  businessInvoiceItem.getCurrency().toString(),
-                 businessInvoiceItem.getLinkedItemId().toString());
+                 businessInvoiceItem.getLinkedItemId() == null ? null : businessInvoiceItem.getLinkedItemId().toString());
         }
 
         public String getItemId() {
