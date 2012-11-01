@@ -28,9 +28,9 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
+import com.ning.billing.ObjectType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.tag.Tag;
 
 public class MockTagDao implements TagDao {

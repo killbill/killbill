@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -13,11 +13,28 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.ning.billing.config;
 
-/*
- * Marker interface for killbill config files
- */
-public interface KillbillConfig {
+package com.ning.billing.util.config.catalog;
+
+import java.io.PrintStream;
+
+public class ValidationException extends Exception {
+    private final ValidationErrors errors;
+
+    ValidationException(final ValidationErrors errors) {
+        this.errors = errors;
+    }
+
+    public ValidationErrors getErrors() {
+        return errors;
+    }
+
+    @Override
+    public void printStackTrace(final PrintStream arg0) {
+        arg0.print(errors.toString());
+        super.printStackTrace(arg0);
+    }
+
 
 }
+

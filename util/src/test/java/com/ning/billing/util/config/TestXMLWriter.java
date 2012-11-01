@@ -23,6 +23,8 @@ import java.net.URI;
 import org.testng.annotations.Test;
 
 import com.ning.billing.util.UtilTestSuite;
+import com.ning.billing.util.config.catalog.XMLLoader;
+import com.ning.billing.util.config.catalog.XMLWriter;
 
 import static org.testng.Assert.assertEquals;
 

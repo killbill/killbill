@@ -16,20 +16,46 @@
 
 package com.ning.billing.catalog.api;
 
-
+/**
+ * The interface {@code Product}
+ */
 public interface Product {
 
-    public abstract String getName();
+    /**
+     * 
+     * @return the name of the {@code Product}
+     */
+    public String getName();
 
-    public abstract boolean isRetired();
+    /**
+     * 
+     * @return whether this {@code Product} has been retired
+     */
+    public boolean isRetired();
 
-    public abstract Product[] getAvailable();
+    /**
+     * 
+     * @return an array of other {@code Product} that can be purchased with that one
+     */
+    public Product[] getAvailable();
 
-    public abstract Product[] getIncluded();
+    /**
+     * 
+     * @return an array of other {@code Product} that are already included within this one
+     */
+    public Product[] getIncluded();
 
-    public abstract ProductCategory getCategory();
+    /**
+     * 
+     * @return the {@code ProductCategory} associated with that {@code Product}
+     */
+    public ProductCategory getCategory();
 
-    public abstract String getCatalogName();
+    /**
+     * 
+     * @return the name of tha catalog where this {@code Product} has been defined
+     */
+    public String getCatalogName();
 
 
 }

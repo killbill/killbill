@@ -25,7 +25,7 @@ import java.util.TreeMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ning.billing.config.NotificationConfig;
+import com.ning.billing.util.config.NotificationConfig;
 import com.ning.billing.util.clock.Clock;
 
 import com.google.common.base.Joiner;

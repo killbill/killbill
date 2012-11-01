@@ -16,6 +16,11 @@
 
 package com.ning.billing.catalog.api;
 
+// TODO should be interface ?
+
+/**
+ * The class {@code PlanPhaseSpecifier} specifies the attributes of a {@code PlanPhase}
+ */
 public class PlanPhaseSpecifier {
 
     private final PhaseType phaseType;
@@ -33,26 +38,50 @@ public class PlanPhaseSpecifier {
         this.priceListName = priceListName;
     }
 
+    /**
+     *
+     * @return the {@code Product} name
+     */
     public String getProductName() {
         return productName;
     }
 
+    /**
+     *
+     * @return the {@code ProductCategory}
+     */
     public ProductCategory getProductCategory() {
         return productCategory;
     }
 
+    /**
+     *
+     * @return the {@code BillingPeriod}
+     */
     public BillingPeriod getBillingPeriod() {
         return billingPeriod;
     }
 
+    /**
+     *
+     * @return the name of the {@code PriceList}
+     */
     public String getPriceListName() {
         return priceListName;
     }
 
+    /**
+     *
+     * @return the {@code PhaseType}
+     */
     public PhaseType getPhaseType() {
         return phaseType;
     }
 
+    /**
+     *
+     * @return the {@code PlanSpecifier}
+     */
     public PlanSpecifier toPlanSpecifier() {
         return new PlanSpecifier(productName, productCategory, billingPeriod, priceListName);
     }

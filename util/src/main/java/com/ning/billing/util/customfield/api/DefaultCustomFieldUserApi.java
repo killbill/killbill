@@ -20,13 +20,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.ning.billing.ObjectType;
 import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.customfield.dao.CustomFieldDao;
-import com.ning.billing.util.dao.ObjectType;
 
 import com.google.inject.Inject;
 

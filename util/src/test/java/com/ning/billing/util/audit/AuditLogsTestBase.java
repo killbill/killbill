@@ -21,7 +21,6 @@ import java.util.UUID;
 
 import org.mockito.Mockito;
 
-import com.ning.billing.util.ChangeType;
 import com.ning.billing.util.UtilTestSuite;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;

@@ -20,8 +20,8 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 
 import com.ning.billing.catalog.api.PriceListSet;
-import com.ning.billing.util.config.ValidationError;
-import com.ning.billing.util.config.ValidationErrors;
+import com.ning.billing.util.config.catalog.ValidationError;
+import com.ning.billing.util.config.catalog.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class PriceListDefault extends DefaultPriceList {

@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.util.dao;
+package com.ning.billing;
 
 public enum ObjectType {
     ACCOUNT("account"),

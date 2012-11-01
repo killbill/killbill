@@ -22,7 +22,7 @@ import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.StaticCatalog;
 import com.ning.billing.catalog.io.VersionedCatalogLoader;
-import com.ning.billing.config.CatalogConfig;
+import com.ning.billing.util.config.CatalogConfig;
 import com.ning.billing.lifecycle.KillbillService;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;

@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.util.LocaleUtils;
-import com.ning.billing.util.config.UriAccessor;
+import com.ning.billing.util.config.catalog.UriAccessor;
 
 import com.google.inject.Inject;
 

@@ -20,7 +20,7 @@ import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.config.PaymentConfig;
+import com.ning.billing.util.config.PaymentConfig;
 import com.ning.billing.payment.PaymentTestSuite;
 import com.ning.billing.payment.provider.ExternalPaymentProviderPlugin;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;

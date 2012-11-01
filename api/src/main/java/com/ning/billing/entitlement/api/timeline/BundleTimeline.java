@@ -19,13 +19,34 @@ package com.ning.billing.entitlement.api.timeline;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ *  The interface {@code BundleTimeline} shows a view of all the entitlement events for a specific
+ *  {@code SubscriptionBundle}.
+ *
+ */
 public interface BundleTimeline {
 
+    /**
+     *
+     * @return a unique viewId to identify whether two calls who display the same view or a different view
+     */
     String getViewId();
 
+    /**
+     *
+     * @return the unique id for the {@SubscriptionBundle}
+     */
     UUID getBundleId();
 
+    /**
+     *
+     * @return the external Key for the {@SubscriptionBundle}
+     */
     String getExternalKey();
 
+    /**
+     *
+     * @return the list of {@code SubscriptionTimeline}
+     */
     List<SubscriptionTimeline> getSubscriptions();
 }

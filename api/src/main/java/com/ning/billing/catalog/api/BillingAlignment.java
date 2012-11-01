@@ -16,8 +16,33 @@
 
 package com.ning.billing.catalog.api;
 
+/**
+ * The various <code>BillingAlignement<code/> supported in Killbill.
+ * <p>
+ * The <code>Catalog</code> will define the billing alignement for each <code>Plan</code>
+ *
+ * @see com.ning.billing.catalog.api.Plan
+ * @see com.ning.billing.catalog.api.PlanPhase
+ * @see com.ning.billing.catalog.api.ProductCategory
+ */
 public enum BillingAlignment {
+    /**
+     * All {@code Subscription}s whose {@code Plan} has been configured with this alignment will
+     * be invoiced using the {@code Account} billCycleDay.
+     */
     ACCOUNT,
+
+    /**
+     * All {@code Subscription}s whose {@code Plan} has been configured with this alignment will
+     * be invoiced using the startDate of the first billable {@code PlanPhase} for the {@code ProductCategory.BASE}
+     * {@code Plan}.
+     */
     BUNDLE,
+
+    /**
+     * All {@code Subscription}s whose {@code Plan} has been configured with this alignment will
+     * be invoiced using the startDate of the first billable {@code PlanPhase} for the
+     * {@code Subscription}.
+     */
     SUBSCRIPTION
 }

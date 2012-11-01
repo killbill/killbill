@@ -17,6 +17,9 @@ package com.ning.billing.beatrix.bus.api;
 
 import com.ning.billing.lifecycle.KillbillService;
 
+/**
+ * The interface {@code BeatrixService} is a {@code KillbillService} required to manage the {@code ExternalBus}
+ *
+ */
 public interface BeatrixService extends KillbillService {
-
 }

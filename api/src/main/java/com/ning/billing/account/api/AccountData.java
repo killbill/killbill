@@ -22,42 +22,131 @@ import org.joda.time.DateTimeZone;
 
 import com.ning.billing.catalog.api.Currency;
 
+/**
+ * The interface <code>AccountData</code> specifies all the fields on the <code>Account</code>.
+ *
+ */
 public interface AccountData {
+
+    /**
+     *
+     * @return  the account externalKey
+     */
     public String getExternalKey();
 
+    /**
+     * The first and last name when that applies are combined into one name.
+     *
+     * @return  the name of the account
+     * @see     AccountData#getFirstNameLength()
+     */
     public String getName();
 
+    /**
+     * @return  the length of the first name that can be extracted from the name
+     */
     public Integer getFirstNameLength();
 
+    /**
+     *
+     * @return  the primary accunt email
+     */
     public String getEmail();
 
+    /**
+     *
+     * The billCycleDay should be interpreted in the account timezone.
+     * The billCycleDay is used to determine when to bill an account
+     * <p>
+     * Its is either set at account creation time or automatically set by the system.
+     *
+     * @return  the billCycleDay for that account
+     *
+     * @see  com.ning.billing.catalog.api.BillingAlignment
+     */
     public BillCycleDay getBillCycleDay();
 
+    /**
+     *
+     * @return  the currency on the account
+     */
     public Currency getCurrency();
 
+    /**
+     *
+     * @return  the UUID of the current default paymentMethod
+     */
     public UUID getPaymentMethodId();
 
+    /**
+     *
+     * @return  the timezone for that account
+     */
     public DateTimeZone getTimeZone();
 
+    /**
+     *
+     * @return  the locale for that account
+     */
     public String getLocale();
 
+    /**
+     *
+     * @return  the address for that account (first line)
+     */
     public String getAddress1();
 
+    /**
+     *
+     * @return  the address for that account (second line)
+     */
     public String getAddress2();
 
+    /**
+     *
+     * @return  the company for that account
+     */
     public String getCompanyName();
 
+    /**
+     *
+     * @return  the city for that account
+     */
     public String getCity();
 
+    /**
+     *
+     * @return  the state or province for that account
+     */
     public String getStateOrProvince();
 
+    /**
+     *
+     * @return  the postal code for that account
+     */
     public String getPostalCode();
 
+    /**
+     *
+     * @return  the country for that account
+     */
     public String getCountry();
 
+    /**
+     *
+     * @return  the phone number for that account
+     */
     public String getPhone();
 
+    /**
+     *
+     * @return  whether or not that account was migrated into the system
+     */
     public Boolean isMigrated();
 
+    /**
+     *
+     * @return  whether or not that account will receive invoice notifications
+     */
     public Boolean isNotifiedForInvoices();
 }

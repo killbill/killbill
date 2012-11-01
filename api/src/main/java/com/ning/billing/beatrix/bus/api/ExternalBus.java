@@ -16,9 +16,23 @@
 package com.ning.billing.beatrix.bus.api;
 
 
+/**
+ * The interface {@code ExternalBus} represents the bus on which Killbill users can register handlers
+ * to receive notifications when change happen in the system
+ */
 public interface ExternalBus {
 
+    /**
+     * Registers a callback.
+     *
+     * @param handlerInstance the handler that will be called back by the system when something changed
+     */
     public void register(final Object handlerInstance); /* throws EventBusException */
 
+    /**
+     * Unregister a callback.
+     *
+     * @param handlerInstance the handler that was previously registered
+     */
     public void unregister(final Object handlerInstance); /* throws EventBusException */
 }

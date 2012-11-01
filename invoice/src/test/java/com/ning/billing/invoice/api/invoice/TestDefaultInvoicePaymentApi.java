@@ -16,9 +16,6 @@
 
 package com.ning.billing.invoice.api.invoice;
 
-import static com.ning.billing.invoice.tests.InvoiceTestUtils.createAndPersistInvoice;
-import static com.ning.billing.invoice.tests.InvoiceTestUtils.createAndPersistPayment;
-
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -41,6 +38,7 @@ import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.InvoicePayment.InvoicePaymentType;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
+import com.ning.billing.invoice.api.svcs.DefaultInvoiceInternalApi;
 import com.ning.billing.invoice.dao.AuditedInvoiceDao;
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.dao.InvoiceItemSqlDao;
@@ -50,10 +48,14 @@ import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
 import com.ning.billing.util.svcsapi.bus.InternalBus;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+
+import static com.ning.billing.invoice.tests.InvoiceTestUtils.createAndPersistInvoice;
+import static com.ning.billing.invoice.tests.InvoiceTestUtils.createAndPersistPayment;
 
 public class TestDefaultInvoicePaymentApi extends InvoiceTestSuiteWithEmbeddedDB {
 
@@ -65,6 +67,7 @@ public class TestDefaultInvoicePaymentApi extends InvoiceTestSuiteWithEmbeddedDB
     private InvoiceSqlDao invoiceSqlDao;
     private InvoiceItemSqlDao invoiceItemSqlDao;
     private InvoicePaymentApi invoicePaymentApi;
+    private InvoiceInternalApi invoiceInternalApi;
     private InternalCallContextFactory internalCallContextFactory;
 
     @BeforeSuite(groups = "slow")
@@ -82,6 +85,7 @@ public class TestDefaultInvoicePaymentApi extends InvoiceTestSuiteWithEmbeddedDB
         internalCallContextFactory = new InternalCallContextFactory(dbi, clock);
         final InvoiceDao invoiceDao = new AuditedInvoiceDao(dbi, nextBillingDatePoster, clock, Mockito.mock(InternalBus.class));
         invoicePaymentApi = new DefaultInvoicePaymentApi(invoiceDao, internalCallContextFactory);
+        invoiceInternalApi = new DefaultInvoiceInternalApi(invoiceDao);
     }
 
     @Test(groups = "slow")
@@ -150,15 +154,15 @@ public class TestDefaultInvoicePaymentApi extends InvoiceTestSuiteWithEmbeddedDB
 
     private void verifyRefund(final Invoice invoice, final BigDecimal invoiceAmount, final BigDecimal refundAmount, final BigDecimal finalInvoiceAmount,
                               final boolean adjusted, final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts) throws InvoiceApiException {
-        final InvoicePayment payment = createAndPersistPayment(invoicePaymentApi, clock, invoice.getId(), invoiceAmount, CURRENCY, callContext);
+        final InvoicePayment payment = createAndPersistPayment(invoiceInternalApi, clock, invoice.getId(), invoiceAmount, CURRENCY, internalCallContext);
 
         // Verify the initial invoice balance
         final BigDecimal initialInvoiceBalance = invoicePaymentApi.getInvoice(invoice.getId(), callContext).getBalance();
         Assert.assertEquals(initialInvoiceBalance.compareTo(BigDecimal.ZERO), 0);
 
         // Create a full refund with no adjustment
-        final InvoicePayment refund = invoicePaymentApi.createRefund(payment.getPaymentId(), refundAmount, adjusted, invoiceItemIdsWithAmounts,
-                                                                     UUID.randomUUID(), callContext);
+        final InvoicePayment refund = invoiceInternalApi.createRefund(payment.getPaymentId(), refundAmount, adjusted, invoiceItemIdsWithAmounts,
+                                                                      UUID.randomUUID(), internalCallContext);
         Assert.assertEquals(refund.getAmount().compareTo(refundAmount.negate()), 0);
         Assert.assertEquals(refund.getCurrency(), CURRENCY);
         Assert.assertEquals(refund.getInvoiceId(), invoice.getId());

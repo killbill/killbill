@@ -27,7 +27,8 @@ import org.mockito.Mockito;
 import org.skife.config.SimplePropertyConfigSource;
 import org.skife.jdbi.v2.IDBI;
 
-import com.ning.billing.config.PaymentConfig;
+import com.ning.billing.ObjectType;
+import com.ning.billing.util.config.PaymentConfig;
 import com.ning.billing.mock.glue.MockInvoiceModule;
 import com.ning.billing.mock.glue.MockNotificationQueueModule;
 import com.ning.billing.payment.dao.MockPaymentDao;
@@ -36,7 +37,6 @@ import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
 import com.ning.billing.util.callcontext.CallContextSqlDao;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.MockCallContextSqlDao;
-import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.globallocker.MockGlobalLocker;
 import com.ning.billing.util.glue.BusModule;

@@ -18,6 +18,10 @@ package com.ning.billing.catalog.api;
 
 import com.ning.billing.lifecycle.KillbillService;
 
+
+/**
+ * The interface {@code CatalogService} is a {@code KillbillService} required to handle catalog operations.
+ */
 public interface CatalogService extends KillbillService {
 
     public abstract Catalog getFullCatalog();

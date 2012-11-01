@@ -18,66 +18,140 @@ package com.ning.billing.catalog.api;
 
 import org.joda.time.DateTime;
 
+/**
+ * The {@code Catalog} information for a specific tenant.
+ *
+ */
 public interface Catalog {
-    //
-    // Simple getters
-    //
-    public abstract String getCatalogName();
 
-    public abstract Currency[] getSupportedCurrencies(DateTime requestedDate) throws CatalogApiException;
+    /**
+     *
+     * @return  the catalogName
+     */
+    public String getCatalogName();
 
-    public abstract Product[] getProducts(DateTime requestedDate) throws CatalogApiException;
+    /**
+     *
+     * @param requestedDate specifies the state of the catalog for that date
+     * @return              an array of available {@code Currency}s
+     *
+     * @throws CatalogApiException
+     */
+    public Currency[] getSupportedCurrencies(DateTime requestedDate) throws CatalogApiException;
 
-    public abstract Plan[] getPlans(DateTime requestedDate) throws CatalogApiException;
+    /**
+     *
+     * @param requestedDate specifies the state of the catalog for that date
+     * @return              an array of available {@code Product}s
+     *
+     * @throws CatalogApiException
+     */
+    public Product[] getProducts(DateTime requestedDate) throws CatalogApiException;
 
+    /**
+     *
+     * @param requestedDate specifies the state of the catalog for that date
+     * @return              an array of available {@code Plan}s
+     * @throws CatalogApiException
+     */
+    public Plan[] getPlans(DateTime requestedDate) throws CatalogApiException;
 
-    //
-    // Find a plan
-    //
+    /**
+     *
+     * @param name          the unique name of the plan
+     * @param requestedDate specifies the state of the catalog for that date
+     * @return              the {@code Plan}
+     *
+     * @throws CatalogApiException if {@code Plan} does not exist
+     */
+    public Plan findPlan(String name, DateTime requestedDate) throws CatalogApiException;
 
-    public abstract Plan findPlan(String name, DateTime requestedDate) throws CatalogApiException;
-
-    public abstract Plan findPlan(String productName, BillingPeriod term, String priceListName,
+    /**
+     *
+     * @param productName   the unique name for the {@code Product}
+     * @param billingPeriod the unique name for the {@code BillingPeriod}
+     * @param priceListName the unique name for the {@code PriceList}
+     * @param requestedDate specifies the state of the catalog for that date
+     * @return              the {@code Plan}
+     *
+     * @throws CatalogApiException if {@code Plan} does not exist
+     */
+    public Plan findPlan(String productName, BillingPeriod billingPeriod, String priceListName,
                                   DateTime requestedDate) throws CatalogApiException;
 
-    public abstract Plan findPlan(String name, DateTime effectiveDate, DateTime subscriptionStartDate) throws CatalogApiException;
+    /**
+     *
+     * @param name                  the unique name of the plan
+     * @param requestedDate         specifies the state of the catalog for that date
+     * @param subscriptionStartDate the startDate of the subscription
+     * @return                      the {@code Plan}
+     *
+     * @throws CatalogApiException if {@code Plan} does not exist
+     */
+    public Plan findPlan(String name, DateTime requestedDate, DateTime subscriptionStartDate) throws CatalogApiException;
 
-    public abstract Plan findPlan(String productName, BillingPeriod term, String priceListName,
+    /**
+     *
+     * @param productName   the unique name for the {@code Product}
+     * @param billingPeriod the unique name for the {@code BillingPeriod}
+     * @param priceListName the unique name for the {@code PriceList}
+     * @param requestedDate specifies the state of the catalog for that date
+     * @return              the {@code Plan}
+     *
+     * @throws CatalogApiException if {@code Plan} does not exist
+     */
+    public Plan findPlan(String productName, BillingPeriod billingPeriod, String priceListName,
                                   DateTime requestedDate, DateTime subscriptionStartDate) throws CatalogApiException;
 
-    //
-    // Find a product
-    //
-    public abstract Product findProduct(String name, DateTime requestedDate) throws CatalogApiException;
+    /**
+     *
+     * @param name          the unique name for the {@code Product}
+     * @param requestedDate specifies the state of the catalog for that date
+     * @return              the {@code Product}
+     *
+     * @throws CatalogApiException if {@code Product} does not exist
+     */
+    public Product findProduct(String name, DateTime requestedDate) throws CatalogApiException;
 
-    //
-    // Find a phase
-    //  
-    public abstract PlanPhase findPhase(String name, DateTime requestedDate, DateTime subscriptionStartDate) throws CatalogApiException;
+    /**
+     *
+     * @param name          the unique name for the {@code PlanPhase}
+     * @param requestedDate specifies the state of the catalog for that date
+     * @return              the {@code PlanPhase}
+     *
+     * @throws CatalogApiException if the {@code PlanPhase} does not exist
+     */
+    public PriceList findPriceList(String name, DateTime requestedDate) throws CatalogApiException;
 
-    //
-    // Find a priceList
-    //  
-    public abstract PriceList findPriceList(String name, DateTime requestedDate) throws CatalogApiException;
 
-    //
-    // Rules
-    //
-    public abstract ActionPolicy planChangePolicy(PlanPhaseSpecifier from,
+    /**
+     *
+     * @param name                  the unique name for the {@code PlanPhase}
+     * @param requestedDate         specifies the state of the catalog for that date
+     * @param subscriptionStartDate the startDate of the subscription
+     * @return                      the {@code PlanPhase}
+     * @throws CatalogApiException if the {@code PlanPhase} does not exist
+     */
+    public PlanPhase findPhase(String name, DateTime requestedDate, DateTime subscriptionStartDate) throws CatalogApiException;
+
+
+    // TODO : should they be private APIs
+
+    public ActionPolicy planChangePolicy(PlanPhaseSpecifier from,
                                                   PlanSpecifier to, DateTime requestedDate) throws CatalogApiException;
 
-    public abstract PlanChangeResult planChange(PlanPhaseSpecifier from,
+    public PlanChangeResult planChange(PlanPhaseSpecifier from,
                                                 PlanSpecifier to, DateTime requestedDate) throws CatalogApiException;
 
-    public abstract ActionPolicy planCancelPolicy(PlanPhaseSpecifier planPhase, DateTime requestedDate) throws CatalogApiException;
+    public ActionPolicy planCancelPolicy(PlanPhaseSpecifier planPhase, DateTime requestedDate) throws CatalogApiException;
 
-    public abstract PlanAlignmentCreate planCreateAlignment(PlanSpecifier specifier, DateTime requestedDate) throws CatalogApiException;
+    public PlanAlignmentCreate planCreateAlignment(PlanSpecifier specifier, DateTime requestedDate) throws CatalogApiException;
 
-    public abstract BillingAlignment billingAlignment(PlanPhaseSpecifier planPhase, DateTime requestedDate) throws CatalogApiException;
+    public BillingAlignment billingAlignment(PlanPhaseSpecifier planPhase, DateTime requestedDate) throws CatalogApiException;
 
-    public abstract PlanAlignmentChange planChangeAlignment(PlanPhaseSpecifier from,
+    public PlanAlignmentChange planChangeAlignment(PlanPhaseSpecifier from,
                                                             PlanSpecifier to, DateTime requestedDate) throws CatalogApiException;
 
-    public abstract boolean canCreatePlan(PlanSpecifier specifier, DateTime requestedDate) throws CatalogApiException;
+    public boolean canCreatePlan(PlanSpecifier specifier, DateTime requestedDate) throws CatalogApiException;
 
 }

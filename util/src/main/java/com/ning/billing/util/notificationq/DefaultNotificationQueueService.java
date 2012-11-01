@@ -18,7 +18,7 @@ package com.ning.billing.util.notificationq;
 
 import org.skife.jdbi.v2.IDBI;
 
-import com.ning.billing.config.NotificationConfig;
+import com.ning.billing.util.config.NotificationConfig;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 

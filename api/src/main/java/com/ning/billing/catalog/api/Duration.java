@@ -21,10 +21,23 @@ import org.joda.time.Period;
 
 public interface Duration {
 
-    public abstract TimeUnit getUnit();
+    /**
+     *
+     * @return the {@code TimeUnit}
+     */
+    public TimeUnit getUnit();
 
-    public abstract int getNumber();
+    /**
+     *
+     * @return the number of units
+     */
+    public int getNumber();
 
+    /**
+     *
+     * @param dateTime  the date to add to that duration
+     * @return          the joda {@code Period}
+     */
     public DateTime addToDateTime(DateTime dateTime);
 
     public Period toJodaPeriod();

@@ -20,64 +20,122 @@ import java.util.Date;
 import java.util.List;
 
 
+/**
+ * The interface {@code StaticCatalog} gives the view of that {@code Catalog} at a given time.
+ * This represents a specific version of the {@code Catalog}
+ */
 public interface StaticCatalog {
-    //
-    // Simple getters
-    //
-    public abstract String getCatalogName();
 
-    public abstract Date getEffectiveDate() throws CatalogApiException;
+    /**
+     *
+     * @return the {@code Catalog} name
+     */
+    public String getCatalogName();
 
-    public abstract Currency[] getCurrentSupportedCurrencies() throws CatalogApiException;
+    /**
+     *
+     * @return the date at which this version of {@code Catalog} becomes effective
+     *
+     * @throws CatalogApiException
+     */
+    public Date getEffectiveDate() throws CatalogApiException;
 
-    public abstract Product[] getCurrentProducts() throws CatalogApiException;
+    /**
+     *
+     * @return an array of supported {@code Currency}
+     *
+     * @throws CatalogApiException
+     */
+    public Currency[] getCurrentSupportedCurrencies() throws CatalogApiException;
 
-    public abstract Plan[] getCurrentPlans() throws CatalogApiException;
+    /**
+     *
+     * @return an array of supported {@code Product}
+     *
+     * @throws CatalogApiException
+     */
+    public Product[] getCurrentProducts() throws CatalogApiException;
 
-    //
-    // Find a plan
-    //
-    public abstract Plan findCurrentPlan(String productName, BillingPeriod term, String priceList) throws CatalogApiException;
+    /**
+     *
+     * @return an array of supported {@code Plan}
+     *
+     * @throws CatalogApiException
+     */
+    public Plan[] getCurrentPlans() throws CatalogApiException;
 
-    public abstract Plan findCurrentPlan(String name) throws CatalogApiException;
+    /**
+     *
+     * @param productName   the {@code Product} name
+     * @param billingPeriod the billingPeriod
+     * @param priceList     the name of the {@code PriceList}
+     * @return              the {@code Plan}
+     *
+     * @throws CatalogApiException if not such {@code Plan} can be found
+     */
+    public Plan findCurrentPlan(String productName, BillingPeriod billingPeriod, String priceList) throws CatalogApiException;
 
-    //
-    // Find a product
-    //
-    public abstract Product findCurrentProduct(String name) throws CatalogApiException;
+    /**
+     *
+     * @param name  the name of the {@Plan}
+     * @return      the {@code Plan}
+     *
+     * @throws CatalogApiException if not such {@code Plan} can be found
+     */
+    public Plan findCurrentPlan(String name) throws CatalogApiException;
 
-    //
-    // Find a phase
-    //
-    public abstract PlanPhase findCurrentPhase(String name) throws CatalogApiException;
+    /**
+     *
+     * @param name  the name of the {@code Product}
+     * @return      the {@code Product}
+     *
+     * @throws CatalogApiException if no such {@code Product} exists
+     */
+    public Product findCurrentProduct(String name) throws CatalogApiException;
 
-    //
-    // Find a pricelist
-    //
-    public abstract PriceList findCurrentPricelist(String name) throws CatalogApiException;
+    /**
+     *
+     * @param name  the name of the {@code PlanPhase}
+     * @return      the {@code PlanPhase}
+     *
+     * @throws CatalogApiException if no such {@code PlanPhase} exists
+     */
+    public PlanPhase findCurrentPhase(String name) throws CatalogApiException;
 
-    //
-    //
-    //
-    public abstract ActionPolicy planChangePolicy(PlanPhaseSpecifier from,
+
+    /**
+     *
+     * @param name  the name of the {@code PriceList}
+     * @return      the {@code PriceList}
+     *
+     * @throws CatalogApiException if no such {@code PriceList} exists
+     */
+    public PriceList findCurrentPricelist(String name) throws CatalogApiException;
+
+
+    // TODO private APIs ?
+
+    public ActionPolicy planChangePolicy(PlanPhaseSpecifier from,
                                                   PlanSpecifier to) throws CatalogApiException;
 
-    public abstract PlanChangeResult planChange(PlanPhaseSpecifier from,
+    public PlanChangeResult planChange(PlanPhaseSpecifier from,
                                                 PlanSpecifier to) throws CatalogApiException;
 
 
-    public abstract ActionPolicy planCancelPolicy(PlanPhaseSpecifier planPhase) throws CatalogApiException;
 
-    public abstract PlanAlignmentCreate planCreateAlignment(PlanSpecifier specifier) throws CatalogApiException;
 
-    public abstract BillingAlignment billingAlignment(PlanPhaseSpecifier planPhase) throws CatalogApiException;
+    public ActionPolicy planCancelPolicy(PlanPhaseSpecifier planPhase) throws CatalogApiException;
 
-    public abstract PlanAlignmentChange planChangeAlignment(PlanPhaseSpecifier from,
+    public PlanAlignmentCreate planCreateAlignment(PlanSpecifier specifier) throws CatalogApiException;
+
+    public BillingAlignment billingAlignment(PlanPhaseSpecifier planPhase) throws CatalogApiException;
+
+    public PlanAlignmentChange planChangeAlignment(PlanPhaseSpecifier from,
                                                             PlanSpecifier to) throws CatalogApiException;
 
-    public abstract boolean canCreatePlan(PlanSpecifier specifier) throws CatalogApiException;
+    public boolean canCreatePlan(PlanSpecifier specifier) throws CatalogApiException;
 
-    public abstract List<Listing> getAvailableBasePlanListings() throws CatalogApiException;
-    public abstract List<Listing> getAvailableAddonListings(String baseProductName) throws CatalogApiException;
+    public List<Listing> getAvailableBasePlanListings() throws CatalogApiException;
+    public List<Listing> getAvailableAddonListings(String baseProductName) throws CatalogApiException;
 
 }

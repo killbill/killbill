@@ -18,7 +18,7 @@ package com.ning.billing.entitlement.glue;
 
 import org.skife.config.ConfigurationObjectFactory;
 
-import com.ning.billing.config.EntitlementConfig;
+import com.ning.billing.util.config.EntitlementConfig;
 import com.ning.billing.entitlement.alignment.MigrationPlanAligner;
 import com.ning.billing.entitlement.alignment.PlanAligner;
 import com.ning.billing.entitlement.api.EntitlementService;

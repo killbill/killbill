@@ -18,7 +18,7 @@ package com.ning.billing.util.events;
 
 import java.util.UUID;
 
-import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.ObjectType;
 import com.ning.billing.util.tag.TagDefinition;
 
 public interface TagInternalEvent extends BusInternalEvent {

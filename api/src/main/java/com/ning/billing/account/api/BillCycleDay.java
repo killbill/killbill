@@ -16,6 +16,9 @@
 
 package com.ning.billing.account.api;
 
+/**
+ * The interface {@code BillCycleDay} represents the default account billing date
+ */
 public interface BillCycleDay {
 
     int getDayOfMonthUTC();

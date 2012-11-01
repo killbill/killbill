@@ -16,11 +16,6 @@
 
 package com.ning.billing.payment.api;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.fail;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
@@ -40,7 +35,6 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.mock.glue.MockClockModule;
 import com.ning.billing.mock.glue.MockJunctionModule;
 import com.ning.billing.payment.MockRecurringInvoiceItem;
@@ -57,6 +51,11 @@ import com.ning.billing.util.svcsapi.bus.InternalBus.EventBusException;
 
 import com.google.inject.Inject;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
+
 @Guice(modules = {PaymentTestModuleWithMocks.class, MockClockModule.class, MockJunctionModule.class, CallContextModule.class})
 public class TestPaymentApi extends PaymentTestSuite {
     private static final Logger log = LoggerFactory.getLogger(TestPaymentApi.class);
@@ -69,8 +68,6 @@ public class TestPaymentApi extends PaymentTestSuite {
     protected AccountInternalApi accountApi;
     @Inject
     protected TestHelper testHelper;
-    @Inject
-    protected InvoicePaymentApi invoicePaymentApi;
     @Inject
     protected Clock clock;
 

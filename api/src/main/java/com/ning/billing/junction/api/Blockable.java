@@ -18,10 +18,10 @@ package com.ning.billing.junction.api;
 
 import java.util.UUID;
 
+import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.util.dao.ObjectType;
 
 public interface Blockable {
 

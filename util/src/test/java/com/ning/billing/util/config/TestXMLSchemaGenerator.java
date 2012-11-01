@@ -25,6 +25,7 @@ import javax.xml.transform.TransformerException;
 import org.testng.annotations.Test;
 
 import com.ning.billing.util.UtilTestSuite;
+import com.ning.billing.util.config.catalog.XMLSchemaGenerator;
 import com.ning.billing.util.io.IOUtils;
 
 public class TestXMLSchemaGenerator extends UtilTestSuite {

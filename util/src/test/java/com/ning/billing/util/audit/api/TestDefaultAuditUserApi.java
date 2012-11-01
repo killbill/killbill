@@ -26,6 +26,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
+import com.ning.billing.ObjectType;
 import com.ning.billing.entitlement.api.timeline.BundleTimeline;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
@@ -43,7 +44,6 @@ import com.ning.billing.util.audit.AuditLogsForRefunds;
 import com.ning.billing.util.audit.AuditLogsTestBase;
 import com.ning.billing.util.audit.dao.MockAuditDao;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
-import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.Entity;
 

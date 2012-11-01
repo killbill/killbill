@@ -21,7 +21,7 @@ import org.testng.annotations.Test;
 import com.google.common.io.Resources;
 import com.ning.billing.overdue.OverdueTestSuite;
 import com.ning.billing.overdue.config.OverdueConfig;
-import com.ning.billing.util.config.XMLLoader;
+import com.ning.billing.util.config.catalog.XMLLoader;
 
 public class TestReadConfig extends OverdueTestSuite {
     @Test(groups = "fast")

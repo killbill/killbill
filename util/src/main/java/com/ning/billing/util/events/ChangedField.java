@@ -14,27 +14,17 @@
  * under the License.
  */
 
-package com.ning.billing.util.config;
+package com.ning.billing.util.events;
 
-import java.io.PrintStream;
+import org.joda.time.DateTime;
 
-public class ValidationException extends Exception {
-    private final ValidationErrors errors;
+public interface ChangedField {
 
-    ValidationException(final ValidationErrors errors) {
-        this.errors = errors;
-    }
+    public DateTime getChangeDate();
 
-    public ValidationErrors getErrors() {
-        return errors;
-    }
+    public String getFieldName();
 
-    @Override
-    public void printStackTrace(final PrintStream arg0) {
-        arg0.print(errors.toString());
-        super.printStackTrace(arg0);
-    }
+    public String getOldValue();
 
-
+    public String getNewValue();
 }
-

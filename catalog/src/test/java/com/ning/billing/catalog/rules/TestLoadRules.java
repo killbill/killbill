@@ -28,7 +28,7 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PlanAlignmentCreate;
 import com.ning.billing.catalog.api.PlanSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.util.config.XMLLoader;
+import com.ning.billing.util.config.catalog.XMLLoader;
 
 public class TestLoadRules extends CatalogTestSuite {
     @Test(groups = "fast")

@@ -22,42 +22,122 @@ import java.util.UUID;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TenantContext;
 
+/**
+ * The interface {@code AccountUserApi} offers APIs related to account operations.
+ */
 public interface AccountUserApi {
 
+    /**
+     *
+     * @param data      the account data
+     * @param context   the user context
+     * @return          the created Account
+     *
+     * @throws AccountApiException
+     */
     public Account createAccount(AccountData data, CallContext context) throws AccountApiException;
 
+    /**
+     *
+     * @param data      the account data
+     * @param context   the user context
+     * @return          the migrated account
+     *
+     * @throws AccountApiException
+     */
     public Account migrateAccount(MigrationAccountData data, CallContext context) throws AccountApiException;
 
     /**
-     * Note: does not update the external key
+     * Updates the account by specifying the destination {@code Account} object
+     * <p>
      *
      * @param account account to be updated
      * @param context contains specific information about the call
+     *
      * @throws AccountApiException if a failure occurs
      */
     public void updateAccount(Account account, CallContext context) throws AccountApiException;
 
+    /**
+     * Updates the account by specifying the {@code AccountData} object
+     * <p>
+     *
+     * @param key account external key
+     * @param context contains specific information about the call
+     *
+     * @throws AccountApiException if a failure occurs
+     */
     public void updateAccount(String key, AccountData accountData, CallContext context) throws AccountApiException;
 
+    /**
+     * Updates the account by specifying the {@code AccountData} object
+     * <p>
+     *
+     * @param accountId account unique id
+     * @param context contains specific information about the call
+     *
+     * @throws AccountApiException if a failure occurs
+     */
     public void updateAccount(UUID accountId, AccountData accountData, CallContext context) throws AccountApiException;
 
-    public void removePaymentMethod(UUID accountId, CallContext context) throws AccountApiException;
-
-    public void updatePaymentMethod(UUID accountId, UUID paymentMethodId, CallContext context) throws AccountApiException;
-
+    /**
+     *
+     * @param key       the externalKey for the account
+     * @param context   the user context
+     * @return          the account
+     *
+     * @throws AccountApiException if there is no such account
+     */
     public Account getAccountByKey(String key, TenantContext context) throws AccountApiException;
 
+    /**
+     *
+     * @param accountId the unique id for the account
+     * @param context   the user context
+     * @return          the account
+     *
+     * @throws AccountApiException if there is no such account
+     */
     public Account getAccountById(UUID accountId, TenantContext context) throws AccountApiException;
 
+    /**
+     *
+     * @param context   the user context
+     * @return          the list of accounts for that tenant
+     */
     public List<Account> getAccounts(TenantContext context);
 
+    /**
+     *
+     * @param externalKey   the externalKey for the account
+     * @param context       the user context
+     * @return              the unique id for that account
+     *
+     * @throws AccountApiException  if there is no such account
+     */
     public UUID getIdFromKey(String externalKey, TenantContext context) throws AccountApiException;
 
+    /**
+     *
+     * @param accountId the account unique id
+     * @param context   the user context
+     * @return          the laist of emails configured for that account
+     */
     public List<AccountEmail> getEmails(UUID accountId, TenantContext context);
 
-    public void saveEmails(UUID accountId, List<AccountEmail> emails, CallContext context);
-
+    /**
+     *
+     * @param accountId the account unique id
+     * @param email     the email to be added
+     * @param context   the user context
+     */
     public void addEmail(UUID accountId, AccountEmail email, CallContext context);
 
+    /**
+     *
+     * @param accountId the account unique id
+     * @param email     the email to be removed
+     * @param context   the user context
+     */
     public void removeEmail(UUID accountId, AccountEmail email, CallContext context);
 }

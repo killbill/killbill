@@ -18,5 +18,8 @@ package com.ning.billing.analytics.api;
 
 import com.ning.billing.lifecycle.KillbillService;
 
+/**
+ * The interface {@code AnalyticsService} is a {@code KillbillService} required to handle analytics operations.
+ */
 public interface AnalyticsService extends KillbillService {
 }

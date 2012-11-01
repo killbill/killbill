@@ -16,8 +16,19 @@
 
 package com.ning.billing.catalog.api;
 
+/**
+ * Specifies how {@code Subscription} cancellation or plan change should operate
+ * <p>
+ */
 public enum ActionPolicy {
-    END_OF_TERM, // transition occurs at end of term
-    IMMEDIATE,   // transition occurs immediately
-    ILLEGAL      // transition is not allowed
+    /**
+     * The cancellation or {@code Plan} change effectiveDate will occur at the end of the current invoiced service
+     * period, and that will not trigger any proration and credit.
+     */
+    END_OF_TERM,
+    /**
+     * The cancellation or {@code Plan} change effectiveDate will occur at the requestedDate
+     */
+    IMMEDIATE,
+    ILLEGAL
 }

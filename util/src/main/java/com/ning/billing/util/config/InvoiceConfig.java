@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.config;
+package com.ning.billing.util.config;
 
 import org.skife.config.Config;
 import org.skife.config.Default;

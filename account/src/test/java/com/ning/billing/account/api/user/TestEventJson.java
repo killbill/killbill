@@ -24,7 +24,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.AccountTestSuite;
-import com.ning.billing.account.api.ChangedField;
+import com.ning.billing.util.events.ChangedField;
 import com.ning.billing.account.api.DefaultBillCycleDay;
 import com.ning.billing.account.api.DefaultChangedField;
 import com.ning.billing.account.api.user.DefaultAccountCreationEvent.DefaultAccountData;

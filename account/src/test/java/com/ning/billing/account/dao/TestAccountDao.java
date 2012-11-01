@@ -26,6 +26,7 @@ import org.skife.jdbi.v2.Handle;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
@@ -43,7 +44,6 @@ import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.customfield.StringCustomField;
 import com.ning.billing.util.customfield.dao.AuditedCustomFieldDao;
 import com.ning.billing.util.customfield.dao.CustomFieldDao;
-import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.entity.EntityPersistenceException;
 import com.ning.billing.util.tag.DefaultTagDefinition;
 import com.ning.billing.util.tag.Tag;

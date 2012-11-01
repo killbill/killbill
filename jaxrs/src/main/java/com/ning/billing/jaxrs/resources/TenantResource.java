@@ -36,6 +36,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriBuilder;
 
+import com.ning.billing.ObjectType;
 import com.ning.billing.jaxrs.json.TenantJson;
 import com.ning.billing.jaxrs.json.TenantKeyJson;
 import com.ning.billing.jaxrs.util.Context;
@@ -50,7 +51,6 @@ import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TenantContext;
-import com.ning.billing.util.dao.ObjectType;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

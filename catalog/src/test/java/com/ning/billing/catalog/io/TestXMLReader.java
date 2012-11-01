@@ -22,7 +22,7 @@ import org.testng.annotations.Test;
 import com.google.common.io.Resources;
 import com.ning.billing.catalog.CatalogTestSuite;
 import com.ning.billing.catalog.StandaloneCatalog;
-import com.ning.billing.util.config.XMLLoader;
+import com.ning.billing.util.config.catalog.XMLLoader;
 
 public class TestXMLReader extends CatalogTestSuite {
     @Test(groups = "fast")

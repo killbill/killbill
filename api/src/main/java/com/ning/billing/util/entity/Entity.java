@@ -22,9 +22,21 @@ import org.joda.time.DateTime;
 
 public interface Entity {
 
+    /**
+     *
+     * @return  the UUID of the object
+     */
     public UUID getId();
 
+    /**
+     *
+     * @return  the createdDate of that object
+     */
     public DateTime getCreatedDate();
 
+    /**
+     *
+     * @return  the last updatedDate of that object
+     */
     public DateTime getUpdatedDate();
 }

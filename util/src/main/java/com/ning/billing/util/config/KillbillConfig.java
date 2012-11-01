@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2012 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -13,20 +13,11 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+package com.ning.billing.util.config;
 
-package com.ning.billing.config;
+/*
+ * Marker interface for killbill config files
+ */
+public interface KillbillConfig {
 
-import org.skife.config.Config;
-import org.skife.config.Default;
-
-public interface EntitlementConfig extends NotificationConfig, KillbillConfig {
-    @Override
-    @Config("killbill.entitlement.engine.notifications.sleep")
-    @Default("500")
-    public long getSleepTimeMs();
-
-    @Override
-    @Config("killbill.entitlement.engine.notifications.off")
-    @Default("false")
-    public boolean isNotificationProcessingOff();
 }

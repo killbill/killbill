@@ -16,29 +16,12 @@
 
 package com.ning.billing.util.config;
 
-import java.net.URI;
+import org.skife.config.Config;
+import org.skife.config.Default;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-
-@XmlAccessorType(XmlAccessType.NONE)
-public abstract class ValidatingConfig<Context> {
-    /**
-     * All must implement validation
-     *
-     * @param root
-     * @param errors
-     * @return
-     */
-    public abstract ValidationErrors validate(Context root, ValidationErrors errors);
-
-
-    /**
-     * Override  to initialize
-     *
-     * @param root
-     */
-    public void initialize(final Context root, final URI uri) {
-    }
+public interface CatalogConfig extends KillbillConfig {
+    @Config("killbill.catalog.uri")
+    @Default("jar:///com/ning/billing/irs/catalog/Catalog.xml")
+    String getCatalogURI();
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -14,9 +14,10 @@
  * under the License.
  */
 
-package com.ning.billing.config;
+package com.ning.billing.util.audit;
 
-
-public interface NotificationConfig extends PersistentQueueConfig {
-    public boolean isNotificationProcessingOff();
+public enum ChangeType {
+    INSERT,
+    UPDATE,
+    DELETE
 }

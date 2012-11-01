@@ -34,12 +34,12 @@ import com.ning.billing.analytics.dao.BusinessAccountSqlDao;
 import com.ning.billing.analytics.model.BusinessAccountModelDao;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.payment.api.Payment;
-import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.PaymentMethod;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
+import com.ning.billing.util.svcapi.payment.PaymentInternalApi;
 import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
 
 import com.google.inject.Inject;
@@ -51,11 +51,11 @@ public class BusinessAccountDao {
     private final BusinessAccountSqlDao sqlDao;
     private final AccountInternalApi accountApi;
     private final InvoiceInternalApi invoiceApi;
-    private final PaymentApi paymentApi;
+    private final PaymentInternalApi paymentApi;
 
     @Inject
     public BusinessAccountDao(final BusinessAccountSqlDao sqlDao, final AccountInternalApi accountApi,
-                              final InvoiceInternalApi invoiceApi, final PaymentApi paymentApi) {
+                              final InvoiceInternalApi invoiceApi, final PaymentInternalApi paymentApi) {
         this.sqlDao = sqlDao;
         this.accountApi = accountApi;
         this.invoiceApi = invoiceApi;
@@ -115,7 +115,7 @@ public class BusinessAccountDao {
                 // Retrieve payments information for these invoices
                 DateTime lastPaymentDate = null;
 
-                final List<Payment> payments = paymentApi.getAccountPayments(account.getId(), context.toTenantContext());
+                final List<Payment> payments = paymentApi.getAccountPayments(account.getId(), context);
                 if (payments != null) {
                     for (final Payment cur : payments) {
                         // Use the last payment method/type/country as the default one for the account
@@ -128,7 +128,7 @@ public class BusinessAccountDao {
             }
 
             // Retrieve payment methods
-            for (final PaymentMethod paymentMethod : paymentApi.getPaymentMethods(account, true, context.toTenantContext())) {
+            for (final PaymentMethod paymentMethod : paymentApi.getPaymentMethods(account, true, context)) {
                 if (paymentMethod.getId().equals(account.getPaymentMethodId()) && paymentMethod.getPluginDetail() != null) {
                     paymentMethodType = PaymentMethodUtils.getPaymentMethodType(paymentMethod.getPluginDetail());
                     creditCardType = PaymentMethodUtils.getCardType(paymentMethod.getPluginDetail());

@@ -16,7 +16,7 @@
 
 package com.ning.billing.payment.glue;
 
-import com.ning.billing.config.PaymentConfig;
+import com.ning.billing.util.config.PaymentConfig;
 import com.ning.billing.payment.provider.DefaultPaymentProviderPluginRegistry;
 import com.ning.billing.payment.provider.ExternalPaymentProviderPlugin;
 

@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.ning.billing.ErrorCode;
+import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.invoice.api.Invoice;
@@ -31,7 +32,6 @@ import com.ning.billing.invoice.template.HtmlInvoiceGenerator;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.TenantContext;
-import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.email.DefaultEmailSender;
 import com.ning.billing.util.email.EmailApiException;
 import com.ning.billing.util.email.EmailConfig;

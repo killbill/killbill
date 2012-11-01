@@ -16,6 +16,11 @@
 
 package com.ning.billing.catalog.api;
 
+// TODO private?
+
+/**
+ * The available alignments for the entitlement system
+ */
 public enum PlanAlignmentCreate {
     START_OF_BUNDLE,
     START_OF_SUBSCRIPTION,

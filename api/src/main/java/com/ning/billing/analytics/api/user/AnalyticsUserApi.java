@@ -30,6 +30,9 @@ import com.ning.billing.analytics.api.TimeSeriesData;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TenantContext;
 
+/**
+ * The interface {@code AnalyticsUserApi} is used to retrieve analytics information on a pre tenant basis
+ */
 public interface AnalyticsUserApi {
 
     public BusinessSnapshot getBusinessSnapshot(Account account, TenantContext context);
@@ -59,7 +62,9 @@ public interface AnalyticsUserApi {
     public TimeSeriesData getSubscriptionsCreatedOverTime(String productType, String slug, TenantContext context);
 
     /**
-     * Rebuild all analytics tables for an account
+     * Rebuild all analytics tables for an account based on the Killbill row tables
+     * <p>
+     * This endpoint should only be used when those tables are not in sync due (bugs?)
      *
      * @param account account
      * @param context call context

@@ -26,7 +26,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.config.PaymentConfig;
+import com.ning.billing.util.config.PaymentConfig;
 import com.ning.billing.payment.PaymentTestSuite;
 import com.ning.billing.payment.api.PaymentMethod;
 import com.ning.billing.payment.dao.MockPaymentDao;

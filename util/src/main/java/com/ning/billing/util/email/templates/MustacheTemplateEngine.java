@@ -21,7 +21,7 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.Map;
 
-import com.ning.billing.util.config.UriAccessor;
+import com.ning.billing.util.config.catalog.UriAccessor;
 import com.ning.billing.util.io.IOUtils;
 
 import com.google.common.annotations.VisibleForTesting;

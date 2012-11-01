@@ -27,9 +27,9 @@ import javax.xml.bind.annotation.XmlIDREF;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.Product;
-import com.ning.billing.util.config.ValidatingConfig;
-import com.ning.billing.util.config.ValidationError;
-import com.ning.billing.util.config.ValidationErrors;
+import com.ning.billing.util.config.catalog.ValidatingConfig;
+import com.ning.billing.util.config.catalog.ValidationError;
+import com.ning.billing.util.config.catalog.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultPriceList extends ValidatingConfig<StandaloneCatalog> implements PriceList {

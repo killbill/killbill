@@ -23,8 +23,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import java.net.URI;
 
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.util.config.ValidatingConfig;
-import com.ning.billing.util.config.ValidationErrors;
+import com.ning.billing.util.config.catalog.ValidatingConfig;
+import com.ning.billing.util.config.catalog.ValidationErrors;
 
 @XmlRootElement(name = "overdueConfig")
 @XmlAccessorType(XmlAccessType.NONE)

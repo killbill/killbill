@@ -27,7 +27,7 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 
 import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
-import com.ning.billing.config.InvoiceConfig;
+import com.ning.billing.util.config.InvoiceConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.invoice.generator.DefaultInvoiceGenerator;
 import com.ning.billing.invoice.generator.InvoiceGenerator;

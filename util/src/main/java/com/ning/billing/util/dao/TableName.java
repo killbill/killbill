@@ -18,6 +18,8 @@ package com.ning.billing.util.dao;
 
 import javax.annotation.Nullable;
 
+import com.ning.billing.ObjectType;
+
 public enum TableName {
     ACCOUNT_HISTORY("account_history"),
     ACCOUNT("accounts", ObjectType.ACCOUNT, ACCOUNT_HISTORY),

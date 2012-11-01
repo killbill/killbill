@@ -28,8 +28,8 @@ import com.ning.billing.catalog.StandaloneCatalog;
 import com.ning.billing.catalog.VersionedCatalog;
 import com.ning.billing.lifecycle.KillbillService.ServiceException;
 import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.config.UriAccessor;
-import com.ning.billing.util.config.XMLLoader;
+import com.ning.billing.util.config.catalog.UriAccessor;
+import com.ning.billing.util.config.catalog.XMLLoader;
 
 public class VersionedCatalogLoader implements ICatalogLoader {
     private static final Object PROTOCOL_FOR_FILE = "file";

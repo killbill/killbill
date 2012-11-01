@@ -18,7 +18,6 @@ package com.ning.billing.util.audit;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.util.ChangeType;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.dao.EntityAudit;
 

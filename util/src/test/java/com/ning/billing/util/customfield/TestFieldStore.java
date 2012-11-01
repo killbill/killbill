@@ -26,12 +26,12 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
+import com.ning.billing.ObjectType;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.customfield.dao.AuditedCustomFieldDao;
 import com.ning.billing.util.customfield.dao.CustomFieldDao;
 import com.ning.billing.util.customfield.dao.CustomFieldSqlDao;
-import com.ning.billing.util.dao.ObjectType;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.fail;

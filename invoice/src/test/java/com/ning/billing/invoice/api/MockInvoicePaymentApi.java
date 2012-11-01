@@ -20,7 +20,6 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -34,21 +33,12 @@ import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TenantContext;
 
 public class MockInvoicePaymentApi implements InvoicePaymentApi {
+
     private final CopyOnWriteArrayList<Invoice> invoices = new CopyOnWriteArrayList<Invoice>();
     private final CopyOnWriteArrayList<InvoicePayment> invoicePayments = new CopyOnWriteArrayList<InvoicePayment>();
 
     public void add(final Invoice invoice) {
         invoices.add(invoice);
-    }
-
-    @Override
-    public void notifyOfPayment(final InvoicePayment invoicePayment, final CallContext context) {
-        for (final InvoicePayment existingInvoicePayment : invoicePayments) {
-            if (existingInvoicePayment.getInvoiceId().equals(invoicePayment.getInvoiceId()) && existingInvoicePayment.getPaymentId().equals(invoicePayment.getPaymentId())) {
-                invoicePayments.remove(existingInvoicePayment);
-            }
-        }
-        invoicePayments.add(invoicePayment);
     }
 
     @Override
@@ -73,15 +63,6 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi {
         return null;
     }
 
-    @Override
-    public Invoice getInvoiceForPaymentId(final UUID paymentId, final TenantContext context) {
-        for (final InvoicePayment invoicePayment : invoicePayments) {
-            if (invoicePayment.getPaymentId().equals(paymentId)) {
-                return getInvoice(invoicePayment.getInvoiceId(), context);
-            }
-        }
-        return null;
-    }
 
     @Override
     public List<InvoicePayment> getInvoicePayments(final UUID paymentId, final TenantContext context) {
@@ -106,12 +87,6 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi {
 
 
     @Override
-    public void notifyOfPayment(final UUID invoiceId, final BigDecimal amountOutstanding, final Currency currency, final UUID paymentId, final DateTime paymentDate, final CallContext context) {
-        final InvoicePayment invoicePayment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentId, invoiceId, paymentDate, amountOutstanding, currency);
-        notifyOfPayment(invoicePayment, context);
-    }
-
-    @Override
     public InvoicePayment createChargeback(final UUID invoicePaymentId, final BigDecimal amount, final CallContext context) throws InvoiceApiException {
         InvoicePayment existingPayment = null;
         for (final InvoicePayment payment : invoicePayments) {
@@ -123,7 +98,7 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi {
 
         if (existingPayment != null) {
             invoicePayments.add(new DefaultInvoicePayment(UUID.randomUUID(), InvoicePaymentType.CHARGED_BACK, null, null, DateTime.now(DateTimeZone.UTC), amount,
-                    Currency.USD, null, existingPayment.getId()));
+                                                          Currency.USD, null, existingPayment.getId()));
         }
 
         return existingPayment;
@@ -179,13 +154,5 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi {
     @Override
     public InvoicePayment getChargebackById(final UUID chargebackId, final TenantContext context) {
         throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public InvoicePayment createRefund(final UUID paymentId, final BigDecimal amount, final boolean isInvoiceAdjusted,
-                                       final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts, final UUID paymentCookieId,
-                                       final CallContext context)
-            throws InvoiceApiException {
-        return null;
     }
 }

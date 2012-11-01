@@ -23,34 +23,87 @@ import org.joda.time.DateTime;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 
+/**
+ * The interface {@code} shows a view of all the events for a particular {@code Subscription}.
+ * <p>
+ * It can be used to display information, or it can be used to modify the entitlement stream of events
+ * and 'repair' the stream by versioning the events.
+ */
 public interface SubscriptionTimeline {
 
+    /**
+     *
+     * @return the unique id for that {@code Subscription}
+     */
     public UUID getId();
 
+    /**
+     *
+     * @return the list of events that should be deleted when repairing the stream.
+     */
     public List<DeletedEvent> getDeletedEvents();
 
+    /**
+     *
+     * @return the list of events that should be added when repairing the stream
+     */
     public List<NewEvent> getNewEvents();
 
+    /**
+     *
+     * @return the current list of events for that {@code Subscription}
+     */
     public List<ExistingEvent> getExistingEvents();
 
+    /**
+     *
+     * @return the active version for the event stream
+     */
     public long getActiveVersion();
 
+
     public interface DeletedEvent {
+
+        /**
+         *
+         * @return the unique if for the event to delete
+         */
         public UUID getEventId();
     }
 
     public interface NewEvent {
+
+        /**
+         *
+         * @return the description for the event to be added
+         */
         public PlanPhaseSpecifier getPlanPhaseSpecifier();
 
+        /**
+         *
+         * @return the date at which this event should be inserted into the stream
+         */
         public DateTime getRequestedDate();
 
+        /**
+         *
+         * @return the {@code SubscriptionTransitionType} for the event
+         */
         public SubscriptionTransitionType getSubscriptionTransitionType();
 
     }
 
     public interface ExistingEvent extends DeletedEvent, NewEvent {
+        /**
+         *
+         * @return the date at which this event was effective
+         */
         public DateTime getEffectiveDate();
 
+        /**
+         *
+         * @return the name of the phase
+         */
         public String getPlanPhaseName();
     }
 }

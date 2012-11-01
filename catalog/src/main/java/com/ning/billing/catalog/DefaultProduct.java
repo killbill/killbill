@@ -28,8 +28,8 @@ import java.util.Arrays;
 
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.util.config.ValidatingConfig;
-import com.ning.billing.util.config.ValidationErrors;
+import com.ning.billing.util.config.catalog.ValidatingConfig;
+import com.ning.billing.util.config.catalog.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implements Product {

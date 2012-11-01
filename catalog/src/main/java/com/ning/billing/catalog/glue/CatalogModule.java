@@ -27,7 +27,7 @@ import com.ning.billing.catalog.DefaultCatalogService;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.io.ICatalogLoader;
 import com.ning.billing.catalog.io.VersionedCatalogLoader;
-import com.ning.billing.config.CatalogConfig;
+import com.ning.billing.util.config.CatalogConfig;
 
 public class CatalogModule extends AbstractModule {
     final ConfigSource configSource;

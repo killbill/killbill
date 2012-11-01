@@ -28,8 +28,8 @@ import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.tweak.HandleCallback;
 
+import com.ning.billing.ObjectType;
 import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.dao.TableName;
 
 import com.google.common.base.Objects;

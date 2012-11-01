@@ -20,6 +20,9 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.ning.billing.util.config.catalog.ValidatingConfig;
+import com.ning.billing.util.config.catalog.ValidationErrors;
+
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
 public class XmlTestClass extends ValidatingConfig<XmlTestClass> {

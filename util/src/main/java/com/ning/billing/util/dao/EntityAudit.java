@@ -16,7 +16,7 @@
 
 package com.ning.billing.util.dao;
 
-import com.ning.billing.util.ChangeType;
+import com.ning.billing.util.audit.ChangeType;
 
 public class EntityAudit {
     private final TableName tableName;

@@ -24,8 +24,8 @@ import org.joda.time.DateTime;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import com.ning.billing.util.ChangeType;
 import com.ning.billing.util.audit.AuditLog;
+import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.audit.DefaultAuditLog;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.DefaultCallContext;

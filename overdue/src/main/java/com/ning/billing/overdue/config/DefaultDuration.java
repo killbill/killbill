@@ -25,8 +25,8 @@ import org.joda.time.Period;
 
 import com.ning.billing.catalog.api.Duration;
 import com.ning.billing.catalog.api.TimeUnit;
-import com.ning.billing.util.config.ValidatingConfig;
-import com.ning.billing.util.config.ValidationErrors;
+import com.ning.billing.util.config.catalog.ValidatingConfig;
+import com.ning.billing.util.config.catalog.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultDuration extends ValidatingConfig<OverdueConfig> implements Duration {

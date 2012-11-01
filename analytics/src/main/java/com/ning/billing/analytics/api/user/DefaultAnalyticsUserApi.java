@@ -31,6 +31,7 @@ import javax.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.analytics.BusinessAccountDao;
 import com.ning.billing.analytics.BusinessInvoiceDao;
@@ -64,14 +65,13 @@ import com.ning.billing.analytics.model.BusinessSubscriptionTransitionModelDao;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.api.Blockable.Type;
 import com.ning.billing.payment.api.Payment;
-import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.TenantContext;
-import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.util.svcapi.payment.PaymentInternalApi;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 import com.ning.billing.util.svcapi.tag.TagInternalApi;
 import com.ning.billing.util.tag.Tag;
@@ -94,7 +94,7 @@ public class DefaultAnalyticsUserApi implements AnalyticsUserApi {
     private final BusinessInvoicePaymentDao bipDao;
     private final BusinessTagDao tagDao;
     private final EntitlementInternalApi entitlementInternalApi;
-    private final PaymentApi paymentApi;
+    private final PaymentInternalApi paymentApi;
     private final TagInternalApi tagInternalApi;
     private final InternalCallContextFactory internalCallContextFactory;
 
@@ -107,7 +107,7 @@ public class DefaultAnalyticsUserApi implements AnalyticsUserApi {
                                    final BusinessInvoicePaymentDao bipDao,
                                    final BusinessTagDao tagDao,
                                    final EntitlementInternalApi entitlementInternalApi,
-                                   final PaymentApi paymentApi,
+                                   final PaymentInternalApi paymentApi,
                                    final TagInternalApi tagInternalApi,
                                    final InternalCallContextFactory internalCallContextFactory) {
         this.analyticsDao = analyticsDao;
@@ -247,7 +247,7 @@ public class DefaultAnalyticsUserApi implements AnalyticsUserApi {
 
         // Update BIP for all invoices
         try {
-            updateBIP(account, context, internalCallContext);
+            updateBIP(account, internalCallContext);
         } catch (PaymentApiException e) {
             // Log and ignore
             log.warn(e.toString());
@@ -302,8 +302,8 @@ public class DefaultAnalyticsUserApi implements AnalyticsUserApi {
         return bundlesId;
     }
 
-    private void updateBIP(final Account account, final TenantContext tenantContext, final InternalCallContext internalCallContext) throws PaymentApiException {
-        final List<Payment> accountPayments = paymentApi.getAccountPayments(account.getId(), tenantContext);
+    private void updateBIP(final Account account, final InternalCallContext internalCallContext) throws PaymentApiException {
+        final List<Payment> accountPayments = paymentApi.getAccountPayments(account.getId(), internalCallContext);
         final Map<UUID, Payment> payments = new HashMap<UUID, Payment>();
         for (final Payment payment : accountPayments) {
             payments.put(payment.getId(), payment);

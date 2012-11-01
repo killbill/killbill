@@ -18,7 +18,7 @@ package com.ning.billing.invoice.glue;
 
 import org.skife.config.ConfigurationObjectFactory;
 
-import com.ning.billing.config.InvoiceConfig;
+import com.ning.billing.util.config.InvoiceConfig;
 import com.ning.billing.glue.InvoiceModule;
 import com.ning.billing.invoice.InvoiceListener;
 import com.ning.billing.invoice.TagHandler;

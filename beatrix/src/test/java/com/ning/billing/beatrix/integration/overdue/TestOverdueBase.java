@@ -41,7 +41,7 @@ import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.payment.provider.MockPaymentProviderPlugin;
 import com.ning.billing.util.clock.ClockMock;
-import com.ning.billing.util.config.XMLLoader;
+import com.ning.billing.util.config.catalog.XMLLoader;
 import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
 
 import com.google.inject.Inject;

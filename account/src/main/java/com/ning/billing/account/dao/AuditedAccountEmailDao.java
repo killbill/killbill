@@ -27,12 +27,12 @@ import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
+import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.account.api.DefaultAccountEmail;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.dao.AuditedCollectionDaoBase;
-import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.EntityPersistenceException;
 import com.ning.billing.util.entity.collection.dao.UpdatableEntityCollectionSqlDao;

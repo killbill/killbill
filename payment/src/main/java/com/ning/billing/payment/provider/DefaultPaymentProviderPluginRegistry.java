@@ -20,7 +20,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.ning.billing.config.PaymentConfig;
+import com.ning.billing.util.config.PaymentConfig;
 import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 
 import com.google.common.base.Strings;

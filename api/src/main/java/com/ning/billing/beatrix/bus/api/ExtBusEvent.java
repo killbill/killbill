@@ -17,21 +17,41 @@ package com.ning.billing.beatrix.bus.api;
 
 import java.util.UUID;
 
-import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.ObjectType;
 
+/**
+ * The interface {@code ExtBusEvent} represents the event type that is published for Killbill users.
+ */
 public interface ExtBusEvent {
 
+    /**
+     *
+     * @return the {@code ExtBusEventType}
+     */
     public ExtBusEventType getEventType();
 
+    /**
+     *
+     * @return the {@code ObjectType}
+     */
     public ObjectType getObjectType();
 
+    /**
+     *
+     * @return the unique id for the object that was created/modified
+     */
     public UUID getObjectId();
 
+    /**
+     *
+     * @return the unique id for the account associated woth that object
+     */
     public UUID getAccountId();
+
 
     public UUID getTenantId();
 
-    /*
+/*
     public UUID getUserToken();
-     */
+    */
 }

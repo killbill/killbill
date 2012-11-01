@@ -51,8 +51,8 @@ import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.StaticCatalog;
 import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.config.ValidatingConfig;
-import com.ning.billing.util.config.ValidationErrors;
+import com.ning.billing.util.config.catalog.ValidatingConfig;
+import com.ning.billing.util.config.catalog.ValidationErrors;
 
 
 @XmlRootElement(name = "catalog")

@@ -19,8 +19,6 @@ package com.ning.billing.util.events;
 import java.util.List;
 import java.util.UUID;
 
-import com.ning.billing.account.api.ChangedField;
-
 public interface AccountChangeInternalEvent extends BusInternalEvent {
     public UUID getAccountId();
 

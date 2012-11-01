@@ -37,7 +37,7 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.catalog.MockCatalogModule;
-import com.ning.billing.config.InvoiceConfig;
+import com.ning.billing.util.config.InvoiceConfig;
 import com.ning.billing.dbi.DBIProvider;
 import com.ning.billing.dbi.DbiConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;

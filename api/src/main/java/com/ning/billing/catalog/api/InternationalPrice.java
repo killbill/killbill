@@ -19,12 +19,31 @@ package com.ning.billing.catalog.api;
 import java.math.BigDecimal;
 
 
+/**
+ * The interface {@code InternationalPrice} allows to associate a set of prices in different currencies to
+ * a given object.
+ */
 public interface InternationalPrice {
 
+    /**
+     *
+     * @return an array of {@code Price} in the various currencies
+     */
     public abstract Price[] getPrices();
 
+    /**
+     *
+     * @param currency  the currency
+     * @return          the price associated with that currency
+     *
+     * @throws CatalogApiException if there is no entry
+     */
     public abstract BigDecimal getPrice(Currency currency) throws CatalogApiException;
 
+    /**
+     *
+     * @return whether this is a zero price
+     */
     public abstract boolean isZero();
 
 }

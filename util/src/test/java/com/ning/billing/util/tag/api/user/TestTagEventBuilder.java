@@ -21,8 +21,8 @@ import java.util.UUID;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.ning.billing.ObjectType;
 import com.ning.billing.util.UtilTestSuite;
-import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.events.ControlTagCreationInternalEvent;
 import com.ning.billing.util.events.ControlTagDefinitionCreationInternalEvent;
 import com.ning.billing.util.events.ControlTagDefinitionDeletionInternalEvent;

@@ -24,9 +24,9 @@ import javax.inject.Inject;
 
 import org.skife.jdbi.v2.IDBI;
 
-import com.ning.billing.util.ChangeType;
 import com.ning.billing.util.api.AuditLevel;
 import com.ning.billing.util.audit.AuditLog;
+import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.dao.AuditSqlDao;
 import com.ning.billing.util.dao.TableName;

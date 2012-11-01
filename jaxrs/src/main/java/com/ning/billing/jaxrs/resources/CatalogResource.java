@@ -38,7 +38,7 @@ import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
 import com.ning.billing.util.api.AuditUserApi;
 import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.api.TagUserApi;
-import com.ning.billing.util.config.XMLWriter;
+import com.ning.billing.util.config.catalog.XMLWriter;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

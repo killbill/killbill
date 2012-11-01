@@ -18,7 +18,7 @@ package com.ning.billing.util.dao;
 
 import java.util.UUID;
 
-import com.ning.billing.util.ChangeType;
+import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.entity.Entity;
 
 public class EntityHistory<T extends Entity> extends MappedEntity<T, UUID, Long> {

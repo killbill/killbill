@@ -23,6 +23,7 @@ import java.util.List;
 import org.joda.time.DateTime;
 
 import com.ning.billing.ErrorCode;
+import com.ning.billing.ObjectType;
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
@@ -45,7 +46,6 @@ import com.ning.billing.entitlement.events.user.ApiEventCancel;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.dao.ObjectType;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;

@@ -29,12 +29,12 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
+import com.ning.billing.ObjectType;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.events.BusInternalEvent;
 import com.ning.billing.util.events.TagInternalEvent;
 import com.ning.billing.util.tag.ControlTagType;

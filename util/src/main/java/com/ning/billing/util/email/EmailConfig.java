@@ -20,7 +20,7 @@ import org.skife.config.Config;
 import org.skife.config.Default;
 import org.skife.config.DefaultNull;
 
-import com.ning.billing.config.KillbillConfig;
+import com.ning.billing.util.config.KillbillConfig;
 
 public interface EmailConfig extends KillbillConfig {
     @Config("killbill.mail.smtp.host")

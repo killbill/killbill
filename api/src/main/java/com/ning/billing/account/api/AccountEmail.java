@@ -21,7 +21,16 @@ import java.util.UUID;
 import com.ning.billing.util.entity.UpdatableEntity;
 
 public interface AccountEmail extends UpdatableEntity {
+
+    /**
+     *
+     * @return  the accountId for this email
+     */
     UUID getAccountId();
 
+    /**
+     *
+     * @return  the email body
+     */
     String getEmail();
 }

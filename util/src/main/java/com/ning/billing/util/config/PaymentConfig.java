@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.config;
+package com.ning.billing.util.config;
 
 import java.util.List;
 

@@ -82,6 +82,7 @@ import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.payment.provider.MockPaymentProviderPlugin;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcsapi.bus.BusService;
 
 import com.google.common.base.Function;
@@ -173,9 +174,11 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     @Inject
     protected PaymentChecker paymentChecker;
 
-
     @Inject
     protected ExternalBus externalBus;
+
+    @Inject
+    protected AccountInternalApi accountInternalApi;
 
     protected TestApiListener busHandler;
 

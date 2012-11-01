@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.ObjectType;
 import com.ning.billing.util.entity.Entity;
 import com.ning.billing.util.entity.EntityCollection;
 
