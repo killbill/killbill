@@ -16,7 +16,7 @@
 
 package com.ning.billing.analytics.api;
 
-import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.ObjectType;
 import com.ning.billing.util.entity.Entity;
 
 public interface BusinessField extends Entity {
