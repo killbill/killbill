@@ -18,8 +18,8 @@ package com.ning.billing.analytics.api;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.ObjectType;
 import com.ning.billing.analytics.model.BusinessOverdueStatusModelDao;
-import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.entity.EntityBase;
 
 public class DefaultBusinessOverdueStatus extends EntityBase implements BusinessOverdueStatus {

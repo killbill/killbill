@@ -16,12 +16,12 @@
 
 package com.ning.billing.analytics.api;
 
+import com.ning.billing.ObjectType;
 import com.ning.billing.analytics.model.BusinessAccountFieldModelDao;
 import com.ning.billing.analytics.model.BusinessFieldModelDao;
 import com.ning.billing.analytics.model.BusinessInvoiceFieldModelDao;
 import com.ning.billing.analytics.model.BusinessInvoicePaymentFieldModelDao;
 import com.ning.billing.analytics.model.BusinessSubscriptionTransitionFieldModelDao;
-import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.entity.EntityBase;
 
 public class DefaultBusinessField extends EntityBase implements BusinessField {

@@ -16,12 +16,12 @@
 
 package com.ning.billing.analytics.api;
 
+import com.ning.billing.ObjectType;
 import com.ning.billing.analytics.model.BusinessAccountTagModelDao;
 import com.ning.billing.analytics.model.BusinessInvoicePaymentTagModelDao;
 import com.ning.billing.analytics.model.BusinessInvoiceTagModelDao;
 import com.ning.billing.analytics.model.BusinessSubscriptionTransitionTagModelDao;
 import com.ning.billing.analytics.model.BusinessTagModelDao;
-import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.entity.EntityBase;
 
 public class DefaultBusinessTag extends EntityBase implements BusinessTag {
