@@ -16,6 +16,7 @@
 
 package com.ning.billing.analytics.api.user;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -38,15 +39,29 @@ import com.ning.billing.analytics.BusinessInvoicePaymentDao;
 import com.ning.billing.analytics.BusinessOverdueStatusDao;
 import com.ning.billing.analytics.BusinessSubscriptionTransitionDao;
 import com.ning.billing.analytics.BusinessTagDao;
+import com.ning.billing.analytics.api.BusinessAccount;
+import com.ning.billing.analytics.api.BusinessField;
+import com.ning.billing.analytics.api.BusinessInvoice;
+import com.ning.billing.analytics.api.BusinessInvoicePayment;
+import com.ning.billing.analytics.api.BusinessOverdueStatus;
+import com.ning.billing.analytics.api.BusinessSnapshot;
+import com.ning.billing.analytics.api.BusinessSubscriptionTransition;
+import com.ning.billing.analytics.api.BusinessTag;
+import com.ning.billing.analytics.api.DefaultBusinessAccount;
+import com.ning.billing.analytics.api.DefaultBusinessInvoice;
+import com.ning.billing.analytics.api.DefaultBusinessInvoicePayment;
+import com.ning.billing.analytics.api.DefaultBusinessOverdueStatus;
+import com.ning.billing.analytics.api.DefaultBusinessSnapshot;
+import com.ning.billing.analytics.api.DefaultBusinessSubscriptionTransition;
+import com.ning.billing.analytics.api.DefaultBusinessTag;
 import com.ning.billing.analytics.api.TimeSeriesData;
 import com.ning.billing.analytics.dao.AnalyticsDao;
-import com.ning.billing.analytics.model.BusinessAccount;
-import com.ning.billing.analytics.model.BusinessAccountTag;
-import com.ning.billing.analytics.model.BusinessInvoice;
-import com.ning.billing.analytics.model.BusinessInvoiceItem;
-import com.ning.billing.analytics.model.BusinessInvoicePayment;
-import com.ning.billing.analytics.model.BusinessOverdueStatus;
-import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
+import com.ning.billing.analytics.model.BusinessAccountModelDao;
+import com.ning.billing.analytics.model.BusinessAccountTagModelDao;
+import com.ning.billing.analytics.model.BusinessInvoiceModelDao;
+import com.ning.billing.analytics.model.BusinessInvoicePaymentModelDao;
+import com.ning.billing.analytics.model.BusinessOverdueStatusModelDao;
+import com.ning.billing.analytics.model.BusinessSubscriptionTransitionModelDao;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.api.Blockable.Type;
 import com.ning.billing.payment.api.Payment;
@@ -54,6 +69,7 @@ import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
+import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.svcapi.payment.PaymentInternalApi;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
@@ -63,6 +79,7 @@ import com.ning.billing.util.tag.TagDefinition;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 
 public class DefaultAnalyticsUserApi implements AnalyticsUserApi {
@@ -104,6 +121,105 @@ public class DefaultAnalyticsUserApi implements AnalyticsUserApi {
         this.paymentApi = paymentApi;
         this.tagInternalApi = tagInternalApi;
         this.internalCallContextFactory = internalCallContextFactory;
+    }
+
+    @Override
+    public BusinessSnapshot getBusinessSnapshot(final Account account, final TenantContext context) {
+        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(context);
+
+        // Find account
+        final BusinessAccount businessAccount = getAccountByKey(account.getExternalKey(), context);
+
+        // Find all transitions for all bundles for that account, and associated overdue statuses
+        final List<SubscriptionBundle> bundles = entitlementInternalApi.getBundlesForAccount(account.getId(), internalTenantContext);
+        final Collection<BusinessSubscriptionTransition> businessSubscriptionTransitions = new ArrayList<BusinessSubscriptionTransition>();
+        final Collection<BusinessOverdueStatus> businessOverdueStatuses = new ArrayList<BusinessOverdueStatus>();
+        for (final SubscriptionBundle bundle : bundles) {
+            businessSubscriptionTransitions.addAll(getTransitionsForBundle(bundle.getKey(), context));
+            businessOverdueStatuses.addAll(getOverdueStatusesForBundle(bundle.getKey(), context));
+        }
+
+        // Find all invoices for that account
+        final Collection<BusinessInvoice> businessInvoices = getInvoicesForAccount(account.getExternalKey(), context);
+
+        // Find all payments for that account
+        final Collection<BusinessInvoicePayment> businessInvoicePayments = getInvoicePaymentsForAccount(account.getExternalKey(), context);
+
+        // Find all tags for that account
+        // TODO add other tag types
+        final Collection<BusinessTag> businessTags = getTagsForAccount(account.getExternalKey(), context);
+
+        // TODO find custom fields
+        final Collection<BusinessField> businessFields = ImmutableList.<BusinessField>of();
+
+        return new DefaultBusinessSnapshot(businessAccount, businessSubscriptionTransitions, businessInvoices, businessInvoicePayments,
+                                           businessOverdueStatuses, businessTags, businessFields);
+    }
+
+    @Override
+    public BusinessAccount getAccountByKey(final String accountKey, final TenantContext context) {
+        final BusinessAccountModelDao accountByKey = analyticsDao.getAccountByKey(accountKey, internalCallContextFactory.createInternalTenantContext(context));
+        if (accountByKey == null) {
+            return null;
+        } else {
+            return new DefaultBusinessAccount(accountByKey);
+        }
+    }
+
+    @Override
+    public List<BusinessSubscriptionTransition> getTransitionsForBundle(final String externalKey, final TenantContext context) {
+        final List<BusinessSubscriptionTransitionModelDao> transitionsByKey = analyticsDao.getTransitionsByKey(externalKey, internalCallContextFactory.createInternalTenantContext(context));
+        return ImmutableList.<BusinessSubscriptionTransition>copyOf(Collections2.transform(transitionsByKey, new Function<BusinessSubscriptionTransitionModelDao, BusinessSubscriptionTransition>() {
+            @Override
+            public BusinessSubscriptionTransition apply(@Nullable final BusinessSubscriptionTransitionModelDao input) {
+                return new DefaultBusinessSubscriptionTransition(input);
+            }
+        }));
+    }
+
+    @Override
+    public List<BusinessInvoice> getInvoicesForAccount(final String accountKey, final TenantContext context) {
+        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(context);
+        final List<BusinessInvoiceModelDao> invoicesByKey = analyticsDao.getInvoicesByKey(accountKey, internalTenantContext);
+        return ImmutableList.<BusinessInvoice>copyOf(Collections2.transform(invoicesByKey, new Function<BusinessInvoiceModelDao, BusinessInvoice>() {
+            @Override
+            public BusinessInvoice apply(@Nullable final BusinessInvoiceModelDao input) {
+                return new DefaultBusinessInvoice(input, input == null ? null : analyticsDao.getInvoiceItemsForInvoice(input.getInvoiceId().toString(), internalTenantContext));
+            }
+        }));
+    }
+
+    @Override
+    public List<BusinessInvoicePayment> getInvoicePaymentsForAccount(final String accountKey, final TenantContext context) {
+        final List<BusinessInvoicePaymentModelDao> invoicePaymentsForAccountByKey = analyticsDao.getInvoicePaymentsForAccountByKey(accountKey, internalCallContextFactory.createInternalTenantContext(context));
+        return ImmutableList.<BusinessInvoicePayment>copyOf(Collections2.transform(invoicePaymentsForAccountByKey, new Function<BusinessInvoicePaymentModelDao, BusinessInvoicePayment>() {
+            @Override
+            public BusinessInvoicePayment apply(@Nullable final BusinessInvoicePaymentModelDao input) {
+                return new DefaultBusinessInvoicePayment(input);
+            }
+        }));
+    }
+
+    @Override
+    public List<BusinessOverdueStatus> getOverdueStatusesForBundle(final String externalKey, final TenantContext context) {
+        final List<BusinessOverdueStatusModelDao> overdueStatusesForBundleByKey = analyticsDao.getOverdueStatusesForBundleByKey(externalKey, internalCallContextFactory.createInternalTenantContext(context));
+        return ImmutableList.<BusinessOverdueStatus>copyOf(Collections2.transform(overdueStatusesForBundleByKey, new Function<BusinessOverdueStatusModelDao, BusinessOverdueStatus>() {
+            @Override
+            public BusinessOverdueStatus apply(@Nullable final BusinessOverdueStatusModelDao input) {
+                return new DefaultBusinessOverdueStatus(input);
+            }
+        }));
+    }
+
+    @Override
+    public List<BusinessTag> getTagsForAccount(final String accountKey, final TenantContext context) {
+        final List<BusinessAccountTagModelDao> tagsForAccount = analyticsDao.getTagsForAccount(accountKey, internalCallContextFactory.createInternalTenantContext(context));
+        return ImmutableList.<BusinessTag>copyOf(Collections2.transform(tagsForAccount, new Function<BusinessAccountTagModelDao, BusinessTag>() {
+            @Override
+            public BusinessTag apply(@Nullable final BusinessAccountTagModelDao input) {
+                return new DefaultBusinessTag(input);
+            }
+        }));
     }
 
     @Override
@@ -164,9 +280,9 @@ public class DefaultAnalyticsUserApi implements AnalyticsUserApi {
 
         // Find the current state of bundles in analytics
         final Collection<UUID> analyticsBundlesId = Collections2.transform(analyticsDao.getTransitionsForAccount(account.getExternalKey(), internalCallContext),
-                                                                           new Function<BusinessSubscriptionTransition, UUID>() {
+                                                                           new Function<BusinessSubscriptionTransitionModelDao, UUID>() {
                                                                                @Override
-                                                                               public UUID apply(@Nullable final BusinessSubscriptionTransition input) {
+                                                                               public UUID apply(@Nullable final BusinessSubscriptionTransitionModelDao input) {
                                                                                    if (input == null) {
                                                                                        return null;
                                                                                    } else {
@@ -208,9 +324,9 @@ public class DefaultAnalyticsUserApi implements AnalyticsUserApi {
 
         // Find the current state of payments in analytics
         final Collection<UUID> analyticsPaymentsId = Collections2.transform(analyticsDao.getInvoicePaymentsForAccountByKey(account.getExternalKey(), internalCallContext),
-                                                                            new Function<BusinessInvoicePayment, UUID>() {
+                                                                            new Function<BusinessInvoicePaymentModelDao, UUID>() {
                                                                                 @Override
-                                                                                public UUID apply(@Nullable final BusinessInvoicePayment input) {
+                                                                                public UUID apply(@Nullable final BusinessInvoicePaymentModelDao input) {
                                                                                     if (input == null) {
                                                                                         return null;
                                                                                     } else {
@@ -256,9 +372,9 @@ public class DefaultAnalyticsUserApi implements AnalyticsUserApi {
 
         // Find the current state of tags in analytics
         final Collection<String> analyticsTags = Collections2.transform(analyticsDao.getTagsForAccount(account.getExternalKey(), internalCallContext),
-                                                                        new Function<BusinessAccountTag, String>() {
+                                                                        new Function<BusinessAccountTagModelDao, String>() {
                                                                             @Override
-                                                                            public String apply(@Nullable final BusinessAccountTag input) {
+                                                                            public String apply(@Nullable final BusinessAccountTagModelDao input) {
                                                                                 if (input == null) {
                                                                                     return null;
                                                                                 } else {
@@ -276,35 +392,5 @@ public class DefaultAnalyticsUserApi implements AnalyticsUserApi {
         for (final String tag : Sets.difference(new HashSet<String>(utilTags), new HashSet<String>(analyticsTags))) {
             tagDao.tagAdded(ObjectType.ACCOUNT, account.getId(), tag, internalCallContext);
         }
-    }
-
-    // Note: the following is not exposed in api yet, as the models need to be extracted first
-
-    public BusinessAccount getAccountByKey(final String accountKey, final TenantContext context) {
-        return analyticsDao.getAccountByKey(accountKey, internalCallContextFactory.createInternalTenantContext(context));
-    }
-
-    public List<BusinessSubscriptionTransition> getTransitionsForBundle(final String externalKey, final TenantContext context) {
-        return analyticsDao.getTransitionsByKey(externalKey, internalCallContextFactory.createInternalTenantContext(context));
-    }
-
-    public List<BusinessInvoice> getInvoicesForAccount(final String accountKey, final TenantContext context) {
-        return analyticsDao.getInvoicesByKey(accountKey, internalCallContextFactory.createInternalTenantContext(context));
-    }
-
-    public List<BusinessAccountTag> getTagsForAccount(final String accountKey, final TenantContext context) {
-        return analyticsDao.getTagsForAccount(accountKey, internalCallContextFactory.createInternalTenantContext(context));
-    }
-
-    public List<BusinessOverdueStatus> getOverdueStatusesForBundle(final String externalKey, final TenantContext context) {
-        return analyticsDao.getOverdueStatusesForBundleByKey(externalKey, internalCallContextFactory.createInternalTenantContext(context));
-    }
-
-    public List<BusinessInvoiceItem> getInvoiceItemsForInvoice(final UUID invoiceId, final TenantContext context) {
-        return analyticsDao.getInvoiceItemsForInvoice(invoiceId.toString(), internalCallContextFactory.createInternalTenantContext(context));
-    }
-
-    public List<BusinessInvoicePayment> getInvoicePaymentsForAccount(final String accountKey, final TenantContext context) {
-        return analyticsDao.getInvoicePaymentsForAccountByKey(accountKey, internalCallContextFactory.createInternalTenantContext(context));
     }
 }

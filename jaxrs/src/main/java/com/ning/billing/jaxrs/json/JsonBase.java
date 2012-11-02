@@ -31,6 +31,10 @@ public abstract class JsonBase {
 
     protected List<AuditLogJson> auditLogs;
 
+    public JsonBase() {
+        this(null);
+    }
+
     public JsonBase(@Nullable final List<AuditLogJson> auditLogs) {
         this.auditLogs = auditLogs;
     }

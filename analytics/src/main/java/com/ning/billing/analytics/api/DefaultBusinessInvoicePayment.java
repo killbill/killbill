@@ -14,23 +14,22 @@
  * under the License.
  */
 
-package com.ning.billing.analytics.model;
+package com.ning.billing.analytics.api;
 
-import javax.annotation.Nullable;
 import java.math.BigDecimal;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.analytics.utils.Rounder;
+import com.ning.billing.analytics.model.BusinessInvoicePaymentModelDao;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.util.entity.EntityBase;
 
-public class BusinessInvoicePayment {
+public class DefaultBusinessInvoicePayment extends EntityBase implements BusinessInvoicePayment {
+
     private final UUID paymentId;
-    private final DateTime createdDate;
     private final String extFirstPaymentRefId;
     private final String extSecondPaymentRefId;
-    private final DateTime updatedDate;
     private final String accountKey;
     private final UUID invoiceId;
     private final DateTime effectiveDate;
@@ -47,111 +46,113 @@ public class BusinessInvoicePayment {
     private final String invoicePaymentType;
     private final UUID linkedInvoicePaymentId;
 
-    public BusinessInvoicePayment(final String accountKey, final BigDecimal amount, final String extFirstPaymentRefId, final String extSecondPaymentRefId,
-                                  final String cardCountry, final String cardType, final DateTime createdDate,
-                                  final Currency currency, final DateTime effectiveDate, final UUID invoiceId,
-                                  final String paymentError, final UUID paymentId, final String paymentMethod,
-                                  final String paymentType, final String pluginName, final String processingStatus,
-                                  final BigDecimal requestedAmount, final DateTime updatedDate, @Nullable final String invoicePaymentType,
-                                  @Nullable final UUID linkedInvoicePaymentId) {
-        this.accountKey = accountKey;
-        this.amount = amount;
-        this.extFirstPaymentRefId = extFirstPaymentRefId;
-        this.extSecondPaymentRefId = extSecondPaymentRefId;
-        this.cardCountry = cardCountry;
-        this.cardType = cardType;
-        this.createdDate = createdDate;
-        this.currency = currency;
-        this.effectiveDate = effectiveDate;
-        this.invoiceId = invoiceId;
-        this.paymentError = paymentError;
-        this.paymentId = paymentId;
-        this.paymentMethod = paymentMethod;
-        this.paymentType = paymentType;
-        this.pluginName = pluginName;
-        this.processingStatus = processingStatus;
-        this.requestedAmount = requestedAmount;
-        this.updatedDate = updatedDate;
-        this.invoicePaymentType = invoicePaymentType;
-        this.linkedInvoicePaymentId = linkedInvoicePaymentId;
+    public DefaultBusinessInvoicePayment(final BusinessInvoicePaymentModelDao businessInvoicePaymentModelDao) {
+        this.paymentId = businessInvoicePaymentModelDao.getPaymentId();
+        this.extFirstPaymentRefId = businessInvoicePaymentModelDao.getExtFirstPaymentRefId();
+        this.extSecondPaymentRefId = businessInvoicePaymentModelDao.getExtSecondPaymentRefId();
+        this.accountKey = businessInvoicePaymentModelDao.getAccountKey();
+        this.invoiceId = businessInvoicePaymentModelDao.getInvoiceId();
+        this.effectiveDate = businessInvoicePaymentModelDao.getEffectiveDate();
+        this.amount = businessInvoicePaymentModelDao.getAmount();
+        this.currency = businessInvoicePaymentModelDao.getCurrency();
+        this.paymentError = businessInvoicePaymentModelDao.getPaymentError();
+        this.processingStatus = businessInvoicePaymentModelDao.getProcessingStatus();
+        this.requestedAmount = businessInvoicePaymentModelDao.getRequestedAmount();
+        this.pluginName = businessInvoicePaymentModelDao.getPluginName();
+        this.paymentType = businessInvoicePaymentModelDao.getPaymentType();
+        this.paymentMethod = businessInvoicePaymentModelDao.getPaymentMethod();
+        this.cardType = businessInvoicePaymentModelDao.getCardType();
+        this.cardCountry = businessInvoicePaymentModelDao.getCardCountry();
+        this.invoicePaymentType = businessInvoicePaymentModelDao.getInvoicePaymentType();
+        this.linkedInvoicePaymentId = businessInvoicePaymentModelDao.getLinkedInvoicePaymentId();
     }
 
-    public String getExtFirstPaymentRefId() {
-        return extFirstPaymentRefId;
-    }
-
-    public String getExtSecondPaymentRefId() {
-        return extSecondPaymentRefId;
-    }
-
-    public DateTime getCreatedDate() {
-        return createdDate;
-    }
-
+    @Override
     public UUID getPaymentId() {
         return paymentId;
     }
 
+    @Override
+    public String getExtFirstPaymentRefId() {
+        return extFirstPaymentRefId;
+    }
+
+    @Override
+    public String getExtSecondPaymentRefId() {
+        return extSecondPaymentRefId;
+    }
+
+    @Override
     public String getAccountKey() {
         return accountKey;
     }
 
-    public BigDecimal getAmount() {
-        return amount;
-    }
-
-    public String getCardCountry() {
-        return cardCountry;
-    }
-
-    public String getCardType() {
-        return cardType;
-    }
-
-    public Currency getCurrency() {
-        return currency;
-    }
-
-    public DateTime getEffectiveDate() {
-        return effectiveDate;
-    }
-
+    @Override
     public UUID getInvoiceId() {
         return invoiceId;
     }
 
+    @Override
+    public DateTime getEffectiveDate() {
+        return effectiveDate;
+    }
+
+    @Override
+    public BigDecimal getAmount() {
+        return amount;
+    }
+
+    @Override
+    public Currency getCurrency() {
+        return currency;
+    }
+
+    @Override
     public String getPaymentError() {
         return paymentError;
     }
 
-    public String getPaymentMethod() {
-        return paymentMethod;
-    }
-
-    public String getPaymentType() {
-        return paymentType;
-    }
-
-    public String getPluginName() {
-        return pluginName;
-    }
-
+    @Override
     public String getProcessingStatus() {
         return processingStatus;
     }
 
+    @Override
     public BigDecimal getRequestedAmount() {
         return requestedAmount;
     }
 
-    public DateTime getUpdatedDate() {
-        return updatedDate;
+    @Override
+    public String getPluginName() {
+        return pluginName;
     }
 
+    @Override
+    public String getPaymentType() {
+        return paymentType;
+    }
+
+    @Override
+    public String getPaymentMethod() {
+        return paymentMethod;
+    }
+
+    @Override
+    public String getCardType() {
+        return cardType;
+    }
+
+    @Override
+    public String getCardCountry() {
+        return cardCountry;
+    }
+
+    @Override
     public String getInvoicePaymentType() {
         return invoicePaymentType;
     }
 
+    @Override
     public UUID getLinkedInvoicePaymentId() {
         return linkedInvoicePaymentId;
     }
@@ -159,12 +160,11 @@ public class BusinessInvoicePayment {
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
-        sb.append("BusinessInvoicePayment");
-        sb.append("{accountKey='").append(accountKey).append('\'');
-        sb.append(", paymentId=").append(paymentId);
-        sb.append(", createdDate=").append(createdDate);
-        sb.append(", extFirstPaymentRefId=").append(extFirstPaymentRefId);
-        sb.append(", updatedDate=").append(updatedDate);
+        sb.append("DefaultBusinessInvoicePayment");
+        sb.append("{paymentId=").append(paymentId);
+        sb.append(", extFirstPaymentRefId='").append(extFirstPaymentRefId).append('\'');
+        sb.append(", extSecondPaymentRefId='").append(extSecondPaymentRefId).append('\'');
+        sb.append(", accountKey='").append(accountKey).append('\'');
         sb.append(", invoiceId=").append(invoiceId);
         sb.append(", effectiveDate=").append(effectiveDate);
         sb.append(", amount=").append(amount);
@@ -178,7 +178,7 @@ public class BusinessInvoicePayment {
         sb.append(", cardType='").append(cardType).append('\'');
         sb.append(", cardCountry='").append(cardCountry).append('\'');
         sb.append(", invoicePaymentType='").append(invoicePaymentType).append('\'');
-        sb.append(", linkedInvoicePaymentId='").append(linkedInvoicePaymentId).append('\'');
+        sb.append(", linkedInvoicePaymentId=").append(linkedInvoicePaymentId);
         sb.append('}');
         return sb.toString();
     }
@@ -192,15 +192,12 @@ public class BusinessInvoicePayment {
             return false;
         }
 
-        final BusinessInvoicePayment that = (BusinessInvoicePayment) o;
+        final DefaultBusinessInvoicePayment that = (DefaultBusinessInvoicePayment) o;
 
         if (accountKey != null ? !accountKey.equals(that.accountKey) : that.accountKey != null) {
             return false;
         }
-        if (amount != null ? Rounder.round(amount) != Rounder.round(that.amount) : that.amount != null) {
-            return false;
-        }
-        if (extFirstPaymentRefId != null ? !extFirstPaymentRefId.equals(that.extFirstPaymentRefId) : that.extFirstPaymentRefId != null) {
+        if (amount != null ? !amount.equals(that.amount) : that.amount != null) {
             return false;
         }
         if (cardCountry != null ? !cardCountry.equals(that.cardCountry) : that.cardCountry != null) {
@@ -209,16 +206,25 @@ public class BusinessInvoicePayment {
         if (cardType != null ? !cardType.equals(that.cardType) : that.cardType != null) {
             return false;
         }
-        if (createdDate != null ? !createdDate.equals(that.createdDate) : that.createdDate != null) {
-            return false;
-        }
         if (currency != that.currency) {
             return false;
         }
         if (effectiveDate != null ? !effectiveDate.equals(that.effectiveDate) : that.effectiveDate != null) {
             return false;
         }
+        if (extFirstPaymentRefId != null ? !extFirstPaymentRefId.equals(that.extFirstPaymentRefId) : that.extFirstPaymentRefId != null) {
+            return false;
+        }
+        if (extSecondPaymentRefId != null ? !extSecondPaymentRefId.equals(that.extSecondPaymentRefId) : that.extSecondPaymentRefId != null) {
+            return false;
+        }
         if (invoiceId != null ? !invoiceId.equals(that.invoiceId) : that.invoiceId != null) {
+            return false;
+        }
+        if (invoicePaymentType != null ? !invoicePaymentType.equals(that.invoicePaymentType) : that.invoicePaymentType != null) {
+            return false;
+        }
+        if (linkedInvoicePaymentId != null ? !linkedInvoicePaymentId.equals(that.linkedInvoicePaymentId) : that.linkedInvoicePaymentId != null) {
             return false;
         }
         if (paymentError != null ? !paymentError.equals(that.paymentError) : that.paymentError != null) {
@@ -239,16 +245,7 @@ public class BusinessInvoicePayment {
         if (processingStatus != null ? !processingStatus.equals(that.processingStatus) : that.processingStatus != null) {
             return false;
         }
-        if (requestedAmount != null ? Rounder.round(requestedAmount) != Rounder.round(that.requestedAmount) : that.requestedAmount != null) {
-            return false;
-        }
-        if (updatedDate != null ? !updatedDate.equals(that.updatedDate) : that.updatedDate != null) {
-            return false;
-        }
-        if (invoicePaymentType != null ? !invoicePaymentType.equals(that.invoicePaymentType) : that.invoicePaymentType != null) {
-            return false;
-        }
-        if (linkedInvoicePaymentId != null ? !linkedInvoicePaymentId.equals(that.linkedInvoicePaymentId) : that.linkedInvoicePaymentId != null) {
+        if (requestedAmount != null ? !requestedAmount.equals(that.requestedAmount) : that.requestedAmount != null) {
             return false;
         }
 
@@ -258,9 +255,8 @@ public class BusinessInvoicePayment {
     @Override
     public int hashCode() {
         int result = paymentId != null ? paymentId.hashCode() : 0;
-        result = 31 * result + (createdDate != null ? createdDate.hashCode() : 0);
         result = 31 * result + (extFirstPaymentRefId != null ? extFirstPaymentRefId.hashCode() : 0);
-        result = 31 * result + (updatedDate != null ? updatedDate.hashCode() : 0);
+        result = 31 * result + (extSecondPaymentRefId != null ? extSecondPaymentRefId.hashCode() : 0);
         result = 31 * result + (accountKey != null ? accountKey.hashCode() : 0);
         result = 31 * result + (invoiceId != null ? invoiceId.hashCode() : 0);
         result = 31 * result + (effectiveDate != null ? effectiveDate.hashCode() : 0);
@@ -274,6 +270,8 @@ public class BusinessInvoicePayment {
         result = 31 * result + (paymentMethod != null ? paymentMethod.hashCode() : 0);
         result = 31 * result + (cardType != null ? cardType.hashCode() : 0);
         result = 31 * result + (cardCountry != null ? cardCountry.hashCode() : 0);
+        result = 31 * result + (invoicePaymentType != null ? invoicePaymentType.hashCode() : 0);
+        result = 31 * result + (linkedInvoicePaymentId != null ? linkedInvoicePaymentId.hashCode() : 0);
         return result;
     }
 }

@@ -16,8 +16,6 @@
 
 package com.ning.billing.analytics.api;
 
-import static org.testng.Assert.fail;
-
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.SQLException;
@@ -44,7 +42,7 @@ import com.ning.billing.analytics.dao.BusinessAccountSqlDao;
 import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionSqlDao;
 import com.ning.billing.analytics.model.BusinessSubscription;
 import com.ning.billing.analytics.model.BusinessSubscriptionEvent;
-import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
+import com.ning.billing.analytics.model.BusinessSubscriptionTransitionModelDao;
 import com.ning.billing.catalog.MockPriceList;
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogApiException;
@@ -87,6 +85,8 @@ import com.ning.billing.util.svcsapi.bus.InternalBus;
 
 import com.google.inject.Inject;
 
+import static org.testng.Assert.fail;
+
 @Guice(modules = {AnalyticsTestModule.class})
 public class TestAnalyticsService extends AnalyticsTestSuiteWithEmbeddedDB {
 
@@ -128,7 +128,7 @@ public class TestAnalyticsService extends AnalyticsTestSuiteWithEmbeddedDB {
     private BusinessAccountSqlDao accountSqlDao;
 
     private EffectiveSubscriptionInternalEvent transition;
-    private BusinessSubscriptionTransition expectedTransition;
+    private BusinessSubscriptionTransitionModelDao expectedTransition;
 
     private AccountCreationInternalEvent accountCreationNotification;
     private InvoiceCreationInternalEvent invoiceCreationNotification;
@@ -204,7 +204,7 @@ public class TestAnalyticsService extends AnalyticsTestSuiteWithEmbeddedDB {
                 TOTAL_ORDERING,
                 null,
                 true), null, 1L, 1L);
-        expectedTransition = new BusinessSubscriptionTransition(
+        expectedTransition = new BusinessSubscriptionTransitionModelDao(
                 TOTAL_ORDERING,
                 transition.getBundleId(),
                 BUNDLE_EXTERNAL_KEY,

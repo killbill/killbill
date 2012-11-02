@@ -18,25 +18,32 @@ package com.ning.billing.analytics.model;
 
 import java.util.UUID;
 
-public class BusinessInvoiceField extends BusinessField {
-    private final UUID invoiceId;
+public class BusinessAccountTagModelDao extends BusinessTagModelDao {
 
-    public BusinessInvoiceField(final UUID invoiceId, final String name, final String value) {
-        super(name, value);
-        this.invoiceId = invoiceId;
+    private final UUID accountId;
+    private final String accountKey;
+
+    public BusinessAccountTagModelDao(final UUID accountId, final String accountKey, final String name) {
+        super(name);
+        this.accountId = accountId;
+        this.accountKey = accountKey;
     }
 
-    public UUID getInvoiceId() {
-        return invoiceId;
+    public UUID getAccountId() {
+        return accountId;
+    }
+
+    public String getAccountKey() {
+        return accountKey;
     }
 
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
-        sb.append("BusinessInvoiceField");
-        sb.append("{invoiceId='").append(invoiceId).append('\'');
+        sb.append("BusinessAccountTagModelDao");
+        sb.append("{accountId='").append(accountId).append('\'');
+        sb.append(", accountKey='").append(accountKey).append('\'');
         sb.append(", name='").append(getName()).append('\'');
-        sb.append(", value='").append(getValue()).append('\'');
         sb.append('}');
         return sb.toString();
     }
@@ -50,15 +57,15 @@ public class BusinessInvoiceField extends BusinessField {
             return false;
         }
 
-        final BusinessInvoiceField that = (BusinessInvoiceField) o;
+        final BusinessAccountTagModelDao that = (BusinessAccountTagModelDao) o;
 
-        if (invoiceId != null ? !invoiceId.equals(that.invoiceId) : that.invoiceId != null) {
+        if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
+            return false;
+        }
+        if (accountKey != null ? !accountKey.equals(that.accountKey) : that.accountKey != null) {
             return false;
         }
         if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) {
-            return false;
-        }
-        if (getValue() != null ? !getValue().equals(that.getValue()) : that.getValue() != null) {
             return false;
         }
 
@@ -67,9 +74,9 @@ public class BusinessInvoiceField extends BusinessField {
 
     @Override
     public int hashCode() {
-        int result = invoiceId != null ? invoiceId.hashCode() : 0;
+        int result = accountId != null ? accountId.hashCode() : 0;
+        result = 31 * result + (accountKey != null ? accountKey.hashCode() : 0);
         result = 31 * result + (getName() != null ? getName().hashCode() : 0);
-        result = 31 * result + (getValue() != null ? getValue().hashCode() : 0);
         return result;
     }
 }

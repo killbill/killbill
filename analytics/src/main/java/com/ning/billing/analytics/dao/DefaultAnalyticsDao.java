@@ -22,13 +22,13 @@ import javax.inject.Inject;
 
 import com.ning.billing.analytics.api.DefaultTimeSeriesData;
 import com.ning.billing.analytics.api.TimeSeriesData;
-import com.ning.billing.analytics.model.BusinessAccount;
-import com.ning.billing.analytics.model.BusinessAccountTag;
-import com.ning.billing.analytics.model.BusinessInvoice;
-import com.ning.billing.analytics.model.BusinessInvoiceItem;
-import com.ning.billing.analytics.model.BusinessInvoicePayment;
-import com.ning.billing.analytics.model.BusinessOverdueStatus;
-import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
+import com.ning.billing.analytics.model.BusinessAccountModelDao;
+import com.ning.billing.analytics.model.BusinessAccountTagModelDao;
+import com.ning.billing.analytics.model.BusinessInvoiceItemModelDao;
+import com.ning.billing.analytics.model.BusinessInvoiceModelDao;
+import com.ning.billing.analytics.model.BusinessInvoicePaymentModelDao;
+import com.ning.billing.analytics.model.BusinessOverdueStatusModelDao;
+import com.ning.billing.analytics.model.BusinessSubscriptionTransitionModelDao;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 
 public class DefaultAnalyticsDao implements AnalyticsDao {
@@ -69,42 +69,42 @@ public class DefaultAnalyticsDao implements AnalyticsDao {
     }
 
     @Override
-    public BusinessAccount getAccountByKey(final String accountKey, final InternalTenantContext context) {
+    public BusinessAccountModelDao getAccountByKey(final String accountKey, final InternalTenantContext context) {
         return accountSqlDao.getAccountByKey(accountKey, context);
     }
 
     @Override
-    public List<BusinessSubscriptionTransition> getTransitionsByKey(final String externalKey, final InternalTenantContext context) {
+    public List<BusinessSubscriptionTransitionModelDao> getTransitionsByKey(final String externalKey, final InternalTenantContext context) {
         return subscriptionTransitionSqlDao.getTransitionsByKey(externalKey, context);
     }
 
     @Override
-    public List<BusinessSubscriptionTransition> getTransitionsForAccount(final String accountKey, final InternalTenantContext context) {
+    public List<BusinessSubscriptionTransitionModelDao> getTransitionsForAccount(final String accountKey, final InternalTenantContext context) {
         return subscriptionTransitionSqlDao.getTransitionsForAccount(accountKey, context);
     }
 
     @Override
-    public List<BusinessInvoice> getInvoicesByKey(final String accountKey, final InternalTenantContext context) {
+    public List<BusinessInvoiceModelDao> getInvoicesByKey(final String accountKey, final InternalTenantContext context) {
         return invoiceSqlDao.getInvoicesForAccountByKey(accountKey, context);
     }
 
     @Override
-    public List<BusinessAccountTag> getTagsForAccount(final String accountKey, final InternalTenantContext context) {
+    public List<BusinessAccountTagModelDao> getTagsForAccount(final String accountKey, final InternalTenantContext context) {
         return accountTagSqlDao.getTagsForAccountByKey(accountKey, context);
     }
 
     @Override
-    public List<BusinessInvoiceItem> getInvoiceItemsForInvoice(final String invoiceId, final InternalTenantContext context) {
+    public List<BusinessInvoiceItemModelDao> getInvoiceItemsForInvoice(final String invoiceId, final InternalTenantContext context) {
         return invoiceItemSqlDao.getInvoiceItemsForInvoice(invoiceId, context);
     }
 
     @Override
-    public List<BusinessOverdueStatus> getOverdueStatusesForBundleByKey(final String externalKey, final InternalTenantContext context) {
+    public List<BusinessOverdueStatusModelDao> getOverdueStatusesForBundleByKey(final String externalKey, final InternalTenantContext context) {
         return overdueStatusSqlDao.getOverdueStatusesForBundleByKey(externalKey, context);
     }
 
     @Override
-    public List<BusinessInvoicePayment> getInvoicePaymentsForAccountByKey(final String accountKey, final InternalTenantContext context) {
+    public List<BusinessInvoicePaymentModelDao> getInvoicePaymentsForAccountByKey(final String accountKey, final InternalTenantContext context) {
         return invoicePaymentSqlDao.getInvoicePaymentsForAccountByKey(accountKey, context);
     }
 }

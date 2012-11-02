@@ -24,19 +24,20 @@ import org.testng.annotations.Test;
 import com.ning.billing.analytics.AnalyticsTestSuite;
 
 public class TestBusinessInvoicePaymentTag extends AnalyticsTestSuite {
+
     @Test(groups = "fast")
     public void testEquals() throws Exception {
         final UUID paymentId = UUID.randomUUID();
         final String name = UUID.randomUUID().toString();
-        final BusinessInvoicePaymentTag invoicePaymentTag = new BusinessInvoicePaymentTag(paymentId, name);
+        final BusinessInvoicePaymentTagModelDao invoicePaymentTag = new BusinessInvoicePaymentTagModelDao(paymentId, name);
         Assert.assertSame(invoicePaymentTag, invoicePaymentTag);
         Assert.assertEquals(invoicePaymentTag, invoicePaymentTag);
         Assert.assertTrue(invoicePaymentTag.equals(invoicePaymentTag));
         Assert.assertEquals(invoicePaymentTag.getPaymentId(), paymentId);
         Assert.assertEquals(invoicePaymentTag.getName(), name);
 
-        final BusinessInvoicePaymentTag otherInvoicePaymentTag = new BusinessInvoicePaymentTag(UUID.randomUUID(),
-                                                                                               UUID.randomUUID().toString());
+        final BusinessInvoicePaymentTagModelDao otherInvoicePaymentTag = new BusinessInvoicePaymentTagModelDao(UUID.randomUUID(),
+                                                                                                               UUID.randomUUID().toString());
         Assert.assertFalse(invoicePaymentTag.equals(otherInvoicePaymentTag));
     }
 }

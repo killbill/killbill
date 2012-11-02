@@ -29,16 +29,18 @@ import org.skife.jdbi.v2.sqlobject.BinderFactory;
 import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
 
 import com.ning.billing.analytics.model.BusinessSubscription;
-import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
+import com.ning.billing.analytics.model.BusinessSubscriptionTransitionModelDao;
 
 @BindingAnnotation(BusinessSubscriptionTransitionBinder.BstBinderFactory.class)
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.PARAMETER})
 public @interface BusinessSubscriptionTransitionBinder {
+
     public static class BstBinderFactory implements BinderFactory {
+
         public Binder build(final Annotation annotation) {
-            return new Binder<BusinessSubscriptionTransitionBinder, BusinessSubscriptionTransition>() {
-                public void bind(final SQLStatement q, final BusinessSubscriptionTransitionBinder bind, final BusinessSubscriptionTransition arg) {
+            return new Binder<BusinessSubscriptionTransitionBinder, BusinessSubscriptionTransitionModelDao>() {
+                public void bind(final SQLStatement q, final BusinessSubscriptionTransitionBinder bind, final BusinessSubscriptionTransitionModelDao arg) {
                     q.bind("total_ordering", arg.getTotalOrdering());
                     q.bind("bundle_id", arg.getBundleId().toString());
                     q.bind("external_key", arg.getExternalKey());

@@ -26,6 +26,7 @@ import org.testng.annotations.Test;
 import com.ning.billing.analytics.AnalyticsTestSuite;
 
 public class TestBusinessOverdueStatus extends AnalyticsTestSuite {
+
     @Test(groups = "fast")
     public void testEquals() throws Exception {
         final String accountKey = UUID.randomUUID().toString();
@@ -34,7 +35,7 @@ public class TestBusinessOverdueStatus extends AnalyticsTestSuite {
         final String externalKey = UUID.randomUUID().toString();
         final DateTime startDate = new DateTime(DateTimeZone.UTC);
         final String status = UUID.randomUUID().toString();
-        final BusinessOverdueStatus overdueStatus = new BusinessOverdueStatus(accountKey, bundleId, endDate, externalKey, startDate, status);
+        final BusinessOverdueStatusModelDao overdueStatus = new BusinessOverdueStatusModelDao(accountKey, bundleId, endDate, externalKey, startDate, status);
         Assert.assertSame(overdueStatus, overdueStatus);
         Assert.assertEquals(overdueStatus, overdueStatus);
         Assert.assertTrue(overdueStatus.equals(overdueStatus));
@@ -45,12 +46,12 @@ public class TestBusinessOverdueStatus extends AnalyticsTestSuite {
         Assert.assertEquals(overdueStatus.getStartDate(), startDate);
         Assert.assertEquals(overdueStatus.getStatus(), status);
 
-        final BusinessOverdueStatus otherOverdueStatus = new BusinessOverdueStatus(UUID.randomUUID().toString(),
-                                                                                   UUID.randomUUID(),
-                                                                                   new DateTime(DateTimeZone.UTC),
-                                                                                   UUID.randomUUID().toString(),
-                                                                                   new DateTime(DateTimeZone.UTC),
-                                                                                   UUID.randomUUID().toString());
+        final BusinessOverdueStatusModelDao otherOverdueStatus = new BusinessOverdueStatusModelDao(UUID.randomUUID().toString(),
+                                                                                                   UUID.randomUUID(),
+                                                                                                   new DateTime(DateTimeZone.UTC),
+                                                                                                   UUID.randomUUID().toString(),
+                                                                                                   new DateTime(DateTimeZone.UTC),
+                                                                                                   UUID.randomUUID().toString());
         Assert.assertFalse(overdueStatus.equals(otherOverdueStatus));
     }
 }

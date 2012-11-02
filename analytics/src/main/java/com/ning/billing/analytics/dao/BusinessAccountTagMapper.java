@@ -23,14 +23,15 @@ import java.util.UUID;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import com.ning.billing.analytics.model.BusinessAccountTag;
+import com.ning.billing.analytics.model.BusinessAccountTagModelDao;
 
-public class BusinessAccountTagMapper implements ResultSetMapper<BusinessAccountTag> {
+public class BusinessAccountTagMapper implements ResultSetMapper<BusinessAccountTagModelDao> {
+
     @Override
-    public BusinessAccountTag map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
+    public BusinessAccountTagModelDao map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
         final UUID accountId = UUID.fromString(r.getString(1));
         final String accountKey = r.getString(2);
         final String name = r.getString(3);
-        return new BusinessAccountTag(accountId, accountKey, name);
+        return new BusinessAccountTagModelDao(accountId, accountKey, name);
     }
 }

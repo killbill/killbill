@@ -25,9 +25,10 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.analytics.AnalyticsTestSuiteWithEmbeddedDB;
-import com.ning.billing.analytics.model.BusinessAccountTag;
+import com.ning.billing.analytics.model.BusinessAccountTagModelDao;
 
 public class TestBusinessAccountTagSqlDao extends AnalyticsTestSuiteWithEmbeddedDB {
+
     private BusinessAccountTagSqlDao accountTagSqlDao;
 
     @BeforeMethod(groups = "slow")
@@ -48,11 +49,11 @@ public class TestBusinessAccountTagSqlDao extends AnalyticsTestSuiteWithEmbedded
 
         // Add an entry
         Assert.assertEquals(accountTagSqlDao.addTag(accountId.toString(), accountKey, name, internalCallContext), 1);
-        final List<BusinessAccountTag> tagsForAccount = accountTagSqlDao.getTagsForAccountByKey(accountKey, internalCallContext);
+        final List<BusinessAccountTagModelDao> tagsForAccount = accountTagSqlDao.getTagsForAccountByKey(accountKey, internalCallContext);
         Assert.assertEquals(tagsForAccount.size(), 1);
 
         // Retrieve it
-        final BusinessAccountTag accountTag = tagsForAccount.get(0);
+        final BusinessAccountTagModelDao accountTag = tagsForAccount.get(0);
         Assert.assertEquals(accountTag.getAccountId(), accountId);
         Assert.assertEquals(accountTag.getAccountKey(), accountKey);
         Assert.assertEquals(accountTag.getName(), name);

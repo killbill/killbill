@@ -19,6 +19,7 @@ package com.ning.billing.analytics.utils;
 import java.math.BigDecimal;
 
 public class Rounder {
+
     public static final int SCALE = 4;
 
     // Static only

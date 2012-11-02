@@ -25,9 +25,10 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.analytics.AnalyticsTestSuiteWithEmbeddedDB;
-import com.ning.billing.analytics.model.BusinessSubscriptionTransitionField;
+import com.ning.billing.analytics.model.BusinessSubscriptionTransitionFieldModelDao;
 
 public class TestBusinessSubscriptionTransitionFieldSqlDao extends AnalyticsTestSuiteWithEmbeddedDB {
+
     private BusinessSubscriptionTransitionFieldSqlDao subscriptionTransitionFieldSqlDao;
 
     @BeforeMethod(groups = "slow")
@@ -50,11 +51,11 @@ public class TestBusinessSubscriptionTransitionFieldSqlDao extends AnalyticsTest
 
         // Add an entry
         Assert.assertEquals(subscriptionTransitionFieldSqlDao.addField(accountKey, bundleId.toString(), externalKey, name, value, internalCallContext), 1);
-        final List<BusinessSubscriptionTransitionField> fieldsForBusinessSubscriptionTransition = subscriptionTransitionFieldSqlDao.getFieldsForBusinessSubscriptionTransitionByKey(externalKey, internalCallContext);
+        final List<BusinessSubscriptionTransitionFieldModelDao> fieldsForBusinessSubscriptionTransition = subscriptionTransitionFieldSqlDao.getFieldsForBusinessSubscriptionTransitionByKey(externalKey, internalCallContext);
         Assert.assertEquals(fieldsForBusinessSubscriptionTransition.size(), 1);
 
         // Retrieve it
-        final BusinessSubscriptionTransitionField subscriptionTransitionField = fieldsForBusinessSubscriptionTransition.get(0);
+        final BusinessSubscriptionTransitionFieldModelDao subscriptionTransitionField = fieldsForBusinessSubscriptionTransition.get(0);
         Assert.assertEquals(subscriptionTransitionField.getBundleId(), bundleId);
         Assert.assertEquals(subscriptionTransitionField.getExternalKey(), externalKey);
         Assert.assertEquals(subscriptionTransitionField.getName(), name);

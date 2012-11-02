@@ -16,7 +16,16 @@
 
 package com.ning.billing.analytics.api.user;
 
+import java.util.List;
+
 import com.ning.billing.account.api.Account;
+import com.ning.billing.analytics.api.BusinessAccount;
+import com.ning.billing.analytics.api.BusinessInvoice;
+import com.ning.billing.analytics.api.BusinessInvoicePayment;
+import com.ning.billing.analytics.api.BusinessOverdueStatus;
+import com.ning.billing.analytics.api.BusinessSnapshot;
+import com.ning.billing.analytics.api.BusinessSubscriptionTransition;
+import com.ning.billing.analytics.api.BusinessTag;
 import com.ning.billing.analytics.api.TimeSeriesData;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TenantContext;
@@ -25,6 +34,20 @@ import com.ning.billing.util.callcontext.TenantContext;
  * The interface {@code AnalyticsUserApi} is used to retrieve analytics information on a pre tenant basis
  */
 public interface AnalyticsUserApi {
+
+    public BusinessSnapshot getBusinessSnapshot(Account account, TenantContext context);
+
+    public BusinessAccount getAccountByKey(String accountKey, TenantContext context);
+
+    public List<BusinessSubscriptionTransition> getTransitionsForBundle(String externalKey, TenantContext context);
+
+    public List<BusinessInvoice> getInvoicesForAccount(String accountKey, TenantContext context);
+
+    public List<BusinessInvoicePayment> getInvoicePaymentsForAccount(String accountKey, TenantContext context);
+
+    public List<BusinessOverdueStatus> getOverdueStatusesForBundle(String externalKey, TenantContext context);
+
+    public List<BusinessTag> getTagsForAccount(String accountKey, TenantContext context);
 
     /**
      * @return the number of accounts created per day

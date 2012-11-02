@@ -26,12 +26,13 @@ import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import com.ning.billing.analytics.model.BusinessInvoicePayment;
+import com.ning.billing.analytics.model.BusinessInvoicePaymentModelDao;
 import com.ning.billing.catalog.api.Currency;
 
-public class BusinessInvoicePaymentMapper implements ResultSetMapper<BusinessInvoicePayment> {
+public class BusinessInvoicePaymentMapper implements ResultSetMapper<BusinessInvoicePaymentModelDao> {
+
     @Override
-    public BusinessInvoicePayment map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
+    public BusinessInvoicePaymentModelDao map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
         final UUID paymentId = UUID.fromString(r.getString(1));
         final DateTime createdDate = new DateTime(r.getLong(2), DateTimeZone.UTC);
         final DateTime updatedDate = new DateTime(r.getLong(3), DateTimeZone.UTC);
@@ -60,9 +61,9 @@ public class BusinessInvoicePaymentMapper implements ResultSetMapper<BusinessInv
             linkedInvoicePaymentId = null;
         }
 
-        return new BusinessInvoicePayment(accountKey, amount, extFirstPaymentRefId, extSecondPaymentRefId, cardCountry, cardType, createdDate, currency,
-                                          effectiveDate, invoiceId, paymentError, paymentId, paymentMethod, paymentType,
-                                          pluginName, processingStatus, requestedAmount, updatedDate, invoicePaymentType,
-                                          linkedInvoicePaymentId);
+        return new BusinessInvoicePaymentModelDao(accountKey, amount, extFirstPaymentRefId, extSecondPaymentRefId, cardCountry, cardType, createdDate, currency,
+                                                  effectiveDate, invoiceId, paymentError, paymentId, paymentMethod, paymentType,
+                                                  pluginName, processingStatus, requestedAmount, updatedDate, invoicePaymentType,
+                                                  linkedInvoicePaymentId);
     }
 }

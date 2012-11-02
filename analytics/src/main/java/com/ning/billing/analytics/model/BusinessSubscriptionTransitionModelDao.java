@@ -20,10 +20,13 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.util.entity.EntityBase;
+
 /**
  * Describe a state change between two BusinessSubscription
  */
-public class BusinessSubscriptionTransition {
+public class BusinessSubscriptionTransitionModelDao extends EntityBase {
+
     private final long totalOrdering;
     private final UUID bundleId;
     private final String externalKey;
@@ -35,10 +38,10 @@ public class BusinessSubscriptionTransition {
     private final BusinessSubscription previousSubscription;
     private final BusinessSubscription nextSubscription;
 
-    public BusinessSubscriptionTransition(final Long totalOrdering, final UUID bundleId, final String externalKey,
-                                          final UUID accountId, final String accountKey, final UUID subscriptionId,
-                                          final DateTime requestedTimestamp, final BusinessSubscriptionEvent event,
-                                          final BusinessSubscription previousSubscription, final BusinessSubscription nextSubscription) {
+    public BusinessSubscriptionTransitionModelDao(final Long totalOrdering, final UUID bundleId, final String externalKey,
+                                                  final UUID accountId, final String accountKey, final UUID subscriptionId,
+                                                  final DateTime requestedTimestamp, final BusinessSubscriptionEvent event,
+                                                  final BusinessSubscription previousSubscription, final BusinessSubscription nextSubscription) {
         if (totalOrdering == null) {
             throw new IllegalArgumentException("A transition must have a total ordering");
         }
@@ -119,7 +122,7 @@ public class BusinessSubscriptionTransition {
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
-        sb.append("BusinessSubscriptionTransition");
+        sb.append("BusinessSubscriptionTransitionModelDao");
         sb.append("{accountId='").append(accountId).append('\'');
         sb.append(", accountKey=").append(accountKey);
         sb.append(", totalOrdering=").append(totalOrdering);
@@ -143,7 +146,7 @@ public class BusinessSubscriptionTransition {
             return false;
         }
 
-        final BusinessSubscriptionTransition that = (BusinessSubscriptionTransition) o;
+        final BusinessSubscriptionTransitionModelDao that = (BusinessSubscriptionTransitionModelDao) o;
 
         return totalOrdering == that.totalOrdering && isDuplicateOf(that);
     }
@@ -163,7 +166,7 @@ public class BusinessSubscriptionTransition {
         return result;
     }
 
-    public boolean isDuplicateOf(final BusinessSubscriptionTransition that) {
+    public boolean isDuplicateOf(final BusinessSubscriptionTransitionModelDao that) {
         if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
             return false;
         }

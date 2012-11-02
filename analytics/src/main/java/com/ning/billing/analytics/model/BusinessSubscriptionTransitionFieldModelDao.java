@@ -18,23 +18,39 @@ package com.ning.billing.analytics.model;
 
 import java.util.UUID;
 
-public class BusinessInvoicePaymentField extends BusinessField {
-    private final UUID paymentId;
+public class BusinessSubscriptionTransitionFieldModelDao extends BusinessFieldModelDao {
 
-    public BusinessInvoicePaymentField(final UUID paymentId, final String name, final String value) {
-        super(name, value);
-        this.paymentId = paymentId;
+    private final String accountKey;
+    private final UUID bundleId;
+    private final String externalKey;
+
+    public BusinessSubscriptionTransitionFieldModelDao(final String accountKey, final UUID bundleId, final String externalKey,
+                                                       final String name, final String value) {
+        super(bundleId, name, value);
+        this.accountKey = accountKey;
+        this.bundleId = bundleId;
+        this.externalKey = externalKey;
     }
 
-    public UUID getPaymentId() {
-        return paymentId;
+    public String getAccountKey() {
+        return accountKey;
+    }
+
+    public UUID getBundleId() {
+        return bundleId;
+    }
+
+    public String getExternalKey() {
+        return externalKey;
     }
 
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
-        sb.append("BusinessPaymentField");
-        sb.append("{paymentId='").append(paymentId).append('\'');
+        sb.append("BusinessSubscriptionTransitionFieldModelDao");
+        sb.append("{accountKey='").append(accountKey).append('\'');
+        sb.append(", bundleId='").append(bundleId).append('\'');
+        sb.append(", externalKey='").append(externalKey).append('\'');
         sb.append(", name='").append(getName()).append('\'');
         sb.append(", value='").append(getValue()).append('\'');
         sb.append('}');
@@ -50,9 +66,15 @@ public class BusinessInvoicePaymentField extends BusinessField {
             return false;
         }
 
-        final BusinessInvoicePaymentField that = (BusinessInvoicePaymentField) o;
+        final BusinessSubscriptionTransitionFieldModelDao that = (BusinessSubscriptionTransitionFieldModelDao) o;
 
-        if (paymentId != null ? !paymentId.equals(that.paymentId) : that.paymentId != null) {
+        if (accountKey != null ? !accountKey.equals(that.accountKey) : that.accountKey != null) {
+            return false;
+        }
+        if (bundleId != null ? !bundleId.equals(that.bundleId) : that.bundleId != null) {
+            return false;
+        }
+        if (externalKey != null ? !externalKey.equals(that.externalKey) : that.externalKey != null) {
             return false;
         }
         if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) {
@@ -67,7 +89,9 @@ public class BusinessInvoicePaymentField extends BusinessField {
 
     @Override
     public int hashCode() {
-        int result = paymentId != null ? paymentId.hashCode() : 0;
+        int result = accountKey != null ? accountKey.hashCode() : 0;
+        result = 31 * result + (bundleId != null ? bundleId.hashCode() : 0);
+        result = 31 * result + (externalKey != null ? externalKey.hashCode() : 0);
         result = 31 * result + (getName() != null ? getName().hashCode() : 0);
         result = 31 * result + (getValue() != null ? getValue().hashCode() : 0);
         return result;

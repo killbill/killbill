@@ -25,9 +25,10 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.analytics.AnalyticsTestSuiteWithEmbeddedDB;
-import com.ning.billing.analytics.model.BusinessInvoicePaymentField;
+import com.ning.billing.analytics.model.BusinessInvoicePaymentFieldModelDao;
 
 public class TestBusinessInvoicePaymentFieldSqlDao extends AnalyticsTestSuiteWithEmbeddedDB {
+
     private BusinessInvoicePaymentFieldSqlDao invoicePaymentFieldSqlDao;
 
     @BeforeMethod(groups = "slow")
@@ -48,11 +49,11 @@ public class TestBusinessInvoicePaymentFieldSqlDao extends AnalyticsTestSuiteWit
 
         // Add an entry
         Assert.assertEquals(invoicePaymentFieldSqlDao.addField(paymentId, name, value, internalCallContext), 1);
-        final List<BusinessInvoicePaymentField> fieldsForInvoicePayment = invoicePaymentFieldSqlDao.getFieldsForInvoicePayment(paymentId, internalCallContext);
+        final List<BusinessInvoicePaymentFieldModelDao> fieldsForInvoicePayment = invoicePaymentFieldSqlDao.getFieldsForInvoicePayment(paymentId, internalCallContext);
         Assert.assertEquals(fieldsForInvoicePayment.size(), 1);
 
         // Retrieve it
-        final BusinessInvoicePaymentField invoicePaymentField = fieldsForInvoicePayment.get(0);
+        final BusinessInvoicePaymentFieldModelDao invoicePaymentField = fieldsForInvoicePayment.get(0);
         Assert.assertEquals(invoicePaymentField.getPaymentId().toString(), paymentId);
         Assert.assertEquals(invoicePaymentField.getName(), name);
         Assert.assertEquals(invoicePaymentField.getValue(), value);

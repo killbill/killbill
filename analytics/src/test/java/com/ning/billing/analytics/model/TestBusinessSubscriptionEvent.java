@@ -38,6 +38,7 @@ import com.ning.billing.mock.MockPlan;
 import com.ning.billing.mock.MockSubscription;
 
 public class TestBusinessSubscriptionEvent extends AnalyticsTestSuite {
+
     private Product product;
     private Plan plan;
     private PlanPhase phase;

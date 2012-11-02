@@ -22,6 +22,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 
 public class BusinessSqlProvider<T> implements Provider<T> {
+
     @Inject
     private IDBI dbi;
 

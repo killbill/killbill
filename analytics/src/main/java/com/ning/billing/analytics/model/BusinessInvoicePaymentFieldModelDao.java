@@ -18,11 +18,12 @@ package com.ning.billing.analytics.model;
 
 import java.util.UUID;
 
-public class BusinessInvoicePaymentTag extends BusinessTag {
+public class BusinessInvoicePaymentFieldModelDao extends BusinessFieldModelDao {
+
     private final UUID paymentId;
 
-    public BusinessInvoicePaymentTag(final UUID paymentId, final String name) {
-        super(name);
+    public BusinessInvoicePaymentFieldModelDao(final UUID paymentId, final String name, final String value) {
+        super(paymentId, name, value);
         this.paymentId = paymentId;
     }
 
@@ -33,9 +34,10 @@ public class BusinessInvoicePaymentTag extends BusinessTag {
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
-        sb.append("BusinessPaymentTag");
+        sb.append("BusinessPaymentField");
         sb.append("{paymentId='").append(paymentId).append('\'');
         sb.append(", name='").append(getName()).append('\'');
+        sb.append(", value='").append(getValue()).append('\'');
         sb.append('}');
         return sb.toString();
     }
@@ -49,12 +51,15 @@ public class BusinessInvoicePaymentTag extends BusinessTag {
             return false;
         }
 
-        final BusinessInvoicePaymentTag that = (BusinessInvoicePaymentTag) o;
+        final BusinessInvoicePaymentFieldModelDao that = (BusinessInvoicePaymentFieldModelDao) o;
 
         if (paymentId != null ? !paymentId.equals(that.paymentId) : that.paymentId != null) {
             return false;
         }
         if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) {
+            return false;
+        }
+        if (getValue() != null ? !getValue().equals(that.getValue()) : that.getValue() != null) {
             return false;
         }
 
@@ -65,6 +70,7 @@ public class BusinessInvoicePaymentTag extends BusinessTag {
     public int hashCode() {
         int result = paymentId != null ? paymentId.hashCode() : 0;
         result = 31 * result + (getName() != null ? getName().hashCode() : 0);
+        result = 31 * result + (getValue() != null ? getValue().hashCode() : 0);
         return result;
     }
 }

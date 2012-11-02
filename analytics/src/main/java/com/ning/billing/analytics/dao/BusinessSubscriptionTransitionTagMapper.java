@@ -23,15 +23,16 @@ import java.util.UUID;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import com.ning.billing.analytics.model.BusinessSubscriptionTransitionTag;
+import com.ning.billing.analytics.model.BusinessSubscriptionTransitionTagModelDao;
 
-public class BusinessSubscriptionTransitionTagMapper implements ResultSetMapper<BusinessSubscriptionTransitionTag> {
+public class BusinessSubscriptionTransitionTagMapper implements ResultSetMapper<BusinessSubscriptionTransitionTagModelDao> {
+
     @Override
-    public BusinessSubscriptionTransitionTag map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
+    public BusinessSubscriptionTransitionTagModelDao map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
         final UUID bundleId = UUID.fromString(r.getString(1));
         final String externalKey = r.getString(2);
         final String accountKey = r.getString(3);
         final String name = r.getString(4);
-        return new BusinessSubscriptionTransitionTag(accountKey, bundleId, externalKey, name);
+        return new BusinessSubscriptionTransitionTagModelDao(accountKey, bundleId, externalKey, name);
     }
 }

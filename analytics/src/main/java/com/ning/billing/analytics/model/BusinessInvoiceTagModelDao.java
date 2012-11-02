@@ -18,30 +18,24 @@ package com.ning.billing.analytics.model;
 
 import java.util.UUID;
 
-public class BusinessAccountTag extends BusinessTag {
-    private final UUID accountId;
-    private final String accountKey;
+public class BusinessInvoiceTagModelDao extends BusinessTagModelDao {
 
-    public BusinessAccountTag(final UUID accountId, final String accountKey, final String name) {
+    private final UUID invoiceId;
+
+    public BusinessInvoiceTagModelDao(final UUID invoiceId, final String name) {
         super(name);
-        this.accountId = accountId;
-        this.accountKey = accountKey;
+        this.invoiceId = invoiceId;
     }
 
-    public UUID getAccountId() {
-        return accountId;
-    }
-
-    public String getAccountKey() {
-        return accountKey;
+    public UUID getInvoiceId() {
+        return invoiceId;
     }
 
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
-        sb.append("BusinessAccountTag");
-        sb.append("{accountId='").append(accountId).append('\'');
-        sb.append(", accountKey='").append(accountKey).append('\'');
+        sb.append("BusinessInvoiceTagModelDao");
+        sb.append("{paymentId='").append(invoiceId).append('\'');
         sb.append(", name='").append(getName()).append('\'');
         sb.append('}');
         return sb.toString();
@@ -56,12 +50,9 @@ public class BusinessAccountTag extends BusinessTag {
             return false;
         }
 
-        final BusinessAccountTag that = (BusinessAccountTag) o;
+        final BusinessInvoiceTagModelDao that = (BusinessInvoiceTagModelDao) o;
 
-        if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
-            return false;
-        }
-        if (accountKey != null ? !accountKey.equals(that.accountKey) : that.accountKey != null) {
+        if (invoiceId != null ? !invoiceId.equals(that.invoiceId) : that.invoiceId != null) {
             return false;
         }
         if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) {
@@ -73,8 +64,7 @@ public class BusinessAccountTag extends BusinessTag {
 
     @Override
     public int hashCode() {
-        int result = accountId != null ? accountId.hashCode() : 0;
-        result = 31 * result + (accountKey != null ? accountKey.hashCode() : 0);
+        int result = invoiceId != null ? invoiceId.hashCode() : 0;
         result = 31 * result + (getName() != null ? getName().hashCode() : 0);
         return result;
     }

@@ -24,7 +24,7 @@ import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 
-import com.ning.billing.analytics.model.BusinessAccountField;
+import com.ning.billing.analytics.model.BusinessAccountFieldModelDao;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.InternalTenantContextBinder;
@@ -34,8 +34,8 @@ import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 public interface BusinessAccountFieldSqlDao {
 
     @SqlQuery
-    List<BusinessAccountField> getFieldsForAccountByKey(@Bind("account_key") final String accountKey,
-                                                        @InternalTenantContextBinder final InternalTenantContext context);
+    List<BusinessAccountFieldModelDao> getFieldsForAccountByKey(@Bind("account_key") final String accountKey,
+                                                                @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlUpdate
     int addField(@Bind("account_id") final String accountId,

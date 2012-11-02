@@ -20,6 +20,7 @@ import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 
 public class MockProduct implements Product {
+
     private final String name;
     private final String type;
     private final ProductCategory category;

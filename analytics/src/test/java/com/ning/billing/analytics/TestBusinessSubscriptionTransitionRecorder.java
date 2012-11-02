@@ -26,7 +26,7 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionSqlDao;
-import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
+import com.ning.billing.analytics.model.BusinessSubscriptionTransitionModelDao;
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
@@ -64,8 +64,6 @@ public class TestBusinessSubscriptionTransitionRecorder extends AnalyticsTestSui
         final EntitlementInternalApi entitlementApi = Mockito.mock(EntitlementInternalApi.class);
         Mockito.when(entitlementApi.getBundleFromId(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(bundle);
 
-
-
         // Setup the account API
         final Account account = Mockito.mock(Account.class);
         Mockito.when(account.getExternalKey()).thenReturn(externalKey.toString());
@@ -92,7 +90,7 @@ public class TestBusinessSubscriptionTransitionRecorder extends AnalyticsTestSui
         dao.rebuildTransitionsForBundle(bundle.getId(), internalCallContext);
 
         Assert.assertEquals(sqlDao.getTransitionsByKey(externalKey.toString(), internalCallContext).size(), 1);
-        final BusinessSubscriptionTransition transition = sqlDao.getTransitionsByKey(externalKey.toString(), internalCallContext).get(0);
+        final BusinessSubscriptionTransitionModelDao transition = sqlDao.getTransitionsByKey(externalKey.toString(), internalCallContext).get(0);
         Assert.assertEquals(transition.getTotalOrdering(), (long) eventEffective.getTotalOrdering());
         Assert.assertEquals(transition.getAccountKey(), externalKey.toString());
         // Make sure all the prev_ columns are null

@@ -24,6 +24,7 @@ import org.testng.annotations.Test;
 import com.ning.billing.analytics.AnalyticsTestSuite;
 
 public class TestBusinessSubscriptionTransitionField extends AnalyticsTestSuite {
+
     @Test(groups = "fast")
     public void testEquals() throws Exception {
         final String accountKey = UUID.randomUUID().toString();
@@ -31,11 +32,11 @@ public class TestBusinessSubscriptionTransitionField extends AnalyticsTestSuite 
         final String externalKey = UUID.randomUUID().toString();
         final String name = UUID.randomUUID().toString();
         final String value = UUID.randomUUID().toString();
-        final BusinessSubscriptionTransitionField subscriptionTransitionField = new BusinessSubscriptionTransitionField(accountKey,
-                                                                                                                        bundleId,
-                                                                                                                        externalKey,
-                                                                                                                        name,
-                                                                                                                        value);
+        final BusinessSubscriptionTransitionFieldModelDao subscriptionTransitionField = new BusinessSubscriptionTransitionFieldModelDao(accountKey,
+                                                                                                                                        bundleId,
+                                                                                                                                        externalKey,
+                                                                                                                                        name,
+                                                                                                                                        value);
         Assert.assertSame(subscriptionTransitionField, subscriptionTransitionField);
         Assert.assertEquals(subscriptionTransitionField, subscriptionTransitionField);
         Assert.assertTrue(subscriptionTransitionField.equals(subscriptionTransitionField));
@@ -45,11 +46,11 @@ public class TestBusinessSubscriptionTransitionField extends AnalyticsTestSuite 
         Assert.assertEquals(subscriptionTransitionField.getName(), name);
         Assert.assertEquals(subscriptionTransitionField.getValue(), value);
 
-        final BusinessSubscriptionTransitionField otherSubscriptionField = new BusinessSubscriptionTransitionField(UUID.randomUUID().toString(),
-                                                                                                                   UUID.randomUUID(),
-                                                                                                                   UUID.randomUUID().toString(),
-                                                                                                                   UUID.randomUUID().toString(),
-                                                                                                                   UUID.randomUUID().toString());
+        final BusinessSubscriptionTransitionFieldModelDao otherSubscriptionField = new BusinessSubscriptionTransitionFieldModelDao(UUID.randomUUID().toString(),
+                                                                                                                                   UUID.randomUUID(),
+                                                                                                                                   UUID.randomUUID().toString(),
+                                                                                                                                   UUID.randomUUID().toString(),
+                                                                                                                                   UUID.randomUUID().toString());
         Assert.assertFalse(subscriptionTransitionField.equals(otherSubscriptionField));
     }
 }

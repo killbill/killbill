@@ -25,11 +25,12 @@ import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import com.ning.billing.analytics.model.BusinessOverdueStatus;
+import com.ning.billing.analytics.model.BusinessOverdueStatusModelDao;
 
-public class BusinessOverdueStatusMapper implements ResultSetMapper<BusinessOverdueStatus> {
+public class BusinessOverdueStatusMapper implements ResultSetMapper<BusinessOverdueStatusModelDao> {
+
     @Override
-    public BusinessOverdueStatus map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
+    public BusinessOverdueStatusModelDao map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
         final UUID bundleId = UUID.fromString(r.getString(1));
         final String externalKey = r.getString(2);
         final String accountKey = r.getString(3);
@@ -37,6 +38,6 @@ public class BusinessOverdueStatusMapper implements ResultSetMapper<BusinessOver
         final DateTime startDate = new DateTime(r.getLong(5), DateTimeZone.UTC);
         final DateTime endDate = new DateTime(r.getLong(6), DateTimeZone.UTC);
 
-        return new BusinessOverdueStatus(accountKey, bundleId, endDate, externalKey, startDate, status);
+        return new BusinessOverdueStatusModelDao(accountKey, bundleId, endDate, externalKey, startDate, status);
     }
 }

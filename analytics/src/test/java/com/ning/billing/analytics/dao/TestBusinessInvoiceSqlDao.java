@@ -27,7 +27,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.analytics.AnalyticsTestSuiteWithEmbeddedDB;
-import com.ning.billing.analytics.model.BusinessInvoice;
+import com.ning.billing.analytics.model.BusinessInvoiceModelDao;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
@@ -49,7 +49,7 @@ public class TestBusinessInvoiceSqlDao extends AnalyticsTestSuiteWithEmbeddedDB 
         final UUID invoiceId = UUID.randomUUID();
         final UUID accountId = UUID.randomUUID();
         final String accountKey = UUID.randomUUID().toString();
-        final BusinessInvoice invoice = createInvoice(accountId, invoiceId, accountKey);
+        final BusinessInvoiceModelDao invoice = createInvoice(accountId, invoiceId, accountKey);
 
         // Verify initial state
         Assert.assertNull(invoiceSqlDao.getInvoice(invoice.getInvoiceId().toString(), internalCallContext));
@@ -74,11 +74,11 @@ public class TestBusinessInvoiceSqlDao extends AnalyticsTestSuiteWithEmbeddedDB 
         final UUID invoiceId1 = UUID.randomUUID();
         final UUID accountId1 = UUID.randomUUID();
         final String accountKey1 = UUID.randomUUID().toString();
-        final BusinessInvoice invoice1 = createInvoice(invoiceId1, accountId1, accountKey1);
+        final BusinessInvoiceModelDao invoice1 = createInvoice(invoiceId1, accountId1, accountKey1);
         final UUID invoiceId2 = UUID.randomUUID();
         final UUID accountId2 = UUID.randomUUID();
         final String accountKey2 = UUID.randomUUID().toString();
-        final BusinessInvoice invoice2 = createInvoice(invoiceId2, accountId2, accountKey2);
+        final BusinessInvoiceModelDao invoice2 = createInvoice(invoiceId2, accountId2, accountKey2);
 
         // Create both invoices
         Assert.assertEquals(invoiceSqlDao.createInvoice(invoice1, internalCallContext), 1);
@@ -104,7 +104,7 @@ public class TestBusinessInvoiceSqlDao extends AnalyticsTestSuiteWithEmbeddedDB 
         }
     }
 
-    private BusinessInvoice createInvoice(final UUID invoiceId, final UUID accountId, final String accountKey) {
+    private BusinessInvoiceModelDao createInvoice(final UUID invoiceId, final UUID accountId, final String accountKey) {
         final BigDecimal amountCharged = BigDecimal.ZERO;
         final BigDecimal amountCredited = BigDecimal.ONE;
         final BigDecimal amountPaid = BigDecimal.TEN;
@@ -115,7 +115,7 @@ public class TestBusinessInvoiceSqlDao extends AnalyticsTestSuiteWithEmbeddedDB 
         final LocalDate targetDate = clock.getUTCToday();
         final DateTime updatedDate = clock.getUTCNow();
 
-        return new BusinessInvoice(accountId, accountKey, amountCharged, amountCredited, amountPaid, balance,
-                                   createdDate, currency, invoiceDate, invoiceId, 12, targetDate, updatedDate);
+        return new BusinessInvoiceModelDao(accountId, accountKey, amountCharged, amountCredited, amountPaid, balance,
+                                           createdDate, currency, invoiceDate, invoiceId, 12, targetDate, updatedDate);
     }
 }

@@ -1,0 +1,301 @@
+group AnalyticsSanitySqlDao;
+
+CHECK_TENANT(prefix) ::= "<prefix>tenant_record_id = :tenantRecordId"
+AND_CHECK_TENANT(prefix) ::= "AND <CHECK_TENANT(prefix)>"
+
+checkBstMatchesSubscriptionEvents() ::= <<
+select distinct
+  account_id
+from (
+    select
+      account_id
+    , sum(per_event_check) account_check_left
+    , count(*) account_check_right
+    from (
+        select
+          account_id
+        , account_key_check and app_id and date_type and slug per_event_check
+        from (
+            select
+              q.account_key
+            , q.account_id
+            , b_account_key = account_key account_key_check
+            , b_app_id = app_id app_id
+            , case
+                when b_event like 'CANCEL_%' then b_req_dt = req_dt
+                when b_event like 'SYSTEM_CANCEL_%' then b_req_dt = eff_dt
+                else b_req_dt = req_dt  and b_eff_dt = eff_dt
+              end date_type
+            , coalesce(b_slug = slug, 1) slug
+            from (
+                select
+                  bst.total_ordering record_id
+                , bst.account_key b_account_key
+                , bst.external_key b_app_id
+                , bst.event b_event
+                , bst.next_slug b_slug
+                , from_unixtime(bst.requested_timestamp / 1000) b_req_dt
+                , from_unixtime(bst.next_start_date / 1000) b_eff_dt
+                , a.external_key account_key
+                , a.id account_id
+                , b.external_key app_id
+                , s.id
+                , e.event_type
+                , e.user_type
+                , e.phase_name slug
+                , e.effective_date eff_dt
+                , e.requested_date req_dt
+                , from_unixtime(coalesce(bst.next_start_date, bst.requested_timestamp) / 1000) b_dt
+                from subscription_events e
+                join subscriptions s on e.subscription_id = s.id
+                join bundles b on s.bundle_id = b.id
+                join accounts a on b.account_id = a.id
+                join bst on bst.total_ordering = e.record_id
+                where
+                    e.is_active = 1
+                and e.user_type != 'MIGRATE_BILLING'
+                <AND_CHECK_TENANT("e.")>
+                <AND_CHECK_TENANT("s.")>
+                <AND_CHECK_TENANT("b.")>
+                <AND_CHECK_TENANT("a.")>
+                <AND_CHECK_TENANT("bst.")>
+                order by e.record_id asc
+            ) q
+        ) p
+    ) r group by (account_id)
+) s
+where account_check_left != account_check_right
+;
+>>
+
+checkBiiMatchesInvoiceItems() ::= <<
+select distinct
+  account_id
+from (
+    select
+      id
+    , account_id
+    , start_date_check and end_date_check and amount_check and currency_check and linked_item_id_check and slug_check per_item_check
+    from (
+        select
+          ii.id
+        , ii.account_id
+        , ii.start_date = bii.start_date start_date_check
+        , coalesce(ii.end_date, bii.end_date) = bii.end_date end_date_check
+        , ii.amount = bii.amount amount_check
+        , ii.currency = bii.currency currency_check
+        , coalesce(ii.linked_item_id = bii.linked_item_id, 1) linked_item_id_check
+        , ii.phase_name = bii.slug slug_check
+        from invoice_items ii
+        join bii on ii.id = bii.item_id
+        where <CHECK_TENANT("ii.")>
+        <AND_CHECK_TENANT("bii.")>
+    ) p
+) q where !per_item_check
+;
+>>
+
+checkBipMatchesInvoicePayments() ::= <<
+select distinct
+  account_id
+from (
+    select
+      payment_id
+    , account_id
+    , amount_check and currency_check and payment_type_check and linked_invoice_payment_id_check and invoice_id_check total_check
+    from (
+        select
+          bip.payment_id
+        , a.id account_id
+        , bip.amount = ip.amount amount_check
+        , bip.currency = ip.currency currency_check
+        , bip.invoice_payment_type = ip.type payment_type_check
+        , bip.linked_invoice_payment_id = ip.linked_invoice_payment_id linked_invoice_payment_id_check
+        , bip.invoice_id = ip.invoice_id invoice_id_check
+        from bip
+        join invoice_payments ip on bip.payment_id = ip.id
+        join accounts a on a.record_id = ip.account_record_id
+        where <CHECK_TENANT("bip.")>
+        <AND_CHECK_TENANT("ip.")>
+        <AND_CHECK_TENANT("a.")>
+    ) p
+) q where !total_check
+;
+>>
+
+checkBinAmountPaidMatchesInvoicePayments() ::= <<
+select distinct
+  account_id
+from (
+    select
+      bin.invoice_id
+    , bin.account_id
+    , sum(ip.amount) = amount_paid amount_paid_check
+    from bin
+    join invoice_payments ip on bin.invoice_id = ip.invoice_id
+    where <CHECK_TENANT("bin.")>
+    <AND_CHECK_TENANT("ip.")>
+    group by ip.invoice_id, bin.account_id
+) p where !amount_paid_check
+;
+>>
+
+checkBinAmountChargedMatchesInvoicePayments() ::= <<
+select distinct
+  account_id
+from (
+    select
+      bin.invoice_id
+    , bin.account_id
+    , sum(ip.amount) = amount_charged amount_charged_check
+    from bin
+    join invoice_payments ip on bin.invoice_id = ip.invoice_id
+    where <CHECK_TENANT("bin.")>
+    <AND_CHECK_TENANT("ip.")>
+    group by ip.invoice_id, bin.account_id
+) p where !amount_charged_check
+;
+>>
+
+checkBinBiiBalanceConsistency() ::= <<
+select distinct
+  account_id
+from (
+    select
+      invoice_id
+    , account_id
+    , balance = amount_charged + total_adj_amount + total_cba - amount_paid balance_check
+    from (
+        select
+          bin.invoice_id
+        , bin.account_id
+        , bin.amount_paid
+        , bin.amount_charged
+        , bin.amount_credited
+        , bin.balance
+        , coalesce(total_adj_amount, 0) total_adj_amount
+        , coalesce(total_cba, 0) total_cba
+        from bin
+        left join (
+          select
+            bii.invoice_id
+          , sum(amount) total_adj_amount
+          from bii
+          join bin on bin.invoice_id = bii.invoice_id
+          where bii.item_type in ('CREDIT_ADJ', 'REFUND_ADJ', 'ITEM_ADJ')
+          <AND_CHECK_TENANT("bii.")>
+          <AND_CHECK_TENANT("bin.")>
+          group by (bii.invoice_id)
+        ) p on bin.invoice_id = p.invoice_id
+        left join (
+          select
+            q.invoice_id
+          , total_cba
+          from (
+              select
+                bii.invoice_id
+              , sum(amount) total_cba
+              from bii
+              join bin on bin.invoice_id = bii.invoice_id
+              where bii.item_type in ('CBA_ADJ')
+              <AND_CHECK_TENANT("bii.")>
+              <AND_CHECK_TENANT("bin.")>
+              group by (bii.invoice_id)
+          ) q
+        ) r on r.invoice_id = bin.invoice_id
+        where <CHECK_TENANT("bin.")>
+    ) s
+) t where !balance_check
+;
+>>
+
+checkBinBiiAmountCreditedConsistency() ::= <<
+select distinct
+  account_id
+from (
+    select
+      bii.invoice_id
+    , bin.account_id
+    , sum(amount) = bin.amount_credited credit_check
+    from bii
+    join bin on bin.invoice_id = bii.invoice_id
+    where bii.item_type in ('CREDIT_ADJ')
+    <AND_CHECK_TENANT("bii.")>
+    <AND_CHECK_TENANT("bin.")>
+    group by bii.invoice_id, bin.account_id
+) p where !credit_check
+;
+>>
+
+checkBacBinBiiConsistency() ::= <<
+select distinct
+  account_id
+from (
+    select
+      account_id
+    , total_invoice_balance_check and total_account_balance_check bac_check
+    from (
+        select
+          account_id
+        , total_invoice_balance_on_account = total_invoice_balance total_invoice_balance_check
+        , total_account_balance = total_invoice_balance_on_account - account_cba total_account_balance_check
+        from (
+            select
+              bac.account_id
+            , bac.total_invoice_balance total_invoice_balance_on_account
+            , sum(bin.balance) total_invoice_balance
+            , bac.balance total_account_balance
+            , coalesce(account_cba, 0) account_cba
+            from bac
+            -- some might not have cba items
+            left join (
+                select
+                  bin.account_id
+                , sum(bii.amount) account_cba
+                from bac
+                join bin on bin.account_id = bac.account_id
+                join bii on bii.invoice_id = bin.invoice_id
+                where bii.item_type = 'CBA_ADJ'
+                <AND_CHECK_TENANT("bac.")>
+                <AND_CHECK_TENANT("bin.")>
+                <AND_CHECK_TENANT("bii.")>
+                group by (bin.account_id)
+            ) p on bac.account_id = p.account_id
+            left join bin on bin.account_id = bac.account_id
+            where <CHECK_TENANT("bac.")>
+            <AND_CHECK_TENANT("bin.")>
+            group by bac.account_id, account_cba
+        ) q
+    ) r
+) s where !bac_check
+;
+>>
+
+checkBacTagsMatchesTags() ::= <<
+select distinct
+  account_id
+from (
+    select
+      account_id
+    , b_tag_name = tag_name tag_name_check
+    from (
+        select
+          bt.account_id account_id
+        , bt.name b_tag_name
+        , case
+          when t.tag_definition_id = '00000000-0000-0000-0000-000000000001' then 'AUTO_PAY_OFF'
+          when t.tag_definition_id = '00000000-0000-0000-0000-000000000002' then 'AUTO_INVOICING_OFF'
+          when t.tag_definition_id = '00000000-0000-0000-0000-000000000003' then 'OVERDUE_ENFORCEMENT_OFF'
+          when t.tag_definition_id = '00000000-0000-0000-0000-000000000003' then 'WRITTEN_OFF'
+          else tdef.name
+        end tag_name
+        from bac_tags bt
+        join tags t on t.object_id = bt.account_id
+        left join tag_definitions tdef on t.tag_definition_id = tdef.id
+        where t.object_type  = 'account'
+        <AND_CHECK_TENANT("bt.")>
+        <AND_CHECK_TENANT("t.")>
+        <AND_CHECK_TENANT("tdef.")>
+    ) p
+) q where ! tag_name_check;
+>>

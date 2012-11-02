@@ -24,7 +24,7 @@ import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 
-import com.ning.billing.analytics.model.BusinessSubscriptionTransitionField;
+import com.ning.billing.analytics.model.BusinessSubscriptionTransitionFieldModelDao;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.InternalTenantContextBinder;
@@ -34,8 +34,8 @@ import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 public interface BusinessSubscriptionTransitionFieldSqlDao {
 
     @SqlQuery
-    List<BusinessSubscriptionTransitionField> getFieldsForBusinessSubscriptionTransitionByKey(@Bind("external_key") final String externalKey,
-                                                                                              @InternalTenantContextBinder final InternalTenantContext context);
+    List<BusinessSubscriptionTransitionFieldModelDao> getFieldsForBusinessSubscriptionTransitionByKey(@Bind("external_key") final String externalKey,
+                                                                                                      @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlUpdate
     int addField(@Bind("account_key") final String accountKey,

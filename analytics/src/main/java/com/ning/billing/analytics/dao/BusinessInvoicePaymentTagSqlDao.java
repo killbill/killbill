@@ -24,7 +24,7 @@ import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 
-import com.ning.billing.analytics.model.BusinessInvoicePaymentTag;
+import com.ning.billing.analytics.model.BusinessInvoicePaymentTagModelDao;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.InternalTenantContextBinder;
@@ -34,8 +34,8 @@ import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 public interface BusinessInvoicePaymentTagSqlDao {
 
     @SqlQuery
-    List<BusinessInvoicePaymentTag> getTagsForInvoicePayment(@Bind("payment_id") final String paymentId,
-                                                             @InternalTenantContextBinder final InternalTenantContext context);
+    List<BusinessInvoicePaymentTagModelDao> getTagsForInvoicePayment(@Bind("payment_id") final String paymentId,
+                                                                     @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlUpdate
     int addTag(@Bind("payment_id") final String paymentId,

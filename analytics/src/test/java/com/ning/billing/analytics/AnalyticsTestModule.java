@@ -40,6 +40,7 @@ import com.ning.billing.util.glue.TagStoreModule;
 import com.ning.billing.util.tag.dao.TagDefinitionSqlDao;
 
 public class AnalyticsTestModule extends AnalyticsModule {
+
     @Override
     protected void configure() {
         super.configure();

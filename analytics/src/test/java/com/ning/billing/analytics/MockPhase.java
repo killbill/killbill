@@ -28,6 +28,7 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.Price;
 
 public class MockPhase implements PlanPhase {
+
     private final PhaseType cohort;
     private final Plan plan;
     private final Duration duration;

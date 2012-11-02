@@ -14,16 +14,25 @@
  * under the License.
  */
 
-package com.ning.billing.analytics.model;
+package com.ning.billing.analytics.api;
 
-public abstract class BusinessTag {
-    private final String name;
+import org.joda.time.DateTime;
 
-    public BusinessTag(final String name) {
-        this.name = name;
-    }
+import com.ning.billing.ObjectType;
+import com.ning.billing.util.entity.Entity;
 
-    public String getName() {
-        return name;
-    }
+public interface BusinessOverdueStatus extends Entity {
+
+    /**
+     * @return applicable object type
+     */
+    public ObjectType getObjectType();
+
+    public String getAccountKey();
+
+    public String getStatus();
+
+    public DateTime getStartDate();
+
+    public DateTime getEndDate();
 }

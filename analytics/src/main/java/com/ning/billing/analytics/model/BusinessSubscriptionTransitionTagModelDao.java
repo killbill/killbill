@@ -18,14 +18,14 @@ package com.ning.billing.analytics.model;
 
 import java.util.UUID;
 
-public class BusinessSubscriptionTransitionField extends BusinessField {
+public class BusinessSubscriptionTransitionTagModelDao extends BusinessTagModelDao {
+
     private final String accountKey;
     private final UUID bundleId;
     private final String externalKey;
 
-    public BusinessSubscriptionTransitionField(final String accountKey, final UUID bundleId, final String externalKey,
-                                               final String name, final String value) {
-        super(name, value);
+    public BusinessSubscriptionTransitionTagModelDao(final String accountKey, final UUID bundleId, final String externalKey, final String name) {
+        super(name);
         this.accountKey = accountKey;
         this.bundleId = bundleId;
         this.externalKey = externalKey;
@@ -46,12 +46,11 @@ public class BusinessSubscriptionTransitionField extends BusinessField {
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
-        sb.append("BusinessSubscriptionTransitionField");
+        sb.append("BusinessSubscriptionTransitionTagModelDao");
         sb.append("{accountKey='").append(accountKey).append('\'');
         sb.append(", bundleId='").append(bundleId).append('\'');
         sb.append(", externalKey='").append(externalKey).append('\'');
         sb.append(", name='").append(getName()).append('\'');
-        sb.append(", value='").append(getValue()).append('\'');
         sb.append('}');
         return sb.toString();
     }
@@ -65,7 +64,7 @@ public class BusinessSubscriptionTransitionField extends BusinessField {
             return false;
         }
 
-        final BusinessSubscriptionTransitionField that = (BusinessSubscriptionTransitionField) o;
+        final BusinessSubscriptionTransitionTagModelDao that = (BusinessSubscriptionTransitionTagModelDao) o;
 
         if (accountKey != null ? !accountKey.equals(that.accountKey) : that.accountKey != null) {
             return false;
@@ -79,9 +78,6 @@ public class BusinessSubscriptionTransitionField extends BusinessField {
         if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) {
             return false;
         }
-        if (getValue() != null ? !getValue().equals(that.getValue()) : that.getValue() != null) {
-            return false;
-        }
 
         return true;
     }
@@ -92,7 +88,6 @@ public class BusinessSubscriptionTransitionField extends BusinessField {
         result = 31 * result + (bundleId != null ? bundleId.hashCode() : 0);
         result = 31 * result + (externalKey != null ? externalKey.hashCode() : 0);
         result = 31 * result + (getName() != null ? getName().hashCode() : 0);
-        result = 31 * result + (getValue() != null ? getValue().hashCode() : 0);
         return result;
     }
 }

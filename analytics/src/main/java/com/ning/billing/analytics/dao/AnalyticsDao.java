@@ -19,13 +19,13 @@ package com.ning.billing.analytics.dao;
 import java.util.List;
 
 import com.ning.billing.analytics.api.TimeSeriesData;
-import com.ning.billing.analytics.model.BusinessAccount;
-import com.ning.billing.analytics.model.BusinessAccountTag;
-import com.ning.billing.analytics.model.BusinessInvoice;
-import com.ning.billing.analytics.model.BusinessInvoiceItem;
-import com.ning.billing.analytics.model.BusinessInvoicePayment;
-import com.ning.billing.analytics.model.BusinessOverdueStatus;
-import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
+import com.ning.billing.analytics.model.BusinessAccountModelDao;
+import com.ning.billing.analytics.model.BusinessAccountTagModelDao;
+import com.ning.billing.analytics.model.BusinessInvoiceItemModelDao;
+import com.ning.billing.analytics.model.BusinessInvoiceModelDao;
+import com.ning.billing.analytics.model.BusinessInvoicePaymentModelDao;
+import com.ning.billing.analytics.model.BusinessOverdueStatusModelDao;
+import com.ning.billing.analytics.model.BusinessSubscriptionTransitionModelDao;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 
 public interface AnalyticsDao {
@@ -34,19 +34,19 @@ public interface AnalyticsDao {
 
     TimeSeriesData getSubscriptionsCreatedOverTime(String productType, String slug, InternalTenantContext context);
 
-    BusinessAccount getAccountByKey(String accountKey, InternalTenantContext context);
+    BusinessAccountModelDao getAccountByKey(String accountKey, InternalTenantContext context);
 
-    List<BusinessSubscriptionTransition> getTransitionsByKey(String externalKey, InternalTenantContext context);
+    List<BusinessSubscriptionTransitionModelDao> getTransitionsByKey(String externalKey, InternalTenantContext context);
 
-    List<BusinessSubscriptionTransition> getTransitionsForAccount(String accountKey, InternalTenantContext context);
+    List<BusinessSubscriptionTransitionModelDao> getTransitionsForAccount(String accountKey, InternalTenantContext context);
 
-    List<BusinessInvoice> getInvoicesByKey(String accountKey, InternalTenantContext context);
+    List<BusinessInvoiceModelDao> getInvoicesByKey(String accountKey, InternalTenantContext context);
 
-    List<BusinessAccountTag> getTagsForAccount(String accountKey, InternalTenantContext context);
+    List<BusinessInvoiceItemModelDao> getInvoiceItemsForInvoice(String invoiceId, InternalTenantContext context);
 
-    List<BusinessInvoiceItem> getInvoiceItemsForInvoice(String invoiceId, InternalTenantContext context);
+    List<BusinessInvoicePaymentModelDao> getInvoicePaymentsForAccountByKey(String accountKey, InternalTenantContext context);
 
-    List<BusinessOverdueStatus> getOverdueStatusesForBundleByKey(String externalKey, InternalTenantContext context);
+    List<BusinessOverdueStatusModelDao> getOverdueStatusesForBundleByKey(String externalKey, InternalTenantContext context);
 
-    List<BusinessInvoicePayment> getInvoicePaymentsForAccountByKey(String accountKey, InternalTenantContext context);
+    List<BusinessAccountTagModelDao> getTagsForAccount(String accountKey, InternalTenantContext context);
 }

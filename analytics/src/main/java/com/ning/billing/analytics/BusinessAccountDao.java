@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.analytics.dao.BusinessAccountSqlDao;
-import com.ning.billing.analytics.model.BusinessAccount;
+import com.ning.billing.analytics.model.BusinessAccountModelDao;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.PaymentApiException;
@@ -67,11 +67,11 @@ public class BusinessAccountDao {
         try {
             account = accountApi.getAccountById(accountId, context);
         } catch (AccountApiException e) {
-            log.warn("Error encountered creating BusinessAccount", e);
+            log.warn("Error encountered creating BusinessAccountModelDao", e);
             return;
         }
 
-        final BusinessAccount bac = createBusinessAccountFromAccount(account, context);
+        final BusinessAccountModelDao bac = createBusinessAccountFromAccount(account, context);
         sqlDao.inTransaction(new Transaction<Void, BusinessAccountSqlDao>() {
             @Override
             public Void inTransaction(final BusinessAccountSqlDao transactional, final TransactionStatus status) throws Exception {
@@ -82,16 +82,16 @@ public class BusinessAccountDao {
     }
 
     // Called also from BusinessInvoiceDao and BusinessInvoicePaymentDao.
-    // Note: computing the BusinessAccount object is fairly expensive, hence should be done outside of the transaction
-    public void updateAccountInTransaction(final BusinessAccount bac, final BusinessAccountSqlDao transactional, final InternalCallContext context) {
+    // Note: computing the BusinessAccountModelDao object is fairly expensive, hence should be done outside of the transaction
+    public void updateAccountInTransaction(final BusinessAccountModelDao bac, final BusinessAccountSqlDao transactional, final InternalCallContext context) {
         log.info("ACCOUNT UPDATE " + bac);
         transactional.deleteAccount(bac.getAccountId().toString(), context);
         // Note! There is a window of doom here since we use read committed transactional level by default
         transactional.createAccount(bac, context);
     }
 
-    public BusinessAccount createBusinessAccountFromAccount(final Account account, final InternalTenantContext context) {
-        final BusinessAccount bac = new BusinessAccount(account);
+    public BusinessAccountModelDao createBusinessAccountFromAccount(final Account account, final InternalTenantContext context) {
+        final BusinessAccountModelDao bac = new BusinessAccountModelDao(account);
 
         try {
             LocalDate lastInvoiceDate = bac.getLastInvoiceDate();

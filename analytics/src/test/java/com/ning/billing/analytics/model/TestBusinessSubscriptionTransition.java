@@ -43,6 +43,7 @@ import com.ning.billing.mock.MockSubscription;
 import static com.ning.billing.catalog.api.Currency.USD;
 
 public class TestBusinessSubscriptionTransition extends AnalyticsTestSuite {
+
     private BusinessSubscription prevSubscription;
     private BusinessSubscription nextSubscription;
     private BusinessSubscriptionEvent event;
@@ -53,7 +54,7 @@ public class TestBusinessSubscriptionTransition extends AnalyticsTestSuite {
     private UUID accountId;
     private String accountKey;
     private UUID subscriptionId;
-    private BusinessSubscriptionTransition transition;
+    private BusinessSubscriptionTransitionModelDao transition;
 
     private final CatalogService catalogService = Mockito.mock(CatalogService.class);
     private final Catalog catalog = Mockito.mock(Catalog.class);
@@ -82,8 +83,8 @@ public class TestBusinessSubscriptionTransition extends AnalyticsTestSuite {
         accountId = UUID.randomUUID();
         accountKey = "pierre-1234";
         subscriptionId = UUID.randomUUID();
-        transition = new BusinessSubscriptionTransition(totalOrdering, bundleId, externalKey, accountId, accountKey,
-                                                        subscriptionId, requestedTimestamp, event, prevSubscription, nextSubscription);
+        transition = new BusinessSubscriptionTransitionModelDao(totalOrdering, bundleId, externalKey, accountId, accountKey,
+                                                                subscriptionId, requestedTimestamp, event, prevSubscription, nextSubscription);
     }
 
     @Test(groups = "fast")
@@ -100,58 +101,58 @@ public class TestBusinessSubscriptionTransition extends AnalyticsTestSuite {
         Assert.assertEquals(transition, transition);
         Assert.assertTrue(transition.equals(transition));
 
-        BusinessSubscriptionTransition otherTransition;
+        BusinessSubscriptionTransitionModelDao otherTransition;
 
-        otherTransition = new BusinessSubscriptionTransition(totalOrdering, bundleId, externalKey, accountId, accountKey,
-                                                             subscriptionId, new DateTime(), event, prevSubscription, nextSubscription);
+        otherTransition = new BusinessSubscriptionTransitionModelDao(totalOrdering, bundleId, externalKey, accountId, accountKey,
+                                                                     subscriptionId, new DateTime(), event, prevSubscription, nextSubscription);
         Assert.assertTrue(!transition.equals(otherTransition));
 
-        otherTransition = new BusinessSubscriptionTransition(totalOrdering, bundleId, "12345", accountId, accountKey,
-                                                             subscriptionId, requestedTimestamp, event, prevSubscription, nextSubscription);
+        otherTransition = new BusinessSubscriptionTransitionModelDao(totalOrdering, bundleId, "12345", accountId, accountKey,
+                                                                     subscriptionId, requestedTimestamp, event, prevSubscription, nextSubscription);
         Assert.assertTrue(!transition.equals(otherTransition));
 
-        otherTransition = new BusinessSubscriptionTransition(totalOrdering, bundleId, externalKey, accountId, accountKey,
-                                                             subscriptionId, requestedTimestamp, event, prevSubscription, prevSubscription);
+        otherTransition = new BusinessSubscriptionTransitionModelDao(totalOrdering, bundleId, externalKey, accountId, accountKey,
+                                                                     subscriptionId, requestedTimestamp, event, prevSubscription, prevSubscription);
         Assert.assertTrue(!transition.equals(otherTransition));
 
-        otherTransition = new BusinessSubscriptionTransition(totalOrdering, bundleId, externalKey, accountId, accountKey,
-                                                             subscriptionId, requestedTimestamp, event, nextSubscription, nextSubscription);
+        otherTransition = new BusinessSubscriptionTransitionModelDao(totalOrdering, bundleId, externalKey, accountId, accountKey,
+                                                                     subscriptionId, requestedTimestamp, event, nextSubscription, nextSubscription);
         Assert.assertTrue(!transition.equals(otherTransition));
 
-        otherTransition = new BusinessSubscriptionTransition(totalOrdering, bundleId, externalKey, accountId, accountKey,
-                                                             subscriptionId, requestedTimestamp, event, nextSubscription, prevSubscription);
+        otherTransition = new BusinessSubscriptionTransitionModelDao(totalOrdering, bundleId, externalKey, accountId, accountKey,
+                                                                     subscriptionId, requestedTimestamp, event, nextSubscription, prevSubscription);
         Assert.assertTrue(!transition.equals(otherTransition));
     }
 
     @Test(groups = "fast")
     public void testRejectInvalidTransitions() throws Exception {
         try {
-            new BusinessSubscriptionTransition(null, bundleId, externalKey, accountId, accountKey,
-                                               subscriptionId, requestedTimestamp, event, prevSubscription, nextSubscription);
+            new BusinessSubscriptionTransitionModelDao(null, bundleId, externalKey, accountId, accountKey,
+                                                       subscriptionId, requestedTimestamp, event, prevSubscription, nextSubscription);
             Assert.fail();
         } catch (IllegalArgumentException e) {
             Assert.assertTrue(true);
         }
 
         try {
-            new BusinessSubscriptionTransition(totalOrdering, bundleId, null, accountId, accountKey,
-                                               subscriptionId, requestedTimestamp, event, prevSubscription, nextSubscription);
+            new BusinessSubscriptionTransitionModelDao(totalOrdering, bundleId, null, accountId, accountKey,
+                                                       subscriptionId, requestedTimestamp, event, prevSubscription, nextSubscription);
             Assert.fail();
         } catch (IllegalArgumentException e) {
             Assert.assertTrue(true);
         }
 
         try {
-            new BusinessSubscriptionTransition(totalOrdering, bundleId, externalKey, accountId, accountKey,
-                                               subscriptionId, null, event, prevSubscription, nextSubscription);
+            new BusinessSubscriptionTransitionModelDao(totalOrdering, bundleId, externalKey, accountId, accountKey,
+                                                       subscriptionId, null, event, prevSubscription, nextSubscription);
             Assert.fail();
         } catch (IllegalArgumentException e) {
             Assert.assertTrue(true);
         }
 
         try {
-            new BusinessSubscriptionTransition(totalOrdering, bundleId, externalKey, accountId, accountKey,
-                                               subscriptionId, requestedTimestamp, null, prevSubscription, nextSubscription);
+            new BusinessSubscriptionTransitionModelDao(totalOrdering, bundleId, externalKey, accountId, accountKey,
+                                                       subscriptionId, requestedTimestamp, null, prevSubscription, nextSubscription);
             Assert.fail();
         } catch (IllegalArgumentException e) {
             Assert.assertTrue(true);

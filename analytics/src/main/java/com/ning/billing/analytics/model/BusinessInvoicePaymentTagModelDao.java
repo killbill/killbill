@@ -18,23 +18,24 @@ package com.ning.billing.analytics.model;
 
 import java.util.UUID;
 
-public class BusinessInvoiceTag extends BusinessTag {
-    private final UUID invoiceId;
+public class BusinessInvoicePaymentTagModelDao extends BusinessTagModelDao {
 
-    public BusinessInvoiceTag(final UUID invoiceId, final String name) {
+    private final UUID paymentId;
+
+    public BusinessInvoicePaymentTagModelDao(final UUID paymentId, final String name) {
         super(name);
-        this.invoiceId = invoiceId;
+        this.paymentId = paymentId;
     }
 
-    public UUID getInvoiceId() {
-        return invoiceId;
+    public UUID getPaymentId() {
+        return paymentId;
     }
 
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
-        sb.append("BusinessInvoiceTag");
-        sb.append("{paymentId='").append(invoiceId).append('\'');
+        sb.append("BusinessPaymentTag");
+        sb.append("{paymentId='").append(paymentId).append('\'');
         sb.append(", name='").append(getName()).append('\'');
         sb.append('}');
         return sb.toString();
@@ -49,9 +50,9 @@ public class BusinessInvoiceTag extends BusinessTag {
             return false;
         }
 
-        final BusinessInvoiceTag that = (BusinessInvoiceTag) o;
+        final BusinessInvoicePaymentTagModelDao that = (BusinessInvoicePaymentTagModelDao) o;
 
-        if (invoiceId != null ? !invoiceId.equals(that.invoiceId) : that.invoiceId != null) {
+        if (paymentId != null ? !paymentId.equals(that.paymentId) : that.paymentId != null) {
             return false;
         }
         if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) {
@@ -63,7 +64,7 @@ public class BusinessInvoiceTag extends BusinessTag {
 
     @Override
     public int hashCode() {
-        int result = invoiceId != null ? invoiceId.hashCode() : 0;
+        int result = paymentId != null ? paymentId.hashCode() : 0;
         result = 31 * result + (getName() != null ? getName().hashCode() : 0);
         return result;
     }

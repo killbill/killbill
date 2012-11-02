@@ -25,9 +25,10 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.analytics.AnalyticsTestSuiteWithEmbeddedDB;
-import com.ning.billing.analytics.model.BusinessAccountField;
+import com.ning.billing.analytics.model.BusinessAccountFieldModelDao;
 
 public class TestBusinessAccountFieldSqlDao extends AnalyticsTestSuiteWithEmbeddedDB {
+
     private BusinessAccountFieldSqlDao accountFieldSqlDao;
 
     @BeforeMethod(groups = "slow")
@@ -49,11 +50,11 @@ public class TestBusinessAccountFieldSqlDao extends AnalyticsTestSuiteWithEmbedd
 
         // Add an entry
         Assert.assertEquals(accountFieldSqlDao.addField(accountId.toString(), accountKey, name, value, internalCallContext), 1);
-        final List<BusinessAccountField> fieldsForAccount = accountFieldSqlDao.getFieldsForAccountByKey(accountKey, internalCallContext);
+        final List<BusinessAccountFieldModelDao> fieldsForAccount = accountFieldSqlDao.getFieldsForAccountByKey(accountKey, internalCallContext);
         Assert.assertEquals(fieldsForAccount.size(), 1);
 
         // Retrieve it
-        final BusinessAccountField accountField = fieldsForAccount.get(0);
+        final BusinessAccountFieldModelDao accountField = fieldsForAccount.get(0);
         Assert.assertEquals(accountField.getAccountId(), accountId);
         Assert.assertEquals(accountField.getAccountKey(), accountKey);
         Assert.assertEquals(accountField.getName(), name);

@@ -14,22 +14,20 @@
  * under the License.
  */
 
-package com.ning.billing.analytics.model;
+package com.ning.billing.analytics.api;
 
-public abstract class BusinessField {
-    private final String name;
-    private final String value;
+import com.ning.billing.ObjectType;
+import com.ning.billing.util.entity.Entity;
 
-    public BusinessField(final String name, final String value) {
-        this.name = name;
-        this.value = value;
-    }
+public interface BusinessTag extends Entity {
 
-    public String getName() {
-        return name;
-    }
+    /**
+     * @return applicable object type
+     */
+    public ObjectType getObjectType();
 
-    public String getValue() {
-        return value;
-    }
+    /**
+     * @return tag name
+     */
+    public String getName();
 }

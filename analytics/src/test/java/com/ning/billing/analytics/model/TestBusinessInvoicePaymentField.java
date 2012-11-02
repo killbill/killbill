@@ -24,14 +24,15 @@ import org.testng.annotations.Test;
 import com.ning.billing.analytics.AnalyticsTestSuite;
 
 public class TestBusinessInvoicePaymentField extends AnalyticsTestSuite {
+
     @Test(groups = "fast")
     public void testEquals() throws Exception {
         final UUID paymentId = UUID.randomUUID();
         final String name = UUID.randomUUID().toString();
         final String value = UUID.randomUUID().toString();
-        final BusinessInvoicePaymentField invoiceField = new BusinessInvoicePaymentField(paymentId,
-                                                                                         name,
-                                                                                         value);
+        final BusinessInvoicePaymentFieldModelDao invoiceField = new BusinessInvoicePaymentFieldModelDao(paymentId,
+                                                                                                         name,
+                                                                                                         value);
         Assert.assertSame(invoiceField, invoiceField);
         Assert.assertEquals(invoiceField, invoiceField);
         Assert.assertTrue(invoiceField.equals(invoiceField));
@@ -39,9 +40,9 @@ public class TestBusinessInvoicePaymentField extends AnalyticsTestSuite {
         Assert.assertEquals(invoiceField.getName(), name);
         Assert.assertEquals(invoiceField.getValue(), value);
 
-        final BusinessInvoicePaymentField otherInvoicePaymentField = new BusinessInvoicePaymentField(UUID.randomUUID(),
-                                                                                                     UUID.randomUUID().toString(),
-                                                                                                     UUID.randomUUID().toString());
+        final BusinessInvoicePaymentFieldModelDao otherInvoicePaymentField = new BusinessInvoicePaymentFieldModelDao(UUID.randomUUID(),
+                                                                                                                     UUID.randomUUID().toString(),
+                                                                                                                     UUID.randomUUID().toString());
         Assert.assertFalse(invoiceField.equals(otherInvoicePaymentField));
     }
 }

@@ -30,17 +30,19 @@ import org.skife.jdbi.v2.sqlobject.Binder;
 import org.skife.jdbi.v2.sqlobject.BinderFactory;
 import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
 
-import com.ning.billing.analytics.model.BusinessInvoice;
+import com.ning.billing.analytics.model.BusinessInvoiceModelDao;
 import com.ning.billing.analytics.utils.Rounder;
 
 @BindingAnnotation(BusinessInvoiceBinder.BinBinderFactory.class)
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.PARAMETER})
 public @interface BusinessInvoiceBinder {
+
     public static class BinBinderFactory implements BinderFactory {
+
         public Binder build(final Annotation annotation) {
-            return new Binder<BusinessInvoiceBinder, BusinessInvoice>() {
-                public void bind(final SQLStatement q, final BusinessInvoiceBinder bind, final BusinessInvoice invoice) {
+            return new Binder<BusinessInvoiceBinder, BusinessInvoiceModelDao>() {
+                public void bind(final SQLStatement q, final BusinessInvoiceBinder bind, final BusinessInvoiceModelDao invoice) {
                     q.bind("invoice_id", invoice.getInvoiceId().toString());
 
                     if (invoice.getInvoiceNumber() != null) {

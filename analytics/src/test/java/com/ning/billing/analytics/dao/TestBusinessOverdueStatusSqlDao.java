@@ -26,9 +26,10 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.analytics.AnalyticsTestSuiteWithEmbeddedDB;
-import com.ning.billing.analytics.model.BusinessOverdueStatus;
+import com.ning.billing.analytics.model.BusinessOverdueStatusModelDao;
 
 public class TestBusinessOverdueStatusSqlDao extends AnalyticsTestSuiteWithEmbeddedDB {
+
     private BusinessOverdueStatusSqlDao overdueStatusSqlDao;
 
     @BeforeMethod(groups = "slow")
@@ -42,7 +43,7 @@ public class TestBusinessOverdueStatusSqlDao extends AnalyticsTestSuiteWithEmbed
         final String accountKey = UUID.randomUUID().toString();
         final UUID bundleId = UUID.randomUUID();
         final String externalKey = UUID.randomUUID().toString();
-        final BusinessOverdueStatus firstOverdueStatus = createOverdueStatus(accountKey, bundleId, externalKey);
+        final BusinessOverdueStatusModelDao firstOverdueStatus = createOverdueStatus(accountKey, bundleId, externalKey);
 
         // Verify initial state
         Assert.assertEquals(overdueStatusSqlDao.getOverdueStatusesForBundleByKey(externalKey, internalCallContext).size(), 0);
@@ -55,7 +56,7 @@ public class TestBusinessOverdueStatusSqlDao extends AnalyticsTestSuiteWithEmbed
         Assert.assertEquals(overdueStatusSqlDao.getOverdueStatusesForBundleByKey(externalKey, internalCallContext).get(0), firstOverdueStatus);
 
         // Add a second one
-        final BusinessOverdueStatus secondOverdueStatus = createOverdueStatus(accountKey, bundleId, externalKey);
+        final BusinessOverdueStatusModelDao secondOverdueStatus = createOverdueStatus(accountKey, bundleId, externalKey);
         Assert.assertEquals(overdueStatusSqlDao.createOverdueStatus(secondOverdueStatus, internalCallContext), 1);
 
         // Retrieve both
@@ -74,11 +75,11 @@ public class TestBusinessOverdueStatusSqlDao extends AnalyticsTestSuiteWithEmbed
         }
     }
 
-    private BusinessOverdueStatus createOverdueStatus(final String accountKey, final UUID bundleId, final String externalKey) {
+    private BusinessOverdueStatusModelDao createOverdueStatus(final String accountKey, final UUID bundleId, final String externalKey) {
         final DateTime endDate = new DateTime(DateTimeZone.UTC);
         final DateTime startDate = new DateTime(DateTimeZone.UTC);
         final String status = UUID.randomUUID().toString();
 
-        return new BusinessOverdueStatus(accountKey, bundleId, endDate, externalKey, startDate, status);
+        return new BusinessOverdueStatusModelDao(accountKey, bundleId, endDate, externalKey, startDate, status);
     }
 }

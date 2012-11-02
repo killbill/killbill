@@ -20,7 +20,10 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
-public class BusinessOverdueStatus {
+import com.ning.billing.util.entity.EntityBase;
+
+public class BusinessOverdueStatusModelDao extends EntityBase {
+
     private final String accountKey;
     private final UUID bundleId;
     private final String externalKey;
@@ -28,8 +31,8 @@ public class BusinessOverdueStatus {
     private final DateTime startDate;
     private final DateTime endDate;
 
-    public BusinessOverdueStatus(final String accountKey, final UUID bundleId, final DateTime endDate,
-                                 final String externalKey, final DateTime startDate, final String status) {
+    public BusinessOverdueStatusModelDao(final String accountKey, final UUID bundleId, final DateTime endDate,
+                                         final String externalKey, final DateTime startDate, final String status) {
         this.accountKey = accountKey;
         this.bundleId = bundleId;
         this.endDate = endDate;
@@ -65,7 +68,7 @@ public class BusinessOverdueStatus {
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
-        sb.append("BusinessOverdueStatus");
+        sb.append("BusinessOverdueStatusModelDao");
         sb.append("{accountKey=").append(accountKey);
         sb.append(", bundleId='").append(bundleId).append('\'');
         sb.append(", endDate='").append(endDate).append('\'');
@@ -85,7 +88,7 @@ public class BusinessOverdueStatus {
             return false;
         }
 
-        final BusinessOverdueStatus that = (BusinessOverdueStatus) o;
+        final BusinessOverdueStatusModelDao that = (BusinessOverdueStatusModelDao) o;
 
         if (accountKey != null ? !accountKey.equals(that.accountKey) : that.accountKey != null) {
             return false;

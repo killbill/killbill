@@ -31,19 +31,21 @@ import org.skife.jdbi.v2.sqlobject.Binder;
 import org.skife.jdbi.v2.sqlobject.BinderFactory;
 import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
 
-import com.ning.billing.analytics.model.BusinessInvoicePayment;
+import com.ning.billing.analytics.model.BusinessInvoicePaymentModelDao;
 import com.ning.billing.analytics.utils.Rounder;
 
 @BindingAnnotation(BusinessInvoicePaymentBinder.BipBinderFactory.class)
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.PARAMETER})
 public @interface BusinessInvoicePaymentBinder {
+
     public static class BipBinderFactory implements BinderFactory {
+
         @Override
         public Binder build(final Annotation annotation) {
-            return new Binder<BusinessInvoicePaymentBinder, BusinessInvoicePayment>() {
+            return new Binder<BusinessInvoicePaymentBinder, BusinessInvoicePaymentModelDao>() {
                 @Override
-                public void bind(final SQLStatement q, final BusinessInvoicePaymentBinder bind, final BusinessInvoicePayment invoicePayment) {
+                public void bind(final SQLStatement q, final BusinessInvoicePaymentBinder bind, final BusinessInvoicePaymentModelDao invoicePayment) {
                     q.bind("payment_id", invoicePayment.getPaymentId().toString());
 
                     final DateTime dateTimeNow = new DateTime(DateTimeZone.UTC);

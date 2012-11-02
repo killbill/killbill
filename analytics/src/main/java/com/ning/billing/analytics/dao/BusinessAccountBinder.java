@@ -30,26 +30,28 @@ import org.skife.jdbi.v2.sqlobject.Binder;
 import org.skife.jdbi.v2.sqlobject.BinderFactory;
 import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
 
-import com.ning.billing.analytics.model.BusinessAccount;
+import com.ning.billing.analytics.model.BusinessAccountModelDao;
 
 @BindingAnnotation(BusinessAccountBinder.BacBinderFactory.class)
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.PARAMETER})
 public @interface BusinessAccountBinder {
+
     public static class BacBinderFactory implements BinderFactory {
+
         public Binder build(final Annotation annotation) {
-            return new Binder<BusinessAccountBinder, BusinessAccount>() {
-                public void bind(final SQLStatement q, final BusinessAccountBinder bind, final BusinessAccount account) {
+            return new Binder<BusinessAccountBinder, BusinessAccountModelDao>() {
+                public void bind(final SQLStatement q, final BusinessAccountBinder bind, final BusinessAccountModelDao account) {
                     final DateTime dateTimeNow = new DateTime(DateTimeZone.UTC);
 
-                    if (account.getCreatedDt() != null) {
-                        q.bind("created_date", account.getCreatedDt().getMillis());
+                    if (account.getCreatedDate() != null) {
+                        q.bind("created_date", account.getCreatedDate().getMillis());
                     } else {
                         q.bind("created_date", dateTimeNow.getMillis());
                     }
 
-                    if (account.getUpdatedDt() != null) {
-                        q.bind("updated_date", account.getUpdatedDt().getMillis());
+                    if (account.getUpdatedDate() != null) {
+                        q.bind("updated_date", account.getUpdatedDate().getMillis());
                     } else {
                         q.bind("updated_date", dateTimeNow.getMillis());
                     }

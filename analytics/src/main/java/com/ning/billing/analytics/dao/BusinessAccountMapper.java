@@ -26,14 +26,14 @@ import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import com.ning.billing.analytics.model.BusinessAccount;
+import com.ning.billing.analytics.model.BusinessAccountModelDao;
 import com.ning.billing.util.dao.MapperBase;
 
-public class BusinessAccountMapper extends MapperBase implements ResultSetMapper<BusinessAccount> {
+public class BusinessAccountMapper extends MapperBase implements ResultSetMapper<BusinessAccountModelDao> {
 
     @Override
-    public BusinessAccount map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
-        return new BusinessAccount(
+    public BusinessAccountModelDao map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
+        return new BusinessAccountModelDao(
                 UUID.fromString(r.getString(1)),
                 r.getString(2),
                 r.getString(6),

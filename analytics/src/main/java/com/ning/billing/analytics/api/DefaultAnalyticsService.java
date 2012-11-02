@@ -19,12 +19,14 @@ package com.ning.billing.analytics.api;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
 import com.ning.billing.analytics.AnalyticsListener;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.util.svcsapi.bus.InternalBus;
 
+import com.google.inject.Inject;
+
 public class DefaultAnalyticsService implements AnalyticsService {
+
     private static final Logger log = LoggerFactory.getLogger(DefaultAnalyticsService.class);
 
     private static final String ANALYTICS_SERVICE = "analytics-service";

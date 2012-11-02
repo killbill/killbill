@@ -26,7 +26,7 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 
-import com.ning.billing.analytics.model.BusinessInvoice;
+import com.ning.billing.analytics.model.BusinessInvoiceModelDao;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.InternalTenantContextBinder;
@@ -36,19 +36,19 @@ import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 public interface BusinessInvoiceSqlDao extends Transactional<BusinessInvoiceSqlDao>, Transmogrifier {
 
     @SqlQuery
-    BusinessInvoice getInvoice(@Bind("invoice_id") final String invoiceId,
-                               @InternalTenantContextBinder final InternalTenantContext context);
+    BusinessInvoiceModelDao getInvoice(@Bind("invoice_id") final String invoiceId,
+                                       @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
-    List<BusinessInvoice> getInvoicesForAccount(@Bind("account_id") final String accountId,
-                                                @InternalTenantContextBinder final InternalTenantContext context);
+    List<BusinessInvoiceModelDao> getInvoicesForAccount(@Bind("account_id") final String accountId,
+                                                        @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
-    List<BusinessInvoice> getInvoicesForAccountByKey(@Bind("account_key") final String accountKey,
-                                                     @InternalTenantContextBinder final InternalTenantContext context);
+    List<BusinessInvoiceModelDao> getInvoicesForAccountByKey(@Bind("account_key") final String accountKey,
+                                                             @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlUpdate
-    int createInvoice(@BusinessInvoiceBinder final BusinessInvoice invoice,
+    int createInvoice(@BusinessInvoiceBinder final BusinessInvoiceModelDao invoice,
                       @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
