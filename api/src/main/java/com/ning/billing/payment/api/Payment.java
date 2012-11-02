@@ -50,7 +50,7 @@ public interface Payment extends Entity {
 
     public String getExtSecondPaymentIdRef();
 
-    public interface PaymentAttempt {
+    public interface PaymentAttempt extends Entity {
 
         public UUID getId();
 

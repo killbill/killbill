@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2012 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -20,14 +20,17 @@ public enum ObjectType {
     ACCOUNT("account"),
     ACCOUNT_EMAIL("account email"),
     BUNDLE("subscription bundle"),
+    CUSTOM_FIELD("custom field"),
     INVOICE("invoice"),
     PAYMENT("payment"),
     INVOICE_ITEM("invoice item"),
     INVOICE_PAYMENT("invoice payment"),
     SUBSCRIPTION("subscription"),
     SUBSCRIPTION_EVENT("subscription event"),
+    PAYMENT_ATTEMPT("payment attempt"),
     PAYMENT_METHOD("payment method"),
     REFUND("refund"),
+    TAG("tag"),
     TAG_DEFINITION("tag definition"),
     TENANT("tenant");
 
