@@ -18,9 +18,9 @@ package com.ning.billing.account.api;
 
 import java.util.UUID;
 
-import com.ning.billing.util.entity.UpdatableEntity;
+import com.ning.billing.util.entity.Entity;
 
-public interface AccountEmail extends UpdatableEntity {
+public interface AccountEmail extends Entity {
 
     /**
      *

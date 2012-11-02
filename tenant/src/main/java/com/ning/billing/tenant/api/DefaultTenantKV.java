@@ -16,12 +16,19 @@
 package com.ning.billing.tenant.api;
 
 
-public class DefaultTenantKV  implements TenantKV {
+import java.util.UUID;
+
+import org.joda.time.DateTime;
+
+import com.ning.billing.util.entity.EntityBase;
+
+public class DefaultTenantKV  extends EntityBase implements TenantKV {
 
     private final String key;
     private final String value;
 
-    public DefaultTenantKV(final String key, final String value) {
+    public DefaultTenantKV(final UUID id, final String key, final String value, final DateTime createdDate, final DateTime updatedDate) {
+        super(id, createdDate, updatedDate);
         this.key = key;
         this.value = value;
     }

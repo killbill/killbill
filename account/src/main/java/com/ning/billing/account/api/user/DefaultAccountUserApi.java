@@ -19,8 +19,6 @@ package com.ning.billing.account.api.user;
 import java.util.List;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
-
 import org.joda.time.DateTime;
 
 import com.ning.billing.ErrorCode;
@@ -101,23 +99,16 @@ public class DefaultAccountUserApi implements AccountUserApi {
 
     @Override
     public void updateAccount(final Account account, final CallContext context) throws AccountApiException {
-        try {
-            accountDao.update(account, internalCallContextFactory.createInternalCallContext(account.getId(), context));
-        } catch (EntityPersistenceException e) {
-            throw new AccountApiException(e, ErrorCode.ACCOUNT_UPDATE_FAILED);
-        }
+        accountDao.update(account, internalCallContextFactory.createInternalCallContext(account.getId(), context));
+
     }
 
     @Override
     public void updateAccount(final UUID accountId, final AccountData accountData, final CallContext context)
             throws AccountApiException {
         final Account account = new DefaultAccount(accountId, accountData);
+        accountDao.update(account, internalCallContextFactory.createInternalCallContext(account.getId(), context));
 
-        try {
-            accountDao.update(account, internalCallContextFactory.createInternalCallContext(account.getId(), context));
-        } catch (EntityPersistenceException e) {
-            throw new AccountApiException(e, e.getCode(), e.getMessage());
-        }
     }
 
     @Override

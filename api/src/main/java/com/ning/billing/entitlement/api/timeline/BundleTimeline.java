@@ -19,12 +19,14 @@ package com.ning.billing.entitlement.api.timeline;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.util.entity.Entity;
+
 /**
  *  The interface {@code BundleTimeline} shows a view of all the entitlement events for a specific
  *  {@code SubscriptionBundle}.
  *
  */
-public interface BundleTimeline {
+public interface BundleTimeline extends Entity {
 
     /**
      *
@@ -36,7 +38,7 @@ public interface BundleTimeline {
      *
      * @return the unique id for the {@SubscriptionBundle}
      */
-    UUID getBundleId();
+    UUID getId();
 
     /**
      *

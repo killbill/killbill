@@ -93,7 +93,7 @@ public class TestBundleJsonWithSubscriptions extends JaxrsTestSuite {
         final BundleTimeline bundleTimeline = Mockito.mock(BundleTimeline.class);
         final UUID bundleId = UUID.randomUUID();
         final String externalKey = UUID.randomUUID().toString();
-        Mockito.when(bundleTimeline.getBundleId()).thenReturn(bundleId);
+        Mockito.when(bundleTimeline.getId()).thenReturn(bundleId);
         Mockito.when(bundleTimeline.getExternalKey()).thenReturn(externalKey);
         Mockito.when(bundleTimeline.getSubscriptions()).thenReturn(ImmutableList.<SubscriptionTimeline>of(subscriptionTimeline));
 
@@ -118,7 +118,7 @@ public class TestBundleJsonWithSubscriptions extends JaxrsTestSuite {
         final BundleTimeline bundle = Mockito.mock(BundleTimeline.class);
         final UUID bundleId = UUID.randomUUID();
         final String externalKey = UUID.randomUUID().toString();
-        Mockito.when(bundle.getBundleId()).thenReturn(bundleId);
+        Mockito.when(bundle.getId()).thenReturn(bundleId);
         Mockito.when(bundle.getExternalKey()).thenReturn(externalKey);
 
         final BundleJsonWithSubscriptions bundleJsonWithSubscriptions = new BundleJsonWithSubscriptions(bundle, null,

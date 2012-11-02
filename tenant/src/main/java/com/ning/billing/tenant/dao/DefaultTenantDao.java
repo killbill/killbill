@@ -115,7 +115,7 @@ public class DefaultTenantDao implements TenantDao {
 
     @Override
     public void addTenantKeyValue(final String key, final String value, final InternalCallContext context) {
-        tenantKVSqlDao.insertTenantKeyValue(key, value, context.getTenantRecordId(), context);
+        tenantKVSqlDao.insertTenantKeyValue(UUID.randomUUID().toString(), key, value, context.getTenantRecordId(), context);
     }
 
     @Override

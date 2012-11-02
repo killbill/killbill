@@ -19,6 +19,7 @@ CREATE UNIQUE INDEX tenants_api_key ON tenants(api_key);
 DROP TABLE IF EXISTS tenant_kvs;
 CREATE TABLE tenant_kvs (
    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
+   id char(36) NOT NULL,
    tenant_record_id int(11) unsigned default null,
    t_key varchar(64) NOT NULL,
    t_value varchar(1024) NOT NULL,

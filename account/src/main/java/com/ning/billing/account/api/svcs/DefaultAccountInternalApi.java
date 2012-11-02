@@ -57,25 +57,21 @@ public class DefaultAccountInternalApi implements AccountInternalApi {
 
     @Override
     public Account getAccountByRecordId(final Long recordId,
-            final InternalTenantContext context) throws AccountApiException {
+                                        final InternalTenantContext context) throws AccountApiException {
         return accountDao.getByRecordId(recordId, context);
     }
 
     @Override
     public void updateAccount(final String externalKey, final AccountData accountData,
-            final InternalCallContext context) throws AccountApiException {
+                              final InternalCallContext context) throws AccountApiException {
         final Account account = getAccountByKey(externalKey, context);
-        try {
-            final Account updatedAccount = new DefaultAccount(account.getId(), accountData);
-            accountDao.update(updatedAccount,context);
-        } catch (final EntityPersistenceException e) {
-            throw new AccountApiException(e, ErrorCode.ACCOUNT_UPDATE_FAILED);
-        }
+        final Account updatedAccount = new DefaultAccount(account.getId(), accountData);
+        accountDao.update(updatedAccount, context);
     }
 
     @Override
     public List<AccountEmail> getEmails(final UUID accountId,
-            final InternalTenantContext context)  {
+                                        final InternalTenantContext context) {
         return accountEmailDao.getEmails(accountId, context);
     }
 
@@ -97,7 +93,7 @@ public class DefaultAccountInternalApi implements AccountInternalApi {
 
     @Override
     public void updatePaymentMethod(final UUID accountId, final UUID paymentMethodId,
-            final InternalCallContext context) throws AccountApiException {
+                                    final InternalCallContext context) throws AccountApiException {
         try {
             accountDao.updatePaymentMethod(accountId, paymentMethodId, context);
         } catch (final EntityPersistenceException e) {

@@ -75,7 +75,7 @@ public class TestDefaultAuditUserApi extends AuditLogsTestBase {
         final List<BundleTimeline> bundles = new ArrayList<BundleTimeline>();
         for (final UUID objectId : objectIds) {
             final BundleTimeline entity = Mockito.mock(BundleTimeline.class);
-            Mockito.when(entity.getBundleId()).thenReturn(objectId);
+            Mockito.when(entity.getId()).thenReturn(objectId);
             bundles.add(entity);
         }
 

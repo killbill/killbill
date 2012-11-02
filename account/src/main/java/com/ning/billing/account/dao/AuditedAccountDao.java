@@ -123,9 +123,9 @@ public class AuditedAccountDao implements AccountDao {
                     accountSqlDao.insertAuditFromTransaction(audit, rehydratedContext);
 
                     final AccountCreationInternalEvent creationEvent = new DefaultAccountCreationEvent(account,
-                            rehydratedContext.getUserToken(),
-                            context.getAccountRecordId(),
-                            context.getTenantRecordId());
+                                                                                                       rehydratedContext.getUserToken(),
+                                                                                                       context.getAccountRecordId(),
+                                                                                                       context.getTenantRecordId());
                     try {
                         eventBus.postFromTransaction(creationEvent, transactionalDao, rehydratedContext);
                     } catch (final EventBusException e) {
@@ -145,54 +145,47 @@ public class AuditedAccountDao implements AccountDao {
         }
     }
 
-    @Override
-    public void update(final Account specifiedAccount, final InternalCallContext context) throws EntityPersistenceException {
-        try {
-            accountSqlDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
-                @Override
-                public Void inTransaction(final AccountSqlDao transactional, final TransactionStatus status) throws EntityPersistenceException, InternalBus.EventBusException {
-                    final UUID accountId = specifiedAccount.getId();
-                    final Account currentAccount = transactional.getById(accountId.toString(), context);
-                    if (currentAccount == null) {
-                        throw new EntityPersistenceException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, accountId);
-                    }
+    public void update(final Account specifiedAccount, final InternalCallContext context) {
 
-                    // Set unspecified (null) fields to their current values
-                    final Account account = specifiedAccount.mergeWithDelegate(currentAccount);
-
-                    transactional.update(account, context);
-
-                    final Long recordId = accountSqlDao.getRecordId(accountId.toString(), context);
-                    final EntityHistory<Account> history = new EntityHistory<Account>(accountId, recordId, account, ChangeType.UPDATE);
-                    accountSqlDao.insertHistoryFromTransaction(history, context);
-
-                    final Long historyRecordId = accountSqlDao.getHistoryRecordId(recordId, context);
-                    final EntityAudit audit = new EntityAudit(TableName.ACCOUNT_HISTORY, historyRecordId, ChangeType.UPDATE);
-                    accountSqlDao.insertAuditFromTransaction(audit, context);
-
-                    final AccountChangeInternalEvent changeEvent = new DefaultAccountChangeEvent(accountId,
-                            context.getUserToken(),
-                            currentAccount,
-                            account,
-                            context.getAccountRecordId(),
-                            context.getTenantRecordId());
-                    if (changeEvent.hasChanges()) {
-                        try {
-                            eventBus.postFromTransaction(changeEvent, transactional, context);
-                        } catch (final EventBusException e) {
-                            log.warn("Failed to post account change event for account " + accountId, e);
-                        }
-                    }
-                    return null;
+        accountSqlDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
+            @Override
+            public Void inTransaction(final AccountSqlDao transactional, final TransactionStatus status) throws EntityPersistenceException, InternalBus.EventBusException {
+                final UUID accountId = specifiedAccount.getId();
+                final Account currentAccount = transactional.getById(accountId.toString(), context);
+                if (currentAccount == null) {
+                    throw new EntityPersistenceException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, accountId);
                 }
-            });
-        } catch (final RuntimeException re) {
-            if (re.getCause() instanceof EntityPersistenceException) {
-                throw (EntityPersistenceException) re.getCause();
-            } else {
-                throw re;
+
+                // Set unspecified (null) fields to their current values
+                final Account account = specifiedAccount.mergeWithDelegate(currentAccount);
+
+                transactional.update(account, context);
+
+                final Long recordId = accountSqlDao.getRecordId(accountId.toString(), context);
+                final EntityHistory<Account> history = new EntityHistory<Account>(accountId, recordId, account, ChangeType.UPDATE);
+                accountSqlDao.insertHistoryFromTransaction(history, context);
+
+                final Long historyRecordId = accountSqlDao.getHistoryRecordId(recordId, context);
+                final EntityAudit audit = new EntityAudit(TableName.ACCOUNT_HISTORY, historyRecordId, ChangeType.UPDATE);
+                accountSqlDao.insertAuditFromTransaction(audit, context);
+
+                final AccountChangeInternalEvent changeEvent = new DefaultAccountChangeEvent(accountId,
+                                                                                             context.getUserToken(),
+                                                                                             currentAccount,
+                                                                                             account,
+                                                                                             context.getAccountRecordId(),
+                                                                                             context.getTenantRecordId());
+                if (changeEvent.hasChanges()) {
+                    try {
+                        eventBus.postFromTransaction(changeEvent, transactional, context);
+                    } catch (final EventBusException e) {
+                        log.warn("Failed to post account change event for account " + accountId, e);
+                    }
+                }
+                return null;
             }
-        }
+        });
+
     }
 
     @Override
@@ -225,7 +218,7 @@ public class AuditedAccountDao implements AccountDao {
                     accountSqlDao.insertAuditFromTransaction(audit, context);
 
                     final AccountChangeInternalEvent changeEvent = new DefaultAccountChangeEvent(accountId, context.getUserToken(), currentAccount, account,
-                            context.getAccountRecordId(), context.getTenantRecordId());
+                                                                                                 context.getAccountRecordId(), context.getTenantRecordId());
 
                     if (changeEvent.hasChanges()) {
                         try {

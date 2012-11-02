@@ -22,6 +22,7 @@ import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
+import com.ning.billing.util.entity.Entity;
 
 /**
  * The interface {@code} shows a view of all the events for a particular {@code Subscription}.
@@ -29,13 +30,7 @@ import com.ning.billing.entitlement.api.SubscriptionTransitionType;
  * It can be used to display information, or it can be used to modify the entitlement stream of events
  * and 'repair' the stream by versioning the events.
  */
-public interface SubscriptionTimeline {
-
-    /**
-     *
-     * @return the unique id for that {@code Subscription}
-     */
-    public UUID getId();
+public interface SubscriptionTimeline extends Entity {
 
     /**
      *

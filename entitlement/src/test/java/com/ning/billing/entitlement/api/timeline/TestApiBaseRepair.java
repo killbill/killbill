@@ -41,13 +41,16 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import static org.testng.Assert.assertEquals;
 
 public abstract class TestApiBaseRepair extends TestApiBase {
+
     protected static final Logger log = LoggerFactory.getLogger(TestApiBaseRepair.class);
 
     public interface TestWithExceptionCallback {
+
         public void doTest() throws EntitlementRepairException, EntitlementUserApiException;
     }
 
     public static class TestWithException {
+
         public void withException(final TestWithExceptionCallback callback, final ErrorCode code) throws Exception {
             try {
                 callback.doTest();
@@ -63,6 +66,16 @@ public abstract class TestApiBaseRepair extends TestApiBase {
             @Override
             public UUID getId() {
                 return id;
+            }
+
+            @Override
+            public DateTime getCreatedDate() {
+                return null;
+            }
+
+            @Override
+            public DateTime getUpdatedDate() {
+                return null;
             }
 
             @Override
@@ -100,8 +113,18 @@ public abstract class TestApiBaseRepair extends TestApiBase {
             }
 
             @Override
-            public UUID getBundleId() {
+            public UUID getId() {
                 return bundleId;
+            }
+
+            @Override
+            public DateTime getCreatedDate() {
+                return null;
+            }
+
+            @Override
+            public DateTime getUpdatedDate() {
+                return null;
             }
 
             @Override

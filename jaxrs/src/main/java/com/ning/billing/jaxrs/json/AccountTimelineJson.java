@@ -82,7 +82,7 @@ public class AccountTimelineJson {
         final StringBuilder tmp = new StringBuilder();
         for (final UUID cur : b) {
             for (final BundleTimeline bt : bundles) {
-                if (bt.getBundleId().equals(cur)) {
+                if (bt.getId().equals(cur)) {
                     if (!first) {
                         tmp.append(",");
                     }
@@ -120,7 +120,7 @@ public class AccountTimelineJson {
         this.account = new AccountJsonSimple(account.getId().toString(), account.getExternalKey());
         this.bundles = new LinkedList<BundleJsonWithSubscriptions>();
         for (final BundleTimeline bundle : bundles) {
-            final List<AuditLog> bundleAuditLogs = bundlesAuditLogs.get(bundle.getBundleId());
+            final List<AuditLog> bundleAuditLogs = bundlesAuditLogs.get(bundle.getId());
             final BundleJsonWithSubscriptions jsonWithSubscriptions = new BundleJsonWithSubscriptions(bundle, bundleAuditLogs,
                                                                                                       subscriptionsAuditLogs, subscriptionEventsAuditLogs);
             this.bundles.add(jsonWithSubscriptions);

@@ -201,6 +201,8 @@ public class AuditedEntitlementDao implements EntitlementDao {
             public Void inTransaction(final SubscriptionSqlDao transactionalDao, final TransactionStatus status) throws Exception {
                 final String subscriptionId = subscription.getId().toString();
                 transactionalDao.updateChargedThroughDate(subscription.getId().toString(), ctd, context);
+
+
                 final Long subscriptionRecordId = transactionalDao.getRecordId(subscriptionId, context);
                 final EntityAudit subscriptionAudit = new EntityAudit(TableName.SUBSCRIPTIONS, subscriptionRecordId, ChangeType.UPDATE);
                 transactionalDao.insertAuditFromTransaction(subscriptionAudit, context);

@@ -22,8 +22,9 @@ import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.util.entity.Entity;
 
-public interface Blockable {
+public interface Blockable extends Entity {
 
     public enum Type {
         ACCOUNT,
@@ -71,6 +72,7 @@ public interface Blockable {
         }
     }
 
+    @Override
     public UUID getId();
 
     public BlockingState getBlockingState();
