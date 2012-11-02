@@ -2,6 +2,7 @@ DROP TABLE IF EXISTS blocking_states;
 CREATE TABLE blocking_states (
     record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
     id char(36) NOT NULL,
+    blockable_id char(36) NOT NULL,
     type varchar(20) NOT NULL,
     state varchar(50) NOT NULL,
     service varchar(20) NOT NULL,
@@ -13,5 +14,5 @@ CREATE TABLE blocking_states (
     tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)
 ) ENGINE=innodb;
-CREATE INDEX blocking_states_id ON blocking_states(id);
+CREATE INDEX blocking_states_id ON blocking_states(blockable_id);
 CREATE INDEX blocking_states_tenant_account_record_id ON blocking_states(tenant_record_id, account_record_id);

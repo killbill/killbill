@@ -22,9 +22,11 @@ import org.joda.time.DateTime;
 
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.BlockingState;
+import com.ning.billing.util.entity.Entity;
+import com.ning.billing.util.entity.EntityBase;
 
 
-public class DefaultBlockingState implements BlockingState {
+public class DefaultBlockingState extends EntityBase implements BlockingState {
 
     public static final String CLEAR_STATE_NAME = "__KILLBILL__CLEAR__OVERDUE_STATE__";
 
@@ -46,34 +48,18 @@ public class DefaultBlockingState implements BlockingState {
         return clearState;
     }
 
-    public DefaultBlockingState(final UUID blockingId,
-                                final String stateName,
-                                final Blockable.Type type,
-                                final String service,
-                                final boolean blockChange,
-                                final boolean blockEntitlement,
-                                final boolean blockBilling
-                               ) {
-        this(blockingId,
-             stateName,
-             type,
-             service,
-             blockChange,
-             blockEntitlement,
-             blockBilling,
-             null);
-    }
 
-    public DefaultBlockingState(final UUID blockingId,
+    public DefaultBlockingState(final UUID id,
+                                final UUID blockingId,
                                 final String stateName,
                                 final Blockable.Type type,
                                 final String service,
                                 final boolean blockChange,
                                 final boolean blockEntitlement,
                                 final boolean blockBilling,
-                                final DateTime timestamp
-                               ) {
-        super();
+                                final DateTime timestamp,
+                                final DateTime createDate) {
+        super(id, createDate, null);
         this.blockingId = blockingId;
         this.stateName = stateName;
         this.service = service;
@@ -83,6 +69,26 @@ public class DefaultBlockingState implements BlockingState {
         this.type = type;
         this.timestamp = timestamp;
     }
+
+    public DefaultBlockingState(final UUID blockingId,
+                                 final String stateName,
+                                 final Blockable.Type type,
+                                 final String service,
+                                 final boolean blockChange,
+                                 final boolean blockEntitlement,
+                                 final boolean blockBilling) {
+        this(UUID.randomUUID(),
+             blockingId,
+             stateName,
+             type,
+             service,
+             blockChange,
+             blockEntitlement,
+             blockBilling,
+             null,
+             null);
+    }
+
 
     public UUID getBlockedId() {
         return blockingId;
@@ -245,6 +251,4 @@ public class DefaultBlockingState implements BlockingState {
                 + service + ", blockChange=" + blockChange + ", blockEntitlement=" + blockEntitlement
                 + ", blockBilling=" + blockBilling + ", timestamp=" + timestamp + "]";
     }
-
-
 }

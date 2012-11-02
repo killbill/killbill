@@ -6,6 +6,7 @@ AND_CHECK_TENANT() ::= "AND <CHECK_TENANT()>"
 getBlockingStateFor() ::= <<
     select
         id
+      , blockable_id
       , state
       , type
       , service
@@ -15,7 +16,7 @@ getBlockingStateFor() ::= <<
       , created_date
       , tenant_record_id
     from blocking_states
-    where id = :id
+    where blockable_id = :blockable_id
     <AND_CHECK_TENANT()>
     -- We want the current state, hence the order desc and limit 1
     order by created_date desc, record_id desc
@@ -26,6 +27,7 @@ getBlockingStateFor() ::= <<
 getBlockingHistoryFor() ::= <<
     select
        id
+      , blockable_id
       , state
       , type
       , service
@@ -35,7 +37,7 @@ getBlockingHistoryFor() ::= <<
       , created_date
       , tenant_record_id
     from blocking_states
-    where id = :id
+    where blockable_id = :blockable_id
     <AND_CHECK_TENANT()>
     -- We want the history in order
     order by created_date asc, record_id asc
@@ -45,6 +47,7 @@ getBlockingHistoryFor() ::= <<
 setBlockingState() ::= <<
     insert into blocking_states (
        id
+      , blockable_id
       , state
       , type
       , service
@@ -56,6 +59,7 @@ setBlockingState() ::= <<
       , tenant_record_id
     ) values (
         :id
+      , :blockable_id
       , :state
       , :type
       , :service

@@ -86,6 +86,7 @@ public interface BlockingStateSqlDao extends BlockingStateDao, CloseMe, Transmog
         public BlockingState map(final int index, final ResultSet r, final StatementContext ctx)
                 throws SQLException {
 
+            final UUID id;
             final DateTime timestamp;
             final UUID blockableId;
             final String stateName;
@@ -94,19 +95,24 @@ public interface BlockingStateSqlDao extends BlockingStateDao, CloseMe, Transmog
             final boolean blockEntitlement;
             final boolean blockBilling;
             final Type type;
+            DateTime createdDate;
+            DateTime updatedDate;
+
             try {
+                id = UUID.fromString(r.getString("id"));
                 timestamp = getDateTime(r, "created_date");
-                blockableId = UUID.fromString(r.getString("id"));
+                blockableId = UUID.fromString(r.getString("blockable_id"));
                 stateName = r.getString("state") == null ? DefaultBlockingState.CLEAR_STATE_NAME : r.getString("state");
                 type = Type.get(r.getString("type"));
                 service = r.getString("service");
                 blockChange = r.getBoolean("block_change");
                 blockEntitlement = r.getBoolean("block_entitlement");
                 blockBilling = r.getBoolean("block_billing");
+                createdDate = getDateTime(r, "created_date");
             } catch (BlockingApiException e) {
                 throw new SQLException(e);
             }
-            return new DefaultBlockingState(blockableId, stateName, type, service, blockChange, blockEntitlement, blockBilling, timestamp);
+            return new DefaultBlockingState(id, blockableId, stateName, type, service, blockChange, blockEntitlement, blockBilling, timestamp, createdDate);
         }
     }
 
@@ -123,7 +129,8 @@ public interface BlockingStateSqlDao extends BlockingStateDao, CloseMe, Transmog
 
         @Override
         public void bind(@SuppressWarnings("rawtypes") final SQLStatement stmt, final Bind bind, final DefaultBlockingState state) {
-            stmt.bind("id", state.getBlockedId().toString());
+            stmt.bind("id", state.getId().toString());
+            stmt.bind("blockable_id", state.getBlockedId().toString());
             stmt.bind("state", state.getStateName().toString());
             stmt.bind("type", state.getType().toString());
             stmt.bind("service", state.getService().toString());
@@ -137,7 +144,7 @@ public interface BlockingStateSqlDao extends BlockingStateDao, CloseMe, Transmog
 
         @Override
         public void bind(@SuppressWarnings("rawtypes") final SQLStatement stmt, final Bind bind, final UUID id) {
-            stmt.bind("id", id.toString());
+            stmt.bind("blockable_id", id.toString());
         }
     }
 
@@ -145,7 +152,7 @@ public interface BlockingStateSqlDao extends BlockingStateDao, CloseMe, Transmog
 
         @Override
         public void bind(@SuppressWarnings("rawtypes") final SQLStatement stmt, final Bind bind, final Blockable overdueable) {
-            stmt.bind("id", overdueable.getId().toString());
+            stmt.bind("blockable_id", overdueable.getId().toString());
         }
     }
 

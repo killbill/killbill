@@ -72,7 +72,7 @@ public class TestDefaultBlockingApi extends JunctionTestSuiteWithEmbeddedDB {
             }
         });
 
-        final BlockingState blockingState = new DefaultBlockingState(bundleId, "BLOCKED", Type.SUBSCRIPTION_BUNDLE, "myService", true, true, true, internalCallContext.getCreatedDate());
+        final BlockingState blockingState = new DefaultBlockingState(UUID.randomUUID(), bundleId, "BLOCKED", Type.SUBSCRIPTION_BUNDLE, "myService", true, true, true, internalCallContext.getCreatedDate(), null);
         blockingApi.setBlockingState(blockingState, internalCallContext);
 
         // Verify the blocking state was applied
