@@ -16,8 +16,6 @@
 
 package com.ning.billing.payment.core;
 
-import static com.ning.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR_NAMED;
-
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -65,6 +63,8 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.name.Named;
+
+import static com.ning.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR_NAMED;
 
 public class RefundProcessor extends ProcessorBase {
 
@@ -174,7 +174,7 @@ public class RefundProcessor extends ProcessorBase {
                                              paymentId, refundInfo.getAmount(), account.getCurrency(),
                                              isAdjusted, refundInfo.getCreatedDate());
                 } catch (PaymentPluginApiException e) {
-                    throw new PaymentApiException(ErrorCode.PAYMENT_CREATE_REFUND, account.getId(), e.getMessage());
+                    throw new PaymentApiException(ErrorCode.PAYMENT_CREATE_REFUND, account.getId(), e.getErrorMessage());
                 } catch (InvoiceApiException e) {
                     throw new PaymentApiException(e);
                 }
