@@ -41,5 +41,5 @@ public interface AccountDao extends EntityDao<Account> {
      */
     public void updatePaymentMethod(UUID accountId, UUID paymentMethodId, InternalCallContext context) throws EntityPersistenceException;
 
-    public void update(Account account, InternalCallContext context);
+    public void update(Account account, InternalCallContext context) throws EntityPersistenceException;
 }

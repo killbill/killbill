@@ -64,9 +64,13 @@ public class DefaultAccountInternalApi implements AccountInternalApi {
     @Override
     public void updateAccount(final String externalKey, final AccountData accountData,
                               final InternalCallContext context) throws AccountApiException {
-        final Account account = getAccountByKey(externalKey, context);
-        final Account updatedAccount = new DefaultAccount(account.getId(), accountData);
-        accountDao.update(updatedAccount, context);
+        try {
+            final Account account = getAccountByKey(externalKey, context);
+            final Account updatedAccount = new DefaultAccount(account.getId(), accountData);
+            accountDao.update(updatedAccount, context);
+        } catch (EntityPersistenceException e) {
+            throw new AccountApiException(e, ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID);
+        }
     }
 
     @Override

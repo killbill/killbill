@@ -99,16 +99,25 @@ public class DefaultAccountUserApi implements AccountUserApi {
 
     @Override
     public void updateAccount(final Account account, final CallContext context) throws AccountApiException {
-        accountDao.update(account, internalCallContextFactory.createInternalCallContext(account.getId(), context));
+        try {
+            accountDao.update(account, internalCallContextFactory.createInternalCallContext(account.getId(), context));
+        } catch (EntityPersistenceException e) {
+            throw new AccountApiException(e, ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, account.getId());
+        }
 
     }
 
     @Override
     public void updateAccount(final UUID accountId, final AccountData accountData, final CallContext context)
             throws AccountApiException {
-        final Account account = new DefaultAccount(accountId, accountData);
-        accountDao.update(account, internalCallContextFactory.createInternalCallContext(account.getId(), context));
-
+        try {
+            final Account account = new DefaultAccount(accountId, accountData);
+            accountDao.update(account, internalCallContextFactory.createInternalCallContext(account.getId(), context));
+        } catch (EntityPersistenceException e) {
+            throw new AccountApiException(e, ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID);
+        } catch (RuntimeException e /* EntityPersistenceException */) {
+            throw new AccountApiException(e, ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, accountId);
+        }
     }
 
     @Override

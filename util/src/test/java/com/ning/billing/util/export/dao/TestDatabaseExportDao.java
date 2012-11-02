@@ -61,11 +61,13 @@ public class TestDatabaseExportDao extends UtilTestSuiteWithEmbeddedDB {
         getMysqlTestingHelper().getDBI().withHandle(new HandleCallback<Void>() {
             @Override
             public Void withHandle(final Handle handle) throws Exception {
+                handle.execute("drop table if exists " + tableNameA);
                 handle.execute("create table " + tableNameA + "(record_id int(11) unsigned not null auto_increment," +
                                "a_column char default 'a'," +
                                "account_record_id int(11) unsigned not null," +
                                "tenant_record_id int(11) unsigned default 0," +
                                "primary key(record_id)) engine=innodb;");
+                handle.execute("drop table if exists " + tableNameB);
                 handle.execute("create table " + tableNameB + "(record_id int(11) unsigned not null auto_increment," +
                                "b_column char default 'b'," +
                                "account_record_id int(11) unsigned not null," +
