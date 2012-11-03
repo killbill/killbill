@@ -24,14 +24,12 @@ import org.joda.time.DateTime;
 
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.overdue.OverdueState;
+import com.ning.billing.util.entity.EntityBase;
 
-public class SubscriptionBundleData implements SubscriptionBundle {
+public class SubscriptionBundleData extends EntityBase implements SubscriptionBundle {
 
-    private final UUID id;
     private final String key;
     private final UUID accountId;
-    private final DateTime createdDate;
-    private final DateTime updatedDate;
     private final DateTime lastSysTimeUpdate;
     private final OverdueState<SubscriptionBundle> overdueState;
 
@@ -44,35 +42,17 @@ public class SubscriptionBundleData implements SubscriptionBundle {
     }
 
     public SubscriptionBundleData(final UUID id, final String key, final UUID accountId, final DateTime lastSysUpdate, @Nullable final OverdueState<SubscriptionBundle> overdueState) {
-        this.id = id;
+        // TODO add column in bundles table
+        super(id, null, null);
         this.key = key;
         this.accountId = accountId;
         this.lastSysTimeUpdate = lastSysUpdate;
         this.overdueState = overdueState;
-
-        // TODO add column in bundles table
-        createdDate = null;
-        updatedDate = null;
     }
 
     @Override
     public String getKey() {
         return key;
-    }
-
-    @Override
-    public UUID getId() {
-        return id;
-    }
-
-    @Override
-    public DateTime getCreatedDate() {
-        return createdDate;
-    }
-
-    @Override
-    public DateTime getUpdatedDate() {
-        return updatedDate;
     }
 
     @Override

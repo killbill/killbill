@@ -18,9 +18,8 @@ package com.ning.billing.util.entity.dao;
 
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.entity.EntityPersistenceException;
-import com.ning.billing.util.entity.UpdatableEntity;
 
-public interface UpdatableEntityDao<T extends UpdatableEntity> extends EntityDao<T> {
+public interface UpdatableEntityDao<T> extends EntityDao {
 
     public void update(T entity, InternalCallContext context) throws EntityPersistenceException;
 }

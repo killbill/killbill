@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.entitlement.api.timeline;
 
 import java.util.ArrayList;
@@ -38,6 +39,7 @@ import com.ning.billing.entitlement.events.phase.PhaseEvent;
 import com.ning.billing.entitlement.events.user.ApiEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 
+
 public class DefaultSubscriptionTimeline implements SubscriptionTimeline {
 
     private final UUID id;
@@ -58,12 +60,12 @@ public class DefaultSubscriptionTimeline implements SubscriptionTimeline {
         this.id = input.getId();
         this.activeVersion = input.getActiveVersion();
         this.existingEvents = (input.getExistingEvents() != null) ? new ArrayList<SubscriptionTimeline.ExistingEvent>(input.getExistingEvents()) :
-                Collections.<SubscriptionTimeline.ExistingEvent>emptyList();
+                              Collections.<SubscriptionTimeline.ExistingEvent>emptyList();
         sortExistingEvent(this.existingEvents);
         this.deletedEvents = (input.getDeletedEvents() != null) ? new ArrayList<SubscriptionTimeline.DeletedEvent>(input.getDeletedEvents()) :
-                Collections.<SubscriptionTimeline.DeletedEvent>emptyList();
+                             Collections.<SubscriptionTimeline.DeletedEvent>emptyList();
         this.newEvents = (input.getNewEvents() != null) ? new ArrayList<SubscriptionTimeline.NewEvent>(input.getNewEvents()) :
-                Collections.<SubscriptionTimeline.NewEvent>emptyList();
+                         Collections.<SubscriptionTimeline.NewEvent>emptyList();
         sortNewEvent(this.newEvents);
     }
 
@@ -261,6 +263,16 @@ public class DefaultSubscriptionTimeline implements SubscriptionTimeline {
     @Override
     public UUID getId() {
         return id;
+    }
+
+    @Override
+    public DateTime getCreatedDate() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public DateTime getUpdatedDate() {
+        throw new UnsupportedOperationException();
     }
 
     @Override

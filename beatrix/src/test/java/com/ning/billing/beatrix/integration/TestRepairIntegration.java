@@ -181,6 +181,16 @@ public class TestRepairIntegration extends TestIntegrationBase {
             }
 
             @Override
+            public DateTime getCreatedDate() {
+                return null;
+            }
+
+            @Override
+            public DateTime getUpdatedDate() {
+                return null;
+            }
+
+            @Override
             public List<NewEvent> getNewEvents() {
                 return newEvents;
             }
@@ -216,8 +226,18 @@ public class TestRepairIntegration extends TestIntegrationBase {
             }
 
             @Override
-            public UUID getBundleId() {
+            public UUID getId() {
                 return bundleId;
+            }
+
+            @Override
+            public DateTime getCreatedDate() {
+                return null;
+            }
+
+            @Override
+            public DateTime getUpdatedDate() {
+                return null;
             }
 
             @Override

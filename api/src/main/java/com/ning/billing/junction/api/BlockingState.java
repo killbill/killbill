@@ -18,8 +18,10 @@ package com.ning.billing.junction.api;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.util.entity.Entity;
 
-public interface BlockingState extends Comparable<BlockingState> {
+
+public interface BlockingState extends Entity, Comparable<BlockingState> {
 
     public abstract String getStateName();
 

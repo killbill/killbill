@@ -16,7 +16,9 @@
 package com.ning.billing.tenant.api;
 
 
-public interface TenantKV {
+import com.ning.billing.util.entity.Entity;
+
+public interface TenantKV extends Entity {
 
     public String getKey();
 

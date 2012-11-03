@@ -225,8 +225,8 @@ public class TestBillingApi extends JunctionTestSuite {
         final Account account = createAccount(32);
 
         final List<BlockingState> blockingStates = new ArrayList<BlockingState>();
-        blockingStates.add(new DefaultBlockingState(bunId, DISABLED_BUNDLE, Blockable.Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now.plusDays(1)));
-        blockingStates.add(new DefaultBlockingState(bunId, CLEAR_BUNDLE, Blockable.Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now.plusDays(2)));
+        blockingStates.add(new DefaultBlockingState(UUID.randomUUID(), bunId, DISABLED_BUNDLE, Blockable.Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now.plusDays(1), null));
+        blockingStates.add(new DefaultBlockingState(UUID.randomUUID(),bunId, CLEAR_BUNDLE, Blockable.Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now.plusDays(2), null));
 
         final BlockingCalculator blockingCal = new BlockingCalculator(new BlockingInternalApi() {
             @Override

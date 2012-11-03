@@ -50,10 +50,10 @@ public class BundleJsonWithSubscriptions extends BundleJsonSimple {
 
     public BundleJsonWithSubscriptions(final BundleTimeline bundle, final List<AuditLog> auditLogs,
                                        final Map<UUID, List<AuditLog>> subscriptionsAuditLogs, final Map<UUID, List<AuditLog>> subscriptionEventsAuditLogs) {
-        super(bundle.getBundleId(), bundle.getExternalKey(), auditLogs);
+        super(bundle.getId(), bundle.getExternalKey(), auditLogs);
         this.subscriptions = new LinkedList<SubscriptionJsonWithEvents>();
         for (final SubscriptionTimeline subscriptionTimeline : bundle.getSubscriptions()) {
-            this.subscriptions.add(new SubscriptionJsonWithEvents(bundle.getBundleId(), subscriptionTimeline,
+            this.subscriptions.add(new SubscriptionJsonWithEvents(bundle.getId(), subscriptionTimeline,
                                                                   subscriptionsAuditLogs.get(subscriptionTimeline.getId()), subscriptionEventsAuditLogs));
         }
     }

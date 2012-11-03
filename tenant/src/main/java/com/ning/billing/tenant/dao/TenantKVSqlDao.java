@@ -18,7 +18,9 @@ package com.ning.billing.tenant.dao;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
@@ -44,7 +46,7 @@ public interface TenantKVSqlDao extends Transactional<TenantKVSqlDao> {
     public List<TenantKV> getTenantValueForKey(@Bind("key") final String key, @Bind("tenantRecordId") Long tenantRecordId);
 
     @SqlUpdate
-    public void insertTenantKeyValue(@Bind("key") final String key, @Bind("value") final String value, @Bind("tenantRecordId") Long tenantRecordId, @InternalTenantContextBinder final InternalCallContext context);
+    public void insertTenantKeyValue(@Bind("id") String id, @Bind("key") final String key, @Bind("value") final String value, @Bind("tenantRecordId") Long tenantRecordId, @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
     public void deleteTenantKey(@Bind("key") final String key, @Bind("tenantRecordId") Long tenantRecordId);
@@ -54,9 +56,12 @@ public interface TenantKVSqlDao extends Transactional<TenantKVSqlDao> {
 
         @Override
         public TenantKV map(final int index, final ResultSet result, final StatementContext context) throws SQLException {
+            final UUID id = getUUID(result, "id");
             final String key = result.getString("t_key");
             final String value = result.getString("t_value");
-            return new DefaultTenantKV(key, value);
+            final DateTime createdDate = getDateTime(result, "created_date");
+            final DateTime updatedDate = getDateTime(result, "updated_date");
+            return new DefaultTenantKV(id, key, value, createdDate, updatedDate);
         }
     }
 }

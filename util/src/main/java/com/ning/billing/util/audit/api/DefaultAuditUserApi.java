@@ -69,7 +69,7 @@ public class DefaultAuditUserApi implements AuditUserApi {
         final Map<UUID, List<AuditLog>> subscriptionsAuditLogs = new HashMap<UUID, List<AuditLog>>();
         final Map<UUID, List<AuditLog>> subscriptionEventsAuditLogs = new HashMap<UUID, List<AuditLog>>();
         for (final BundleTimeline bundle : bundles) {
-            bundlesAuditLogs.put(bundle.getBundleId(), getAuditLogs(bundle.getBundleId(), ObjectType.BUNDLE, auditLevel, context));
+            bundlesAuditLogs.put(bundle.getId(), getAuditLogs(bundle.getId(), ObjectType.BUNDLE, auditLevel, context));
             for (final SubscriptionTimeline subscriptionTimeline : bundle.getSubscriptions()) {
                 subscriptionsAuditLogs.put(subscriptionTimeline.getId(), getAuditLogs(subscriptionTimeline.getId(), ObjectType.SUBSCRIPTION, auditLevel, context));
                 for (final ExistingEvent event : subscriptionTimeline.getExistingEvents()) {

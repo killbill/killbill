@@ -23,9 +23,10 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.entity.EntityPersistenceException;
+import com.ning.billing.util.entity.dao.EntityDao;
 import com.ning.billing.util.entity.dao.UpdatableEntityDao;
 
-public interface AccountDao extends UpdatableEntityDao<Account> {
+public interface AccountDao extends EntityDao<Account> {
 
     public Account getAccountByKey(String key, InternalTenantContext context);
 
@@ -39,4 +40,6 @@ public interface AccountDao extends UpdatableEntityDao<Account> {
      * @param paymentMethodId the is of the current default paymentMethod
      */
     public void updatePaymentMethod(UUID accountId, UUID paymentMethodId, InternalCallContext context) throws EntityPersistenceException;
+
+    public void update(Account account, InternalCallContext context) throws EntityPersistenceException;
 }

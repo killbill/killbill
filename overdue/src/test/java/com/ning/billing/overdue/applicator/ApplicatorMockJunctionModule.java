@@ -85,6 +85,20 @@ public class ApplicatorMockJunctionModule extends MockJunctionModule {
                     return null;
                 }
 
+                @Override
+                public UUID getId() {
+                    return UUID.randomUUID();
+                }
+
+                @Override
+                public DateTime getCreatedDate() {
+                    return null;
+                }
+
+                @Override
+                public DateTime getUpdatedDate() {
+                    return null;
+                }
             };
         }
 
