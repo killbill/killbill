@@ -34,13 +34,13 @@ public class TestStringTemplateInheritance extends UtilTestSuite {
     InputStream entityStream;
     InputStream kombuchaStream;
 
-    @BeforeMethod
+    @BeforeMethod(groups = "fast")
     public void setUp() throws Exception {
         entityStream = this.getClass().getResourceAsStream("/com/ning/billing/util/dao/EntitySqlDao.sql.stg");
         kombuchaStream = this.getClass().getResourceAsStream("/com/ning/billing/util/dao/Kombucha.sql.stg");
     }
 
-    @AfterMethod
+    @AfterMethod(groups = "fast")
     public void tearDown() throws Exception {
         if (entityStream != null) {
             entityStream.close();
