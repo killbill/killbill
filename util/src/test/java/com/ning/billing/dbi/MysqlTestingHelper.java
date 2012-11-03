@@ -247,7 +247,7 @@ public class MysqlTestingHelper {
         dbi.withHandle(new HandleCallback<Void>() {
             @Override
             public Void withHandle(final Handle handle) throws Exception {
-                log.info("Executing DDL script: " + ddl);
+                log.debug("Executing DDL script: " + ddl);
                 handle.createScript(ddl).execute();
                 return null;
             }
