@@ -21,8 +21,6 @@ import java.util.List;
 import java.util.UUID;
 
 import org.skife.jdbi.v2.IDBI;
-import org.skife.jdbi.v2.Transaction;
-import org.skife.jdbi.v2.TransactionStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,14 +29,14 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.user.DefaultAccountChangeEvent;
 import com.ning.billing.account.api.user.DefaultAccountCreationEvent;
-import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.dao.EntityAudit;
-import com.ning.billing.util.dao.EntityHistory;
-import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.EntityPersistenceException;
+import com.ning.billing.util.entity.dao.EntitySqlDao;
+import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
+import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
+import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import com.ning.billing.util.events.AccountChangeInternalEvent;
 import com.ning.billing.util.events.AccountCreationInternalEvent;
 import com.ning.billing.util.svcsapi.bus.InternalBus;
@@ -50,6 +48,7 @@ public class AuditedAccountDao implements AccountDao {
 
     private static final Logger log = LoggerFactory.getLogger(AuditedAccountDao.class);
 
+    private final EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao;
     private final AccountSqlDao accountSqlDao;
     private final InternalBus eventBus;
     private final InternalCallContextFactory internalCallContextFactory;
@@ -59,6 +58,7 @@ public class AuditedAccountDao implements AccountDao {
         this.eventBus = eventBus;
         this.accountSqlDao = dbi.onDemand(AccountSqlDao.class);
         this.internalCallContextFactory = internalCallContextFactory;
+        transactionalSqlDao = new EntitySqlDaoTransactionalJdbiWrapper(dbi);
     }
 
     @Override
@@ -99,9 +99,11 @@ public class AuditedAccountDao implements AccountDao {
     public void create(final Account account, final InternalCallContext context) throws EntityPersistenceException {
         final String key = account.getExternalKey();
         try {
-            accountSqlDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
+            transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
                 @Override
-                public Void inTransaction(final AccountSqlDao transactionalDao, final TransactionStatus status) throws AccountApiException, InternalBus.EventBusException {
+                public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws AccountApiException, InternalBus.EventBusException {
+                    final AccountSqlDao transactionalDao = entitySqlDaoWrapperFactory.become(AccountSqlDao.class);
+
                     final Account currentAccount = transactionalDao.getAccountByKey(key, context);
                     if (currentAccount != null) {
                         throw new AccountApiException(ErrorCode.ACCOUNT_ALREADY_EXISTS, key);
@@ -113,19 +115,10 @@ public class AuditedAccountDao implements AccountDao {
                     // We need to re-hydrate the context with the account record id
                     final InternalCallContext rehydratedContext = internalCallContextFactory.createInternalCallContext(recordId, context);
 
-                    // Insert history
-                    final EntityHistory<Account> history = new EntityHistory<Account>(account.getId(), recordId, account, ChangeType.INSERT);
-                    accountSqlDao.insertHistoryFromTransaction(history, rehydratedContext);
-
-                    // Insert audit
-                    final Long historyRecordId = accountSqlDao.getHistoryRecordId(recordId, rehydratedContext);
-                    final EntityAudit audit = new EntityAudit(TableName.ACCOUNT_HISTORY, historyRecordId, ChangeType.INSERT);
-                    accountSqlDao.insertAuditFromTransaction(audit, rehydratedContext);
-
                     final AccountCreationInternalEvent creationEvent = new DefaultAccountCreationEvent(account,
-                            rehydratedContext.getUserToken(),
-                            context.getAccountRecordId(),
-                            context.getTenantRecordId());
+                                                                                                       rehydratedContext.getUserToken(),
+                                                                                                       context.getAccountRecordId(),
+                                                                                                       context.getTenantRecordId());
                     try {
                         eventBus.postFromTransaction(creationEvent, transactionalDao, rehydratedContext);
                     } catch (final EventBusException e) {
@@ -148,9 +141,11 @@ public class AuditedAccountDao implements AccountDao {
     @Override
     public void update(final Account specifiedAccount, final InternalCallContext context) throws EntityPersistenceException {
         try {
-            accountSqlDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
+            transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
                 @Override
-                public Void inTransaction(final AccountSqlDao transactional, final TransactionStatus status) throws EntityPersistenceException, InternalBus.EventBusException {
+                public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws EntityPersistenceException, InternalBus.EventBusException {
+                    final AccountSqlDao transactional = entitySqlDaoWrapperFactory.become(AccountSqlDao.class);
+
                     final UUID accountId = specifiedAccount.getId();
                     final Account currentAccount = transactional.getById(accountId.toString(), context);
                     if (currentAccount == null) {
@@ -161,14 +156,6 @@ public class AuditedAccountDao implements AccountDao {
                     final Account account = specifiedAccount.mergeWithDelegate(currentAccount);
 
                     transactional.update(account, context);
-
-                    final Long recordId = accountSqlDao.getRecordId(accountId.toString(), context);
-                    final EntityHistory<Account> history = new EntityHistory<Account>(accountId, recordId, account, ChangeType.UPDATE);
-                    accountSqlDao.insertHistoryFromTransaction(history, context);
-
-                    final Long historyRecordId = accountSqlDao.getHistoryRecordId(recordId, context);
-                    final EntityAudit audit = new EntityAudit(TableName.ACCOUNT_HISTORY, historyRecordId, ChangeType.UPDATE);
-                    accountSqlDao.insertAuditFromTransaction(audit, context);
 
                     final AccountChangeInternalEvent changeEvent = new DefaultAccountChangeEvent(accountId,
                             context.getUserToken(),
@@ -203,9 +190,10 @@ public class AuditedAccountDao implements AccountDao {
     @Override
     public void updatePaymentMethod(final UUID accountId, final UUID paymentMethodId, final InternalCallContext context) throws EntityPersistenceException {
         try {
-            accountSqlDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
+            transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
                 @Override
-                public Void inTransaction(final AccountSqlDao transactional, final TransactionStatus status) throws EntityPersistenceException, InternalBus.EventBusException {
+                public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws EntityPersistenceException, InternalBus.EventBusException {
+                    final AccountSqlDao transactional = entitySqlDaoWrapperFactory.become(AccountSqlDao.class);
 
                     final Account currentAccount = transactional.getById(accountId.toString(), context);
                     if (currentAccount == null) {
@@ -215,15 +203,6 @@ public class AuditedAccountDao implements AccountDao {
                     transactional.updatePaymentMethod(accountId.toString(), thePaymentMethodId, context);
 
                     final Account account = transactional.getById(accountId.toString(), context);
-
-                    final Long recordId = accountSqlDao.getRecordId(accountId.toString(), context);
-                    final EntityHistory<Account> history = new EntityHistory<Account>(accountId, recordId, account, ChangeType.UPDATE);
-                    accountSqlDao.insertHistoryFromTransaction(history, context);
-
-                    final Long historyRecordId = accountSqlDao.getHistoryRecordId(recordId, context);
-                    final EntityAudit audit = new EntityAudit(TableName.ACCOUNT_HISTORY, historyRecordId, ChangeType.UPDATE);
-                    accountSqlDao.insertAuditFromTransaction(audit, context);
-
                     final AccountChangeInternalEvent changeEvent = new DefaultAccountChangeEvent(accountId, context.getUserToken(), currentAccount, account,
                             context.getAccountRecordId(), context.getTenantRecordId());
 

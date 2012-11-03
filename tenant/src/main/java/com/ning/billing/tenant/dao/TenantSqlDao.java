@@ -21,8 +21,6 @@ import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.Mapper;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
-import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
-import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 
 import com.ning.billing.tenant.api.Tenant;
@@ -33,7 +31,7 @@ import com.ning.billing.util.entity.dao.EntitySqlDao;
 
 @ExternalizedSqlViaStringTemplate3
 @RegisterMapper({UuidMapper.class, TenantMapper.class})
-public interface TenantSqlDao extends EntitySqlDao<Tenant>, Transactional<TenantSqlDao>, Transmogrifier {
+public interface TenantSqlDao extends EntitySqlDao<Tenant> {
 
     @SqlQuery
     public Tenant getByApiKey(@Bind("apiKey") final String apiKey);

@@ -30,31 +30,32 @@ import org.skife.jdbi.v2.sqlobject.Binder;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
-import org.skife.jdbi.v2.sqlobject.mixins.CloseMe;
-import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
-import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.payment.api.PaymentStatus;
+import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 import com.ning.billing.util.dao.BinderBase;
 import com.ning.billing.util.dao.EntityHistory;
 import com.ning.billing.util.dao.MapperBase;
+import com.ning.billing.util.entity.dao.Audited;
 import com.ning.billing.util.entity.dao.UpdatableEntitySqlDao;
 
 @ExternalizedSqlViaStringTemplate3()
 @RegisterMapper(PaymentSqlDao.PaymentModelDaoMapper.class)
-public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, UpdatableEntitySqlDao<PaymentModelDao>, Transmogrifier, CloseMe {
+public interface PaymentSqlDao extends UpdatableEntitySqlDao<PaymentModelDao> {
 
     @SqlUpdate
+    @Audited(ChangeType.INSERT)
     void insertPayment(@Bind(binder = PaymentModelDaoBinder.class) final PaymentModelDao paymentInfo,
                        @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
+    @Audited(ChangeType.UPDATE)
     void updatePaymentStatusAndExtRef(@Bind("id") final String paymentId,
                                       @Bind("paymentStatus") final String paymentStatus,
                                       @Bind("extFirstPaymentRefId") final String extFirstPaymentRefId,
@@ -62,6 +63,7 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, UpdatableEn
                                       @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
+    @Audited(ChangeType.UPDATE)
     void updatePaymentAmount(@Bind("id") final String paymentId,
                              @Bind("amount") final BigDecimal amount,
                              @InternalTenantContextBinder final InternalCallContext context);

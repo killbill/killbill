@@ -29,10 +29,7 @@ import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.Binder;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
-import org.skife.jdbi.v2.sqlobject.customizers.Mapper;
-import org.skife.jdbi.v2.sqlobject.mixins.CloseMe;
-import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
-import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
+import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
@@ -40,39 +37,45 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
+import com.ning.billing.entitlement.engine.dao.SubscriptionSqlDao.SubscriptionMapper;
+import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.InternalTenantContextBinder;
-import com.ning.billing.util.dao.AuditSqlDao;
 import com.ning.billing.util.dao.BinderBase;
 import com.ning.billing.util.dao.MapperBase;
+import com.ning.billing.util.entity.dao.Audited;
+import com.ning.billing.util.entity.dao.EntitySqlDao;
 
 @ExternalizedSqlViaStringTemplate3()
-public interface SubscriptionSqlDao extends Transactional<SubscriptionSqlDao>, AuditSqlDao, CloseMe, Transmogrifier {
+@RegisterMapper(SubscriptionMapper.class)
+public interface SubscriptionSqlDao extends EntitySqlDao<Subscription> {
 
     @SqlUpdate
+    @Audited(ChangeType.INSERT)
     public void insertSubscription(@Bind(binder = SubscriptionBinder.class) SubscriptionData sub,
                                    @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlQuery
-    @Mapper(SubscriptionMapper.class)
     public Subscription getSubscriptionFromId(@Bind("id") String id,
                                               @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
-    @Mapper(SubscriptionMapper.class)
     public List<Subscription> getSubscriptionsFromBundleId(@Bind("bundleId") String bundleId,
                                                            @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlUpdate
+    @Audited(ChangeType.UPDATE)
     public void updateChargedThroughDate(@Bind("id") String id, @Bind("chargedThroughDate") Date chargedThroughDate,
                                          @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
+    @Audited(ChangeType.UPDATE)
     void updateActiveVersion(@Bind("id") String id, @Bind("activeVersion") long activeVersion,
                              @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
+    @Audited(ChangeType.UPDATE)
     public void updateForRepair(@Bind("id") String id, @Bind("activeVersion") long activeVersion,
                                 @Bind("startDate") Date startDate,
                                 @Bind("bundleStartDate") Date bundleStartDate,
@@ -93,7 +96,7 @@ public interface SubscriptionSqlDao extends Transactional<SubscriptionSqlDao>, A
         }
     }
 
-    public static class SubscriptionMapper extends MapperBase implements ResultSetMapper<SubscriptionData> {
+    public static class SubscriptionMapper extends MapperBase implements ResultSetMapper<Subscription> {
 
         @Override
         public SubscriptionData map(final int arg0, final ResultSet r, final StatementContext ctx)

@@ -30,31 +30,30 @@ import org.skife.jdbi.v2.sqlobject.Binder;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
-import org.skife.jdbi.v2.sqlobject.mixins.CloseMe;
-import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
-import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
+import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.InternalTenantContextBinder;
-import com.ning.billing.util.dao.AuditSqlDao;
 import com.ning.billing.util.dao.BinderBase;
 import com.ning.billing.util.dao.MapperBase;
+import com.ning.billing.util.entity.dao.Audited;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 
 @ExternalizedSqlViaStringTemplate3()
 @RegisterMapper(BundleSqlDao.ISubscriptionBundleSqlMapper.class)
-public interface BundleSqlDao extends Transactional<BundleSqlDao>, EntitySqlDao<SubscriptionBundle>,
-                                      AuditSqlDao, CloseMe, Transmogrifier {
+public interface BundleSqlDao extends EntitySqlDao<SubscriptionBundle> {
     @SqlUpdate
+    @Audited(ChangeType.INSERT)
     public void insertBundle(@Bind(binder = SubscriptionBundleBinder.class) SubscriptionBundleData bundle,
                              @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
+    @Audited(ChangeType.UPDATE)
     public void updateBundleLastSysTime(@Bind("id") String id,
                                         @Bind("lastSysUpdateDate") Date lastSysUpdate,
                                         @InternalTenantContextBinder final InternalCallContext context);

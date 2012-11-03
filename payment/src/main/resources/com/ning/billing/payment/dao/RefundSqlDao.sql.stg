@@ -65,6 +65,18 @@ getRecordId() ::= <<
     ;
 >>
 
+getByRecordId() ::= <<
+    SELECT <refundFields()>
+    FROM refunds
+    WHERE record_id = :recordId <AND_CHECK_TENANT()>;
+>>
+
+getById() ::= <<
+    SELECT <refundFields()>
+    FROM refunds
+    WHERE id = :id <AND_CHECK_TENANT()>;
+>>
+
 historyFields(prefix) ::= <<
     <prefix>record_id,
     <prefix>id,

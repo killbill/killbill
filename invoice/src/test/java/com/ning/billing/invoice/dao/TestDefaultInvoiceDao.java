@@ -37,6 +37,7 @@ import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.tag.dao.MockTagDao;
 import com.ning.billing.util.tag.dao.MockTagDefinitionDao;
@@ -56,7 +57,7 @@ public class TestDefaultInvoiceDao extends InvoiceTestSuite {
         invoiceSqlDao = Mockito.mock(InvoiceSqlDao.class);
         Mockito.when(idbi.onDemand(InvoiceSqlDao.class)).thenReturn(invoiceSqlDao);
         Mockito.when(invoiceSqlDao.getById(Mockito.anyString(), Mockito.<InternalTenantContext>any())).thenReturn(Mockito.mock(Invoice.class));
-        Mockito.when(invoiceSqlDao.inTransaction(Mockito.<Transaction<Void, InvoiceSqlDao>>any())).thenAnswer(new Answer() {
+        Mockito.when(invoiceSqlDao.inTransaction(Mockito.<Transaction<Void, EntitySqlDao<Invoice>>>any())).thenAnswer(new Answer() {
             @Override
             public Object answer(final InvocationOnMock invocation) {
                 final Object[] args = invocation.getArguments();

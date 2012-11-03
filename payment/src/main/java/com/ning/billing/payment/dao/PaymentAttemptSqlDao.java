@@ -31,29 +31,31 @@ import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.mixins.CloseMe;
-import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
-import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import com.ning.billing.payment.api.PaymentStatus;
+import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 import com.ning.billing.util.dao.BinderBase;
 import com.ning.billing.util.dao.EntityHistory;
 import com.ning.billing.util.dao.MapperBase;
+import com.ning.billing.util.entity.dao.Audited;
 import com.ning.billing.util.entity.dao.UpdatableEntitySqlDao;
 
 @ExternalizedSqlViaStringTemplate3()
 @RegisterMapper(PaymentAttemptSqlDao.PaymentAttemptModelDaoMapper.class)
-public interface PaymentAttemptSqlDao extends Transactional<PaymentAttemptSqlDao>, UpdatableEntitySqlDao<PaymentAttemptModelDao>, Transmogrifier, CloseMe {
+public interface PaymentAttemptSqlDao extends UpdatableEntitySqlDao<PaymentAttemptModelDao>, CloseMe {
 
     @SqlUpdate
+    @Audited(ChangeType.INSERT)
     void insertPaymentAttempt(@Bind(binder = PaymentAttemptModelDaoBinder.class) final PaymentAttemptModelDao attempt,
                               @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
+    @Audited(ChangeType.UPDATE)
     void updatePaymentAttemptStatus(@Bind("id") final String attemptId,
                                     @Bind("processingStatus") final String processingStatus,
                                     @Bind("gatewayErrorCode") final String gatewayErrorCode,

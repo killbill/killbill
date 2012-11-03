@@ -98,7 +98,7 @@ public enum TableName {
 
     public static TableName fromEntityClass(final Class<? extends Entity> entityClass) {
         for (final TableName tableName : values()) {
-            if (tableName.getEntityClass() != null && tableName.getEntityClass().equals(entityClass)) {
+            if (tableName.getEntityClass() != null && tableName.getEntityClass().isAssignableFrom(entityClass)) {
                 return tableName;
             }
         }

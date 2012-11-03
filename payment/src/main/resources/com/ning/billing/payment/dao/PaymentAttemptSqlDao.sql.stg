@@ -68,6 +68,32 @@ getRecordId() ::= <<
     ;
 >>
 
+getByRecordId() ::= <<
+    SELECT <paymentAttemptFields("pa.")>
+    , pa.created_date as effective_date
+    , p.account_id as account_id
+    , p.invoice_id as invoice_id
+      FROM payment_attempts pa join payments p
+     WHERE pa.record_id = :recordId
+     AND pa.payment_id = p.id
+     <AND_CHECK_TENANT("pa.")>
+     <AND_CHECK_TENANT("p.")>
+     ;
+>>
+
+getById() ::= <<
+    SELECT <paymentAttemptFields("pa.")>
+    , pa.created_date as effective_date
+    , p.account_id as account_id
+    , p.invoice_id as invoice_id
+      FROM payment_attempts pa join payments p
+     WHERE pa.id = :id
+     AND pa.payment_id = p.id
+     <AND_CHECK_TENANT("pa.")>
+     <AND_CHECK_TENANT("p.")>
+     ;
+>>
+
 getPaymentAttemptIdFromPaymentId() ::= <<
     SELECT id
     FROM payment_attempts

@@ -126,6 +126,13 @@ getRecordId() ::= <<
     ;
 >>
 
+getById() ::= <<
+    SELECT record_id, <fields()>
+    FROM subscription_events
+    WHERE id = :id <AND_CHECK_TENANT()>
+    ;
+>>
+
 auditFields(prefix) ::= <<
     <prefix>table_name,
     <prefix>record_id,

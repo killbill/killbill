@@ -38,8 +38,6 @@ import org.skife.jdbi.v2.sqlobject.SqlBatch;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
-import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
-import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
@@ -47,18 +45,19 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.InvoicePayment.InvoicePaymentType;
 import com.ning.billing.invoice.model.DefaultInvoicePayment;
+import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.InternalTenantContextBinder;
-import com.ning.billing.util.dao.AuditSqlDao;
 import com.ning.billing.util.dao.BinderBase;
 import com.ning.billing.util.dao.MapperBase;
 import com.ning.billing.util.dao.UuidMapper;
+import com.ning.billing.util.entity.dao.Audited;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 
 @ExternalizedSqlViaStringTemplate3
 @RegisterMapper(InvoicePaymentSqlDao.InvoicePaymentMapper.class)
-public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePayment>, Transactional<InvoicePaymentSqlDao>, AuditSqlDao, Transmogrifier {
+public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePayment> {
 
     @SqlQuery
     List<Long> getRecordIds(@Bind("invoiceId") final String invoiceId,
@@ -74,10 +73,12 @@ public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePayment>, Tran
 
     @Override
     @SqlUpdate
+    @Audited(ChangeType.INSERT)
     public void create(@InvoicePaymentBinder final InvoicePayment invoicePayment,
                        @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlBatch(transactional = false)
+    @Audited(ChangeType.INSERT)
     void batchCreateFromTransaction(@InvoicePaymentBinder final List<InvoicePayment> items,
                                     @InternalTenantContextBinder final InternalCallContext context);
 
@@ -94,6 +95,7 @@ public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePayment>, Tran
                                           @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlUpdate
+    @Audited(ChangeType.UPDATE)
     void notifyOfPayment(@InvoicePaymentBinder final InvoicePayment invoicePayment,
                          @InternalTenantContextBinder final InternalCallContext context);
 

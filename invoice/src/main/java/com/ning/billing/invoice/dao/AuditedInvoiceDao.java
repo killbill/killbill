@@ -27,8 +27,6 @@ import javax.annotation.Nullable;
 
 import org.joda.time.LocalDate;
 import org.skife.jdbi.v2.IDBI;
-import org.skife.jdbi.v2.Transaction;
-import org.skife.jdbi.v2.TransactionStatus;
 import org.skife.jdbi.v2.exceptions.TransactionFailedException;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.slf4j.Logger;
@@ -52,12 +50,13 @@ import com.ning.billing.invoice.model.ItemAdjInvoiceItem;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.invoice.model.RefundAdjInvoiceItem;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
-import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.dao.EntityAudit;
-import com.ning.billing.util.dao.TableName;
+import com.ning.billing.util.entity.dao.EntitySqlDao;
+import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
+import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
+import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.svcsapi.bus.InternalBus.EventBusException;
 
@@ -72,6 +71,7 @@ public class AuditedInvoiceDao implements InvoiceDao {
 
     private static final Logger log = LoggerFactory.getLogger(AuditedInvoiceDao.class);
 
+    private final EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao;
     private final InvoiceSqlDao invoiceSqlDao;
     private final InvoicePaymentSqlDao invoicePaymentSqlDao;
     private final NextBillingDatePoster nextBillingDatePoster;
@@ -90,15 +90,18 @@ public class AuditedInvoiceDao implements InvoiceDao {
         this.nextBillingDatePoster = nextBillingDatePoster;
         this.clock = clock;
         this.eventBus = eventBus;
+        this.transactionalSqlDao = new EntitySqlDaoTransactionalJdbiWrapper(dbi);
     }
 
     @Override
     public List<Invoice> getInvoicesByAccount(final UUID accountId, final InternalTenantContext context) {
-        return invoiceSqlDao.inTransaction(new Transaction<List<Invoice>, InvoiceSqlDao>() {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<Invoice>>() {
             @Override
-            public List<Invoice> inTransaction(final InvoiceSqlDao invoiceDao, final TransactionStatus status) throws Exception {
+            public List<Invoice> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                final InvoiceSqlDao invoiceDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
+
                 final List<Invoice> invoices = invoiceDao.getInvoicesByAccount(accountId.toString(), context);
-                populateChildren(invoices, invoiceDao, context);
+                populateChildren(invoices, entitySqlDaoWrapperFactory, context);
                 return invoices;
             }
         });
@@ -106,24 +109,28 @@ public class AuditedInvoiceDao implements InvoiceDao {
 
     @Override
     public List<Invoice> getAllInvoicesByAccount(final UUID accountId, final InternalTenantContext context) {
-        return invoiceSqlDao.inTransaction(new Transaction<List<Invoice>, InvoiceSqlDao>() {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<Invoice>>() {
             @Override
-            public List<Invoice> inTransaction(final InvoiceSqlDao invoiceDao, final TransactionStatus status) throws Exception {
-                return getAllInvoicesByAccountFromTransaction(accountId, invoiceDao, context);
+            public List<Invoice> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                final InvoiceSqlDao invoiceDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
+
+                return getAllInvoicesByAccountFromTransaction(accountId, entitySqlDaoWrapperFactory, context);
             }
         });
     }
 
     @Override
     public List<Invoice> getInvoicesByAccount(final UUID accountId, final LocalDate fromDate, final InternalTenantContext context) {
-        return invoiceSqlDao.inTransaction(new Transaction<List<Invoice>, InvoiceSqlDao>() {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<Invoice>>() {
             @Override
-            public List<Invoice> inTransaction(final InvoiceSqlDao invoiceDao, final TransactionStatus status) throws Exception {
+            public List<Invoice> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                final InvoiceSqlDao invoiceDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
+
                 final List<Invoice> invoices = invoiceDao.getInvoicesByAccountAfterDate(accountId.toString(),
                                                                                         fromDate.toDateTimeAtStartOfDay().toDate(),
                                                                                         context);
 
-                populateChildren(invoices, invoiceDao, context);
+                populateChildren(invoices, entitySqlDaoWrapperFactory, context);
 
                 return invoices;
             }
@@ -132,12 +139,14 @@ public class AuditedInvoiceDao implements InvoiceDao {
 
     @Override
     public List<Invoice> get(final InternalTenantContext context) {
-        return invoiceSqlDao.inTransaction(new Transaction<List<Invoice>, InvoiceSqlDao>() {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<Invoice>>() {
             @Override
-            public List<Invoice> inTransaction(final InvoiceSqlDao invoiceDao, final TransactionStatus status) throws Exception {
+            public List<Invoice> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                final InvoiceSqlDao invoiceDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
+
                 final List<Invoice> invoices = invoiceDao.get(context);
 
-                populateChildren(invoices, invoiceDao, context);
+                populateChildren(invoices, entitySqlDaoWrapperFactory, context);
 
                 return invoices;
             }
@@ -147,14 +156,16 @@ public class AuditedInvoiceDao implements InvoiceDao {
     @Override
     public Invoice getById(final UUID invoiceId, final InternalTenantContext context) throws InvoiceApiException {
         try {
-            return invoiceSqlDao.inTransaction(new Transaction<Invoice, InvoiceSqlDao>() {
+            return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Invoice>() {
                 @Override
-                public Invoice inTransaction(final InvoiceSqlDao invoiceDao, final TransactionStatus status) throws Exception {
+                public Invoice inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                    final InvoiceSqlDao invoiceDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
+
                     final Invoice invoice = invoiceDao.getById(invoiceId.toString(), context);
                     if (invoice == null) {
                         throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND, invoiceId);
                     }
-                    populateChildren(invoice, invoiceDao, context);
+                    populateChildren(invoice, entitySqlDaoWrapperFactory, context);
                     return invoice;
                 }
             });
@@ -179,63 +190,46 @@ public class AuditedInvoiceDao implements InvoiceDao {
 
     @Override
     public void create(final Invoice invoice, final int billCycleDayUTC, final boolean isRealInvoice, final InternalCallContext context) {
-        invoiceSqlDao.inTransaction(new Transaction<Void, InvoiceSqlDao>() {
+        transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
-            public Void inTransaction(final InvoiceSqlDao transactional, final TransactionStatus status) throws Exception {
+            public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                final InvoiceSqlDao transactional = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
+
                 final Invoice currentInvoice = transactional.getById(invoice.getId().toString(), context);
                 if (currentInvoice == null) {
-                    final List<EntityAudit> audits = new ArrayList<EntityAudit>();
-
                     // We only want to insert that invoice if there are real invoiceItems associated to it-- if not, this is just
                     // a shell invoice and we only need to insert the invoiceItems-- for the already existing invoices
 
                     if (isRealInvoice) {
                         transactional.create(invoice, context);
-                        final Long recordId = transactional.getRecordId(invoice.getId().toString(), context);
-                        audits.add(new EntityAudit(TableName.INVOICES, recordId, ChangeType.INSERT));
                     }
 
-                    List<Long> recordIdList;
-
                     final List<InvoiceItem> invoiceItems = invoice.getInvoiceItems();
-                    final InvoiceItemSqlDao transInvoiceItemSqlDao = transactional.become(InvoiceItemSqlDao.class);
+                    final InvoiceItemSqlDao transInvoiceItemSqlDao = entitySqlDaoWrapperFactory.become(InvoiceItemSqlDao.class);
                     transInvoiceItemSqlDao.batchCreateFromTransaction(invoiceItems, context);
-                    recordIdList = transInvoiceItemSqlDao.getRecordIds(invoice.getId().toString(), context);
-                    audits.addAll(createAudits(TableName.INVOICE_ITEMS, recordIdList));
 
                     final List<InvoiceItem> recurringInvoiceItems = invoice.getInvoiceItems(RecurringInvoiceItem.class);
                     notifyOfFutureBillingEvents(transactional, invoice.getAccountId(), recurringInvoiceItems);
 
                     final List<InvoicePayment> invoicePayments = invoice.getPayments();
-                    final InvoicePaymentSqlDao invoicePaymentSqlDao = transactional.become(InvoicePaymentSqlDao.class);
+                    final InvoicePaymentSqlDao invoicePaymentSqlDao = entitySqlDaoWrapperFactory.become(InvoicePaymentSqlDao.class);
                     invoicePaymentSqlDao.batchCreateFromTransaction(invoicePayments, context);
-                    recordIdList = invoicePaymentSqlDao.getRecordIds(invoice.getId().toString(), context);
-                    audits.addAll(createAudits(TableName.INVOICE_PAYMENTS, recordIdList));
-
-                    transactional.insertAuditFromTransaction(audits, context);
                 }
                 return null;
             }
         });
     }
 
-    private List<EntityAudit> createAudits(final TableName tableName, final List<Long> recordIdList) {
-        final List<EntityAudit> entityAuditList = new ArrayList<EntityAudit>();
-        for (final Long recordId : recordIdList) {
-            entityAuditList.add(new EntityAudit(tableName, recordId, ChangeType.INSERT));
-        }
-
-        return entityAuditList;
-    }
-
     @Override
     public List<Invoice> getInvoicesBySubscription(final UUID subscriptionId, final InternalTenantContext context) {
-        return invoiceSqlDao.inTransaction(new Transaction<List<Invoice>, InvoiceSqlDao>() {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<Invoice>>() {
             @Override
-            public List<Invoice> inTransaction(final InvoiceSqlDao invoiceDao, final TransactionStatus status) throws Exception {
+            public List<Invoice> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                final InvoiceSqlDao invoiceDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
+
                 final List<Invoice> invoices = invoiceDao.getInvoicesBySubscription(subscriptionId.toString(), context);
 
-                populateChildren(invoices, invoiceDao, context);
+                populateChildren(invoices, entitySqlDaoWrapperFactory, context);
 
                 return invoices;
             }
@@ -245,13 +239,13 @@ public class AuditedInvoiceDao implements InvoiceDao {
     @Override
     public BigDecimal getAccountBalance(final UUID accountId, final InternalTenantContext context) {
 
-        return invoiceSqlDao.inTransaction(new Transaction<BigDecimal, InvoiceSqlDao>() {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<BigDecimal>() {
             @Override
-            public BigDecimal inTransaction(final InvoiceSqlDao transactional, final TransactionStatus status) throws Exception {
+            public BigDecimal inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
                 BigDecimal cba = BigDecimal.ZERO;
 
                 BigDecimal accountBalance = BigDecimal.ZERO;
-                final List<Invoice> invoices = getAllInvoicesByAccountFromTransaction(accountId, transactional, context);
+                final List<Invoice> invoices = getAllInvoicesByAccountFromTransaction(accountId, entitySqlDaoWrapperFactory, context);
                 for (final Invoice cur : invoices) {
                     accountBalance = accountBalance.add(cur.getBalance());
                     cba = cba.add(cur.getCBAAmount());
@@ -263,25 +257,23 @@ public class AuditedInvoiceDao implements InvoiceDao {
 
     @Override
     public BigDecimal getAccountCBA(final UUID accountId, final InternalTenantContext context) {
-        return invoiceSqlDao.inTransaction(new Transaction<BigDecimal, InvoiceSqlDao>() {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<BigDecimal>() {
             @Override
-            public BigDecimal inTransaction(final InvoiceSqlDao transactional, final TransactionStatus status) throws Exception {
-                return getAccountCBAFromTransaction(accountId, transactional, context);
+            public BigDecimal inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                final InvoiceSqlDao transactional = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
+                return getAccountCBAFromTransaction(accountId, entitySqlDaoWrapperFactory, context);
             }
         });
     }
 
     @Override
     public void notifyOfPayment(final InvoicePayment invoicePayment, final InternalCallContext context) {
-        invoicePaymentSqlDao.inTransaction(new Transaction<Void, InvoicePaymentSqlDao>() {
+        transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
-            public Void inTransaction(final InvoicePaymentSqlDao transactional, final TransactionStatus status) throws Exception {
-                transactional.notifyOfPayment(invoicePayment, context);
+            public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                final InvoicePaymentSqlDao transactional = entitySqlDaoWrapperFactory.become(InvoicePaymentSqlDao.class);
 
-                final String invoicePaymentId = invoicePayment.getId().toString();
-                final Long recordId = transactional.getRecordId(invoicePaymentId, context);
-                final EntityAudit audit = new EntityAudit(TableName.INVOICE_PAYMENTS, recordId, ChangeType.INSERT);
-                transactional.insertAuditFromTransaction(audit, context);
+                transactional.notifyOfPayment(invoicePayment, context);
 
                 return null;
             }
@@ -290,11 +282,12 @@ public class AuditedInvoiceDao implements InvoiceDao {
 
     @Override
     public List<Invoice> getUnpaidInvoicesByAccountId(final UUID accountId, @Nullable final LocalDate upToDate, final InternalTenantContext context) {
-        return invoiceSqlDao.inTransaction(new Transaction<List<Invoice>, InvoiceSqlDao>() {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<Invoice>>() {
             @Override
-            public List<Invoice> inTransaction(final InvoiceSqlDao invoiceDao, final TransactionStatus status) throws Exception {
+            public List<Invoice> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                final InvoiceSqlDao invoiceDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
 
-                final List<Invoice> invoices = getAllInvoicesByAccountFromTransaction(accountId, invoiceDao, context);
+                final List<Invoice> invoices = getAllInvoicesByAccountFromTransaction(accountId, entitySqlDaoWrapperFactory, context);
                 final Collection<Invoice> unpaidInvoices = Collections2.filter(invoices, new Predicate<Invoice>() {
                     @Override
                     public boolean apply(final Invoice in) {
@@ -324,12 +317,12 @@ public class AuditedInvoiceDao implements InvoiceDao {
             throws InvoiceApiException {
         final boolean isInvoiceItemAdjusted = isInvoiceAdjusted && invoiceItemIdsWithNullAmounts.size() > 0;
 
-        return invoicePaymentSqlDao.inTransaction(new Transaction<InvoicePayment, InvoicePaymentSqlDao>() {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<InvoicePayment>() {
             @Override
-            public InvoicePayment inTransaction(final InvoicePaymentSqlDao transactional, final TransactionStatus status) throws Exception {
-                final List<EntityAudit> audits = new ArrayList<EntityAudit>();
+            public InvoicePayment inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                final InvoicePaymentSqlDao transactional = entitySqlDaoWrapperFactory.become(InvoicePaymentSqlDao.class);
 
-                final InvoiceSqlDao transInvoiceDao = transactional.become(InvoiceSqlDao.class);
+                final InvoiceSqlDao transInvoiceDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
 
                 final InvoicePayment payment = transactional.getByPaymentId(paymentId.toString(), context);
                 if (payment == null) {
@@ -338,7 +331,7 @@ public class AuditedInvoiceDao implements InvoiceDao {
 
                 // Retrieve the amounts to adjust, if needed
                 final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts = computeItemAdjustments(payment.getInvoiceId().toString(),
-                                                                                               transInvoiceDao,
+                                                                                               entitySqlDaoWrapperFactory,
                                                                                                invoiceItemIdsWithNullAmounts,
                                                                                                context);
 
@@ -356,19 +349,17 @@ public class AuditedInvoiceDao implements InvoiceDao {
                         payment.getInvoiceId(), context.getCreatedDate(), requestedPositiveAmount.negate(),
                         payment.getCurrency(), paymentCookieId, payment.getId());
                 transactional.create(refund, context);
-                final Long refundRecordId = transactional.getRecordId(refund.getId().toString(), context);
-                audits.add(new EntityAudit(TableName.REFUNDS, refundRecordId, ChangeType.INSERT));
 
                 // Retrieve invoice after the Refund
                 final Invoice invoice = transInvoiceDao.getById(payment.getInvoiceId().toString(), context);
                 if (invoice != null) {
-                    populateChildren(invoice, transInvoiceDao, context);
+                    populateChildren(invoice, entitySqlDaoWrapperFactory, context);
                 } else {
                     throw new IllegalStateException("Invoice shouldn't be null for payment " + payment.getId());
                 }
 
                 final BigDecimal invoiceBalanceAfterRefund = invoice.getBalance();
-                final InvoiceItemSqlDao transInvoiceItemDao = transInvoiceDao.become(InvoiceItemSqlDao.class);
+                final InvoiceItemSqlDao transInvoiceItemDao = entitySqlDaoWrapperFactory.become(InvoiceItemSqlDao.class);
 
                 // At this point, we created the refund which made the invoice balance positive and applied any existing
                 // available CBA to that invoice.
@@ -380,27 +371,20 @@ public class AuditedInvoiceDao implements InvoiceDao {
                     if (requestedPositiveAmountToAdjust.compareTo(BigDecimal.ZERO) > 0) {
                         final InvoiceItem adjItem = new RefundAdjInvoiceItem(invoice.getId(), invoice.getAccountId(), context.getCreatedDate().toLocalDate(), requestedPositiveAmountToAdjust.negate(), invoice.getCurrency());
                         transInvoiceItemDao.create(adjItem, context);
-                        final Long adjItemRecordId = transInvoiceItemDao.getRecordId(adjItem.getId().toString(), context);
-                        audits.add(new EntityAudit(TableName.INVOICE_ITEMS, adjItemRecordId, ChangeType.INSERT));
                     }
                 } else if (isInvoiceAdjusted) {
                     // Invoice item adjustment
                     for (final UUID invoiceItemId : invoiceItemIdsWithAmounts.keySet()) {
                         final BigDecimal adjAmount = invoiceItemIdsWithAmounts.get(invoiceItemId);
-                        final InvoiceItem item = createAdjustmentItem(transInvoiceDao, invoice.getId(), invoiceItemId, adjAmount,
+                        final InvoiceItem item = createAdjustmentItem(entitySqlDaoWrapperFactory, invoice.getId(), invoiceItemId, adjAmount,
                                                                       invoice.getCurrency(), context.getCreatedDate().toLocalDate(),
                                                                       context);
                         transInvoiceItemDao.create(item, context);
-                        final Long itemRecordId = transInvoiceItemDao.getRecordId(item.getId().toString(), context);
-                        audits.add(new EntityAudit(TableName.INVOICE_ITEMS, itemRecordId, ChangeType.INSERT));
                     }
                 }
 
                 // Notify the bus since the balance of the invoice changed
                 notifyBusOfInvoiceAdjustment(transactional, invoice.getId(), invoice.getAccountId(), context.getUserToken(), context);
-
-                // Save audit logs
-                transactional.insertAuditFromTransaction(audits, context);
 
                 return refund;
             }
@@ -414,14 +398,14 @@ public class AuditedInvoiceDao implements InvoiceDao {
      * item.
      *
      * @param invoiceId                     original invoice id
-     * @param transInvoiceDao               the transactional InvoiceSqlDao
+     * @param entitySqlDaoWrapperFactory    the EntitySqlDaoWrapperFactory from the current transaction
      * @param invoiceItemIdsWithNullAmounts the original mapping between invoice item ids and amount to refund (contains null)
      * @param context                       the tenant context
      * @return the final mapping between invoice item ids and amount to refund
      * @throws InvoiceApiException
      */
     private Map<UUID, BigDecimal> computeItemAdjustments(final String invoiceId,
-                                                         final InvoiceSqlDao transInvoiceDao,
+                                                         final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory,
                                                          final Map<UUID, BigDecimal> invoiceItemIdsWithNullAmounts,
                                                          final InternalTenantContext context) throws InvoiceApiException {
         // Populate the missing amounts for individual items, if needed
@@ -431,9 +415,9 @@ public class AuditedInvoiceDao implements InvoiceDao {
         }
 
         // Retrieve invoice before the Refund
-        final Invoice invoice = transInvoiceDao.getById(invoiceId, context);
+        final Invoice invoice = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class).getById(invoiceId, context);
         if (invoice != null) {
-            populateChildren(invoice, transInvoiceDao, context);
+            populateChildren(invoice, entitySqlDaoWrapperFactory, context);
         } else {
             throw new IllegalStateException("Invoice shouldn't be null for id " + invoiceId);
         }
@@ -511,9 +495,11 @@ public class AuditedInvoiceDao implements InvoiceDao {
     @Override
     public InvoicePayment postChargeback(final UUID invoicePaymentId, final BigDecimal amount, final InternalCallContext context) throws InvoiceApiException {
 
-        return invoicePaymentSqlDao.inTransaction(new Transaction<InvoicePayment, InvoicePaymentSqlDao>() {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<InvoicePayment>() {
             @Override
-            public InvoicePayment inTransaction(final InvoicePaymentSqlDao transactional, final TransactionStatus status) throws Exception {
+            public InvoicePayment inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                final InvoicePaymentSqlDao transactional = entitySqlDaoWrapperFactory.become(InvoicePaymentSqlDao.class);
+
                 final BigDecimal maxChargedBackAmount = getRemainingAmountPaidFromTransaction(invoicePaymentId, transactional, context);
                 final BigDecimal requestedChargedBackAmout = (amount == null) ? maxChargedBackAmount : amount;
                 if (requestedChargedBackAmout.compareTo(BigDecimal.ZERO) <= 0) {
@@ -523,18 +509,13 @@ public class AuditedInvoiceDao implements InvoiceDao {
                     throw new InvoiceApiException(ErrorCode.CHARGE_BACK_AMOUNT_TOO_HIGH, requestedChargedBackAmout, maxChargedBackAmount);
                 }
 
-                final InvoicePayment payment = invoicePaymentSqlDao.getById(invoicePaymentId.toString(), context);
+                final InvoicePayment payment = entitySqlDaoWrapperFactory.become(InvoicePaymentSqlDao.class).getById(invoicePaymentId.toString(), context);
                 if (payment == null) {
                     throw new InvoiceApiException(ErrorCode.INVOICE_PAYMENT_NOT_FOUND, invoicePaymentId.toString());
                 } else {
                     final InvoicePayment chargeBack = new DefaultInvoicePayment(UUID.randomUUID(), InvoicePaymentType.CHARGED_BACK, payment.getPaymentId(),
                             payment.getInvoiceId(), context.getCreatedDate(), requestedChargedBackAmout.negate(), payment.getCurrency(), null, payment.getId());
                     transactional.create(chargeBack, context);
-
-                    // Add audit
-                    final Long recordId = transactional.getRecordId(chargeBack.getId().toString(), context);
-                    final EntityAudit audit = new EntityAudit(TableName.INVOICE_PAYMENTS, recordId, ChangeType.INSERT);
-                    transactional.insertAuditFromTransaction(audit, context);
 
                     // Notify the bus since the balance of the invoice changed
                     final UUID accountId = transactional.getAccountIdFromInvoicePaymentId(chargeBack.getId().toString(), context);
@@ -590,18 +571,16 @@ public class AuditedInvoiceDao implements InvoiceDao {
     public InvoiceItem insertExternalCharge(final UUID accountId, @Nullable final UUID invoiceId, @Nullable final UUID bundleId, final String description,
                                             final BigDecimal amount, final LocalDate effectiveDate, final Currency currency, final InternalCallContext context)
             throws InvoiceApiException {
-        return invoiceSqlDao.inTransaction(new Transaction<InvoiceItem, InvoiceSqlDao>() {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<InvoiceItem>() {
             @Override
-            public InvoiceItem inTransaction(final InvoiceSqlDao transactional, final TransactionStatus status) throws Exception {
-                final List<EntityAudit> audits = new ArrayList<EntityAudit>();
+            public InvoiceItem inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                final InvoiceSqlDao transactional = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
 
                 UUID invoiceIdForExternalCharge = invoiceId;
                 // Create an invoice for that external charge if it doesn't exist
                 if (invoiceIdForExternalCharge == null) {
                     final Invoice invoiceForExternalCharge = new DefaultInvoice(accountId, effectiveDate, effectiveDate, currency);
                     transactional.create(invoiceForExternalCharge, context);
-                    final Long invoiceRecordId = transactional.getRecordId(invoiceForExternalCharge.getId().toString(), context);
-                    audits.add(new EntityAudit(TableName.INVOICES, invoiceRecordId, ChangeType.INSERT));
 
                     invoiceIdForExternalCharge = invoiceForExternalCharge.getId();
                 }
@@ -610,32 +589,25 @@ public class AuditedInvoiceDao implements InvoiceDao {
                         bundleId, description,
                         effectiveDate, amount, currency);
 
-                final InvoiceItemSqlDao transInvoiceItemDao = transactional.become(InvoiceItemSqlDao.class);
+                final InvoiceItemSqlDao transInvoiceItemDao = entitySqlDaoWrapperFactory.become(InvoiceItemSqlDao.class);
                 transInvoiceItemDao.create(externalCharge, context);
-                final Long invoiceItemRecordId = transInvoiceItemDao.getRecordId(externalCharge.getId().toString(), context);
-                audits.add(new EntityAudit(TableName.INVOICE_ITEMS, invoiceItemRecordId, ChangeType.INSERT));
 
                 // At this point, reread the invoice and figure out if we need to consume some of the CBA
                 final Invoice invoice = transactional.getById(invoiceIdForExternalCharge.toString(), context);
                 if (invoice == null) {
                     throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND, invoiceIdForExternalCharge);
                 }
-                populateChildren(invoice, transactional, context);
+                populateChildren(invoice, entitySqlDaoWrapperFactory, context);
 
-                final BigDecimal accountCbaAvailable = getAccountCBAFromTransaction(invoice.getAccountId(), transactional, context);
+                final BigDecimal accountCbaAvailable = getAccountCBAFromTransaction(invoice.getAccountId(), entitySqlDaoWrapperFactory, context);
                 if (accountCbaAvailable.compareTo(BigDecimal.ZERO) > 0 && invoice.getBalance().compareTo(BigDecimal.ZERO) > 0) {
                     final BigDecimal cbaAmountToConsume = accountCbaAvailable.compareTo(invoice.getBalance()) > 0 ? invoice.getBalance().negate() : accountCbaAvailable.negate();
                     final InvoiceItem cbaAdjItem = new CreditBalanceAdjInvoiceItem(invoice.getId(), invoice.getAccountId(), context.getCreatedDate().toLocalDate(), cbaAmountToConsume, invoice.getCurrency());
                     transInvoiceItemDao.create(cbaAdjItem, context);
-                    final Long cbaAdjItemRecordId = transInvoiceItemDao.getRecordId(cbaAdjItem.getId().toString(), context);
-                    audits.add(new EntityAudit(TableName.INVOICE_ITEMS, cbaAdjItemRecordId, ChangeType.INSERT));
                 }
 
                 // Notify the bus since the balance of the invoice changed
                 notifyBusOfInvoiceAdjustment(transactional, invoiceId, accountId, context.getUserToken(), context);
-
-                // Save audit logs
-                transactional.insertAuditFromTransaction(audits, context);
 
                 return externalCharge;
             }
@@ -650,31 +622,26 @@ public class AuditedInvoiceDao implements InvoiceDao {
     @Override
     public InvoiceItem insertCredit(final UUID accountId, @Nullable final UUID invoiceId, final BigDecimal positiveCreditAmount,
                                     final LocalDate effectiveDate, final Currency currency, final InternalCallContext context) {
-        return invoiceSqlDao.inTransaction(new Transaction<InvoiceItem, InvoiceSqlDao>() {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<InvoiceItem>() {
             @Override
-            public InvoiceItem inTransaction(final InvoiceSqlDao transactional, final TransactionStatus status) throws Exception {
-                final List<EntityAudit> audits = new ArrayList<EntityAudit>();
+            public InvoiceItem inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                final InvoiceSqlDao transactional = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
 
                 UUID invoiceIdForCredit = invoiceId;
                 // Create an invoice for that credit if it doesn't exist
                 if (invoiceIdForCredit == null) {
                     final Invoice invoiceForCredit = new DefaultInvoice(accountId, effectiveDate, effectiveDate, currency);
                     transactional.create(invoiceForCredit, context);
-                    final Long invoiceForCreditRecordId = transactional.getRecordId(invoiceForCredit.getId().toString(), context);
-                    audits.add(new EntityAudit(TableName.INVOICES, invoiceForCreditRecordId, ChangeType.INSERT));
 
                     invoiceIdForCredit = invoiceForCredit.getId();
                 }
 
                 // Note! The amount is negated here!
                 final InvoiceItem credit = new CreditAdjInvoiceItem(invoiceIdForCredit, accountId, effectiveDate, positiveCreditAmount.negate(), currency);
-                insertItemAndAddCBAIfNeeded(transactional, credit, audits, context);
+                insertItemAndAddCBAIfNeeded(entitySqlDaoWrapperFactory, credit, context);
 
                 // Notify the bus since the balance of the invoice changed
                 notifyBusOfInvoiceAdjustment(transactional, invoiceId, accountId, context.getUserToken(), context);
-
-                // Save audit logs
-                transactional.insertAuditFromTransaction(audits, context);
 
                 return credit;
             }
@@ -685,17 +652,14 @@ public class AuditedInvoiceDao implements InvoiceDao {
     public InvoiceItem insertInvoiceItemAdjustment(final UUID accountId, final UUID invoiceId, final UUID invoiceItemId,
                                                    final LocalDate effectiveDate, @Nullable final BigDecimal positiveAdjAmount,
                                                    @Nullable final Currency currency, final InternalCallContext context) {
-        return invoiceSqlDao.inTransaction(new Transaction<InvoiceItem, InvoiceSqlDao>() {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<InvoiceItem>() {
             @Override
-            public InvoiceItem inTransaction(final InvoiceSqlDao transactional, final TransactionStatus status) throws Exception {
-                final List<EntityAudit> audits = new ArrayList<EntityAudit>();
-                final InvoiceItem invoiceItemAdjustment = createAdjustmentItem(transactional, invoiceId, invoiceItemId, positiveAdjAmount,
+            public InvoiceItem inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                final InvoiceSqlDao transactional = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
+                final InvoiceItem invoiceItemAdjustment = createAdjustmentItem(entitySqlDaoWrapperFactory, invoiceId, invoiceItemId, positiveAdjAmount,
                                                                                currency, effectiveDate, context);
-                insertItemAndAddCBAIfNeeded(transactional, invoiceItemAdjustment, audits, context);
+                insertItemAndAddCBAIfNeeded(entitySqlDaoWrapperFactory, invoiceItemAdjustment, context);
                 notifyBusOfInvoiceAdjustment(transactional, invoiceId, accountId, context.getUserToken(), context);
-
-                // Save audit logs
-                transactional.insertAuditFromTransaction(audits, context);
 
                 return invoiceItemAdjustment;
             }
@@ -704,10 +668,10 @@ public class AuditedInvoiceDao implements InvoiceDao {
 
     @Override
     public void deleteCBA(final UUID accountId, final UUID invoiceId, final UUID invoiceItemId, final InternalCallContext context) throws InvoiceApiException {
-        invoiceSqlDao.inTransaction(new Transaction<Void, InvoiceSqlDao>() {
+        transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
-            public Void inTransaction(final InvoiceSqlDao transactional, final TransactionStatus status) throws Exception {
-                final List<EntityAudit> audits = new ArrayList<EntityAudit>();
+            public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                final InvoiceSqlDao transactional = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
 
                 // Retrieve the invoice and make sure it belongs to the right account
                 final Invoice invoice = transactional.getById(invoiceId.toString(), context);
@@ -716,7 +680,7 @@ public class AuditedInvoiceDao implements InvoiceDao {
                 }
 
                 // Retrieve the invoice item and make sure it belongs to the right invoice
-                final InvoiceItemSqlDao invoiceItemSqlDao = transactional.become(InvoiceItemSqlDao.class);
+                final InvoiceItemSqlDao invoiceItemSqlDao = entitySqlDaoWrapperFactory.become(InvoiceItemSqlDao.class);
                 final InvoiceItem cbaItem = invoiceItemSqlDao.getById(invoiceItemId.toString(), context);
                 if (cbaItem == null || !cbaItem.getInvoiceId().equals(invoice.getId())) {
                     throw new InvoiceApiException(ErrorCode.INVOICE_ITEM_NOT_FOUND, invoiceItemId);
@@ -726,18 +690,16 @@ public class AuditedInvoiceDao implements InvoiceDao {
                 final InvoiceItem cbaAdjItem = new CreditBalanceAdjInvoiceItem(invoice.getId(), invoice.getAccountId(), context.getCreatedDate().toLocalDate(),
                         cbaItem.getId(), cbaItem.getAmount().negate(), cbaItem.getCurrency());
                 invoiceItemSqlDao.create(cbaAdjItem, context);
-                final Long cbaAdjItemRecordId = invoiceItemSqlDao.getRecordId(cbaAdjItem.getId().toString(), context);
-                audits.add(new EntityAudit(TableName.INVOICE_ITEMS, cbaAdjItemRecordId, ChangeType.INSERT));
 
                 // Verify the final invoice balance is not negative
-                populateChildren(invoice, transactional, context);
+                populateChildren(invoice, entitySqlDaoWrapperFactory, context);
                 if (invoice.getBalance().compareTo(BigDecimal.ZERO) < 0) {
                     throw new InvoiceApiException(ErrorCode.INVOICE_WOULD_BE_NEGATIVE);
                 }
 
                 // If there is more account credit than CBA we adjusted, we're done.
                 // Otherwise, we need to find further invoices on which this credit was consumed
-                final BigDecimal accountCBA = getAccountCBAFromTransaction(accountId, invoiceSqlDao, context);
+                final BigDecimal accountCBA = getAccountCBAFromTransaction(accountId, entitySqlDaoWrapperFactory, context);
                 if (accountCBA.compareTo(BigDecimal.ZERO) < 0) {
                     if (accountCBA.compareTo(cbaItem.getAmount().negate()) < 0) {
                         throw new IllegalStateException("The account balance can't be lower than the amount adjusted");
@@ -745,7 +707,7 @@ public class AuditedInvoiceDao implements InvoiceDao {
                     final List<Invoice> invoicesFollowing = transactional.getInvoicesByAccountAfterDate(accountId.toString(),
                                                                                                         invoice.getInvoiceDate().toDateTimeAtStartOfDay().toDate(),
                                                                                                         context);
-                    populateChildren(invoicesFollowing, transactional, context);
+                    populateChildren(invoicesFollowing, entitySqlDaoWrapperFactory, context);
 
                     // The remaining amount to adjust (i.e. the amount of credits used on following invoices)
                     // is the current account CBA balance (minus the sign)
@@ -785,17 +747,12 @@ public class AuditedInvoiceDao implements InvoiceDao {
                         final InvoiceItem nextCBAAdjItem = new CreditBalanceAdjInvoiceItem(invoiceFollowing.getId(), invoice.getAccountId(), context.getCreatedDate().toLocalDate(),
                                 cbaItem.getId(), positiveCBAAdjItemAmount, cbaItem.getCurrency());
                         invoiceItemSqlDao.create(nextCBAAdjItem, context);
-                        final Long nextCBAAdjItemRecordId = invoiceItemSqlDao.getRecordId(nextCBAAdjItem.getId().toString(), context);
-                        audits.add(new EntityAudit(TableName.INVOICE_ITEMS, nextCBAAdjItemRecordId, ChangeType.INSERT));
 
                         if (positiveRemainderToAdjust.compareTo(BigDecimal.ZERO) == 0) {
                             break;
                         }
                     }
                 }
-
-                // Save audit logs
-                transactional.insertAuditFromTransaction(audits, context);
 
                 return null;
             }
@@ -817,11 +774,11 @@ public class AuditedInvoiceDao implements InvoiceDao {
      * @param currency          the currency of the amount. Pass null to default to the original currency used
      * @return the adjustment item
      */
-    private InvoiceItem createAdjustmentItem(final InvoiceSqlDao transactional, final UUID invoiceId, final UUID invoiceItemId,
+    private InvoiceItem createAdjustmentItem(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final UUID invoiceId, final UUID invoiceItemId,
                                              final BigDecimal positiveAdjAmount, final Currency currency,
                                              final LocalDate effectiveDate, final InternalTenantContext context) throws InvoiceApiException {
         // First, retrieve the invoice item in question
-        final InvoiceItemSqlDao invoiceItemSqlDao = transactional.become(InvoiceItemSqlDao.class);
+        final InvoiceItemSqlDao invoiceItemSqlDao = entitySqlDaoWrapperFactory.become(InvoiceItemSqlDao.class);
         final InvoiceItem invoiceItemToBeAdjusted = invoiceItemSqlDao.getById(invoiceItemId.toString(), context);
         if (invoiceItemToBeAdjusted == null) {
             throw new InvoiceApiException(ErrorCode.INVOICE_ITEM_NOT_FOUND, invoiceItemId);
@@ -845,72 +802,68 @@ public class AuditedInvoiceDao implements InvoiceDao {
     /**
      * Create an invoice item and adjust the invoice with a CBA item if the new invoice balance is negative.
      *
-     * @param transactional the InvoiceSqlDao
+     * @param entitySqlDaoWrapperFactory the EntitySqlDaoWrapperFactory from the current transaction
      * @param item          the invoice item to create
-     * @param audits        the audits to populate
      * @param context       the call context
      */
-    private void insertItemAndAddCBAIfNeeded(final InvoiceSqlDao transactional, final InvoiceItem item,
-                                             final List<EntityAudit> audits, final InternalCallContext context) {
-        final InvoiceItemSqlDao transInvoiceItemDao = transactional.become(InvoiceItemSqlDao.class);
+    private void insertItemAndAddCBAIfNeeded(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final InvoiceItem item,
+                                             final InternalCallContext context) {
+        final InvoiceItemSqlDao transInvoiceItemDao = entitySqlDaoWrapperFactory.become(InvoiceItemSqlDao.class);
         transInvoiceItemDao.create(item, context);
 
-        final Long invoiceItemRecordId = transInvoiceItemDao.getRecordId(item.getId().toString(), context);
-        audits.add(new EntityAudit(TableName.INVOICE_ITEMS, invoiceItemRecordId, ChangeType.INSERT));
-
-        addCBAIfNeeded(transactional, item.getInvoiceId(), audits, context);
+        addCBAIfNeeded(entitySqlDaoWrapperFactory, item.getInvoiceId(), context);
     }
 
     /**
      * Adjust the invoice with a CBA item if the new invoice balance is negative.
      *
-     * @param transactional the InvoiceSqlDao
+     * @param entitySqlDaoWrapperFactory the EntitySqlDaoWrapperFactory from the current transaction
      * @param invoiceId     the invoice id to adjust
-     * @param audits        the audits to populate
      * @param context       the call context
      */
-    private void addCBAIfNeeded(final InvoiceSqlDao transactional, final UUID invoiceId,
-                                final List<EntityAudit> audits, final InternalCallContext context) {
-        final Invoice invoice = transactional.getById(invoiceId.toString(), context);
+    private void addCBAIfNeeded(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory,
+                                final UUID invoiceId,
+                                final InternalCallContext context) {
+        final Invoice invoice = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class).getById(invoiceId.toString(), context);
         if (invoice != null) {
-            populateChildren(invoice, transactional, context);
+            populateChildren(invoice, entitySqlDaoWrapperFactory, context);
         } else {
             throw new IllegalStateException("Invoice shouldn't be null for this item at this stage " + invoiceId);
         }
 
         // If invoice balance becomes negative we add some CBA item
         if (invoice.getBalance().compareTo(BigDecimal.ZERO) < 0) {
-            final InvoiceItemSqlDao transInvoiceItemDao = transactional.become(InvoiceItemSqlDao.class);
+            final InvoiceItemSqlDao transInvoiceItemDao = entitySqlDaoWrapperFactory.become(InvoiceItemSqlDao.class);
             final InvoiceItem cbaAdjItem = new CreditBalanceAdjInvoiceItem(invoice.getId(), invoice.getAccountId(), context.getCreatedDate().toLocalDate(),
                     invoice.getBalance().negate(), invoice.getCurrency());
             transInvoiceItemDao.create(cbaAdjItem, context);
-            final Long cbaAdjItemRecordId = transInvoiceItemDao.getRecordId(cbaAdjItem.getId().toString(), context);
-            audits.add(new EntityAudit(TableName.INVOICE_ITEMS, cbaAdjItemRecordId, ChangeType.INSERT));
         }
     }
 
-    private BigDecimal getAccountCBAFromTransaction(final UUID accountId, final InvoiceSqlDao transactional, final InternalTenantContext context) {
+    private BigDecimal getAccountCBAFromTransaction(final UUID accountId,
+                                                    final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory,
+                                                    final InternalTenantContext context) {
         BigDecimal cba = BigDecimal.ZERO;
-        final List<Invoice> invoices = getAllInvoicesByAccountFromTransaction(accountId, transactional, context);
+        final List<Invoice> invoices = getAllInvoicesByAccountFromTransaction(accountId, entitySqlDaoWrapperFactory, context);
         for (final Invoice cur : invoices) {
             cba = cba.add(cur.getCBAAmount());
         }
         return cba;
     }
 
-    private void populateChildren(final Invoice invoice, final InvoiceSqlDao invoiceSqlDao, final InternalTenantContext context) {
-        getInvoiceItemsWithinTransaction(invoice, invoiceSqlDao, context);
-        getInvoicePaymentsWithinTransaction(invoice, invoiceSqlDao, context);
+    private void populateChildren(final Invoice invoice, final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final InternalTenantContext context) {
+        getInvoiceItemsWithinTransaction(invoice, entitySqlDaoWrapperFactory, context);
+        getInvoicePaymentsWithinTransaction(invoice, entitySqlDaoWrapperFactory, context);
     }
 
-    private void populateChildren(final List<Invoice> invoices, final InvoiceSqlDao invoiceSqlDao, final InternalTenantContext context) {
-        getInvoiceItemsWithinTransaction(invoices, invoiceSqlDao, context);
-        getInvoicePaymentsWithinTransaction(invoices, invoiceSqlDao, context);
+    private void populateChildren(final List<Invoice> invoices, final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final InternalTenantContext context) {
+        getInvoiceItemsWithinTransaction(invoices, entitySqlDaoWrapperFactory, context);
+        getInvoicePaymentsWithinTransaction(invoices, entitySqlDaoWrapperFactory, context);
     }
 
-    private List<Invoice> getAllInvoicesByAccountFromTransaction(final UUID accountId, final InvoiceSqlDao transactional, final InternalTenantContext context) {
-        final List<Invoice> invoices = transactional.getAllInvoicesByAccount(accountId.toString(), context);
-        populateChildren(invoices, transactional, context);
+    private List<Invoice> getAllInvoicesByAccountFromTransaction(final UUID accountId, final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final InternalTenantContext context) {
+        final List<Invoice> invoices = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class).getAllInvoicesByAccount(accountId.toString(), context);
+        populateChildren(invoices, entitySqlDaoWrapperFactory, context);
         return invoices;
     }
 
@@ -919,28 +872,28 @@ public class AuditedInvoiceDao implements InvoiceDao {
         return amount == null ? BigDecimal.ZERO : amount;
     }
 
-    private void getInvoiceItemsWithinTransaction(final List<Invoice> invoices, final InvoiceSqlDao invoiceDao, final InternalTenantContext context) {
+    private void getInvoiceItemsWithinTransaction(final List<Invoice> invoices, final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final InternalTenantContext context) {
         for (final Invoice invoice : invoices) {
-            getInvoiceItemsWithinTransaction(invoice, invoiceDao, context);
+            getInvoiceItemsWithinTransaction(invoice, entitySqlDaoWrapperFactory, context);
         }
     }
 
-    private void getInvoiceItemsWithinTransaction(final Invoice invoice, final InvoiceSqlDao transactional, final InternalTenantContext context) {
+    private void getInvoiceItemsWithinTransaction(final Invoice invoice, final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final InternalTenantContext context) {
         final String invoiceId = invoice.getId().toString();
 
-        final InvoiceItemSqlDao transInvoiceItemSqlDao = transactional.become(InvoiceItemSqlDao.class);
+        final InvoiceItemSqlDao transInvoiceItemSqlDao = entitySqlDaoWrapperFactory.become(InvoiceItemSqlDao.class);
         final List<InvoiceItem> items = transInvoiceItemSqlDao.getInvoiceItemsByInvoice(invoiceId, context);
         invoice.addInvoiceItems(items);
     }
 
-    private void getInvoicePaymentsWithinTransaction(final List<Invoice> invoices, final InvoiceSqlDao invoiceDao, final InternalTenantContext context) {
+    private void getInvoicePaymentsWithinTransaction(final List<Invoice> invoices, final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final InternalTenantContext context) {
         for (final Invoice invoice : invoices) {
-            getInvoicePaymentsWithinTransaction(invoice, invoiceDao, context);
+            getInvoicePaymentsWithinTransaction(invoice, entitySqlDaoWrapperFactory, context);
         }
     }
 
-    private void getInvoicePaymentsWithinTransaction(final Invoice invoice, final InvoiceSqlDao invoiceSqlDao, final InternalTenantContext context) {
-        final InvoicePaymentSqlDao invoicePaymentSqlDao = invoiceSqlDao.become(InvoicePaymentSqlDao.class);
+    private void getInvoicePaymentsWithinTransaction(final Invoice invoice, final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final InternalTenantContext context) {
+        final InvoicePaymentSqlDao invoicePaymentSqlDao = entitySqlDaoWrapperFactory.become(InvoicePaymentSqlDao.class);
         final String invoiceId = invoice.getId().toString();
         final List<InvoicePayment> invoicePayments = invoicePaymentSqlDao.getPaymentsForInvoice(invoiceId, context);
         invoice.addPayments(invoicePayments);

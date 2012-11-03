@@ -26,6 +26,7 @@ import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 import com.ning.billing.util.entity.Entity;
 
 public interface HistorySqlDao<T extends Entity> {
+
     @SqlBatch(transactional = false)
     public void batchAddHistoryFromTransaction(List<EntityHistory<T>> histories,
                                                @InternalTenantContextBinder InternalCallContext context);

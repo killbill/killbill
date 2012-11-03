@@ -22,8 +22,6 @@ import java.util.List;
 import java.util.UUID;
 
 import org.skife.jdbi.v2.IDBI;
-import org.skife.jdbi.v2.Transaction;
-import org.skife.jdbi.v2.TransactionStatus;
 import org.skife.jdbi.v2.exceptions.TransactionFailedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +30,10 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.entity.dao.EntitySqlDao;
+import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
+import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
+import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import com.ning.billing.util.events.TagDefinitionInternalEvent;
 import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.tag.ControlTagType;
@@ -47,6 +49,7 @@ public class DefaultTagDefinitionDao implements TagDefinitionDao {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultTagDefinitionDao.class);
 
+    private final EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao;
     private final TagDefinitionSqlDao tagDefinitionSqlDao;
     private final TagEventBuilder tagEventBuilder;
     private final InternalBus bus;
@@ -56,6 +59,7 @@ public class DefaultTagDefinitionDao implements TagDefinitionDao {
         this.tagEventBuilder = tagEventBuilder;
         this.bus = bus;
         this.tagDefinitionSqlDao = dbi.onDemand(TagDefinitionSqlDao.class);
+        this.transactionalSqlDao = new EntitySqlDaoTransactionalJdbiWrapper(dbi);
     }
 
     @Override
@@ -123,9 +127,11 @@ public class DefaultTagDefinitionDao implements TagDefinitionDao {
         }
 
         try {
-            return tagDefinitionSqlDao.inTransaction(new Transaction<TagDefinition, TagDefinitionSqlDao>() {
+            return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<TagDefinition>() {
                 @Override
-                public TagDefinition inTransaction(final TagDefinitionSqlDao tagDefinitionSqlDao, final TransactionStatus status) throws Exception {
+                public TagDefinition inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                    final TagDefinitionSqlDao tagDefinitionSqlDao = entitySqlDaoWrapperFactory.become(TagDefinitionSqlDao.class);
+
                     // Make sure the tag definition doesn't exist already
                     final TagDefinition existingDefinition = tagDefinitionSqlDao.getByName(definitionName, context);
                     if (existingDefinition != null) {
@@ -174,9 +180,11 @@ public class DefaultTagDefinitionDao implements TagDefinitionDao {
     @Override
     public void deleteById(final UUID definitionId, final InternalCallContext context) throws TagDefinitionApiException {
         try {
-            tagDefinitionSqlDao.inTransaction(new Transaction<Void, TagDefinitionSqlDao>() {
+            transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
                 @Override
-                public Void inTransaction(final TagDefinitionSqlDao tagDefinitionSqlDao, final TransactionStatus status) throws Exception {
+                public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                    final TagDefinitionSqlDao tagDefinitionSqlDao = entitySqlDaoWrapperFactory.become(TagDefinitionSqlDao.class);
+
                     // Make sure the tag definition exists
                     final TagDefinition tagDefinition = tagDefinitionSqlDao.getById(definitionId.toString(), context);
                     if (tagDefinition == null) {

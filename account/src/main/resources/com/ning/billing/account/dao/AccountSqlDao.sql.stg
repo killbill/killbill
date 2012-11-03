@@ -110,7 +110,7 @@ getHistoryRecordId() ::= <<
     WHERE record_id = :recordId <AND_CHECK_TENANT()>;
 >>
 
-insertHistoryFromTransaction() ::= <<
+addHistoryFromTransaction() ::= <<
     INSERT INTO account_history(<historyFields()>)
     VALUES
     (:recordId, :id, :externalKey, :email, :name, :firstNameLength, :currency,

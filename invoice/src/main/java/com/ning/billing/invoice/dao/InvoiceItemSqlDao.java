@@ -53,10 +53,12 @@ import com.ning.billing.invoice.model.ItemAdjInvoiceItem;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.invoice.model.RefundAdjInvoiceItem;
 import com.ning.billing.invoice.model.RepairAdjInvoiceItem;
+import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 import com.ning.billing.util.dao.MapperBase;
+import com.ning.billing.util.entity.dao.Audited;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 
 @ExternalizedSqlViaStringTemplate3()
@@ -81,10 +83,12 @@ public interface InvoiceItemSqlDao extends EntitySqlDao<InvoiceItem> {
 
     @Override
     @SqlUpdate
+    @Audited(ChangeType.INSERT)
     void create(@InvoiceItemBinder final InvoiceItem invoiceItem,
                 @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlBatch(transactional = false)
+    @Audited(ChangeType.INSERT)
     void batchCreateFromTransaction(@InvoiceItemBinder final List<InvoiceItem> items,
                                     @InternalTenantContextBinder final InternalCallContext context);
 

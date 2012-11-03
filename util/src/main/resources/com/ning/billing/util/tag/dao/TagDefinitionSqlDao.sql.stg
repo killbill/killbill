@@ -57,6 +57,27 @@ getByName() ::= <<
   ;
 >>
 
+getRecordId() ::= <<
+    SELECT record_id
+    FROM tag_definitions
+    WHERE id = :id
+    <AND_CHECK_TENANT()>
+    ;
+>>
+
+getByRecordId() ::= <<
+    SELECT <fields()>
+    FROM tag_definitions
+    WHERE record_id = :recordId <AND_CHECK_TENANT()>
+    ;
+>>
+
+getHistoryRecordId() ::= <<
+    SELECT MAX(history_record_id)
+    FROM tag_definition_history
+    WHERE record_id = :recordId <AND_CHECK_TENANT()>;
+>>
+
 getById() ::= <<
   SELECT <fields()>
   FROM tag_definitions
@@ -71,4 +92,38 @@ getByIds(tag_definition_ids) ::= <<
   WHERE id IN (<tag_definition_ids: {id | :id_<i0>}; separator="," >)
   <AND_CHECK_TENANT()>
 >>
-;
+
+auditFields(prefix) ::= <<
+    <prefix>table_name,
+    <prefix>record_id,
+    <prefix>change_type,
+    <prefix>change_date,
+    <prefix>changed_by,
+    <prefix>reason_code,
+    <prefix>comments,
+    <prefix>user_token,
+    <prefix>account_record_id,
+    <prefix>tenant_record_id
+>>
+
+insertAuditFromTransaction() ::= <<
+    INSERT INTO audit_log(<auditFields()>)
+    VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, :reasonCode, :comment, :userToken, :accountRecordId, :tenantRecordId);
+>>
+
+historyFields() ::= <<
+    record_id,
+    id,
+    name,
+    created_by,
+    description,
+    change_type,
+    updated_by,
+    date,
+    tenant_record_id
+>>
+
+addHistoryFromTransaction() ::= <<
+    INSERT INTO tag_definition_history(<historyFields()>)
+    VALUES (:recordId, :id, :name, :userName, :description, :changeType, :userName, :createdDate, :tenantRecordId);
+>>

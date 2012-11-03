@@ -29,33 +29,35 @@ import org.skife.jdbi.v2.sqlobject.Binder;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
-import org.skife.jdbi.v2.sqlobject.mixins.CloseMe;
-import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
-import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
+import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 import com.ning.billing.util.dao.BinderBase;
 import com.ning.billing.util.dao.EntityHistory;
 import com.ning.billing.util.dao.MapperBase;
+import com.ning.billing.util.entity.dao.Audited;
 import com.ning.billing.util.entity.dao.UpdatableEntitySqlDao;
 
 @ExternalizedSqlViaStringTemplate3()
 @RegisterMapper(PaymentMethodSqlDao.PaymentMethodDaoMapper.class)
-public interface PaymentMethodSqlDao extends Transactional<PaymentMethodSqlDao>, UpdatableEntitySqlDao<PaymentMethodModelDao>, Transmogrifier, CloseMe {
+public interface PaymentMethodSqlDao extends UpdatableEntitySqlDao<PaymentMethodModelDao> {
 
     @SqlUpdate
+    @Audited(ChangeType.INSERT)
     void insertPaymentMethod(@Bind(binder = PaymentMethodModelDaoBinder.class) final PaymentMethodModelDao paymentMethod,
                              @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
+    @Audited(ChangeType.UPDATE)
     void markPaymentMethodAsDeleted(@Bind("id") final String paymentMethodId,
                                     @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
+    @Audited(ChangeType.UPDATE)
     void unmarkPaymentMethodAsDeleted(@Bind("id") final String paymentMethodId,
                                       @InternalTenantContextBinder final InternalCallContext context);
 

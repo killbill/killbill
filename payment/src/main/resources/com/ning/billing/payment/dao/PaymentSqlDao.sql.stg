@@ -91,6 +91,17 @@ getRecordId() ::= <<
     ;
 >>
 
+getByRecordId() ::= <<
+    SELECT <paymentFields()>, record_id as payment_number
+    FROM payments
+    WHERE record_id = :recordId <AND_CHECK_TENANT()>;
+>>
+
+getById() ::= <<
+    SELECT <paymentFields()>, record_id as payment_number
+    FROM payments
+    WHERE id = :id <AND_CHECK_TENANT()>;
+>>
 
 historyFields(prefix) ::= <<
     <prefix>record_id,

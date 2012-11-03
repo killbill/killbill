@@ -70,6 +70,13 @@ getRecordId() ::= <<
     ;
 >>
 
+getById() ::= <<
+    SELECT <fields()>
+    FROM bundles
+    WHERE id = :id <AND_CHECK_TENANT()>
+    ;
+>>
+
 auditFields(prefix) ::= <<
     <prefix>table_name,
     <prefix>record_id,

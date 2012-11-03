@@ -29,13 +29,11 @@ import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.Binder;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
-import org.skife.jdbi.v2.sqlobject.customizers.Mapper;
-import org.skife.jdbi.v2.sqlobject.mixins.CloseMe;
-import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
-import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
+import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
+import com.ning.billing.entitlement.engine.dao.EntitlementEventSqlDao.EventSqlMapper;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
 import com.ning.billing.entitlement.events.EventBaseBuilder;
@@ -54,48 +52,50 @@ import com.ning.billing.entitlement.events.user.ApiEventTransfer;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.events.user.ApiEventUncancel;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
+import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.InternalTenantContextBinder;
-import com.ning.billing.util.dao.AuditSqlDao;
 import com.ning.billing.util.dao.BinderBase;
 import com.ning.billing.util.dao.MapperBase;
+import com.ning.billing.util.entity.dao.Audited;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 
 @ExternalizedSqlViaStringTemplate3()
-public interface EntitlementEventSqlDao extends Transactional<EntitlementEventSqlDao>, AuditSqlDao,
-                                                EntitySqlDao<EntitlementEvent>, CloseMe, Transmogrifier {
+@RegisterMapper(EventSqlMapper.class)
+public interface EntitlementEventSqlDao extends EntitySqlDao<EntitlementEvent> {
 
     @SqlQuery
-    @Mapper(EventSqlMapper.class)
     public EntitlementEvent getEventById(@Bind("id") String id,
                                          @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlUpdate
+    @Audited(ChangeType.INSERT)
     public void insertEvent(@Bind(binder = EventSqlDaoBinder.class) EntitlementEvent evt,
                             @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
+    @Audited(ChangeType.UPDATE)
     public void unactiveEvent(@Bind("id") String id,
                               @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
+    @Audited(ChangeType.UPDATE)
     public void reactiveEvent(@Bind("id") String id,
                               @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
+    @Audited(ChangeType.UPDATE)
     public void updateVersion(@Bind("id") String id,
                               @Bind("currentVersion") Long currentVersion,
                               @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlQuery
-    @Mapper(EventSqlMapper.class)
     public List<EntitlementEvent> getFutureActiveEventForSubscription(@Bind("subscriptionId") String subscriptionId,
                                                                       @Bind("now") Date now,
                                                                       @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
-    @Mapper(EventSqlMapper.class)
     public List<EntitlementEvent> getEventsForSubscription(@Bind("subscriptionId") String subscriptionId,
                                                            @InternalTenantContextBinder final InternalTenantContext context);
 

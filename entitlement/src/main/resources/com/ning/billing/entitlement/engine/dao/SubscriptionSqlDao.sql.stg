@@ -3,23 +3,26 @@ group SubscriptionSqlDao;
 CHECK_TENANT() ::= "tenant_record_id = :tenantRecordId"
 AND_CHECK_TENANT() ::= "AND <CHECK_TENANT()>"
 
+fields(prefix) ::= <<
+    <prefix>id,
+    <prefix>bundle_id,
+    <prefix>category,
+    <prefix>start_date,
+    <prefix>bundle_start_date,
+    <prefix>active_version,
+    <prefix>charged_through_date,
+    <prefix>paid_through_date,
+    <prefix>created_by,
+    <prefix>created_date,
+    <prefix>updated_by,
+    <prefix>updated_date,
+    <prefix>account_record_id,
+    <prefix>tenant_record_id
+>>
+
 insertSubscription() ::= <<
-    insert into subscriptions (
-        id
-      , bundle_id
-      , category
-      , start_date
-      , bundle_start_date
-      , active_version
-      , charged_through_date
-      , paid_through_date
-      , created_by
-      , created_date
-      , updated_by
-      , updated_date
-      , account_record_id
-      , tenant_record_id
-    ) values (
+    insert into subscriptions (<fields()>)
+    values (
         :id
       , :bundleId
       , :category
@@ -112,6 +115,13 @@ getRecordId() ::= <<
     FROM subscriptions
     WHERE id = :id
     <AND_CHECK_TENANT()>
+    ;
+>>
+
+getById() ::= <<
+    SELECT record_id, <fields()>
+    FROM subscriptions
+    WHERE id = :id <AND_CHECK_TENANT()>
     ;
 >>
 

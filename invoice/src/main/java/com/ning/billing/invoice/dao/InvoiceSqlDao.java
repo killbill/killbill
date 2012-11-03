@@ -38,29 +38,28 @@ import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
-import org.skife.jdbi.v2.sqlobject.mixins.CloseMe;
-import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
-import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.model.DefaultInvoice;
+import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.InternalTenantContextBinder;
-import com.ning.billing.util.dao.AuditSqlDao;
 import com.ning.billing.util.dao.MapperBase;
 import com.ning.billing.util.dao.UuidMapper;
+import com.ning.billing.util.entity.dao.Audited;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 
 @ExternalizedSqlViaStringTemplate3()
-@RegisterMapper(InvoiceSqlDao.InvoiceMapper.class)
-public interface InvoiceSqlDao extends EntitySqlDao<Invoice>, AuditSqlDao, Transactional<InvoiceSqlDao>, Transmogrifier, CloseMe {
+@RegisterMapper({InvoiceSqlDao.InvoiceMapper.class, UuidMapper.class})
+public interface InvoiceSqlDao extends EntitySqlDao<Invoice> {
 
     @Override
     @SqlUpdate
+    @Audited(ChangeType.INSERT)
     void create(@InvoiceBinder Invoice invoice,
                 @InternalTenantContextBinder final InternalCallContext context);
 
@@ -82,7 +81,6 @@ public interface InvoiceSqlDao extends EntitySqlDao<Invoice>, AuditSqlDao, Trans
                                             @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
-    @RegisterMapper(UuidMapper.class)
     UUID getInvoiceIdByPaymentId(@Bind("paymentId") final String paymentId,
                                  @InternalTenantContextBinder final InternalTenantContext context);
 

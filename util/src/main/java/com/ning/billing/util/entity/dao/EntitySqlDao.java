@@ -22,14 +22,19 @@ import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
+import org.skife.jdbi.v2.sqlobject.mixins.CloseMe;
+import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
+import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.InternalTenantContextBinder;
+import com.ning.billing.util.dao.AuditSqlDao;
+import com.ning.billing.util.dao.HistorySqlDao;
 import com.ning.billing.util.entity.Entity;
 import com.ning.billing.util.entity.EntityPersistenceException;
 
-public interface EntitySqlDao<T extends Entity> {
+public interface EntitySqlDao<T extends Entity> extends AuditSqlDao, HistorySqlDao<T>, Transmogrifier, Transactional<EntitySqlDao<T>>, CloseMe {
 
     @SqlUpdate
     public void create(@BindBean final T entity,
