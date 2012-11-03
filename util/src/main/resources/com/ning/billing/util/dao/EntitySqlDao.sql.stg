@@ -1,0 +1,173 @@
+group EntitySqlDao;
+
+/** To override in each EntitySqlDao template file **/
+
+tableName() ::= ""
+
+/** Leave out id, account_record_id and tenant_record_id */
+tableFields(prefix) ::= ""
+
+tableValues() ::= ""
+
+historyTableName() ::= ""
+
+historyTableFields(prefix) ::= "<tableFields(prefix)>"
+
+historyTableValues() ::= "<tableValues()>"
+
+/****************************************************/
+
+idField(prefix) ::= <<
+<prefix>id
+>>
+
+recordIdField(prefix) ::= <<
+<prefix>record_id
+>>
+
+historyRecordIdField(prefix) ::= <<
+<prefix>history_record_id
+>>
+
+/** Override this if the Entity isn't tied to an account */
+accountRecordIdField(prefix) ::= <<
+<prefix>account_record_id
+>>
+
+accountRecordIdValue() ::= ":accountRecordId"
+
+tenantRecordIdField(prefix) ::= <<
+<prefix>tenant_record_id
+>>
+
+tenantRecordIdValue() ::= ":tenantRecordId"
+
+allTableFields(prefix) ::= <<
+  <recordIdField(prefix)>
+, <idField(prefix)>
+, <tableFields(prefix)>
+<if(accountRecordIdField(prefix))>, <accountRecordIdField(prefix)><endif>
+, <tenantRecordIdField(prefix)>
+>>
+
+allHistoryTableFields(prefix) ::= <<
+  <recordIdField(prefix)>
+, <idField(prefix)>
+, <historyTableFields(prefix)>
+<if(accountRecordIdField(prefix))>, <accountRecordIdField(prefix)><endif>
+, <tenantRecordIdField(prefix)>
+>>
+
+allHistoryTableValues() ::= <<
+  :recordId
+, :id
+, <historyTableValues()>
+<if(accountRecordIdField(""))>, <accountRecordIdValue()><endif>
+<if(tenantRecordIdField(""))>, <tenantRecordIdValue()><endif>
+>>
+
+auditTableName() ::= "audit_log"
+
+auditTableFields(prefix) ::= <<
+  <prefix>table_name
+, <prefix>record_id
+, <prefix>change_type
+, <prefix>change_date
+, <prefix>changed_by
+, <prefix>reason_code
+, <prefix>comments
+, <prefix>user_token
+, <accountRecordIdField(prefix)>
+, <tenantRecordIdField(prefix)>
+>>
+
+auditTableValues(prefix) ::= <<
+  :table_name
+, :record_id
+, :change_type
+, :change_date
+, :changed_by
+, :reason_code
+, :comments
+, :user_token
+, <accountRecordIdValue()>
+, <tenantRecordIdValue()>
+>>
+
+/** Macros used for multi-tenancy (almost any query should use them!) */
+CHECK_TENANT(prefix) ::= "<prefix>tenant_record_id = :tenantRecordId"
+AND_CHECK_TENANT(prefix) ::= "and <CHECK_TENANT(prefix)>"
+
+getById(id) ::= <<
+select
+<allTableFields("t.")>
+from <tableName()> t
+where <idField("t.")> = :id
+<AND_CHECK_TENANT("t.")>
+;
+>>
+
+getByRecordId(recordId) ::= <<
+select
+<allTableFields("t.")>
+from <tableName()> t
+where <recordIdField("t.")> = :recordId
+<AND_CHECK_TENANT("t.")>
+;
+>>
+
+getRecordId(id) ::= <<
+select
+  <recordIdField("t.")>
+from <tableName()> t
+where <idField("t.")> = :id
+<AND_CHECK_TENANT("t.")>
+;
+>>
+
+getHistoryRecordId(recordId) ::= <<
+select
+  max(<historyRecordIdField("t.")>)
+from <tableName()> t
+where <recordIdField("t.")> = :recordId
+<AND_CHECK_TENANT("t.")>
+;
+>>
+
+get(limit) ::= <<
+select
+<allTableFields("t.")>
+from <tableName()> t
+where <CHECK_TENANT("t.")>
+<if(limit)>limit :limit<endif>
+;
+>>
+
+test() ::= <<
+select
+<allTableFields("t.")>
+from <tableName()> t
+where <CHECK_TENANT("t.")>
+limit 1
+;
+>>
+
+addHistoryFromTransaction() ::= <<
+insert into <historyTableName()> (
+<allHistoryTableFields()>
+)
+values (
+<allHistoryTableValues()>
+)
+;
+>>
+
+insertAuditFromTransaction() ::= <<
+insert into <auditTableName()> (
+<auditTableFields()>
+)
+values (
+<auditTableValues()>
+)
+;
+>>

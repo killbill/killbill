@@ -1,0 +1,21 @@
+group Kombucha: EntitySqlDao;
+
+tableName() ::= "kombucha"
+
+historyTableName() ::= "kombucha_history"
+
+tableFields(prefix) ::= <<
+  <prefix>tea
+, <prefix>mushroom
+, <prefix>sugar
+>>
+
+tableValues() ::= <<
+  :tea
+, :mushroom
+, :sugar
+>>
+
+isIsTimeForKombucha() ::= <<
+select hour(current_timestamp()) = 17 as is_time;
+>>

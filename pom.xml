@@ -322,7 +322,6 @@
                 <groupId>org.antlr</groupId>
                 <artifactId>stringtemplate</artifactId>
                 <version>3.2.1</version>
-                <scope>runtime</scope>
             </dependency>
             <dependency>
                 <groupId>org.jdbi</groupId>

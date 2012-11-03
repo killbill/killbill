@@ -85,7 +85,6 @@
         <dependency>
             <groupId>org.antlr</groupId>
             <artifactId>stringtemplate</artifactId>
-            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>com.jayway.awaitility</groupId>
