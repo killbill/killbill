@@ -36,7 +36,7 @@ public class TestStringTemplateInheritance extends UtilTestSuite {
 
     @BeforeMethod(groups = "fast")
     public void setUp() throws Exception {
-        entityStream = this.getClass().getResourceAsStream("/com/ning/billing/util/dao/EntitySqlDao.sql.stg");
+        entityStream = this.getClass().getResourceAsStream("/com/ning/billing/util/entity/dao/EntitySqlDao.sql.stg");
         kombuchaStream = this.getClass().getResourceAsStream("/com/ning/billing/util/dao/Kombucha.sql.stg");
     }
 

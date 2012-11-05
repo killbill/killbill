@@ -30,7 +30,6 @@ import org.skife.jdbi.v2.sqlobject.Binder;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
-import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import com.ning.billing.catalog.api.ProductCategory;
@@ -46,8 +45,9 @@ import com.ning.billing.util.dao.BinderBase;
 import com.ning.billing.util.dao.MapperBase;
 import com.ning.billing.util.entity.dao.Audited;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
+import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 
-@ExternalizedSqlViaStringTemplate3()
+@EntitySqlDaoStringTemplate
 @RegisterMapper(SubscriptionMapper.class)
 public interface SubscriptionSqlDao extends EntitySqlDao<Subscription> {
 
