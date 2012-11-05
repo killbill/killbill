@@ -19,3 +19,15 @@ CREATE TABLE validation_test (
     column3 numeric(10,4),
     column4 datetime
 ) ENGINE = innodb;
+
+DROP TABLE IF EXISTS kombucha;
+CREATE TABLE kombucha (
+    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
+    id char(36) NOT NULL,
+    tea varchar(50) NOT NULL,
+    mushroom varchar(50) NOT NULL,
+    sugar varchar(50) NOT NULL,
+    account_record_id int(11) unsigned default null,
+    tenant_record_id int(11) unsigned default null,
+    PRIMARY KEY(record_id)
+) ENGINE = innodb;

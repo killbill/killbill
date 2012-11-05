@@ -22,7 +22,6 @@ import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
-import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.util.audit.ChangeType;
@@ -32,9 +31,10 @@ import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 import com.ning.billing.util.dao.EntityHistory;
 import com.ning.billing.util.dao.UuidMapper;
 import com.ning.billing.util.entity.dao.Audited;
+import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 import com.ning.billing.util.entity.dao.UpdatableEntitySqlDao;
 
-@ExternalizedSqlViaStringTemplate3
+@EntitySqlDaoStringTemplate
 @RegisterMapper({UuidMapper.class, AccountMapper.class})
 public interface AccountSqlDao extends UpdatableEntitySqlDao<Account> {
 

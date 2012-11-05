@@ -23,20 +23,19 @@ import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlBatch;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
-import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
-import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 
 import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.AccountEmail;
-import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 import com.ning.billing.util.dao.EntityHistory;
 import com.ning.billing.util.dao.ObjectTypeBinder;
 import com.ning.billing.util.entity.collection.dao.UpdatableEntityCollectionSqlDao;
+import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 
-@ExternalizedSqlViaStringTemplate3
+@EntitySqlDaoStringTemplate
 @RegisterMapper(AccountEmailMapper.class)
-public interface AccountEmailSqlDao extends UpdatableEntityCollectionSqlDao<AccountEmail>, Transactional<AccountEmailSqlDao>, Transmogrifier {
+public interface AccountEmailSqlDao extends UpdatableEntityCollectionSqlDao<AccountEmail>, Transactional<AccountEmailSqlDao> {
 
     @Override
     @SqlBatch

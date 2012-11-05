@@ -46,10 +46,11 @@ import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 import com.ning.billing.util.dao.EntityHistory;
 import com.ning.billing.util.entity.dao.Audited;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
+import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 import com.ning.billing.util.tag.DefaultTagDefinition;
 import com.ning.billing.util.tag.TagDefinition;
 
-@ExternalizedSqlViaStringTemplate3
+@EntitySqlDaoStringTemplate
 @RegisterMapper(TagDefinitionSqlDao.TagDefinitionMapper.class)
 public interface TagDefinitionSqlDao extends EntitySqlDao<TagDefinition> {
 
