@@ -1,26 +1,25 @@
-group InvoiceDao;
+group InvoiceDao: EntitySqlDao;
 
-CHECK_TENANT(prefix) ::= "<prefix>tenant_record_id = :tenantRecordId"
-AND_CHECK_TENANT(prefix) ::= "AND <CHECK_TENANT(prefix)>"
 
-invoiceFields(prefix) ::= <<
-    <prefix>id,
-    <prefix>account_id,
-    <prefix>invoice_date,
-    <prefix>target_date,
-    <prefix>currency,
-    <prefix>migrated,
-    <prefix>created_by,
-    <prefix>created_date,
-    <prefix>account_record_id,
-    <prefix>tenant_record_id
+tableFields(prefix) ::= <<
+  <prefix>account_id
+, <prefix>invoice_date
+, <prefix>target_date
+, <prefix>currency
+, <prefix>migrated
+, <prefix>created_by
+, <prefix>created_date
 >>
 
-get() ::= <<
-  SELECT record_id as invoice_number, <invoiceFields()>
-  FROM invoices
-  WHERE <CHECK_TENANT()>
-  ORDER BY target_date ASC;
+
+tableValues(prefix) ::= <<
+    <prefix>account_id
+    <prefix>invoice_date
+    <prefix>target_date
+    <prefix>currency
+    <prefix>migrated
+    <prefix>created_by
+    <prefix>created_date
 >>
 
 getInvoicesByAccount() ::= <<
@@ -57,27 +56,6 @@ getInvoicesBySubscription() ::= <<
   ;
 >>
 
-getById() ::= <<
-  SELECT record_id as invoice_number, <invoiceFields()>
-  FROM invoices
-  WHERE id = :id
-  <AND_CHECK_TENANT()>
-  ;
->>
-
-getByRecordId() ::= <<
-  SELECT record_id as invoice_number, <invoiceFields()>
-  FROM invoices
-  WHERE record_id = :recordId
-  <AND_CHECK_TENANT()>
-  ;
->>
-
-create() ::= <<
-  INSERT INTO invoices(<invoiceFields()>)
-  VALUES (:id, :accountId, :invoiceDate, :targetDate, :currency, :migrated, :userName, :createdDate, :accountRecordId, :tenantRecordId);
->>
-
 getInvoiceIdByPaymentId() ::= <<
   SELECT i.id
     FROM invoices i, invoice_payments ip
@@ -86,38 +64,3 @@ getInvoiceIdByPaymentId() ::= <<
    <AND_CHECK_TENANT("i.")>
    <AND_CHECK_TENANT("ip.")>
 >>
-
-
-getRecordId() ::= <<
-    SELECT record_id
-    FROM invoices
-    WHERE id = :id
-    <AND_CHECK_TENANT()>
-    ;
->>
-
-auditFields(prefix) ::= <<
-    <prefix>table_name,
-    <prefix>record_id,
-    <prefix>change_type,
-    <prefix>change_date,
-    <prefix>changed_by,
-    <prefix>reason_code,
-    <prefix>comments,
-    <prefix>user_token,
-    <prefix>account_record_id,
-    <prefix>tenant_record_id
->>
-
-insertAuditFromTransaction() ::= <<
-    INSERT INTO audit_log(<auditFields()>)
-    VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, :reasonCode, :comment, :userToken, :accountRecordId, :tenantRecordId);
->>
-
-test() ::= <<
-  SELECT 1
-  FROM invoices
-  WHERE <CHECK_TENANT()>
-  ;
->>
-;

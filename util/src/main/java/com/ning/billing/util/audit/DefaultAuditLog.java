@@ -21,20 +21,15 @@ import org.joda.time.DateTime;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.dao.EntityAudit;
 
-public class DefaultAuditLog implements AuditLog {
+public class DefaultAuditLog extends EntityAudit implements AuditLog {
 
-    private final EntityAudit entityAudit;
     private final CallContext callContext;
 
     public DefaultAuditLog(final EntityAudit entityAudit, final CallContext callContext) {
-        this.entityAudit = entityAudit;
+        super(entityAudit.getId(), entityAudit.getTableName(), entityAudit.getTargetRecordId(), entityAudit.getChangeType(), entityAudit.getCreatedDate());
         this.callContext = callContext;
     }
 
-    @Override
-    public ChangeType getChangeType() {
-        return entityAudit.getChangeType();
-    }
 
     @Override
     public String getUserName() {
@@ -68,38 +63,10 @@ public class DefaultAuditLog implements AuditLog {
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
-        sb.append("DefaultAuditLog");
-        sb.append("{entityAudit=").append(entityAudit);
+        sb.append("DefaultAuditLog {");
+        sb.append(super.toString());
         sb.append(", callContext=").append(callContext);
         sb.append('}');
         return sb.toString();
-    }
-
-    @Override
-    public boolean equals(final Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-
-        final DefaultAuditLog that = (DefaultAuditLog) o;
-
-        if (callContext != null ? !callContext.equals(that.callContext) : that.callContext != null) {
-            return false;
-        }
-        if (entityAudit != null ? !entityAudit.equals(that.entityAudit) : that.entityAudit != null) {
-            return false;
-        }
-
-        return true;
-    }
-
-    @Override
-    public int hashCode() {
-        int result = entityAudit != null ? entityAudit.hashCode() : 0;
-        result = 31 * result + (callContext != null ? callContext.hashCode() : 0);
-        return result;
     }
 }

@@ -31,6 +31,7 @@ import com.ning.billing.ObjectType;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.clock.DefaultClock;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.customfield.StringCustomField;
 import com.ning.billing.util.customfield.dao.AuditedCustomFieldDao;
@@ -45,7 +46,7 @@ public class TestDefaultCustomFieldUserApi extends UtilTestSuiteWithEmbeddedDB {
     @BeforeMethod(groups = "slow")
     public void setUp() throws Exception {
         final InternalCallContextFactory internalCallContextFactory = new InternalCallContextFactory(getMysqlTestingHelper().getDBI(), new ClockMock());
-        final CustomFieldDao customFieldDao = new AuditedCustomFieldDao(getMysqlTestingHelper().getDBI());
+        final CustomFieldDao customFieldDao = new AuditedCustomFieldDao(getMysqlTestingHelper().getDBI(), new DefaultClock());
         customFieldUserApi = new DefaultCustomFieldUserApi(internalCallContextFactory, customFieldDao);
     }
 

@@ -21,7 +21,7 @@ import java.util.UUID;
 import com.ning.billing.util.entity.Entity;
 import com.ning.billing.util.entity.EntityBase;
 
-public class DefaultAccountEmail extends EntityBase implements AccountEmail, Entity {
+public class DefaultAccountEmail extends EntityBase implements AccountEmail {
     private final UUID accountId;
     private final String email;
 

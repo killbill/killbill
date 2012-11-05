@@ -1,12 +1,5 @@
-group CustomFieldSqlDao;
+group CustomFieldSqlDao : EntitySqlDao;
 
-CHECK_TENANT() ::= "tenant_record_id = :tenantRecordId"
-AND_CHECK_TENANT() ::= "AND <CHECK_TENANT()>"
-
-insertFromTransaction() ::= <<
-    INSERT INTO custom_fields(id, object_id, object_type, field_name, field_value, created_by, created_date, updated_by, updated_date, account_record_id, tenant_record_id)
-    VALUES (:id, :objectId, :objectType, :fieldName, :fieldValue, :userName, :createdDate, :userName, :updatedDate, :accountRecordId, :tenantRecordId);
->>
 
 updateFromTransaction() ::= <<
     UPDATE custom_fields
@@ -22,77 +15,4 @@ deleteFromTransaction() ::= <<
     <AND_CHECK_TENANT()>
     ;
 >>
-
-load() ::= <<
-    SELECT id, object_id, object_type, field_name, field_value, created_by, created_date, updated_by, updated_date
-    FROM custom_fields
-    WHERE object_id = :objectId AND object_type = :objectType
-    <AND_CHECK_TENANT()>
-    ;
->>
-
-getRecordIds() ::= <<
-    SELECT record_id, id
-    FROM custom_fields
-    WHERE object_id = :objectId AND object_type = :objectType
-    <AND_CHECK_TENANT()>
-    ;
->>
-
-historyFields(prefix) ::= <<
-  <prefix>record_id,
-  <prefix>id,
-  <prefix>object_id,
-  <prefix>object_type,
-  <prefix>field_name,
-  <prefix>field_value,
-  <prefix>updated_by,
-  <prefix>date,
-  <prefix>change_type,
-  <prefix>account_record_id,
-  <prefix>tenant_record_id
->>
-
-addHistoryFromTransaction() ::= <<
-    INSERT INTO custom_field_history(<historyFields()>)
-    VALUES(:recordId, :id, :objectId, :objectType, :fieldName, :fieldValue, :userName, :updatedDate, :changeType, :accountRecordId, :tenantRecordId);
->>
-
-getMaxHistoryRecordId() ::= <<
-    SELECT MAX(history_record_id)
-    FROM custom_field_history
-    WHERE <CHECK_TENANT()>
-    ;
->>
-
-getHistoryRecordIds() ::= <<
-    SELECT history_record_id, record_id
-    FROM custom_field_history
-    WHERE history_record_id > :maxHistoryRecordId
-    <AND_CHECK_TENANT()>
-    ;
->>
-
-auditFields(prefix) ::= <<
-    <prefix>table_name,
-    <prefix>record_id,
-    <prefix>change_type,
-    <prefix>change_date,
-    <prefix>changed_by,
-    <prefix>reason_code,
-    <prefix>comments,
-    <prefix>user_token,
-    <prefix>account_record_id,
-    <prefix>tenant_record_id
->>
-
-insertAuditFromTransaction() ::= <<
-    INSERT INTO audit_log(<auditFields()>)
-    VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, :reasonCode, :comment, :userToken, :accountRecordId, :tenantRecordId);
->>
-
-test() ::= <<
-    SELECT 1 FROM custom_fields WHERE <CHECK_TENANT()>;
->>
-;
 

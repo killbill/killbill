@@ -16,28 +16,48 @@
 
 package com.ning.billing.util.dao;
 
-import com.ning.billing.util.audit.ChangeType;
+import java.util.UUID;
 
-public class EntityAudit {
+import org.joda.time.DateTime;
+
+import com.ning.billing.util.audit.ChangeType;
+import com.ning.billing.util.entity.EntityBase;
+
+public class EntityAudit extends EntityBase {
+    
     private final TableName tableName;
-    private final Long recordId;
+    private final Long targetRecordId;
     private final ChangeType changeType;
 
-    public EntityAudit(final TableName tableName, final Long recordId, final ChangeType changeType) {
+    public EntityAudit(final UUID entityId, final TableName tableName, final Long targetRecordId, final ChangeType changeType, final DateTime createdDate) {
+        super(entityId, createdDate, null);
         this.tableName = tableName;
-        this.recordId = recordId;
+        this.targetRecordId = targetRecordId;
         this.changeType = changeType;
+
+    }
+    public EntityAudit(final TableName tableName, final Long targetRecordId, final ChangeType changeType, final DateTime createdDate) {
+        this(UUID.randomUUID(), tableName, targetRecordId, changeType, createdDate);
     }
 
     public TableName getTableName() {
         return tableName;
     }
 
-    public Long getRecordId() {
-        return recordId;
+    public Long getTargetRecordId() {
+        return targetRecordId;
     }
 
     public ChangeType getChangeType() {
         return changeType;
+    }
+
+    @Override
+    public String toString() {
+        return "EntityAudit{" +
+               "tableName=" + tableName +
+               ", targetRecordId=" + targetRecordId +
+               ", changeType=" + changeType +
+               '}';
     }
 }

@@ -1,46 +1,62 @@
-group AccountDaoSql;
+group AccountDaoSql: EntitySqlDao;
 
-CHECK_TENANT() ::= "tenant_record_id = :tenantRecordId"
-AND_CHECK_TENANT() ::= "AND <CHECK_TENANT()>"
 
-accountFields(prefix) ::= <<
-    <prefix>id,
-    <prefix>external_key,
-    <prefix>email,
-    <prefix>name,
-    <prefix>first_name_length,
-    <prefix>currency,
-    <prefix>billing_cycle_day_local,
-    <prefix>billing_cycle_day_utc,
-    <prefix>payment_method_id,
-    <prefix>time_zone, 
-    <prefix>locale,
-    <prefix>address1, 
-    <prefix>address2, 
-    <prefix>company_name, 
-    <prefix>city, 
-	<prefix>state_or_province, 
-    <prefix>country, 
-    <prefix>postal_code,
-    <prefix>phone,
-    <prefix>migrated,
-    <prefix>is_notified_for_invoices,
-    <prefix>created_by,
-    <prefix>created_date,
-    <prefix>updated_by,
-    <prefix>updated_date,
-    <prefix>tenant_record_id
+tableFields(prefix) ::= <<
+  <prefix>external_key
+, <prefix>email
+, <prefix>name
+, <prefix>first_name_length
+, <prefix>currency
+, <prefix>billing_cycle_day_local
+, <prefix>billing_cycle_day_utc
+, <prefix>payment_method_id
+, <prefix>time_zone
+, <prefix>locale
+, <prefix>address1
+, <prefix>address2
+, <prefix>company_name
+, <prefix>city
+, <prefix>state_or_province
+, <prefix>country
+, <prefix>postal_code
+, <prefix>phone
+, <prefix>migrated
+, <prefix>is_notified_for_invoices
+, <prefix>created_by
+, <prefix>created_date
+, <prefix>updated_by
+, <prefix>updated_date
 >>
 
-create() ::= <<
-    INSERT INTO accounts
-      (<accountFields()>)
-    VALUES
-      (:id, :externalKey, :email, :name, :firstNameLength, :currency, :billingCycleDayLocal,
-       :billingCycleDayUTC, :paymentMethodId, :timeZone, :locale,
-       :address1, :address2, :companyName, :city, :stateOrProvince, :country, :postalCode, :phone,
-       :migrated, :isNotifiedForInvoices, :userName, :createdDate, :userName, :updatedDate, :tenantRecordId);
->>
+tableValues() ::= <<
+  :externalKey
+, :email
+, :name
+, :firstNameLength
+, :currency
+, :billingCycleDayLocal
+, :billingCycleDayUTC
+, :paymentMethodId
+, :timeZone
+, :locale
+, :address1
+, :address2
+, :companyName
+, :city
+, :stateOrProvince
+, :country
+, :postalCode
+, :phone
+, :migrated
+, :isNotifiedForInvoices
+, :createdBy
+, :createdDate
+, :updatedBy
+ >>
+
+historyTableName() ::= "account_history"
+
+accountRecordIdField(prefix) ::= ""
 
 update() ::= <<
     UPDATE accounts
@@ -63,61 +79,6 @@ updatePaymentMethod() ::= <<
 >>
 
 
-historyFields() ::= <<
-    record_id,
-    id,
-    external_key,
-    email,
-    name,
-    first_name_length,
-    currency,
-    billing_cycle_day_local,
-    billing_cycle_day_utc,
-    payment_method_id,
-    time_zone,
-    locale,
-    address1,
-    address2,
-    company_name,
-    city,
-    state_or_province,
-    country,
-    postal_code,
-    phone,
-    migrated,
-    is_notified_for_invoices,
-    change_type,
-    updated_by,
-    date,
-    tenant_record_id
->>
-
-getRecordId() ::= <<
-    SELECT record_id
-    FROM accounts
-    WHERE id = :id <AND_CHECK_TENANT()>;
->>
-
-getByRecordId() ::= <<
-    SELECT <accountFields()>
-    FROM accounts
-    WHERE record_id = :recordId <AND_CHECK_TENANT()>;
->>
-
-getHistoryRecordId() ::= <<
-    SELECT MAX(history_record_id)
-    FROM account_history
-    WHERE record_id = :recordId <AND_CHECK_TENANT()>;
->>
-
-addHistoryFromTransaction() ::= <<
-    INSERT INTO account_history(<historyFields()>)
-    VALUES
-    (:recordId, :id, :externalKey, :email, :name, :firstNameLength, :currency,
-     :billingCycleDayLocal, :billingCycleDayUTC, :paymentMethodId, :timeZone, :locale,
-     :address1, :address2, :companyName, :city, :stateOrProvince,
-     :country, :postalCode, :phone, :migrated, :isNotifiedForInvoices, :changeType, :userName, :createdDate, :tenantRecordId);
->>
 
 getAccountByKey() ::= <<
     select <accountFields()>
@@ -125,17 +86,6 @@ getAccountByKey() ::= <<
     where external_key = :externalKey <AND_CHECK_TENANT()>;
 >>
 
-getById() ::= <<
-    SELECT <accountFields()>
-    FROM accounts
-    WHERE id = :id <AND_CHECK_TENANT()>;
->>
-
-get() ::= <<
-    SELECT <accountFields()>
-    FROM accounts
-    WHERE <CHECK_TENANT()>;
->>
 
 getIdFromKey() ::= <<
     SELECT id
@@ -143,25 +93,3 @@ getIdFromKey() ::= <<
     WHERE external_key = :externalKey <AND_CHECK_TENANT()>;
 >>
 
-auditFields(prefix) ::= <<
-    <prefix>table_name,
-    <prefix>record_id,
-    <prefix>change_type,
-    <prefix>change_date,
-    <prefix>changed_by,
-    <prefix>reason_code,
-    <prefix>comments,
-    <prefix>user_token,
-    <prefix>account_record_id,
-    <prefix>tenant_record_id
->>
-
-insertAuditFromTransaction() ::= <<
-    INSERT INTO audit_log(<auditFields()>)
-    VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, :reasonCode, :comment, :userToken, :accountRecordId, :tenantRecordId);
->>
-
-test() ::= <<
-    SELECT 1 FROM accounts WHERE <CHECK_TENANT()>;
->>
-;

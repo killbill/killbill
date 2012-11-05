@@ -1,7 +1,30 @@
-group BlockingStateSqlDao;
+group BlockingStateSqlDao: EntitySqlDao;
 
-CHECK_TENANT() ::= "tenant_record_id = :tenantRecordId"
-AND_CHECK_TENANT() ::= "AND <CHECK_TENANT()>"
+
+tableFields(prefix) ::= <<
+ <prefix>id
+, <prefix>blockable_id
+, <prefix>state
+, <prefix>type
+, <prefix>service
+, <prefix>block_change
+, <prefix>block_entitlement
+, <prefix>block_billing
+, <prefix>created_date
+>>
+
+
+tableValues() ::= <<
+ :id
+, :blockableId
+, :state
+, :type
+, :service
+, :blockChange
+, :blockEntitlement
+, :blockBilling
+, :createdDate
+>>
 
 getBlockingStateFor() ::= <<
     select
@@ -42,32 +65,4 @@ getBlockingHistoryFor() ::= <<
     -- We want the history in order
     order by created_date asc, record_id asc
     ;
->>
-
-setBlockingState() ::= <<
-    insert into blocking_states (
-       id
-      , blockable_id
-      , state
-      , type
-      , service
-      , block_change
-      , block_entitlement
-      , block_billing
-      , created_date
-      , account_record_id
-      , tenant_record_id
-    ) values (
-        :id
-      , :blockable_id
-      , :state
-      , :type
-      , :service
-      , :block_change
-      , :block_entitlement
-      , :block_billing
-      , :created_date
-      , :accountRecordId
-      , :tenantRecordId
-    );
 >>

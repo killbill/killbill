@@ -130,13 +130,13 @@ public interface BlockingStateSqlDao extends BlockingStateDao, CloseMe, Transmog
         @Override
         public void bind(@SuppressWarnings("rawtypes") final SQLStatement stmt, final Bind bind, final DefaultBlockingState state) {
             stmt.bind("id", state.getId().toString());
-            stmt.bind("blockable_id", state.getBlockedId().toString());
+            stmt.bind("blockableId", state.getBlockedId().toString());
             stmt.bind("state", state.getStateName().toString());
             stmt.bind("type", state.getType().toString());
             stmt.bind("service", state.getService().toString());
-            stmt.bind("block_change", state.isBlockChange());
-            stmt.bind("block_entitlement", state.isBlockEntitlement());
-            stmt.bind("block_billing", state.isBlockBilling());
+            stmt.bind("blockChange", state.isBlockChange());
+            stmt.bind("blockEntitlement", state.isBlockEntitlement());
+            stmt.bind("blockBilling", state.isBlockBilling());
         }
     }
 

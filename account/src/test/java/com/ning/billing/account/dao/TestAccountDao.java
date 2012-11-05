@@ -40,6 +40,7 @@ import com.ning.billing.account.api.MutableAccountData;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.mock.MockAccountBuilder;
 import com.ning.billing.util.api.TagApiException;
+import com.ning.billing.util.clock.DefaultClock;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.customfield.StringCustomField;
 import com.ning.billing.util.customfield.dao.AuditedCustomFieldDao;
@@ -146,7 +147,7 @@ public class TestAccountDao extends AccountDaoTestBase {
         final UUID accountId = UUID.randomUUID();
         final List<CustomField> customFields = new ArrayList<CustomField>();
         customFields.add(new StringCustomField(fieldName, fieldValue));
-        final CustomFieldDao customFieldDao = new AuditedCustomFieldDao(dbi);
+        final CustomFieldDao customFieldDao = new AuditedCustomFieldDao(dbi, new DefaultClock());
         customFieldDao.saveEntities(accountId, ObjectType.ACCOUNT, customFields, internalCallContext);
 
         final Map<String, CustomField> customFieldMap = customFieldDao.loadEntities(accountId, ObjectType.ACCOUNT, internalCallContext);
@@ -163,7 +164,7 @@ public class TestAccountDao extends AccountDaoTestBase {
         final TagDefinitionSqlDao tagDescriptionDao = dbi.onDemand(TagDefinitionSqlDao.class);
         tagDescriptionDao.create(definition, internalCallContext);
 
-        final TagDao tagDao = new AuditedTagDao(dbi, tagEventBuilder, bus);
+        final TagDao tagDao = new AuditedTagDao(dbi, tagEventBuilder, bus, new DefaultClock());
         tagDao.insertTag(account.getId(), ObjectType.ACCOUNT, definition.getId(), internalCallContext);
 
         final Map<String, Tag> tagMap = tagDao.loadEntities(account.getId(), ObjectType.ACCOUNT, internalCallContext);

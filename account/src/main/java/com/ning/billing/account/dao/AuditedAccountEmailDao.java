@@ -32,6 +32,7 @@ import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.account.api.DefaultAccountEmail;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.dao.AuditedCollectionDaoBase;
 import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.EntityPersistenceException;
@@ -45,7 +46,8 @@ public class AuditedAccountEmailDao extends AuditedCollectionDaoBase<AccountEmai
     private final AccountEmailSqlDao accountEmailSqlDao;
 
     @Inject
-    public AuditedAccountEmailDao(final IDBI dbi) {
+    public AuditedAccountEmailDao(final IDBI dbi, final Clock clock) {
+        super(clock);
         this.accountEmailSqlDao = dbi.onDemand(AccountEmailSqlDao.class);
     }
 

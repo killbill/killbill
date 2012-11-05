@@ -54,10 +54,8 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
     @BeforeSuite(groups = "slow")
     public void setup() throws IOException {
         clock = new DefaultClock();
-
         setupDb();
-
-        paymentDao = new AuditedPaymentDao(dbi, null);
+        paymentDao = new AuditedPaymentDao(dbi, null, clock);
     }
 
     private void setupDb() {

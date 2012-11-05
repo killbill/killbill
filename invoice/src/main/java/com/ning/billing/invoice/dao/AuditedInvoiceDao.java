@@ -272,9 +272,7 @@ public class AuditedInvoiceDao implements InvoiceDao {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
                 final InvoicePaymentSqlDao transactional = entitySqlDaoWrapperFactory.become(InvoicePaymentSqlDao.class);
-
                 transactional.notifyOfPayment(invoicePayment, context);
-
                 return null;
             }
         });
@@ -581,7 +579,6 @@ public class AuditedInvoiceDao implements InvoiceDao {
                 if (invoiceIdForExternalCharge == null) {
                     final Invoice invoiceForExternalCharge = new DefaultInvoice(accountId, effectiveDate, effectiveDate, currency);
                     transactional.create(invoiceForExternalCharge, context);
-
                     invoiceIdForExternalCharge = invoiceForExternalCharge.getId();
                 }
 
@@ -632,7 +629,6 @@ public class AuditedInvoiceDao implements InvoiceDao {
                 if (invoiceIdForCredit == null) {
                     final Invoice invoiceForCredit = new DefaultInvoice(accountId, effectiveDate, effectiveDate, currency);
                     transactional.create(invoiceForCredit, context);
-
                     invoiceIdForCredit = invoiceForCredit.getId();
                 }
 
@@ -747,7 +743,6 @@ public class AuditedInvoiceDao implements InvoiceDao {
                         final InvoiceItem nextCBAAdjItem = new CreditBalanceAdjInvoiceItem(invoiceFollowing.getId(), invoice.getAccountId(), context.getCreatedDate().toLocalDate(),
                                 cbaItem.getId(), positiveCBAAdjItemAmount, cbaItem.getCurrency());
                         invoiceItemSqlDao.create(nextCBAAdjItem, context);
-
                         if (positiveRemainderToAdjust.compareTo(BigDecimal.ZERO) == 0) {
                             break;
                         }

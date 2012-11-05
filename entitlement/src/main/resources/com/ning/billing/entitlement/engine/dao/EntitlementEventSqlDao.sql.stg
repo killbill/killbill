@@ -1,27 +1,40 @@
-group EventSqlDao;
+group EventSqlDao: EntitySqlDao;
 
-CHECK_TENANT() ::= "tenant_record_id = :tenantRecordId"
-AND_CHECK_TENANT() ::= "AND <CHECK_TENANT()>"
 
-fields(prefix) ::= <<
-    <prefix>id,
-    <prefix>event_type,
-    <prefix>user_type,
-    <prefix>requested_date,
-    <prefix>effective_date,
-    <prefix>subscription_id,
-    <prefix>plan_name,
-    <prefix>phase_name,
-    <prefix>price_list_name,
-    <prefix>user_token,
-    <prefix>current_version,
-    <prefix>is_active,
-    <prefix>created_by,
-    <prefix>created_date,
-    <prefix>updated_by,
-    <prefix>updated_date,
-    <prefix>account_record_id,
-    <prefix>tenant_record_id
+tableFields(prefix) ::= <<
+  <prefix> event_type
+, <prefix> user_type
+, <prefix> requested_date
+, <prefix> effective_date
+, <prefix> subscription_id
+, <prefix> plan_name
+, <prefix> phase_name
+, <prefix> price_list_name
+, <prefix> user_token
+, <prefix> current_version
+, <prefix> is_active
+, <prefix> created_by
+, <prefix> created_date
+, <prefix> updated_by
+, <prefix> updated_date
+>>
+
+tableValues() ::= <<
+  :eventType
+, :userType
+, :requested_date
+, :effective_date
+, :subscription_id
+, :plan_name
+, :phase_name
+, :price_list_name
+, :user_token
+, :current_version
+, :is_active
+, :created_by
+, :created_date
+, :updated_by
+, :updated_date
 >>
 
 getEventById() ::= <<
@@ -33,29 +46,6 @@ getEventById() ::= <<
   ;
 >>
 
-insertEvent() ::= <<
-    insert into subscription_events (<fields()>)
-    values (
-    :id
-    , :eventType
-    , :userType
-    , :requestedDate
-    , :effectiveDate
-    , :subscriptionId
-    , :planName
-    , :phaseName
-    , :priceListName
-    , :userToken
-    , :currentVersion
-    , :isActive
-    , :userName
-    , :createdDate
-    , :userName
-    , :updatedDate
-    , :accountRecordId
-    , :tenantRecordId
-    );
->>
 
 updateVersion() ::= <<
     update subscription_events
@@ -117,38 +107,3 @@ getEventsForSubscription() ::= <<
       , record_id asc
     ;      
 >>
-
-getRecordId() ::= <<
-    SELECT record_id
-    FROM subscription_events
-    WHERE id = :id
-    <AND_CHECK_TENANT()>
-    ;
->>
-
-getById() ::= <<
-    SELECT record_id, <fields()>
-    FROM subscription_events
-    WHERE id = :id <AND_CHECK_TENANT()>
-    ;
->>
-
-auditFields(prefix) ::= <<
-    <prefix>table_name,
-    <prefix>record_id,
-    <prefix>change_type,
-    <prefix>change_date,
-    <prefix>changed_by,
-    <prefix>reason_code,
-    <prefix>comments,
-    <prefix>user_token,
-    <prefix>account_record_id,
-    <prefix>tenant_record_id
->>
-
-insertAuditFromTransaction() ::= <<
-    INSERT INTO audit_log(<auditFields()>)
-    VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, :reasonCode, :comment, :userToken, :accountRecordId, :tenantRecordId);
->>
-
-

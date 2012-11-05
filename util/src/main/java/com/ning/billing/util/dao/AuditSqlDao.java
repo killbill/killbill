@@ -44,9 +44,9 @@ public interface AuditSqlDao {
                                            @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlQuery
-    public List<AuditLog> getAuditLogsForRecordId(@TableNameBinder final TableName tableName,
-                                                  @Bind("recordId") final long recordId,
-                                                  @InternalTenantContextBinder final InternalTenantContext context);
+    public List<AuditLog> getAuditLogsForTargetRecordId(@TableNameBinder final TableName tableName,
+                                                        @Bind("targetRecordId") final long targetRecordId,
+                                                        @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
     public Long getRecordId(@Bind("id") final String id, @InternalTenantContextBinder final InternalTenantContext context);

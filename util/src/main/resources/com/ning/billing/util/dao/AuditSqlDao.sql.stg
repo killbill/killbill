@@ -1,30 +1,13 @@
-group AuditSqlDao;
+group AuditSqlDao : EntitySqlDao;
 
 CHECK_TENANT() ::= "tenant_record_id = :tenantRecordId"
 AND_CHECK_TENANT() ::= "AND <CHECK_TENANT()>"
 
-fields(prefix) ::= <<
-    <prefix>table_name,
-    <prefix>record_id,
-    <prefix>change_type,
-    <prefix>change_date,
-    <prefix>changed_by,
-    <prefix>reason_code,
-    <prefix>comments,
-    <prefix>user_token,
-    <prefix>account_record_id,
-    <prefix>tenant_record_id
->>
-
-insertAuditFromTransaction() ::= <<
-    INSERT INTO audit_log(<fields()>)
-    VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, :reasonCode, :comment, :userToken, :accountRecordId, :tenantRecordId);
->>
 
 getAuditLogsForRecordId() ::= <<
-  SELECT <fields()>
+  SELECT <auditTableFields()>
   FROM audit_log
-  WHERE record_id = :recordId
+  WHERE target_record_id = :targetRecordId
   AND table_name = :tableName
   <AND_CHECK_TENANT()>
   ORDER BY change_date ASC

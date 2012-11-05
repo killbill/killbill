@@ -228,7 +228,8 @@ public class EntitySqlDaoWrapperInvocationHandler<T extends EntitySqlDao<U>, U e
     }
 
     private void insertAudits(final TableName tableName, final Long historyRecordId, final ChangeType changeType, final InternalCallContext context) {
-        final EntityAudit audit = new EntityAudit(tableName, historyRecordId, changeType);
+        // STEPH can we trust context or should we use Clock?
+        final EntityAudit audit = new EntityAudit(tableName, historyRecordId, changeType, context.getCreatedDate());
         sqlDao.insertAuditFromTransaction(audit, context);
     }
 }

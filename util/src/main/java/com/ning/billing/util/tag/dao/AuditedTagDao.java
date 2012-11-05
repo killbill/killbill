@@ -36,6 +36,7 @@ import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.dao.AuditedCollectionDaoBase;
 import com.ning.billing.util.dao.EntityAudit;
 import com.ning.billing.util.dao.EntityHistory;
@@ -61,7 +62,8 @@ public class AuditedTagDao extends AuditedCollectionDaoBase<Tag, Tag> implements
     private final InternalBus bus;
 
     @Inject
-    public AuditedTagDao(final IDBI dbi, final TagEventBuilder tagEventBuilder, final InternalBus bus) {
+    public AuditedTagDao(final IDBI dbi, final TagEventBuilder tagEventBuilder, final InternalBus bus, final Clock clock) {
+        super(clock);
         this.tagEventBuilder = tagEventBuilder;
         this.bus = bus;
         this.tagSqlDao = dbi.onDemand(TagSqlDao.class);

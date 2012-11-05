@@ -1,34 +1,30 @@
-group InvoicePayment;
+group InvoicePayment: EntitySqlDao;
 
-CHECK_TENANT(prefix) ::= "<prefix>tenant_record_id = :tenantRecordId"
-AND_CHECK_TENANT(prefix) ::= "AND <CHECK_TENANT(prefix)>"
 
-invoicePaymentFields(prefix) ::= <<
-  <prefix>id,
-  <prefix>type,
-  <prefix>invoice_id,
-  <prefix>payment_id,
-  <prefix>payment_date,
-  <prefix>amount,
-  <prefix>currency,
-  <prefix>payment_cookie_id,
-  <prefix>linked_invoice_payment_id,
-  <prefix>created_by,
-  <prefix>created_date,
-  <prefix>account_record_id,
-  <prefix>tenant_record_id
+tableFields(prefix) ::= <<
+  <prefix>type
+, <prefix>invoice_id
+, <prefix>payment_id
+, <prefix>payment_date
+, <prefix>amount
+, <prefix>currency
+, <prefix>payment_cookie_id
+, <prefix>linked_invoice_payment_id
+, <prefix>created_by
+, <prefix>created_date
 >>
 
-create() ::= <<
-  INSERT INTO invoice_payments(<invoicePaymentFields()>)
-  VALUES(:id, :type, :invoiceId, :paymentId, :paymentDate, :amount, :currency,
-         :paymentCookieId, :linkedInvoicePaymentId, :userName, :createdDate, :accountRecordId, :tenantRecordId);
->>
-
-batchCreateFromTransaction() ::= <<
-  INSERT INTO invoice_payments(<invoicePaymentFields()>)
-  VALUES(:id, :type, :invoiceId, :paymentId, :paymentDate, :amount, :currency,
-         :paymentCookieId, :linkedInvoicePaymentId, :userName, :createdDate, :accountRecordId, :tenantRecordId);
+tableValues() ::= <<
+  :type
+, :invoiceId
+, :paymentId
+, :paymentDate
+, :amount
+, :currency
+, :paymentCookieId
+, :linkedInvoicePaymentId
+, :createdBy
+, :createdDate
 >>
 
 getByPaymentId() ::= <<
@@ -39,20 +35,6 @@ getByPaymentId() ::= <<
   ;
 >>
 
-get() ::= <<
-  SELECT <invoicePaymentFields()>
-  FROM invoice_payments
-  <AND_CHECK_TENANT()>
-  ;
->>
-
-getById() ::= <<
-  SELECT <invoicePaymentFields()>
-  FROM invoice_payments
-  WHERE id = :id
-  <AND_CHECK_TENANT()>
-  ;
->>
 
 getPaymentsForCookieId() ::= <<
   SELECT <invoicePaymentFields()>
@@ -82,44 +64,6 @@ getInvoicePayments() ::= <<
     WHERE payment_id = :paymentId
     <AND_CHECK_TENANT()>
     ;
->>
-
-getRecordId() ::= <<
-    SELECT record_id
-    FROM invoice_payments
-    WHERE id = :id
-    <AND_CHECK_TENANT()>
-    ;
->>
-
-getRecordIds() ::= <<
-    SELECT record_id, id
-    FROM invoice_payments
-    WHERE invoice_id = :invoiceId
-    <AND_CHECK_TENANT()>
-    ;
->>
-
-auditFields(prefix) ::= <<
-    <prefix>table_name,
-    <prefix>record_id,
-    <prefix>change_type,
-    <prefix>change_date,
-    <prefix>changed_by,
-    <prefix>reason_code,
-    <prefix>comments,
-    <prefix>user_token,
-    <prefix>account_record_id,
-    <prefix>tenant_record_id
->>
-
-insertAuditFromTransaction() ::= <<
-    INSERT INTO audit_log(<auditFields()>)
-    VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, :reasonCode, :comment, :userToken, :accountRecordId, :tenantRecordId);
->>
-
-test() ::= <<
-    SELECT 1 FROM invoice_payments where <CHECK_TENANT()>;
 >>
 
 getRemainingAmountPaid() ::= <<
@@ -158,4 +102,4 @@ getChargebacksByPaymentId() ::= <<
     <AND_CHECK_TENANT()>
     ;
 >>
-;
+

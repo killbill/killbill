@@ -63,9 +63,12 @@ import com.ning.billing.entitlement.events.user.ApiEventCancel;
 import com.ning.billing.entitlement.events.user.ApiEventChange;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
+import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.dao.EntityAudit;
+import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
@@ -202,7 +205,6 @@ public class AuditedEntitlementDao implements EntitlementDao {
                 final BundleSqlDao bundleSqlDao = entitySqlDaoWrapperFactory.become(BundleSqlDao.class);
                 final String bundleId = subscription.getBundleId().toString();
                 bundleSqlDao.updateBundleLastSysTime(bundleId, clock.getUTCNow().toDate(), context);
-
                 return null;
             }
         });
@@ -217,7 +219,6 @@ public class AuditedEntitlementDao implements EntitlementDao {
                 final UUID subscriptionId = subscription.getId();
                 cancelNextPhaseEventFromTransaction(subscriptionId, transactional, context);
                 transactional.insertEvent(nextPhase, context);
-
                 recordFutureNotificationFromTransaction(transactional,
                                                         nextPhase.getEffectiveDate(),
                                                         new EntitlementNotificationKey(nextPhase.getId()),
@@ -279,7 +280,6 @@ public class AuditedEntitlementDao implements EntitlementDao {
                 final SubscriptionSqlDao transactional = entitySqlDaoWrapperFactory.become(SubscriptionSqlDao.class);
                 transactional.insertSubscription(subscription, context);
 
-                // STEPH batch as well
                 final EntitlementEventSqlDao eventsDaoFromSameTransaction = entitySqlDaoWrapperFactory.become(EntitlementEventSqlDao.class);
                 for (final EntitlementEvent cur : initialEvents) {
                     eventsDaoFromSameTransaction.insertEvent(cur, context);
@@ -288,12 +288,10 @@ public class AuditedEntitlementDao implements EntitlementDao {
                                                             new EntitlementNotificationKey(cur.getId()),
                                                             context);
                 }
-
                 // Notify the Bus of the latest requested change, if needed
                 if (initialEvents.size() > 0) {
                     notifyBusOfRequestedChange(eventsDaoFromSameTransaction, subscription, initialEvents.get(initialEvents.size() - 1), context);
                 }
-
                 return null;
             }
         });
@@ -359,7 +357,6 @@ public class AuditedEntitlementDao implements EntitlementDao {
                 if (cancelledEvent != null) {
                     final String cancelledEventId = cancelledEvent.getId().toString();
                     transactional.unactiveEvent(cancelledEventId, context);
-
                     for (final EntitlementEvent cur : uncancelEvents) {
                         transactional.insertEvent(cur, context);
                         recordFutureNotificationFromTransaction(transactional,
@@ -389,7 +386,6 @@ public class AuditedEntitlementDao implements EntitlementDao {
 
                 for (final EntitlementEvent cur : changeEvents) {
                     transactional.insertEvent(cur, context);
-
                     recordFutureNotificationFromTransaction(transactional,
                                                             cur.getEffectiveDate(),
                                                             new EntitlementNotificationKey(cur.getId()),
@@ -409,7 +405,6 @@ public class AuditedEntitlementDao implements EntitlementDao {
         final UUID subscriptionId = subscription.getId();
         cancelFutureEventsFromTransaction(subscriptionId, transactional, context);
         transactional.insertEvent(cancelEvent, context);
-
         recordFutureNotificationFromTransaction(transactional,
                                                 cancelEvent.getEffectiveDate(),
                                                 new EntitlementNotificationKey(cancelEvent.getId(), seqId),
@@ -682,7 +677,6 @@ public class AuditedEntitlementDao implements EntitlementDao {
             final SubscriptionData subData = curSubscription.getData();
             for (final EntitlementEvent curEvent : curSubscription.getInitialEvents()) {
                 transactional.insertEvent(curEvent, context);
-
                 recordFutureNotificationFromTransaction(transactional,
                                                         curEvent.getEffectiveDate(),
                                                         new EntitlementNotificationKey(curEvent.getId()),

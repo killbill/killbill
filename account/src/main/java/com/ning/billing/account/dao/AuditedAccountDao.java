@@ -114,7 +114,6 @@ public class AuditedAccountDao implements AccountDao {
                     final Long recordId = accountSqlDao.getRecordId(account.getId().toString(), context);
                     // We need to re-hydrate the context with the account record id
                     final InternalCallContext rehydratedContext = internalCallContextFactory.createInternalCallContext(recordId, context);
-
                     final AccountCreationInternalEvent creationEvent = new DefaultAccountCreationEvent(account,
                                                                                                        rehydratedContext.getUserToken(),
                                                                                                        context.getAccountRecordId(),

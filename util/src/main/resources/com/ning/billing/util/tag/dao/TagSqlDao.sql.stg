@@ -89,18 +89,6 @@ getHistoryRecordIds() ::= <<
     ;
 >>
 
-auditFields(prefix) ::= <<
-    <prefix>table_name,
-    <prefix>record_id,
-    <prefix>change_type,
-    <prefix>change_date,
-    <prefix>changed_by,
-    <prefix>reason_code,
-    <prefix>comments,
-    <prefix>user_token,
-    <prefix>account_record_id,
-    <prefix>tenant_record_id
->>
 
 load() ::= <<
   SELECT <fields()>
@@ -109,10 +97,6 @@ load() ::= <<
   <AND_CHECK_TENANT()>;
 >>
 
-insertAuditFromTransaction() ::= <<
-    INSERT INTO audit_log(<auditFields()>)
-    VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, :reasonCode, :comment, :userToken, :accountRecordId, :tenantRecordId);
->>
 
 test() ::= <<
   SELECT 1 FROM tags WHERE <CHECK_TENANT()>;

@@ -24,6 +24,7 @@ import org.testng.annotations.BeforeClass;
 import com.ning.billing.account.AccountTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.clock.DefaultClock;
 import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.svcsapi.bus.BusService;
 import com.ning.billing.util.bus.DefaultBusService;
@@ -54,7 +55,7 @@ public abstract class AccountDaoTestBase extends AccountTestSuiteWithEmbeddedDB 
             // Health check test to make sure MySQL is setup properly
             accountDao.test(internalCallContext);
 
-            accountEmailDao = new AuditedAccountEmailDao(dbi);
+            accountEmailDao = new AuditedAccountEmailDao(dbi, new DefaultClock());
             // Health check test to make sure MySQL is setup properly
             accountEmailDao.test(internalCallContext);
         } catch (Throwable t) {

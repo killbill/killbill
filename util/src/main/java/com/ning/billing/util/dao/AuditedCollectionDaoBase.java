@@ -24,18 +24,27 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
 import com.ning.billing.ObjectType;
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.entity.Entity;
 import com.ning.billing.util.entity.collection.dao.UpdatableEntityCollectionSqlDao;
 
 import com.google.common.collect.Sets;
 
 public abstract class AuditedCollectionDaoBase<T extends Entity, V> implements AuditedCollectionDao<T> {
+
+
+    protected final Clock clock;
+
+    public AuditedCollectionDaoBase( final Clock clock) {
+        this.clock = clock;
+    }
 
     /**
      * Returns equivalence object for the entities, so that dao
@@ -191,7 +200,7 @@ public abstract class AuditedCollectionDaoBase<T extends Entity, V> implements A
         for (final EntityHistory<T> history : histories) {
             final Long recordId = history.getValue();
             final Long historyRecordId = historyRecordIds.get(recordId);
-            audits.add(new EntityAudit(getTableName(context), historyRecordId, history.getChangeType()));
+            audits.add(new EntityAudit(getTableName(context), historyRecordId, history.getChangeType(), clock.getUTCNow()));
         }
 
         return audits;

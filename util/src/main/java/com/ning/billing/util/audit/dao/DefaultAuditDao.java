@@ -65,21 +65,21 @@ public class DefaultAuditDao implements AuditDao {
         final List<AuditLog> auditLogs = new ArrayList<AuditLog>();
 
         // Look at the history table and gather all the history_record_id for that objectId
-        final List<Long> recordIds = auditSqlDao.getHistoryRecordIdsForTable(tableName.getHistoryTableName().getTableName().toLowerCase(),
+        final List<Long> targetRecordIds = auditSqlDao.getHistoryRecordIdsForTable(tableName.getHistoryTableName().getTableName().toLowerCase(),
                                                                              objectId.toString(), context);
-        if (recordIds == null) {
+        if (targetRecordIds == null) {
             return auditLogs;
         } else {
-            for (final Long recordId : recordIds) {
-                auditLogs.addAll(getAuditLogsForRecordId(tableName.getHistoryTableName(), recordId, auditLevel, context));
+            for (final Long targetRecordId : targetRecordIds) {
+                auditLogs.addAll(getAuditLogsForRecordId(tableName.getHistoryTableName(), targetRecordId, auditLevel, context));
             }
 
             return auditLogs;
         }
     }
 
-    private List<AuditLog> getAuditLogsForRecordId(final TableName tableName, final Long recordId, final AuditLevel auditLevel, final InternalTenantContext context) {
-        final List<AuditLog> allAuditLogs = auditSqlDao.getAuditLogsForRecordId(tableName, recordId, context);
+    private List<AuditLog> getAuditLogsForRecordId(final TableName tableName, final Long targetRecordId, final AuditLevel auditLevel, final InternalTenantContext context) {
+        final List<AuditLog> allAuditLogs = auditSqlDao.getAuditLogsForTargetRecordId(tableName, targetRecordId, context);
         if (AuditLevel.FULL.equals(auditLevel)) {
             return allAuditLogs;
         } else if (AuditLevel.MINIMAL.equals(auditLevel) && allAuditLogs.size() > 0) {

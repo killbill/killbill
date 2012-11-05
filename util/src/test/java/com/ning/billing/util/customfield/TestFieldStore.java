@@ -29,6 +29,7 @@ import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.ObjectType;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
+import com.ning.billing.util.clock.DefaultClock;
 import com.ning.billing.util.customfield.dao.AuditedCustomFieldDao;
 import com.ning.billing.util.customfield.dao.CustomFieldDao;
 import com.ning.billing.util.customfield.dao.CustomFieldSqlDao;
@@ -46,7 +47,7 @@ public class TestFieldStore extends UtilTestSuiteWithEmbeddedDB {
     protected void setup() throws IOException {
         try {
             dbi = helper.getDBI();
-            customFieldDao = new AuditedCustomFieldDao(dbi);
+            customFieldDao = new AuditedCustomFieldDao(dbi, new DefaultClock());
         } catch (Throwable t) {
             log.error("Setup failed", t);
             fail(t.toString());

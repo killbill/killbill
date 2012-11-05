@@ -1,24 +1,26 @@
-group account_emails;
+group account_emails: EntitySqlDao;
 
-CHECK_TENANT() ::= "tenant_record_id = :tenantRecordId"
-AND_CHECK_TENANT() ::= "AND <CHECK_TENANT()>"
 
-fields(prefix) ::= <<
-    <prefix>id,
-    <prefix>account_id,
-    <prefix>email,
-    <prefix>created_by,
-    <prefix>created_date,
-    <prefix>updated_by,
-    <prefix>updated_date,
-    <prefix>account_record_id,
-    <prefix>tenant_record_id
+tableFields(prefix) ::= <<
+  account_id
+, email
+, created_by
+, created_date
+, updated_by
+, updated_date
 >>
 
-insertFromTransaction() ::= <<
-    INSERT INTO account_emails(<fields()>)
-    VALUES (:id, :accountId, :email, :userName, :createdDate, :userName, :updatedDate, :accountRecordId, :tenantRecordId);
->>
+
+tableValues() ::= <<
+  :accountId
+, :email
+, :createdBy
+, :createdDate
+, :updatedBy
+, :updatedDate
+ >>
+
+ historyTableName() ::= "account_email_history"
 
 updateFromTransaction() ::= <<
     UPDATE account_emails
@@ -31,63 +33,8 @@ deleteFromTransaction() ::= <<
     WHERE id = :id <AND_CHECK_TENANT()>;
 >>
 
-addHistoryFromTransaction() ::= <<
-    INSERT INTO account_email_history(record_id, id, account_id, email, change_type, updated_by, date, account_record_id, tenant_record_id)
-    VALUES (:recordId, :id, :accountId, :email, :changeType, :userName, :updatedDate, :accountRecordId, :tenantRecordId);
->>
-
-load() ::= <<
-    SELECT <fields()> FROM account_emails WHERE account_id = :objectId <AND_CHECK_TENANT()>;
->>
-
-getRecordIds() ::= <<
-    SELECT record_id, id
-    FROM account_emails
-    WHERE account_id = :objectId <AND_CHECK_TENANT()>;
->>
-
-getMaxHistoryRecordId() ::= <<
-    SELECT MAX(history_record_id)
-    FROM account_email_history
-    WHERE <CHECK_TENANT()>;
->>
-
-getHistoryRecordIds() ::= <<
-    SELECT history_record_id, record_id
-    FROM account_email_history
-    WHERE history_record_id > :maxHistoryRecordId <AND_CHECK_TENANT()>;
->>
-
-getById() ::= <<
-    SELECT <fields()> FROM account_emails WHERE id = :id <AND_CHECK_TENANT()>;
->>
-
-get() ::= <<
-    SELECT <fields()> FROM account_emails WHERE <CHECK_TENANT()>;
->>
 
 getByAccountId() ::= <<
     SELECT <fields()> FROM account_emails WHERE account_id = :accountId <AND_CHECK_TENANT()>;
 >>
 
-auditFields(prefix) ::= <<
-    <prefix>table_name,
-    <prefix>record_id,
-    <prefix>change_type,
-    <prefix>change_date,
-    <prefix>changed_by,
-    <prefix>reason_code,
-    <prefix>comments,
-    <prefix>user_token,
-    <prefix>account_record_id,
-    <prefix>tenant_record_id
->>
-
-insertAuditFromTransaction() ::= <<
-    INSERT INTO audit_log(<auditFields()>)
-    VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, :reasonCode, :comment, :userToken, :accountRecordId, :tenantRecordId);
->>
-
-test() ::= <<
-    SELECT 1 FROM account_emails where <CHECK_TENANT()>;
->>

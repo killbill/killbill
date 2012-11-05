@@ -42,6 +42,7 @@ import com.ning.billing.catalog.DefaultCatalogService;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.io.VersionedCatalogLoader;
+import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.config.CatalogConfig;
 import com.ning.billing.entitlement.alignment.PlanAligner;
 import com.ning.billing.entitlement.api.svcs.DefaultEntitlementInternalApi;
@@ -77,6 +78,7 @@ public class TestBusinessTagRecorder extends AnalyticsTestSuiteWithEmbeddedDB {
 
     @BeforeMethod(groups = "slow")
     public void setUp() throws Exception {
+        final Clock clock = new ClockMock();
         final IDBI dbi = helper.getDBI();
         accountTagSqlDao = dbi.onDemand(BusinessAccountTagSqlDao.class);
         final BusinessInvoiceTagSqlDao invoiceTagSqlDao = dbi.onDemand(BusinessInvoiceTagSqlDao.class);
@@ -84,8 +86,7 @@ public class TestBusinessTagRecorder extends AnalyticsTestSuiteWithEmbeddedDB {
         subscriptionTransitionTagSqlDao = dbi.onDemand(BusinessSubscriptionTransitionTagSqlDao.class);
         eventBus = new InMemoryInternalBus();
         final AccountDao accountDao = new AuditedAccountDao(dbi, eventBus, new InternalCallContextFactory(dbi, new ClockMock()));
-        final AccountEmailDao accountEmailDao = new AuditedAccountEmailDao(dbi);
-        final DefaultClock clock = new DefaultClock();
+        final AccountEmailDao accountEmailDao = new AuditedAccountEmailDao(dbi, clock);
         callContextFactory = new DefaultCallContextFactory(clock);
         final InternalCallContextFactory internalCallContextFactory = new InternalCallContextFactory(dbi, clock);
         accountApi = new DefaultAccountInternalApi(accountDao, accountEmailDao);

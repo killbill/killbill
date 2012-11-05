@@ -16,6 +16,7 @@
 
 package com.ning.billing.payment.dao;
 
+import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -26,8 +27,13 @@ import org.skife.jdbi.v2.IDBI;
 import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
 import com.ning.billing.payment.retry.PluginFailureRetryService.PluginFailureRetryServiceScheduler;
+import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.dao.EntityAudit;
+import com.ning.billing.util.dao.EntityHistory;
+import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
@@ -42,14 +48,16 @@ public class AuditedPaymentDao implements PaymentDao {
     private final PaymentAttemptSqlDao paymentAttemptSqlDao;
     private final PaymentMethodSqlDao paymentMethodSqlDao;
     private final RefundSqlDao refundSqlDao;
+    private final Clock clock;
 
     @Inject
-    public AuditedPaymentDao(final IDBI dbi, final PluginFailureRetryServiceScheduler timedoutSchduler) {
+    public AuditedPaymentDao(final IDBI dbi, final PluginFailureRetryServiceScheduler timedoutSchduler, final Clock clock) {
         this.paymentSqlDao = dbi.onDemand(PaymentSqlDao.class);
         this.paymentAttemptSqlDao = dbi.onDemand(PaymentAttemptSqlDao.class);
         this.paymentMethodSqlDao = dbi.onDemand(PaymentMethodSqlDao.class);
         this.refundSqlDao = dbi.onDemand(RefundSqlDao.class);
         this.transactionalSqlDao = new EntitySqlDaoTransactionalJdbiWrapper(dbi);
+        this.clock = clock;
     }
 
     @Override
@@ -76,6 +84,7 @@ public class AuditedPaymentDao implements PaymentDao {
             public PaymentModelDao inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
                 final PaymentSqlDao transactional = entitySqlDaoWrapperFactory.become(PaymentSqlDao.class);
                 transactional.insertPayment(payment, context);
+
 
                 entitySqlDaoWrapperFactory.become(PaymentAttemptSqlDao.class).insertPaymentAttempt(attempt, context);
 
@@ -122,6 +131,7 @@ public class AuditedPaymentDao implements PaymentDao {
     private PaymentMethodModelDao insertPaymentMethodInTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final PaymentMethodModelDao paymentMethod, final InternalCallContext context) {
         final PaymentMethodSqlDao transactional = entitySqlDaoWrapperFactory.become(PaymentMethodSqlDao.class);
         transactional.insertPaymentMethod(paymentMethod, context);
+
         return transactional.getPaymentMethod(paymentMethod.getId().toString(), context);
     }
 
@@ -188,7 +198,6 @@ public class AuditedPaymentDao implements PaymentDao {
     @Override
     public void updateRefundStatus(final UUID refundId, final RefundStatus refundStatus, final InternalCallContext context) {
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
-
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
                 entitySqlDaoWrapperFactory.become(RefundSqlDao.class).updateStatus(refundId.toString(), refundStatus.toString(), context);

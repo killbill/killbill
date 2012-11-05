@@ -20,6 +20,7 @@ import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
 import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.dao.AuditedCollectionDaoBase;
 import com.ning.billing.util.dao.TableName;
@@ -32,7 +33,8 @@ public class AuditedCustomFieldDao extends AuditedCollectionDaoBase<CustomField,
     private final CustomFieldSqlDao dao;
 
     @Inject
-    public AuditedCustomFieldDao(final IDBI dbi) {
+    public AuditedCustomFieldDao(final IDBI dbi, final Clock clock) {
+        super(clock);
         dao = dbi.onDemand(CustomFieldSqlDao.class);
     }
 
@@ -93,7 +95,7 @@ public class AuditedCustomFieldDao extends AuditedCollectionDaoBase<CustomField,
     //        List<Mapper> recordIds = customFieldSqlDao.getRecordIds(objectId.toString(), objectType);
     //        Map<UUID, Long> recordIdMap = new HashMap<UUID, Long>();
     //        for (Mapper recordId : recordIds) {
-    //            recordIdMap.put(recordId.getId(), recordId.getRecordId());
+    //            recordIdMap.put(recordId.getId(), recordId.getTargetRecordId());
     //        }
     //
     //        customFieldSqlDao.batchDeleteFromTransaction(objectId.toString(), objectType, existingFields, context);

@@ -21,7 +21,7 @@ import java.util.UUID;
 import com.ning.billing.util.entity.Entity;
 import com.ning.billing.util.entity.EntityBase;
 
-public class StringCustomField extends EntityBase implements CustomField, Entity {
+public class StringCustomField extends EntityBase implements CustomField {
     private final String name;
     private String value;
 

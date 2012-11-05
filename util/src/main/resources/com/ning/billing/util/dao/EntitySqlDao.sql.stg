@@ -50,8 +50,10 @@ allTableFields(prefix) ::= <<
 , <tenantRecordIdField(prefix)>
 >>
 
+/** TODO  history tables should not start with history_record_id, instead: record_id, id, target_record_id  **/
 allHistoryTableFields(prefix) ::= <<
-  <recordIdField(prefix)>
+  <historyRecordIdField(prefix)>
+, <recordIdField(prefix)>
 , <idField(prefix)>
 , <historyTableFields(prefix)>
 <if(accountRecordIdField(prefix))>, <accountRecordIdField(prefix)><endif>
@@ -68,28 +70,32 @@ allHistoryTableValues() ::= <<
 
 auditTableName() ::= "audit_log"
 
+
 auditTableFields(prefix) ::= <<
-  <prefix>table_name
-, <prefix>record_id
+  <prefix>id
+, <prefix>table_name
+, <prefix>target_record_id
 , <prefix>change_type
-, <prefix>change_date
 , <prefix>changed_by
 , <prefix>reason_code
 , <prefix>comments
 , <prefix>user_token
+, <prefix>created_date
 , <accountRecordIdField(prefix)>
 , <tenantRecordIdField(prefix)>
 >>
 
+
 auditTableValues(prefix) ::= <<
-  :table_name
-, :record_id
-, :change_type
-, :change_date
-, :changed_by
-, :reason_code
-, :comments
-, :user_token
+  :id
+, :tableName
+, :targetRecordId
+, :changeType
+, :changedBy
+, :reasonCode
+, :comment
+, :userToken
+, :createdDate
 , <accountRecordIdValue()>
 , <tenantRecordIdValue()>
 >>
