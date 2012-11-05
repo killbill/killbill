@@ -1,5 +1,17 @@
-group CustomFieldSqlDao : EntitySqlDao;
+group CustomFieldSqlDao: EntitySqlDao;
 
+tableName() ::= "custom_fields"
+
+tableFields(prefix) ::= <<
+  <prefix>object_id
+, <prefix>object_type
+, <prefix>created_by
+, <prefix>created_date
+, <prefix>updated_by
+, <prefix>updated_date
+>>
+
+historyTableName() ::= "custom_field_history"
 
 updateFromTransaction() ::= <<
     UPDATE custom_fields
@@ -16,3 +28,26 @@ deleteFromTransaction() ::= <<
     ;
 >>
 
+load() ::= <<
+    SELECT id, object_id, object_type, field_name, field_value, created_by, created_date, updated_by, updated_date
+    FROM custom_fields
+    WHERE object_id = :objectId AND object_type = :objectType
+    <AND_CHECK_TENANT()>
+    ;
+>>
+
+getRecordIds() ::= <<
+    SELECT record_id, id
+    FROM custom_fields
+    WHERE object_id = :objectId AND object_type = :objectType
+    <AND_CHECK_TENANT()>
+    ;
+>>
+
+getHistoryRecordIds() ::= <<
+    SELECT history_record_id, record_id
+    FROM custom_field_history
+    WHERE history_record_id > :maxHistoryRecordId
+    <AND_CHECK_TENANT()>
+    ;
+>>

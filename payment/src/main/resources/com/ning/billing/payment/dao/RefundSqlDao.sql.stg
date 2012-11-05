@@ -1,41 +1,23 @@
-group RefundSqlDao : EntitySqlDao;
+group RefundSqlDao: EntitySqlDao;
 
-CHECK_TENANT() ::= "tenant_record_id = :tenantRecordId"
-AND_CHECK_TENANT() ::= "AND <CHECK_TENANT()>"
+tableName() ::= "refunds"
 
-refundFields(prefix) ::= <<
-<prefix>id,
-<prefix>account_id,
-<prefix>payment_id,
-<prefix>amount,  
-<prefix>currency,
-<prefix>is_adjusted,
-<prefix>refund_status,    
-<prefix>created_by,
-<prefix>created_date,
-<prefix>updated_by,
-<prefix>updated_date,
-<prefix>account_record_id,
-<prefix>tenant_record_id
->>
-
-insertRefund() ::= <<
-    INSERT INTO refunds (<refundFields()>)
-    VALUES (:id, :accountId, :paymentId, :amount, :currency, :isAdjusted, :refundStatus, :userName, :createdDate,
-            :userName, :createdDate, :accountRecordId, :tenantRecordId);
+tableFields(prefix) ::= <<
+  <prefix>account_id,
+, <prefix>payment_id,
+, <prefix>amount,
+, <prefix>currency,
+, <prefix>is_adjusted,
+, <prefix>refund_status,
+, <prefix>created_by,
+, <prefix>created_date,
+, <prefix>updated_by,
+, <prefix>updated_date
 >>
 
 updateStatus() ::= <<
     UPDATE refunds
     SET refund_status = :refundStatus
-    WHERE id = :id
-    <AND_CHECK_TENANT()>
-    ;
->>
-
-getRefund() ::= <<
-    SELECT <refundFields()>
-    FROM refunds
     WHERE id = :id
     <AND_CHECK_TENANT()>
     ;
@@ -55,6 +37,4 @@ getRefundsForAccount()  ::= <<
     WHERE account_id = :accountId
     <AND_CHECK_TENANT()>
     ;
->> 
-
-
+>>

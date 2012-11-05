@@ -1,17 +1,20 @@
-group TagDefinitionDao : EntitySqlDao;
+group TagDefinitionDao: EntitySqlDao;
 
+tableName() ::= "tag_definitions"
 
-fields(prefix) ::= <<
-    <prefix>id,
-    <prefix>name,
-    <prefix>description,
-    <prefix>created_by,
-    <prefix>created_date ,
-    <prefix>updated_by,
-    <prefix>updated_date,
-    <prefix>tenant_record_id
+tableFields(prefix) ::= <<
+  <prefix>name
+, <prefix>description
+, <prefix>created_by
+, <prefix>created_date
+, <prefix>updated_by
+, <prefix>updated_date
 >>
 
+/** No account_record_id field */
+accountRecordIdField(prefix) ::= ""
+
+historyTableName() ::= "tag_definition_history"
 
 deleteTagDefinition() ::= <<
   DELETE FROM tag_definitions
@@ -35,3 +38,9 @@ getByName() ::= <<
   ;
 >>
 
+getByIds(tag_definition_ids) ::= <<
+  SELECT <fields()>
+  FROM tag_definitions
+  WHERE id IN (<tag_definition_ids: {id | :id_<i0>}; separator="," >)
+  <AND_CHECK_TENANT()>
+>>

@@ -1,41 +1,21 @@
-group TagDao;
+group TagDao: EntitySqlDao;
 
-CHECK_TENANT() ::= "tenant_record_id = :tenantRecordId"
-AND_CHECK_TENANT() ::= "AND <CHECK_TENANT()>"
+tableName() ::= "tags"
 
-fields(prefix) ::= <<
-    <prefix>id,
-    <prefix>tag_definition_id,
-    <prefix>object_id,
-    <prefix>object_type,
-    <prefix>created_by,
-    <prefix>created_date,
-    <prefix>account_record_id,
-    <prefix>tenant_record_id
+tableFields(prefix) ::= <<
+  <prefix>tag_definition_id
+, <prefix>object_id
+, <prefix>object_type
+, <prefix>created_by
+, <prefix>created_date
 >>
 
-insertFromTransaction() ::= <<
-  INSERT INTO tags(<fields()>)
-  VALUES (:id, :tagDefinitionId, :objectId, :objectType, :userName, :createdDate, :accountRecordId, :tenantRecordId);
->>
+historyTableName() ::= "tag_history"
 
 deleteFromTransaction() ::= <<
     DELETE FROM tags
     WHERE tag_definition_id = :tagDefinitionId
         AND object_id = :objectId AND object_type = :objectType
-    <AND_CHECK_TENANT()>
-    ;
->>
-
-addTagFromTransaction() ::= <<
-    INSERT INTO tags(<fields()>)
-    VALUES (:id, :tagDefinitionId, :objectId, :objectType, :userName, :createdDate, :accountRecordId, :tenantRecordId);
->>
-
-removeTagFromTransaction() ::= <<
-    DELETE FROM tags
-    WHERE tag_definition_id = :tagDefinitionId
-    AND object_id = :objectId AND object_type = :objectType
     <AND_CHECK_TENANT()>
     ;
 >>
@@ -56,31 +36,6 @@ getRecordIds() ::= <<
     ;
 >>
 
-historyFields(prefix) ::= <<
-  <prefix>record_id,
-  <prefix>id,
-  <prefix>object_id,
-  <prefix>object_type,
-  <prefix>tag_definition_id,
-  <prefix>updated_by,
-  <prefix>date,
-  <prefix>change_type,
-  <prefix>account_record_id,
-  <prefix>tenant_record_id
->>
-
-addHistoryFromTransaction() ::= <<
-    INSERT INTO tag_history(<historyFields()>)
-    VALUES(:recordId, :id, :objectId, :objectType, :tagDefinitionId, :userName, :updatedDate, :changeType, :accountRecordId, :tenantRecordId);
->>
-
-getMaxHistoryRecordId() ::= <<
-    SELECT MAX(history_record_id)
-    FROM tag_history
-    WHERE <CHECK_TENANT()>
-    ;
->>
-
 getHistoryRecordIds() ::= <<
     SELECT history_record_id, record_id
     FROM tag_history
@@ -89,16 +44,9 @@ getHistoryRecordIds() ::= <<
     ;
 >>
 
-
 load() ::= <<
   SELECT <fields()>
     FROM tags
   WHERE object_id = :objectId AND object_type = :objectType
   <AND_CHECK_TENANT()>;
 >>
-
-
-test() ::= <<
-  SELECT 1 FROM tags WHERE <CHECK_TENANT()>;
->>
-;

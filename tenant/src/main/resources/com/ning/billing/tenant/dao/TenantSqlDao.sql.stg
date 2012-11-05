@@ -1,15 +1,22 @@
-group TenantDaoSql;
+group TenantDaoSql: EntitySqlDao;
 
-tenantFields(prefix) ::= <<
-    <prefix>record_id,
-    <prefix>id,
-    <prefix>external_key,
-    <prefix>api_key,
-    <prefix>created_date,
-    <prefix>created_by,
-    <prefix>updated_date,
-    <prefix>updated_by
+tableName() ::= "tenants"
+
+/** Don't add api_secret and api_salt in these fields, we shouldn't need to retrieve them */
+tableFields(prefix) ::= <<
+  <prefix>external_key
+, <prefix>api_key
+, <prefix>created_date
+, <prefix>created_by
+, <prefix>updated_date
+, <prefix>updated_by
 >>
+
+/** No account_record_id field */
+accountRecordIdField(prefix) ::= ""
+
+/** No tenant_record_id field */
+tenantRecordIdField(prefix) ::= ""
 
 create() ::= <<
     INSERT INTO tenants (
@@ -35,17 +42,6 @@ create() ::= <<
     );
 >>
 
-get() ::= <<
-    SELECT <tenantFields()>
-    FROM tenants;
->>
-
-getById() ::= <<
-    SELECT <tenantFields()>
-    FROM tenants
-    WHERE id = :id;
->>
-
 getByApiKey() ::= <<
     SELECT <tenantFields()>
     FROM tenants
@@ -56,8 +52,4 @@ getSecrets() ::= <<
     SELECT api_key, api_secret, api_salt
     FROM tenants
     WHERE id = :id;
->>
-
-test() ::= <<
-    SELECT 1 FROM tenants;
 >>
