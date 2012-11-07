@@ -40,8 +40,8 @@ public @interface CustomFieldHistoryBinder {
             return new Binder<CustomFieldHistoryBinder, EntityHistory<CustomField>>() {
                 @Override
                 public void bind(final SQLStatement<?> q, final CustomFieldHistoryBinder bind, final EntityHistory<CustomField> customFieldHistory) {
-                    q.bind("recordId", customFieldHistory.getValue());
-                    q.bind("changeType", customFieldHistory.getChangeType().toString());
+//                    q.bind("recordId", customFieldHistory.getValue());
+//                    q.bind("changeType", customFieldHistory.getChangeType().toString());
                     q.bind("id", customFieldHistory.getId().toString());
                     q.bind("fieldName", customFieldHistory.getEntity().getName());
                     q.bind("fieldValue", customFieldHistory.getEntity().getValue());

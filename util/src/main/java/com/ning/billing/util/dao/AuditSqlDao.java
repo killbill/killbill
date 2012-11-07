@@ -19,6 +19,7 @@ package com.ning.billing.util.dao;
 import java.util.List;
 
 import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlBatch;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
@@ -36,12 +37,12 @@ import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 public interface AuditSqlDao {
 
     @SqlUpdate
-    public void insertAuditFromTransaction(@AuditBinder final EntityAudit audit,
-                                           @InternalTenantContextBinder final InternalCallContext context);
+    public void insertAuditFromTransaction(@BindBean final EntityAudit audit,
+                                           @BindBean final InternalCallContext context);
 
     @SqlBatch(transactional = false)
-    public void insertAuditFromTransaction(@AuditBinder final List<EntityAudit> audit,
-                                           @InternalTenantContextBinder final InternalCallContext context);
+    public void insertAuditFromTransaction(@BindBean final List<EntityAudit> audit,
+                                           @BindBean final InternalCallContext context);
 
     @SqlQuery
     public List<AuditLog> getAuditLogsForTargetRecordId(@TableNameBinder final TableName tableName,

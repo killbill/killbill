@@ -4,16 +4,24 @@ group EntitySqlDao;
 
 tableName() ::= ""
 
-/** Leave out id, account_record_id and tenant_record_id */
+/** Leave out id, account_record_id and tenant_record_id **/
 tableFields(prefix) ::= ""
 
 tableValues() ::= ""
 
 historyTableName() ::= ""
 
-historyTableFields(prefix) ::= "<tableFields(prefix)>"
+historyTableFields(prefix) ::= <<
+  <targetRecordIdField(prefix)>
+, <changeTypeField(prefix)>
+, <tableFields(prefix)>
+>>
 
-historyTableValues() ::= "<tableValues()>"
+historyTableValues() ::= <<
+  <targetRecordIdValue()>
+, <changeTypeValue()>
+, <tableValues()>
+>>
 
 /****************************************************/
 
@@ -21,84 +29,95 @@ idField(prefix) ::= <<
 <prefix>id
 >>
 
+idValue() ::= ":id"
+
 recordIdField(prefix) ::= <<
 <prefix>record_id
 >>
 
-historyRecordIdField(prefix) ::= <<
-<prefix>history_record_id
+recordIdValue() ::= ":recordId"
+
+changeTypeField(prefix) ::= <<
+<prefix>change_type
 >>
 
-/** Override this if the Entity isn't tied to an account */
+changeTypeValue() ::= ":changeType"
+
+targetRecordIdField(prefix) ::= <<
+<prefix>target_record_id
+>>
+
+targetRecordIdValue() ::= ":targetRecordId"
+
+/** Override this if the Entity isn't tied to an account **/
+
+
 accountRecordIdField(prefix) ::= <<
 <prefix>account_record_id
 >>
 
+accountRecordIdFieldWithComma(prefix) ::= <<
+, <accountRecordIdField(prefix)>
+>>
+
 accountRecordIdValue() ::= ":accountRecordId"
+
+accountRecordIdValueWithComma() ::= <<
+, <accountRecordIdValue()>
+>>
 
 tenantRecordIdField(prefix) ::= <<
 <prefix>tenant_record_id
 >>
 
+tenantRecordIdFieldWithComma(prefix) ::= <<
+, <tenantRecordIdField(prefix)>
+>>
+
+
 tenantRecordIdValue() ::= ":tenantRecordId"
+
+tenantRecordIdValueWithComma() ::= <<
+, <tenantRecordIdValue()>
+>>
 
 allTableFields(prefix) ::= <<
   <recordIdField(prefix)>
 , <idField(prefix)>
 , <tableFields(prefix)>
-<if(accountRecordIdField(prefix))>, <accountRecordIdField(prefix)><endif>
-, <tenantRecordIdField(prefix)>
+<accountRecordIdFieldWithComma(prefix)>
+<tenantRecordIdFieldWithComma(prefix)>
 >>
 
-/** TODO  history tables should not start with history_record_id, instead: record_id, id, target_record_id  **/
+
+
+allTableValues() ::= <<
+  <recordIdValue()>
+, <idValue()>
+, <tableValues()>
+<accountRecordIdValueWithComma()>
+<tenantRecordIdValueWithComma()>
+>>
+
+
 allHistoryTableFields(prefix) ::= <<
-  <historyRecordIdField(prefix)>
-, <recordIdField(prefix)>
+  <recordIdField(prefix)>
 , <idField(prefix)>
+, <targetRecordIdField(prefix)>
 , <historyTableFields(prefix)>
-<if(accountRecordIdField(prefix))>, <accountRecordIdField(prefix)><endif>
-, <tenantRecordIdField(prefix)>
+<accountRecordIdFieldWithComma(prefix)>
+<tenantRecordIdFieldWithComma(prefix)>
 >>
 
 allHistoryTableValues() ::= <<
-  :recordId
-, :id
+  <recordIdValue()>
+, <idValue()>
+,  <targetRecordIdValue()>
 , <historyTableValues()>
-<if(accountRecordIdField(""))>, <accountRecordIdValue()><endif>
-<if(tenantRecordIdField(""))>, <tenantRecordIdValue()><endif>
+<accountRecordIdValueWithComma()>
+<tenantRecordIdValueWithComma()>
 >>
 
-auditTableName() ::= "audit_log"
-
-
-auditTableFields(prefix) ::= <<
-  <prefix>id
-, <prefix>table_name
-, <prefix>target_record_id
-, <prefix>change_type
-, <prefix>changed_by
-, <prefix>reason_code
-, <prefix>comments
-, <prefix>user_token
-, <prefix>created_date
-, <accountRecordIdField(prefix)>
-, <tenantRecordIdField(prefix)>
->>
-
-
-auditTableValues(prefix) ::= <<
-  :id
-, :tableName
-, :targetRecordId
-, :changeType
-, :changedBy
-, :reasonCode
-, :comment
-, :userToken
-, :createdDate
-, <accountRecordIdValue()>
-, <tenantRecordIdValue()>
->>
 
 /** Macros used for multi-tenancy (almost any query should use them!) */
 CHECK_TENANT(prefix) ::= "<prefix>tenant_record_id = :tenantRecordId"
@@ -131,11 +150,30 @@ where <idField("t.")> = :id
 ;
 >>
 
+getRecordIdForTable(tableName) ::= <<
+select
+  <recordIdField("t.")>
+from <tableName> t
+where <idField("t.")> = :id
+<AND_CHECK_TENANT("t.")>
+;
+>>
+
 getHistoryRecordId(recordId) ::= <<
 select
-  max(<historyRecordIdField("t.")>)
+  max(<recordIdField("t.")>)
 from <tableName()> t
 where <recordIdField("t.")> = :recordId
+<AND_CHECK_TENANT("t.")>
+;
+>>
+
+
+getHistoryRecordIdsForTable(tableName) ::= <<
+select
+  <recordIdField("t.")> record_id
+from <tableName> t
+where <idField("t.")> = :id
 <AND_CHECK_TENANT("t.")>
 ;
 >>
@@ -149,24 +187,70 @@ where <CHECK_TENANT("t.")>
 ;
 >>
 
-test() ::= <<
-select
-<allTableFields("t.")>
-from <tableName()> t
-where <CHECK_TENANT("t.")>
-limit 1
+create() ::= <<
+insert into <tableName()> (
+  <idField()>
+, <tableFields()>
+<accountRecordIdFieldWithComma()>
+<tenantRecordIdFieldWithComma()>
+)
+values (
+  <idValue()>
+, <tableValues()>
+<accountRecordIdValueWithComma()>
+<tenantRecordIdValueWithComma()>
+)
 ;
 >>
 
+/** Audits, History **/
+auditTableName() ::= "audit_log"
+
+auditTableFields(prefix) ::= <<
+  <prefix>id
+, <prefix>table_name
+, <prefix>target_record_id
+, <prefix>change_type
+, <prefix>created_by
+, <prefix>reason_code
+, <prefix>comments
+, <prefix>user_token
+, <prefix>created_date
+<if(accountRecordIdField(prefix))>, <accountRecordIdField(prefix)><endif>
+<if(tenantRecordIdField(prefix))>, <tenantRecordIdField(prefix)><endif>
+>>
+
+auditTableValues() ::= <<
+  :id
+, :tableName
+, :targetRecordId
+, :changeType
+, :createdBy
+, :reasonCode
+, :comment
+, :userToken
+, :createdDate
+<if(accountRecordIdField(""))>, <accountRecordIdValue()><endif>
+<if(tenantRecordIdField(""))>, <tenantRecordIdValue()><endif>
+>>
+
+
 addHistoryFromTransaction() ::= <<
 insert into <historyTableName()> (
-<allHistoryTableFields()>
+  <idField()>
+, <historyTableFields()>
+<accountRecordIdFieldWithComma()>
+<tenantRecordIdFieldWithComma()>
 )
 values (
-<allHistoryTableValues()>
+  <idValue()>
+, <historyTableValues()>
+<accountRecordIdValueWithComma()>
+<tenantRecordIdValueWithComma()>
 )
 ;
 >>
+
 
 insertAuditFromTransaction() ::= <<
 insert into <auditTableName()> (
@@ -175,5 +259,25 @@ insert into <auditTableName()> (
 values (
 <auditTableValues()>
 )
+;
+>>
+
+getAuditLogsForTargetRecordId() ::= <<
+select
+  <auditTableFields("t.")>
+from <auditTableName()> t
+where t.target_record_id = :targetRecordId
+and t.table_name = :tableName
+<AND_CHECK_TENANT("t.")>
+order by change_date ASC
+;
+>>
+
+test() ::= <<
+select
+<allTableFields("t.")>
+from <tableName()> t
+where <CHECK_TENANT("t.")>
+limit 1
 ;
 >>

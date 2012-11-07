@@ -134,7 +134,7 @@ public class TestDefaultAuditDao extends UtilTestSuiteWithEmbeddedDB {
         Assert.assertEquals(auditLogs.get(0).getChangeType(), ChangeType.INSERT);
         Assert.assertEquals(auditLogs.get(0).getComment(), internalCallContext.getComment());
         Assert.assertEquals(auditLogs.get(0).getReasonCode(), internalCallContext.getReasonCode());
-        Assert.assertEquals(auditLogs.get(0).getUserName(), internalCallContext.getUserName());
+        Assert.assertEquals(auditLogs.get(0).getUserName(), internalCallContext.getCreatedBy());
         Assert.assertNotNull(auditLogs.get(0).getCreatedDate());
     }
 }

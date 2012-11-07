@@ -40,6 +40,7 @@ public @interface TagHistoryBinder {
             return new Binder<TagHistoryBinder, EntityHistory<Tag>>() {
                 @Override
                 public void bind(final SQLStatement<?> q, final TagHistoryBinder bind, final EntityHistory<Tag> tagHistory) {
+
                     q.bind("recordId", tagHistory.getValue());
                     q.bind("changeType", tagHistory.getChangeType().toString());
                     q.bind("id", tagHistory.getId().toString());

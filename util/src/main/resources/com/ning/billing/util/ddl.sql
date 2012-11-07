@@ -58,20 +58,21 @@ CREATE INDEX tag_definitions_tenant_record_id ON tag_definitions(tenant_record_i
 
 DROP TABLE IF EXISTS tag_definition_history;
 CREATE TABLE tag_definition_history (
-    history_record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
-    record_id int(11) unsigned NOT NULL,
+    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
     id char(36) NOT NULL,
+    target_record_id int(11) unsigned NOT NULL,
     name varchar(30) NOT NULL,
-    created_by varchar(50),
     description varchar(200),
     change_type char(6) NOT NULL,
+    created_by varchar(50),
+    created_date datetime NOT NULL,
     updated_by varchar(50) NOT NULL,
-    date datetime NOT NULL,
+    updated_date datetime NOT NULL,
     tenant_record_id int(11) unsigned default null,
-    PRIMARY KEY(history_record_id)
+    PRIMARY KEY(record_id)
 ) ENGINE=innodb;
 CREATE INDEX tag_definition_history_id ON tag_definition_history(id);
-CREATE INDEX tag_definition_history_record_id ON tag_definition_history(record_id);
+CREATE INDEX tag_definition_history_target_record_id ON tag_definition_history(target_record_id);
 CREATE INDEX tag_definition_history_name ON tag_definition_history(name);
 CREATE INDEX tag_definition_history_tenant_record_id ON tag_definition_history(tenant_record_id);
 
@@ -155,7 +156,7 @@ CREATE TABLE audit_log (
     table_name varchar(50) NOT NULL,
     target_record_id int(11) NOT NULL,
     change_type char(6) NOT NULL,
-    changed_by varchar(50) NOT NULL,
+    created_by varchar(50) NOT NULL,
     reason_code varchar(255) DEFAULT NULL,
     comments varchar(255) DEFAULT NULL,
     user_token char(36),
@@ -165,7 +166,7 @@ CREATE TABLE audit_log (
     PRIMARY KEY(record_id)
 ) ENGINE=innodb;
 CREATE INDEX audit_log_fetch_target_record_id ON audit_log(table_name, target_record_id);
-CREATE INDEX audit_log_user_name ON audit_log(changed_by);
+CREATE INDEX audit_log_user_name ON audit_log(created_by);
 CREATE INDEX audit_log_tenant_account_record_id ON audit_log(tenant_record_id, account_record_id);
 
 DROP TABLE IF EXISTS bus_events;

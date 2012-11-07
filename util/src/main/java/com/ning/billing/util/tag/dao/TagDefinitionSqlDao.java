@@ -35,6 +35,7 @@ import org.skife.jdbi.v2.sqlobject.BinderFactory;
 import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
+import org.skife.jdbi.v2.sqlobject.customizers.RegisterArgumentFactory;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
@@ -42,22 +43,21 @@ import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.InternalTenantContextBinder;
+import com.ning.billing.util.dao.DateTimeArgumentFactory;
 import com.ning.billing.util.dao.EntityHistory;
+import com.ning.billing.util.dao.EnumArgumentFactory;
+import com.ning.billing.util.dao.UUIDArgumentFactory;
 import com.ning.billing.util.entity.dao.Audited;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 import com.ning.billing.util.tag.DefaultTagDefinition;
 import com.ning.billing.util.tag.TagDefinition;
 
+@RegisterArgumentFactory({UUIDArgumentFactory.class, DateTimeArgumentFactory.class, EnumArgumentFactory.class})
 @EntitySqlDaoStringTemplate
 @RegisterMapper(TagDefinitionSqlDao.TagDefinitionMapper.class)
 public interface TagDefinitionSqlDao extends EntitySqlDao<TagDefinition> {
 
-    @Override
-    @SqlUpdate
-    @Audited(ChangeType.INSERT)
-    public void create(@TagDefinitionBinder final TagDefinition entity,
-                       @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlQuery
     public TagDefinition getByName(@Bind("name") final String definitionName,
@@ -76,10 +76,6 @@ public interface TagDefinitionSqlDao extends EntitySqlDao<TagDefinition> {
     public List<TagDefinition> getByIds(@UUIDCollectionBinder final Collection<String> definitionIds,
                                         @InternalTenantContextBinder final InternalTenantContext context);
 
-    @Override
-    @SqlUpdate
-    public void addHistoryFromTransaction(@TagDefinitionHistoryBinder final EntityHistory<TagDefinition> tagDefinition,
-                                          @InternalTenantContextBinder final InternalCallContext context);
 
     public class TagDefinitionMapper implements ResultSetMapper<TagDefinition> {
 
@@ -92,49 +88,4 @@ public interface TagDefinitionSqlDao extends EntitySqlDao<TagDefinition> {
         }
     }
 
-    @BindingAnnotation(TagDefinitionBinder.TagDefinitionBinderFactory.class)
-    @Retention(RetentionPolicy.RUNTIME)
-    @Target({ElementType.PARAMETER})
-    public @interface TagDefinitionBinder {
-
-        public static class TagDefinitionBinderFactory implements BinderFactory {
-
-            @Override
-            public Binder build(final Annotation annotation) {
-                return new Binder<TagDefinitionBinder, TagDefinition>() {
-                    @Override
-                    public void bind(final SQLStatement q, final TagDefinitionBinder bind, final TagDefinition tagDefinition) {
-                        q.bind("id", tagDefinition.getId().toString());
-                        q.bind("name", tagDefinition.getName());
-                        q.bind("description", tagDefinition.getDescription());
-                    }
-                };
-            }
-        }
-    }
-
-    @BindingAnnotation(TagDefinitionHistoryBinder.TagDefinitionHistoryBinderFactory.class)
-    @Retention(RetentionPolicy.RUNTIME)
-    @Target({ElementType.PARAMETER})
-    public @interface TagDefinitionHistoryBinder {
-
-        public static class TagDefinitionHistoryBinderFactory implements BinderFactory {
-
-            @Override
-            public Binder<TagDefinitionHistoryBinder, EntityHistory<TagDefinition>> build(final Annotation annotation) {
-                return new Binder<TagDefinitionHistoryBinder, EntityHistory<TagDefinition>>() {
-                    @Override
-                    public void bind(final SQLStatement<?> q, final TagDefinitionHistoryBinder bind, final EntityHistory<TagDefinition> history) {
-                        q.bind("recordId", history.getValue());
-                        q.bind("changeType", history.getChangeType().toString());
-
-                        final TagDefinition tagDefinition = history.getEntity();
-                        q.bind("id", tagDefinition.getId().toString());
-                        q.bind("name", tagDefinition.getName());
-                        q.bind("description", tagDefinition.getDescription());
-                    }
-                };
-            }
-        }
-    }
 }

@@ -328,7 +328,7 @@ public class TestTagStore extends UtilTestSuiteWithEmbeddedDB {
         assertNotNull(result.get(0).get("change_date"));
         final DateTime changeDate = new DateTime(result.get(0).get("change_date"));
         assertTrue(Seconds.secondsBetween(changeDate, internalCallContext.getCreatedDate()).getSeconds() < 2);
-        assertEquals(result.get(0).get("changed_by"), internalCallContext.getUserName());
+        assertEquals(result.get(0).get("changed_by"), internalCallContext.getCreatedBy());
     }
 
     @Test
@@ -358,7 +358,7 @@ public class TestTagStore extends UtilTestSuiteWithEmbeddedDB {
         assertNotNull(result.get(0).get("change_date"));
         final DateTime changeDate = new DateTime(result.get(0).get("change_date"));
         assertTrue(Seconds.secondsBetween(changeDate, internalCallContext.getUpdatedDate()).getSeconds() < 2);
-        assertEquals(result.get(0).get("changed_by"), internalCallContext.getUserName());
+        assertEquals(result.get(0).get("changed_by"), internalCallContext.getCreatedBy());
     }
 
     @Test

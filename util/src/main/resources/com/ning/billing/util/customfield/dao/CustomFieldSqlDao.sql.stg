@@ -11,6 +11,15 @@ tableFields(prefix) ::= <<
 , <prefix>updated_date
 >>
 
+tableValues() ::= <<
+  :objectId
+, :objectType
+, :createdBy
+, :createdDate
+, :updatedBy
+, :updatedDate
+>>
+
 historyTableName() ::= "custom_field_history"
 
 updateFromTransaction() ::= <<
