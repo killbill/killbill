@@ -168,7 +168,7 @@ public class TestAuditedTagDao extends UtilTestSuiteWithEmbeddedDB {
         tagDao.insertTag(objectId, objectType, createdTagDefinition.getId(), internalCallContext);
 
         // Make sure we can retrieve it via the DAO
-        final Map<String, Tag> foundTags = tagDao.loadEntities(objectId, objectType, internalCallContext);
+        final Map<String, Tag> foundTags = tagDao.getTags(objectId, objectType, internalCallContext);
         Assert.assertEquals(foundTags.keySet().size(), 1);
         Assert.assertEquals(foundTags.values().iterator().next().getTagDefinitionId(), createdTagDefinition.getId());
 
@@ -188,7 +188,7 @@ public class TestAuditedTagDao extends UtilTestSuiteWithEmbeddedDB {
         tagDao.deleteTag(objectId, objectType, createdTagDefinition.getId(), internalCallContext);
 
         // Make sure the tag is deleted
-        Assert.assertEquals(tagDao.loadEntities(objectId, objectType, internalCallContext).keySet().size(), 0);
+        Assert.assertEquals(tagDao.getTags(objectId, objectType, internalCallContext).keySet().size(), 0);
 
         // Verify we caught an event on the bus
         Assert.assertEquals(eventsListener.getEvents().size(), 3);

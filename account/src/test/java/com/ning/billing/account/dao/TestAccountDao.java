@@ -167,7 +167,7 @@ public class TestAccountDao extends AccountDaoTestBase {
         final TagDao tagDao = new AuditedTagDao(dbi, tagEventBuilder, bus, new DefaultClock());
         tagDao.insertTag(account.getId(), ObjectType.ACCOUNT, definition.getId(), internalCallContext);
 
-        final Map<String, Tag> tagMap = tagDao.loadEntities(account.getId(), ObjectType.ACCOUNT, internalCallContext);
+        final Map<String, Tag> tagMap = tagDao.getTags(account.getId(), ObjectType.ACCOUNT, internalCallContext);
         assertEquals(tagMap.size(), 1);
 
         assertEquals(tagMap.values().iterator().next().getTagDefinitionId(), definition.getId());

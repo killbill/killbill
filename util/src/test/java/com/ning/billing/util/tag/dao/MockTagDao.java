@@ -37,26 +37,6 @@ public class MockTagDao implements TagDao {
 
     private final Map<UUID, List<Tag>> tagStore = new HashMap<UUID, List<Tag>>();
 
-    @Override
-    public void saveEntitiesFromTransaction(final Transmogrifier dao, final UUID objectId, final ObjectType objectType,
-                                            final List<Tag> tags, final InternalCallContext context) {
-        tagStore.put(objectId, tags);
-    }
-
-    @Override
-    public void saveEntities(final UUID objectId, final ObjectType objectType, final List<Tag> tags, final InternalCallContext context) {
-        tagStore.put(objectId, tags);
-    }
-
-    @Override
-    public Map<String, Tag> loadEntities(final UUID objectId, final ObjectType objectType, final InternalTenantContext context) {
-        return getMap(tagStore.get(objectId));
-    }
-
-    @Override
-    public Map<String, Tag> loadEntitiesFromTransaction(final Transmogrifier dao, final UUID objectId, final ObjectType objectType, final InternalTenantContext context) {
-        return getMap(tagStore.get(objectId));
-    }
 
     private Map<String, Tag> getMap(@Nullable final List<Tag> tags) {
         final Map<String, Tag> map = new HashMap<String, Tag>();
@@ -77,6 +57,16 @@ public class MockTagDao implements TagDao {
             @Override
             public UUID getTagDefinitionId() {
                 return tagDefinitionId;
+            }
+
+            @Override
+            public ObjectType getObjectType() {
+                return objectType;
+            }
+
+            @Override
+            public UUID getObjectId() {
+                return objectId;
             }
 
             @Override
@@ -115,5 +105,15 @@ public class MockTagDao implements TagDao {
                 }
             }
         }
+    }
+
+    @Override
+    public Tag getTagById(final UUID tagId, final InternalTenantContext context) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Map<String, Tag> getTags(final UUID objectId, final ObjectType objectType, final InternalTenantContext internalTenantContext) {
+        throw new UnsupportedOperationException();
     }
 }

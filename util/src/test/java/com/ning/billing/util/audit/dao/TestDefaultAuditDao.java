@@ -117,7 +117,7 @@ public class TestDefaultAuditDao extends UtilTestSuiteWithEmbeddedDB {
         // Create a tag
         final UUID objectId = UUID.randomUUID();
         tagDao.insertTag(objectId, ObjectType.ACCOUNT, tagDefinition.getId(), internalCallContext);
-        final Map<String, Tag> tags = tagDao.loadEntities(objectId, ObjectType.ACCOUNT, internalCallContext);
+        final Map<String, Tag> tags = tagDao.getTags(objectId, ObjectType.ACCOUNT, internalCallContext);
         Assert.assertEquals(tags.size(), 1);
         final Tag tag = tags.values().iterator().next();
         Assert.assertEquals(tag.getTagDefinitionId(), tagDefinition.getId());
@@ -135,7 +135,7 @@ public class TestDefaultAuditDao extends UtilTestSuiteWithEmbeddedDB {
         Assert.assertEquals(auditLogs.get(0).getChangeType(), ChangeType.INSERT);
         Assert.assertEquals(auditLogs.get(0).getComment(), internalCallContext.getComment());
         Assert.assertEquals(auditLogs.get(0).getReasonCode(), internalCallContext.getReasonCode());
-        Assert.assertEquals(auditLogs.get(0).getUserName(), internalCallContext.getUserName());
+        Assert.assertEquals(auditLogs.get(0).getUserName(), internalCallContext.getCreatedBy());
         Assert.assertNotNull(auditLogs.get(0).getCreatedDate());
     }
 }

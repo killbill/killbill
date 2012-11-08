@@ -26,6 +26,7 @@ import org.skife.jdbi.v2.sqlobject.mixins.CloseMe;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
+import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.InternalTenantContextBinder;
@@ -37,8 +38,9 @@ import com.ning.billing.util.entity.EntityPersistenceException;
 public interface EntitySqlDao<T extends Entity> extends AuditSqlDao, HistorySqlDao<T>, Transmogrifier, Transactional<EntitySqlDao<T>>, CloseMe {
 
     @SqlUpdate
+    @Audited(ChangeType.INSERT)
     public void create(@BindBean final T entity,
-                       @InternalTenantContextBinder final InternalCallContext context) throws EntityPersistenceException;
+                       @BindBean final InternalCallContext context) throws EntityPersistenceException;
 
     @SqlQuery
     public T getById(@Bind("id") final String id,

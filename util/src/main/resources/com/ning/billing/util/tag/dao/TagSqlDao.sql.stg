@@ -8,16 +8,37 @@ tableFields(prefix) ::= <<
 , <prefix>object_type
 , <prefix>created_by
 , <prefix>created_date
+, <prefix>updated_by
+, <prefix>updated_date
+>>
+
+tableValues() ::= <<
+  :tagDefinitionId
+, :objectId
+, :objectType
+, :createdBy
+, :createdDate
+, :updatedBy
+, :updatedDate
 >>
 
 historyTableName() ::= "tag_history"
 
-deleteFromTransaction() ::= <<
-    DELETE FROM tags
-    WHERE tag_definition_id = :tagDefinitionId
-        AND object_id = :objectId AND object_type = :objectType
-    <AND_CHECK_TENANT()>
-    ;
+deleteById() ::= <<
+delete from <tableName()>
+where id = :id
+<AND_CHECK_TENANT()>
+;
+>>
+
+getTagsForObject() ::= <<
+select
+<allTableFields()>
+from <tableName()>
+where
+object_id = :objectId AND object_type = :objectType
+<AND_CHECK_TENANT()>
+;
 >>
 
 findTag() ::= <<

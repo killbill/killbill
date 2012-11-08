@@ -11,8 +11,19 @@ tableFields(prefix) ::= <<
 , <prefix>updated_date
 >>
 
-/** No account_record_id field */
-accountRecordIdField(prefix) ::= ""
+tableValues() ::= <<
+  :name
+, :description
+, :createdBy
+, :createdDate
+, :updatedBy
+, :updatedDate
+>>
+
+accountRecordIdFieldWithComma() ::= ""
+
+accountRecordIdValueWithComma() ::= ""
+
 
 historyTableName() ::= "tag_definition_history"
 
@@ -31,7 +42,7 @@ tagDefinitionUsageCount() ::= <<
 >>
 
 getByName() ::= <<
-  SELECT <fields()>
+  SELECT <allTableFields()>
    FROM tag_definitions
   WHERE name = :name
   <AND_CHECK_TENANT()>
@@ -39,7 +50,7 @@ getByName() ::= <<
 >>
 
 getByIds(tag_definition_ids) ::= <<
-  SELECT <fields()>
+  SELECT <allTableFields()>
   FROM tag_definitions
   WHERE id IN (<tag_definition_ids: {id | :id_<i0>}; separator="," >)
   <AND_CHECK_TENANT()>

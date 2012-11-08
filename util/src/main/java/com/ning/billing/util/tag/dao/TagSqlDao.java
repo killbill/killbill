@@ -18,8 +18,11 @@ package com.ning.billing.util.tag.dao;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlBatch;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
@@ -34,57 +37,19 @@ import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 import com.ning.billing.util.dao.EntityHistory;
 import com.ning.billing.util.dao.ObjectTypeBinder;
 import com.ning.billing.util.entity.collection.dao.UpdatableEntityCollectionSqlDao;
+import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 import com.ning.billing.util.tag.Tag;
+import com.ning.billing.util.tag.TagDefinition;
 
 @EntitySqlDaoStringTemplate
 @RegisterMapper(TagMapper.class)
-public interface TagSqlDao extends UpdatableEntityCollectionSqlDao<Tag>, Transactional<TagSqlDao>, Transmogrifier {
+public interface TagSqlDao extends EntitySqlDao<Tag> {
 
-    @Override
-    @SqlBatch(transactional = false)
-    public void insertFromTransaction(@Bind("objectId") final String objectId,
-                                      @ObjectTypeBinder final ObjectType objectType,
-                                      @TagBinder final Collection<Tag> tags,
-                                      @InternalTenantContextBinder final InternalCallContext context);
-
-    @Override
-    @SqlBatch(transactional = false)
-    public void updateFromTransaction(@Bind("objectId") final String objectId,
-                                      @ObjectTypeBinder final ObjectType objectType,
-                                      @TagBinder final Collection<Tag> tags,
-                                      @InternalTenantContextBinder final InternalCallContext context);
-
-    @Override
-    @SqlBatch(transactional = false)
-    public void deleteFromTransaction(@Bind("objectId") final String objectId,
-                                      @ObjectTypeBinder final ObjectType objectType,
-                                      @TagBinder final Collection<Tag> tags,
-                                      @InternalTenantContextBinder final InternalCallContext context);
-
-    @Override
-    @SqlBatch(transactional = false)
-    public void addHistoryFromTransaction(@Bind("objectId") final String objectId,
-                                          @ObjectTypeBinder final ObjectType objectType,
-                                          @TagHistoryBinder final List<EntityHistory<Tag>> histories,
-                                          @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
-    public void addTagFromTransaction(@Bind("id") final String tagId,
-                                      @Bind("tagDefinitionId") final String tagDefinitionId,
-                                      @Bind("objectId") final String objectId,
-                                      @ObjectTypeBinder final ObjectType objectType,
-                                      @InternalTenantContextBinder final InternalCallContext context);
-
-    @SqlUpdate
-    public void removeTagFromTransaction(@Bind("tagDefinitionId") final String tagDefinitionId,
-                                         @Bind("objectId") final String objectId,
-                                         @ObjectTypeBinder final ObjectType objectType,
-                                         @InternalTenantContextBinder final InternalCallContext context);
+    void deleteById(@Bind("id") UUID id, @BindBean InternalCallContext context);
 
     @SqlQuery
-    public Tag findTag(@Bind("tagDefinitionId") final String tagDefinitionId,
-                       @Bind("objectId") final String objectId,
-                       @ObjectTypeBinder final ObjectType objectType,
-                       @InternalTenantContextBinder final InternalTenantContext context);
+    List<Tag> getTagsForObject(@Bind("objectId") UUID objectId, @Bind("objectType") ObjectType objectType, @BindBean InternalTenantContext internalTenantContext);
 }

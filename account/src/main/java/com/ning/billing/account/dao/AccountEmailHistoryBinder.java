@@ -40,7 +40,7 @@ public @interface AccountEmailHistoryBinder {
             return new Binder<AccountEmailHistoryBinder, EntityHistory<AccountEmail>>() {
                 @Override
                 public void bind(final SQLStatement<?> q, final AccountEmailHistoryBinder bind, final EntityHistory<AccountEmail> history) {
-                    q.bind("recordId", history.getValue());
+                    //q.bind("recordId", history.getValue());
                     q.bind("changeType", history.getChangeType().toString());
 
                     final AccountEmail accountEmail = history.getEntity();

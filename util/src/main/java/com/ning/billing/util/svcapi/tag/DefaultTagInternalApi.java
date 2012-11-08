@@ -50,7 +50,7 @@ public class DefaultTagInternalApi implements TagInternalApi {
     @Override
     public Map<String, Tag> getTags(UUID objectId, ObjectType objectType,
             InternalTenantContext context) {
-        return tagDao.loadEntities(objectId, objectType, context);
+        return tagDao.getTags(objectId, objectType, context);
     }
 
     @Override

@@ -28,7 +28,8 @@ import org.joda.time.DateTime;
 public class InternalCallContext extends InternalTenantContext {
 
     private final UUID userToken;
-    private final String userName;
+    private final String createdBy;
+    private final String updatedBy;
     private final CallOrigin callOrigin;
     private final UserType userType;
     private final String reasonCode;
@@ -41,7 +42,8 @@ public class InternalCallContext extends InternalTenantContext {
                                final DateTime createdDate, final DateTime updatedDate) {
         super(tenantRecordId, accountRecordId);
         this.userToken = userToken;
-        this.userName = userName;
+        this.createdBy = userName;
+        this.updatedBy = userName;
         this.callOrigin = callOrigin;
         this.userType = userType;
         this.reasonCode = reasonCode;
@@ -61,15 +63,19 @@ public class InternalCallContext extends InternalTenantContext {
     // Unfortunately not true as some APIs ae hidden in object-- e.g OverdueStateApplicator is doing subscription.cancelWithPolicy(polciy, context);
     //
     public CallContext toCallContext() {
-        return new DefaultCallContext(null, userName, callOrigin, userType, reasonCode, comment, userToken, createdDate, updatedDate);
+        return new DefaultCallContext(null, createdBy, callOrigin, userType, reasonCode, comment, userToken, createdDate, updatedDate);
     }
 
     public UUID getUserToken() {
         return userToken;
     }
 
-    public String getUserName() {
-        return userName;
+    public String getCreatedBy() {
+        return createdBy;
+    }
+
+    public String getUpdatedBy() {
+        return updatedBy;
     }
 
     public CallOrigin getCallOrigin() {
@@ -101,7 +107,8 @@ public class InternalCallContext extends InternalTenantContext {
         final StringBuilder sb = new StringBuilder();
         sb.append("InternalCallContext");
         sb.append("{userToken=").append(userToken);
-        sb.append(", userName='").append(userName).append('\'');
+        sb.append(", createdBy='").append(createdBy).append('\'');
+        sb.append(", updatedBy='").append(updatedBy).append('\'');
         sb.append(", callOrigin=").append(callOrigin);
         sb.append(", userType=").append(userType);
         sb.append(", reasonCode='").append(reasonCode).append('\'');
@@ -132,16 +139,19 @@ public class InternalCallContext extends InternalTenantContext {
         if (comment != null ? !comment.equals(that.comment) : that.comment != null) {
             return false;
         }
+        if (createdBy != null ? !createdBy.equals(that.createdBy) : that.createdBy != null) {
+            return false;
+        }
         if (createdDate != null ? !createdDate.equals(that.createdDate) : that.createdDate != null) {
             return false;
         }
         if (reasonCode != null ? !reasonCode.equals(that.reasonCode) : that.reasonCode != null) {
             return false;
         }
-        if (updatedDate != null ? !updatedDate.equals(that.updatedDate) : that.updatedDate != null) {
+        if (updatedBy != null ? !updatedBy.equals(that.updatedBy) : that.updatedBy != null) {
             return false;
         }
-        if (userName != null ? !userName.equals(that.userName) : that.userName != null) {
+        if (updatedDate != null ? !updatedDate.equals(that.updatedDate) : that.updatedDate != null) {
             return false;
         }
         if (userToken != null ? !userToken.equals(that.userToken) : that.userToken != null) {
@@ -158,7 +168,8 @@ public class InternalCallContext extends InternalTenantContext {
     public int hashCode() {
         int result = super.hashCode();
         result = 31 * result + (userToken != null ? userToken.hashCode() : 0);
-        result = 31 * result + (userName != null ? userName.hashCode() : 0);
+        result = 31 * result + (createdBy != null ? createdBy.hashCode() : 0);
+        result = 31 * result + (updatedBy != null ? updatedBy.hashCode() : 0);
         result = 31 * result + (callOrigin != null ? callOrigin.hashCode() : 0);
         result = 31 * result + (userType != null ? userType.hashCode() : 0);
         result = 31 * result + (reasonCode != null ? reasonCode.hashCode() : 0);

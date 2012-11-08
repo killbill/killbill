@@ -18,11 +18,39 @@ package com.ning.billing.util.dao;
 
 import java.util.UUID;
 
+import org.joda.time.DateTime;
+import org.skife.jdbi.v2.tweak.Argument;
+
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.entity.Entity;
+import com.ning.billing.util.entity.EntityBase;
 
-public class EntityHistory<T extends Entity> extends MappedEntity<T, UUID, Long> {
-    public EntityHistory(final UUID id, final Long recordId, final T entity, final ChangeType changeType) {
-        super(new Mapper<UUID, Long>(id, recordId), entity, changeType);
+public class EntityHistory<T extends Entity> extends EntityBase {
+
+    private final Long targetRecordId;
+    private final T entity;
+    private ChangeType changeType;
+
+    public EntityHistory(final UUID id, final T src, final Long targetRecordId, final ChangeType type, final DateTime createdDate) {
+        super(id, createdDate, createdDate);
+        this.changeType = type;
+        this.targetRecordId = targetRecordId;
+        this.entity = src;
+    }
+
+    public EntityHistory(final T src, final Long targetRecordId, final ChangeType type, final DateTime createdDate) {
+        this(UUID.randomUUID(), src, targetRecordId, type, createdDate);
+    }
+
+    public ChangeType getChangeType() {
+        return changeType;
+    }
+
+    public T getEntity() {
+        return entity;
+    }
+
+    public Long getTargetRecordId() {
+        return targetRecordId;
     }
 }

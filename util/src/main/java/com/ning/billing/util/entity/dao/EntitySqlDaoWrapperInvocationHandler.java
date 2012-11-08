@@ -19,17 +19,18 @@ package com.ning.billing.util.entity.dao;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.skife.jdbi.v2.exceptions.DBIException;
 import org.skife.jdbi.v2.sqlobject.Bind;
 
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 import com.ning.billing.util.dao.EntityAudit;
 import com.ning.billing.util.dao.EntityHistory;
 import com.ning.billing.util.dao.TableName;
@@ -199,12 +200,7 @@ public class EntitySqlDaoWrapperInvocationHandler<T extends EntitySqlDao<U>, U e
             if (!(arg instanceof InternalCallContext)) {
                 continue;
             }
-
-            for (final Annotation annotation : parameterAnnotations[i]) {
-                if (InternalTenantContextBinder.class.equals(annotation.annotationType())) {
-                    return (InternalCallContext) arg;
-                }
-            }
+            return (InternalCallContext) arg;
         }
 
         return null;
@@ -222,14 +218,19 @@ public class EntitySqlDaoWrapperInvocationHandler<T extends EntitySqlDao<U>, U e
     }
 
     private Long insertHistory(final Long entityRecordId, final U entity, final ChangeType changeType, final InternalCallContext context) {
-        final EntityHistory<U> history = new EntityHistory<U>(entity.getId(), entityRecordId, entity, changeType);
+        // TODO use clock
+        EntityHistory<U> history = new EntityHistory<U>(entity, entityRecordId, changeType, context.getCreatedDate());
+
         sqlDao.addHistoryFromTransaction(history, context);
         return sqlDao.getHistoryRecordId(entityRecordId, context);
     }
 
+
+
     private void insertAudits(final TableName tableName, final Long historyRecordId, final ChangeType changeType, final InternalCallContext context) {
         // STEPH can we trust context or should we use Clock?
-        final EntityAudit audit = new EntityAudit(tableName, historyRecordId, changeType, context.getCreatedDate());
+        final TableName destinationTableName = Objects.firstNonNull(tableName.getHistoryTableName(), tableName);
+        final EntityAudit audit = new EntityAudit(destinationTableName, historyRecordId, changeType, context.getCreatedDate());
         sqlDao.insertAuditFromTransaction(audit, context);
     }
 }
