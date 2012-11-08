@@ -18,23 +18,22 @@ package com.ning.billing.util.tag;
 
 import java.util.UUID;
 
-import javax.annotation.Nullable;
-
 import org.joda.time.DateTime;
+
+import com.ning.billing.ObjectType;
 
 public class DefaultControlTag extends DescriptiveTag implements ControlTag {
 
     private final ControlTagType controlTagType;
 
     // use to create new objects
-    public DefaultControlTag(final ControlTagType controlTagType) {
-        super(controlTagType.getId());
-        this.controlTagType = controlTagType;
+    public DefaultControlTag(final ControlTagType controlTagType, ObjectType objectType, UUID objectId, DateTime createdDate) {
+        this(UUID.randomUUID(), controlTagType, objectType, objectId, createdDate);
     }
 
     // use to hydrate objects when loaded from the persistence layer
-    public DefaultControlTag(final UUID id, @Nullable final DateTime createdDate, final ControlTagType controlTagType) {
-        super(id, createdDate, controlTagType.getId());
+    public DefaultControlTag(final UUID id, final ControlTagType controlTagType, ObjectType objectType, UUID objectId, DateTime createdDate) {
+        super(id, controlTagType.getId(), objectType, objectId, createdDate);
         this.controlTagType = controlTagType;
     }
 

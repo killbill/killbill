@@ -53,7 +53,6 @@ import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 import com.ning.billing.util.tag.DefaultTagDefinition;
 import com.ning.billing.util.tag.TagDefinition;
 
-@RegisterArgumentFactory({UUIDArgumentFactory.class, DateTimeArgumentFactory.class, EnumArgumentFactory.class})
 @EntitySqlDaoStringTemplate
 @RegisterMapper(TagDefinitionSqlDao.TagDefinitionMapper.class)
 public interface TagDefinitionSqlDao extends EntitySqlDao<TagDefinition> {

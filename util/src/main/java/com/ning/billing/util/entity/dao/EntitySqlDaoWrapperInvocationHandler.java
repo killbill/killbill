@@ -33,7 +33,6 @@ import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.dao.EntityAudit;
 import com.ning.billing.util.dao.EntityHistory;
-import com.ning.billing.util.dao.EntityHistoryToBeRenamed;
 import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.Entity;
 
@@ -219,20 +218,19 @@ public class EntitySqlDaoWrapperInvocationHandler<T extends EntitySqlDao<U>, U e
     }
 
     private Long insertHistory(final Long entityRecordId, final U entity, final ChangeType changeType, final InternalCallContext context) {
-
         // TODO use clock
         EntityHistory<U> history = new EntityHistory<U>(entity, entityRecordId, changeType, context.getCreatedDate());
 
         sqlDao.addHistoryFromTransaction(history, context);
         return sqlDao.getHistoryRecordId(entityRecordId, context);
-
     }
 
 
 
     private void insertAudits(final TableName tableName, final Long historyRecordId, final ChangeType changeType, final InternalCallContext context) {
         // STEPH can we trust context or should we use Clock?
-        final EntityAudit audit = new EntityAudit(tableName, historyRecordId, changeType, context.getCreatedDate());
+        final TableName destinationTableName = Objects.firstNonNull(tableName.getHistoryTableName(), tableName);
+        final EntityAudit audit = new EntityAudit(destinationTableName, historyRecordId, changeType, context.getCreatedDate());
         sqlDao.insertAuditFromTransaction(audit, context);
     }
 }

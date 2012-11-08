@@ -24,6 +24,7 @@ import org.joda.time.DateTime;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
+import com.ning.billing.ObjectType;
 import com.ning.billing.util.dao.MapperBase;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.DefaultControlTag;
@@ -44,12 +45,14 @@ public class TagMapper extends MapperBase implements ResultSetMapper<Tag> {
             }
         }
 
+        final ObjectType objectType = ObjectType.valueOf(result.getString("object_type"));
+        final UUID objectId = getUUID(result, "object_id");
         final UUID id = getUUID(result, "id");
         final DateTime createdDate = getDateTime(result, "created_date");
         if (thisTagType == null) {
-            return new DescriptiveTag(id, createdDate, tagDefinitionId);
+            return new DescriptiveTag(id, tagDefinitionId, objectType, objectId, createdDate);
         } else {
-            return new DefaultControlTag(id, createdDate, thisTagType);
+            return new DefaultControlTag(id, thisTagType, objectType, objectId, createdDate);
         }
     }
 }

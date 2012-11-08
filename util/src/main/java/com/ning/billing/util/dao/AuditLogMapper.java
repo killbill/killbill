@@ -39,14 +39,14 @@ public class AuditLogMapper extends MapperBase implements ResultSetMapper<AuditL
         final long targetRecordId = r.getLong("target_record_id");
         final String changeType = r.getString("change_type");
         final DateTime createdDate = getDateTime(r, "created_date");
-        final String changedBy = r.getString("changed_by");
+        final String createdBy = r.getString("created_by");
         final String reasonCode = r.getString("reason_code");
         final String comments = r.getString("comments");
         final UUID userToken = getUUID(r, "user_token");
 
         final EntityAudit entityAudit = new EntityAudit(id, TableName.valueOf(tableName), targetRecordId, ChangeType.valueOf(changeType), createdDate);
         // TODO - we have the tenant_record_id but not the tenant id here
-        final CallContext callContext = new DefaultCallContext(null, changedBy, createdDate, reasonCode, comments, userToken);
+        final CallContext callContext = new DefaultCallContext(null, createdBy, createdDate, reasonCode, comments, userToken);
         return new DefaultAuditLog(entityAudit, callContext);
     }
 }

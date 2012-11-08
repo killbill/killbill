@@ -16,9 +16,16 @@
 
 package com.ning.billing.dbi;
 
+import java.util.concurrent.TimeUnit;
+
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.IDBI;
+import org.skife.jdbi.v2.sqlobject.customizers.RegisterArgumentFactory;
 import org.skife.jdbi.v2.tweak.transactions.SerializableTransactionRunner;
+
+import com.ning.billing.util.dao.DateTimeArgumentFactory;
+import com.ning.billing.util.dao.EnumArgumentFactory;
+import com.ning.billing.util.dao.UUIDArgumentFactory;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -27,29 +34,40 @@ import com.jolbox.bonecp.BoneCPDataSource;
 
 public class DBIProvider implements Provider<IDBI> {
 
-    private final DbiConfig config;
+    private final BoneCPConfig dbConfig;
 
     @Inject
     public DBIProvider(final DbiConfig config) {
-        this.config = config;
+        this(config.getJdbcUrl(), config.getUsername(), config.getPassword());
     }
 
-    @Override
-    public IDBI get() {
+    public DBIProvider(final String dbiString, final String userName, final String pwd) {
+        this.dbConfig = createConfig(dbiString, userName, pwd);
+    }
+
+    BoneCPConfig createConfig(final String dbiString, final String userName, final String pwd) {
         final BoneCPConfig dbConfig = new BoneCPConfig();
-        dbConfig.setJdbcUrl(config.getJdbcUrl());
-        dbConfig.setUsername(config.getUsername());
-        dbConfig.setPassword(config.getPassword());
-        dbConfig.setMinConnectionsPerPartition(config.getMinIdle());
-        dbConfig.setMaxConnectionsPerPartition(config.getMaxActive());
-        dbConfig.setConnectionTimeout(config.getConnectionTimeout().getPeriod(), config.getConnectionTimeout().getUnit());
+        dbConfig.setJdbcUrl(dbiString);
+        dbConfig.setUsername(userName);
+        dbConfig.setPassword(pwd);
+        dbConfig.setMinConnectionsPerPartition(1);
+        dbConfig.setMaxConnectionsPerPartition(30);
+        dbConfig.setConnectionTimeout(10, TimeUnit.SECONDS);
         dbConfig.setPartitionCount(1);
         dbConfig.setDefaultTransactionIsolation("REPEATABLE_READ");
         dbConfig.setDisableJMX(false);
         dbConfig.setLazyInit(true);
+        return dbConfig;
+    }
 
+    @Override
+    public IDBI get() {
         final BoneCPDataSource ds = new BoneCPDataSource(dbConfig);
         final DBI dbi = new DBI(ds);
+        dbi.registerArgumentFactory(new UUIDArgumentFactory());
+        dbi.registerArgumentFactory(new DateTimeArgumentFactory());
+        dbi.registerArgumentFactory(new EnumArgumentFactory());
+
         // Restart transactions in case of deadlocks
         dbi.setTransactionHandler(new SerializableTransactionRunner());
         //final SQLLog log = new Log4JLog();

@@ -169,11 +169,11 @@ where <recordIdField("t.")> = :recordId
 >>
 
 
-getHistoryRecordIdsForTable(tableName) ::= <<
+getHistoryRecordIdsForTable(historyTableName) ::= <<
 select
-  <recordIdField("t.")> record_id
-from <tableName> t
-where <idField("t.")> = :id
+  <recordIdField("t.")>
+from <historyTableName> t
+where <targetRecordIdField("t.")> = :targetRecordId
 <AND_CHECK_TENANT("t.")>
 ;
 >>
@@ -269,7 +269,7 @@ from <auditTableName()> t
 where t.target_record_id = :targetRecordId
 and t.table_name = :tableName
 <AND_CHECK_TENANT("t.")>
-order by change_date ASC
+order by created_date ASC
 ;
 >>
 

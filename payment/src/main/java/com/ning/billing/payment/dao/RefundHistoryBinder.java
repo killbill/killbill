@@ -42,7 +42,7 @@ public @interface RefundHistoryBinder {
             return new Binder<RefundHistoryBinder, EntityHistory<RefundModelDao>>() {
                 @Override
                 public void bind(final SQLStatement<?> q, final RefundHistoryBinder bind, final EntityHistory<RefundModelDao> history) {
-                    q.bind("recordId", history.getValue());
+                   // q.bind("recordId", history.getValue());
                     q.bind("changeType", history.getChangeType().toString());
                     final RefundModelDao refund = history.getEntity();
                     q.bind("id", refund.getId().toString());

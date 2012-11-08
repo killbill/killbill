@@ -188,7 +188,9 @@ public abstract class AuditedCollectionDaoBase<T extends Entity, V> implements A
             if (recordId == null) {
                 throw new IllegalStateException("recordId for object " + entity.getClass() + " is null ");
             }
+            /*
             histories.add(new EntityHistory<T>(id, recordId, entity, changeType));
+            */
         }
 
         return histories;
@@ -198,7 +200,7 @@ public abstract class AuditedCollectionDaoBase<T extends Entity, V> implements A
         final List<EntityAudit> audits = new ArrayList<EntityAudit>();
 
         for (final EntityHistory<T> history : histories) {
-            final Long recordId = history.getValue();
+            final Long recordId = null; // history.getValue();
             final Long historyRecordId = historyRecordIds.get(recordId);
             audits.add(new EntityAudit(getTableName(context), historyRecordId, history.getChangeType(), clock.getUTCNow()));
         }

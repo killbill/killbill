@@ -175,9 +175,14 @@ public class MysqlTestingHelper {
         }
     }
 
-    public IDBI getDBI() {
-        final String dbiString = getJdbcConnectionString() + "?createDatabaseIfNotExist=true&allowMultiQueries=true";
-        return new DBI(dbiString, USERNAME, PASSWORD);
+    private IDBI dbiInstance = null;
+
+    public synchronized IDBI getDBI() {
+        if (dbiInstance == null) {
+            final String dbiString = getJdbcConnectionString() + "?createDatabaseIfNotExist=true&allowMultiQueries=true";
+            dbiInstance = new DBIProvider(dbiString, USERNAME, PASSWORD).get();
+        }
+        return dbiInstance;
     }
 
     public String getJdbcConnectionString() {

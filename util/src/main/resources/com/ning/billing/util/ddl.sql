@@ -85,6 +85,8 @@ CREATE TABLE tags (
     object_type varchar(30) NOT NULL,
     created_by varchar(50) NOT NULL,
     created_date datetime NOT NULL,
+    updated_by varchar(50) NOT NULL,
+    updated_date datetime NOT NULL,
     account_record_id int(11) unsigned default null,
     tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)
@@ -96,20 +98,22 @@ CREATE INDEX tags_tenant_account_record_id ON tags(tenant_record_id, account_rec
 
 DROP TABLE IF EXISTS tag_history;
 CREATE TABLE tag_history (
-    history_record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
-    record_id int(11) unsigned NOT NULL,
+    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
     id char(36) NOT NULL,
+    target_record_id int(11) unsigned NOT NULL,
     object_id char(36) NOT NULL,
     object_type varchar(30) NOT NULL,
     tag_definition_id char(36) NOT NULL,
-    updated_by varchar(50) NOT NULL,
-    date datetime NOT NULL,
     change_type char(6) NOT NULL,
+    created_date datetime NOT NULL,
+    created_by varchar(50) NOT NULL,
+    updated_date datetime NOT NULL,
+    updated_by varchar(50) NOT NULL,
     account_record_id int(11) unsigned default null,
     tenant_record_id int(11) unsigned default null,
-    PRIMARY KEY(history_record_id)
+    PRIMARY KEY(record_id)
 ) ENGINE = innodb;
-CREATE INDEX tag_history_record_id ON tag_history(record_id);
+CREATE INDEX tag_history_target_record_id ON tag_history(target_record_id);
 CREATE INDEX tag_history_by_object ON tags(object_id);
 CREATE INDEX tag_history_tenant_account_record_id ON tag_history(tenant_record_id, account_record_id);
 

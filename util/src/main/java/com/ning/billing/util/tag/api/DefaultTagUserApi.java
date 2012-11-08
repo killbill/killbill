@@ -103,7 +103,7 @@ public class DefaultTagUserApi implements TagUserApi {
 
     @Override
     public Map<String, Tag> getTags(final UUID objectId, final ObjectType objectType, final TenantContext context) {
-        return tagDao.loadEntities(objectId, objectType, internalCallContextFactory.createInternalTenantContext(context));
+        return tagDao.getTags(objectId, objectType, internalCallContextFactory.createInternalTenantContext(context));
     }
 
     @Override

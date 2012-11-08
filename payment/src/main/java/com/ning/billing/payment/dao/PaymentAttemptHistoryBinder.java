@@ -41,7 +41,7 @@ public @interface PaymentAttemptHistoryBinder {
             return new Binder<PaymentAttemptHistoryBinder, EntityHistory<PaymentAttemptModelDao>>() {
                 @Override
                 public void bind(final SQLStatement<?> q, final PaymentAttemptHistoryBinder bind, final EntityHistory<PaymentAttemptModelDao> history) {
-                    q.bind("recordId", history.getValue());
+                  //  q.bind("recordId", history.getValue());
                     q.bind("changeType", history.getChangeType().toString());
                     final PaymentAttemptModelDao attempt = history.getEntity();
                     q.bind("id", attempt.getId().toString());
