@@ -22,13 +22,12 @@ import org.skife.jdbi.v2.IDBI;
 import org.testng.annotations.BeforeClass;
 
 import com.ning.billing.account.AccountTestSuiteWithEmbeddedDB;
-import com.ning.billing.util.callcontext.InternalCallContextFactory;
-import com.ning.billing.util.clock.ClockMock;
-import com.ning.billing.util.clock.DefaultClock;
-import com.ning.billing.util.svcsapi.bus.InternalBus;
-import com.ning.billing.util.svcsapi.bus.BusService;
 import com.ning.billing.util.bus.DefaultBusService;
 import com.ning.billing.util.bus.InMemoryInternalBus;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
+import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.svcsapi.bus.BusService;
+import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.tag.api.user.TagEventBuilder;
 
 import static org.testng.Assert.fail;

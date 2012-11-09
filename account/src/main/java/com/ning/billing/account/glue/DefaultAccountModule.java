@@ -32,6 +32,7 @@ import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.google.inject.AbstractModule;
 
 public class DefaultAccountModule extends AbstractModule implements AccountModule {
+
     private void installConfig() {
     }
 
@@ -49,6 +50,7 @@ public class DefaultAccountModule extends AbstractModule implements AccountModul
     public void installInternalApi() {
         bind(AccountInternalApi.class).to(DefaultAccountInternalApi.class).asEagerSingleton();
     }
+
     private void installAccountService() {
         bind(AccountService.class).to(DefaultAccountService.class).asEagerSingleton();
     }

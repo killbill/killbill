@@ -21,9 +21,9 @@ import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.util.events.ChangedField;
 import com.ning.billing.account.api.DefaultChangedField;
 import com.ning.billing.util.events.AccountChangeInternalEvent;
+import com.ning.billing.util.events.ChangedField;
 import com.ning.billing.util.events.DefaultBusInternalEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -50,7 +50,7 @@ public class DefaultAccountChangeEvent extends DefaultBusInternalEvent implement
     }
 
     public DefaultAccountChangeEvent(final UUID id, final UUID userToken, final Account oldData, final Account newData,
-            final Long accountRecordId, final Long tenantRecordId) {
+                                     final Long accountRecordId, final Long tenantRecordId) {
         super(userToken, accountRecordId, tenantRecordId);
         this.accountId = id;
         this.userToken = userToken;

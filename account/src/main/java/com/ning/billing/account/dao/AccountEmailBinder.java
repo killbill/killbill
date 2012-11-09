@@ -33,7 +33,9 @@ import com.ning.billing.account.api.AccountEmail;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.PARAMETER})
 public @interface AccountEmailBinder {
+
     public static class AccountEmailBinderFactory implements BinderFactory {
+
         @Override
         public Binder<AccountEmailBinder, AccountEmail> build(final Annotation annotation) {
             return new Binder<AccountEmailBinder, AccountEmail>() {

@@ -34,7 +34,9 @@ import com.ning.billing.util.dao.EntityHistory;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.PARAMETER})
 public @interface AccountEmailHistoryBinder {
+
     public static class AccountEmailHistoryBinderFactory implements BinderFactory {
+
         @Override
         public Binder<AccountEmailHistoryBinder, EntityHistory<AccountEmail>> build(final Annotation annotation) {
             return new Binder<AccountEmailHistoryBinder, EntityHistory<AccountEmail>>() {

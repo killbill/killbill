@@ -83,7 +83,6 @@ public class AuditedAccountDao implements AccountDao {
         return accountSqlDao.getByRecordId(recordId, context);
     }
 
-
     @Override
     public List<Account> get(final InternalTenantContext context) {
         return accountSqlDao.get(context);

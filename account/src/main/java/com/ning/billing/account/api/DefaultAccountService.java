@@ -16,7 +16,6 @@
 
 package com.ning.billing.account.api;
 
-
 public class DefaultAccountService implements AccountService {
 
     private static final String ACCOUNT_SERVICE_NAME = "account-service";
@@ -26,7 +25,7 @@ public class DefaultAccountService implements AccountService {
         return ACCOUNT_SERVICE_NAME;
     }
 
-//    @LifecycleHandlerType(LifecycleLevel.INIT_SERVICE)
-//    public void initialize() {
-//    }
+    //    @LifecycleHandlerType(LifecycleLevel.INIT_SERVICE)
+    //    public void initialize() {
+    //    }
 }
