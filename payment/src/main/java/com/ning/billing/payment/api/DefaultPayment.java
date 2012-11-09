@@ -175,7 +175,7 @@ public class DefaultPayment extends EntityBase implements Payment {
                 return new PaymentAttempt() {
                     @Override
                     public PaymentStatus getPaymentStatus() {
-                        return input.getPaymentStatus();
+                        return input.getProcessingStatus();
                     }
 
                     @Override

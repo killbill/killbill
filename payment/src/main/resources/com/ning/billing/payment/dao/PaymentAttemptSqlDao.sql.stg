@@ -1,6 +1,5 @@
 group PaymentAttemptSqlDao: EntitySqlDao;
 
-
 tableFields(prefix) ::= <<
   <prefix>payment_id
 , <prefix>gateway_error_code
@@ -25,54 +24,45 @@ tableValues() ::= <<
 , :updatedDate
 >>
 
+tableName() ::= "payment_attempts"
 
-insertPaymentAttempt() ::= <<
-    INSERT INTO payment_attempts (<paymentAttemptFields()>)
-    VALUES (:id, :paymentId, :gatewayErrorCode, :gatewayErrorMsg, :processingStatus, :requestedAmount, :userName,
-            :createdDate, :userName, :createdDate, :accountRecordId, :tenantRecordId);
+historyTableName() ::= "payment_attempt_history"
+
+
+getById(id) ::= <<
+select <allTableFields("pa.")>
+, pa.created_date as effective_date
+, p.account_id as account_id
+, p.invoice_id as invoice_id
+from <tableName()> pa join payments p
+where pa.id = :id
+and pa.payment_id = p.id
+<AND_CHECK_TENANT("pa.")>
+<AND_CHECK_TENANT("p.")>
+;
 >>
 
-getPaymentAttempt() ::= <<
-    SELECT <paymentAttemptFields("pa.")>
-    , pa.created_date as effective_date
-    , p.account_id as account_id
-    , p.invoice_id as invoice_id
-      FROM payment_attempts pa join payments p
-     WHERE pa.id = :id 
-     AND pa.payment_id = p.id
-     <AND_CHECK_TENANT("pa.")>
-     <AND_CHECK_TENANT("p.")>
-     ;
+getByPaymentId(paymentId) ::= <<
+select <allTableFields("pa.")>
+, pa.created_date as effective_date
+, p.account_id as account_id
+, p.invoice_id as invoice_id
+from <tableName()> pa join payments p
+where pa.payment_id = :paymentId
+and p.id = :paymentId
+<AND_CHECK_TENANT("pa.")>
+<AND_CHECK_TENANT("p.")>
+order by effective_date asc
+;
 >>
 
-getPaymentAttempts() ::= <<
-    SELECT <paymentAttemptFields("pa.")>
-    , pa.created_date as effective_date
-    , p.account_id as account_id
-    , p.invoice_id as invoice_id
-      FROM payment_attempts pa join payments p
-     WHERE pa.payment_id = :paymentId
-     AND p.id = :paymentId
-     <AND_CHECK_TENANT("pa.")>
-     <AND_CHECK_TENANT("p.")>
-     ORDER BY effective_date ASC;
->>
 
 updatePaymentAttemptStatus() ::= <<
-    UPDATE payment_attempts
-    SET processing_status = :processingStatus,
-        gateway_error_code = :gatewayErrorCode,
-        gateway_error_msg = :gatewayErrorMsg        
-    WHERE  id = :id
-    <AND_CHECK_TENANT()>
-    ;
->>
-
-
-getPaymentAttemptIdFromPaymentId() ::= <<
-    SELECT id
-    FROM payment_attempts
-    WHERE payment_id = :paymentId
-    <AND_CHECK_TENANT()>
-    ;
+update <tableName()>
+set processing_status = :processingStatus
+, gateway_error_code = :gatewayErrorCode
+, gateway_error_msg = :gatewayErrorMsg
+where id = :id
+<AND_CHECK_TENANT()>
+;
 >>

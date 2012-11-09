@@ -72,7 +72,13 @@ public class RefundModelDao extends EntityBase {
         return refundStatus;
     }
 
-    public boolean isAdjsuted() {
+    // TODO Required for making the BindBeanFactory with Introspector work
+    // see Introspector line 571; they look at public method.
+    public boolean getIsAdjusted() {
+        return isAdjusted;
+    }
+
+    public boolean isAdjusted() {
         return isAdjusted;
     }
 

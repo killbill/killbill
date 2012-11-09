@@ -50,7 +50,7 @@ public @interface RefundHistoryBinder {
                     q.bind("paymentId", refund.getPaymentId().toString());
                     q.bind("amount", refund.getAmount());
                     q.bind("currency", refund.getCurrency().toString());
-                    q.bind("isAdjusted", refund.isAdjsuted());
+                    q.bind("isAdjusted", refund.isAdjusted());
                     q.bind("refundStatus", refund.getRefundStatus().toString());
                 }
             };

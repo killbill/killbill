@@ -13,44 +13,58 @@ tableFields(prefix) ::= <<
 >>
 
 tableValues() ::= <<
-  :account_id
-, :plugin_name
-, :is_active
-, :external_id
-, :created_by
-, :created_date
-, :updated_by
-, :updated_date
+  :accountId
+, :pluginName
+, :isActive
+, :externalId
+, :createdBy
+, :createdDate
+, :updatedBy
+, :updatedDate
 >>
+
+tableName() ::= "payment_methods"
 
 historyTableName() ::= "payment_method_history"
 
-markPaymentMethodAsDeleted() ::= <<
-    UPDATE payment_methods 
-    SET is_active = 0
-    WHERE  id = :id
-    <AND_CHECK_TENANT()>
-    ;
+
+getById(id) ::= <<
+select
+<allTableFields()>
+from <tableName()>
+where id = :id
+and is_active = 1
+<AND_CHECK_TENANT()>
+;
 >>
 
-unmarkPaymentMethodAsDeleted() ::= <<
-    UPDATE payment_methods
-    SET is_active = 1
-    WHERE  id = :id
-    <AND_CHECK_TENANT()>
-    ;
+markPaymentMethodAsDeleted(id) ::= <<
+update <tableName()>
+set is_active = 0
+where  id = :id
+<AND_CHECK_TENANT()>
+;
 >>
 
-getPaymentMethodIncludedDelete() ::= <<
-    SELECT <paymentMethodFields()>
-      FROM payment_methods
-    WHERE id = :id;
+unmarkPaymentMethodAsDeleted(id) ::= <<
+update <tableName()>
+set is_active = 1
+where  id = :id
+<AND_CHECK_TENANT()>
+;
 >>
 
-getPaymentMethods() ::= <<
-    SELECT <paymentMethodFields()>
-      FROM payment_methods
-    WHERE account_id = :accountId AND is_active = 1
-    <AND_CHECK_TENANT()>
-    ;
+getPaymentMethodIncludedDelete(accountId) ::= <<
+select <allTableFields()>
+from <tableName()>
+where account_id = :accountId
+;
+>>
+
+getByAccountId(accountId) ::= <<
+select
+<allTableFields()>
+from <tableName()>
+where account_id = :accountId
+;
 >>

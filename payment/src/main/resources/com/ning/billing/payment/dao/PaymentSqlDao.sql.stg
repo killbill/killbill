@@ -18,76 +18,75 @@ tableFields(prefix) ::= <<
 >>
 
 tableValues() ::= <<
-  :account_id
-, :invoice_id
-, :payment_method_id
+  :accountId
+, :invoiceId
+, :paymentMethodId
 , :amount
-, :effective_date
+, :effectiveDate
 , :currency
-, :payment_status
-, :ext_first_payment_ref_id
-, :ext_second_payment_ref_id
-, :created_by
-, :created_date
-, :updated_by
-, :updated_date
+, :paymentStatus
+, :extFirstPaymentRefId
+, :extSecondPaymentRefId
+, :createdBy
+, :createdDate
+, :updatedBy
+, :updatedDate
 >>
 
+tableName() ::= "payments"
 
-getPayment() ::= <<
-    SELECT <tableFields()>
-    , record_id as payment_number
-      FROM payments
-    WHERE id = :id
-    <AND_CHECK_TENANT()>
-    ;
->>
+historyTableName() ::= "payment_history"
 
-getLastPaymentForAccountAndPaymentMethod() ::= <<
-    SELECT <paymentFields()>
-    , record_id as payment_number
-      FROM payments
-    WHERE account_id = :accountId AND payment_method_id = :paymentMethodId
-    <AND_CHECK_TENANT()>
-    ORDER BY effective_date desc limit 1;
->> 
-
-getPaymentsForInvoice() ::= <<
-    SELECT <paymentFields()>
-    , record_id as payment_number
-      FROM payments
-    WHERE invoice_id = :invoiceId
-    <AND_CHECK_TENANT()>
-    ;
->>
 
 getPaymentsForAccount() ::= <<
-    SELECT <paymentFields()>
-    , record_id as payment_number
-      FROM payments
-    WHERE account_id = :accountId
-    <AND_CHECK_TENANT()>
-    ;
+select <allTableFields()>
+, record_id as payment_number
+from payments
+where account_id = :accountId
+<AND_CHECK_TENANT()>
+;
 >>
+
+
+getPaymentsForInvoice() ::= <<
+select <allTableFields()>
+, record_id as payment_number
+from payments
+where invoice_id = :invoiceId
+<AND_CHECK_TENANT()>
+;
+>>
+
+
+getLastPaymentForAccountAndPaymentMethod() ::= <<
+select <allTableFields()>
+, record_id as payment_number
+from payments
+where account_id = :accountId
+and payment_method_id = :paymentMethodId
+<AND_CHECK_TENANT()>
+order by effective_date desc limit 1
+;
+>>
+
 
 
 updatePaymentStatusAndExtRef() ::= <<
-    UPDATE payments
-    SET payment_status = :paymentStatus,
-        ext_first_payment_ref_id = :extFirstPaymentRefId,
-        ext_second_payment_ref_id = :extSecondPaymentRefId
-    WHERE id = :id
-    <AND_CHECK_TENANT()>
-    ;
+update payments
+set payment_status = :paymentStatus
+, ext_first_payment_ref_id = :extFirstPaymentRefId
+, ext_second_payment_ref_id = :extSecondPaymentRefId
+where id = :id
+<AND_CHECK_TENANT()>
+;
 >>
 
 updatePaymentAmount() ::= <<
-    UPDATE payments
-    SET amount = :amount
-    WHERE id = :id
-    <AND_CHECK_TENANT()>
-    ;
+update <tableName()>
+set amount = :amount
+where id = :id
+<AND_CHECK_TENANT()>
+;
 >>
 
 
-historyTableName() ::= "payment_history"

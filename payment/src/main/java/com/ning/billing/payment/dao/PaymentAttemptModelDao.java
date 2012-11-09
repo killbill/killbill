@@ -77,7 +77,7 @@ public class PaymentAttemptModelDao extends EntityBase {
         return paymentId;
     }
 
-    public PaymentStatus getPaymentStatus() {
+    public PaymentStatus getProcessingStatus() {
         return processingStatus;
     }
 

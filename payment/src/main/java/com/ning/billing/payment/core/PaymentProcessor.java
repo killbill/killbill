@@ -516,7 +516,7 @@ public class PaymentProcessor extends ProcessorBase {
             @Override
             public boolean apply(final PaymentAttemptModelDao input) {
                 for (final PaymentStatus cur : statuses) {
-                    if (input.getPaymentStatus() == cur) {
+                    if (input.getProcessingStatus() == cur) {
                         return true;
                     }
                 }
