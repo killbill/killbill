@@ -34,10 +34,10 @@ import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 
 import com.google.inject.Inject;
 
-public class AuditedAccountEmailDao extends EntityDaoBase<AccountEmail, AccountApiException> implements AccountEmailDao {
+public class DefaultAccountEmailDao extends EntityDaoBase<AccountEmail, AccountApiException> implements AccountEmailDao {
 
     @Inject
-    public AuditedAccountEmailDao(final IDBI dbi) {
+    public DefaultAccountEmailDao(final IDBI dbi) {
         super(new EntitySqlDaoTransactionalJdbiWrapper(dbi), AccountEmailSqlDao.class);
     }
 

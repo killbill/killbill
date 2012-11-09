@@ -50,11 +50,11 @@ public abstract class AccountDaoTestBase extends AccountTestSuiteWithEmbeddedDB 
             final BusService busService = new DefaultBusService(bus);
             ((DefaultBusService) busService).startBus();
 
-            accountDao = new AuditedAccountDao(dbi, bus, new InternalCallContextFactory(dbi, new ClockMock()));
+            accountDao = new DefaultAccountDao(dbi, bus, new InternalCallContextFactory(dbi, new ClockMock()));
             // Health check test to make sure MySQL is setup properly
             accountDao.test(internalCallContext);
 
-            accountEmailDao = new AuditedAccountEmailDao(dbi);
+            accountEmailDao = new DefaultAccountEmailDao(dbi);
             // Health check test to make sure MySQL is setup properly
             accountEmailDao.test(internalCallContext);
         } catch (Throwable t) {

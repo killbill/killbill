@@ -45,15 +45,15 @@ import com.ning.billing.util.svcsapi.bus.InternalBus.EventBusException;
 
 import com.google.inject.Inject;
 
-public class AuditedAccountDao extends EntityDaoBase<Account, AccountApiException> implements AccountDao {
+public class DefaultAccountDao extends EntityDaoBase<Account, AccountApiException> implements AccountDao {
 
-    private static final Logger log = LoggerFactory.getLogger(AuditedAccountDao.class);
+    private static final Logger log = LoggerFactory.getLogger(DefaultAccountDao.class);
 
     private final InternalBus eventBus;
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
-    public AuditedAccountDao(final IDBI dbi, final InternalBus eventBus, final InternalCallContextFactory internalCallContextFactory) {
+    public DefaultAccountDao(final IDBI dbi, final InternalBus eventBus, final InternalCallContextFactory internalCallContextFactory) {
         super(new EntitySqlDaoTransactionalJdbiWrapper(dbi), AccountSqlDao.class);
         this.eventBus = eventBus;
         this.internalCallContextFactory = internalCallContextFactory;
