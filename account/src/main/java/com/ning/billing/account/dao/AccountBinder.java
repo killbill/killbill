@@ -35,7 +35,9 @@ import com.ning.billing.catalog.api.Currency;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.PARAMETER})
 public @interface AccountBinder {
+
     public static class AccountBinderFactory implements BinderFactory {
+
         @Override
         public Binder<AccountBinder, Account> build(final Annotation annotation) {
             return new Binder<AccountBinder, Account>() {

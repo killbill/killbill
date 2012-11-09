@@ -28,6 +28,7 @@ import com.ning.billing.account.api.DefaultAccountEmail;
 import com.ning.billing.util.dao.MapperBase;
 
 public class AccountEmailMapper extends MapperBase implements ResultSetMapper<AccountEmail> {
+
     @Override
     public AccountEmail map(final int index, final ResultSet result, final StatementContext context) throws SQLException {
         final UUID id = UUID.fromString(result.getString("id"));

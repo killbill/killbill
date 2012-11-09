@@ -144,7 +144,7 @@ public class TestAccountDao extends AccountDaoTestBase {
     }
 
     @Test(groups = "slow")
-    public void testCustomFields() throws  CustomFieldApiException {
+    public void testCustomFields() throws CustomFieldApiException {
         final String fieldName = "testField1";
         final String fieldValue = "testField1_value";
 
@@ -169,7 +169,6 @@ public class TestAccountDao extends AccountDaoTestBase {
         tagDefinitionDao.create(definition, internalCallContext);
 
         final TagDao tagDao = new AuditedTagDao(dbi, tagEventBuilder, bus, new DefaultClock());
-
 
         final TagDefinition tagDefinition = tagDefinitionDao.getById(definition.getId().toString(), internalCallContext);
         final Tag tag = tagDefinition.isControlTag() ? new DefaultControlTag(ControlTagType.getTypeFromId(tagDefinition.getId()), ObjectType.ACCOUNT, account.getId(), internalCallContext.getCreatedDate()) :

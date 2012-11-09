@@ -30,16 +30,17 @@ import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import com.ning.billing.ObjectType;
+import com.ning.billing.mock.glue.MockEntitlementModule;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.api.AuditLevel;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.audit.AuditLog;
 import com.ning.billing.util.audit.ChangeType;
-import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.glue.AuditModule;
+import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.DefaultControlTag;
 import com.ning.billing.util.tag.DescriptiveTag;
@@ -51,7 +52,7 @@ import com.ning.billing.util.tag.dao.TagDefinitionDao;
 
 import com.google.inject.Inject;
 
-@Guice(modules = {MockTagStoreModuleSql.class, AuditModule.class})
+@Guice(modules = {MockTagStoreModuleSql.class, AuditModule.class, MockEntitlementModule.class})
 public class TestDefaultAuditDao extends UtilTestSuiteWithEmbeddedDB {
 
     @Inject

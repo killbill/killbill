@@ -16,28 +16,28 @@
 
 package com.ning.billing.account.dao;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
+import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.account.api.DefaultAccount;
+import com.ning.billing.account.api.DefaultMutableAccountData;
 import com.ning.billing.account.api.user.DefaultAccountChangeEvent;
 import com.ning.billing.account.api.user.DefaultAccountCreationEvent;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.entity.EntityPersistenceException;
+import com.ning.billing.util.entity.dao.MockEntityDaoBase;
 import com.ning.billing.util.events.AccountChangeInternalEvent;
 import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.svcsapi.bus.InternalBus.EventBusException;
 
 import com.google.inject.Inject;
 
-public class MockAccountDao implements AccountDao {
+public class MockAccountDao extends MockEntityDaoBase<Account, AccountApiException> implements AccountDao {
 
     private final InternalBus eventBus;
-    private final Map<UUID, Account> accounts = new ConcurrentHashMap<UUID, Account>();
 
     @Inject
     public MockAccountDao(final InternalBus eventBus) {
@@ -45,56 +45,23 @@ public class MockAccountDao implements AccountDao {
     }
 
     @Override
-    public Long getRecordId(final UUID id, final InternalTenantContext context) {
-        return 1L;
-    }
-
-    @Override
-    public void create(final Account account, final InternalCallContext context) {
-        accounts.put(account.getId(), account);
+    public void create(final Account account, final InternalCallContext context) throws AccountApiException {
+        super.create(account, context);
 
         try {
-            eventBus.post(new DefaultAccountCreationEvent(account, null, 1L, 1L), context);
+            eventBus.post(new DefaultAccountCreationEvent(account, null, getRecordId(account.getId(), context), context.getTenantRecordId()), context);
         } catch (final EventBusException ex) {
             throw new RuntimeException(ex);
         }
     }
 
     @Override
-    public Account getById(final UUID id, final InternalTenantContext context) {
-        return accounts.get(id);
-    }
-
-    @Override
-    public List<Account> get(final InternalTenantContext context) {
-        return new ArrayList<Account>(accounts.values());
-    }
-
-    @Override
-    public void test(final InternalTenantContext context) {
-    }
-
-    @Override
-    public Account getAccountByKey(final String externalKey, final InternalTenantContext context) {
-        for (final Account account : accounts.values()) {
-            if (externalKey.equals(account.getExternalKey())) {
-                return account;
-            }
-        }
-        return null;
-    }
-
-    @Override
-    public UUID getIdFromKey(final String externalKey, final InternalTenantContext context) {
-        final Account account = getAccountByKey(externalKey, context);
-        return account == null ? null : account.getId();
-    }
-
-    @Override
     public void update(final Account account, final InternalCallContext context) {
-        final Account currentAccount = accounts.put(account.getId(), account);
+        final Account currentAccount = getById(account.getId(), context);
+        super.update(account, context);
 
-        final AccountChangeInternalEvent changeEvent = new DefaultAccountChangeEvent(account.getId(), null, currentAccount, account, 1L, 1L);
+        final AccountChangeInternalEvent changeEvent = new DefaultAccountChangeEvent(account.getId(), null, currentAccount, account,
+                                                                                     getRecordId(account.getId(), context), context.getTenantRecordId());
         if (changeEvent.hasChanges()) {
             try {
                 eventBus.post(changeEvent, context);
@@ -105,11 +72,33 @@ public class MockAccountDao implements AccountDao {
     }
 
     @Override
-    public void updatePaymentMethod(final UUID accountId, final UUID paymentMethodId, final InternalCallContext context) throws EntityPersistenceException {
+    public Account getAccountByKey(final String externalKey, final InternalTenantContext context) {
+        for (final Map<Long, Account> accountRow : entities.values()) {
+            final Account account = accountRow.values().iterator().next();
+            if (account.getExternalKey().equals(externalKey)) {
+                return account;
+            }
+        }
+
+        return null;
     }
 
     @Override
-    public Account getByRecordId(final Long recordId, final InternalTenantContext context) {
-        return null;
+    public UUID getIdFromKey(final String externalKey, final InternalTenantContext context) {
+        final Account account = getAccountByKey(externalKey, context);
+        return account == null ? null : account.getId();
+    }
+
+    @Override
+    public void updatePaymentMethod(final UUID accountId, final UUID paymentMethodId, final InternalCallContext context) throws AccountApiException {
+        final Account currentAccount = getById(accountId, context);
+        if (currentAccount == null) {
+            throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, accountId);
+        }
+
+        final DefaultMutableAccountData updatedAccount = new DefaultMutableAccountData(currentAccount);
+        updatedAccount.setPaymentMethodId(paymentMethodId);
+
+        update(new DefaultAccount(updatedAccount), context);
     }
 }

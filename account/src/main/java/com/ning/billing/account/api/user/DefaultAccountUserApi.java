@@ -36,7 +36,6 @@ import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.TenantContext;
-import com.ning.billing.util.entity.EntityPersistenceException;
 
 import com.google.inject.Inject;
 
@@ -58,13 +57,13 @@ public class DefaultAccountUserApi implements AccountUserApi {
 
     @Override
     public Account createAccount(final AccountData data, final CallContext context) throws AccountApiException {
-        final Account account = new DefaultAccount(data);
-
-        try {
-            accountDao.create(account, internalCallContextFactory.createInternalCallContext(account.getId(), context));
-        } catch (AccountApiException e) {
-            throw new AccountApiException(e, ErrorCode.ACCOUNT_CREATION_FAILED);
+        // Not transactional, but there is a db constraint on that column
+        if (getIdFromKey(data.getExternalKey(), context) != null) {
+            throw new AccountApiException(ErrorCode.ACCOUNT_ALREADY_EXISTS, data.getExternalKey());
         }
+
+        final Account account = new DefaultAccount(data);
+        accountDao.create(account, internalCallContextFactory.createInternalCallContext(account.getId(), context));
 
         return account;
     }
@@ -75,6 +74,7 @@ public class DefaultAccountUserApi implements AccountUserApi {
         if (account == null) {
             throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_KEY, key);
         }
+
         return account;
     }
 
@@ -84,6 +84,7 @@ public class DefaultAccountUserApi implements AccountUserApi {
         if (account == null) {
             throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, id);
         }
+
         return account;
     }
 
@@ -99,25 +100,13 @@ public class DefaultAccountUserApi implements AccountUserApi {
 
     @Override
     public void updateAccount(final Account account, final CallContext context) throws AccountApiException {
-        try {
-            accountDao.update(account, internalCallContextFactory.createInternalCallContext(account.getId(), context));
-        } catch (EntityPersistenceException e) {
-            throw new AccountApiException(e, ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, account.getId());
-        }
-
+        accountDao.update(account, internalCallContextFactory.createInternalCallContext(account.getId(), context));
     }
 
     @Override
-    public void updateAccount(final UUID accountId, final AccountData accountData, final CallContext context)
-            throws AccountApiException {
-        try {
-            final Account account = new DefaultAccount(accountId, accountData);
-            accountDao.update(account, internalCallContextFactory.createInternalCallContext(account.getId(), context));
-        } catch (EntityPersistenceException e) {
-            throw new AccountApiException(e, ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID);
-        } catch (RuntimeException e /* EntityPersistenceException */) {
-            throw new AccountApiException(e, ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, accountId);
-        }
+    public void updateAccount(final UUID accountId, final AccountData accountData, final CallContext context) throws AccountApiException {
+        final Account account = new DefaultAccount(accountId, accountData);
+        updateAccount(account, context);
     }
 
     @Override
@@ -130,20 +119,19 @@ public class DefaultAccountUserApi implements AccountUserApi {
     }
 
     @Override
-    public Account migrateAccount(final MigrationAccountData data, final CallContext context)
-            throws AccountApiException {
+    public Account migrateAccount(final MigrationAccountData data, final CallContext context) throws AccountApiException {
+        // Create a special (migration) context
         final DateTime createdDate = data.getCreatedDate() == null ? context.getCreatedDate() : data.getCreatedDate();
         final DateTime updatedDate = data.getUpdatedDate() == null ? context.getUpdatedDate() : data.getUpdatedDate();
         final CallContext migrationContext = callContextFactory.toMigrationCallContext(context, createdDate, updatedDate);
-        final Account account = new DefaultAccount(data);
 
-        try {
-            accountDao.create(account, internalCallContextFactory.createInternalCallContext(account.getId(), migrationContext));
-            for (final String cur : data.getAdditionalContactEmails()) {
-                addEmail(account.getId(), new DefaultAccountEmail(account.getId(), cur), migrationContext);
-            }
-        } catch (AccountApiException e) {
-            throw new AccountApiException(e, ErrorCode.ACCOUNT_CREATION_FAILED);
+        // Create the account
+        final Account account = new DefaultAccount(data);
+        createAccount(account, migrationContext);
+
+        // Add associated contact emails
+        for (final String cur : data.getAdditionalContactEmails()) {
+            addEmail(account.getId(), new DefaultAccountEmail(account.getId(), cur), migrationContext);
         }
 
         return account;

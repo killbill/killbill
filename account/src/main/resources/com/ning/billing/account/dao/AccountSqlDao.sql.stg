@@ -1,5 +1,7 @@
 group AccountDaoSql: EntitySqlDao;
 
+tableName() ::= "accounts";
+historyTableName() ::= "account_history";
 
 tableFields(prefix) ::= <<
   <prefix>external_key
@@ -54,9 +56,9 @@ tableValues() ::= <<
 , :updatedBy
  >>
 
-historyTableName() ::= "account_history"
-
-accountRecordIdField(prefix) ::= ""
+/** The accounts table doesn't have an account_record_id column (it's the record_id) **/
+accountRecordIdFieldWithComma(prefix) ::= ""
+accountRecordIdValueWithComma(prefix) ::= ""
 
 update() ::= <<
     UPDATE accounts

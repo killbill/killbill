@@ -67,7 +67,7 @@ public class TestDefaultAuditUserApi extends AuditLogsTestBase {
             }
         }
 
-        auditUserApi = new DefaultAuditUserApi(auditDao, Mockito.mock(InternalCallContextFactory.class));
+        auditUserApi = new DefaultAuditUserApi(auditDao, null, Mockito.mock(InternalCallContextFactory.class));
     }
 
     @Test(groups = "fast")

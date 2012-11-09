@@ -27,6 +27,7 @@ import org.testng.annotations.Test;
 import com.ning.billing.account.AccountTestSuite;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountData;
+import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.account.api.DefaultAccountEmail;
@@ -36,11 +37,11 @@ import com.ning.billing.account.dao.AccountEmailDao;
 import com.ning.billing.account.dao.MockAccountDao;
 import com.ning.billing.account.dao.MockAccountEmailDao;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.svcsapi.bus.InternalBus;
 
 public class TestDefaultAccountUserApi extends AccountTestSuite {
 
@@ -118,17 +119,19 @@ public class TestDefaultAccountUserApi extends AccountTestSuite {
         Assert.assertEquals(accountEmailDao.getByAccountId(accountId, tenantContext).size(), 0);
 
         // Add the first email
-        final String email1 = UUID.randomUUID().toString();
-        accountUserApi.addEmail(accountId, new DefaultAccountEmail(accountId, email1), callContext);
+        final String emailAddress1 = UUID.randomUUID().toString();
+        final AccountEmail email1 = new DefaultAccountEmail(accountId, emailAddress1);
+        accountUserApi.addEmail(accountId, email1, callContext);
         Assert.assertEquals(accountEmailDao.getByAccountId(accountId, tenantContext).size(), 1);
 
         // Add a second one
-        final String email2 = UUID.randomUUID().toString();
-        accountUserApi.addEmail(accountId, new DefaultAccountEmail(accountId, email2), callContext);
+        final String emailAddress2 = UUID.randomUUID().toString();
+        final AccountEmail email2 = new DefaultAccountEmail(accountId, emailAddress2);
+        accountUserApi.addEmail(accountId, email2, callContext);
         Assert.assertEquals(accountEmailDao.getByAccountId(accountId, tenantContext).size(), 2);
 
         // Remove the first second one
-        accountUserApi.removeEmail(accountId, new DefaultAccountEmail(accountId, email1), callContext);
+        accountUserApi.removeEmail(accountId, email1, callContext);
         Assert.assertEquals(accountEmailDao.getByAccountId(accountId, tenantContext).size(), 1);
     }
 }

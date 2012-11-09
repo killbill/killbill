@@ -19,15 +19,19 @@ package com.ning.billing.util.entity.dao;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
+import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.exceptions.DBIException;
+import org.skife.jdbi.v2.exceptions.StatementException;
 import org.skife.jdbi.v2.sqlobject.Bind;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
@@ -47,9 +51,13 @@ import com.google.common.collect.ImmutableList.Builder;
  */
 public class EntitySqlDaoWrapperInvocationHandler<T extends EntitySqlDao<U>, U extends Entity> implements InvocationHandler {
 
+    private final Logger logger = LoggerFactory.getLogger(EntitySqlDaoWrapperInvocationHandler.class);
+
+    private final Class<T> sqlDaoClass;
     private final T sqlDao;
 
-    public EntitySqlDaoWrapperInvocationHandler(final T sqlDao) {
+    public EntitySqlDaoWrapperInvocationHandler(final Class<T> sqlDaoClass, final T sqlDao) {
+        this.sqlDaoClass = sqlDaoClass;
         this.sqlDao = sqlDao;
     }
 
@@ -60,12 +68,23 @@ public class EntitySqlDaoWrapperInvocationHandler<T extends EntitySqlDao<U>, U e
         } catch (Throwable t) {
             if (t.getCause() != null && t.getCause().getCause() != null && DBIException.class.isAssignableFrom(t.getCause().getClass())) {
                 // Likely the JDBC exception or a Billing exception we have thrown in the transaction
-                errorDuringTransaction(t.getCause().getCause());
+                // If it's a JDBC error, try to extract the SQL statement
+                if (t.getCause() instanceof StatementException) {
+                    final StatementContext statementContext = ((StatementException) t.getCause()).getStatementContext();
+                    if (statementContext != null) {
+                        final PreparedStatement statement = statementContext.getStatement();
+                        // Note: we rely on the JDBC driver to have a sane toString() method...
+                        errorDuringTransaction(t.getCause().getCause(), method, statement.toString());
+                        // Never reached
+                        return null;
+                    }
+                }
+                errorDuringTransaction(t.getCause().getCause(), method);
             } else if (t.getCause() != null) {
                 // t is likely not interesting (java.lang.reflect.InvocationTargetException)
-                errorDuringTransaction(t.getCause());
+                errorDuringTransaction(t.getCause(), method);
             } else {
-                errorDuringTransaction(t);
+                errorDuringTransaction(t, method);
             }
         }
 
@@ -74,13 +93,32 @@ public class EntitySqlDaoWrapperInvocationHandler<T extends EntitySqlDao<U>, U e
     }
 
     // Nice method name to ease debugging while looking at log files
-    private void errorDuringTransaction(final Throwable t) throws Throwable {
+    private void errorDuringTransaction(final Throwable t, final Method method, final String extraErrorMessage) throws Throwable {
+        final StringBuilder errorMessageBuilder = new StringBuilder("Error during transaction for sql entity {} and method {}");
+        if (t instanceof SQLException) {
+            final SQLException sqlException = (SQLException) t;
+            errorMessageBuilder.append(" [SQL State: ")
+                               .append(sqlException.getSQLState())
+                               .append(", Vendor Error Code: ")
+                               .append(sqlException.getErrorCode())
+                               .append("]");
+        }
+        if (extraErrorMessage != null) {
+            // This is usually the SQL statement
+            errorMessageBuilder.append("\n").append(extraErrorMessage);
+        }
+        logger.warn(errorMessageBuilder.toString(), sqlDaoClass, method.getName());
+
         // This is to avoid throwing an exception wrapped in an UndeclaredThrowableException
         if (!(t instanceof RuntimeException)) {
             throw new RuntimeException(t);
         } else {
             throw t;
         }
+    }
+
+    private void errorDuringTransaction(final Throwable t, final Method method) throws Throwable {
+        errorDuringTransaction(t, method, null);
     }
 
     private Object invokeSafely(final Object proxy, final Method method, final Object[] args) throws Throwable {
@@ -224,8 +262,6 @@ public class EntitySqlDaoWrapperInvocationHandler<T extends EntitySqlDao<U>, U e
         sqlDao.addHistoryFromTransaction(history, context);
         return sqlDao.getHistoryRecordId(entityRecordId, context);
     }
-
-
 
     private void insertAudits(final TableName tableName, final Long historyRecordId, final ChangeType changeType, final InternalCallContext context) {
         // STEPH can we trust context or should we use Clock?

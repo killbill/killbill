@@ -31,7 +31,6 @@ import com.ning.billing.account.dao.AccountDao;
 import com.ning.billing.account.dao.AccountEmailDao;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.entity.EntityPersistenceException;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 
 public class DefaultAccountInternalApi implements AccountInternalApi {
@@ -46,8 +45,7 @@ public class DefaultAccountInternalApi implements AccountInternalApi {
     }
 
     @Override
-    public Account getAccountById(final UUID accountId, final InternalTenantContext context)
-            throws AccountApiException {
+    public Account getAccountById(final UUID accountId, final InternalTenantContext context) throws AccountApiException {
         final Account account = accountDao.getById(accountId, context);
         if (account == null) {
             throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, accountId);
@@ -56,21 +54,16 @@ public class DefaultAccountInternalApi implements AccountInternalApi {
     }
 
     @Override
-    public Account getAccountByRecordId(final Long recordId,
-                                        final InternalTenantContext context) throws AccountApiException {
+    public Account getAccountByRecordId(final Long recordId, final InternalTenantContext context) throws AccountApiException {
         return accountDao.getByRecordId(recordId, context);
     }
 
     @Override
     public void updateAccount(final String externalKey, final AccountData accountData,
                               final InternalCallContext context) throws AccountApiException {
-        try {
-            final Account account = getAccountByKey(externalKey, context);
-            final Account updatedAccount = new DefaultAccount(account.getId(), accountData);
-            accountDao.update(updatedAccount, context);
-        } catch (EntityPersistenceException e) {
-            throw new AccountApiException(e, ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID);
-        }
+        final Account account = getAccountByKey(externalKey, context);
+        final Account updatedAccount = new DefaultAccount(account.getId(), accountData);
+        accountDao.update(updatedAccount, context);
     }
 
     @Override
@@ -80,8 +73,7 @@ public class DefaultAccountInternalApi implements AccountInternalApi {
     }
 
     @Override
-    public Account getAccountByKey(final String key, final InternalTenantContext context)
-            throws AccountApiException {
+    public Account getAccountByKey(final String key, final InternalTenantContext context) throws AccountApiException {
         final Account account = accountDao.getAccountByKey(key, context);
         if (account == null) {
             throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_KEY, key);
@@ -90,18 +82,13 @@ public class DefaultAccountInternalApi implements AccountInternalApi {
     }
 
     @Override
-    public void removePaymentMethod(final UUID accountId, final InternalCallContext context)
-            throws AccountApiException {
+    public void removePaymentMethod(final UUID accountId, final InternalCallContext context) throws AccountApiException {
         updatePaymentMethod(accountId, null, context);
     }
 
     @Override
     public void updatePaymentMethod(final UUID accountId, final UUID paymentMethodId,
                                     final InternalCallContext context) throws AccountApiException {
-        try {
-            accountDao.updatePaymentMethod(accountId, paymentMethodId, context);
-        } catch (final EntityPersistenceException e) {
-            throw new AccountApiException(e, e.getCode(), e.getMessage());
-        }
+        accountDao.updatePaymentMethod(accountId, paymentMethodId, context);
     }
 }

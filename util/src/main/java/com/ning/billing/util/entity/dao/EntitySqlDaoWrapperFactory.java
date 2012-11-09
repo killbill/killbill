@@ -56,7 +56,7 @@ public class EntitySqlDaoWrapperFactory<InitialSqlDao extends EntitySqlDao> {
     private <NewSqlDao extends EntitySqlDao<NewEntity>, NewEntity extends Entity> NewSqlDao create(final Class<NewSqlDao> newSqlDaoClass, final NewSqlDao newSqlDao) {
         final ClassLoader classLoader = newSqlDao.getClass().getClassLoader();
         final Class[] interfacesToImplement = {newSqlDaoClass};
-        final EntitySqlDaoWrapperInvocationHandler<NewSqlDao, NewEntity> wrapperInvocationHandler = new EntitySqlDaoWrapperInvocationHandler<NewSqlDao, NewEntity>(newSqlDao);
+        final EntitySqlDaoWrapperInvocationHandler<NewSqlDao, NewEntity> wrapperInvocationHandler = new EntitySqlDaoWrapperInvocationHandler<NewSqlDao, NewEntity>(newSqlDaoClass, newSqlDao);
 
         final Object newSqlDaoObject = Proxy.newProxyInstance(classLoader, interfacesToImplement, wrapperInvocationHandler);
         return newSqlDaoClass.cast(newSqlDaoObject);

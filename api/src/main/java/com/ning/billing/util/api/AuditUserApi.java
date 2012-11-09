@@ -21,6 +21,7 @@ import java.util.UUID;
 
 import com.ning.billing.ObjectType;
 import com.ning.billing.entitlement.api.timeline.BundleTimeline;
+import com.ning.billing.entitlement.api.timeline.EntitlementRepairException;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.payment.api.Payment;
@@ -34,6 +35,16 @@ import com.ning.billing.util.audit.AuditLogsForRefunds;
 import com.ning.billing.util.callcontext.TenantContext;
 
 public interface AuditUserApi {
+
+    /**
+     * Fetch all audit logs for a bundle.
+     *
+     * @param bundleId   the bundle id to lookup
+     * @param auditLevel audit level (verbosity)
+     * @param context    the tenant context
+     * @return all audit logs for these refunds
+     */
+    public AuditLogsForBundles getAuditLogsForBundle(UUID bundleId, AuditLevel auditLevel, TenantContext context) throws EntitlementRepairException;
 
     /**
      * Fetch all audit logs for bundles.
