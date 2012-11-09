@@ -50,9 +50,10 @@ public class DefaultCustomFieldUserApi implements CustomFieldUserApi {
 
     @Override
     public void addCustomFields(final List<CustomField> fields, final CallContext context) throws CustomFieldApiException {
+
         // TODO make it transactional
         for (CustomField cur : fields) {
-            customFieldDao.create(cur, internalCallContextFactory.createInternalCallContext(context));
+            customFieldDao.create(cur, internalCallContextFactory.createInternalCallContext(cur.getObjectId(), cur.getObjectType(), context));
         }
     }
 }
