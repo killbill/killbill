@@ -55,7 +55,7 @@ public abstract class AccountDaoTestBase extends AccountTestSuiteWithEmbeddedDB 
             // Health check test to make sure MySQL is setup properly
             accountDao.test(internalCallContext);
 
-            accountEmailDao = new AuditedAccountEmailDao(dbi, new DefaultClock());
+            accountEmailDao = new AuditedAccountEmailDao(dbi);
             // Health check test to make sure MySQL is setup properly
             accountEmailDao.test(internalCallContext);
         } catch (Throwable t) {

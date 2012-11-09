@@ -131,7 +131,7 @@ public interface AccountUserApi {
      * @param email     the email to be added
      * @param context   the user context
      */
-    public void addEmail(UUID accountId, AccountEmail email, CallContext context);
+    public void addEmail(UUID accountId, AccountEmail email, CallContext context) throws AccountApiException;
 
     /**
      *

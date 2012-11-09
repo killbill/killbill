@@ -37,7 +37,8 @@ public class MockAccountEmailDao implements AccountEmailDao {
 
     @Override
     public void create(final AccountEmail entity, final InternalCallContext context) throws AccountApiException {
-        saveEmails(entity.getAccountId(), ImmutableList.<AccountEmail>of(entity), context);
+        Set<AccountEmail> theSet = emails.get(entity.getAccountId());
+        theSet.add(entity);
     }
 
     @Override
@@ -56,40 +57,19 @@ public class MockAccountEmailDao implements AccountEmailDao {
     }
 
     @Override
-    public List<AccountEmail> getEmails(final UUID accountId, final InternalTenantContext context) {
+    public void delete(final AccountEmail email, final InternalCallContext context) {
+        Set<AccountEmail> theSet = emails.get(email.getAccountId());
+        theSet.remove(email);
+    }
+
+    @Override
+    public List<AccountEmail> getByAccountId(final UUID accountId, final InternalTenantContext context) {
         final Set<AccountEmail> accountEmails = emails.get(accountId);
         if (accountEmails == null) {
             return ImmutableList.<AccountEmail>of();
         } else {
             return ImmutableList.<AccountEmail>copyOf(accountEmails.iterator());
         }
-    }
-
-    @Override
-    public void saveEmails(final UUID accountId, final List<AccountEmail> newEmails, final InternalCallContext context) {
-        if (emails.get(accountId) == null) {
-            emails.put(accountId, new HashSet<AccountEmail>());
-        }
-
-        emails.get(accountId).addAll(newEmails);
-    }
-
-    @Override
-    public void addEmail(final UUID accountId, final AccountEmail email, final InternalCallContext context) {
-        if (emails.get(accountId) == null) {
-            emails.put(accountId, new HashSet<AccountEmail>());
-        }
-
-        emails.get(accountId).add(email);
-    }
-
-    @Override
-    public void removeEmail(final UUID accountId, final AccountEmail email, final InternalCallContext context) {
-        if (emails.get(accountId) == null) {
-            emails.put(accountId, new HashSet<AccountEmail>());
-        }
-
-        emails.get(accountId).remove(email);
     }
 
     @Override

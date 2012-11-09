@@ -20,7 +20,16 @@ tableValues() ::= <<
 , :updatedDate
  >>
 
- historyTableName() ::= "account_email_history"
+historyTableName() ::= "account_email_history"
+
+getEmailByAccountId() ::= <<
+select
+<allTableFields()>
+from <tableName()>
+where account_id = :accountId
+<AND_CHECK_TENANT()>
+;
+>>
 
 updateFromTransaction() ::= <<
     UPDATE account_emails

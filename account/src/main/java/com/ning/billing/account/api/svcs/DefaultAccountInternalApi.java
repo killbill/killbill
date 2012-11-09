@@ -76,7 +76,7 @@ public class DefaultAccountInternalApi implements AccountInternalApi {
     @Override
     public List<AccountEmail> getEmails(final UUID accountId,
                                         final InternalTenantContext context) {
-        return accountEmailDao.getEmails(accountId, context);
+        return accountEmailDao.getByAccountId(accountId, context);
     }
 
     @Override

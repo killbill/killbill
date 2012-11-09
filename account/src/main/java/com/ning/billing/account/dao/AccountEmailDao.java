@@ -27,18 +27,7 @@ import com.ning.billing.util.entity.dao.EntityDao;
 
 public interface AccountEmailDao extends EntityDao<AccountEmail, AccountApiException> {
 
-    public List<AccountEmail> getEmails(UUID accountId, InternalTenantContext context);
+    public void delete(AccountEmail email, InternalCallContext context);
 
-    /**
-     * Add, remove or update the list of emails in this account.
-     *
-     * @param accountId id of the account
-     * @param emails    the final list of emails
-     * @param context   the call context
-     */
-    public void saveEmails(UUID accountId, List<AccountEmail> emails, InternalCallContext context);
-
-    public void addEmail(UUID accountId, AccountEmail email, InternalCallContext context);
-
-    public void removeEmail(UUID accountId, AccountEmail email, InternalCallContext context);
+    public List<AccountEmail> getByAccountId(UUID accountId, InternalTenantContext context);
 }

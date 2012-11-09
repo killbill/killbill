@@ -156,6 +156,8 @@ public enum ErrorCode {
     ACCOUNT_CREATION_FAILED(3006, "Account creation failed."),
     ACCOUNT_UPDATE_FAILED(3007, "Account update failed."),
 
+    ACCOUNT_EMAIL_ALREADY_EXISTS(3500, "Account email already exists %s"),
+
     /*
     *
     * Range 3900: Tag definitions

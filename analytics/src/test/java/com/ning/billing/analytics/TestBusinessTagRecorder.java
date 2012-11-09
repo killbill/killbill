@@ -86,7 +86,7 @@ public class TestBusinessTagRecorder extends AnalyticsTestSuiteWithEmbeddedDB {
         subscriptionTransitionTagSqlDao = dbi.onDemand(BusinessSubscriptionTransitionTagSqlDao.class);
         eventBus = new InMemoryInternalBus();
         final AccountDao accountDao = new AuditedAccountDao(dbi, eventBus, new InternalCallContextFactory(dbi, new ClockMock()));
-        final AccountEmailDao accountEmailDao = new AuditedAccountEmailDao(dbi, clock);
+        final AccountEmailDao accountEmailDao = new AuditedAccountEmailDao(dbi);
         callContextFactory = new DefaultCallContextFactory(clock);
         final InternalCallContextFactory internalCallContextFactory = new InternalCallContextFactory(dbi, clock);
         accountApi = new DefaultAccountInternalApi(accountDao, accountEmailDao);
