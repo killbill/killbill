@@ -35,6 +35,7 @@ import com.ning.billing.util.dao.HistorySqlDao;
 import com.ning.billing.util.entity.Entity;
 import com.ning.billing.util.entity.EntityPersistenceException;
 
+@EntitySqlDaoStringTemplate
 public interface EntitySqlDao<T extends Entity> extends AuditSqlDao, HistorySqlDao<T>, Transmogrifier, Transactional<EntitySqlDao<T>>, CloseMe {
 
     @SqlUpdate

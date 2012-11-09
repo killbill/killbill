@@ -17,6 +17,7 @@ package com.ning.billing.beatrix.integration;
 
 import java.math.BigDecimal;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -280,7 +281,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
 
     private void add_AUTO_PAY_OFF_Tag(final UUID id, final ObjectType type) throws TagDefinitionApiException, TagApiException {
         tagApi.addTag(id, type, ControlTagType.AUTO_PAY_OFF.getId(), callContext);
-        final Map<String, Tag> tags = tagApi.getTags(id, type, callContext);
+        final List<Tag> tags = tagApi.getTags(id, type, callContext);
         assertEquals(tags.size(), 1);
     }
 

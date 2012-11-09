@@ -26,8 +26,12 @@ import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.TenantContext;
+import com.ning.billing.util.tag.ControlTagType;
+import com.ning.billing.util.tag.DefaultControlTag;
+import com.ning.billing.util.tag.DescriptiveTag;
 import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
 import com.ning.billing.util.tag.dao.TagDao;
@@ -77,15 +81,19 @@ public class DefaultTagUserApi implements TagUserApi {
 
     @Override
     public void addTags(final UUID objectId, final ObjectType objectType, final Collection<UUID> tagDefinitionIds, final CallContext context) throws TagApiException {
-        // TODO: consider making this batch
         for (final UUID tagDefinitionId : tagDefinitionIds) {
-            tagDao.insertTag(objectId, objectType, tagDefinitionId, internalCallContextFactory.createInternalCallContext(objectId, objectType, context));
+           addTag(objectId, objectType, tagDefinitionId,context);
         }
     }
 
     @Override
     public void addTag(final UUID objectId, final ObjectType objectType, final UUID tagDefinitionId, final CallContext context) throws TagApiException {
-        tagDao.insertTag(objectId, objectType, tagDefinitionId, internalCallContextFactory.createInternalCallContext(objectId, objectType, context));
+        final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(objectId, objectType, context);
+
+        final TagDefinition tagDefinition = tagDefinitionDao.getById(tagDefinitionId, internalContext);
+        final Tag tag = tagDefinition.isControlTag() ? new DefaultControlTag(ControlTagType.getTypeFromId(tagDefinition.getId()), objectType, objectId, context.getCreatedDate()) :
+                        new DescriptiveTag(tagDefinition.getId(), objectType, objectId, context.getCreatedDate());
+        tagDao.create(tag, internalContext);
     }
 
     @Override
@@ -102,7 +110,7 @@ public class DefaultTagUserApi implements TagUserApi {
     }
 
     @Override
-    public Map<String, Tag> getTags(final UUID objectId, final ObjectType objectType, final TenantContext context) {
+    public List<Tag> getTags(final UUID objectId, final ObjectType objectType, final TenantContext context) {
         return tagDao.getTags(objectId, objectType, internalCallContextFactory.createInternalTenantContext(context));
     }
 

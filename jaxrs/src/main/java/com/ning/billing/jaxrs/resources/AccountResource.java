@@ -76,6 +76,7 @@ import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.PaymentMethod;
 import com.ning.billing.payment.api.Refund;
 import com.ning.billing.util.api.AuditUserApi;
+import com.ning.billing.util.api.CustomFieldApiException;
 import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagDefinitionApiException;
@@ -453,7 +454,7 @@ public class AccountResource extends JaxRsResourceBase {
                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                        @HeaderParam(HDR_REASON) final String reason,
                                        @HeaderParam(HDR_COMMENT) final String comment,
-                                       @javax.ws.rs.core.Context final HttpServletRequest request) {
+                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
         return super.createCustomFields(UUID.fromString(id), customFields,
                                         context.createContext(createdBy, reason, comment, request));
     }

@@ -25,6 +25,9 @@ import com.ning.billing.ObjectType;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.tag.ControlTagType;
+import com.ning.billing.util.tag.DefaultControlTag;
+import com.ning.billing.util.tag.DescriptiveTag;
 import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
 import com.ning.billing.util.tag.dao.TagDao;
@@ -48,8 +51,7 @@ public class DefaultTagInternalApi implements TagInternalApi {
     }
 
     @Override
-    public Map<String, Tag> getTags(UUID objectId, ObjectType objectType,
-            InternalTenantContext context) {
+    public List<Tag> getTags(UUID objectId, ObjectType objectType, InternalTenantContext context) {
         return tagDao.getTags(objectId, objectType, context);
     }
 
@@ -57,7 +59,11 @@ public class DefaultTagInternalApi implements TagInternalApi {
     public void addTag(UUID objectId, ObjectType objectType,
             UUID tagDefinitionId, InternalCallContext context)
             throws TagApiException {
-        tagDao.insertTag(objectId, objectType, tagDefinitionId, context);
+
+        final TagDefinition tagDefinition = tagDefinitionDao.getById(tagDefinitionId, context);
+        final Tag tag = tagDefinition.isControlTag() ? new DefaultControlTag(ControlTagType.getTypeFromId(tagDefinition.getId()), ObjectType.ACCOUNT, objectId, context.getCreatedDate()) :
+                        new DescriptiveTag(tagDefinition.getId(), ObjectType.ACCOUNT, objectId, context.getCreatedDate());
+        tagDao.create(tag, context);
 
     }
 

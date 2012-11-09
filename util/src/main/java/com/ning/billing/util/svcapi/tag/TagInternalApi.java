@@ -39,7 +39,7 @@ public interface TagInternalApi {
      * @param context    call context
      * @return mapping tag id -> tag
      */
-    public Map<String, Tag> getTags(UUID objectId, ObjectType objectType, InternalTenantContext context);
+    public List<Tag> getTags(UUID objectId, ObjectType objectType, InternalTenantContext context);
 
     public void addTag(UUID objectId, ObjectType objectType, UUID tagDefinitionId, InternalCallContext context) throws TagApiException;
 

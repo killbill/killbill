@@ -37,6 +37,8 @@ import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.entity.dao.EntitySqlDao;
+import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import com.ning.billing.util.events.BusInternalEvent;
 import com.ning.billing.util.queue.PersistentQueueBase;
 import com.ning.billing.util.svcsapi.bus.InternalBus;
@@ -171,9 +173,9 @@ public class PersistentInternalBus extends PersistentQueueBase implements Intern
     }
 
     @Override
-    public void postFromTransaction(final BusInternalEvent event, final Transmogrifier transmogrifier, final InternalCallContext context)
+    public void postFromTransaction(final BusInternalEvent event, final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final InternalCallContext context)
             throws EventBusException {
-        final PersistentBusSqlDao transactional = transmogrifier.become(PersistentBusSqlDao.class);
+        final PersistentBusSqlDao transactional = entitySqlDaoWrapperFactory.transmogrify(PersistentBusSqlDao.class);
         postFromTransaction(event, context, transactional);
     }
 

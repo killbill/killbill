@@ -20,9 +20,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
+import com.ning.billing.ObjectType;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.customfield.StringCustomField;
 import com.ning.billing.util.dao.MapperBase;
@@ -33,6 +35,9 @@ public class CustomFieldMapper extends MapperBase implements ResultSetMapper<Cus
         final UUID id = UUID.fromString(result.getString("id"));
         final String fieldName = result.getString("field_name");
         final String fieldValue = result.getString("field_value");
-        return new StringCustomField(id, fieldName, fieldValue);
+        final ObjectType objectType = ObjectType.valueOf(result.getString("object_type"));
+        final UUID objectId = getUUID(result, "object_id");
+        final DateTime createdDate = getDateTime(result, "created_date");
+        return new StringCustomField(id, fieldName, fieldValue, objectType, objectId, createdDate);
     }
 }

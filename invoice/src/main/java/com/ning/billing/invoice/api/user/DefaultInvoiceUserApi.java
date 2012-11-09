@@ -268,8 +268,8 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
 
         // Check if this account has the MANUAL_PAY system tag
         boolean manualPay = false;
-        final Map<String, Tag> accountTags = tagApi.getTags(account.getId(), ObjectType.ACCOUNT, internalContext);
-        for (final Tag tag : accountTags.values()) {
+        final List<Tag> accountTags = tagApi.getTags(account.getId(), ObjectType.ACCOUNT, internalContext);
+        for (final Tag tag : accountTags) {
             if (ControlTagType.MANUAL_PAY.getId().equals(tag.getTagDefinitionId())) {
                 manualPay = true;
                 break;

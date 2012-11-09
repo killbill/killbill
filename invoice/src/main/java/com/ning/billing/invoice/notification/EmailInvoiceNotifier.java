@@ -77,8 +77,8 @@ public class EmailInvoiceNotifier implements InvoiceNotifier {
 
         // Check if this account has the MANUAL_PAY system tag
         boolean manualPay = false;
-        final Map<String, Tag> accountTags = tagUserApi.getTags(account.getId(), ObjectType.ACCOUNT, internalTenantContext);
-        for (final Tag tag : accountTags.values()) {
+        final List<Tag> accountTags = tagUserApi.getTags(account.getId(), ObjectType.ACCOUNT, internalTenantContext);
+        for (final Tag tag : accountTags) {
             if (ControlTagType.MANUAL_PAY.getId().equals(tag.getTagDefinitionId())) {
                 manualPay = true;
                 break;

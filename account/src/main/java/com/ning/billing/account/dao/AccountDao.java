@@ -26,7 +26,7 @@ import com.ning.billing.util.entity.EntityPersistenceException;
 import com.ning.billing.util.entity.dao.EntityDao;
 import com.ning.billing.util.entity.dao.UpdatableEntityDao;
 
-public interface AccountDao extends EntityDao<Account> {
+public interface AccountDao extends EntityDao<Account, AccountApiException> {
 
     public Account getAccountByKey(String key, InternalTenantContext context);
 

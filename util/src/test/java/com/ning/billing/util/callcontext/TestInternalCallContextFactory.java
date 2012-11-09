@@ -96,7 +96,7 @@ public class TestInternalCallContextFactory extends UtilTestSuiteWithEmbeddedDB 
 
     private void verifyInternalCallContext(final InternalCallContext context) {
         Assert.assertEquals(context.getCallOrigin(), callContext.getCallOrigin());
-        Assert.assertEquals(context.getComment(), callContext.getComment());
+        Assert.assertEquals(context.getComments(), callContext.getComments());
         Assert.assertEquals(context.getCreatedDate(), callContext.getCreatedDate());
         Assert.assertEquals(context.getReasonCode(), callContext.getReasonCode());
         Assert.assertEquals(context.getUpdatedDate(), callContext.getUpdatedDate());

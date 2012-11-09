@@ -56,6 +56,10 @@ import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.email.templates.TemplateModule;
+import com.ning.billing.util.entity.dao.EntitySqlDao;
+import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
+import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
+import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.BusModule.BusType;
 import com.ning.billing.util.glue.NotificationQueueModule;
@@ -81,6 +85,7 @@ public class TestNextBillingDateNotifier extends InvoiceTestSuiteWithEmbeddedDB 
     private InvoiceListenerMock listener;
     private NotificationQueueService notificationQueueService;
     private InternalCallContextFactory internalCallContextFactory;
+    private EntitySqlDaoTransactionalJdbiWrapper entitySqlDaoTransactionalJdbiWrapper;
 
     private static final class InvoiceListenerMock extends InvoiceListener {
         int eventCount = 0;
@@ -137,6 +142,7 @@ public class TestNextBillingDateNotifier extends InvoiceTestSuiteWithEmbeddedDB 
                     bind(IDBI.class).toInstance(dbi);
                 }
 
+
                 final InternalCallContextFactory internalCallContextFactory = new InternalCallContextFactory(helper.getDBI(), clock);
                 bind(InternalCallContextFactory.class).toInstance(internalCallContextFactory);
 
@@ -149,6 +155,9 @@ public class TestNextBillingDateNotifier extends InvoiceTestSuiteWithEmbeddedDB 
 
         clock = g.getInstance(Clock.class);
         final IDBI dbi = g.getInstance(IDBI.class);
+
+        entitySqlDaoTransactionalJdbiWrapper = new EntitySqlDaoTransactionalJdbiWrapper(dbi);
+
         dao = dbi.onDemand(DummySqlTest.class);
         eventBus = g.getInstance(InternalBus.class);
         notificationQueueService = g.getInstance(NotificationQueueService.class);
@@ -177,12 +186,10 @@ public class TestNextBillingDateNotifier extends InvoiceTestSuiteWithEmbeddedDB 
         notifier.initialize();
         notifier.start();
 
-        dao.inTransaction(new Transaction<Void, DummySqlTest>() {
+        entitySqlDaoTransactionalJdbiWrapper.execute(new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
-            public Void inTransaction(final DummySqlTest transactional,
-                                      final TransactionStatus status) throws Exception {
-
-                poster.insertNextBillingNotification(transactional, accountId, subscriptionId, readyTime);
+            public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                poster.insertNextBillingNotification(entitySqlDaoWrapperFactory, accountId, subscriptionId, readyTime);
                 return null;
             }
         });

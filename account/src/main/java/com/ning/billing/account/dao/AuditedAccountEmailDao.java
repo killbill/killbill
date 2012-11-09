@@ -28,6 +28,7 @@ import org.skife.jdbi.v2.TransactionStatus;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
 import com.ning.billing.ObjectType;
+import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.account.api.DefaultAccountEmail;
 import com.ning.billing.util.callcontext.InternalCallContext;
@@ -52,7 +53,7 @@ public class AuditedAccountEmailDao extends AuditedCollectionDaoBase<AccountEmai
     }
 
     @Override
-    public void create(final AccountEmail entity, final InternalCallContext context) throws EntityPersistenceException {
+    public void create(final AccountEmail entity, final InternalCallContext context) throws AccountApiException {
         saveEmails(entity.getAccountId(), ImmutableList.<AccountEmail>of(entity), context);
     }
 

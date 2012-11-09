@@ -23,6 +23,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
@@ -35,7 +36,7 @@ public class MockAccountEmailDao implements AccountEmailDao {
     private final Map<UUID, Set<AccountEmail>> emails = new ConcurrentHashMap<UUID, Set<AccountEmail>>();
 
     @Override
-    public void create(final AccountEmail entity, final InternalCallContext context) throws EntityPersistenceException {
+    public void create(final AccountEmail entity, final InternalCallContext context) throws AccountApiException {
         saveEmails(entity.getAccountId(), ImmutableList.<AccountEmail>of(entity), context);
     }
 

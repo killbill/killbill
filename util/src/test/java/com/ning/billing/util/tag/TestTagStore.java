@@ -93,11 +93,11 @@ public class TestTagStore extends UtilTestSuiteWithEmbeddedDB {
     @Test(groups = "slow")
     public void testTagCreationAndRetrieval() throws TagApiException {
         final UUID accountId = UUID.randomUUID();
-        final Tag tag = new DescriptiveTag(testTagDefinition.getId(), UUID.randomUUID(), ObjectType.ACCOUNT, accountId, clock.getUTCNow());
+        final Tag tag = new DescriptiveTag(testTagDefinition.getId(), ObjectType.ACCOUNT, accountId, clock.getUTCNow());
 
-        tagDao.insertTag(accountId, ObjectType.ACCOUNT, tag.getTagDefinitionId(), internalCallContext);
+        tagDao.create(tag, internalCallContext);
 
-        final Tag savedTag = tagDao.getTagById(tag.getId(), internalCallContext);
+        final Tag savedTag = tagDao.getById(tag.getId(), internalCallContext);
         assertEquals(savedTag.getTagDefinitionId(), tag.getTagDefinitionId());
         assertEquals(savedTag.getId(), tag.getId());
     }
@@ -109,9 +109,9 @@ public class TestTagStore extends UtilTestSuiteWithEmbeddedDB {
 
         final ControlTag tag = new DefaultControlTag(ControlTagType.AUTO_INVOICING_OFF, ObjectType.ACCOUNT, accountId, clock.getUTCNow());
 
-        tagDao.insertTag(accountId, ObjectType.ACCOUNT, tag.getTagDefinitionId(), internalCallContext);
+        tagDao.create(tag, internalCallContext);
 
-        final Tag savedTag = tagDao.getTagById(tag.getId(), internalCallContext);
+        final Tag savedTag = tagDao.getById(tag.getId(), internalCallContext);
         assertEquals(savedTag.getTagDefinitionId(), tag.getTagDefinitionId());
         assertEquals(savedTag.getId(), tag.getId());
     }
@@ -145,8 +145,9 @@ public class TestTagStore extends UtilTestSuiteWithEmbeddedDB {
         assertNotNull(tagDefinition);
 
         final UUID objectId = UUID.randomUUID();
-
-        tagDao.insertTag(tagDefinition.getId(), ObjectType.ACCOUNT, objectId, internalCallContext);
+        final Tag tag = tagDefinition.isControlTag() ? new DefaultControlTag(ControlTagType.getTypeFromId(tagDefinition.getId()), ObjectType.ACCOUNT, objectId, internalCallContext.getCreatedDate()) :
+                        new DescriptiveTag(tagDefinition.getId(), ObjectType.ACCOUNT, objectId, internalCallContext.getCreatedDate());
+        tagDao.create(tag, internalCallContext);
 
         tagDefinitionDao.deleteById(tagDefinition.getId(), internalCallContext);
     }
@@ -165,8 +166,11 @@ public class TestTagStore extends UtilTestSuiteWithEmbeddedDB {
 
         final UUID objectId = UUID.randomUUID();
 
-        tagDao.insertTag(tagDefinition.getId(), ObjectType.ACCOUNT, objectId, internalCallContext);
 
+        final Tag tag = tagDefinition.isControlTag() ? new DefaultControlTag(ControlTagType.getTypeFromId(tagDefinition.getId()), ObjectType.ACCOUNT, objectId, internalCallContext.getCreatedDate()) :
+                        new DescriptiveTag(tagDefinition.getId(), ObjectType.ACCOUNT, objectId, internalCallContext.getCreatedDate());
+
+        tagDao.create(tag, internalCallContext);
         tagDao.deleteTag(objectId, ObjectType.ACCOUNT, tagDefinition.getId(), internalCallContext);
 
         try {

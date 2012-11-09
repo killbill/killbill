@@ -71,5 +71,5 @@ public interface TagUserApi {
      * @param context    The tenant context
      * @return A map of tag, key being the tagId, and value the tag
      */
-    public Map<String, Tag> getTags(UUID objectId, ObjectType objectType, TenantContext context);
+    public List<Tag> getTags(UUID objectId, ObjectType objectType, TenantContext context);
 }

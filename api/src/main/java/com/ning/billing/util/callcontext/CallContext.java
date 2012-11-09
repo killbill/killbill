@@ -35,7 +35,7 @@ public interface CallContext extends TenantContext {
 
     public String getReasonCode();
 
-    public String getComment();
+    public String getComments();
 
     public DateTime getCreatedDate();
 

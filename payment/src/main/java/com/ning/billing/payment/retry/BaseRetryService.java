@@ -31,6 +31,8 @@ import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.entity.dao.EntitySqlDao;
+import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import com.ning.billing.util.notificationq.NotificationKey;
 import com.ning.billing.util.notificationq.NotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService;
@@ -106,8 +108,8 @@ public abstract class BaseRetryService implements RetryService {
             this.internalCallContextFactory = internalCallContextFactory;
         }
 
-        public boolean scheduleRetryFromTransaction(final UUID paymentId, final DateTime timeOfRetry, final Transmogrifier transactionalDao) {
-            return scheduleRetryInternal(paymentId, timeOfRetry, transactionalDao);
+        public boolean scheduleRetryFromTransaction(final UUID paymentId, final DateTime timeOfRetry, final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) {
+            return scheduleRetryInternal(paymentId, timeOfRetry, entitySqlDaoWrapperFactory);
         }
 
         public boolean scheduleRetry(final UUID paymentId, final DateTime timeOfRetry) {
@@ -132,7 +134,7 @@ public abstract class BaseRetryService implements RetryService {
              */
         }
 
-        private boolean scheduleRetryInternal(final UUID paymentId, final DateTime timeOfRetry, final Transmogrifier transactionalDao) {
+        private boolean scheduleRetryInternal(final UUID paymentId, final DateTime timeOfRetry, final EntitySqlDaoWrapperFactory<EntitySqlDao> transactionalDao) {
             final InternalCallContext context = createCallContextFromPaymentId(paymentId);
 
             try {

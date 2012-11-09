@@ -209,7 +209,7 @@ public class AuditedInvoiceDao implements InvoiceDao {
                     transInvoiceItemSqlDao.batchCreateFromTransaction(invoiceItems, context);
 
                     final List<InvoiceItem> recurringInvoiceItems = invoice.getInvoiceItems(RecurringInvoiceItem.class);
-                    notifyOfFutureBillingEvents(transactional, invoice.getAccountId(), recurringInvoiceItems);
+                    notifyOfFutureBillingEvents(entitySqlDaoWrapperFactory, invoice.getAccountId(), recurringInvoiceItems);
 
                     final List<InvoicePayment> invoicePayments = invoice.getPayments();
                     final InvoicePaymentSqlDao invoicePaymentSqlDao = entitySqlDaoWrapperFactory.become(InvoicePaymentSqlDao.class);
@@ -382,7 +382,7 @@ public class AuditedInvoiceDao implements InvoiceDao {
                 }
 
                 // Notify the bus since the balance of the invoice changed
-                notifyBusOfInvoiceAdjustment(transactional, invoice.getId(), invoice.getAccountId(), context.getUserToken(), context);
+                notifyBusOfInvoiceAdjustment(entitySqlDaoWrapperFactory, invoice.getId(), invoice.getAccountId(), context.getUserToken(), context);
 
                 return refund;
             }
@@ -517,7 +517,7 @@ public class AuditedInvoiceDao implements InvoiceDao {
 
                     // Notify the bus since the balance of the invoice changed
                     final UUID accountId = transactional.getAccountIdFromInvoicePaymentId(chargeBack.getId().toString(), context);
-                    notifyBusOfInvoiceAdjustment(transactional, payment.getInvoiceId(), accountId, context.getUserToken(), context);
+                    notifyBusOfInvoiceAdjustment(entitySqlDaoWrapperFactory, payment.getInvoiceId(), accountId, context.getUserToken(), context);
 
                     return chargeBack;
                 }
@@ -604,7 +604,7 @@ public class AuditedInvoiceDao implements InvoiceDao {
                 }
 
                 // Notify the bus since the balance of the invoice changed
-                notifyBusOfInvoiceAdjustment(transactional, invoiceId, accountId, context.getUserToken(), context);
+                notifyBusOfInvoiceAdjustment(entitySqlDaoWrapperFactory, invoiceId, accountId, context.getUserToken(), context);
 
                 return externalCharge;
             }
@@ -637,7 +637,7 @@ public class AuditedInvoiceDao implements InvoiceDao {
                 insertItemAndAddCBAIfNeeded(entitySqlDaoWrapperFactory, credit, context);
 
                 // Notify the bus since the balance of the invoice changed
-                notifyBusOfInvoiceAdjustment(transactional, invoiceId, accountId, context.getUserToken(), context);
+                notifyBusOfInvoiceAdjustment(entitySqlDaoWrapperFactory, invoiceId, accountId, context.getUserToken(), context);
 
                 return credit;
             }
@@ -655,7 +655,7 @@ public class AuditedInvoiceDao implements InvoiceDao {
                 final InvoiceItem invoiceItemAdjustment = createAdjustmentItem(entitySqlDaoWrapperFactory, invoiceId, invoiceItemId, positiveAdjAmount,
                                                                                currency, effectiveDate, context);
                 insertItemAndAddCBAIfNeeded(entitySqlDaoWrapperFactory, invoiceItemAdjustment, context);
-                notifyBusOfInvoiceAdjustment(transactional, invoiceId, accountId, context.getUserToken(), context);
+                notifyBusOfInvoiceAdjustment(entitySqlDaoWrapperFactory, invoiceId, accountId, context.getUserToken(), context);
 
                 return invoiceItemAdjustment;
             }
@@ -894,7 +894,7 @@ public class AuditedInvoiceDao implements InvoiceDao {
         invoice.addPayments(invoicePayments);
     }
 
-    private void notifyOfFutureBillingEvents(final InvoiceSqlDao dao, final UUID accountId, final List<InvoiceItem> invoiceItems) {
+    private void notifyOfFutureBillingEvents(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final UUID accountId, final List<InvoiceItem> invoiceItems) {
 
         for (final InvoiceItem item : invoiceItems) {
             if (item.getInvoiceItemType() == InvoiceItemType.RECURRING) {
@@ -905,18 +905,18 @@ public class AuditedInvoiceDao implements InvoiceDao {
                     //
                     // We insert a future notification for each recurring subscription at the end of the service period  = new CTD of the subscription
                     //
-                    nextBillingDatePoster.insertNextBillingNotification(dao, accountId, recurringInvoiceItem.getSubscriptionId(),
+                    nextBillingDatePoster.insertNextBillingNotification(entitySqlDaoWrapperFactory, accountId, recurringInvoiceItem.getSubscriptionId(),
                             recurringInvoiceItem.getEndDate().toDateTimeAtCurrentTime());
                 }
             }
         }
     }
 
-    private void notifyBusOfInvoiceAdjustment(final Transmogrifier transactional, final UUID invoiceId, final UUID accountId,
+    private void notifyBusOfInvoiceAdjustment(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final UUID invoiceId, final UUID accountId,
                                               final UUID userToken, final InternalCallContext context) {
         try {
             eventBus.postFromTransaction(new DefaultInvoiceAdjustmentEvent(invoiceId, accountId, userToken, context.getAccountRecordId(), context.getTenantRecordId()),
-                    transactional, context);
+                                         entitySqlDaoWrapperFactory, context);
         } catch (EventBusException e) {
             log.warn("Failed to post adjustment event for invoice " + invoiceId, e);
         }

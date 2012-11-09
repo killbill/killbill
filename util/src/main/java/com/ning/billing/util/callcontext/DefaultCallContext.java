@@ -75,7 +75,7 @@ public class DefaultCallContext extends CallContextBase {
         sb.append(", callOrigin=").append(callOrigin);
         sb.append(", userType=").append(userType);
         sb.append(", reasonCode='").append(reasonCode).append('\'');
-        sb.append(", comment='").append(comment).append('\'');
+        sb.append(", comments='").append(comments).append('\'');
         sb.append(", createdDate='").append(createdDate).append('\'');
         sb.append(", updatedDate='").append(createdDate).append('\'');
         sb.append('}');
@@ -96,7 +96,7 @@ public class DefaultCallContext extends CallContextBase {
         if (callOrigin != that.callOrigin) {
             return false;
         }
-        if (comment != null ? !comment.equals(that.comment) : that.comment != null) {
+        if (comments != null ? !comments.equals(that.comments) : that.comments != null) {
             return false;
         }
         if (reasonCode != null ? !reasonCode.equals(that.reasonCode) : that.reasonCode != null) {
@@ -125,7 +125,7 @@ public class DefaultCallContext extends CallContextBase {
         result = 31 * result + (callOrigin != null ? callOrigin.hashCode() : 0);
         result = 31 * result + (userType != null ? userType.hashCode() : 0);
         result = 31 * result + (reasonCode != null ? reasonCode.hashCode() : 0);
-        result = 31 * result + (comment != null ? comment.hashCode() : 0);
+        result = 31 * result + (comments != null ? comments.hashCode() : 0);
         result = 31 * result + (createdDate != null ? createdDate.hashCode() : 0);
         return result;
     }

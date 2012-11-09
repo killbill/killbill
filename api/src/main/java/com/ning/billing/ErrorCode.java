@@ -175,6 +175,8 @@ public enum ErrorCode {
     */
     TAG_DOES_NOT_EXIST(3950, "The tag does not exist (name: %s)"),
     TAG_CANNOT_BE_REMOVED(3951, "The tag %s cannot be removed because %s"),
+    TAG_ALREADY_EXISTS(3952, "The tag %s already exists"),
+
 
     /*
     *
@@ -286,6 +288,9 @@ public enum ErrorCode {
     TENANT_CREATION_FAILED(10004, "Tenant creation failed."),
     TENANT_UPDATE_FAILED(10005, "Tenant update failed."),
     TENANT_NO_SUCH_KEY(10006, "Tenant %s does not have a key %s"),
+
+
+    CUSTOM_FIELD_ALREADY_EXISTS(11000, "The custom field %s already exists"),
 
     __UNKNOWN_ERROR_CODE(-1, "Unknown ErrorCode");
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2012 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -14,20 +14,23 @@
  * under the License.
  */
 
-package com.ning.billing.util.customfield.dao;
-
-import java.util.List;
-import java.util.UUID;
+package com.ning.billing.util.api;
 
 import com.ning.billing.BillingExceptionBase;
-import com.ning.billing.ObjectType;
-import com.ning.billing.util.api.CustomFieldApiException;
-import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.customfield.CustomField;
-import com.ning.billing.util.entity.dao.EntityDao;
+import com.ning.billing.ErrorCode;
 
-public interface CustomFieldDao extends EntityDao<CustomField, CustomFieldApiException> {
+public class CustomFieldApiException extends BillingExceptionBase {
+    private static final long serialVersionUID = 1L;
 
+    public CustomFieldApiException(final Throwable cause, final int code, final String msg) {
+        super(cause, code, msg);
+    }
 
-    public List<CustomField> getCustomFields(final UUID objectId, final ObjectType objectType, final InternalTenantContext context);
+    public CustomFieldApiException(final Throwable cause, final ErrorCode code, final Object... args) {
+        super(cause, code, args);
+    }
+
+    public CustomFieldApiException(final ErrorCode code, final Object... args) {
+        super(code, args);
+    }
 }

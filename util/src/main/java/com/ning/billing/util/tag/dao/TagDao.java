@@ -16,6 +16,7 @@
 
 package com.ning.billing.util.tag.dao;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -28,11 +29,11 @@ import com.ning.billing.util.tag.Tag;
 
 public interface TagDao {
 
-    void insertTag(UUID objectId, ObjectType objectType, UUID tagDefinition, InternalCallContext context) throws TagApiException;
+    void create(Tag tag, InternalCallContext context) throws TagApiException;
 
     void deleteTag(UUID objectId, ObjectType objectType, UUID tagDefinition, InternalCallContext context) throws TagApiException;
 
-    Tag getTagById(UUID tagId, InternalTenantContext context);
+    Tag getById(UUID tagId, InternalTenantContext context);
 
-    Map<String,Tag> getTags(UUID objectId, ObjectType objectType, InternalTenantContext internalTenantContext);
+    List<Tag> getTags(UUID objectId, ObjectType objectType, InternalTenantContext internalTenantContext);
 }

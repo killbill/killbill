@@ -39,6 +39,7 @@ import com.ning.billing.account.api.DefaultMutableAccountData;
 import com.ning.billing.account.api.MutableAccountData;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.mock.MockAccountBuilder;
+import com.ning.billing.util.api.CustomFieldApiException;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.clock.DefaultClock;
 import com.ning.billing.util.customfield.CustomField;
@@ -46,7 +47,10 @@ import com.ning.billing.util.customfield.StringCustomField;
 import com.ning.billing.util.customfield.dao.AuditedCustomFieldDao;
 import com.ning.billing.util.customfield.dao.CustomFieldDao;
 import com.ning.billing.util.entity.EntityPersistenceException;
+import com.ning.billing.util.tag.ControlTagType;
+import com.ning.billing.util.tag.DefaultControlTag;
 import com.ning.billing.util.tag.DefaultTagDefinition;
+import com.ning.billing.util.tag.DescriptiveTag;
 import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
 import com.ning.billing.util.tag.dao.AuditedTagDao;
@@ -86,7 +90,7 @@ public class TestAccountDao extends AccountDaoTestBase {
     }
 
     @Test(groups = "slow")
-    public void testBasic() throws EntityPersistenceException {
+    public void testBasic() throws AccountApiException {
         final Account a = createTestAccount(5);
         accountDao.create(a, internalCallContext);
         final String key = a.getExternalKey();
@@ -106,7 +110,7 @@ public class TestAccountDao extends AccountDaoTestBase {
 
     // simple test to ensure long phone numbers can be stored
     @Test(groups = "slow")
-    public void testLongPhoneNumber() throws EntityPersistenceException {
+    public void testLongPhoneNumber() throws AccountApiException {
         final Account account = createTestAccount(1, "123456789012345678901234");
         accountDao.create(account, internalCallContext);
 
@@ -115,14 +119,14 @@ public class TestAccountDao extends AccountDaoTestBase {
     }
 
     // simple test to ensure excessively long phone numbers cannot be stored
-    @Test(groups = "slow", expectedExceptions = EntityPersistenceException.class)
-    public void testOverlyLongPhoneNumber() throws EntityPersistenceException {
+    @Test(groups = "slow", expectedExceptions = AccountApiException.class)
+    public void testOverlyLongPhoneNumber() throws AccountApiException {
         final Account account = createTestAccount(1, "12345678901234567890123456");
         accountDao.create(account, internalCallContext);
     }
 
     @Test(groups = "slow")
-    public void testGetById() throws EntityPersistenceException {
+    public void testGetById() throws AccountApiException {
         Account account = createTestAccount(1);
         final UUID id = account.getId();
         final String key = account.getExternalKey();
@@ -140,19 +144,19 @@ public class TestAccountDao extends AccountDaoTestBase {
     }
 
     @Test(groups = "slow")
-    public void testCustomFields() throws EntityPersistenceException {
+    public void testCustomFields() throws  CustomFieldApiException {
         final String fieldName = "testField1";
         final String fieldValue = "testField1_value";
 
         final UUID accountId = UUID.randomUUID();
-        final List<CustomField> customFields = new ArrayList<CustomField>();
-        customFields.add(new StringCustomField(fieldName, fieldValue));
-        final CustomFieldDao customFieldDao = new AuditedCustomFieldDao(dbi, new DefaultClock());
-        customFieldDao.saveEntities(accountId, ObjectType.ACCOUNT, customFields, internalCallContext);
 
-        final Map<String, CustomField> customFieldMap = customFieldDao.loadEntities(accountId, ObjectType.ACCOUNT, internalCallContext);
+        CustomField field = new StringCustomField(fieldName, fieldValue, ObjectType.ACCOUNT, accountId, internalCallContext.getCreatedDate());
+        final CustomFieldDao customFieldDao = new AuditedCustomFieldDao(dbi);
+        customFieldDao.create(field, internalCallContext);
+
+        final List<CustomField> customFieldMap = customFieldDao.getCustomFields(accountId, ObjectType.ACCOUNT, internalCallContext);
         assertEquals(customFieldMap.size(), 1);
-        final CustomField customField = customFieldMap.get(fieldName);
+        final CustomField customField = customFieldMap.get(0);
         assertEquals(customField.getName(), fieldName);
         assertEquals(customField.getValue(), fieldValue);
     }
@@ -161,20 +165,26 @@ public class TestAccountDao extends AccountDaoTestBase {
     public void testTags() throws EntityPersistenceException, TagApiException {
         final Account account = createTestAccount(1);
         final TagDefinition definition = new DefaultTagDefinition("Test Tag", "For testing only", false);
-        final TagDefinitionSqlDao tagDescriptionDao = dbi.onDemand(TagDefinitionSqlDao.class);
-        tagDescriptionDao.create(definition, internalCallContext);
+        final TagDefinitionSqlDao tagDefinitionDao = dbi.onDemand(TagDefinitionSqlDao.class);
+        tagDefinitionDao.create(definition, internalCallContext);
 
         final TagDao tagDao = new AuditedTagDao(dbi, tagEventBuilder, bus, new DefaultClock());
-        tagDao.insertTag(account.getId(), ObjectType.ACCOUNT, definition.getId(), internalCallContext);
 
-        final Map<String, Tag> tagMap = tagDao.getTags(account.getId(), ObjectType.ACCOUNT, internalCallContext);
-        assertEquals(tagMap.size(), 1);
 
-        assertEquals(tagMap.values().iterator().next().getTagDefinitionId(), definition.getId());
+        final TagDefinition tagDefinition = tagDefinitionDao.getById(definition.getId().toString(), internalCallContext);
+        final Tag tag = tagDefinition.isControlTag() ? new DefaultControlTag(ControlTagType.getTypeFromId(tagDefinition.getId()), ObjectType.ACCOUNT, account.getId(), internalCallContext.getCreatedDate()) :
+                        new DescriptiveTag(tagDefinition.getId(), ObjectType.ACCOUNT, account.getId(), internalCallContext.getCreatedDate());
+
+        tagDao.create(tag, internalCallContext);
+
+        final List<Tag> tags = tagDao.getTags(account.getId(), ObjectType.ACCOUNT, internalCallContext);
+        assertEquals(tags.size(), 1);
+
+        assertEquals(tags.get(0).getTagDefinitionId(), definition.getId());
     }
 
     @Test(groups = "slow")
-    public void testGetIdFromKey() throws EntityPersistenceException {
+    public void testGetIdFromKey() throws AccountApiException {
         final Account account = createTestAccount(1);
         accountDao.create(account, internalCallContext);
 

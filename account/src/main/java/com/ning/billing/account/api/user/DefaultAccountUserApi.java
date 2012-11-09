@@ -62,7 +62,7 @@ public class DefaultAccountUserApi implements AccountUserApi {
 
         try {
             accountDao.create(account, internalCallContextFactory.createInternalCallContext(account.getId(), context));
-        } catch (EntityPersistenceException e) {
+        } catch (AccountApiException e) {
             throw new AccountApiException(e, ErrorCode.ACCOUNT_CREATION_FAILED);
         }
 
@@ -142,7 +142,7 @@ public class DefaultAccountUserApi implements AccountUserApi {
             for (final String cur : data.getAdditionalContactEmails()) {
                 addEmail(account.getId(), new DefaultAccountEmail(account.getId(), cur), migrationContext);
             }
-        } catch (EntityPersistenceException e) {
+        } catch (AccountApiException e) {
             throw new AccountApiException(e, ErrorCode.ACCOUNT_CREATION_FAILED);
         }
 

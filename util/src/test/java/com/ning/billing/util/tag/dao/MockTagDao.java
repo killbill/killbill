@@ -29,6 +29,7 @@ import org.joda.time.DateTime;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
 import com.ning.billing.ObjectType;
+import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.tag.Tag;
@@ -37,59 +38,12 @@ public class MockTagDao implements TagDao {
 
     private final Map<UUID, List<Tag>> tagStore = new HashMap<UUID, List<Tag>>();
 
-
-    private Map<String, Tag> getMap(@Nullable final List<Tag> tags) {
-        final Map<String, Tag> map = new HashMap<String, Tag>();
-        if (tags != null) {
-            for (final Tag tag : tags) {
-                map.put(tag.getTagDefinitionId().toString(), tag);
-            }
-        }
-        return map;
-    }
-
     @Override
-    public void insertTag(final UUID objectId, final ObjectType objectType,
-                          final UUID tagDefinitionId, final InternalCallContext context) {
-        final Tag tag = new Tag() {
-            private final UUID id = UUID.randomUUID();
-
-            @Override
-            public UUID getTagDefinitionId() {
-                return tagDefinitionId;
-            }
-
-            @Override
-            public ObjectType getObjectType() {
-                return objectType;
-            }
-
-            @Override
-            public UUID getObjectId() {
-                return objectId;
-            }
-
-            @Override
-            public UUID getId() {
-                return id;
-            }
-
-            @Override
-            public DateTime getCreatedDate() {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public DateTime getUpdatedDate() {
-                throw new UnsupportedOperationException();
-            }
-        };
-
-        if (tagStore.get(objectId) == null) {
-            tagStore.put(objectId, new ArrayList<Tag>());
+    public void create(final Tag tag, final InternalCallContext context) throws TagApiException {
+        if (tagStore.get(tag.getObjectId()) == null) {
+            tagStore.put(tag.getObjectId(), new ArrayList<Tag>());
         }
-
-        tagStore.get(objectId).add(tag);
+        tagStore.get(tag.getObjectId()).add(tag);
     }
 
     @Override
@@ -108,12 +62,12 @@ public class MockTagDao implements TagDao {
     }
 
     @Override
-    public Tag getTagById(final UUID tagId, final InternalTenantContext context) {
+    public Tag getById(final UUID tagId, final InternalTenantContext context) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Map<String, Tag> getTags(final UUID objectId, final ObjectType objectType, final InternalTenantContext internalTenantContext) {
+    public List<Tag> getTags(final UUID objectId, final ObjectType objectType, final InternalTenantContext internalTenantContext) {
         throw new UnsupportedOperationException();
     }
 }

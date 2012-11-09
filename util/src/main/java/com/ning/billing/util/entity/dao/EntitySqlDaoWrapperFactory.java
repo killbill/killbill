@@ -18,6 +18,8 @@ package com.ning.billing.util.entity.dao;
 
 import java.lang.reflect.Proxy;
 
+import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
+
 import com.ning.billing.util.entity.Entity;
 
 /**
@@ -45,6 +47,10 @@ public class EntitySqlDaoWrapperFactory<InitialSqlDao extends EntitySqlDao> {
      */
     public <NewSqlDao extends EntitySqlDao<NewEntity>, NewEntity extends Entity> NewSqlDao become(final Class<NewSqlDao> newSqlDaoClass) {
         return create(newSqlDaoClass, sqlDao.become(newSqlDaoClass));
+    }
+
+    public <SelfType> SelfType transmogrify(final Class<SelfType> newTransactionalClass) {
+        return sqlDao.become(newTransactionalClass);
     }
 
     private <NewSqlDao extends EntitySqlDao<NewEntity>, NewEntity extends Entity> NewSqlDao create(final Class<NewSqlDao> newSqlDaoClass, final NewSqlDao newSqlDao) {

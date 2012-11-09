@@ -38,6 +38,8 @@ import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.events.BusInternalEvent;
 import com.ning.billing.util.events.TagInternalEvent;
 import com.ning.billing.util.tag.ControlTagType;
+import com.ning.billing.util.tag.DefaultControlTag;
+import com.ning.billing.util.tag.DescriptiveTag;
 import com.ning.billing.util.tag.MockTagStoreModuleSql;
 import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
@@ -165,12 +167,14 @@ public class TestAuditedTagDao extends UtilTestSuiteWithEmbeddedDB {
         Assert.assertEquals(createdTagDefinition.getDescription(), description);
 
         // Make sure we can create a tag
-        tagDao.insertTag(objectId, objectType, createdTagDefinition.getId(), internalCallContext);
+        final Tag tag = createdTagDefinition.isControlTag() ? new DefaultControlTag(ControlTagType.getTypeFromId(createdTagDefinition.getId()), ObjectType.ACCOUNT, objectId, internalCallContext.getCreatedDate()) :
+                        new DescriptiveTag(createdTagDefinition.getId(), ObjectType.ACCOUNT, objectId, internalCallContext.getCreatedDate());
+        tagDao.create(tag, internalCallContext);
 
         // Make sure we can retrieve it via the DAO
-        final Map<String, Tag> foundTags = tagDao.getTags(objectId, objectType, internalCallContext);
-        Assert.assertEquals(foundTags.keySet().size(), 1);
-        Assert.assertEquals(foundTags.values().iterator().next().getTagDefinitionId(), createdTagDefinition.getId());
+        final List<Tag> foundTags = tagDao.getTags(objectId, objectType, internalCallContext);
+        Assert.assertEquals(foundTags.size(), 1);
+        Assert.assertEquals(foundTags.get(0).getTagDefinitionId(), createdTagDefinition.getId());
 
         // Verify we caught an event on the bus -  we got 2 total (one for the tag definition, one for the tag)
         Assert.assertEquals(eventsListener.getEvents().size(), 2);
@@ -188,7 +192,7 @@ public class TestAuditedTagDao extends UtilTestSuiteWithEmbeddedDB {
         tagDao.deleteTag(objectId, objectType, createdTagDefinition.getId(), internalCallContext);
 
         // Make sure the tag is deleted
-        Assert.assertEquals(tagDao.getTags(objectId, objectType, internalCallContext).keySet().size(), 0);
+        Assert.assertEquals(tagDao.getTags(objectId, objectType, internalCallContext).size(), 0);
 
         // Verify we caught an event on the bus
         Assert.assertEquals(eventsListener.getEvents().size(), 3);

@@ -69,7 +69,7 @@ public @interface InternalTenantContextBinder {
                             q.bind("updatedDate", callContext.getUpdatedDate().toDate());
                         }
                         q.bind("reasonCode", callContext.getReasonCode());
-                        q.bind("comment", callContext.getComment());
+                        q.bind("comments", callContext.getComments());
                         q.bind("userToken", (callContext.getUserToken() != null) ? callContext.getUserToken().toString() : null);
                     }
                 }

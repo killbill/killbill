@@ -19,12 +19,13 @@ package com.ning.billing.account.dao;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.entity.dao.EntityDao;
 
-public interface AccountEmailDao extends EntityDao<AccountEmail> {
+public interface AccountEmailDao extends EntityDao<AccountEmail, AccountApiException> {
 
     public List<AccountEmail> getEmails(UUID accountId, InternalTenantContext context);
 
