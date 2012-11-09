@@ -27,6 +27,7 @@ import com.ning.billing.account.api.DefaultMutableAccountData;
 import com.ning.billing.account.api.user.DefaultAccountChangeEvent;
 import com.ning.billing.account.api.user.DefaultAccountCreationEvent;
 import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.entity.dao.MockEntityDaoBase;
 import com.ning.billing.util.events.AccountChangeInternalEvent;
@@ -49,7 +50,10 @@ public class MockAccountDao extends MockEntityDaoBase<Account, AccountApiExcepti
         super.create(account, context);
 
         try {
-            eventBus.post(new DefaultAccountCreationEvent(account, null, getRecordId(account.getId(), context), context.getTenantRecordId()), context);
+            final Long accountRecordId = getRecordId(account.getId(), context);
+            final long tenantRecordId = context == null ? InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID
+                                                        : context.getTenantRecordId();
+            eventBus.post(new DefaultAccountCreationEvent(account, null, accountRecordId, tenantRecordId), context);
         } catch (final EventBusException ex) {
             throw new RuntimeException(ex);
         }
@@ -60,8 +64,11 @@ public class MockAccountDao extends MockEntityDaoBase<Account, AccountApiExcepti
         final Account currentAccount = getById(account.getId(), context);
         super.update(account, context);
 
+        final Long accountRecordId = getRecordId(account.getId(), context);
+        final long tenantRecordId = context == null ? InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID
+                                                    : context.getTenantRecordId();
         final AccountChangeInternalEvent changeEvent = new DefaultAccountChangeEvent(account.getId(), null, currentAccount, account,
-                                                                                     getRecordId(account.getId(), context), context.getTenantRecordId());
+                                                                                     accountRecordId, tenantRecordId);
         if (changeEvent.hasChanges()) {
             try {
                 eventBus.post(changeEvent, context);
