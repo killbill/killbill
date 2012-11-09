@@ -19,15 +19,15 @@ package com.ning.billing.util.entity.dao;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import org.skife.jdbi.v2.exceptions.DBIException;
 import org.skife.jdbi.v2.sqlobject.Bind;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
@@ -47,6 +47,8 @@ import com.google.common.collect.ImmutableList.Builder;
  */
 public class EntitySqlDaoWrapperInvocationHandler<T extends EntitySqlDao<U>, U extends Entity> implements InvocationHandler {
 
+    private final Logger logger = LoggerFactory.getLogger(EntitySqlDaoWrapperInvocationHandler.class);
+
     private final T sqlDao;
 
     public EntitySqlDaoWrapperInvocationHandler(final T sqlDao) {
@@ -58,6 +60,8 @@ public class EntitySqlDaoWrapperInvocationHandler<T extends EntitySqlDao<U>, U e
         try {
             return invokeSafely(proxy, method, args);
         } catch (Throwable t) {
+            logger.warn("Error during transaction for entity {} and method {}", sqlDao.getClass(), method.getName());
+
             if (t.getCause() != null && t.getCause().getCause() != null && DBIException.class.isAssignableFrom(t.getCause().getClass())) {
                 // Likely the JDBC exception or a Billing exception we have thrown in the transaction
                 errorDuringTransaction(t.getCause().getCause());
@@ -224,8 +228,6 @@ public class EntitySqlDaoWrapperInvocationHandler<T extends EntitySqlDao<U>, U e
         sqlDao.addHistoryFromTransaction(history, context);
         return sqlDao.getHistoryRecordId(entityRecordId, context);
     }
-
-
 
     private void insertAudits(final TableName tableName, final Long historyRecordId, final ChangeType changeType, final InternalCallContext context) {
         // STEPH can we trust context or should we use Clock?
