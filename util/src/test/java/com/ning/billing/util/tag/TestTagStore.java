@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
@@ -77,11 +78,22 @@ public class TestTagStore extends UtilTestSuiteWithEmbeddedDB {
         try {
             bus.start();
 
-            tagDefinitionDao.create("tag1", "First tag", internalCallContext);
-            testTagDefinition = tagDefinitionDao.create("testTagDefinition", "Second tag", internalCallContext);
         } catch (Throwable t) {
             log.error("Failed to start tag store tests", t);
             fail(t.toString());
+        }
+    }
+
+    // We need tag definitions before we start the tests
+    @Override
+    @BeforeMethod(groups = "slow")
+    public void cleanupTablesBetweenMethods() {
+        super.cleanupTablesBetweenMethods();
+        try {
+            tagDefinitionDao.create("tag1", "First tag", internalCallContext);
+            testTagDefinition = tagDefinitionDao.create("testTagDefinition", "Second tag", internalCallContext);
+        } catch (TagDefinitionApiException e) {
+            fail(e.toString());
         }
     }
 

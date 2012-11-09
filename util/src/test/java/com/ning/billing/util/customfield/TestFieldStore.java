@@ -61,12 +61,13 @@ public class TestFieldStore extends UtilTestSuiteWithEmbeddedDB {
         final ObjectType objectType = ObjectType.ACCOUNT;
 
 
-        final String fieldName = "TestField1";
+        String fieldName = "TestField1";
         String fieldValue = "Kitty Hawk";
 
         CustomField field = new StringCustomField(fieldName, fieldValue, objectType, id, internalCallContext.getCreatedDate());
         customFieldDao.create(field, internalCallContext);
 
+        fieldName = "TestField2";
         fieldValue = "Cape Canaveral";
         CustomField field2 = new StringCustomField(fieldName, fieldValue, objectType, id, internalCallContext.getCreatedDate());
         customFieldDao.create(field2 ,internalCallContext);

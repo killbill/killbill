@@ -23,6 +23,7 @@ import java.util.UUID;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlBatch;
+import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
@@ -42,5 +43,6 @@ import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 @RegisterMapper(CustomFieldMapper.class)
 public interface CustomFieldSqlDao extends EntitySqlDao<CustomField> {
 
+    @SqlQuery
     List<CustomField> getCustomFieldsForObject(@Bind("objectId") UUID objectId, @Bind("objectType") ObjectType objectType, @BindBean InternalTenantContext internalTenantContext);
 }

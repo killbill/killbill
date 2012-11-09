@@ -167,8 +167,8 @@ public class TestAuditedTagDao extends UtilTestSuiteWithEmbeddedDB {
         Assert.assertEquals(createdTagDefinition.getDescription(), description);
 
         // Make sure we can create a tag
-        final Tag tag = createdTagDefinition.isControlTag() ? new DefaultControlTag(ControlTagType.getTypeFromId(createdTagDefinition.getId()), ObjectType.ACCOUNT, objectId, internalCallContext.getCreatedDate()) :
-                        new DescriptiveTag(createdTagDefinition.getId(), ObjectType.ACCOUNT, objectId, internalCallContext.getCreatedDate());
+        final Tag tag = createdTagDefinition.isControlTag() ? new DefaultControlTag(ControlTagType.getTypeFromId(createdTagDefinition.getId()), objectType, objectId, internalCallContext.getCreatedDate()) :
+                        new DescriptiveTag(createdTagDefinition.getId(), objectType, objectId, internalCallContext.getCreatedDate());
         tagDao.create(tag, internalCallContext);
 
         // Make sure we can retrieve it via the DAO
