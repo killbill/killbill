@@ -32,9 +32,4 @@ public interface CollectionHistorySqlDao<T extends Entity> {
     public void addHistoryFromTransaction(String objectId, ObjectType objectType,
                                           List<EntityHistory<T>> histories,
                                           @InternalTenantContextBinder InternalCallContext context);
-
-    @SqlUpdate
-    public void addHistoryFromTransaction(String objectId, ObjectType objectType,
-                                          EntityHistory<T> history,
-                                          @InternalTenantContextBinder InternalCallContext context);
 }

@@ -43,8 +43,8 @@ public @interface CustomFieldHistoryBinder {
 //                    q.bind("recordId", customFieldHistory.getValue());
 //                    q.bind("changeType", customFieldHistory.getChangeType().toString());
                     q.bind("id", customFieldHistory.getId().toString());
-                    q.bind("fieldName", customFieldHistory.getEntity().getName());
-                    q.bind("fieldValue", customFieldHistory.getEntity().getValue());
+                    q.bind("fieldName", customFieldHistory.getEntity().getFieldName());
+                    q.bind("fieldValue", customFieldHistory.getEntity().getFieldValue());
                 }
             };
         }

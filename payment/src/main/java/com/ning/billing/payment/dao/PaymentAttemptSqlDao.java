@@ -26,33 +26,32 @@ import org.joda.time.DateTime;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.Binder;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
-import org.skife.jdbi.v2.sqlobject.mixins.CloseMe;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
+import com.ning.billing.payment.api.Payment.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 import com.ning.billing.util.dao.BinderBase;
-import com.ning.billing.util.dao.EntityHistory;
 import com.ning.billing.util.dao.MapperBase;
 import com.ning.billing.util.entity.dao.Audited;
+import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
-import com.ning.billing.util.entity.dao.UpdatableEntitySqlDao;
 
 @EntitySqlDaoStringTemplate
 @RegisterMapper(PaymentAttemptSqlDao.PaymentAttemptModelDaoMapper.class)
-public interface PaymentAttemptSqlDao extends UpdatableEntitySqlDao<PaymentAttemptModelDao>, CloseMe {
+public interface PaymentAttemptSqlDao extends EntitySqlDao<PaymentAttempt> {
 
     @SqlUpdate
     @Audited(ChangeType.INSERT)
-    void insertPaymentAttempt(@Bind(binder = PaymentAttemptModelDaoBinder.class) final PaymentAttemptModelDao attempt,
-                              @InternalTenantContextBinder final InternalCallContext context);
+    void insertPaymentAttempt(@BindBean final PaymentAttemptModelDao attempt,
+                              @BindBean final InternalCallContext context);
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
@@ -60,33 +59,16 @@ public interface PaymentAttemptSqlDao extends UpdatableEntitySqlDao<PaymentAttem
                                     @Bind("processingStatus") final String processingStatus,
                                     @Bind("gatewayErrorCode") final String gatewayErrorCode,
                                     @Bind("gatewayErrorMsg") final String gatewayErrorMsg,
-                                    @InternalTenantContextBinder final InternalCallContext context);
+                                    @BindBean final InternalCallContext context);
 
     @SqlQuery
     PaymentAttemptModelDao getPaymentAttempt(@Bind("id") final String attemptId,
-                                             @InternalTenantContextBinder final InternalTenantContext context);
+                                             @BindBean final InternalTenantContext context);
 
     @SqlQuery
     List<PaymentAttemptModelDao> getPaymentAttempts(@Bind("paymentId") final String paymentId,
-                                                    @InternalTenantContextBinder final InternalTenantContext context);
+                                                    @BindBean final InternalTenantContext context);
 
-    @Override
-    @SqlUpdate
-    void insertHistoryFromTransaction(@PaymentAttemptHistoryBinder final EntityHistory<PaymentAttemptModelDao> payment,
-                                      @InternalTenantContextBinder final InternalCallContext context);
-
-    public static final class PaymentAttemptModelDaoBinder extends BinderBase implements Binder<Bind, PaymentAttemptModelDao> {
-
-        @Override
-        public void bind(@SuppressWarnings("rawtypes") final SQLStatement stmt, final Bind bind, final PaymentAttemptModelDao attempt) {
-            stmt.bind("id", attempt.getId().toString());
-            stmt.bind("paymentId", attempt.getPaymentId().toString());
-            stmt.bind("processingStatus", attempt.getPaymentStatus().toString());
-            stmt.bind("gatewayErrorCode", attempt.getGatewayErrorCode());
-            stmt.bind("gatewayErrorMsg", attempt.getGatewayErrorMsg());
-            stmt.bind("requestedAmount", attempt.getRequestedAmount());
-        }
-    }
 
     public static class PaymentAttemptModelDaoMapper extends MapperBase implements ResultSetMapper<PaymentAttemptModelDao> {
 

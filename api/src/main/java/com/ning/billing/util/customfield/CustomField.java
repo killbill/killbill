@@ -27,9 +27,8 @@ public interface CustomField extends Entity {
 
     public ObjectType getObjectType();
 
-    public String getName();
+    public String getFieldName();
 
-    public String getValue();
+    public String getFieldValue();
 
-    public void setValue(String value);
 }

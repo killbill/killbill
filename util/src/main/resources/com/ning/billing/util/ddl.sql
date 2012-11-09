@@ -21,21 +21,23 @@ CREATE INDEX custom_fields_tenant_account_record_id ON custom_fields(tenant_reco
 
 DROP TABLE IF EXISTS custom_field_history;
 CREATE TABLE custom_field_history (
-    history_record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
-    record_id int(11) unsigned NOT NULL,
+    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
     id char(36) NOT NULL,
+    target_record_id int(11) unsigned NOT NULL,
     object_id char(36) NOT NULL,
     object_type varchar(30) NOT NULL,
     field_name varchar(30),
     field_value varchar(255),
-    updated_by varchar(50) NOT NULL,
-    date datetime NOT NULL,
     change_type char(6) NOT NULL,
+    created_by varchar(50) NOT NULL,
+    created_date datetime NOT NULL,
+    updated_by varchar(50) NOT NULL,
+    updated_date datetime NOT NULL,
     account_record_id int(11) unsigned default null,
     tenant_record_id int(11) unsigned default null,
-    PRIMARY KEY(history_record_id)
+    PRIMARY KEY(record_id)
 ) ENGINE=innodb;
-CREATE INDEX custom_field_history_record_id ON custom_field_history(record_id);
+CREATE INDEX custom_field_history_target_record_id ON custom_field_history(target_record_id);
 CREATE INDEX custom_field_history_object_id_object_type ON custom_fields(object_id, object_type);
 CREATE INDEX custom_field_history_tenant_account_record_id ON custom_field_history(tenant_record_id, account_record_id);
 
@@ -64,10 +66,11 @@ CREATE TABLE tag_definition_history (
     name varchar(30) NOT NULL,
     description varchar(200),
     change_type char(6) NOT NULL,
-    created_by varchar(50),
+    created_by varchar(50) NOT NULL,
     created_date datetime NOT NULL,
     updated_by varchar(50) NOT NULL,
     updated_date datetime NOT NULL,
+    account_record_id int(11) unsigned default null,
     tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)
 ) ENGINE=innodb;
@@ -105,10 +108,10 @@ CREATE TABLE tag_history (
     object_type varchar(30) NOT NULL,
     tag_definition_id char(36) NOT NULL,
     change_type char(6) NOT NULL,
-    created_date datetime NOT NULL,
     created_by varchar(50) NOT NULL,
-    updated_date datetime NOT NULL,
+    created_date datetime NOT NULL,
     updated_by varchar(50) NOT NULL,
+    updated_date datetime NOT NULL,
     account_record_id int(11) unsigned default null,
     tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)

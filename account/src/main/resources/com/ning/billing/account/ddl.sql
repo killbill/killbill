@@ -35,9 +35,9 @@ CREATE INDEX accounts_tenant_record_id ON accounts(tenant_record_id);
 
 DROP TABLE IF EXISTS account_history;
 CREATE TABLE account_history (
-    history_record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
-    record_id int(11) unsigned NOT NULL,
+    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
     id char(36) NOT NULL,
+    target_record_id int(11) unsigned NOT NULL,
     external_key varchar(128) NULL,
     email varchar(128) NOT NULL,
     name varchar(100) NOT NULL,
@@ -59,12 +59,14 @@ CREATE TABLE account_history (
     migrated bool DEFAULT false,
     is_notified_for_invoices boolean NOT NULL,
     change_type char(6) NOT NULL,
+    created_by varchar(50) NOT NULL,
+    created_date datetime NOT NULL,
     updated_by varchar(50) NOT NULL,
-    date datetime NOT NULL,
+    updated_date datetime NOT NULL,
     tenant_record_id int(11) unsigned default null,
-    PRIMARY KEY(history_record_id)
-) ENGINE=innodb;
-CREATE INDEX account_history_record_id ON account_history(record_id);
+    PRIMARY KEY(record_id)
+    ) ENGINE=innodb;
+CREATE INDEX account_history_target_record_id ON account_history(target_record_id);
 CREATE INDEX account_history_tenant_record_id ON account_history(tenant_record_id);
 
 DROP TABLE IF EXISTS account_emails;
@@ -87,17 +89,19 @@ CREATE INDEX account_emails_tenant_account_record_id ON account_emails(tenant_re
 
 DROP TABLE IF EXISTS account_email_history;
 CREATE TABLE account_email_history (
-    history_record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
-    record_id int(11) unsigned NOT NULL,
+    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
     id char(36) NOT NULL,
+    target_record_id int(11) unsigned NOT NULL,
     account_id char(36) NOT NULL,
     email varchar(128) NOT NULL,
     change_type char(6) NOT NULL,
+    created_by varchar(50) NOT NULL,
+    created_date datetime NOT NULL,
     updated_by varchar(50) NOT NULL,
-    date datetime NOT NULL,
+    updated_date datetime NOT NULL,
     account_record_id int(11) unsigned default null,
     tenant_record_id int(11) unsigned default null,
-    PRIMARY KEY(history_record_id)
+    PRIMARY KEY(record_id)
 ) ENGINE=innodb;
-CREATE INDEX account_email_record_id ON account_email_history(record_id);
+CREATE INDEX account_email_target_record_id ON account_email_history(target_record_id);
 CREATE INDEX account_email_history_tenant_account_record_id ON account_email_history(tenant_record_id, account_record_id);

@@ -59,7 +59,7 @@ public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinition, TagDef
 
     @Inject
     public DefaultTagDefinitionDao(final IDBI dbi, final TagEventBuilder tagEventBuilder, final InternalBus bus) {
-        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi));
+        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi), TagDefinitionSqlDao.class);
         this.tagEventBuilder = tagEventBuilder;
         this.bus = bus;
         this.tagDefinitionSqlDao = dbi.onDemand(TagDefinitionSqlDao.class);

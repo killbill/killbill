@@ -5,6 +5,8 @@ tableName() ::= "custom_fields"
 tableFields(prefix) ::= <<
   <prefix>object_id
 , <prefix>object_type
+, <prefix>field_name
+, <prefix>field_value
 , <prefix>created_by
 , <prefix>created_date
 , <prefix>updated_by
@@ -14,6 +16,8 @@ tableFields(prefix) ::= <<
 tableValues() ::= <<
   :objectId
 , :objectType
+, :fieldName
+, :fieldValue
 , :createdBy
 , :createdDate
 , :updatedBy

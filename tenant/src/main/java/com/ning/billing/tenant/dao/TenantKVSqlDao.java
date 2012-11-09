@@ -23,6 +23,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
@@ -37,16 +38,20 @@ import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 import com.ning.billing.util.dao.MapperBase;
 import com.ning.billing.util.dao.UuidMapper;
+import com.ning.billing.util.entity.dao.EntitySqlDao;
+import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 
-@ExternalizedSqlViaStringTemplate3
+@EntitySqlDaoStringTemplate
 @RegisterMapper({UuidMapper.class, TenantKVMapper.class})
-public interface TenantKVSqlDao extends Transactional<TenantKVSqlDao> {
+public interface TenantKVSqlDao extends EntitySqlDao<TenantKV> {
+
+    // TODO should take a context
 
     @SqlQuery
     public List<TenantKV> getTenantValueForKey(@Bind("key") final String key, @Bind("tenantRecordId") Long tenantRecordId);
 
     @SqlUpdate
-    public void insertTenantKeyValue(@Bind("id") String id, @Bind("key") final String key, @Bind("value") final String value, @Bind("tenantRecordId") Long tenantRecordId, @InternalTenantContextBinder final InternalCallContext context);
+    public void insertTenantKeyValue(@Bind("id") String id, @Bind("key") final String key, @Bind("value") final String value, @Bind("tenantRecordId") Long tenantRecordId, @BindBean final InternalCallContext context);
 
     @SqlUpdate
     public void deleteTenantKey(@Bind("key") final String key, @Bind("tenantRecordId") Long tenantRecordId);

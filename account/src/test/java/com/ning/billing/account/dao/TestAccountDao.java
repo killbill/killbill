@@ -157,8 +157,8 @@ public class TestAccountDao extends AccountDaoTestBase {
         final List<CustomField> customFieldMap = customFieldDao.getCustomFields(accountId, ObjectType.ACCOUNT, internalCallContext);
         assertEquals(customFieldMap.size(), 1);
         final CustomField customField = customFieldMap.get(0);
-        assertEquals(customField.getName(), fieldName);
-        assertEquals(customField.getValue(), fieldValue);
+        assertEquals(customField.getFieldName(), fieldName);
+        assertEquals(customField.getFieldValue(), fieldValue);
     }
 
     @Test(groups = "slow")

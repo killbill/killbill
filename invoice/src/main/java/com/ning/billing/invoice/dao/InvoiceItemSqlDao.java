@@ -16,11 +16,6 @@
 
 package com.ning.billing.invoice.dao;
 
-import java.lang.annotation.Annotation;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
 import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -29,12 +24,9 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.Binder;
-import org.skife.jdbi.v2.sqlobject.BinderFactory;
-import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
+import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlBatch;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
@@ -55,7 +47,6 @@ import com.ning.billing.invoice.model.RepairAdjInvoiceItem;
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 import com.ning.billing.util.dao.MapperBase;
 import com.ning.billing.util.entity.dao.Audited;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
@@ -67,62 +58,31 @@ public interface InvoiceItemSqlDao extends EntitySqlDao<InvoiceItem> {
 
     @SqlQuery
     List<Long> getRecordIds(@Bind("invoiceId") final String invoiceId,
-                            @InternalTenantContextBinder final InternalTenantContext context);
+                            @BindBean final InternalTenantContext context);
 
     @SqlQuery
     List<InvoiceItem> getInvoiceItemsByInvoice(@Bind("invoiceId") final String invoiceId,
-                                               @InternalTenantContextBinder final InternalTenantContext context);
+                                               @BindBean final InternalTenantContext context);
 
     @SqlQuery
     List<InvoiceItem> getInvoiceItemsByAccount(@Bind("accountId") final String accountId,
-                                               @InternalTenantContextBinder final InternalTenantContext context);
+                                               @BindBean final InternalTenantContext context);
 
     @SqlQuery
     List<InvoiceItem> getInvoiceItemsBySubscription(@Bind("subscriptionId") final String subscriptionId,
-                                                    @InternalTenantContextBinder final InternalTenantContext context);
+                                                    @BindBean final InternalTenantContext context);
 
     @Override
     @SqlUpdate
     @Audited(ChangeType.INSERT)
-    void create(@InvoiceItemBinder final InvoiceItem invoiceItem,
-                @InternalTenantContextBinder final InternalCallContext context);
+    void create(@BindBean final InvoiceItem invoiceItem,
+                @BindBean final InternalCallContext context);
 
     @SqlBatch(transactional = false)
     @Audited(ChangeType.INSERT)
-    void batchCreateFromTransaction(@InvoiceItemBinder final List<InvoiceItem> items,
-                                    @InternalTenantContextBinder final InternalCallContext context);
+    void batchCreateFromTransaction(@BindBean final List<InvoiceItem> items,
+                                    @BindBean final InternalCallContext context);
 
-    @BindingAnnotation(InvoiceItemBinder.InvoiceItemBinderFactory.class)
-    @Retention(RetentionPolicy.RUNTIME)
-    @Target({ElementType.PARAMETER})
-    public @interface InvoiceItemBinder {
-
-        public static class InvoiceItemBinderFactory implements BinderFactory {
-
-            @Override
-            public Binder build(final Annotation annotation) {
-                return new Binder<InvoiceItemBinder, InvoiceItem>() {
-                    @Override
-                    public void bind(final SQLStatement<?> q, final InvoiceItemBinder bind, final InvoiceItem item) {
-                        q.bind("id", item.getId().toString());
-                        q.bind("type", item.getInvoiceItemType().toString());
-                        q.bind("invoiceId", item.getInvoiceId().toString());
-                        q.bind("accountId", item.getAccountId().toString());
-                        q.bind("bundleId", item.getBundleId() == null ? null : item.getBundleId().toString());
-                        q.bind("subscriptionId", item.getSubscriptionId() == null ? null : item.getSubscriptionId().toString());
-                        q.bind("planName", item.getPlanName() == null ? null : item.getPlanName());
-                        q.bind("phaseName", item.getPhaseName() == null ? item.getPhaseName() : item.getPhaseName());
-                        q.bind("startDate", item.getStartDate().toDate());
-                        q.bind("endDate", item.getEndDate() == null ? null : item.getEndDate().toDate());
-                        q.bind("amount", item.getAmount());
-                        q.bind("rate", (item.getRate() == null) ? null : item.getRate());
-                        q.bind("currency", item.getCurrency().toString());
-                        q.bind("linkedItemId", (item.getLinkedItemId() == null) ? null : item.getLinkedItemId().toString());
-                    }
-                };
-            }
-        }
-    }
 
     public static class InvoiceItemSqlDaoMapper extends MapperBase implements ResultSetMapper<InvoiceItem> {
 

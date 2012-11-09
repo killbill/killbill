@@ -26,6 +26,7 @@ import org.joda.time.DateTime;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.Binder;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
@@ -42,17 +43,18 @@ import com.ning.billing.util.dao.BinderBase;
 import com.ning.billing.util.dao.EntityHistory;
 import com.ning.billing.util.dao.MapperBase;
 import com.ning.billing.util.entity.dao.Audited;
+import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 import com.ning.billing.util.entity.dao.UpdatableEntitySqlDao;
 
 @EntitySqlDaoStringTemplate
 @RegisterMapper(PaymentSqlDao.PaymentModelDaoMapper.class)
-public interface PaymentSqlDao extends UpdatableEntitySqlDao<PaymentModelDao> {
+public interface PaymentSqlDao extends EntitySqlDao<PaymentModelDao> {
 
     @SqlUpdate
     @Audited(ChangeType.INSERT)
-    void insertPayment(@Bind(binder = PaymentModelDaoBinder.class) final PaymentModelDao paymentInfo,
-                       @InternalTenantContextBinder final InternalCallContext context);
+    void insertPayment(@BindBean final PaymentModelDao paymentInfo,
+                       @BindBean final InternalCallContext context);
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
@@ -60,52 +62,32 @@ public interface PaymentSqlDao extends UpdatableEntitySqlDao<PaymentModelDao> {
                                       @Bind("paymentStatus") final String paymentStatus,
                                       @Bind("extFirstPaymentRefId") final String extFirstPaymentRefId,
                                       @Bind("extSecondPaymentRefId") final String extSecondPaymentRefId,
-                                      @InternalTenantContextBinder final InternalCallContext context);
+                                      @BindBean final InternalCallContext context);
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
     void updatePaymentAmount(@Bind("id") final String paymentId,
                              @Bind("amount") final BigDecimal amount,
-                             @InternalTenantContextBinder final InternalCallContext context);
+                             @BindBean final InternalCallContext context);
 
     @SqlQuery
     PaymentModelDao getPayment(@Bind("id") final String paymentId,
-                               @InternalTenantContextBinder final InternalTenantContext context);
+                               @BindBean final InternalTenantContext context);
 
     @SqlQuery
     PaymentModelDao getLastPaymentForAccountAndPaymentMethod(@Bind("accountId") final String accountId,
                                                              @Bind("paymentMethodId") final String paymentMethodId,
-                                                             @InternalTenantContextBinder final InternalTenantContext context);
+                                                             @BindBean final InternalTenantContext context);
 
     @SqlQuery
     List<PaymentModelDao> getPaymentsForInvoice(@Bind("invoiceId") final String invoiceId,
-                                                @InternalTenantContextBinder final InternalTenantContext context);
+                                                @BindBean final InternalTenantContext context);
 
     @SqlQuery
     List<PaymentModelDao> getPaymentsForAccount(@Bind("accountId") final String accountId,
-                                                @InternalTenantContextBinder final InternalTenantContext context);
+                                                @BindBean final InternalTenantContext context);
 
-    @Override
-    @SqlUpdate
-    void insertHistoryFromTransaction(@PaymentHistoryBinder final EntityHistory<PaymentModelDao> payment,
-                                      @InternalTenantContextBinder final InternalCallContext context);
 
-    public static final class PaymentModelDaoBinder extends BinderBase implements Binder<Bind, PaymentModelDao> {
-
-        @Override
-        public void bind(@SuppressWarnings("rawtypes") final SQLStatement stmt, final Bind bind, final PaymentModelDao payment) {
-            stmt.bind("id", payment.getId().toString());
-            stmt.bind("accountId", payment.getAccountId().toString());
-            stmt.bind("invoiceId", payment.getInvoiceId().toString());
-            stmt.bind("paymentMethodId", payment.getPaymentMethodId().toString());
-            stmt.bind("amount", payment.getAmount());
-            stmt.bind("currency", payment.getCurrency().toString());
-            stmt.bind("effectiveDate", getDate(payment.getEffectiveDate()));
-            stmt.bind("paymentStatus", payment.getPaymentStatus().toString());
-            stmt.bind("extFirstPaymentRefId", payment.getExtFirstPaymentRefId());
-            stmt.bind("extSecondPaymentRefId", payment.getExtSecondPaymentRefId());
-        }
-    }
 
     public static class PaymentModelDaoMapper extends MapperBase implements ResultSetMapper<PaymentModelDao> {
 

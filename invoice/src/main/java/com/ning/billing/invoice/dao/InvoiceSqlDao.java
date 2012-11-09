@@ -16,11 +16,6 @@
 
 package com.ning.billing.invoice.dao;
 
-import java.lang.annotation.Annotation;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Date;
@@ -29,12 +24,9 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.Binder;
-import org.skife.jdbi.v2.sqlobject.BinderFactory;
-import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
+import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
@@ -46,7 +38,6 @@ import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 import com.ning.billing.util.dao.MapperBase;
 import com.ning.billing.util.dao.UuidMapper;
 import com.ning.billing.util.entity.dao.Audited;
@@ -60,53 +51,30 @@ public interface InvoiceSqlDao extends EntitySqlDao<Invoice> {
     @Override
     @SqlUpdate
     @Audited(ChangeType.INSERT)
-    void create(@InvoiceBinder Invoice invoice,
-                @InternalTenantContextBinder final InternalCallContext context);
+    void create(@BindBean Invoice invoice,
+                @BindBean final InternalCallContext context);
 
     @SqlQuery
     List<Invoice> getInvoicesByAccount(@Bind("accountId") final String accountId,
-                                       @InternalTenantContextBinder final InternalTenantContext context);
+                                       @BindBean final InternalTenantContext context);
 
     @SqlQuery
     List<Invoice> getAllInvoicesByAccount(@Bind("accountId") final String string,
-                                          @InternalTenantContextBinder final InternalTenantContext context);
+                                          @BindBean final InternalTenantContext context);
 
     @SqlQuery
     List<Invoice> getInvoicesByAccountAfterDate(@Bind("accountId") final String accountId,
                                                 @Bind("fromDate") final Date fromDate,
-                                                @InternalTenantContextBinder final InternalTenantContext context);
+                                                @BindBean final InternalTenantContext context);
 
     @SqlQuery
     List<Invoice> getInvoicesBySubscription(@Bind("subscriptionId") final String subscriptionId,
-                                            @InternalTenantContextBinder final InternalTenantContext context);
+                                            @BindBean final InternalTenantContext context);
 
     @SqlQuery
     UUID getInvoiceIdByPaymentId(@Bind("paymentId") final String paymentId,
-                                 @InternalTenantContextBinder final InternalTenantContext context);
+                                 @BindBean final InternalTenantContext context);
 
-    @BindingAnnotation(InvoiceBinder.InvoiceBinderFactory.class)
-    @Retention(RetentionPolicy.RUNTIME)
-    @Target({ElementType.PARAMETER})
-    public @interface InvoiceBinder {
-
-        public static class InvoiceBinderFactory implements BinderFactory {
-
-            @Override
-            public Binder<InvoiceBinder, Invoice> build(final Annotation annotation) {
-                return new Binder<InvoiceBinder, Invoice>() {
-                    @Override
-                    public void bind(@SuppressWarnings("rawtypes") final SQLStatement q, final InvoiceBinder bind, final Invoice invoice) {
-                        q.bind("id", invoice.getId().toString());
-                        q.bind("accountId", invoice.getAccountId().toString());
-                        q.bind("invoiceDate", invoice.getInvoiceDate().toDate());
-                        q.bind("targetDate", invoice.getTargetDate().toDate());
-                        q.bind("currency", invoice.getCurrency().toString());
-                        q.bind("migrated", invoice.isMigrationInvoice());
-                    }
-                };
-            }
-        }
-    }
 
     public static class InvoiceMapper extends MapperBase implements ResultSetMapper<Invoice> {
 
