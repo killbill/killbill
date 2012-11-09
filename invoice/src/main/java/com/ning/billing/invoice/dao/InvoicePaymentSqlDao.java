@@ -16,11 +16,6 @@
 
 package com.ning.billing.invoice.dao;
 
-import java.lang.annotation.Annotation;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
 import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -28,12 +23,9 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.Binder;
-import org.skife.jdbi.v2.sqlobject.BinderFactory;
-import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
+import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlBatch;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
@@ -47,8 +39,6 @@ import com.ning.billing.invoice.model.DefaultInvoicePayment;
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.callcontext.InternalTenantContextBinder;
-import com.ning.billing.util.dao.BinderBase;
 import com.ning.billing.util.dao.MapperBase;
 import com.ning.billing.util.dao.UuidMapper;
 import com.ning.billing.util.entity.dao.Audited;
@@ -61,60 +51,60 @@ public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePayment> {
 
     @SqlQuery
     List<Long> getRecordIds(@Bind("invoiceId") final String invoiceId,
-                            @InternalTenantContextBinder final InternalTenantContext context);
+                            @BindBean final InternalTenantContext context);
 
     @SqlQuery
     public InvoicePayment getByPaymentId(@Bind("paymentId") final String paymentId,
-                                         @InternalTenantContextBinder final InternalTenantContext context);
+                                         @BindBean final InternalTenantContext context);
 
     @Override
     @SqlQuery
-    public List<InvoicePayment> get(@InternalTenantContextBinder final InternalTenantContext context);
+    public List<InvoicePayment> get(@BindBean final InternalTenantContext context);
 
     @Override
     @SqlUpdate
     @Audited(ChangeType.INSERT)
-    public void create(@InvoicePaymentBinder final InvoicePayment invoicePayment,
-                       @InternalTenantContextBinder final InternalCallContext context);
+    public void create(@BindBean final InvoicePayment invoicePayment,
+                       @BindBean final InternalCallContext context);
 
     @SqlBatch(transactional = false)
     @Audited(ChangeType.INSERT)
-    void batchCreateFromTransaction(@InvoicePaymentBinder final List<InvoicePayment> items,
-                                    @InternalTenantContextBinder final InternalCallContext context);
+    void batchCreateFromTransaction(@BindBean final List<InvoicePayment> items,
+                                    @BindBean final InternalCallContext context);
 
     @SqlQuery
     public List<InvoicePayment> getPaymentsForInvoice(@Bind("invoiceId") final String invoiceId,
-                                                      @InternalTenantContextBinder final InternalTenantContext context);
+                                                      @BindBean final InternalTenantContext context);
 
     @SqlQuery
     List<InvoicePayment> getInvoicePayments(@Bind("paymentId") final String paymentId,
-                                            @InternalTenantContextBinder final InternalTenantContext context);
+                                            @BindBean final InternalTenantContext context);
 
     @SqlQuery
     InvoicePayment getPaymentsForCookieId(@Bind("paymentCookieId") final String paymentCookieId,
-                                          @InternalTenantContextBinder final InternalTenantContext context);
+                                          @BindBean final InternalTenantContext context);
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
-    void notifyOfPayment(@InvoicePaymentBinder final InvoicePayment invoicePayment,
-                         @InternalTenantContextBinder final InternalCallContext context);
+    void notifyOfPayment(@BindBean final InvoicePayment invoicePayment,
+                         @BindBean final InternalCallContext context);
 
     @SqlQuery
     BigDecimal getRemainingAmountPaid(@Bind("invoicePaymentId") final String invoicePaymentId,
-                                      @InternalTenantContextBinder final InternalTenantContext context);
+                                      @BindBean final InternalTenantContext context);
 
     @SqlQuery
     @RegisterMapper(UuidMapper.class)
     UUID getAccountIdFromInvoicePaymentId(@Bind("invoicePaymentId") final String invoicePaymentId,
-                                          @InternalTenantContextBinder final InternalTenantContext context);
+                                          @BindBean final InternalTenantContext context);
 
     @SqlQuery
     List<InvoicePayment> getChargeBacksByAccountId(@Bind("accountId") final String accountId,
-                                                   @InternalTenantContextBinder final InternalTenantContext context);
+                                                   @BindBean final InternalTenantContext context);
 
     @SqlQuery
     List<InvoicePayment> getChargebacksByPaymentId(@Bind("paymentId") final String paymentId,
-                                                   @InternalTenantContextBinder final InternalTenantContext context);
+                                                   @BindBean final InternalTenantContext context);
 
     public static class InvoicePaymentMapper extends MapperBase implements ResultSetMapper<InvoicePayment> {
 
@@ -134,34 +124,6 @@ public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePayment> {
 
             return new DefaultInvoicePayment(id, createdDate, type, paymentId, invoiceId, paymentDate,
                                              amount, currency, paymentCookieId, linkedInvoicePaymentId);
-        }
-    }
-
-    @BindingAnnotation(InvoicePaymentBinder.InvoicePaymentBinderFactory.class)
-    @Retention(RetentionPolicy.RUNTIME)
-    @Target({ElementType.PARAMETER})
-    public @interface InvoicePaymentBinder {
-
-        public static class InvoicePaymentBinderFactory extends BinderBase implements BinderFactory {
-
-            @Override
-            public Binder build(final Annotation annotation) {
-                return new Binder<InvoicePaymentBinder, InvoicePayment>() {
-                    @Override
-                    public void bind(final SQLStatement q, final InvoicePaymentBinder bind, final InvoicePayment payment) {
-                        q.bind("id", payment.getId().toString());
-                        q.bind("type", payment.getType().toString());
-                        q.bind("invoiceId", payment.getInvoiceId().toString());
-                        q.bind("paymentId", uuidToString(payment.getPaymentId()));
-                        q.bind("paymentDate", payment.getPaymentDate().toDate());
-                        q.bind("amount", payment.getAmount());
-                        final Currency currency = payment.getCurrency();
-                        q.bind("currency", (currency == null) ? null : currency.toString());
-                        q.bind("paymentCookieId", uuidToString(payment.getPaymentCookieId()));
-                        q.bind("linkedInvoicePaymentId", uuidToString(payment.getLinkedInvoicePaymentId()));
-                    }
-                };
-            }
         }
     }
 }

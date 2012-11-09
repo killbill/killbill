@@ -61,7 +61,7 @@ public class AuditedTagDao extends EntityDaoBase<Tag, TagApiException> implement
 
     @Inject
     public AuditedTagDao(final IDBI dbi, final TagEventBuilder tagEventBuilder, final InternalBus bus, final Clock clock) {
-        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi));
+        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi), TagSqlDao.class);
         this.clock = clock;
         this.tagEventBuilder = tagEventBuilder;
         this.bus = bus;

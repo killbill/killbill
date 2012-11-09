@@ -26,6 +26,7 @@ import org.joda.time.DateTime;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.Binder;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
@@ -53,48 +54,34 @@ public interface SubscriptionSqlDao extends EntitySqlDao<Subscription> {
 
     @SqlUpdate
     @Audited(ChangeType.INSERT)
-    public void insertSubscription(@Bind(binder = SubscriptionBinder.class) SubscriptionData sub,
-                                   @InternalTenantContextBinder final InternalCallContext context);
+    public void insertSubscription(@BindBean SubscriptionData sub,
+                                   @BindBean final InternalCallContext context);
 
     @SqlQuery
     public Subscription getSubscriptionFromId(@Bind("id") String id,
-                                              @InternalTenantContextBinder final InternalTenantContext context);
+                                              @BindBean final InternalTenantContext context);
 
     @SqlQuery
     public List<Subscription> getSubscriptionsFromBundleId(@Bind("bundleId") String bundleId,
-                                                           @InternalTenantContextBinder final InternalTenantContext context);
+                                                           @BindBean final InternalTenantContext context);
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
     public void updateChargedThroughDate(@Bind("id") String id, @Bind("chargedThroughDate") Date chargedThroughDate,
-                                         @InternalTenantContextBinder final InternalCallContext context);
+                                         @BindBean final InternalCallContext context);
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
     void updateActiveVersion(@Bind("id") String id, @Bind("activeVersion") long activeVersion,
-                             @InternalTenantContextBinder final InternalCallContext context);
+                             @BindBean final InternalCallContext context);
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
     public void updateForRepair(@Bind("id") String id, @Bind("activeVersion") long activeVersion,
                                 @Bind("startDate") Date startDate,
                                 @Bind("bundleStartDate") Date bundleStartDate,
-                                @InternalTenantContextBinder final InternalCallContext context);
+                                @BindBean final InternalCallContext context);
 
-    public static class SubscriptionBinder extends BinderBase implements Binder<Bind, SubscriptionData> {
-
-        @Override
-        public void bind(@SuppressWarnings("rawtypes") final SQLStatement stmt, final Bind bind, final SubscriptionData sub) {
-            stmt.bind("id", sub.getId().toString());
-            stmt.bind("bundleId", sub.getBundleId().toString());
-            stmt.bind("category", sub.getCategory().toString());
-            stmt.bind("startDate", getDate(sub.getAlignStartDate()));
-            stmt.bind("bundleStartDate", getDate(sub.getBundleStartDate()));
-            stmt.bind("activeVersion", sub.getActiveVersion());
-            stmt.bind("chargedThroughDate", getDate(sub.getChargedThroughDate()));
-            stmt.bind("paidThroughDate", getDate(sub.getPaidThroughDate()));
-        }
-    }
 
     public static class SubscriptionMapper extends MapperBase implements ResultSetMapper<Subscription> {
 

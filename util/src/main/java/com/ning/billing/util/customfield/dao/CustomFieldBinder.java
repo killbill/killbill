@@ -40,8 +40,8 @@ public @interface CustomFieldBinder {
                 @Override
                 public void bind(final SQLStatement q, final CustomFieldBinder bind, final CustomField customField) {
                     q.bind("id", customField.getId().toString());
-                    q.bind("fieldName", customField.getName());
-                    q.bind("fieldValue", customField.getValue());
+                    q.bind("fieldName", customField.getFieldName());
+                    q.bind("fieldValue", customField.getFieldValue());
                 }
             };
         }

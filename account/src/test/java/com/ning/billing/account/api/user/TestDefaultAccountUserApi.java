@@ -115,20 +115,20 @@ public class TestDefaultAccountUserApi extends AccountTestSuite {
         final UUID accountId = UUID.randomUUID();
 
         // Verify the initial state
-        Assert.assertEquals(accountEmailDao.getEmails(accountId, tenantContext).size(), 0);
+        Assert.assertEquals(accountEmailDao.getByAccountId(accountId, tenantContext).size(), 0);
 
         // Add the first email
         final String email1 = UUID.randomUUID().toString();
         accountUserApi.addEmail(accountId, new DefaultAccountEmail(accountId, email1), callContext);
-        Assert.assertEquals(accountEmailDao.getEmails(accountId, tenantContext).size(), 1);
+        Assert.assertEquals(accountEmailDao.getByAccountId(accountId, tenantContext).size(), 1);
 
         // Add a second one
         final String email2 = UUID.randomUUID().toString();
         accountUserApi.addEmail(accountId, new DefaultAccountEmail(accountId, email2), callContext);
-        Assert.assertEquals(accountEmailDao.getEmails(accountId, tenantContext).size(), 2);
+        Assert.assertEquals(accountEmailDao.getByAccountId(accountId, tenantContext).size(), 2);
 
         // Remove the first second one
         accountUserApi.removeEmail(accountId, new DefaultAccountEmail(accountId, email1), callContext);
-        Assert.assertEquals(accountEmailDao.getEmails(accountId, tenantContext).size(), 1);
+        Assert.assertEquals(accountEmailDao.getByAccountId(accountId, tenantContext).size(), 1);
     }
 }

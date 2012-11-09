@@ -151,16 +151,16 @@ public class DefaultAccountUserApi implements AccountUserApi {
 
     @Override
     public List<AccountEmail> getEmails(final UUID accountId, final TenantContext context) {
-        return accountEmailDao.getEmails(accountId, internalCallContextFactory.createInternalTenantContext(context));
+        return accountEmailDao.getByAccountId(accountId, internalCallContextFactory.createInternalTenantContext(context));
     }
 
     @Override
-    public void addEmail(final UUID accountId, final AccountEmail email, final CallContext context) {
-        accountEmailDao.addEmail(accountId, email, internalCallContextFactory.createInternalCallContext(accountId, context));
+    public void addEmail(final UUID accountId, final AccountEmail email, final CallContext context) throws AccountApiException {
+        accountEmailDao.create(email, internalCallContextFactory.createInternalCallContext(accountId, context));
     }
 
     @Override
     public void removeEmail(final UUID accountId, final AccountEmail email, final CallContext context) {
-        accountEmailDao.removeEmail(accountId, email, internalCallContextFactory.createInternalCallContext(accountId, context));
+        accountEmailDao.delete(email, internalCallContextFactory.createInternalCallContext(accountId, context));
     }
 }

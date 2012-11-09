@@ -45,23 +45,23 @@ public interface EntitySqlDao<T extends Entity> extends AuditSqlDao, HistorySqlD
 
     @SqlQuery
     public T getById(@Bind("id") final String id,
-                     @InternalTenantContextBinder final InternalTenantContext context);
+                     @BindBean final InternalTenantContext context);
 
     @SqlQuery
     public T getByRecordId(@Bind("recordId") final Long recordId,
-                           @InternalTenantContextBinder final InternalTenantContext context);
+                           @BindBean final InternalTenantContext context);
 
     @SqlQuery
     public Long getRecordId(@Bind("id") final String id,
-                            @InternalTenantContextBinder final InternalTenantContext context);
+                            @BindBean final InternalTenantContext context);
 
     @SqlQuery
     public Long getHistoryRecordId(@Bind("recordId") final Long recordId,
-                                   @InternalTenantContextBinder final InternalTenantContext context);
+                                   @BindBean final InternalTenantContext context);
 
     @SqlQuery
-    public List<T> get(@InternalTenantContextBinder final InternalTenantContext context);
+    public List<T> get(@BindBean final InternalTenantContext context);
 
     @SqlUpdate
-    public void test(@InternalTenantContextBinder final InternalTenantContext context);
+    public void test(@BindBean final InternalTenantContext context);
 }

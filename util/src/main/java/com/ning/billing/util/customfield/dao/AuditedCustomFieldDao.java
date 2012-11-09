@@ -40,7 +40,7 @@ public class AuditedCustomFieldDao extends EntityDaoBase<CustomField, CustomFiel
 
     @Inject
     public AuditedCustomFieldDao(final IDBI dbi) {
-        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi));
+        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi), CustomFieldSqlDao.class);
     }
 
     @Override

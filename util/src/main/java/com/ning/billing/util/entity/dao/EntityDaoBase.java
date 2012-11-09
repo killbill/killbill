@@ -30,8 +30,11 @@ public abstract class EntityDaoBase<T extends Entity, U extends BillingException
 
     protected final EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao;
 
-    public EntityDaoBase(final EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao) {
+    private Class<? extends EntitySqlDao<T>> realSqlDao;
+
+    public EntityDaoBase(final EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao, Class<? extends EntitySqlDao<T>> realSqlDao) {
         this.transactionalSqlDao = transactionalSqlDao;
+        this.realSqlDao = realSqlDao;
     }
 
     @Override
@@ -43,7 +46,7 @@ public abstract class EntityDaoBase<T extends Entity, U extends BillingException
                 if (getById(entity.getId(), context) != null) {
                     throw generateAlreadyExistsException(entity, context);
                 }
-                final EntitySqlDao<T> transactional = entitySqlDaoWrapperFactory.become(EntitySqlDao.class);
+                final EntitySqlDao<T> transactional = entitySqlDaoWrapperFactory.become(realSqlDao);
                 transactional.create(entity, context);
 
                 postBusEventFromTransaction(entity, entity, ChangeType.INSERT, entitySqlDaoWrapperFactory, context);
@@ -64,7 +67,8 @@ public abstract class EntityDaoBase<T extends Entity, U extends BillingException
 
             @Override
             public Long inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                return entitySqlDaoWrapperFactory.become(EntitySqlDao.class).getRecordId(id.toString(), context);
+                final EntitySqlDao<T> transactional = entitySqlDaoWrapperFactory.become(realSqlDao);
+                return transactional.getRecordId(id.toString(), context);
             }
         });
     }
@@ -75,7 +79,8 @@ public abstract class EntityDaoBase<T extends Entity, U extends BillingException
 
             @Override
             public T inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                return (T) entitySqlDaoWrapperFactory.become(EntitySqlDao.class).getByRecordId(recordId, context);
+                final EntitySqlDao<T> transactional = entitySqlDaoWrapperFactory.become(realSqlDao);
+                return transactional.getByRecordId(recordId, context);
             }
         });
     }
@@ -86,7 +91,8 @@ public abstract class EntityDaoBase<T extends Entity, U extends BillingException
 
             @Override
             public T inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                return (T) entitySqlDaoWrapperFactory.become(EntitySqlDao.class).getById(id.toString(), context);
+                final EntitySqlDao<T> transactional = entitySqlDaoWrapperFactory.become(realSqlDao);
+                return transactional.getById(id.toString(), context);
             }
         });
     }
@@ -97,7 +103,8 @@ public abstract class EntityDaoBase<T extends Entity, U extends BillingException
 
             @Override
             public List<T> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                return entitySqlDaoWrapperFactory.become(EntitySqlDao.class).get(context);
+                final EntitySqlDao<T> transactional = entitySqlDaoWrapperFactory.become(realSqlDao);
+                return transactional.get(context);
             }
         });
     }
@@ -108,7 +115,8 @@ public abstract class EntityDaoBase<T extends Entity, U extends BillingException
 
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                entitySqlDaoWrapperFactory.become(EntitySqlDao.class).test(context);
+                final EntitySqlDao<T> transactional = entitySqlDaoWrapperFactory.become(realSqlDao);
+                transactional.test(context);
                 return null;
             }
         });

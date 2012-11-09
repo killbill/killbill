@@ -16,52 +16,30 @@
 
 package com.ning.billing.account.dao;
 
-import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 
 import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.SqlBatch;
+import org.skife.jdbi.v2.sqlobject.BindBean;
+import org.skife.jdbi.v2.sqlobject.SqlQuery;
+import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
-import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 
-import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.callcontext.InternalTenantContextBinder;
-import com.ning.billing.util.dao.EntityHistory;
-import com.ning.billing.util.dao.ObjectTypeBinder;
-import com.ning.billing.util.entity.collection.dao.UpdatableEntityCollectionSqlDao;
+import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 
 @EntitySqlDaoStringTemplate
 @RegisterMapper(AccountEmailMapper.class)
-public interface AccountEmailSqlDao extends UpdatableEntityCollectionSqlDao<AccountEmail>, Transactional<AccountEmailSqlDao> {
+public interface AccountEmailSqlDao extends EntitySqlDao<AccountEmail> {
 
-    @Override
-    @SqlBatch
-    public void insertFromTransaction(@Bind("objectId") final String objectId,
-                                      @ObjectTypeBinder final ObjectType objectType,
-                                      @AccountEmailBinder final Collection<AccountEmail> entities,
-                                      @InternalTenantContextBinder final InternalCallContext context);
+    @SqlUpdate
+    public void delete(@BindBean final AccountEmail accountEmail,
+                       @BindBean final InternalCallContext context);
 
-    @Override
-    @SqlBatch
-    public void updateFromTransaction(@Bind("objectId") final String objectId,
-                                      @ObjectTypeBinder final ObjectType objectType,
-                                      @AccountEmailBinder final Collection<AccountEmail> entities,
-                                      @InternalTenantContextBinder final InternalCallContext context);
-
-    @Override
-    @SqlBatch
-    public void deleteFromTransaction(@Bind("objectId") final String objectId,
-                                      @ObjectTypeBinder final ObjectType objectType,
-                                      @AccountEmailBinder final Collection<AccountEmail> entities,
-                                      @InternalTenantContextBinder final InternalCallContext context);
-
-    @Override
-    @SqlBatch
-    public void addHistoryFromTransaction(@Bind("objectId") final String objectId,
-                                          @ObjectTypeBinder final ObjectType objectType,
-                                          @AccountEmailHistoryBinder final List<EntityHistory<AccountEmail>> entities,
-                                          @InternalTenantContextBinder final InternalCallContext context);
+    @SqlQuery
+    public List<AccountEmail> getEmailByAccountId(@Bind("accountId") final UUID accountId,
+                                                  @BindBean final InternalTenantContext context);
 }
