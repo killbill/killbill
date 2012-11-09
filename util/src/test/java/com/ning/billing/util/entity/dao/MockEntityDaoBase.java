@@ -70,6 +70,11 @@ public class MockEntityDaoBase<T extends Entity, U extends BillingExceptionBase>
         return result;
     }
 
+    public void update(final T entity, final InternalCallContext context) {
+        final Long entityRecordId = getRecordId(entity.getId(), context);
+        entities.get(entity.getId()).put(entityRecordId, entity);
+    }
+
     public void delete(final T entity, final InternalCallContext context) {
         entities.remove(entity.getId());
     }
