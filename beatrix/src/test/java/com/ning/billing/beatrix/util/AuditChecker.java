@@ -122,7 +122,7 @@ public class AuditChecker {
             Assert.assertEquals(auditLog.getUserName(), context.getUserName());
             Assert.assertEquals(auditLog.getReasonCode(), context.getReasonCode());
             // TODO check 'Next Billing Date' and 'Transition' - add comment, maybe internal reason code and token
-            Assert.assertEquals(auditLog.getComment(), context.getComment());
+            Assert.assertEquals(auditLog.getComment(), context.getComments());
             Assert.assertEquals(auditLog.getUserToken(), context.getUserToken().toString());
             Assert.assertEquals(auditLog.getCreatedDate(), context.getCreatedDate());
         }
