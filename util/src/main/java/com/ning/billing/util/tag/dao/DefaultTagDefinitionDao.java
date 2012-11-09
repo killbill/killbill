@@ -26,15 +26,19 @@ import org.skife.jdbi.v2.exceptions.TransactionFailedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ning.billing.BillingExceptionBase;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.util.api.TagDefinitionApiException;
+import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.entity.dao.EntityDaoBase;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import com.ning.billing.util.events.TagDefinitionInternalEvent;
+import com.ning.billing.util.events.TagInternalEvent;
 import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.DefaultTagDefinition;
@@ -45,21 +49,20 @@ import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
 
-public class DefaultTagDefinitionDao implements TagDefinitionDao {
+public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinition, TagDefinitionApiException> implements TagDefinitionDao {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultTagDefinitionDao.class);
 
-    private final EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao;
     private final TagDefinitionSqlDao tagDefinitionSqlDao;
     private final TagEventBuilder tagEventBuilder;
     private final InternalBus bus;
 
     @Inject
     public DefaultTagDefinitionDao(final IDBI dbi, final TagEventBuilder tagEventBuilder, final InternalBus bus) {
+        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi));
         this.tagEventBuilder = tagEventBuilder;
         this.bus = bus;
         this.tagDefinitionSqlDao = dbi.onDemand(TagDefinitionSqlDao.class);
-        this.transactionalSqlDao = new EntitySqlDaoTransactionalJdbiWrapper(dbi);
     }
 
     @Override
@@ -150,7 +153,7 @@ public class DefaultTagDefinitionDao implements TagDefinitionDao {
                         tagDefinitionEvent = tagEventBuilder.newUserTagDefinitionCreationEvent(tagDefinition.getId(), tagDefinition, context);
                     }
                     try {
-                        bus.postFromTransaction(tagDefinitionEvent, tagDefinitionSqlDao, context);
+                        bus.postFromTransaction(tagDefinitionEvent, entitySqlDaoWrapperFactory, context);
                     } catch (InternalBus.EventBusException e) {
                         log.warn("Failed to post tag definition creation event for tag " + tagDefinition.getId(), e);
                     }
@@ -199,19 +202,7 @@ public class DefaultTagDefinitionDao implements TagDefinitionDao {
                     // Delete it
                     tagDefinitionSqlDao.deleteTagDefinition(definitionId.toString(), context);
 
-                    // Post an event to the Bus
-                    final TagDefinitionInternalEvent tagDefinitionEvent;
-                    if (tagDefinition.isControlTag()) {
-                        tagDefinitionEvent = tagEventBuilder.newControlTagDefinitionDeletionEvent(tagDefinition.getId(), tagDefinition, context);
-                    } else {
-                        tagDefinitionEvent = tagEventBuilder.newUserTagDefinitionDeletionEvent(tagDefinition.getId(), tagDefinition, context);
-                    }
-                    try {
-                        bus.postFromTransaction(tagDefinitionEvent, tagDefinitionSqlDao, context);
-                    } catch (InternalBus.EventBusException e) {
-                        log.warn("Failed to post tag definition deletion event for tag " + tagDefinition.getId(), e);
-                    }
-
+                    postBusEventFromTransaction(tagDefinition, tagDefinition, ChangeType.DELETE, entitySqlDaoWrapperFactory, context);
                     return null;
                 }
             });
@@ -222,5 +213,38 @@ public class DefaultTagDefinitionDao implements TagDefinitionDao {
                 throw exception;
             }
         }
+    }
+
+    protected void postBusEventFromTransaction(TagDefinition tagDefinition, TagDefinition savedTagDefinition, ChangeType changeType, final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final InternalCallContext context)
+            throws BillingExceptionBase {
+
+
+        final TagDefinitionInternalEvent tagDefinitionEvent;
+        switch(changeType) {
+            case INSERT:
+                tagDefinitionEvent = (tagDefinition.isControlTag()) ?
+                                     tagEventBuilder.newControlTagDefinitionCreationEvent(tagDefinition.getId(), tagDefinition, context) :
+                                     tagEventBuilder.newUserTagDefinitionCreationEvent(tagDefinition.getId(), tagDefinition, context);
+
+                break;
+            case DELETE:
+                tagDefinitionEvent = (tagDefinition.isControlTag()) ?
+                                     tagEventBuilder.newControlTagDefinitionDeletionEvent(tagDefinition.getId(), tagDefinition, context) :
+                                     tagEventBuilder.newUserTagDefinitionDeletionEvent(tagDefinition.getId(), tagDefinition, context);
+                break;
+            default:
+                return;
+        }
+
+        try {
+            bus.postFromTransaction(tagDefinitionEvent, entitySqlDaoWrapperFactory, context);
+        } catch (InternalBus.EventBusException e) {
+            log.warn("Failed to post tag definition event for tag " + tagDefinition.getId().toString(), e);
+        }
+    }
+
+    @Override
+    protected TagDefinitionApiException generateAlreadyExistsException(final TagDefinition entity, final InternalCallContext context) {
+        return new TagDefinitionApiException(ErrorCode.TAG_DEFINITION_ALREADY_EXISTS, entity.getId());
     }
 }

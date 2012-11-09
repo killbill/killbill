@@ -36,5 +36,4 @@ public interface AuditedCollectionDao<T extends Entity> {
 
     Map<String, T> loadEntities(UUID objectId, ObjectType objectType, InternalTenantContext context);
 
-    Map<String, T> loadEntitiesFromTransaction(Transmogrifier dao, UUID objectId, ObjectType objectType, InternalTenantContext context);
 }

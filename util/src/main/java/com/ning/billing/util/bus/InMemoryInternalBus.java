@@ -26,6 +26,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.entity.dao.EntitySqlDao;
+import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import com.ning.billing.util.events.BusInternalEvent;
 import com.ning.billing.util.svcsapi.bus.InternalBus;
 
@@ -97,7 +99,7 @@ public class InMemoryInternalBus implements InternalBus {
     }
 
     @Override
-    public void postFromTransaction(final BusInternalEvent event, final Transmogrifier dao, final InternalCallContext context) throws EventBusException {
+    public void postFromTransaction(final BusInternalEvent event, final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final InternalCallContext context) throws EventBusException {
         checkInitialized("postFromTransaction");
         delegate.post(event);
     }

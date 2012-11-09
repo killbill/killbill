@@ -43,7 +43,7 @@ public class TestDefaultCallContext extends UtilTestSuite {
         Assert.assertEquals(callContext.getTenantId(), tenantId);
         Assert.assertEquals(callContext.getCreatedDate(), createdDate);
         Assert.assertNull(callContext.getCallOrigin());
-        Assert.assertEquals(callContext.getComment(), comment);
+        Assert.assertEquals(callContext.getComments(), comment);
         Assert.assertEquals(callContext.getReasonCode(), reasonCode);
         Assert.assertEquals(callContext.getUserName(), userName);
         Assert.assertEquals(callContext.getUpdatedDate(), createdDate);

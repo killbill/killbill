@@ -46,7 +46,7 @@ public class TestDefaultCustomFieldUserApi extends UtilTestSuiteWithEmbeddedDB {
     @BeforeMethod(groups = "slow")
     public void setUp() throws Exception {
         final InternalCallContextFactory internalCallContextFactory = new InternalCallContextFactory(getMysqlTestingHelper().getDBI(), new ClockMock());
-        final CustomFieldDao customFieldDao = new AuditedCustomFieldDao(getMysqlTestingHelper().getDBI(), new DefaultClock());
+        final CustomFieldDao customFieldDao = new AuditedCustomFieldDao(getMysqlTestingHelper().getDBI());
         customFieldUserApi = new DefaultCustomFieldUserApi(internalCallContextFactory, customFieldDao);
     }
 
@@ -66,13 +66,13 @@ public class TestDefaultCustomFieldUserApi extends UtilTestSuiteWithEmbeddedDB {
             }
         });
 
-        final CustomField customField = new StringCustomField(UUID.randomUUID().toString().substring(1, 4), UUID.randomUUID().toString().substring(1, 4));
-        customFieldUserApi.saveCustomFields(accountId, ObjectType.ACCOUNT, ImmutableList.<CustomField>of(customField), callContext);
+        final CustomField customField = new StringCustomField(UUID.randomUUID().toString().substring(1, 4), UUID.randomUUID().toString().substring(1, 4), ObjectType.ACCOUNT, accountId, callContext.getCreatedDate());
+        customFieldUserApi.addCustomFields(ImmutableList.<CustomField>of(customField), callContext);
 
         // Verify the field was saved
-        final Map<String, CustomField> customFields = customFieldUserApi.getCustomFields(accountId, ObjectType.ACCOUNT, callContext);
-        Assert.assertEquals(customFields.keySet().size(), 1);
-        Assert.assertEquals(customFields.get(customField.getName()), customField);
+        final List<CustomField> customFields = customFieldUserApi.getCustomFields(accountId, ObjectType.ACCOUNT, callContext);
+        Assert.assertEquals(customFields.size(), 1);
+        Assert.assertEquals(customFields.get(0), customField);
         // Verify the account_record_id was populated
         getMysqlTestingHelper().getDBI().withHandle(new HandleCallback<Void>() {
             @Override

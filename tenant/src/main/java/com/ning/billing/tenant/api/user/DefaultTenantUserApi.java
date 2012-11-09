@@ -53,7 +53,7 @@ public class DefaultTenantUserApi implements TenantUserApi {
 
         try {
             tenantDao.create(tenant, internalCallContextFactory.createInternalCallContext(context));
-        } catch (final EntityPersistenceException e) {
+        } catch (final TenantApiException e) {
             throw new TenantApiException(e, ErrorCode.TENANT_CREATION_FAILED);
         }
 

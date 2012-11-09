@@ -28,6 +28,8 @@ import com.ning.billing.payment.core.PaymentProcessor;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.entity.dao.EntitySqlDao;
+import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 
 import com.google.inject.Inject;
@@ -82,7 +84,7 @@ public class PluginFailureRetryService extends BaseRetryService implements Retry
             return super.scheduleRetry(paymentId, nextRetryDate);
         }
 
-        public boolean scheduleRetryFromTransaction(final UUID paymentId, final int retryAttempt, final Transmogrifier transactionalDao) {
+        public boolean scheduleRetryFromTransaction(final UUID paymentId, final int retryAttempt, final EntitySqlDaoWrapperFactory<EntitySqlDao> transactionalDao) {
             final DateTime nextRetryDate = getNextRetryDate(retryAttempt);
             if (nextRetryDate == null) {
                 return false;

@@ -31,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ning.billing.tenant.api.Tenant;
+import com.ning.billing.tenant.api.TenantApiException;
 import com.ning.billing.tenant.api.TenantKV;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
@@ -66,7 +67,7 @@ public class DefaultTenantDao implements TenantDao {
     }
 
     @Override
-    public void create(final Tenant entity, final InternalCallContext context) throws EntityPersistenceException {
+    public void create(final Tenant entity, final InternalCallContext context) throws TenantApiException {
         // Create the salt and password
         final ByteSource salt = rng.nextBytes();
         // Hash the plain-text password with the random salt and multiple

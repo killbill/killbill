@@ -227,7 +227,7 @@ auditTableValues() ::= <<
 , :changeType
 , :createdBy
 , :reasonCode
-, :comment
+, :comments
 , :userToken
 , :createdDate
 <if(accountRecordIdField(""))>, <accountRecordIdValue()><endif>

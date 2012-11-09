@@ -29,7 +29,7 @@ public class HalfFloat {
     }
 
     // These two static methods were pinched from http://stackoverflow.com/questions/6162651/half-precision-floating-point-in-java/6162687#6162687
-    // The last comment on that page is the author saying "I hereby commit these to the public domain"
+    // The last comments on that page is the author saying "I hereby commit these to the public domain"
 
     // Ignores the higher 16 bits
     public static float toFloat(final int hbits) {

@@ -29,6 +29,7 @@ import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.ObjectType;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
+import com.ning.billing.util.api.CustomFieldApiException;
 import com.ning.billing.util.clock.DefaultClock;
 import com.ning.billing.util.customfield.dao.AuditedCustomFieldDao;
 import com.ning.billing.util.customfield.dao.CustomFieldDao;
@@ -47,7 +48,7 @@ public class TestFieldStore extends UtilTestSuiteWithEmbeddedDB {
     protected void setup() throws IOException {
         try {
             dbi = helper.getDBI();
-            customFieldDao = new AuditedCustomFieldDao(dbi, new DefaultClock());
+            customFieldDao = new AuditedCustomFieldDao(dbi);
         } catch (Throwable t) {
             log.error("Setup failed", t);
             fail(t.toString());
@@ -55,33 +56,19 @@ public class TestFieldStore extends UtilTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
-    public void testFieldStore() {
+    public void testCreateCustomField() throws CustomFieldApiException {
         final UUID id = UUID.randomUUID();
         final ObjectType objectType = ObjectType.ACCOUNT;
 
-        final FieldStore fieldStore1 = new DefaultFieldStore(id, objectType);
 
         final String fieldName = "TestField1";
         String fieldValue = "Kitty Hawk";
-        fieldStore1.setValue(fieldName, fieldValue);
 
-        final CustomFieldSqlDao customFieldSqlDao = dbi.onDemand(CustomFieldSqlDao.class);
-        customFieldDao.saveEntitiesFromTransaction(customFieldSqlDao, id, objectType, fieldStore1.getEntityList(), internalCallContext);
-
-        final FieldStore fieldStore2 = DefaultFieldStore.create(id, objectType);
-        fieldStore2.add(customFieldSqlDao.load(id.toString(), objectType, internalCallContext));
-
-        assertEquals(fieldStore2.getValue(fieldName), fieldValue);
+        CustomField field = new StringCustomField(fieldName, fieldValue, objectType, id, internalCallContext.getCreatedDate());
+        customFieldDao.create(field, internalCallContext);
 
         fieldValue = "Cape Canaveral";
-        fieldStore2.setValue(fieldName, fieldValue);
-        assertEquals(fieldStore2.getValue(fieldName), fieldValue);
-        customFieldDao.saveEntitiesFromTransaction(customFieldSqlDao, id, objectType, fieldStore2.getEntityList(), internalCallContext);
-
-        final FieldStore fieldStore3 = DefaultFieldStore.create(id, objectType);
-        assertEquals(fieldStore3.getValue(fieldName), null);
-        fieldStore3.add(customFieldSqlDao.load(id.toString(), objectType, internalCallContext));
-
-        assertEquals(fieldStore3.getValue(fieldName), fieldValue);
+        CustomField field2 = new StringCustomField(fieldName, fieldValue, objectType, id, internalCallContext.getCreatedDate());
+        customFieldDao.create(field2 ,internalCallContext);
     }
 }

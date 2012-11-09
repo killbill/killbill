@@ -163,12 +163,6 @@ public abstract class AuditedCollectionDaoBase<T extends Entity, V> implements A
         return getMap(thisDao, objectId, objectType, context);
     }
 
-    @Override
-    public Map<String, T> loadEntitiesFromTransaction(final Transmogrifier dao, final UUID objectId, final ObjectType objectType, final InternalTenantContext context) {
-        final UpdatableEntityCollectionSqlDao<T> thisDao = transmogrifyDao(dao, context);
-        return getMap(thisDao, objectId, objectType, context);
-    }
-
     private Map<String, T> getMap(final UpdatableEntityCollectionSqlDao<T> dao, final UUID objectId, final ObjectType objectType, final InternalTenantContext context) {
         final List<T> entities = dao.load(objectId.toString(), objectType, context);
         final Map<String, T> results = new HashMap<String, T>();

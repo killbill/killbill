@@ -217,15 +217,15 @@ public class AuditedEntitlementDao implements EntitlementDao {
             public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
                 final EntitlementEventSqlDao transactional = entitySqlDaoWrapperFactory.become(EntitlementEventSqlDao.class);
                 final UUID subscriptionId = subscription.getId();
-                cancelNextPhaseEventFromTransaction(subscriptionId, transactional, context);
+                cancelNextPhaseEventFromTransaction(subscriptionId, entitySqlDaoWrapperFactory, context);
                 transactional.insertEvent(nextPhase, context);
-                recordFutureNotificationFromTransaction(transactional,
+                recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory,
                                                         nextPhase.getEffectiveDate(),
                                                         new EntitlementNotificationKey(nextPhase.getId()),
                                                         context);
 
                 // Notify the Bus of the requested change
-                notifyBusOfRequestedChange(transactional, subscription, nextPhase, context);
+                notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, nextPhase, context);
 
                 return null;
             }
@@ -283,14 +283,14 @@ public class AuditedEntitlementDao implements EntitlementDao {
                 final EntitlementEventSqlDao eventsDaoFromSameTransaction = entitySqlDaoWrapperFactory.become(EntitlementEventSqlDao.class);
                 for (final EntitlementEvent cur : initialEvents) {
                     eventsDaoFromSameTransaction.insertEvent(cur, context);
-                    recordFutureNotificationFromTransaction(transactional,
+                    recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory,
                                                             cur.getEffectiveDate(),
                                                             new EntitlementNotificationKey(cur.getId()),
                                                             context);
                 }
                 // Notify the Bus of the latest requested change, if needed
                 if (initialEvents.size() > 0) {
-                    notifyBusOfRequestedChange(eventsDaoFromSameTransaction, subscription, initialEvents.get(initialEvents.size() - 1), context);
+                    notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, initialEvents.get(initialEvents.size() - 1), context);
                 }
                 return null;
             }
@@ -306,7 +306,7 @@ public class AuditedEntitlementDao implements EntitlementDao {
 
                 for (final EntitlementEvent cur : recreateEvents) {
                     transactional.insertEvent(cur, context);
-                    recordFutureNotificationFromTransaction(transactional,
+                    recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory,
                                                             cur.getEffectiveDate(),
                                                             new EntitlementNotificationKey(cur.getId()),
                                                             context);
@@ -314,7 +314,7 @@ public class AuditedEntitlementDao implements EntitlementDao {
                 }
 
                 // Notify the Bus of the latest requested change
-                notifyBusOfRequestedChange(transactional, subscription, recreateEvents.get(recreateEvents.size() - 1), context);
+                notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, recreateEvents.get(recreateEvents.size() - 1), context);
 
                 return null;
             }
@@ -326,8 +326,7 @@ public class AuditedEntitlementDao implements EntitlementDao {
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                final EntitlementEventSqlDao transactional = entitySqlDaoWrapperFactory.become(EntitlementEventSqlDao.class);
-                cancelSubscriptionFromTransaction(subscription, cancelEvent, transactional, context, seqId);
+                cancelSubscriptionFromTransaction(subscription, cancelEvent, entitySqlDaoWrapperFactory, context, seqId);
                 return null;
             }
         });
@@ -359,14 +358,14 @@ public class AuditedEntitlementDao implements EntitlementDao {
                     transactional.unactiveEvent(cancelledEventId, context);
                     for (final EntitlementEvent cur : uncancelEvents) {
                         transactional.insertEvent(cur, context);
-                        recordFutureNotificationFromTransaction(transactional,
+                        recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory,
                                                                 cur.getEffectiveDate(),
                                                                 new EntitlementNotificationKey(cur.getId()),
                                                                 context);
                     }
 
                     // Notify the Bus of the latest requested change
-                    notifyBusOfRequestedChange(transactional, subscription, uncancelEvents.get(uncancelEvents.size() - 1), context);
+                    notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, uncancelEvents.get(uncancelEvents.size() - 1), context);
                 }
 
                 return null;
@@ -382,11 +381,11 @@ public class AuditedEntitlementDao implements EntitlementDao {
                 final EntitlementEventSqlDao transactional = entitySqlDaoWrapperFactory.become(EntitlementEventSqlDao.class);
 
                 final UUID subscriptionId = subscription.getId();
-                cancelFutureEventsFromTransaction(subscriptionId, transactional, context);
+                cancelFutureEventsFromTransaction(subscriptionId, entitySqlDaoWrapperFactory, context);
 
                 for (final EntitlementEvent cur : changeEvents) {
                     transactional.insertEvent(cur, context);
-                    recordFutureNotificationFromTransaction(transactional,
+                    recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory,
                                                             cur.getEffectiveDate(),
                                                             new EntitlementNotificationKey(cur.getId()),
                                                             context);
@@ -394,43 +393,43 @@ public class AuditedEntitlementDao implements EntitlementDao {
 
                 // Notify the Bus of the latest requested change
                 final EntitlementEvent finalEvent = changeEvents.get(changeEvents.size() - 1);
-                notifyBusOfRequestedChange(transactional, subscription, finalEvent, context);
+                notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, finalEvent, context);
 
                 return null;
             }
         });
     }
 
-    private void cancelSubscriptionFromTransaction(final SubscriptionData subscription, final EntitlementEvent cancelEvent, final EntitlementEventSqlDao transactional, final InternalCallContext context, final int seqId) {
+    private void cancelSubscriptionFromTransaction(final SubscriptionData subscription, final EntitlementEvent cancelEvent, final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final InternalCallContext context, final int seqId) {
         final UUID subscriptionId = subscription.getId();
-        cancelFutureEventsFromTransaction(subscriptionId, transactional, context);
-        transactional.insertEvent(cancelEvent, context);
-        recordFutureNotificationFromTransaction(transactional,
+        cancelFutureEventsFromTransaction(subscriptionId, entitySqlDaoWrapperFactory, context);
+        entitySqlDaoWrapperFactory.become(EntitlementEventSqlDao.class).insertEvent(cancelEvent, context);
+        recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory,
                                                 cancelEvent.getEffectiveDate(),
                                                 new EntitlementNotificationKey(cancelEvent.getId(), seqId),
                                                 context);
 
         // Notify the Bus of the requested change
-        notifyBusOfRequestedChange(transactional, subscription, cancelEvent, context);
+        notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, cancelEvent, context);
     }
 
-    private void cancelNextPhaseEventFromTransaction(final UUID subscriptionId, final EntitlementEventSqlDao dao, final InternalCallContext context) {
-        cancelFutureEventFromTransaction(subscriptionId, dao, EventType.PHASE, null, context);
+    private void cancelNextPhaseEventFromTransaction(final UUID subscriptionId, final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final InternalCallContext context) {
+        cancelFutureEventFromTransaction(subscriptionId, entitySqlDaoWrapperFactory, EventType.PHASE, null, context);
     }
 
-    private void cancelFutureEventsFromTransaction(final UUID subscriptionId, final EntitlementEventSqlDao dao, final InternalCallContext context) {
+    private void cancelFutureEventsFromTransaction(final UUID subscriptionId, final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final InternalCallContext context) {
         final Date now = clock.getUTCNow().toDate();
-        final List<EntitlementEvent> events = dao.getFutureActiveEventForSubscription(subscriptionId.toString(), now, context);
+        final List<EntitlementEvent> events = entitySqlDaoWrapperFactory.become(EntitlementEventSqlDao.class).getFutureActiveEventForSubscription(subscriptionId.toString(), now, context);
         for (final EntitlementEvent cur : events) {
-            unactivateEventFromTransaction(cur, dao, context);
+            unactivateEventFromTransaction(cur, entitySqlDaoWrapperFactory, context);
         }
     }
 
-    private void cancelFutureEventFromTransaction(final UUID subscriptionId, final EntitlementEventSqlDao dao, final EventType type,
+    private void cancelFutureEventFromTransaction(final UUID subscriptionId, final EntitySqlDaoWrapperFactory<EntitySqlDao> dao, final EventType type,
                                                   @Nullable final ApiEventType apiType, final InternalCallContext context) {
         EntitlementEvent futureEvent = null;
         final Date now = clock.getUTCNow().toDate();
-        final List<EntitlementEvent> events = dao.getFutureActiveEventForSubscription(subscriptionId.toString(), now, context);
+        final List<EntitlementEvent> events = dao.become(EntitlementEventSqlDao.class).getFutureActiveEventForSubscription(subscriptionId.toString(), now, context);
         for (final EntitlementEvent cur : events) {
             if (cur.getType() == type &&
                 (apiType == null || apiType == ((ApiEvent) cur).getEventType())) {
@@ -444,10 +443,10 @@ public class AuditedEntitlementDao implements EntitlementDao {
         unactivateEventFromTransaction(futureEvent, dao, context);
     }
 
-    private void unactivateEventFromTransaction(final EntitlementEvent event, final EntitlementEventSqlDao dao, final InternalCallContext context) {
+    private void unactivateEventFromTransaction(final EntitlementEvent event, final EntitySqlDaoWrapperFactory<EntitySqlDao> dao, final InternalCallContext context) {
         if (event != null) {
             final String eventId = event.getId().toString();
-            dao.unactiveEvent(eventId, context);
+            dao.become(EntitlementEventSqlDao.class).unactiveEvent(eventId, context);
         }
     }
 
@@ -584,7 +583,7 @@ public class AuditedEntitlementDao implements EntitlementDao {
                     for (final EntitlementEvent event : cur.getNewEvents()) {
                         transEventDao.insertEvent(event, context);
                         if (event.getEffectiveDate().isAfter(clock.getUTCNow())) {
-                            recordFutureNotificationFromTransaction(transactional,
+                            recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory,
                                                                     event.getEffectiveDate(),
                                                                     new EntitlementNotificationKey(event.getId()),
                                                                     context);
@@ -596,7 +595,7 @@ public class AuditedEntitlementDao implements EntitlementDao {
                     // Note: we don't send a requested change event here, but a repair event
                     final RepairEntitlementInternalEvent busEvent = new DefaultRepairEntitlementEvent(context.getUserToken(), accountId, bundleId, clock.getUTCNow(),
                             context.getAccountRecordId(), context.getTenantRecordId());
-                    eventBus.postFromTransaction(busEvent, transactional, context);
+                    eventBus.postFromTransaction(busEvent, entitySqlDaoWrapperFactory, context);
                 } catch (EventBusException e) {
                     log.warn("Failed to post repair entitlement event for bundle " + bundleId, e);
                 }
@@ -617,7 +616,7 @@ public class AuditedEntitlementDao implements EntitlementDao {
 
                 // Cancel the subscriptions for the old bundle
                 for (final TransferCancelData cancel : transferCancelData) {
-                    cancelSubscriptionFromTransaction(cancel.getSubscription(), cancel.getCancelEvent(), transactional, context, 0);
+                    cancelSubscriptionFromTransaction(cancel.getSubscription(), cancel.getCancelEvent(), entitySqlDaoWrapperFactory, context, 0);
                 }
 
                 migrateBundleDataFromTransaction(bundleTransferData, transactional, entitySqlDaoWrapperFactory, context);
@@ -637,12 +636,12 @@ public class AuditedEntitlementDao implements EntitlementDao {
         return null;
     }
 
-    private void recordFutureNotificationFromTransaction(final Transmogrifier transactionalDao, final DateTime effectiveDate,
+    private void recordFutureNotificationFromTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final DateTime effectiveDate,
                                                          final NotificationKey notificationKey, final InternalCallContext context) {
         try {
             final NotificationQueue subscriptionEventQueue = notificationQueueService.getNotificationQueue(Engine.ENTITLEMENT_SERVICE_NAME,
                                                                                                            Engine.NOTIFICATION_QUEUE_NAME);
-            subscriptionEventQueue.recordFutureNotificationFromTransaction(transactionalDao, effectiveDate, null, notificationKey, context);
+            subscriptionEventQueue.recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory, effectiveDate, null, notificationKey, context);
         } catch (NoSuchNotificationQueue e) {
             throw new RuntimeException(e);
         } catch (IOException e) {
@@ -650,10 +649,10 @@ public class AuditedEntitlementDao implements EntitlementDao {
         }
     }
 
-    private void notifyBusOfRequestedChange(final EntitlementEventSqlDao transactional, final SubscriptionData subscription,
+    private void notifyBusOfRequestedChange(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final SubscriptionData subscription,
                                             final EntitlementEvent nextEvent, final InternalCallContext context) {
         try {
-            eventBus.postFromTransaction(new DefaultRequestedSubscriptionEvent(subscription, nextEvent, context.getAccountRecordId(), context.getTenantRecordId()), transactional, context);
+            eventBus.postFromTransaction(new DefaultRequestedSubscriptionEvent(subscription, nextEvent, context.getAccountRecordId(), context.getTenantRecordId()), entitySqlDaoWrapperFactory, context);
         } catch (EventBusException e) {
             log.warn("Failed to post requested change event for subscription " + subscription.getId(), e);
         }
@@ -677,7 +676,7 @@ public class AuditedEntitlementDao implements EntitlementDao {
             final SubscriptionData subData = curSubscription.getData();
             for (final EntitlementEvent curEvent : curSubscription.getInitialEvents()) {
                 transactional.insertEvent(curEvent, context);
-                recordFutureNotificationFromTransaction(transactional,
+                recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory,
                                                         curEvent.getEffectiveDate(),
                                                         new EntitlementNotificationKey(curEvent.getId()),
                                                         context);
@@ -686,7 +685,7 @@ public class AuditedEntitlementDao implements EntitlementDao {
 
             // Notify the Bus of the latest requested change
             final EntitlementEvent finalEvent = curSubscription.getInitialEvents().get(curSubscription.getInitialEvents().size() - 1);
-            notifyBusOfRequestedChange(transactional, subData, finalEvent, context);
+            notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subData, finalEvent, context);
         }
 
         transBundleDao.insertBundle(bundleData, context);

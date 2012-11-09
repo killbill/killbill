@@ -36,6 +36,8 @@ import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.entity.dao.EntitySqlDao;
+import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
 import com.ning.billing.util.notificationq.dao.NotificationSqlDao;
 
@@ -89,12 +91,12 @@ public class DefaultNotificationQueue extends NotificationQueueBase {
     }
 
     @Override
-    public void recordFutureNotificationFromTransaction(final Transmogrifier transactionalDao,
+    public void recordFutureNotificationFromTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> transactionalDao,
                                                         final DateTime futureNotificationTime,
                                                         final UUID accountId,
                                                         final NotificationKey notificationKey,
                                                         final InternalCallContext context) throws IOException {
-        final NotificationSqlDao transactionalNotificationDao = transactionalDao.become(NotificationSqlDao.class);
+        final NotificationSqlDao transactionalNotificationDao = transactionalDao.transmogrify(NotificationSqlDao.class);
         recordFutureNotificationInternal(futureNotificationTime, accountId, notificationKey, transactionalNotificationDao, context);
     }
 

@@ -82,8 +82,8 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
             final Account account = accountApi.getAccountById(accountId, context);
 
             // Check to see if billing is off for the account
-            final Map<String, Tag> accountTags = tagApi.getTags(accountId, ObjectType.ACCOUNT, context);
-            for (final Tag cur : accountTags.values()) {
+            final List<Tag> accountTags = tagApi.getTags(accountId, ObjectType.ACCOUNT, context);
+            for (final Tag cur : accountTags) {
                 if (ControlTagType.AUTO_INVOICING_OFF.getId().equals(cur.getTagDefinitionId())) {
                     result.setAccountAutoInvoiceIsOff(true);
                     return result; // billing is off, we are done
@@ -116,10 +116,10 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
             final List<Subscription> subscriptions = entitlementApi.getSubscriptionsForBundle(bundle.getId(), context);
 
             //Check if billing is off for the bundle
-            final Map<String, Tag> bundleTags = tagApi.getTags(bundle.getId(), ObjectType.BUNDLE, context);
+            final List<Tag> bundleTags = tagApi.getTags(bundle.getId(), ObjectType.BUNDLE, context);
 
             boolean found_AUTO_INVOICING_OFF = false;
-            for (final Tag cur : bundleTags.values()) {
+            for (final Tag cur : bundleTags) {
                 if (ControlTagType.AUTO_INVOICING_OFF.getId().equals(cur.getTagDefinitionId())) {
                     found_AUTO_INVOICING_OFF = true;
                     break;

@@ -93,7 +93,7 @@ public class TestStringTemplateInheritance extends UtilTestSuite {
                                                                               "and t.tenant_record_id = :tenantRecordId\n" +
                                                                               ";");
         Assert.assertEquals(kombucha.getInstanceOf("getHistoryRecordId").toString(), "select\n" +
-                                                                                     "  max(t.history_record_id)\n" +
+                                                                                     "  max(t.record_id)\n" +
                                                                                      "from kombucha t\n" +
                                                                                      "where t.record_id = :recordId\n" +
                                                                                      "and t.tenant_record_id = :tenantRecordId\n" +
@@ -134,8 +134,9 @@ public class TestStringTemplateInheritance extends UtilTestSuite {
                                                                        "limit 1\n" +
                                                                        ";");
         Assert.assertEquals(kombucha.getInstanceOf("addHistoryFromTransaction").toString(), "insert into kombucha_history (\n" +
-                                                                                            "  record_id\n" +
-                                                                                            ", id\n" +
+                                                                                            "  id\n" +
+                                                                                            ", target_record_id\n" +
+                                                                                            ", change_type\n" +
                                                                                             ", tea\n" +
                                                                                             ", mushroom\n" +
                                                                                             ", sugar\n" +
@@ -143,8 +144,9 @@ public class TestStringTemplateInheritance extends UtilTestSuite {
                                                                                             ", tenant_record_id\n" +
                                                                                             ")\n" +
                                                                                             "values (\n" +
-                                                                                            "  :recordId\n" +
-                                                                                            ", :id\n" +
+                                                                                            "  :id\n" +
+                                                                                            ", :targetRecordId\n" +
+                                                                                            ", :changeType\n" +
                                                                                             ",   :tea\n" +
                                                                                             ", :mushroom\n" +
                                                                                             ", :sugar\n" +
@@ -152,27 +154,30 @@ public class TestStringTemplateInheritance extends UtilTestSuite {
                                                                                             ", :tenantRecordId\n" +
                                                                                             ")\n" +
                                                                                             ";");
+
         Assert.assertEquals(kombucha.getInstanceOf("insertAuditFromTransaction").toString(), "insert into audit_log (\n" +
-                                                                                             "table_name\n" +
-                                                                                             ", record_id\n" +
+                                                                                             "id\n" +
+                                                                                             ", table_name\n" +
+                                                                                             ", target_record_id\n" +
                                                                                              ", change_type\n" +
-                                                                                             ", change_date\n" +
-                                                                                             ", changed_by\n" +
+                                                                                             ", created_by\n" +
                                                                                              ", reason_code\n" +
                                                                                              ", comments\n" +
                                                                                              ", user_token\n" +
+                                                                                             ", created_date\n" +
                                                                                              ", account_record_id\n" +
                                                                                              ", tenant_record_id\n" +
                                                                                              ")\n" +
                                                                                              "values (\n" +
-                                                                                             "  :table_name\n" +
-                                                                                             ", :record_id\n" +
-                                                                                             ", :change_type\n" +
-                                                                                             ", :change_date\n" +
-                                                                                             ", :changed_by\n" +
-                                                                                             ", :reason_code\n" +
+                                                                                             "  :id\n" +
+                                                                                             ", :tableName\n" +
+                                                                                             ", :targetRecordId\n" +
+                                                                                             ", :changeType\n" +
+                                                                                             ", :createdBy\n" +
+                                                                                             ", :reasonCode\n" +
                                                                                              ", :comments\n" +
-                                                                                             ", :user_token\n" +
+                                                                                             ", :userToken\n" +
+                                                                                             ", :createdDate\n" +
                                                                                              ", :accountRecordId\n" +
                                                                                              ", :tenantRecordId\n" +
                                                                                              ")\n" +

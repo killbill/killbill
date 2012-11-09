@@ -57,7 +57,7 @@ public class DefaultAuditLog extends EntityAudit implements AuditLog {
 
     @Override
     public String getComment() {
-        return callContext.getComment();
+        return callContext.getComments();
     }
 
     @Override
@@ -68,5 +68,33 @@ public class DefaultAuditLog extends EntityAudit implements AuditLog {
         sb.append(", callContext=").append(callContext);
         sb.append('}');
         return sb.toString();
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+
+        final DefaultAuditLog that = (DefaultAuditLog) o;
+
+        if (callContext != null ? !callContext.equals(that.callContext) : that.callContext != null) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (callContext != null ? callContext.hashCode() : 0);
+        return result;
     }
 }

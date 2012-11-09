@@ -19,11 +19,12 @@ package com.ning.billing.tenant.dao;
 import java.util.List;
 
 import com.ning.billing.tenant.api.Tenant;
+import com.ning.billing.tenant.api.TenantApiException;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.entity.dao.EntityDao;
 
-public interface TenantDao extends EntityDao<Tenant> {
+public interface TenantDao extends EntityDao<Tenant, TenantApiException> {
 
     public Tenant getTenantByApiKey(final String key);
 

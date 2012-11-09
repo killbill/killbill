@@ -16,6 +16,7 @@
 
 package com.ning.billing.util.customfield.dao;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,41 +24,26 @@ import java.util.UUID;
 
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
+import com.ning.billing.BillingExceptionBase;
 import com.ning.billing.ObjectType;
+import com.ning.billing.util.api.CustomFieldApiException;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.customfield.CustomField;
+import com.ning.billing.util.entity.Entity;
+import com.ning.billing.util.entity.dao.MockEntityDaoBase;
 
-public class MockCustomFieldDao implements CustomFieldDao {
-
-    private final Map<UUID, List<CustomField>> fields = new HashMap<UUID, List<CustomField>>();
-
-    @Override
-    public void saveEntitiesFromTransaction(final Transmogrifier transactionalDao, final UUID objectId, final ObjectType objectType,
-                                            final List<CustomField> entities, final InternalCallContext context) {
-        fields.put(objectId, entities);
-    }
+public class MockCustomFieldDao extends MockEntityDaoBase<CustomField, CustomFieldApiException> implements CustomFieldDao {
 
     @Override
-    public void saveEntities(final UUID objectId, final ObjectType objectType, final List<CustomField> entities, final InternalCallContext context) {
-        fields.put(objectId, entities);
-    }
-
-    @Override
-    public Map<String, CustomField> loadEntities(final UUID objectId, final ObjectType objectType, final InternalTenantContext context) {
-        return getMap(fields.get(objectId));
-    }
-
-    @Override
-    public Map<String, CustomField> loadEntitiesFromTransaction(final Transmogrifier dao, final UUID objectId, final ObjectType objectType, final InternalTenantContext context) {
-        return getMap(fields.get(objectId));
-    }
-
-    private Map<String, CustomField> getMap(final List<CustomField> customFields) {
-        final Map<String, CustomField> map = new HashMap<String, CustomField>();
-        for (final CustomField customField : customFields) {
-            map.put(customField.getName(), customField);
+    public List<CustomField> getCustomFields(final UUID objectId, final ObjectType objectType, final InternalTenantContext context) {
+        List<CustomField> result =  new ArrayList<CustomField>();
+        List<CustomField> all = get(context);
+        for (CustomField cur : all) {
+            if (cur.getObjectId().equals(objectId) && cur.getObjectType() == objectType) {
+                result.add(cur);
+            }
         }
-        return map;
+        return result;
     }
 }

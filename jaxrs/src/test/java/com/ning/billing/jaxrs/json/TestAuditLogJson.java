@@ -89,7 +89,7 @@ public class TestAuditLogJson extends JaxrsTestSuite {
         Assert.assertNotNull(auditLogJson.getChangeDate());
         Assert.assertEquals(auditLogJson.getChangedBy(), callContext.getUserName());
         Assert.assertEquals(auditLogJson.getReasonCode(), callContext.getReasonCode());
-        Assert.assertEquals(auditLogJson.getComments(), callContext.getComment());
+        Assert.assertEquals(auditLogJson.getComments(), callContext.getComments());
         Assert.assertEquals(auditLogJson.getUserToken(), callContext.getUserToken().toString());
     }
 }

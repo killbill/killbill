@@ -40,6 +40,9 @@ import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.glue.AuditModule;
+import com.ning.billing.util.tag.ControlTagType;
+import com.ning.billing.util.tag.DefaultControlTag;
+import com.ning.billing.util.tag.DescriptiveTag;
 import com.ning.billing.util.tag.MockTagStoreModuleSql;
 import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
@@ -115,12 +118,16 @@ public class TestDefaultAuditDao extends UtilTestSuiteWithEmbeddedDB {
 
         // Create a tag
         final UUID objectId = UUID.randomUUID();
-        tagDao.insertTag(objectId, ObjectType.ACCOUNT, tagDefinition.getId(), internalCallContext);
-        final Map<String, Tag> tags = tagDao.getTags(objectId, ObjectType.ACCOUNT, internalCallContext);
+
+        final Tag tag = tagDefinition.isControlTag() ? new DefaultControlTag(ControlTagType.getTypeFromId(tagDefinition.getId()), ObjectType.ACCOUNT, objectId, clock.getUTCNow()) :
+                                                       new DescriptiveTag(tagDefinition.getId(), ObjectType.ACCOUNT, objectId, clock.getUTCNow());
+
+        tagDao.create(tag, internalCallContext);
+        final List<Tag> tags = tagDao.getTags(objectId, ObjectType.ACCOUNT, internalCallContext);
         Assert.assertEquals(tags.size(), 1);
-        final Tag tag = tags.values().iterator().next();
-        Assert.assertEquals(tag.getTagDefinitionId(), tagDefinition.getId());
-        tagId = tag.getId();
+        final Tag savedTag = tags.get(0);
+        Assert.assertEquals(savedTag.getTagDefinitionId(), tagDefinition.getId());
+        tagId = savedTag.getId();
     }
 
     private void verifyAuditLogsForTag(final List<AuditLog> auditLogs, final AuditLevel level) {
@@ -132,7 +139,7 @@ public class TestDefaultAuditDao extends UtilTestSuiteWithEmbeddedDB {
         Assert.assertEquals(auditLogs.size(), 1);
         Assert.assertEquals(auditLogs.get(0).getUserToken(), internalCallContext.getUserToken().toString());
         Assert.assertEquals(auditLogs.get(0).getChangeType(), ChangeType.INSERT);
-        Assert.assertEquals(auditLogs.get(0).getComment(), internalCallContext.getComment());
+        Assert.assertEquals(auditLogs.get(0).getComment(), internalCallContext.getComments());
         Assert.assertEquals(auditLogs.get(0).getReasonCode(), internalCallContext.getReasonCode());
         Assert.assertEquals(auditLogs.get(0).getUserName(), internalCallContext.getCreatedBy());
         Assert.assertNotNull(auditLogs.get(0).getCreatedDate());

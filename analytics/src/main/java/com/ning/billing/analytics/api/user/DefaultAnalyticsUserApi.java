@@ -353,7 +353,7 @@ public class DefaultAnalyticsUserApi implements AnalyticsUserApi {
     private void updateTags(final Account account, final InternalCallContext internalCallContext) {
         // Find the current state of tags from util
         final List<TagDefinition> tagDefinitions = tagInternalApi.getTagDefinitions(internalCallContext);
-        final Collection<String> utilTags = Collections2.transform(tagInternalApi.getTags(account.getId(), ObjectType.ACCOUNT, internalCallContext).values(),
+        final Collection<String> utilTags = Collections2.transform(tagInternalApi.getTags(account.getId(), ObjectType.ACCOUNT, internalCallContext),
                                                                    new Function<Tag, String>() {
                                                                        @Override
                                                                        public String apply(@Nullable final Tag input) {

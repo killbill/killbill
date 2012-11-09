@@ -18,23 +18,31 @@ package com.ning.billing.util.customfield;
 
 import java.util.UUID;
 
+import org.joda.time.DateTime;
+
+import com.ning.billing.ObjectType;
 import com.ning.billing.util.entity.Entity;
 import com.ning.billing.util.entity.EntityBase;
 
 public class StringCustomField extends EntityBase implements CustomField {
+
+
     private final String name;
     private String value;
+    private final UUID objectId;
+    private final ObjectType objectType;
 
-    public StringCustomField(final String name, final String value) {
-        super();
-        this.name = name;
-        this.value = value;
+    public StringCustomField(final String name, final String value, final ObjectType objectType, final UUID objectId, final DateTime createdDate) {
+        this(UUID.randomUUID(), name, value, objectType, objectId, createdDate);
     }
 
-    public StringCustomField(final UUID id, final String name, final String value) {
-        super(id);
+    public StringCustomField(final UUID id, final String name, final String value, final ObjectType objectType, final UUID objectId, final DateTime createdDate) {
+        super(id, createdDate, createdDate);
         this.name = name;
         this.value = value;
+        this.objectId = objectId;
+        this.objectType = objectType;
+
     }
 
     @Override
@@ -45,6 +53,14 @@ public class StringCustomField extends EntityBase implements CustomField {
     @Override
     public String getValue() {
         return value;
+    }
+
+    public ObjectType getObjectType() {
+        return objectType;
+    }
+
+    public UUID getObjectId() {
+        return objectId;
     }
 
     @Override
