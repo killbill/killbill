@@ -31,10 +31,6 @@ public class DefaultAccountEmail extends EntityBase implements AccountEmail {
         this.email = email;
     }
 
-    public DefaultAccountEmail(final AccountEmail source, final String newEmail) {
-        this(source.getAccountId(), newEmail);
-    }
-
     public DefaultAccountEmail(final UUID id, final UUID accountId, final String email) {
         super(id);
         this.accountId = accountId;

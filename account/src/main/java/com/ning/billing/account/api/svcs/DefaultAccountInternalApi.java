@@ -29,6 +29,7 @@ import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.account.dao.AccountDao;
 import com.ning.billing.account.dao.AccountEmailDao;
+import com.ning.billing.account.dao.AccountModelDao;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
@@ -46,24 +47,32 @@ public class DefaultAccountInternalApi implements AccountInternalApi {
 
     @Override
     public Account getAccountById(final UUID accountId, final InternalTenantContext context) throws AccountApiException {
-        final Account account = accountDao.getById(accountId, context);
+        final AccountModelDao account = accountDao.getById(accountId, context);
         if (account == null) {
             throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, accountId);
         }
-        return account;
+        return new DefaultAccount(account);
     }
 
     @Override
     public Account getAccountByRecordId(final Long recordId, final InternalTenantContext context) throws AccountApiException {
-        return accountDao.getByRecordId(recordId, context);
+        final AccountModelDao account = accountDao.getByRecordId(recordId, context);
+        return new DefaultAccount(account);
     }
 
     @Override
     public void updateAccount(final String externalKey, final AccountData accountData,
                               final InternalCallContext context) throws AccountApiException {
-        final Account account = getAccountByKey(externalKey, context);
-        final Account updatedAccount = new DefaultAccount(account.getId(), accountData);
-        accountDao.update(updatedAccount, context);
+        final Account currentAccount = getAccountByKey(externalKey, context);
+        if (currentAccount == null) {
+            throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_KEY, externalKey);
+        }
+
+        // Set unspecified (null) fields to their current values
+        final Account updatedAccount = new DefaultAccount(currentAccount.getId(), accountData);
+        final AccountModelDao accountToUpdate = new AccountModelDao(currentAccount.getId(), updatedAccount.mergeWithDelegate(currentAccount));
+
+        accountDao.update(accountToUpdate, context);
     }
 
     @Override
@@ -74,11 +83,11 @@ public class DefaultAccountInternalApi implements AccountInternalApi {
 
     @Override
     public Account getAccountByKey(final String key, final InternalTenantContext context) throws AccountApiException {
-        final Account account = accountDao.getAccountByKey(key, context);
-        if (account == null) {
+        final AccountModelDao accountModelDao = accountDao.getAccountByKey(key, context);
+        if (accountModelDao == null) {
             throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_KEY, key);
         }
-        return account;
+        return new DefaultAccount(accountModelDao);
     }
 
     @Override

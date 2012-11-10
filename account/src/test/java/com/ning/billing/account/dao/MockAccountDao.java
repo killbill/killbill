@@ -20,7 +20,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.ning.billing.ErrorCode;
-import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.account.api.DefaultMutableAccountData;
@@ -36,7 +35,7 @@ import com.ning.billing.util.svcsapi.bus.InternalBus.EventBusException;
 
 import com.google.inject.Inject;
 
-public class MockAccountDao extends MockEntityDaoBase<Account, AccountApiException> implements AccountDao {
+public class MockAccountDao extends MockEntityDaoBase<AccountModelDao, AccountApiException> implements AccountDao {
 
     private final InternalBus eventBus;
 
@@ -46,7 +45,7 @@ public class MockAccountDao extends MockEntityDaoBase<Account, AccountApiExcepti
     }
 
     @Override
-    public void create(final Account account, final InternalCallContext context) throws AccountApiException {
+    public void create(final AccountModelDao account, final InternalCallContext context) throws AccountApiException {
         super.create(account, context);
 
         try {
@@ -60,8 +59,8 @@ public class MockAccountDao extends MockEntityDaoBase<Account, AccountApiExcepti
     }
 
     @Override
-    public void update(final Account account, final InternalCallContext context) {
-        final Account currentAccount = getById(account.getId(), context);
+    public void update(final AccountModelDao account, final InternalCallContext context) {
+        final AccountModelDao currentAccount = getById(account.getId(), context);
         super.update(account, context);
 
         final Long accountRecordId = getRecordId(account.getId(), context);
@@ -79,9 +78,9 @@ public class MockAccountDao extends MockEntityDaoBase<Account, AccountApiExcepti
     }
 
     @Override
-    public Account getAccountByKey(final String externalKey, final InternalTenantContext context) {
-        for (final Map<Long, Account> accountRow : entities.values()) {
-            final Account account = accountRow.values().iterator().next();
+    public AccountModelDao getAccountByKey(final String externalKey, final InternalTenantContext context) {
+        for (final Map<Long, AccountModelDao> accountRow : entities.values()) {
+            final AccountModelDao account = accountRow.values().iterator().next();
             if (account.getExternalKey().equals(externalKey)) {
                 return account;
             }
@@ -92,20 +91,21 @@ public class MockAccountDao extends MockEntityDaoBase<Account, AccountApiExcepti
 
     @Override
     public UUID getIdFromKey(final String externalKey, final InternalTenantContext context) {
-        final Account account = getAccountByKey(externalKey, context);
+        final AccountModelDao account = getAccountByKey(externalKey, context);
         return account == null ? null : account.getId();
     }
 
     @Override
     public void updatePaymentMethod(final UUID accountId, final UUID paymentMethodId, final InternalCallContext context) throws AccountApiException {
-        final Account currentAccount = getById(accountId, context);
-        if (currentAccount == null) {
+        final AccountModelDao currentAccountModelDao = getById(accountId, context);
+        if (currentAccountModelDao == null) {
             throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, accountId);
         }
 
+        final DefaultAccount currentAccount = new DefaultAccount(currentAccountModelDao);
         final DefaultMutableAccountData updatedAccount = new DefaultMutableAccountData(currentAccount);
         updatedAccount.setPaymentMethodId(paymentMethodId);
 
-        update(new DefaultAccount(updatedAccount), context);
+        update(new AccountModelDao(accountId, updatedAccount), context);
     }
 }

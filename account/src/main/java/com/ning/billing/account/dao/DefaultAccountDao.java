@@ -24,7 +24,6 @@ import org.slf4j.LoggerFactory;
 
 import com.ning.billing.BillingExceptionBase;
 import com.ning.billing.ErrorCode;
-import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.user.DefaultAccountChangeEvent;
 import com.ning.billing.account.api.user.DefaultAccountCreationEvent;
@@ -45,7 +44,7 @@ import com.ning.billing.util.svcsapi.bus.InternalBus.EventBusException;
 
 import com.google.inject.Inject;
 
-public class DefaultAccountDao extends EntityDaoBase<Account, AccountApiException> implements AccountDao {
+public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, AccountApiException> implements AccountDao {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultAccountDao.class);
 
@@ -60,12 +59,12 @@ public class DefaultAccountDao extends EntityDaoBase<Account, AccountApiExceptio
     }
 
     @Override
-    protected AccountApiException generateAlreadyExistsException(final Account account, final InternalCallContext context) {
+    protected AccountApiException generateAlreadyExistsException(final AccountModelDao account, final InternalCallContext context) {
         return new AccountApiException(ErrorCode.ACCOUNT_ALREADY_EXISTS, account.getExternalKey());
     }
 
     @Override
-    protected void postBusEventFromTransaction(final Account account, final Account savedAccount, final ChangeType changeType,
+    protected void postBusEventFromTransaction(final AccountModelDao account, final AccountModelDao savedAccount, final ChangeType changeType,
                                                final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final InternalCallContext context) throws BillingExceptionBase {
         // This is only called for the create call (see update below)
         switch (changeType) {
@@ -90,10 +89,10 @@ public class DefaultAccountDao extends EntityDaoBase<Account, AccountApiExceptio
     }
 
     @Override
-    public Account getAccountByKey(final String key, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Account>() {
+    public AccountModelDao getAccountByKey(final String key, final InternalTenantContext context) {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<AccountModelDao>() {
             @Override
-            public Account inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+            public AccountModelDao inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
                 return entitySqlDaoWrapperFactory.become(AccountSqlDao.class).getAccountByKey(key, context);
             }
         });
@@ -114,26 +113,24 @@ public class DefaultAccountDao extends EntityDaoBase<Account, AccountApiExceptio
     }
 
     @Override
-    public void update(final Account specifiedAccount, final InternalCallContext context) throws AccountApiException {
+    public void update(final AccountModelDao specifiedAccount, final InternalCallContext context) throws AccountApiException {
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
-            public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws InternalBus.EventBusException, AccountApiException {
+            public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws EventBusException, AccountApiException {
                 final AccountSqlDao transactional = entitySqlDaoWrapperFactory.become(AccountSqlDao.class);
 
                 final UUID accountId = specifiedAccount.getId();
-                final Account currentAccount = transactional.getById(accountId.toString(), context);
+                final AccountModelDao currentAccount = transactional.getById(accountId.toString(), context);
                 if (currentAccount == null) {
                     throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, accountId);
                 }
 
-                // Set unspecified (null) fields to their current values
-                final Account account = specifiedAccount.mergeWithDelegate(currentAccount);
-                transactional.update(account, context);
+                transactional.update(specifiedAccount, context);
 
                 final AccountChangeInternalEvent changeEvent = new DefaultAccountChangeEvent(accountId,
                                                                                              context.getUserToken(),
                                                                                              currentAccount,
-                                                                                             account,
+                                                                                             specifiedAccount,
                                                                                              context.getAccountRecordId(),
                                                                                              context.getTenantRecordId());
                 if (changeEvent.hasChanges()) {
@@ -153,17 +150,17 @@ public class DefaultAccountDao extends EntityDaoBase<Account, AccountApiExceptio
     public void updatePaymentMethod(final UUID accountId, final UUID paymentMethodId, final InternalCallContext context) throws AccountApiException {
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
-            public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws EntityPersistenceException, InternalBus.EventBusException {
+            public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws EntityPersistenceException, EventBusException {
                 final AccountSqlDao transactional = entitySqlDaoWrapperFactory.become(AccountSqlDao.class);
 
-                final Account currentAccount = transactional.getById(accountId.toString(), context);
+                final AccountModelDao currentAccount = transactional.getById(accountId.toString(), context);
                 if (currentAccount == null) {
                     throw new EntityPersistenceException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, accountId);
                 }
                 final String thePaymentMethodId = paymentMethodId != null ? paymentMethodId.toString() : null;
                 transactional.updatePaymentMethod(accountId.toString(), thePaymentMethodId, context);
 
-                final Account account = transactional.getById(accountId.toString(), context);
+                final AccountModelDao account = transactional.getById(accountId.toString(), context);
                 final AccountChangeInternalEvent changeEvent = new DefaultAccountChangeEvent(accountId, context.getUserToken(), currentAccount, account,
                                                                                              context.getAccountRecordId(), context.getTenantRecordId());
 

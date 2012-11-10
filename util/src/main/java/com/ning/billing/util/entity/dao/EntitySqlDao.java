@@ -29,7 +29,6 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 import com.ning.billing.util.dao.AuditSqlDao;
 import com.ning.billing.util.dao.HistorySqlDao;
 import com.ning.billing.util.entity.Entity;
@@ -56,7 +55,7 @@ public interface EntitySqlDao<T extends Entity> extends AuditSqlDao, HistorySqlD
                             @BindBean final InternalTenantContext context);
 
     @SqlQuery
-    public Long getHistoryRecordId(@Bind("recordId") final Long recordId,
+    public Long getHistoryRecordId(@Bind("targetRecordId") final Long targetRecordId,
                                    @BindBean final InternalTenantContext context);
 
     @SqlQuery

@@ -24,7 +24,6 @@ import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.entity.Entity;
-import com.ning.billing.util.entity.EntityPersistenceException;
 
 public abstract class EntityDaoBase<T extends Entity, U extends BillingExceptionBase> implements EntityDao<T, U> {
 
@@ -56,7 +55,7 @@ public abstract class EntityDaoBase<T extends Entity, U extends BillingException
     }
 
     protected void postBusEventFromTransaction(T entity, T savedEntity, ChangeType changeType, final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final InternalCallContext context)
-        throws BillingExceptionBase {
+            throws BillingExceptionBase {
     }
 
     protected abstract U generateAlreadyExistsException(final T entity, final InternalCallContext context);
