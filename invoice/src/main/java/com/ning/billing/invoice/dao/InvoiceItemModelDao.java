@@ -19,8 +19,6 @@ package com.ning.billing.invoice.dao;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
-
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 
@@ -45,7 +43,7 @@ public class InvoiceItemModelDao extends EntityBase {
     private final Currency currency;
     private final UUID linkedItemId;
 
-    public InvoiceItemModelDao(final UUID id, @Nullable final DateTime createdDate, final InvoiceItemType type, final UUID invoiceId,
+    public InvoiceItemModelDao(final UUID id, final DateTime createdDate, final InvoiceItemType type, final UUID invoiceId,
                                final UUID accountId, final UUID bundleId, final UUID subscriptionId, final String planName,
                                final String phaseName, final LocalDate startDate, final LocalDate endDate, final BigDecimal amount,
                                final BigDecimal rate, final Currency currency, final UUID linkedItemId) {
@@ -65,11 +63,11 @@ public class InvoiceItemModelDao extends EntityBase {
         this.linkedItemId = linkedItemId;
     }
 
-    public InvoiceItemModelDao(final InvoiceItemType type, final UUID invoiceId, final UUID accountId,
+    public InvoiceItemModelDao(final DateTime createdDate, final InvoiceItemType type, final UUID invoiceId, final UUID accountId,
                                final UUID bundleId, final UUID subscriptionId, final String planName,
                                final String phaseName, final LocalDate startDate, final LocalDate endDate, final BigDecimal amount,
                                final BigDecimal rate, final Currency currency, final UUID linkedItemId) {
-        this(UUID.randomUUID(), null, type, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName,
+        this(UUID.randomUUID(), createdDate, type, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName,
              startDate, endDate, amount, rate, currency, linkedItemId);
     }
 

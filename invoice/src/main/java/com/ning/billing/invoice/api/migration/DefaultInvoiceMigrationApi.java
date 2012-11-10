@@ -70,7 +70,7 @@ public class DefaultInvoiceMigrationApi implements InvoiceMigrationApi {
         }
 
         final InvoiceModelDao migrationInvoice = new InvoiceModelDao(accountId, clock.getUTCToday(), targetDate, currency, true);
-        final InvoiceItemModelDao migrationInvoiceItem = new InvoiceItemModelDao(InvoiceItemType.FIXED, migrationInvoice.getId(), accountId, null, null,
+        final InvoiceItemModelDao migrationInvoiceItem = new InvoiceItemModelDao(context.getCreatedDate(), InvoiceItemType.FIXED, migrationInvoice.getId(), accountId, null, null,
                                                                                  MigrationPlan.MIGRATION_PLAN_NAME, MigrationPlan.MIGRATION_PLAN_PHASE_NAME,
                                                                                  targetDate, null, balance, null, currency, null);
         dao.createInvoice(migrationInvoice, ImmutableList.<InvoiceItemModelDao>of(migrationInvoiceItem),

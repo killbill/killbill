@@ -339,7 +339,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, InvoiceApi
                     final BigDecimal maxBalanceToAdjust = (invoiceBalanceAfterRefund.compareTo(BigDecimal.ZERO) <= 0) ? BigDecimal.ZERO : invoiceBalanceAfterRefund;
                     final BigDecimal requestedPositiveAmountToAdjust = requestedPositiveAmount.compareTo(maxBalanceToAdjust) > 0 ? maxBalanceToAdjust : requestedPositiveAmount;
                     if (requestedPositiveAmountToAdjust.compareTo(BigDecimal.ZERO) > 0) {
-                        final InvoiceItemModelDao adjItem = new InvoiceItemModelDao(InvoiceItemType.REFUND_ADJ, invoice.getId(), invoice.getAccountId(),
+                        final InvoiceItemModelDao adjItem = new InvoiceItemModelDao(context.getCreatedDate(), InvoiceItemType.REFUND_ADJ, invoice.getId(), invoice.getAccountId(),
                                                                                     null, null, null, null, context.getCreatedDate().toLocalDate(), null,
                                                                                     requestedPositiveAmountToAdjust.negate(), null, invoice.getCurrency(), null);
                         transInvoiceItemDao.create(adjItem, context);
@@ -597,7 +597,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, InvoiceApi
                     invoiceIdForExternalCharge = invoiceForExternalCharge.getId();
                 }
 
-                final InvoiceItemModelDao externalCharge = new InvoiceItemModelDao(InvoiceItemType.EXTERNAL_CHARGE,
+                final InvoiceItemModelDao externalCharge = new InvoiceItemModelDao(context.getCreatedDate(), InvoiceItemType.EXTERNAL_CHARGE,
                                                                                    invoiceIdForExternalCharge, accountId,
                                                                                    bundleId, null, description, null,
                                                                                    effectiveDate, null, amount, null,
@@ -616,7 +616,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, InvoiceApi
                 final BigDecimal balance = InvoiceModelDaoHelper.getBalance(invoice);
                 if (accountCbaAvailable.compareTo(BigDecimal.ZERO) > 0 && balance.compareTo(BigDecimal.ZERO) > 0) {
                     final BigDecimal cbaAmountToConsume = accountCbaAvailable.compareTo(balance) > 0 ? balance.negate() : accountCbaAvailable.negate();
-                    final InvoiceItemModelDao cbaAdjItem = new InvoiceItemModelDao(InvoiceItemType.CBA_ADJ,
+                    final InvoiceItemModelDao cbaAdjItem = new InvoiceItemModelDao(context.getCreatedDate(), InvoiceItemType.CBA_ADJ,
                                                                                    invoice.getId(), invoice.getAccountId(),
                                                                                    null, null, null, null,
                                                                                    context.getCreatedDate().toLocalDate(),
@@ -660,7 +660,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, InvoiceApi
                 }
 
                 // Note! The amount is negated here!
-                final InvoiceItemModelDao credit = new InvoiceItemModelDao(InvoiceItemType.CREDIT_ADJ, invoiceIdForCredit,
+                final InvoiceItemModelDao credit = new InvoiceItemModelDao(context.getCreatedDate(), InvoiceItemType.CREDIT_ADJ, invoiceIdForCredit,
                                                                            accountId, null, null, null, null, effectiveDate,
                                                                            null, positiveCreditAmount.negate(), null,
                                                                            currency, null);
@@ -712,7 +712,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, InvoiceApi
                 }
 
                 // First, adjust the same invoice with the CBA amount to "delete"
-                final InvoiceItemModelDao cbaAdjItem = new InvoiceItemModelDao(InvoiceItemType.CBA_ADJ, invoice.getId(), invoice.getAccountId(),
+                final InvoiceItemModelDao cbaAdjItem = new InvoiceItemModelDao(context.getCreatedDate(), InvoiceItemType.CBA_ADJ, invoice.getId(), invoice.getAccountId(),
                                                                                null, null, null, null, context.getCreatedDate().toLocalDate(),
                                                                                null, cbaItem.getAmount().negate(), null, cbaItem.getCurrency(), cbaItem.getId());
                 invoiceItemSqlDao.create(cbaAdjItem, context);
@@ -770,7 +770,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, InvoiceApi
                         }
 
                         // Add the adjustment on that invoice
-                        final InvoiceItemModelDao nextCBAAdjItem = new InvoiceItemModelDao(InvoiceItemType.CBA_ADJ, invoiceFollowing.getId(),
+                        final InvoiceItemModelDao nextCBAAdjItem = new InvoiceItemModelDao(context.getCreatedDate(), InvoiceItemType.CBA_ADJ, invoiceFollowing.getId(),
                                                                                            invoice.getAccountId(), null, null, null, null,
                                                                                            context.getCreatedDate().toLocalDate(), null,
                                                                                            positiveCBAAdjItemAmount, null, cbaItem.getCurrency(), cbaItem.getId());
@@ -798,7 +798,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, InvoiceApi
      */
     private InvoiceItemModelDao createAdjustmentItem(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final UUID invoiceId, final UUID invoiceItemId,
                                                      final BigDecimal positiveAdjAmount, final Currency currency,
-                                                     final LocalDate effectiveDate, final InternalTenantContext context) throws InvoiceApiException {
+                                                     final LocalDate effectiveDate, final InternalCallContext context) throws InvoiceApiException {
         // First, retrieve the invoice item in question
         final InvoiceItemSqlDao invoiceItemSqlDao = entitySqlDaoWrapperFactory.become(InvoiceItemSqlDao.class);
         final InvoiceItemModelDao invoiceItemToBeAdjusted = invoiceItemSqlDao.getById(invoiceItemId.toString(), context);
@@ -818,7 +818,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, InvoiceApi
 
         // Finally, create the adjustment
         // Note! The amount is negated here!
-        return new InvoiceItemModelDao(InvoiceItemType.ITEM_ADJ, invoiceItemToBeAdjusted.getInvoiceId(), invoiceItemToBeAdjusted.getAccountId(),
+        return new InvoiceItemModelDao(context.getCreatedDate(), InvoiceItemType.ITEM_ADJ, invoiceItemToBeAdjusted.getInvoiceId(), invoiceItemToBeAdjusted.getAccountId(),
                                        null, null, null, null, effectiveDate, effectiveDate, amountToAdjust.negate(), null, currencyForAdjustment, invoiceItemToBeAdjusted.getId());
     }
 
@@ -859,7 +859,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, InvoiceApi
         final BigDecimal balance = InvoiceModelDaoHelper.getBalance(invoice);
         if (balance.compareTo(BigDecimal.ZERO) < 0) {
             final InvoiceItemSqlDao transInvoiceItemDao = entitySqlDaoWrapperFactory.become(InvoiceItemSqlDao.class);
-            final InvoiceItemModelDao cbaAdjItem = new InvoiceItemModelDao(InvoiceItemType.CBA_ADJ, invoice.getId(), invoice.getAccountId(),
+            final InvoiceItemModelDao cbaAdjItem = new InvoiceItemModelDao(context.getCreatedDate(), InvoiceItemType.CBA_ADJ, invoice.getId(), invoice.getAccountId(),
                                                                            null, null, null, null, context.getCreatedDate().toLocalDate(),
                                                                            null, balance.negate(), null, invoice.getCurrency(), null);
             transInvoiceItemDao.create(cbaAdjItem, context);
