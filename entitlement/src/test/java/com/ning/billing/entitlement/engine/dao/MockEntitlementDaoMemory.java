@@ -27,7 +27,6 @@ import java.util.TreeSet;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -108,7 +107,7 @@ public class MockEntitlementDaoMemory implements EntitlementDao {
     public List<SubscriptionBundle> getSubscriptionBundlesForKey(final String bundleKey, final InternalTenantContext context) {
         final List<SubscriptionBundle> results = new ArrayList<SubscriptionBundle>();
         for (final SubscriptionBundle cur : bundles) {
-            if (cur.getKey().equals(bundleKey)) {
+            if (cur.getExternalKey().equals(bundleKey)) {
                 results.add(cur);
             }
         }
@@ -128,7 +127,7 @@ public class MockEntitlementDaoMemory implements EntitlementDao {
     @Override
     public SubscriptionBundle getSubscriptionBundleFromAccountAndKey(final UUID accountId, final String bundleKey, final InternalTenantContext context) {
         for (final SubscriptionBundle cur : bundles) {
-            if (cur.getKey().equals(bundleKey) && cur.getAccountId().equals(accountId)) {
+            if (cur.getExternalKey().equals(bundleKey) && cur.getAccountId().equals(accountId)) {
                 return cur;
             }
         }
@@ -160,7 +159,7 @@ public class MockEntitlementDaoMemory implements EntitlementDao {
     public List<Subscription> getSubscriptionsForAccountAndKey(final SubscriptionFactory factory, final UUID accountId, final String bundleKey, final InternalTenantContext context) {
 
         for (final SubscriptionBundle cur : bundles) {
-            if (cur.getKey().equals(bundleKey) && cur.getAccountId().equals(bundleKey)) {
+            if (cur.getExternalKey().equals(bundleKey) && cur.getAccountId().equals(bundleKey)) {
                 return getSubscriptions(factory, cur.getId(), context);
             }
         }

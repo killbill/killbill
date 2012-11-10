@@ -128,7 +128,7 @@ public class BusinessTagDao {
          * Note: we store tags associated to bundles, not to subscriptions.
          */
         final String accountKey = account.getExternalKey();
-        final String externalKey = bundle.getKey();
+        final String externalKey = bundle.getExternalKey();
         subscriptionTransitionTagSqlDao.addTag(accountKey, bundleId.toString(), externalKey, name, context);
     }
 

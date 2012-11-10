@@ -74,7 +74,7 @@ public class MockEntitlementUserApi implements EntitlementUserApi {
             }
 
             @Override
-            public String getKey() {
+            public String getExternalKey() {
                 return key;
             }
 

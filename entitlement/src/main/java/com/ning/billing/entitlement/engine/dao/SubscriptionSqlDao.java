@@ -38,6 +38,7 @@ import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.Subscrip
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.engine.dao.SubscriptionSqlDao.SubscriptionMapper;
+import com.ning.billing.entitlement.engine.dao.model.SubscriptionModelDao;
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
@@ -50,19 +51,10 @@ import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 
 @EntitySqlDaoStringTemplate
 @RegisterMapper(SubscriptionMapper.class)
-public interface SubscriptionSqlDao extends EntitySqlDao<Subscription> {
-
-    @SqlUpdate
-    @Audited(ChangeType.INSERT)
-    public void insertSubscription(@BindBean SubscriptionData sub,
-                                   @BindBean final InternalCallContext context);
+public interface SubscriptionSqlDao extends EntitySqlDao<SubscriptionModelDao> {
 
     @SqlQuery
-    public Subscription getSubscriptionFromId(@Bind("id") String id,
-                                              @BindBean final InternalTenantContext context);
-
-    @SqlQuery
-    public List<Subscription> getSubscriptionsFromBundleId(@Bind("bundleId") String bundleId,
+    public List<SubscriptionModelDao> getSubscriptionsFromBundleId(@Bind("bundleId") String bundleId,
                                                            @BindBean final InternalTenantContext context);
 
     @SqlUpdate
@@ -83,10 +75,10 @@ public interface SubscriptionSqlDao extends EntitySqlDao<Subscription> {
                                 @BindBean final InternalCallContext context);
 
 
-    public static class SubscriptionMapper extends MapperBase implements ResultSetMapper<Subscription> {
+    public static class SubscriptionMapper extends MapperBase implements ResultSetMapper<SubscriptionModelDao> {
 
         @Override
-        public SubscriptionData map(final int arg0, final ResultSet r, final StatementContext ctx)
+        public SubscriptionModelDao map(final int arg0, final ResultSet r, final StatementContext ctx)
                 throws SQLException {
             final UUID id = UUID.fromString(r.getString("id"));
             final UUID bundleId = UUID.fromString(r.getString("bundle_id"));
@@ -98,17 +90,8 @@ public interface SubscriptionSqlDao extends EntitySqlDao<Subscription> {
             final long activeVersion = r.getLong("active_version");
             final DateTime createdDate = getDateTime(r, "created_date");
             final DateTime updatedDate = getDateTime(r, "updated_date");
-            return new SubscriptionData(new SubscriptionBuilder()
-                                                .setId(id)
-                                                .setBundleId(bundleId)
-                                                .setCategory(category)
-                                                .setCreatedDate(createdDate)
-                                                .setUpdatedDate(updatedDate)
-                                                .setBundleStartDate(bundleStartDate)
-                                                .setAlignStartDate(startDate)
-                                                .setActiveVersion(activeVersion)
-                                                .setChargedThroughDate(ctd)
-                                                .setPaidThroughDate(ptd));
+            return new SubscriptionModelDao(id, bundleId, category, startDate, bundleStartDate, activeVersion, ctd, ptd, createdDate, updatedDate);
+
         }
     }
 }

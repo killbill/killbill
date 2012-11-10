@@ -1,5 +1,6 @@
 group EventSqlDao: EntitySqlDao;
 
+tableName() ::= "subscription_events"
 
 tableFields(prefix) ::= <<
   <prefix> event_type
@@ -37,73 +38,64 @@ tableValues() ::= <<
 , :updated_date
 >>
 
-getEventById() ::= <<
-  select record_id, <fields()>
-  from subscription_events
-  where
-      id = :id
-  <AND_CHECK_TENANT()>
-  ;
->>
-
 
 updateVersion() ::= <<
-    update subscription_events
-    set
-      current_version = :currentVersion
-    where
-      id = :id
-    <AND_CHECK_TENANT()>
-    ;
+update <tableName()>
+set
+current_version = :currentVersion
+where
+id = :id
+<AND_CHECK_TENANT()>
+;
 >>
 
 unactiveEvent() ::= <<
-    update subscription_events
-    set
-      is_active = 0
-      , updated_by = :userName
-      , updated_date = :updatedDate
-    where
-      id = :id
-    <AND_CHECK_TENANT()>
-    ;
+update <tableName()>
+set
+is_active = 0
+, updated_by = :userName
+, updated_date = :updatedDate
+where
+id = :id
+<AND_CHECK_TENANT()>
+;
 >>
 
 reactiveEvent() ::= <<
-    update subscription_events
-    set
-      is_active = 1
-      , updated_by = :userName
-      , updated_date = :updatedDate
-    where
-      event_id = :eventId
-    <AND_CHECK_TENANT()>
-    ;
+update <tableName()>
+set
+is_active = 1
+, updated_by = :userName
+, updated_date = :updatedDate
+where
+event_id = :eventId
+<AND_CHECK_TENANT()>
+;
 >>
 
 
 getFutureActiveEventForSubscription() ::= <<
-    select record_id, <fields()>
-    from subscription_events
-    where
-      subscription_id = :subscriptionId
-      and is_active = 1
-      and effective_date > :now
-    <AND_CHECK_TENANT()>
-    order by
-      effective_date asc
-      , record_id asc
-    ;
+select <allTableFields()>
+from <tableName()>
+where
+subscription_id = :subscriptionId
+and is_active = 1
+and effective_date > :now
+<AND_CHECK_TENANT()>
+order by
+effective_date asc
+, record_id asc
+;
 >> 
 
 getEventsForSubscription() ::= <<
-    select record_id, <fields()>
-    from subscription_events
-    where
-      subscription_id = :subscriptionId
-    <AND_CHECK_TENANT()>
-    order by
-      effective_date asc
-      , record_id asc
-    ;      
+select <allTableFields()>
+from <tableName()>
+where
+subscription_id = :subscriptionId
+<AND_CHECK_TENANT()>
+order by
+effective_date asc
+, record_id asc
+;
 >>

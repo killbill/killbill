@@ -106,7 +106,7 @@ public class TestBlockingChecker extends JunctionTestSuite {
         Mockito.when(bundle.getAccountId()).thenReturn(accountId);
         final UUID bundleId = UUID.randomUUID();
         Mockito.when(bundle.getId()).thenReturn(bundleId);
-        Mockito.when(bundle.getKey()).thenReturn("key");
+        Mockito.when(bundle.getExternalKey()).thenReturn("key");
 
         subscription = Mockito.mock(Subscription.class);
         Mockito.when(subscription.getId()).thenReturn(UUID.randomUUID());
