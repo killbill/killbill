@@ -20,10 +20,10 @@ import java.util.concurrent.TimeUnit;
 
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.IDBI;
-import org.skife.jdbi.v2.sqlobject.customizers.RegisterArgumentFactory;
 import org.skife.jdbi.v2.tweak.transactions.SerializableTransactionRunner;
 
 import com.ning.billing.util.dao.DateTimeArgumentFactory;
+import com.ning.billing.util.dao.DateTimeZoneArgumentFactory;
 import com.ning.billing.util.dao.EnumArgumentFactory;
 import com.ning.billing.util.dao.UUIDArgumentFactory;
 
@@ -65,6 +65,7 @@ public class DBIProvider implements Provider<IDBI> {
         final BoneCPDataSource ds = new BoneCPDataSource(dbConfig);
         final DBI dbi = new DBI(ds);
         dbi.registerArgumentFactory(new UUIDArgumentFactory());
+        dbi.registerArgumentFactory(new DateTimeZoneArgumentFactory());
         dbi.registerArgumentFactory(new DateTimeArgumentFactory());
         dbi.registerArgumentFactory(new EnumArgumentFactory());
 

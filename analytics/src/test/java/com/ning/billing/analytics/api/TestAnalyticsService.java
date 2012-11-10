@@ -33,6 +33,7 @@ import org.testng.annotations.Test;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.api.user.DefaultAccountCreationEvent;
+import com.ning.billing.account.dao.AccountModelDao;
 import com.ning.billing.analytics.AnalyticsTestModule;
 import com.ning.billing.analytics.AnalyticsTestSuiteWithEmbeddedDB;
 import com.ning.billing.analytics.MockDuration;
@@ -219,7 +220,7 @@ public class TestAnalyticsService extends AnalyticsTestSuiteWithEmbeddedDB {
     }
 
     private void createAccountCreationEvent(final Account account) {
-        accountCreationNotification = new DefaultAccountCreationEvent(account, null, 1L, 1L);
+        accountCreationNotification = new DefaultAccountCreationEvent(new AccountModelDao(account.getId(), account), null, 1L, 1L);
     }
 
     private void createInvoiceAndPaymentCreationEvents(final Account account) {

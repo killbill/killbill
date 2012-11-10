@@ -25,16 +25,13 @@ import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.DefaultAccount;
-import com.ning.billing.account.api.DefaultBillCycleDay;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.dao.MapperBase;
 
-public class AccountMapper extends MapperBase implements ResultSetMapper<Account> {
+public class AccountModelDaoMapper extends MapperBase implements ResultSetMapper<AccountModelDao> {
 
     @Override
-    public Account map(final int index, final ResultSet result, final StatementContext context) throws SQLException {
+    public AccountModelDao map(final int index, final ResultSet result, final StatementContext context) throws SQLException {
         final UUID id = UUID.fromString(result.getString("id"));
         final String externalKey = result.getString("external_key");
         final String email = result.getString("email");
@@ -67,9 +64,9 @@ public class AccountMapper extends MapperBase implements ResultSetMapper<Account
 
         final DateTime createdDate = getDateTime(result, "created_date");
         final DateTime updatedDate = getDateTime(result, "updated_date");
-        return new DefaultAccount(id, createdDate, updatedDate, externalKey, email, name, firstNameLength, currency,
-                                  new DefaultBillCycleDay(billingCycleDayLocal, billingCycleDayUTC), paymentMethodId, timeZone, locale,
-                                  address1, address2, companyName, city, stateOrProvince, country, postalCode, phone,
-                                  isMigrated, isNotifiedForInvoices);
+        return new AccountModelDao(id, createdDate, updatedDate, externalKey, email, name, firstNameLength, currency,
+                                   billingCycleDayLocal, billingCycleDayUTC, paymentMethodId, timeZone, locale,
+                                   address1, address2, companyName, city, stateOrProvince, country, postalCode, phone,
+                                   isMigrated, isNotifiedForInvoices);
     }
 }

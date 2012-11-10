@@ -19,53 +19,39 @@ package com.ning.billing.account.dao;
 import java.util.UUID;
 
 import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 
-import com.ning.billing.account.api.Account;
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.callcontext.InternalTenantContextBinder;
-import com.ning.billing.util.dao.EntityHistory;
 import com.ning.billing.util.dao.UuidMapper;
 import com.ning.billing.util.entity.dao.Audited;
+import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
-import com.ning.billing.util.entity.dao.UpdatableEntitySqlDao;
 
 @EntitySqlDaoStringTemplate
-@RegisterMapper({UuidMapper.class, AccountMapper.class})
-public interface AccountSqlDao extends UpdatableEntitySqlDao<Account> {
+@RegisterMapper({UuidMapper.class, AccountModelDaoMapper.class})
+public interface AccountSqlDao extends EntitySqlDao<AccountModelDao> {
 
     @SqlQuery
-    public Account getAccountByKey(@Bind("externalKey") final String key,
-                                   @InternalTenantContextBinder final InternalTenantContext context);
+    public AccountModelDao getAccountByKey(@Bind("externalKey") final String key,
+                                           @BindBean final InternalTenantContext context);
 
     @SqlQuery
     public UUID getIdFromKey(@Bind("externalKey") final String key,
-                             @InternalTenantContextBinder final InternalTenantContext context);
+                             @BindBean final InternalTenantContext context);
 
-    @Override
-    @SqlUpdate
-    @Audited(ChangeType.INSERT)
-    public void create(@AccountBinder Account account,
-                       @InternalTenantContextBinder final InternalCallContext context);
-
-    @Override
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
-    public void update(@AccountBinder Account account,
-                       @InternalTenantContextBinder final InternalCallContext context);
+    public void update(@BindBean final AccountModelDao account,
+                       @BindBean final InternalCallContext context);
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
     public void updatePaymentMethod(@Bind("id") String accountId,
                                     @Bind("paymentMethodId") String paymentMethodId,
-                                    @InternalTenantContextBinder final InternalCallContext context);
-
-    @Override
-    @SqlUpdate
-    public void addHistoryFromTransaction(@AccountHistoryBinder final EntityHistory<Account> account,
-                                          @InternalTenantContextBinder final InternalCallContext context);
+                                    @BindBean final InternalCallContext context);
 }

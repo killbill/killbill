@@ -73,10 +73,12 @@ public class EntitySqlDaoWrapperInvocationHandler<T extends EntitySqlDao<U>, U e
                     final StatementContext statementContext = ((StatementException) t.getCause()).getStatementContext();
                     if (statementContext != null) {
                         final PreparedStatement statement = statementContext.getStatement();
-                        // Note: we rely on the JDBC driver to have a sane toString() method...
-                        errorDuringTransaction(t.getCause().getCause(), method, statement.toString());
-                        // Never reached
-                        return null;
+                        if (statement != null) {
+                            // Note: we rely on the JDBC driver to have a sane toString() method...
+                            errorDuringTransaction(t.getCause().getCause(), method, statement.toString());
+                            // Never reached
+                            return null;
+                        }
                     }
                 }
                 errorDuringTransaction(t.getCause().getCause(), method);

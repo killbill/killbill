@@ -94,8 +94,8 @@ public class TestStringTemplateInheritance extends UtilTestSuite {
                                                                               ";");
         Assert.assertEquals(kombucha.getInstanceOf("getHistoryRecordId").toString(), "select\n" +
                                                                                      "  max(t.record_id)\n" +
-                                                                                     "from kombucha t\n" +
-                                                                                     "where t.record_id = :recordId\n" +
+                                                                                     "from kombucha_history t\n" +
+                                                                                     "where t.target_record_id = :targetRecordId\n" +
                                                                                      "and t.tenant_record_id = :tenantRecordId\n" +
                                                                                      ";");
         Assert.assertEquals(kombucha.getInstanceOf("get").toString(), "select\n" +

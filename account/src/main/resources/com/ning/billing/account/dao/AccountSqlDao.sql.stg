@@ -1,7 +1,8 @@
-group AccountDaoSql: EntitySqlDao;
+group AccountSqlDao: EntitySqlDao;
 
-tableName() ::= "accounts";
-historyTableName() ::= "account_history";
+tableName() ::= "accounts"
+
+historyTableName() ::= "account_history"
 
 tableFields(prefix) ::= <<
   <prefix>external_key
@@ -54,7 +55,8 @@ tableValues() ::= <<
 , :createdBy
 , :createdDate
 , :updatedBy
- >>
+, :updatedDate
+>>
 
 /** The accounts table doesn't have an account_record_id column (it's the record_id) **/
 accountRecordIdFieldWithComma(prefix) ::= ""
@@ -67,7 +69,7 @@ update() ::= <<
         payment_method_id = :paymentMethodId, time_zone = :timeZone, locale = :locale,
         address1 = :address1, address2 = :address2, company_name = :companyName, city = :city, state_or_province = :stateOrProvince,
         country = :country, postal_code = :postalCode, phone = :phone,
-        is_notified_for_invoices = :isNotifiedForInvoices, updated_date = :updatedDate, updated_by = :userName
+        is_notified_for_invoices = :isNotifiedForInvoices, updated_date = :updatedDate, updated_by = :updatedBy
     WHERE id = :id <AND_CHECK_TENANT()>;
 >>
 
@@ -76,14 +78,14 @@ updatePaymentMethod() ::= <<
     UPDATE accounts
     SET payment_method_id = :paymentMethodId
     , updated_date = :updatedDate
-    , updated_by = :userName
+    , updated_by = :updatedBy
     WHERE id = :id <AND_CHECK_TENANT()>;
 >>
 
 
 
 getAccountByKey() ::= <<
-    select <accountFields()>
+    select <allTableFields()>
     from accounts
     where external_key = :externalKey <AND_CHECK_TENANT()>;
 >>

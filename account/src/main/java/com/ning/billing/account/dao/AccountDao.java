@@ -18,15 +18,14 @@ package com.ning.billing.account.dao;
 
 import java.util.UUID;
 
-import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.entity.dao.EntityDao;
 
-public interface AccountDao extends EntityDao<Account, AccountApiException> {
+public interface AccountDao extends EntityDao<AccountModelDao, AccountApiException> {
 
-    public Account getAccountByKey(String key, InternalTenantContext context);
+    public AccountModelDao getAccountByKey(String key, InternalTenantContext context);
 
     /**
      * @throws AccountApiException when externalKey is null
@@ -39,5 +38,5 @@ public interface AccountDao extends EntityDao<Account, AccountApiException> {
      */
     public void updatePaymentMethod(UUID accountId, UUID paymentMethodId, InternalCallContext context) throws AccountApiException;
 
-    public void update(Account account, InternalCallContext context) throws AccountApiException;
+    public void update(AccountModelDao account, InternalCallContext context) throws AccountApiException;
 }

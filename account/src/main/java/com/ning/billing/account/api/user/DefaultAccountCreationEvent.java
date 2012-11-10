@@ -20,10 +20,10 @@ import java.util.UUID;
 
 import org.joda.time.DateTimeZone;
 
-import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.account.api.DefaultBillCycleDay;
+import com.ning.billing.account.dao.AccountModelDao;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.events.AccountCreationInternalEvent;
 import com.ning.billing.util.events.DefaultBusInternalEvent;
@@ -48,7 +48,7 @@ public class DefaultAccountCreationEvent extends DefaultBusInternalEvent impleme
         this.data = data;
     }
 
-    public DefaultAccountCreationEvent(final Account data, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
+    public DefaultAccountCreationEvent(final AccountModelDao data, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
         super(userToken, accountRecordId, tenantRecordId);
         this.id = data.getId();
         this.data = new DefaultAccountData(data);
@@ -130,12 +130,12 @@ public class DefaultAccountCreationEvent extends DefaultBusInternalEvent impleme
         private final boolean isMigrated;
         private final boolean isNotifiedForInvoices;
 
-        public DefaultAccountData(final Account d) {
+        public DefaultAccountData(final AccountModelDao d) {
             this(d.getExternalKey() != null ? d.getExternalKey() : null,
                  d.getName(),
                  d.getFirstNameLength(),
                  d.getEmail(),
-                 new DefaultBillCycleDay(d.getBillCycleDay()),
+                 new DefaultBillCycleDay(d.getBillingCycleDayLocal(), d.getBillingCycleDayUTC()),
                  d.getCurrency() != null ? d.getCurrency().name() : null,
                  d.getPaymentMethodId(),
                  d.getTimeZone() != null ? d.getTimeZone().getID() : null,
@@ -148,8 +148,8 @@ public class DefaultAccountCreationEvent extends DefaultBusInternalEvent impleme
                  d.getPostalCode(),
                  d.getCountry(),
                  d.getPhone(),
-                 d.isMigrated(),
-                 d.isNotifiedForInvoices());
+                 d.getMigrated(),
+                 d.getIsNotifiedForInvoices());
         }
 
         @JsonCreator

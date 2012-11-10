@@ -25,7 +25,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.AccountTestSuite;
-import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.account.api.BillCycleDay;
@@ -34,6 +33,7 @@ import com.ning.billing.account.api.DefaultAccountEmail;
 import com.ning.billing.account.api.DefaultBillCycleDay;
 import com.ning.billing.account.dao.AccountDao;
 import com.ning.billing.account.dao.AccountEmailDao;
+import com.ning.billing.account.dao.AccountModelDao;
 import com.ning.billing.account.dao.MockAccountDao;
 import com.ning.billing.account.dao.MockAccountEmailDao;
 import com.ning.billing.catalog.api.Currency;
@@ -89,13 +89,14 @@ public class TestDefaultAccountUserApi extends AccountTestSuite {
 
         accountUserApi.createAccount(data, callContext);
 
-        final Account account = accountDao.getAccountByKey(externalKey, tenantContext);
+        final AccountModelDao account = accountDao.getAccountByKey(externalKey, tenantContext);
         Assert.assertEquals(account.getExternalKey(), externalKey);
         Assert.assertEquals(account.getEmail(), email);
         Assert.assertEquals(account.getName(), name);
         Assert.assertEquals(account.getFirstNameLength(), firstNameLength);
         Assert.assertEquals(account.getCurrency(), currency);
-        Assert.assertEquals(account.getBillCycleDay(), billCycleDay);
+        Assert.assertEquals(account.getBillingCycleDayLocal(), billCycleDay.getDayOfMonthLocal());
+        Assert.assertEquals(account.getBillingCycleDayUTC(), billCycleDay.getDayOfMonthUTC());
         Assert.assertEquals(account.getPaymentMethodId(), paymentMethodId);
         Assert.assertEquals(account.getTimeZone(), timeZone);
         Assert.assertEquals(account.getLocale(), locale);
@@ -107,8 +108,8 @@ public class TestDefaultAccountUserApi extends AccountTestSuite {
         Assert.assertEquals(account.getCountry(), country);
         Assert.assertEquals(account.getPostalCode(), postalCode);
         Assert.assertEquals(account.getPhone(), phone);
-        Assert.assertEquals(account.isMigrated(), isMigrated);
-        Assert.assertEquals(account.isNotifiedForInvoices(), isNotifiedForInvoices);
+        Assert.assertEquals(account.getMigrated(), isMigrated);
+        Assert.assertEquals(account.getIsNotifiedForInvoices(), isNotifiedForInvoices);
     }
 
     @Test(groups = "fast")

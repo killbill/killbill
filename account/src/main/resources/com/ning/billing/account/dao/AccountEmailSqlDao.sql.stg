@@ -1,5 +1,8 @@
-group account_emails: EntitySqlDao;
+group AccountEmailSqlDao: EntitySqlDao;
 
+tableName() ::= "account_emails"
+
+historyTableName() ::= "account_email_history"
 
 tableFields(prefix) ::= <<
   account_id
@@ -20,8 +23,6 @@ tableValues() ::= <<
 , :updatedDate
  >>
 
-historyTableName() ::= "account_email_history"
-
 getEmailByAccountId() ::= <<
 select
 <allTableFields()>
@@ -31,19 +32,7 @@ where account_id = :accountId
 ;
 >>
 
-updateFromTransaction() ::= <<
-    UPDATE account_emails
-    SET email = :email, updated_by = :userName, updated_date = :updatedDate
-    WHERE id = :id <AND_CHECK_TENANT()>;
->>
-
-deleteFromTransaction() ::= <<
+delete() ::= <<
     DELETE FROM account_emails
     WHERE id = :id <AND_CHECK_TENANT()>;
 >>
-
-
-getByAccountId() ::= <<
-    SELECT <fields()> FROM account_emails WHERE account_id = :accountId <AND_CHECK_TENANT()>;
->>
-

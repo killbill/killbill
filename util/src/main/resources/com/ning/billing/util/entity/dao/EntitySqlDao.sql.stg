@@ -159,11 +159,11 @@ where <idField("t.")> = :id
 ;
 >>
 
-getHistoryRecordId(recordId) ::= <<
+getHistoryRecordId(targetRecordId) ::= <<
 select
   max(<recordIdField("t.")>)
-from <tableName()> t
-where <recordIdField("t.")> = :recordId
+from <historyTableName()> t
+where <targetRecordIdField("t.")> = :targetRecordId
 <AND_CHECK_TENANT("t.")>
 ;
 >>
