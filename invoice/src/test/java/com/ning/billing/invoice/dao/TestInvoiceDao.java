@@ -130,8 +130,13 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
 
     @Test(groups = "slow")
     public void testRetrievalForNonExistentInvoiceId() throws InvoiceApiException {
-        invoiceDao.getById(UUID.randomUUID(), internalCallContext);
-        Assert.fail();
+        try {
+            invoiceDao.getById(UUID.randomUUID(), internalCallContext);
+            Assert.fail();
+        } catch (TransactionFailedException e) {
+            Assert.assertTrue(e.getCause() instanceof InvoiceApiException);
+            Assert.assertEquals(((InvoiceApiException) e.getCause()).getCode(), ErrorCode.INVOICE_NOT_FOUND.getCode());
+        }
     }
 
     @Test(groups = "slow")

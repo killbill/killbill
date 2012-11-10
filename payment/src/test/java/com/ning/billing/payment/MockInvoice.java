@@ -16,11 +16,13 @@
 
 package com.ning.billing.payment;
 
-import javax.annotation.Nullable;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
+
+import javax.annotation.Nullable;
 
 import org.joda.time.LocalDate;
 
@@ -64,7 +66,7 @@ public class MockInvoice extends EntityBase implements Invoice {
     }
 
     @Override
-    public boolean addInvoiceItems(final List<InvoiceItem> items) {
+    public boolean addInvoiceItems(final Collection<InvoiceItem> items) {
         return this.invoiceItems.addAll(items);
     }
 
@@ -95,7 +97,7 @@ public class MockInvoice extends EntityBase implements Invoice {
     }
 
     @Override
-    public boolean addPayments(final List<InvoicePayment> payments) {
+    public boolean addPayments(final Collection<InvoicePayment> payments) {
         return this.payments.addAll(payments);
     }
 

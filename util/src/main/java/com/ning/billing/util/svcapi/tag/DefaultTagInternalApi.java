@@ -16,7 +16,6 @@
 package com.ning.billing.util.svcapi.tag;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import javax.inject.Inject;
@@ -61,8 +60,8 @@ public class DefaultTagInternalApi implements TagInternalApi {
             throws TagApiException {
 
         final TagDefinition tagDefinition = tagDefinitionDao.getById(tagDefinitionId, context);
-        final Tag tag = tagDefinition.isControlTag() ? new DefaultControlTag(ControlTagType.getTypeFromId(tagDefinition.getId()), ObjectType.ACCOUNT, objectId, context.getCreatedDate()) :
-                        new DescriptiveTag(tagDefinition.getId(), ObjectType.ACCOUNT, objectId, context.getCreatedDate());
+        final Tag tag = tagDefinition.isControlTag() ? new DefaultControlTag(ControlTagType.getTypeFromId(tagDefinition.getId()), objectType, objectId, context.getCreatedDate()) :
+                        new DescriptiveTag(tagDefinition.getId(), objectType, objectId, context.getCreatedDate());
         tagDao.create(tag, context);
 
     }

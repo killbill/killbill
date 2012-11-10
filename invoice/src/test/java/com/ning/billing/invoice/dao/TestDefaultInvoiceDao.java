@@ -36,10 +36,6 @@ import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.svcsapi.bus.InternalBus;
-import com.ning.billing.util.tag.dao.MockTagDao;
-import com.ning.billing.util.tag.dao.MockTagDefinitionDao;
-import com.ning.billing.util.tag.dao.TagDao;
-import com.ning.billing.util.tag.dao.TagDefinitionDao;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -68,8 +64,6 @@ public class TestDefaultInvoiceDao extends InvoiceTestSuite {
         });
 
         final NextBillingDatePoster poster = Mockito.mock(NextBillingDatePoster.class);
-        final TagDefinitionDao tagDefinitionDao = new MockTagDefinitionDao();
-        final TagDao tagDao = new MockTagDao();
         dao = new DefaultInvoiceDao(idbi, poster, Mockito.mock(InternalBus.class));
     }
 
@@ -108,19 +102,5 @@ public class TestDefaultInvoiceDao extends InvoiceTestSuite {
 
         final BigDecimal actualRefundAmount = dao.computePositiveRefundAmount(invoicePayment, requestedAmount, invoiceItemIdsWithAmounts);
         Assert.assertEquals(actualRefundAmount, expectedRefundAmount);
-    }
-
-    @Test(groups = "fast")
-    public void testFindByNumber() throws Exception {
-        final Integer number = Integer.MAX_VALUE;
-        final InvoiceModelDao invoice = Mockito.mock(InvoiceModelDao.class);
-        Mockito.when(invoiceSqlDao.getByRecordId(number.longValue(), internalCallContext)).thenReturn(invoice);
-
-        Assert.assertEquals(dao.getByNumber(number, internalCallContext), invoice);
-        try {
-            dao.getByNumber(Integer.MIN_VALUE, internalCallContext);
-            Assert.fail();
-        } catch (InvoiceApiException e) {
-        }
     }
 }

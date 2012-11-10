@@ -18,6 +18,7 @@ package com.ning.billing.invoice.model;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -30,8 +31,13 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
+import com.ning.billing.invoice.dao.InvoiceItemModelDao;
 import com.ning.billing.invoice.dao.InvoiceModelDao;
+import com.ning.billing.invoice.dao.InvoicePaymentModelDao;
 import com.ning.billing.util.entity.EntityBase;
+
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
 
 public class DefaultInvoice extends EntityBase implements Invoice {
 
@@ -71,6 +77,18 @@ public class DefaultInvoice extends EntityBase implements Invoice {
         this(invoiceModelDao.getId(), invoiceModelDao.getCreatedDate(), invoiceModelDao.getAccountId(),
              invoiceModelDao.getInvoiceNumber(), invoiceModelDao.getInvoiceDate(), invoiceModelDao.getTargetDate(),
              invoiceModelDao.getCurrency(), invoiceModelDao.isMigrated());
+        addInvoiceItems(Collections2.transform(invoiceModelDao.getInvoiceItems(), new Function<InvoiceItemModelDao, InvoiceItem>() {
+            @Override
+            public InvoiceItem apply(final InvoiceItemModelDao input) {
+                return InvoiceItemFactory.fromModelDao(input);
+            }
+        }));
+        addPayments(Collections2.transform(invoiceModelDao.getInvoicePayments(), new Function<InvoicePaymentModelDao, InvoicePayment>() {
+            @Override
+            public InvoicePayment apply(final InvoicePaymentModelDao input) {
+                return new DefaultInvoicePayment(input);
+            }
+        }));
     }
 
     @Override
@@ -79,7 +97,7 @@ public class DefaultInvoice extends EntityBase implements Invoice {
     }
 
     @Override
-    public boolean addInvoiceItems(final List<InvoiceItem> items) {
+    public boolean addInvoiceItems(final Collection<InvoiceItem> items) {
         return this.invoiceItems.addAll(items);
     }
 
@@ -110,7 +128,7 @@ public class DefaultInvoice extends EntityBase implements Invoice {
     }
 
     @Override
-    public boolean addPayments(final List<InvoicePayment> payments) {
+    public boolean addPayments(final Collection<InvoicePayment> payments) {
         return this.payments.addAll(payments);
     }
 

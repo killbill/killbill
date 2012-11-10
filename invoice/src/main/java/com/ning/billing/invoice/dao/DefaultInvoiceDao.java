@@ -175,7 +175,9 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, InvoiceApi
 
                     // Create the invoice items
                     final InvoiceItemSqlDao transInvoiceItemSqlDao = entitySqlDaoWrapperFactory.become(InvoiceItemSqlDao.class);
-                    transInvoiceItemSqlDao.batchCreateFromTransaction(invoiceItems, context);
+                    for (final InvoiceItemModelDao invoiceItemModelDao : invoiceItems) {
+                        transInvoiceItemSqlDao.create(invoiceItemModelDao, context);
+                    }
 
                     // Add entries in the notification queue for recurring items
                     final List<InvoiceItemModelDao> recurringInvoiceItems = ImmutableList.<InvoiceItemModelDao>copyOf(Collections2.filter(invoiceItems, new Predicate<InvoiceItemModelDao>() {
@@ -817,7 +819,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, InvoiceApi
         // Finally, create the adjustment
         // Note! The amount is negated here!
         return new InvoiceItemModelDao(InvoiceItemType.ITEM_ADJ, invoiceItemToBeAdjusted.getInvoiceId(), invoiceItemToBeAdjusted.getAccountId(),
-                                       null, null, null, null, effectiveDate, null, amountToAdjust.negate(), null, currencyForAdjustment, invoiceItemToBeAdjusted.getId());
+                                       null, null, null, null, effectiveDate, effectiveDate, amountToAdjust.negate(), null, currencyForAdjustment, invoiceItemToBeAdjusted.getId());
     }
 
     /**

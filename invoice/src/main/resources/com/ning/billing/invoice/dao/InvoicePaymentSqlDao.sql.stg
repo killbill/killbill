@@ -69,7 +69,7 @@ getRemainingAmountPaid() ::= <<
 >>
 
 getAccountIdFromInvoicePaymentId() ::= <<
-    SELECT <tableName()>
+    SELECT i.account_id
     FROM <tableName()> ip
     INNER JOIN invoices i ON i.id = ip.invoice_id
     WHERE ip.id = :invoicePaymentId

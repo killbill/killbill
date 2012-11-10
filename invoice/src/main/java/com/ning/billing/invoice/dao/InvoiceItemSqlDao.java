@@ -27,7 +27,6 @@ import org.joda.time.LocalDate;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
-import org.skife.jdbi.v2.sqlobject.SqlBatch;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
@@ -65,11 +64,6 @@ public interface InvoiceItemSqlDao extends EntitySqlDao<InvoiceItemModelDao> {
     @Audited(ChangeType.INSERT)
     void create(@BindBean final InvoiceItemModelDao invoiceItem,
                 @BindBean final InternalCallContext context);
-
-    @SqlBatch(transactional = false)
-    @Audited(ChangeType.INSERT)
-    void batchCreateFromTransaction(@BindBean final List<InvoiceItemModelDao> items,
-                                    @BindBean final InternalCallContext context);
 
     public static class InvoiceItemModelDaoSqlDaoMapper extends MapperBase implements ResultSetMapper<InvoiceItemModelDao> {
 

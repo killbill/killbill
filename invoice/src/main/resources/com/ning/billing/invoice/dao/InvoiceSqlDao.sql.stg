@@ -24,7 +24,7 @@ tableValues(prefix) ::= <<
 >>
 
 extraTableFieldsWithComma(prefix) ::= <<
-, record_id as invoice_number
+, <prefix>record_id as invoice_number
 >>
 
 getInvoicesByAccount() ::= <<

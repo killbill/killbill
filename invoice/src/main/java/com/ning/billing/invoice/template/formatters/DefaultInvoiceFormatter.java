@@ -35,6 +35,7 @@ package com.ning.billing.invoice.template.formatters;
 import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
@@ -153,7 +154,7 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
     }
 
     @Override
-    public boolean addInvoiceItems(final List<InvoiceItem> items) {
+    public boolean addInvoiceItems(final Collection<InvoiceItem> items) {
         return invoice.addInvoiceItems(items);
     }
 
@@ -173,7 +174,7 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
     }
 
     @Override
-    public boolean addPayments(final List<InvoicePayment> payments) {
+    public boolean addPayments(final Collection<InvoicePayment> payments) {
         return invoice.addPayments(payments);
     }
 

@@ -28,6 +28,7 @@ import org.skife.jdbi.v2.exceptions.TransactionFailedException;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Test;
 
+import com.ning.billing.ErrorCode;
 import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.dbi.MysqlTestingHelper;
@@ -162,9 +163,15 @@ public class TestChargeBacks extends InvoiceTestSuiteWithEmbeddedDB {
         assertEquals(accountId, invoice.getAccountId());
     }
 
-    @Test(groups = "slow", expectedExceptions = InvoiceApiException.class)
+    @Test(groups = "slow")
     public void testGetAccountIdFromPaymentIdBadPaymentId() throws InvoiceApiException {
-        invoicePaymentApi.getAccountIdFromInvoicePaymentId(UUID.randomUUID(), callContext);
+        try {
+            invoicePaymentApi.getAccountIdFromInvoicePaymentId(UUID.randomUUID(), callContext);
+            fail();
+        } catch (TransactionFailedException e) {
+            assertTrue(e.getCause() instanceof InvoiceApiException);
+            assertEquals(((InvoiceApiException) e.getCause()).getCode(), ErrorCode.CHARGE_BACK_COULD_NOT_FIND_ACCOUNT_ID.getCode());
+        }
     }
 
     @Test(groups = "slow")
