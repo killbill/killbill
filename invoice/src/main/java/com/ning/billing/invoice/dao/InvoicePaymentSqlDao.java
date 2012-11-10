@@ -101,7 +101,7 @@ public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePaymentModelDa
             final UUID linkedInvoicePaymentId = getUUID(result, "linked_invoice_payment_id");
             final DateTime createdDate = getDateTime(result, "created_date");
 
-            return new InvoicePaymentModelDao(id, createdDate, type, paymentId, invoiceId, paymentDate,
+            return new InvoicePaymentModelDao(id, createdDate, type, invoiceId, paymentId, paymentDate,
                                               amount, currency, paymentCookieId, linkedInvoicePaymentId);
         }
     }

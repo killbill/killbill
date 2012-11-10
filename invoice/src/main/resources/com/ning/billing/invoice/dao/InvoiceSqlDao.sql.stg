@@ -28,7 +28,7 @@ extraTableFieldsWithComma(prefix) ::= <<
 >>
 
 getInvoicesByAccount() ::= <<
-  SELECT record_id as invoice_number, <allTableFields()>
+  SELECT <allTableFields()>
   FROM <tableName()>
   WHERE account_id = :accountId AND migrated = '0'
   <AND_CHECK_TENANT()>
@@ -36,7 +36,7 @@ getInvoicesByAccount() ::= <<
 >>
 
 getAllInvoicesByAccount() ::= <<
-  SELECT record_id as invoice_number, <allTableFields()>
+  SELECT <allTableFields()>
   FROM <tableName()>
   WHERE account_id = :accountId
   <AND_CHECK_TENANT()>
@@ -44,7 +44,7 @@ getAllInvoicesByAccount() ::= <<
 >>
 
 getInvoicesByAccountAfterDate() ::= <<
-  SELECT record_id as invoice_number, <allTableFields()>
+  SELECT <allTableFields()>
   FROM <tableName()>
   WHERE account_id = :accountId AND target_date >= :fromDate AND migrated = '0'
   <AND_CHECK_TENANT()>
@@ -52,7 +52,7 @@ getInvoicesByAccountAfterDate() ::= <<
 >>
 
 getInvoicesBySubscription() ::= <<
-  SELECT i.record_id as invoice_number, <allTableFields("i.")>
+  SELECT <allTableFields("i.")>
   FROM <tableName()> i
   JOIN invoice_items ii ON i.id = ii.invoice_id
   WHERE ii.subscription_id = :subscriptionId AND i.migrated = '0'
