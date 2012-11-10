@@ -49,6 +49,11 @@ public class PaymentMethodModelDao extends EntityBase {
         return pluginName;
     }
 
+    // TODO  Required for making the BindBeanFactory with Introspector work
+    public Boolean getIsActive() {
+        return isActive;
+    }
+
     public Boolean isActive() {
         return isActive;
     }

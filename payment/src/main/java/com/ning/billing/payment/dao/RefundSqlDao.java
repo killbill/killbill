@@ -46,19 +46,10 @@ import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 public interface RefundSqlDao extends EntitySqlDao<RefundModelDao> {
 
     @SqlUpdate
-    @Audited(ChangeType.INSERT)
-    void insertRefund(@BindBean final RefundModelDao refundInfo,
-                      @BindBean final InternalCallContext context);
-
-    @SqlUpdate
     @Audited(ChangeType.UPDATE)
     void updateStatus(@Bind("id") final String refundId,
                       @Bind("refundStatus") final String status,
                       @BindBean final InternalCallContext context);
-
-    @SqlQuery
-    RefundModelDao getRefund(@Bind("id") final String refundId,
-                             @BindBean final InternalTenantContext context);
 
     @SqlQuery
     List<RefundModelDao> getRefundsForPayment(@Bind("paymentId") final String paymentId,

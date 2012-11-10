@@ -239,7 +239,7 @@ public class RefundProcessor extends ProcessorBase {
         }
         return new DefaultRefund(result.getId(), result.getCreatedDate(), result.getUpdatedDate(),
                                  result.getPaymentId(), result.getAmount(), result.getCurrency(),
-                                 result.isAdjsuted(), result.getCreatedDate());
+                                 result.isAdjusted(), result.getCreatedDate());
     }
 
     public List<Refund> getAccountRefunds(final Account account, final InternalTenantContext context)
@@ -268,7 +268,7 @@ public class RefundProcessor extends ProcessorBase {
             public Refund apply(final RefundModelDao cur) {
                 return new DefaultRefund(cur.getId(), cur.getCreatedDate(), cur.getUpdatedDate(),
                                          cur.getPaymentId(), cur.getAmount(), cur.getCurrency(),
-                                         cur.isAdjsuted(), cur.getCreatedDate());
+                                         cur.isAdjusted(), cur.getCreatedDate());
             }
         }));
     }
@@ -304,7 +304,7 @@ public class RefundProcessor extends ProcessorBase {
                     try {
                         for (final RefundModelDao cur : refundsToBeFixed) {
                             // TODO - we currently don't save the items to be adjusted. If we crash, they won't be adjusted...
-                            invoiceApi.createRefund(cur.getPaymentId(), cur.getAmount(), cur.isAdjsuted(), ImmutableMap.<UUID, BigDecimal>of(), cur.getId(), context);
+                            invoiceApi.createRefund(cur.getPaymentId(), cur.getAmount(), cur.isAdjusted(), ImmutableMap.<UUID, BigDecimal>of(), cur.getId(), context);
                             paymentDao.updateRefundStatus(cur.getId(), RefundStatus.COMPLETED, context);
                         }
                     } catch (InvoiceApiException e) {

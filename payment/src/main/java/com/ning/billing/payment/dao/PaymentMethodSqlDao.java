@@ -45,12 +45,7 @@ import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 
 @EntitySqlDaoStringTemplate
 @RegisterMapper(PaymentMethodSqlDao.PaymentMethodDaoMapper.class)
-public interface PaymentMethodSqlDao extends EntitySqlDao<PaymentMethod> {
-
-    @SqlUpdate
-    @Audited(ChangeType.INSERT)
-    void insertPaymentMethod(@BindBean final PaymentMethodModelDao paymentMethod,
-                             @BindBean final InternalCallContext context);
+public interface PaymentMethodSqlDao extends EntitySqlDao<PaymentMethodModelDao> {
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
@@ -62,17 +57,13 @@ public interface PaymentMethodSqlDao extends EntitySqlDao<PaymentMethod> {
     void unmarkPaymentMethodAsDeleted(@Bind("id") final String paymentMethodId,
                                       @BindBean final InternalCallContext context);
 
-    @SqlQuery
-    PaymentMethodModelDao getPaymentMethod(@Bind("id") final String paymentMethodId,
-                                           @BindBean final InternalTenantContext context);
 
     @SqlQuery
     PaymentMethodModelDao getPaymentMethodIncludedDelete(@Bind("id") final String paymentMethodId,
                                                          @BindBean final InternalTenantContext context);
 
     @SqlQuery
-    List<PaymentMethodModelDao> getPaymentMethods(@Bind("accountId") final String accountId,
-                                                  @BindBean final InternalTenantContext context);
+    List<PaymentMethodModelDao> getByAccountId(@Bind("accountId") final String accountId, @BindBean final InternalCallContext context);
 
 
     public static class PaymentMethodDaoMapper extends MapperBase implements ResultSetMapper<PaymentMethodModelDao> {

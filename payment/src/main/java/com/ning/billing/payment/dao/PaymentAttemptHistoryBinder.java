@@ -46,7 +46,7 @@ public @interface PaymentAttemptHistoryBinder {
                     final PaymentAttemptModelDao attempt = history.getEntity();
                     q.bind("id", attempt.getId().toString());
                     q.bind("paymentId", attempt.getPaymentId().toString());
-                    q.bind("processingStatus", attempt.getPaymentStatus().toString());
+                    q.bind("processingStatus", attempt.getProcessingStatus().toString());
                     q.bind("gatewayErrorCode", attempt.getGatewayErrorCode() );
                     q.bind("gatewayErrorMsg", attempt.getGatewayErrorMsg() );
                     q.bind("requestedAmount", attempt.getRequestedAmount());

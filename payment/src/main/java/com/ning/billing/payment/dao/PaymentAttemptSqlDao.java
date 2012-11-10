@@ -46,12 +46,8 @@ import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 
 @EntitySqlDaoStringTemplate
 @RegisterMapper(PaymentAttemptSqlDao.PaymentAttemptModelDaoMapper.class)
-public interface PaymentAttemptSqlDao extends EntitySqlDao<PaymentAttempt> {
+public interface PaymentAttemptSqlDao extends EntitySqlDao<PaymentAttemptModelDao> {
 
-    @SqlUpdate
-    @Audited(ChangeType.INSERT)
-    void insertPaymentAttempt(@BindBean final PaymentAttemptModelDao attempt,
-                              @BindBean final InternalCallContext context);
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
@@ -62,12 +58,8 @@ public interface PaymentAttemptSqlDao extends EntitySqlDao<PaymentAttempt> {
                                     @BindBean final InternalCallContext context);
 
     @SqlQuery
-    PaymentAttemptModelDao getPaymentAttempt(@Bind("id") final String attemptId,
-                                             @BindBean final InternalTenantContext context);
-
-    @SqlQuery
-    List<PaymentAttemptModelDao> getPaymentAttempts(@Bind("paymentId") final String paymentId,
-                                                    @BindBean final InternalTenantContext context);
+    List<PaymentAttemptModelDao> getByPaymentId(@Bind("paymentId") final String paymentId,
+                                                @BindBean final InternalTenantContext context);
 
 
     public static class PaymentAttemptModelDaoMapper extends MapperBase implements ResultSetMapper<PaymentAttemptModelDao> {

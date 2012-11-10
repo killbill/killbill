@@ -51,10 +51,7 @@ import com.ning.billing.util.entity.dao.UpdatableEntitySqlDao;
 @RegisterMapper(PaymentSqlDao.PaymentModelDaoMapper.class)
 public interface PaymentSqlDao extends EntitySqlDao<PaymentModelDao> {
 
-    @SqlUpdate
-    @Audited(ChangeType.INSERT)
-    void insertPayment(@BindBean final PaymentModelDao paymentInfo,
-                       @BindBean final InternalCallContext context);
+
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
@@ -70,9 +67,6 @@ public interface PaymentSqlDao extends EntitySqlDao<PaymentModelDao> {
                              @Bind("amount") final BigDecimal amount,
                              @BindBean final InternalCallContext context);
 
-    @SqlQuery
-    PaymentModelDao getPayment(@Bind("id") final String paymentId,
-                               @BindBean final InternalTenantContext context);
 
     @SqlQuery
     PaymentModelDao getLastPaymentForAccountAndPaymentMethod(@Bind("accountId") final String accountId,
@@ -98,7 +92,7 @@ public interface PaymentSqlDao extends EntitySqlDao<PaymentModelDao> {
             final UUID accountId = getUUID(rs, "account_id");
             final UUID invoiceId = getUUID(rs, "invoice_id");
             final UUID paymentMethodId = getUUID(rs, "payment_method_id");
-            final Integer paymentNumber = rs.getInt("payment_number");
+            final Integer paymentNumber = rs.getInt("record_id");
             final BigDecimal amount = rs.getBigDecimal("amount");
             final DateTime effectiveDate = getDateTime(rs, "effective_date");
             final Currency currency = Currency.valueOf(rs.getString("currency"));
@@ -107,7 +101,7 @@ public interface PaymentSqlDao extends EntitySqlDao<PaymentModelDao> {
             final String extSecondPaymentRefId = rs.getString("ext_second_payment_ref_id");
             final DateTime createdDate = getDateTime(rs, "created_date");
             final DateTime updatedDate = getDateTime(rs, "updated_date");
-            return new PaymentModelDao(id, createdDate, updatedDate, accountId, invoiceId, paymentMethodId, paymentNumber,
+            return new PaymentModelDao(id, createdDate, updatedDate, accountId , invoiceId, paymentMethodId, paymentNumber,
                                        amount, currency, paymentStatus, effectiveDate, extFirstPaymentRefId, extSecondPaymentRefId);
         }
     }
