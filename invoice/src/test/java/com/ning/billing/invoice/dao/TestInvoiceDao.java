@@ -16,11 +16,6 @@
 
 package com.ning.billing.invoice.dao;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertNull;
-import static org.testng.Assert.assertTrue;
-
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -72,6 +67,11 @@ import com.ning.billing.util.svcapi.junction.BillingModeType;
 
 import com.google.common.collect.ImmutableMap;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
+import static org.testng.Assert.assertTrue;
+
 public class TestInvoiceDao extends InvoiceDaoTestBase {
 
     @Test(groups = "slow")
@@ -80,17 +80,17 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         final Invoice invoice = new DefaultInvoice(accountId, clock.getUTCToday(), clock.getUTCToday(), Currency.USD);
         final LocalDate invoiceDate = invoice.getInvoiceDate();
 
-        invoiceDao.create(invoice, invoice.getTargetDate().getDayOfMonth(), true, internalCallContext);
+        createInvoice(invoice, true, internalCallContext);
 
-        final List<Invoice> invoices = invoiceDao.getInvoicesByAccount(accountId, internalCallContext);
+        final List<InvoiceModelDao> invoices = invoiceDao.getInvoicesByAccount(accountId, internalCallContext);
         assertNotNull(invoices);
         assertEquals(invoices.size(), 1);
-        final Invoice thisInvoice = invoices.get(0);
+        final InvoiceModelDao thisInvoice = invoices.get(0);
         assertEquals(invoice.getAccountId(), accountId);
         assertTrue(thisInvoice.getInvoiceDate().compareTo(invoiceDate) == 0);
         assertEquals(thisInvoice.getCurrency(), Currency.USD);
-        assertEquals(thisInvoice.getNumberOfItems(), 0);
-        assertTrue(thisInvoice.getBalance().compareTo(BigDecimal.ZERO) == 0);
+        assertEquals(thisInvoice.getInvoiceItems().size(), 0);
+        assertTrue(InvoiceModelDaoHelper.getBalance(thisInvoice).compareTo(BigDecimal.ZERO) == 0);
     }
 
     @Test(groups = "slow")
@@ -106,37 +106,32 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
                                                                  new BigDecimal("21.00"), new BigDecimal("7.00"), Currency.USD);
 
         invoice.addInvoiceItem(invoiceItem);
-        invoiceDao.create(invoice, invoice.getTargetDate().getDayOfMonth(), true, internalCallContext);
+        createInvoice(invoice, true, internalCallContext);
 
-        final Invoice savedInvoice = invoiceDao.getById(invoiceId, internalCallContext);
+        final InvoiceModelDao savedInvoice = invoiceDao.getById(invoiceId, internalCallContext);
         assertNotNull(savedInvoice);
-        assertEquals(savedInvoice.getBalance().compareTo(new BigDecimal("21.00")), 0);
-        assertEquals(savedInvoice.getPaidAmount(), BigDecimal.ZERO);
+        assertEquals(InvoiceModelDaoHelper.getBalance(savedInvoice).compareTo(new BigDecimal("21.00")), 0);
+        assertEquals(InvoiceModelDaoHelper.getPaidAmount(savedInvoice), BigDecimal.ZERO);
         assertEquals(savedInvoice.getInvoiceItems().size(), 1);
 
         final BigDecimal paymentAmount = new BigDecimal("11.00");
         final UUID paymentId = UUID.randomUUID();
 
-        invoiceDao.notifyOfPayment(new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentId, invoiceId, clock.getUTCNow().plusDays(12), paymentAmount, Currency.USD), internalCallContext);
+        final DefaultInvoicePayment defaultInvoicePayment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentId, invoiceId, clock.getUTCNow().plusDays(12), paymentAmount, Currency.USD);
+        invoiceDao.notifyOfPayment(new InvoicePaymentModelDao(defaultInvoicePayment), internalCallContext);
 
-        final Invoice retrievedInvoice = invoiceDao.getById(invoiceId, internalCallContext);
+        final InvoiceModelDao retrievedInvoice = invoiceDao.getById(invoiceId, internalCallContext);
         assertNotNull(retrievedInvoice);
         assertEquals(retrievedInvoice.getInvoiceItems().size(), 1);
-        assertEquals(retrievedInvoice.getChargedAmount().compareTo(new BigDecimal("21.00")), 0);
-        assertEquals(retrievedInvoice.getBalance().compareTo(new BigDecimal("10.00")), 0);
-        assertEquals(retrievedInvoice.getPaidAmount().compareTo(new BigDecimal("11.00")), 0);
+        assertEquals(InvoiceModelDaoHelper.getChargedAmount(retrievedInvoice).compareTo(new BigDecimal("21.00")), 0);
+        assertEquals(InvoiceModelDaoHelper.getBalance(retrievedInvoice).compareTo(new BigDecimal("10.00")), 0);
+        assertEquals(InvoiceModelDaoHelper.getPaidAmount(retrievedInvoice).compareTo(new BigDecimal("11.00")), 0);
     }
 
     @Test(groups = "slow")
     public void testRetrievalForNonExistentInvoiceId() throws InvoiceApiException {
-        try {
-            invoiceDao.getById(UUID.randomUUID(), internalCallContext);
-            Assert.fail();
-        } catch (InvoiceApiException e) {
-            if (e.getCode() != ErrorCode.INVOICE_NOT_FOUND.getCode()) {
-                Assert.fail();
-            }
-        }
+        invoiceDao.getById(UUID.randomUUID(), internalCallContext);
+        Assert.fail();
     }
 
     @Test(groups = "slow")
@@ -157,7 +152,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
 
         // Create invoice 1 (subscriptions 1-4)
         final Invoice invoice1 = new DefaultInvoice(accountId, clock.getUTCToday(), targetDate, Currency.USD);
-        invoiceDao.create(invoice1, invoice1.getTargetDate().getDayOfMonth(), true, internalCallContext);
+        createInvoice(invoice1, true, internalCallContext);
 
         final UUID invoiceId1 = invoice1.getId();
 
@@ -166,23 +161,23 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
 
         final RecurringInvoiceItem item1 = new RecurringInvoiceItem(invoiceId1, accountId, bundleId, subscriptionId1, "test plan", "test A", startDate, endDate,
                                                                     rate1, rate1, Currency.USD);
-        invoiceItemSqlDao.create(item1, internalCallContext);
+        createInvoiceItem(item1, internalCallContext);
 
         final RecurringInvoiceItem item2 = new RecurringInvoiceItem(invoiceId1, accountId, bundleId, subscriptionId2, "test plan", "test B", startDate, endDate,
                                                                     rate2, rate2, Currency.USD);
-        invoiceItemSqlDao.create(item2, internalCallContext);
+        createInvoiceItem(item2, internalCallContext);
 
         final RecurringInvoiceItem item3 = new RecurringInvoiceItem(invoiceId1, accountId, bundleId, subscriptionId3, "test plan", "test C", startDate, endDate,
                                                                     rate3, rate3, Currency.USD);
-        invoiceItemSqlDao.create(item3, internalCallContext);
+        createInvoiceItem(item3, internalCallContext);
 
         final RecurringInvoiceItem item4 = new RecurringInvoiceItem(invoiceId1, accountId, bundleId, subscriptionId4, "test plan", "test D", startDate, endDate,
                                                                     rate4, rate4, Currency.USD);
-        invoiceItemSqlDao.create(item4, internalCallContext);
+        createInvoiceItem(item4, internalCallContext);
 
         // Create invoice 2 (subscriptions 1-3)
         final DefaultInvoice invoice2 = new DefaultInvoice(accountId, clock.getUTCToday(), targetDate, Currency.USD);
-        invoiceDao.create(invoice2, invoice2.getTargetDate().getDayOfMonth(), true, internalCallContext);
+        createInvoice(invoice2, true, internalCallContext);
 
         final UUID invoiceId2 = invoice2.getId();
 
@@ -191,27 +186,27 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
 
         final RecurringInvoiceItem item5 = new RecurringInvoiceItem(invoiceId2, accountId, bundleId, subscriptionId1, "test plan", "test phase A", startDate, endDate,
                                                                     rate1, rate1, Currency.USD);
-        invoiceItemSqlDao.create(item5, internalCallContext);
+        createInvoiceItem(item5, internalCallContext);
 
         final RecurringInvoiceItem item6 = new RecurringInvoiceItem(invoiceId2, accountId, bundleId, subscriptionId2, "test plan", "test phase B", startDate, endDate,
                                                                     rate2, rate2, Currency.USD);
-        invoiceItemSqlDao.create(item6, internalCallContext);
+        createInvoiceItem(item6, internalCallContext);
 
         final RecurringInvoiceItem item7 = new RecurringInvoiceItem(invoiceId2, accountId, bundleId, subscriptionId3, "test plan", "test phase C", startDate, endDate,
                                                                     rate3, rate3, Currency.USD);
-        invoiceItemSqlDao.create(item7, internalCallContext);
+        createInvoiceItem(item7, internalCallContext);
 
         // Check that each subscription returns the correct number of invoices
-        final List<Invoice> items1 = invoiceDao.getInvoicesBySubscription(subscriptionId1, internalCallContext);
+        final List<InvoiceModelDao> items1 = invoiceDao.getInvoicesBySubscription(subscriptionId1, internalCallContext);
         assertEquals(items1.size(), 2);
 
-        final List<Invoice> items2 = invoiceDao.getInvoicesBySubscription(subscriptionId2, internalCallContext);
+        final List<InvoiceModelDao> items2 = invoiceDao.getInvoicesBySubscription(subscriptionId2, internalCallContext);
         assertEquals(items2.size(), 2);
 
-        final List<Invoice> items3 = invoiceDao.getInvoicesBySubscription(subscriptionId3, internalCallContext);
+        final List<InvoiceModelDao> items3 = invoiceDao.getInvoicesBySubscription(subscriptionId3, internalCallContext);
         assertEquals(items3.size(), 2);
 
-        final List<Invoice> items4 = invoiceDao.getInvoicesBySubscription(subscriptionId4, internalCallContext);
+        final List<InvoiceModelDao> items4 = invoiceDao.getInvoicesBySubscription(subscriptionId4, internalCallContext);
         assertEquals(items4.size(), 1);
     }
 
@@ -233,7 +228,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
 
         // Create invoice 1 (subscriptions 1-4)
         final Invoice invoice1 = new DefaultInvoice(accountId, clock.getUTCToday(), targetDate, Currency.USD);
-        invoiceDao.create(invoice1, invoice1.getTargetDate().getDayOfMonth(), true, internalCallContext);
+        createInvoice(invoice1, true, internalCallContext);
 
         final UUID invoiceId1 = invoice1.getId();
 
@@ -242,23 +237,23 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
 
         final FixedPriceInvoiceItem item1 = new FixedPriceInvoiceItem(invoiceId1, accountId, bundleId, subscriptionId1, "test plan", "test A", startDate,
                                                                       rate1, Currency.USD);
-        invoiceItemSqlDao.create(item1, internalCallContext);
+        createInvoiceItem(item1, internalCallContext);
 
         final FixedPriceInvoiceItem item2 = new FixedPriceInvoiceItem(invoiceId1, accountId, bundleId, subscriptionId2, "test plan", "test B", startDate,
                                                                       rate2, Currency.USD);
-        invoiceItemSqlDao.create(item2, internalCallContext);
+        createInvoiceItem(item2, internalCallContext);
 
         final FixedPriceInvoiceItem item3 = new FixedPriceInvoiceItem(invoiceId1, accountId, bundleId, subscriptionId3, "test plan", "test C", startDate,
                                                                       rate3, Currency.USD);
-        invoiceItemSqlDao.create(item3, internalCallContext);
+        createInvoiceItem(item3, internalCallContext);
 
         final FixedPriceInvoiceItem item4 = new FixedPriceInvoiceItem(invoiceId1, accountId, bundleId, subscriptionId4, "test plan", "test D", startDate,
                                                                       rate4, Currency.USD);
-        invoiceItemSqlDao.create(item4, internalCallContext);
+        createInvoiceItem(item4, internalCallContext);
 
         // create invoice 2 (subscriptions 1-3)
         final DefaultInvoice invoice2 = new DefaultInvoice(accountId, clock.getUTCToday(), targetDate, Currency.USD);
-        invoiceDao.create(invoice2, invoice2.getTargetDate().getDayOfMonth(), true, internalCallContext);
+        createInvoice(invoice2, true, internalCallContext);
 
         final UUID invoiceId2 = invoice2.getId();
 
@@ -267,27 +262,27 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
 
         final FixedPriceInvoiceItem item5 = new FixedPriceInvoiceItem(invoiceId2, accountId, bundleId, subscriptionId1, "test plan", "test phase A", startDate,
                                                                       rate1, Currency.USD);
-        invoiceItemSqlDao.create(item5, internalCallContext);
+        createInvoiceItem(item5, internalCallContext);
 
         final FixedPriceInvoiceItem item6 = new FixedPriceInvoiceItem(invoiceId2, accountId, bundleId, subscriptionId2, "test plan", "test phase B", startDate,
                                                                       rate2, Currency.USD);
-        invoiceItemSqlDao.create(item6, internalCallContext);
+        createInvoiceItem(item6, internalCallContext);
 
         final FixedPriceInvoiceItem item7 = new FixedPriceInvoiceItem(invoiceId2, accountId, bundleId, subscriptionId3, "test plan", "test phase C", startDate,
                                                                       rate3, Currency.USD);
-        invoiceItemSqlDao.create(item7, internalCallContext);
+        createInvoiceItem(item7, internalCallContext);
 
         // check that each subscription returns the correct number of invoices
-        final List<Invoice> items1 = invoiceDao.getInvoicesBySubscription(subscriptionId1, internalCallContext);
+        final List<InvoiceModelDao> items1 = invoiceDao.getInvoicesBySubscription(subscriptionId1, internalCallContext);
         assertEquals(items1.size(), 2);
 
-        final List<Invoice> items2 = invoiceDao.getInvoicesBySubscription(subscriptionId2, internalCallContext);
+        final List<InvoiceModelDao> items2 = invoiceDao.getInvoicesBySubscription(subscriptionId2, internalCallContext);
         assertEquals(items2.size(), 2);
 
-        final List<Invoice> items3 = invoiceDao.getInvoicesBySubscription(subscriptionId3, internalCallContext);
+        final List<InvoiceModelDao> items3 = invoiceDao.getInvoicesBySubscription(subscriptionId3, internalCallContext);
         assertEquals(items3.size(), 2);
 
-        final List<Invoice> items4 = invoiceDao.getInvoicesBySubscription(subscriptionId4, internalCallContext);
+        final List<InvoiceModelDao> items4 = invoiceDao.getInvoicesBySubscription(subscriptionId4, internalCallContext);
         assertEquals(items4.size(), 1);
     }
 
@@ -309,7 +304,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
 
         // Create invoice 1 (subscriptions 1-4)
         final Invoice invoice1 = new DefaultInvoice(accountId, clock.getUTCToday(), targetDate, Currency.USD);
-        invoiceDao.create(invoice1, invoice1.getTargetDate().getDayOfMonth(), true, internalCallContext);
+        createInvoice(invoice1, true, internalCallContext);
 
         final UUID invoiceId1 = invoice1.getId();
 
@@ -318,39 +313,39 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
 
         final RecurringInvoiceItem recurringItem1 = new RecurringInvoiceItem(invoiceId1, accountId, bundleId, subscriptionId1, "test plan", "test A", startDate, endDate,
                                                                              rate1, rate1, Currency.USD);
-        invoiceItemSqlDao.create(recurringItem1, internalCallContext);
+        createInvoiceItem(recurringItem1, internalCallContext);
 
         final RecurringInvoiceItem recurringItem2 = new RecurringInvoiceItem(invoiceId1, accountId, bundleId, subscriptionId2, "test plan", "test B", startDate, endDate,
                                                                              rate2, rate2, Currency.USD);
-        invoiceItemSqlDao.create(recurringItem2, internalCallContext);
+        createInvoiceItem(recurringItem2, internalCallContext);
 
         final RecurringInvoiceItem recurringItem3 = new RecurringInvoiceItem(invoiceId1, accountId, bundleId, subscriptionId3, "test plan", "test C", startDate, endDate,
                                                                              rate3, rate3, Currency.USD);
-        invoiceItemSqlDao.create(recurringItem3, internalCallContext);
+        createInvoiceItem(recurringItem3, internalCallContext);
 
         final RecurringInvoiceItem recurringItem4 = new RecurringInvoiceItem(invoiceId1, accountId, bundleId, subscriptionId4, "test plan", "test D", startDate, endDate,
                                                                              rate4, rate4, Currency.USD);
-        invoiceItemSqlDao.create(recurringItem4, internalCallContext);
+        createInvoiceItem(recurringItem4, internalCallContext);
 
         final FixedPriceInvoiceItem fixedItem1 = new FixedPriceInvoiceItem(invoiceId1, accountId, bundleId, subscriptionId1, "test plan", "test A", startDate,
                                                                            rate1, Currency.USD);
-        invoiceItemSqlDao.create(fixedItem1, internalCallContext);
+        createInvoiceItem(fixedItem1, internalCallContext);
 
         final FixedPriceInvoiceItem fixedItem2 = new FixedPriceInvoiceItem(invoiceId1, accountId, bundleId, subscriptionId2, "test plan", "test B", startDate,
                                                                            rate2, Currency.USD);
-        invoiceItemSqlDao.create(fixedItem2, internalCallContext);
+        createInvoiceItem(fixedItem2, internalCallContext);
 
         final FixedPriceInvoiceItem fixedItem3 = new FixedPriceInvoiceItem(invoiceId1, accountId, bundleId, subscriptionId3, "test plan", "test C", startDate,
                                                                            rate3, Currency.USD);
-        invoiceItemSqlDao.create(fixedItem3, internalCallContext);
+        createInvoiceItem(fixedItem3, internalCallContext);
 
         final FixedPriceInvoiceItem fixedItem4 = new FixedPriceInvoiceItem(invoiceId1, accountId, bundleId, subscriptionId4, "test plan", "test D", startDate,
                                                                            rate4, Currency.USD);
-        invoiceItemSqlDao.create(fixedItem4, internalCallContext);
+        createInvoiceItem(fixedItem4, internalCallContext);
 
         // create invoice 2 (subscriptions 1-3)
         final DefaultInvoice invoice2 = new DefaultInvoice(accountId, clock.getUTCToday(), targetDate, Currency.USD);
-        invoiceDao.create(invoice2, invoice2.getTargetDate().getDayOfMonth(), true, internalCallContext);
+        createInvoice(invoice2, true, internalCallContext);
 
         final UUID invoiceId2 = invoice2.getId();
 
@@ -359,38 +354,38 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
 
         final RecurringInvoiceItem recurringItem5 = new RecurringInvoiceItem(invoiceId2, accountId, bundleId, subscriptionId1, "test plan", "test phase A", startDate, endDate,
                                                                              rate1, rate1, Currency.USD);
-        invoiceItemSqlDao.create(recurringItem5, internalCallContext);
+        createInvoiceItem(recurringItem5, internalCallContext);
 
         final RecurringInvoiceItem recurringItem6 = new RecurringInvoiceItem(invoiceId2, accountId, bundleId, subscriptionId2, "test plan", "test phase B", startDate, endDate,
                                                                              rate2, rate2, Currency.USD);
-        invoiceItemSqlDao.create(recurringItem6, internalCallContext);
+        createInvoiceItem(recurringItem6, internalCallContext);
 
         final RecurringInvoiceItem recurringItem7 = new RecurringInvoiceItem(invoiceId2, accountId, bundleId, subscriptionId3, "test plan", "test phase C", startDate, endDate,
                                                                              rate3, rate3, Currency.USD);
-        invoiceItemSqlDao.create(recurringItem7, internalCallContext);
+        createInvoiceItem(recurringItem7, internalCallContext);
         final FixedPriceInvoiceItem fixedItem5 = new FixedPriceInvoiceItem(invoiceId2, accountId, bundleId, subscriptionId1, "test plan", "test phase A", startDate,
                                                                            rate1, Currency.USD);
-        invoiceItemSqlDao.create(fixedItem5, internalCallContext);
+        createInvoiceItem(fixedItem5, internalCallContext);
 
         final FixedPriceInvoiceItem fixedItem6 = new FixedPriceInvoiceItem(invoiceId2, accountId, bundleId, subscriptionId2, "test plan", "test phase B", startDate,
                                                                            rate2, Currency.USD);
-        invoiceItemSqlDao.create(fixedItem6, internalCallContext);
+        createInvoiceItem(fixedItem6, internalCallContext);
 
         final FixedPriceInvoiceItem fixedItem7 = new FixedPriceInvoiceItem(invoiceId2, accountId, bundleId, subscriptionId3, "test plan", "test phase C", startDate,
                                                                            rate3, Currency.USD);
-        invoiceItemSqlDao.create(fixedItem7, internalCallContext);
+        createInvoiceItem(fixedItem7, internalCallContext);
 
         // check that each subscription returns the correct number of invoices
-        final List<Invoice> items1 = invoiceDao.getInvoicesBySubscription(subscriptionId1, internalCallContext);
+        final List<InvoiceModelDao> items1 = invoiceDao.getInvoicesBySubscription(subscriptionId1, internalCallContext);
         assertEquals(items1.size(), 4);
 
-        final List<Invoice> items2 = invoiceDao.getInvoicesBySubscription(subscriptionId2, internalCallContext);
+        final List<InvoiceModelDao> items2 = invoiceDao.getInvoicesBySubscription(subscriptionId2, internalCallContext);
         assertEquals(items2.size(), 4);
 
-        final List<Invoice> items3 = invoiceDao.getInvoicesBySubscription(subscriptionId3, internalCallContext);
+        final List<InvoiceModelDao> items3 = invoiceDao.getInvoicesBySubscription(subscriptionId3, internalCallContext);
         assertEquals(items3.size(), 4);
 
-        final List<Invoice> items4 = invoiceDao.getInvoicesBySubscription(subscriptionId4, internalCallContext);
+        final List<InvoiceModelDao> items4 = invoiceDao.getInvoicesBySubscription(subscriptionId4, internalCallContext);
         assertEquals(items4.size(), 2);
     }
 
@@ -399,13 +394,13 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         final UUID accountId = UUID.randomUUID();
         final LocalDate targetDate1 = new LocalDate(2011, 10, 6);
         final Invoice invoice1 = new DefaultInvoice(accountId, clock.getUTCToday(), targetDate1, Currency.USD);
-        invoiceDao.create(invoice1, invoice1.getTargetDate().getDayOfMonth(), true, internalCallContext);
+        createInvoice(invoice1, true, internalCallContext);
 
         final LocalDate targetDate2 = new LocalDate(2011, 12, 6);
         final Invoice invoice2 = new DefaultInvoice(accountId, clock.getUTCToday(), targetDate2, Currency.USD);
-        invoiceDao.create(invoice2, invoice2.getTargetDate().getDayOfMonth(), true, internalCallContext);
+        createInvoice(invoice2, true, internalCallContext);
 
-        List<Invoice> invoices;
+        List<InvoiceModelDao> invoices;
         invoices = invoiceDao.getInvoicesByAccount(accountId, new LocalDate(2011, 1, 1), internalCallContext);
         assertEquals(invoices.size(), 2);
 
@@ -428,7 +423,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         final UUID bundleId = UUID.randomUUID();
         final LocalDate targetDate1 = new LocalDate(2011, 10, 6);
         final Invoice invoice1 = new DefaultInvoice(accountId, clock.getUTCToday(), targetDate1, Currency.USD);
-        invoiceDao.create(invoice1, invoice1.getTargetDate().getDayOfMonth(), true, internalCallContext);
+        createInvoice(invoice1, true, internalCallContext);
 
         final LocalDate startDate = new LocalDate(2011, 3, 1);
         final LocalDate endDate = startDate.plusMonths(1);
@@ -438,15 +433,15 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
 
         final RecurringInvoiceItem item1 = new RecurringInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test plan", "test phase A", startDate,
                                                                     endDate, rate1, rate1, Currency.USD);
-        invoiceItemSqlDao.create(item1, internalCallContext);
+        createInvoiceItem(item1, internalCallContext);
 
         final RecurringInvoiceItem item2 = new RecurringInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test plan", "test phase B", startDate,
                                                                     endDate, rate2, rate2, Currency.USD);
-        invoiceItemSqlDao.create(item2, internalCallContext);
+        createInvoiceItem(item2, internalCallContext);
 
         final BigDecimal payment1 = new BigDecimal("48.0");
         final InvoicePayment payment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, UUID.randomUUID(), invoice1.getId(), new DateTime(), payment1, Currency.USD);
-        invoicePaymentDao.create(payment, internalCallContext);
+        createPayment(payment, internalCallContext);
 
         final BigDecimal balance = invoiceDao.getAccountBalance(accountId, internalCallContext);
         assertEquals(balance.compareTo(rate1.add(rate2).subtract(payment1)), 0);
@@ -458,7 +453,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         final UUID bundleId = UUID.randomUUID();
         final LocalDate targetDate1 = new LocalDate(2011, 10, 6);
         final Invoice invoice1 = new DefaultInvoice(accountId, clock.getUTCToday(), targetDate1, Currency.USD);
-        invoiceDao.create(invoice1, invoice1.getTargetDate().getDayOfMonth(), true, internalCallContext);
+        createInvoice(invoice1, true, internalCallContext);
 
         final LocalDate startDate = new LocalDate(2011, 3, 1);
         final LocalDate endDate = startDate.plusMonths(1);
@@ -467,10 +462,10 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
 
         final RecurringInvoiceItem item1 = new RecurringInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test plan", "test phase A", startDate,
                                                                     endDate, rate1, rate1, Currency.USD);
-        invoiceItemSqlDao.create(item1, internalCallContext);
+        createInvoiceItem(item1, internalCallContext);
 
         final CreditAdjInvoiceItem creditItem = new CreditAdjInvoiceItem(invoice1.getId(), accountId, new LocalDate(), rate1.negate(), Currency.USD);
-        invoiceItemSqlDao.create(creditItem, internalCallContext);
+        createInvoiceItem(creditItem, internalCallContext);
 
         final BigDecimal balance = invoiceDao.getAccountBalance(accountId, internalCallContext);
         assertEquals(balance.compareTo(BigDecimal.ZERO), 0);
@@ -482,7 +477,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         final UUID bundleId = UUID.randomUUID();
         final LocalDate targetDate1 = new LocalDate(2011, 10, 6);
         final Invoice invoice1 = new DefaultInvoice(accountId, clock.getUTCToday(), targetDate1, Currency.USD);
-        invoiceDao.create(invoice1, invoice1.getTargetDate().getDayOfMonth(), true, internalCallContext);
+        createInvoice(invoice1, true, internalCallContext);
 
         final LocalDate startDate = new LocalDate(2011, 3, 1);
         final LocalDate endDate = startDate.plusMonths(1);
@@ -492,11 +487,11 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
 
         final RecurringInvoiceItem item1 = new RecurringInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test plan", "test phase A", startDate, endDate,
                                                                     rate1, rate1, Currency.USD);
-        invoiceItemSqlDao.create(item1, internalCallContext);
+        createInvoiceItem(item1, internalCallContext);
 
         final RecurringInvoiceItem item2 = new RecurringInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test plan", "test phase B", startDate, endDate,
                                                                     rate2, rate2, Currency.USD);
-        invoiceItemSqlDao.create(item2, internalCallContext);
+        createInvoiceItem(item2, internalCallContext);
 
         final BigDecimal balance = invoiceDao.getAccountBalance(accountId, internalCallContext);
         assertEquals(balance.compareTo(rate1.add(rate2)), 0);
@@ -507,11 +502,11 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         final UUID accountId = UUID.randomUUID();
         final LocalDate targetDate1 = new LocalDate(2011, 10, 6);
         final Invoice invoice1 = new DefaultInvoice(accountId, clock.getUTCToday(), targetDate1, Currency.USD);
-        invoiceDao.create(invoice1, invoice1.getTargetDate().getDayOfMonth(), true, internalCallContext);
+        createInvoice(invoice1, true, internalCallContext);
 
         final BigDecimal payment1 = new BigDecimal("48.0");
         final InvoicePayment payment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, UUID.randomUUID(), invoice1.getId(), new DateTime(), payment1, Currency.USD);
-        invoicePaymentDao.create(payment, internalCallContext);
+        createPayment(payment, internalCallContext);
 
         final BigDecimal balance = invoiceDao.getAccountBalance(accountId, internalCallContext);
         assertEquals(balance.compareTo(BigDecimal.ZERO.subtract(payment1)), 0);
@@ -533,7 +528,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         final UUID bundleId = UUID.randomUUID();
         final LocalDate targetDate1 = new LocalDate(2011, 10, 6);
         final Invoice invoice1 = new DefaultInvoice(accountId, clock.getUTCToday(), targetDate1, Currency.USD);
-        invoiceDao.create(invoice1, invoice1.getTargetDate().getDayOfMonth(), true, internalCallContext);
+        createInvoice(invoice1, true, internalCallContext);
 
         final LocalDate startDate = new LocalDate(2011, 3, 1);
         final LocalDate endDate = startDate.plusMonths(1);
@@ -545,7 +540,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         // Recurring item
         final RecurringInvoiceItem item2 = new RecurringInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test plan", "test phase B", startDate,
                                                                     endDate, rate1, rate1, Currency.USD);
-        invoiceItemSqlDao.create(item2, internalCallContext);
+        createInvoiceItem(item2, internalCallContext);
         BigDecimal balance = invoiceDao.getAccountBalance(accountId, internalCallContext);
         assertEquals(balance.compareTo(new BigDecimal("20.00")), 0);
 
@@ -553,7 +548,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         final UUID paymentId = UUID.randomUUID();
         final BigDecimal payment1 = rate1;
         final InvoicePayment payment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentId, invoice1.getId(), new DateTime(), payment1, Currency.USD);
-        invoicePaymentDao.create(payment, internalCallContext);
+        createPayment(payment, internalCallContext);
         balance = invoiceDao.getAccountBalance(accountId, internalCallContext);
         assertEquals(balance.compareTo(new BigDecimal("0.00")), 0);
 
@@ -567,24 +562,24 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
     }
 
     @Test(groups = "slow")
-    private void testFullRefundWithRepairAndInvoiceItemAdjustment() throws InvoiceApiException {
+    public void testFullRefundWithRepairAndInvoiceItemAdjustment() throws InvoiceApiException, EntityPersistenceException {
         final BigDecimal refundAmount = new BigDecimal("20.00");
         testRefundWithRepairAndInvoiceItemAdjustmentInternal(refundAmount);
     }
 
     @Test(groups = "slow")
-    private void testPartialRefundWithRepairAndInvoiceItemAdjustment() throws InvoiceApiException {
+    public void testPartialRefundWithRepairAndInvoiceItemAdjustment() throws InvoiceApiException, EntityPersistenceException {
         final BigDecimal refundAmount = new BigDecimal("7.00");
         testRefundWithRepairAndInvoiceItemAdjustmentInternal(refundAmount);
     }
 
-    private void testRefundWithRepairAndInvoiceItemAdjustmentInternal(final BigDecimal refundAmount) throws InvoiceApiException {
+    private void testRefundWithRepairAndInvoiceItemAdjustmentInternal(final BigDecimal refundAmount) throws InvoiceApiException, EntityPersistenceException {
         final UUID accountId = UUID.randomUUID();
         final UUID bundleId = UUID.randomUUID();
         final LocalDate targetDate1 = new LocalDate(2011, 10, 6);
 
         final Invoice invoice = new DefaultInvoice(accountId, clock.getUTCToday(), targetDate1, Currency.USD);
-        invoiceDao.create(invoice, invoice.getTargetDate().getDayOfMonth(), true, internalCallContext);
+        createInvoice(invoice, true, internalCallContext);
 
         final LocalDate startDate = new LocalDate(2011, 3, 1);
         final LocalDate endDate = startDate.plusMonths(1);
@@ -594,7 +589,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         // Recurring item
         final RecurringInvoiceItem item2 = new RecurringInvoiceItem(invoice.getId(), accountId, bundleId, UUID.randomUUID(), "test plan", "test phase B", startDate,
                                                                     endDate, amount, amount, Currency.USD);
-        invoiceItemSqlDao.create(item2, internalCallContext);
+        createInvoiceItem(item2, internalCallContext);
         BigDecimal balance = invoiceDao.getAccountBalance(accountId, internalCallContext);
         assertEquals(balance.compareTo(new BigDecimal("20.00")), 0);
 
@@ -602,16 +597,16 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         final UUID paymentId = UUID.randomUUID();
         final BigDecimal payment1 = amount;
         final InvoicePayment payment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentId, invoice.getId(), new DateTime(), payment1, Currency.USD);
-        invoicePaymentDao.create(payment, internalCallContext);
+        createPayment(payment, internalCallContext);
         balance = invoiceDao.getAccountBalance(accountId, internalCallContext);
         assertEquals(balance.compareTo(new BigDecimal("0.00")), 0);
 
         // Repair the item (And add CBA item that should be generated)
         final InvoiceItem repairItem = new RepairAdjInvoiceItem(invoice.getId(), accountId, startDate, endDate, amount.negate(), Currency.USD, item2.getId());
-        invoiceItemSqlDao.create(repairItem, internalCallContext);
+        createInvoiceItem(repairItem, internalCallContext);
 
         final InvoiceItem cbaItem = new CreditBalanceAdjInvoiceItem(invoice.getId(), accountId, startDate, amount, Currency.USD);
-        invoiceItemSqlDao.create(cbaItem, internalCallContext);
+        createInvoiceItem(cbaItem, internalCallContext);
 
         Map<UUID, BigDecimal> itemAdjustment = new HashMap<UUID, BigDecimal>();
         itemAdjustment.put(item2.getId(), refundAmount);
@@ -621,7 +616,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
 
         final boolean partialRefund = refundAmount.compareTo(amount) < 0;
         final BigDecimal cba = invoiceDao.getAccountCBA(accountId, internalCallContext);
-        final Invoice savedInvoice = invoiceDao.getById(invoice.getId(), internalCallContext);
+        final InvoiceModelDao savedInvoice = invoiceDao.getById(invoice.getId(), internalCallContext);
         assertEquals(cba.compareTo(new BigDecimal("20.0")), 0);
         if (partialRefund) {
             // IB = 20 (rec) - 20 (repair) + 20 (cba) - (20 -7) = 7;  AB = IB - CBA = 7 - 20 = -13
@@ -666,7 +661,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         final UUID bundleId = UUID.randomUUID();
         final LocalDate targetDate1 = new LocalDate(2011, 10, 6);
         final Invoice invoice1 = new DefaultInvoice(accountId, clock.getUTCToday(), targetDate1, Currency.USD);
-        invoiceDao.create(invoice1, invoice1.getTargetDate().getDayOfMonth(), true, internalCallContext);
+        createInvoice(invoice1, true, internalCallContext);
 
         final LocalDate startDate = new LocalDate(2011, 3, 1);
         final LocalDate endDate = startDate.plusMonths(1);
@@ -678,7 +673,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         // Fixed Item
         final FixedPriceInvoiceItem item1 = new FixedPriceInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test plan", "test phase A", startDate,
                                                                       amount1, Currency.USD);
-        invoiceItemSqlDao.create(item1, internalCallContext);
+        createInvoiceItem(item1, internalCallContext);
 
         BigDecimal balance = invoiceDao.getAccountBalance(accountId, internalCallContext);
         assertEquals(balance.compareTo(new BigDecimal("5.00")), 0);
@@ -686,7 +681,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         // Recurring item
         final RecurringInvoiceItem item2 = new RecurringInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test plan", "test phase B", startDate,
                                                                     endDate, rate1, rate1, Currency.USD);
-        invoiceItemSqlDao.create(item2, internalCallContext);
+        createInvoiceItem(item2, internalCallContext);
         balance = invoiceDao.getAccountBalance(accountId, internalCallContext);
         assertEquals(balance.compareTo(new BigDecimal("25.00")), 0);
 
@@ -694,7 +689,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         final UUID paymentId = UUID.randomUUID();
         final BigDecimal payment1 = amount1.add(rate1);
         final InvoicePayment payment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentId, invoice1.getId(), new DateTime(), payment1, Currency.USD);
-        invoicePaymentDao.create(payment, internalCallContext);
+        createPayment(payment, internalCallContext);
         balance = invoiceDao.getAccountBalance(accountId, internalCallContext);
         assertEquals(balance.compareTo(new BigDecimal("0.00")), 0);
 
@@ -702,14 +697,14 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         final RepairAdjInvoiceItem item2Repair = new RepairAdjInvoiceItem(invoice1.getId(), accountId, startDate, endDate, rate1.negate(), Currency.USD, item2.getId());
         final RecurringInvoiceItem item2Replace = new RecurringInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test plan", "test phase B", startDate,
                                                                            endDate, rate2, rate2, Currency.USD);
-        invoiceItemSqlDao.create(item2Repair, internalCallContext);
-        invoiceItemSqlDao.create(item2Replace, internalCallContext);
+        createInvoiceItem(item2Repair, internalCallContext);
+        createInvoiceItem(item2Replace, internalCallContext);
         balance = invoiceDao.getAccountBalance(accountId, internalCallContext);
         assertEquals(balance.compareTo(new BigDecimal("-10.00")), 0);
 
         // CBA
         final CreditBalanceAdjInvoiceItem cbaItem = new CreditBalanceAdjInvoiceItem(invoice1.getId(), accountId, new LocalDate(), balance.negate(), Currency.USD);
-        invoiceItemSqlDao.create(cbaItem, internalCallContext);
+        createInvoiceItem(cbaItem, internalCallContext);
         balance = invoiceDao.getAccountBalance(accountId, internalCallContext);
         assertEquals(balance.compareTo(new BigDecimal("-10.00")), 0);
         BigDecimal cba = invoiceDao.getAccountCBA(accountId, internalCallContext);
@@ -731,20 +726,20 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         final UUID bundleId = UUID.randomUUID();
         final LocalDate targetDate1 = new LocalDate(2011, 10, 6);
         final Invoice invoice1 = new DefaultInvoice(accountId, clock.getUTCToday(), targetDate1, Currency.USD);
-        invoiceDao.create(invoice1, invoice1.getTargetDate().getDayOfMonth(), true, internalCallContext);
+        createInvoice(invoice1, true, internalCallContext);
 
         // CREATE INVOICE WITH A (just) CBA. Should not happen, but that does not matter for that test
         final CreditBalanceAdjInvoiceItem cbaItem = new CreditBalanceAdjInvoiceItem(invoice1.getId(), accountId, new LocalDate(), new BigDecimal("20.0"), Currency.USD);
-        invoiceItemSqlDao.create(cbaItem, internalCallContext);
+        createInvoiceItem(cbaItem, internalCallContext);
 
-        final InvoiceItem charge = invoiceDao.insertExternalCharge(accountId, null, bundleId, "bla", new BigDecimal("15.0"), clock.getUTCNow().toLocalDate(), Currency.USD, internalCallContext);
+        final InvoiceItemModelDao charge = invoiceDao.insertExternalCharge(accountId, null, bundleId, "bla", new BigDecimal("15.0"), clock.getUTCNow().toLocalDate(), Currency.USD, internalCallContext);
 
-        final Invoice newInvoice = invoiceDao.getById(charge.getInvoiceId(), internalCallContext);
-        List<InvoiceItem> items = newInvoice.getInvoiceItems();
+        final InvoiceModelDao newInvoice = invoiceDao.getById(charge.getInvoiceId(), internalCallContext);
+        List<InvoiceItemModelDao> items = newInvoice.getInvoiceItems();
         assertEquals(items.size(), 2);
-        for (InvoiceItem cur : items) {
+        for (InvoiceItemModelDao cur : items) {
             if (!cur.getId().equals(charge.getId())) {
-                assertEquals(cur.getInvoiceItemType(), InvoiceItemType.CBA_ADJ);
+                assertEquals(cur.getType(), InvoiceItemType.CBA_ADJ);
                 assertTrue(cur.getAmount().compareTo(new BigDecimal("-15.00")) == 0);
                 break;
             }
@@ -757,7 +752,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         final UUID bundleId = UUID.randomUUID();
         final LocalDate targetDate1 = new LocalDate(2011, 10, 6);
         final Invoice invoice1 = new DefaultInvoice(accountId, clock.getUTCToday(), targetDate1, Currency.USD);
-        invoiceDao.create(invoice1, invoice1.getTargetDate().getDayOfMonth(), true, internalCallContext);
+        createInvoice(invoice1, true, internalCallContext);
 
         final LocalDate startDate = new LocalDate(2011, 3, 1);
         final LocalDate endDate = startDate.plusMonths(1);
@@ -769,7 +764,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         // Fixed Item
         final FixedPriceInvoiceItem item1 = new FixedPriceInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test plan", "test phase A", startDate,
                                                                       amount1, Currency.USD);
-        invoiceItemSqlDao.create(item1, internalCallContext);
+        createInvoiceItem(item1, internalCallContext);
 
         BigDecimal balance = invoiceDao.getAccountBalance(accountId, internalCallContext);
         assertEquals(balance.compareTo(new BigDecimal("5.00")), 0);
@@ -777,14 +772,14 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         // Recurring item
         final RecurringInvoiceItem item2 = new RecurringInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test plan", "test phase B", startDate,
                                                                     endDate, rate1, rate1, Currency.USD);
-        invoiceItemSqlDao.create(item2, internalCallContext);
+        createInvoiceItem(item2, internalCallContext);
         balance = invoiceDao.getAccountBalance(accountId, internalCallContext);
         assertEquals(balance.compareTo(new BigDecimal("25.00")), 0);
 
         // Pay the whole thing
         final BigDecimal payment1 = amount1.add(rate1);
         final InvoicePayment payment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, UUID.randomUUID(), invoice1.getId(), new DateTime(), payment1, Currency.USD);
-        invoicePaymentDao.create(payment, internalCallContext);
+        createPayment(payment, internalCallContext);
         balance = invoiceDao.getAccountBalance(accountId, internalCallContext);
         assertEquals(balance.compareTo(new BigDecimal("0.00")), 0);
 
@@ -792,14 +787,14 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         final RepairAdjInvoiceItem item2Repair = new RepairAdjInvoiceItem(invoice1.getId(), accountId, startDate, endDate, rate1.negate(), Currency.USD, item2.getId());
         final RecurringInvoiceItem item2Replace = new RecurringInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test plan", "test phase B", startDate,
                                                                            endDate, rate2, rate2, Currency.USD);
-        invoiceItemSqlDao.create(item2Repair, internalCallContext);
-        invoiceItemSqlDao.create(item2Replace, internalCallContext);
+        createInvoiceItem(item2Repair, internalCallContext);
+        createInvoiceItem(item2Replace, internalCallContext);
         balance = invoiceDao.getAccountBalance(accountId, internalCallContext);
         assertEquals(balance.compareTo(new BigDecimal("-10.00")), 0);
 
         // CBA
         final CreditBalanceAdjInvoiceItem cbaItem = new CreditBalanceAdjInvoiceItem(invoice1.getId(), accountId, new LocalDate(), balance.negate(), Currency.USD);
-        invoiceItemSqlDao.create(cbaItem, internalCallContext);
+        createInvoiceItem(cbaItem, internalCallContext);
         balance = invoiceDao.getAccountBalance(accountId, internalCallContext);
         assertEquals(balance.compareTo(new BigDecimal("-10.00")), 0);
         BigDecimal cba = invoiceDao.getAccountCBA(accountId, internalCallContext);
@@ -807,9 +802,9 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
 
         // partial REFUND on the payment (along with CBA generated by the system)
         final InvoicePayment refund = new DefaultInvoicePayment(UUID.randomUUID(), InvoicePaymentType.ATTEMPT, UUID.randomUUID(), invoice1.getId(), new DateTime(), rate2.negate(), Currency.USD, null, payment.getId());
-        invoicePaymentDao.create(refund, internalCallContext);
+        createPayment(refund, internalCallContext);
         final CreditBalanceAdjInvoiceItem cbaItem2 = new CreditBalanceAdjInvoiceItem(invoice1.getId(), accountId, new LocalDate(), rate2.negate(), Currency.USD);
-        invoiceItemSqlDao.create(cbaItem2, internalCallContext);
+        createInvoiceItem(cbaItem2, internalCallContext);
 
         balance = invoiceDao.getAccountBalance(accountId, internalCallContext);
         assertEquals(balance.compareTo(BigDecimal.ZERO), 0);
@@ -819,11 +814,11 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         // NEXT RECURRING on invoice 2
 
         final Invoice invoice2 = new DefaultInvoice(accountId, clock.getUTCToday(), targetDate1.plusMonths(1), Currency.USD);
-        invoiceDao.create(invoice2, invoice2.getTargetDate().getDayOfMonth(), true, internalCallContext);
+        createInvoice(invoice2, true, internalCallContext);
 
         final RecurringInvoiceItem nextItem = new RecurringInvoiceItem(invoice2.getId(), accountId, bundleId, UUID.randomUUID(), "test plan", "test bla", startDate.plusMonths(1),
                                                                        endDate.plusMonths(1), rate2, rate2, Currency.USD);
-        invoiceItemSqlDao.create(nextItem, internalCallContext);
+        createInvoiceItem(nextItem, internalCallContext);
         balance = invoiceDao.getAccountBalance(accountId, internalCallContext);
         assertEquals(balance.compareTo(new BigDecimal("10.00")), 0);
         cba = invoiceDao.getAccountCBA(accountId, internalCallContext);
@@ -831,7 +826,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
 
         // FINALLY ISSUE A CREDIT ADJ
         final CreditAdjInvoiceItem creditItem = new CreditAdjInvoiceItem(invoice2.getId(), accountId, new LocalDate(), rate2.negate(), Currency.USD);
-        invoiceItemSqlDao.create(creditItem, internalCallContext);
+        createInvoiceItem(creditItem, internalCallContext);
         balance = invoiceDao.getAccountBalance(accountId, internalCallContext);
         assertEquals(balance.compareTo(new BigDecimal("0.00")), 0);
         cba = invoiceDao.getAccountCBA(accountId, internalCallContext);
@@ -850,20 +845,20 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
 
         invoiceDao.insertCredit(accountId, null, creditAmount, effectiveDate, Currency.USD, internalCallContext);
 
-        final List<Invoice> invoices = invoiceDao.getAllInvoicesByAccount(accountId, internalCallContext);
+        final List<InvoiceModelDao> invoices = invoiceDao.getAllInvoicesByAccount(accountId, internalCallContext);
         assertEquals(invoices.size(), 1);
 
-        final Invoice invoice = invoices.get(0);
-        assertTrue(invoice.getBalance().compareTo(BigDecimal.ZERO) == 0);
-        final List<InvoiceItem> invoiceItems = invoice.getInvoiceItems();
+        final InvoiceModelDao invoice = invoices.get(0);
+        assertTrue(InvoiceModelDaoHelper.getBalance(invoice).compareTo(BigDecimal.ZERO) == 0);
+        final List<InvoiceItemModelDao> invoiceItems = invoice.getInvoiceItems();
         assertEquals(invoiceItems.size(), 2);
         boolean foundCredit = false;
         boolean foundCBA = false;
-        for (final InvoiceItem cur : invoiceItems) {
-            if (cur.getInvoiceItemType() == InvoiceItemType.CREDIT_ADJ) {
+        for (final InvoiceItemModelDao cur : invoiceItems) {
+            if (cur.getType() == InvoiceItemType.CREDIT_ADJ) {
                 foundCredit = true;
                 assertTrue(cur.getAmount().compareTo(creditAmount.negate()) == 0);
-            } else if (cur.getInvoiceItemType() == InvoiceItemType.CBA_ADJ) {
+            } else if (cur.getType() == InvoiceItemType.CBA_ADJ) {
                 foundCBA = true;
                 assertTrue(cur.getAmount().compareTo(creditAmount) == 0);
             }
@@ -904,7 +899,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         // Create one invoice with a fixed invoice item
         final LocalDate targetDate = new LocalDate(2011, 2, 15);
         final Invoice invoice1 = new DefaultInvoice(accountId, clock.getUTCToday(), targetDate, Currency.USD);
-        invoiceDao.create(invoice1, invoice1.getTargetDate().getDayOfMonth(), true, internalCallContext);
+        createInvoice(invoice1, true, internalCallContext);
 
         final LocalDate startDate = new LocalDate(2011, 3, 1);
 
@@ -913,27 +908,27 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         // Fixed Item
         final FixedPriceInvoiceItem item1 = new FixedPriceInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test plan", "test phase A", startDate,
                                                                       amount1, Currency.USD);
-        invoiceItemSqlDao.create(item1, internalCallContext);
+        createInvoiceItem(item1, internalCallContext);
 
         // Create the credit item
         final LocalDate effectiveDate = new LocalDate(2011, 3, 1);
 
         invoiceDao.insertCredit(accountId, invoice1.getId(), creditAmount, effectiveDate, Currency.USD, internalCallContext);
 
-        final List<Invoice> invoices = invoiceDao.getAllInvoicesByAccount(accountId, internalCallContext);
+        final List<InvoiceModelDao> invoices = invoiceDao.getAllInvoicesByAccount(accountId, internalCallContext);
         assertEquals(invoices.size(), 1);
 
-        final Invoice invoice = invoices.get(0);
-        assertTrue(invoice.getBalance().compareTo(expectedBalance) == 0);
-        final List<InvoiceItem> invoiceItems = invoice.getInvoiceItems();
+        final InvoiceModelDao invoice = invoices.get(0);
+        assertTrue(InvoiceModelDaoHelper.getBalance(invoice).compareTo(expectedBalance) == 0);
+        final List<InvoiceItemModelDao> invoiceItems = invoice.getInvoiceItems();
         assertEquals(invoiceItems.size(), expectCBA ? 3 : 2);
         boolean foundCredit = false;
         boolean foundCBA = false;
-        for (final InvoiceItem cur : invoiceItems) {
-            if (cur.getInvoiceItemType() == InvoiceItemType.CREDIT_ADJ) {
+        for (final InvoiceItemModelDao cur : invoiceItems) {
+            if (cur.getType() == InvoiceItemType.CREDIT_ADJ) {
                 foundCredit = true;
                 assertTrue(cur.getAmount().compareTo(creditAmount.negate()) == 0);
-            } else if (cur.getInvoiceItemType() == InvoiceItemType.CBA_ADJ) {
+            } else if (cur.getType() == InvoiceItemType.CBA_ADJ) {
                 foundCBA = true;
             }
         }
@@ -947,7 +942,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         final UUID bundleId = UUID.randomUUID();
         final LocalDate targetDate1 = new LocalDate(2011, 10, 6);
         final Invoice invoice1 = new DefaultInvoice(accountId, clock.getUTCToday(), targetDate1, Currency.USD);
-        invoiceDao.create(invoice1, invoice1.getTargetDate().getDayOfMonth(), true, internalCallContext);
+        createInvoice(invoice1, true, internalCallContext);
 
         final LocalDate startDate = new LocalDate(2011, 3, 1);
         final LocalDate endDate = startDate.plusMonths(1);
@@ -957,14 +952,14 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
 
         final RecurringInvoiceItem item1 = new RecurringInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test plan", "test phase A", startDate, endDate,
                                                                     rate1, rate1, Currency.USD);
-        invoiceItemSqlDao.create(item1, internalCallContext);
+        createInvoiceItem(item1, internalCallContext);
 
         final RecurringInvoiceItem item2 = new RecurringInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test plan", "test phase B", startDate, endDate,
                                                                     rate2, rate2, Currency.USD);
-        invoiceItemSqlDao.create(item2, internalCallContext);
+        createInvoiceItem(item2, internalCallContext);
 
         LocalDate upToDate;
-        Collection<Invoice> invoices;
+        Collection<InvoiceModelDao> invoices;
 
         upToDate = new LocalDate(2011, 1, 1);
         invoices = invoiceDao.getUnpaidInvoicesByAccountId(accountId, upToDate, internalCallContext);
@@ -976,7 +971,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
 
         final LocalDate targetDate2 = new LocalDate(2011, 7, 1);
         final Invoice invoice2 = new DefaultInvoice(accountId, clock.getUTCToday(), targetDate2, Currency.USD);
-        invoiceDao.create(invoice2, invoice2.getTargetDate().getDayOfMonth(), true, internalCallContext);
+        createInvoice(invoice2, true, internalCallContext);
 
         final LocalDate startDate2 = new LocalDate(2011, 6, 1);
         final LocalDate endDate2 = startDate2.plusMonths(3);
@@ -985,7 +980,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
 
         final RecurringInvoiceItem item3 = new RecurringInvoiceItem(invoice2.getId(), accountId, bundleId, UUID.randomUUID(), "test plan", "test phase C", startDate2, endDate2,
                                                                     rate3, rate3, Currency.USD);
-        invoiceItemSqlDao.create(item3, internalCallContext);
+        createInvoiceItem(item3, internalCallContext);
 
         upToDate = new LocalDate(2011, 1, 1);
         invoices = invoiceDao.getUnpaidInvoicesByAccountId(accountId, upToDate, internalCallContext);
@@ -1046,14 +1041,14 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         assertEquals(invoice2.getBalance(), FIVE);
         invoiceList.add(invoice2);
 
-        invoiceDao.create(invoice1, invoice1.getTargetDate().getDayOfMonth(), true, internalCallContext);
-        invoiceDao.create(invoice2, invoice2.getTargetDate().getDayOfMonth(), true, internalCallContext);
+        createInvoice(invoice1, true, internalCallContext);
+        createInvoice(invoice2, true, internalCallContext);
 
-        final Invoice savedInvoice1 = invoiceDao.getById(invoice1.getId(), internalCallContext);
-        assertEquals(savedInvoice1.getBalance(), ZERO);
+        final InvoiceModelDao savedInvoice1 = invoiceDao.getById(invoice1.getId(), internalCallContext);
+        assertEquals(InvoiceModelDaoHelper.getBalance(savedInvoice1), ZERO);
 
-        final Invoice savedInvoice2 = invoiceDao.getById(invoice2.getId(), internalCallContext);
-        assertEquals(savedInvoice2.getBalance(), FIFTEEN);
+        final InvoiceModelDao savedInvoice2 = invoiceDao.getById(invoice2.getId(), internalCallContext);
+        assertEquals(InvoiceModelDaoHelper.getBalance(savedInvoice2), FIFTEEN);
     }
 
     @Test(groups = "slow")
@@ -1121,7 +1116,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         final List<Invoice> invoiceList = new ArrayList<Invoice>();
         invoiceList.add(invoice1);
 
-        //invoiceDao.create(invoice1, invoice1.getTargetDate().getDayOfMonth(), internalCallContext);
+        //createInvoice(invoice1, invoice1.getTargetDate().getDayOfMonth(), internalCallContext);
 
         final DateTime effectiveDate2 = effectiveDate1.plusDays(30);
         final BillingEvent event2 = createMockBillingEvent(null, subscription, effectiveDate2, plan, phase2, null,
@@ -1136,7 +1131,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
 
         invoiceList.add(invoice2);
 
-        //invoiceDao.create(invoice2, invoice2.getTargetDate().getDayOfMonth(), internalCallContext);
+        //createInvoice(invoice2, invoice2.getTargetDate().getDayOfMonth(), internalCallContext);
 
         final DateTime effectiveDate3 = effectiveDate2.plusMonths(1);
         final Invoice invoice3 = generator.generateInvoice(accountId, events, invoiceList, new LocalDate(effectiveDate3), DateTimeZone.UTC, Currency.USD);
@@ -1144,7 +1139,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         assertEquals(invoice3.getNumberOfItems(), 1);
         assertEquals(invoice3.getBalance().compareTo(cheapAmount), 0);
 
-        //invoiceDao.create(invoice3, invoice3.getTargetDate().getDayOfMonth(), internalCallContext);
+        //createInvoice(invoice3, invoice3.getTargetDate().getDayOfMonth(), internalCallContext);
     }
 
     @Test(groups = "slow")
@@ -1189,12 +1184,12 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         assertEquals(invoice.getNumberOfItems(), 2);
         assertEquals(invoice.getBalance().compareTo(cheapAmount), 0);
 
-        invoiceDao.create(invoice, invoice.getTargetDate().getDayOfMonth(), true, internalCallContext);
-        final Invoice savedInvoice = invoiceDao.getById(invoice.getId(), internalCallContext);
+        createInvoice(invoice, true, internalCallContext);
+        final InvoiceModelDao savedInvoice = invoiceDao.getById(invoice.getId(), internalCallContext);
 
         assertNotNull(savedInvoice);
-        assertEquals(savedInvoice.getNumberOfItems(), 2);
-        assertEquals(savedInvoice.getBalance().compareTo(cheapAmount), 0);
+        assertEquals(savedInvoice.getInvoiceItems().size(), 2);
+        assertEquals(InvoiceModelDaoHelper.getBalance(savedInvoice).compareTo(cheapAmount), 0);
     }
 
     @Test(groups = "slow")
@@ -1219,26 +1214,27 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
                                                                  recuringStartDate, recuringEndDate, new BigDecimal("239.00"), new BigDecimal("239.00"), Currency.USD);
 
         invoice.addInvoiceItem(invoiceItem);
-        invoiceDao.create(invoice, invoice.getTargetDate().getDayOfMonth(), true, internalCallContext);
+        createInvoice(invoice, true, internalCallContext);
 
         ((ClockMock) clock).addDays(1);
 
         // SECOND CREATE THE PAYMENT
         final BigDecimal paymentAmount = new BigDecimal("239.00");
         final UUID paymentId = UUID.randomUUID();
-        invoiceDao.notifyOfPayment(new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentId, invoiceId, clock.getUTCNow(), paymentAmount, Currency.USD), internalCallContext);
+        final DefaultInvoicePayment defaultInvoicePayment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentId, invoiceId, clock.getUTCNow(), paymentAmount, Currency.USD);
+        invoiceDao.notifyOfPayment(new InvoicePaymentModelDao(defaultInvoicePayment), internalCallContext);
 
         // AND THEN THIRD THE REFUND
         final Map<UUID, BigDecimal> invoiceItemMap = new HashMap<UUID, BigDecimal>();
         invoiceItemMap.put(invoiceItem.getId(), new BigDecimal("239.00"));
         invoiceDao.createRefund(paymentId, paymentAmount, true, invoiceItemMap, UUID.randomUUID(), internalCallContext);
 
-        final Invoice savedInvoice = invoiceDao.getById(invoiceId, internalCallContext);
+        final InvoiceModelDao savedInvoice = invoiceDao.getById(invoiceId, internalCallContext);
         assertNotNull(savedInvoice);
         assertEquals(savedInvoice.getInvoiceItems().size(), 2);
 
         final List<Invoice> invoices = new ArrayList<Invoice>();
-        invoices.add(savedInvoice);
+        invoices.add(new DefaultInvoice(savedInvoice));
 
         // NOW COMPUTE A DIFFERENT ITEM TO TRIGGER REPAIR
         final BillingEventSet events = new MockBillingEventSet();
@@ -1259,10 +1255,10 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
                                                            "new-event", 1L, SubscriptionTransitionType.CREATE);
         events.add(event1);
         final Invoice newInvoice = generator.generateInvoice(UUID.randomUUID(), events, invoices, targetDate, DateTimeZone.UTC, Currency.USD);
-        invoiceDao.create(newInvoice, newInvoice.getTargetDate().getDayOfMonth(), true, internalCallContext);
+        createInvoice(newInvoice, true, internalCallContext);
 
         // VERIFY THAT WE STILL HAVE ONLY 2 ITEMS, MENAING THERE WERE NO REPAIR AND NO CBA GENERATED
-        final Invoice firstInvoice = invoiceDao.getById(invoiceId, internalCallContext);
+        final Invoice firstInvoice = new DefaultInvoice(invoiceDao.getById(invoiceId, internalCallContext));
         assertNotNull(firstInvoice);
         assertEquals(firstInvoice.getInvoiceItems().size(), 2);
     }
@@ -1295,8 +1291,8 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
 
         Invoice invoice1 = generator.generateInvoice(UUID.randomUUID(), events, invoices, new LocalDate(targetDate1), DateTimeZone.UTC, Currency.USD);
         invoices.add(invoice1);
-        invoiceDao.create(invoice1, invoice1.getTargetDate().getDayOfMonth(), true, internalCallContext);
-        invoice1 = invoiceDao.getById(invoice1.getId(), internalCallContext);
+        createInvoice(invoice1, true, internalCallContext);
+        invoice1 = new DefaultInvoice(invoiceDao.getById(invoice1.getId(), internalCallContext));
         assertNotNull(invoice1.getInvoiceNumber());
 
         final BillingEvent event2 = createMockBillingEvent(null, subscription, targetDate1, plan, phase2, null,
@@ -1305,8 +1301,8 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
                                                            "testEvent2", 2L, SubscriptionTransitionType.CHANGE);
         events.add(event2);
         Invoice invoice2 = generator.generateInvoice(UUID.randomUUID(), events, invoices, new LocalDate(targetDate2), DateTimeZone.UTC, Currency.USD);
-        invoiceDao.create(invoice2, invoice2.getTargetDate().getDayOfMonth(), true, internalCallContext);
-        invoice2 = invoiceDao.getById(invoice2.getId(), internalCallContext);
+        createInvoice(invoice2, true, internalCallContext);
+        invoice2 = new DefaultInvoice(invoiceDao.getById(invoice2.getId(), internalCallContext));
         assertNotNull(invoice2.getInvoiceNumber());
     }
 
@@ -1330,10 +1326,10 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         final CreditBalanceAdjInvoiceItem creditBalanceAdjInvoiceItem1 = new CreditBalanceAdjInvoiceItem(fixedItem1.getInvoiceId(), fixedItem1.getAccountId(),
                                                                                                          fixedItem1.getStartDate(), fixedItem1.getAmount(),
                                                                                                          fixedItem1.getCurrency());
-        invoiceDao.create(invoice1, invoice1.getTargetDate().getDayOfMonth(), true, internalCallContext);
-        invoiceItemSqlDao.create(fixedItem1, internalCallContext);
-        invoiceItemSqlDao.create(repairAdjInvoiceItem, internalCallContext);
-        invoiceItemSqlDao.create(creditBalanceAdjInvoiceItem1, internalCallContext);
+        createInvoice(invoice1, true, internalCallContext);
+        createInvoiceItem(fixedItem1, internalCallContext);
+        createInvoiceItem(repairAdjInvoiceItem, internalCallContext);
+        createInvoiceItem(creditBalanceAdjInvoiceItem1, internalCallContext);
 
         // Verify scenario - no CBA should have been used
         Assert.assertEquals(invoiceDao.getAccountCBA(accountId, internalCallContext).doubleValue(), 10.00);
@@ -1367,10 +1363,10 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         final CreditBalanceAdjInvoiceItem creditBalanceAdjInvoiceItem1 = new CreditBalanceAdjInvoiceItem(fixedItem1.getInvoiceId(), fixedItem1.getAccountId(),
                                                                                                          fixedItem1.getStartDate(), fixedItem1.getAmount(),
                                                                                                          fixedItem1.getCurrency());
-        invoiceDao.create(invoice1, invoice1.getTargetDate().getDayOfMonth(), true, internalCallContext);
-        invoiceItemSqlDao.create(fixedItem1, internalCallContext);
-        invoiceItemSqlDao.create(repairAdjInvoiceItem, internalCallContext);
-        invoiceItemSqlDao.create(creditBalanceAdjInvoiceItem1, internalCallContext);
+        createInvoice(invoice1, true, internalCallContext);
+        createInvoiceItem(fixedItem1, internalCallContext);
+        createInvoiceItem(repairAdjInvoiceItem, internalCallContext);
+        createInvoiceItem(creditBalanceAdjInvoiceItem1, internalCallContext);
 
         // Create invoice 2
         // Scenario: single item
@@ -1382,9 +1378,9 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         final CreditBalanceAdjInvoiceItem creditBalanceAdjInvoiceItem2 = new CreditBalanceAdjInvoiceItem(fixedItem2.getInvoiceId(), fixedItem2.getAccountId(),
                                                                                                          fixedItem2.getStartDate(), fixedItem2.getAmount().negate(),
                                                                                                          fixedItem2.getCurrency());
-        invoiceDao.create(invoice2, invoice2.getTargetDate().getDayOfMonth(), true, internalCallContext);
-        invoiceItemSqlDao.create(fixedItem2, internalCallContext);
-        invoiceItemSqlDao.create(creditBalanceAdjInvoiceItem2, internalCallContext);
+        createInvoice(invoice2, true, internalCallContext);
+        createInvoiceItem(fixedItem2, internalCallContext);
+        createInvoiceItem(creditBalanceAdjInvoiceItem2, internalCallContext);
 
         // Verify scenario - half of the CBA should have been used
         Assert.assertEquals(invoiceDao.getAccountCBA(accountId, internalCallContext).doubleValue(), 5.00);
@@ -1420,10 +1416,10 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         final CreditBalanceAdjInvoiceItem creditBalanceAdjInvoiceItem1 = new CreditBalanceAdjInvoiceItem(fixedItem1.getInvoiceId(), fixedItem1.getAccountId(),
                                                                                                          fixedItem1.getStartDate(), fixedItem1.getAmount(),
                                                                                                          fixedItem1.getCurrency());
-        invoiceDao.create(invoice1, invoice1.getTargetDate().getDayOfMonth(), true, internalCallContext);
-        invoiceItemSqlDao.create(fixedItem1, internalCallContext);
-        invoiceItemSqlDao.create(repairAdjInvoiceItem, internalCallContext);
-        invoiceItemSqlDao.create(creditBalanceAdjInvoiceItem1, internalCallContext);
+        createInvoice(invoice1, true, internalCallContext);
+        createInvoiceItem(fixedItem1, internalCallContext);
+        createInvoiceItem(repairAdjInvoiceItem, internalCallContext);
+        createInvoiceItem(creditBalanceAdjInvoiceItem1, internalCallContext);
 
         // Create invoice 2
         // Scenario: single item
@@ -1435,9 +1431,9 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         final CreditBalanceAdjInvoiceItem creditBalanceAdjInvoiceItem2 = new CreditBalanceAdjInvoiceItem(fixedItem2.getInvoiceId(), fixedItem2.getAccountId(),
                                                                                                          fixedItem2.getStartDate(), fixedItem2.getAmount().negate(),
                                                                                                          fixedItem2.getCurrency());
-        invoiceDao.create(invoice2, invoice2.getTargetDate().getDayOfMonth(), true, internalCallContext);
-        invoiceItemSqlDao.create(fixedItem2, internalCallContext);
-        invoiceItemSqlDao.create(creditBalanceAdjInvoiceItem2, internalCallContext);
+        createInvoice(invoice2, true, internalCallContext);
+        createInvoiceItem(fixedItem2, internalCallContext);
+        createInvoiceItem(creditBalanceAdjInvoiceItem2, internalCallContext);
 
         // Create invoice 3
         // Scenario: single item
@@ -1449,9 +1445,9 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         final CreditBalanceAdjInvoiceItem creditBalanceAdjInvoiceItem3 = new CreditBalanceAdjInvoiceItem(fixedItem3.getInvoiceId(), fixedItem3.getAccountId(),
                                                                                                          fixedItem3.getStartDate(), fixedItem3.getAmount().negate(),
                                                                                                          fixedItem3.getCurrency());
-        invoiceDao.create(invoice3, invoice3.getTargetDate().getDayOfMonth(), true, internalCallContext);
-        invoiceItemSqlDao.create(fixedItem3, internalCallContext);
-        invoiceItemSqlDao.create(creditBalanceAdjInvoiceItem3, internalCallContext);
+        createInvoice(invoice3, true, internalCallContext);
+        createInvoiceItem(fixedItem3, internalCallContext);
+        createInvoiceItem(creditBalanceAdjInvoiceItem3, internalCallContext);
 
         // Verify scenario - all CBA should have been used
         Assert.assertEquals(invoiceDao.getAccountCBA(accountId, internalCallContext).doubleValue(), 0.00);
@@ -1485,9 +1481,9 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         final CreditBalanceAdjInvoiceItem creditBalanceAdjInvoiceItem1 = new CreditBalanceAdjInvoiceItem(invoice1.getId(), invoice1.getAccountId(),
                                                                                                          invoice1.getInvoiceDate(), repairAdjInvoiceItem.getAmount().negate(),
                                                                                                          invoice1.getCurrency());
-        invoiceDao.create(invoice1, invoice1.getTargetDate().getDayOfMonth(), true, internalCallContext);
-        invoiceItemSqlDao.create(repairAdjInvoiceItem, internalCallContext);
-        invoiceItemSqlDao.create(creditBalanceAdjInvoiceItem1, internalCallContext);
+        createInvoice(invoice1, true, internalCallContext);
+        createInvoiceItem(repairAdjInvoiceItem, internalCallContext);
+        createInvoiceItem(creditBalanceAdjInvoiceItem1, internalCallContext);
 
         // Verify scenario
         Assert.assertEquals(invoiceDao.getAccountCBA(accountId, internalCallContext).doubleValue(), 10.00);
@@ -1505,11 +1501,5 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         // Verify the result
         Assert.assertEquals(invoiceDao.getAccountCBA(accountId, internalCallContext).doubleValue(), 10.00);
         verifyInvoice(invoice1.getId(), 0.00, 10.00);
-    }
-
-    private void verifyInvoice(final UUID invoiceId, final double balance, final double cbaAmount) throws InvoiceApiException {
-        final Invoice invoice = invoiceDao.getById(invoiceId, internalCallContext);
-        Assert.assertEquals(invoice.getBalance().doubleValue(), balance);
-        Assert.assertEquals(invoice.getCBAAmount().doubleValue(), cbaAmount);
     }
 }

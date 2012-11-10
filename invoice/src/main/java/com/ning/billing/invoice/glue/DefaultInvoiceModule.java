@@ -18,6 +18,7 @@ package com.ning.billing.invoice.glue;
 
 import org.skife.config.ConfigurationObjectFactory;
 
+import com.ning.billing.invoice.dao.DefaultInvoiceDao;
 import com.ning.billing.util.config.InvoiceConfig;
 import com.ning.billing.glue.InvoiceModule;
 import com.ning.billing.invoice.InvoiceListener;
@@ -33,7 +34,6 @@ import com.ning.billing.invoice.api.invoice.DefaultInvoicePaymentApi;
 import com.ning.billing.invoice.api.migration.DefaultInvoiceMigrationApi;
 import com.ning.billing.invoice.api.svcs.DefaultInvoiceInternalApi;
 import com.ning.billing.invoice.api.user.DefaultInvoiceUserApi;
-import com.ning.billing.invoice.dao.AuditedInvoiceDao;
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.generator.DefaultInvoiceGenerator;
 import com.ning.billing.invoice.generator.InvoiceGenerator;
@@ -53,7 +53,7 @@ public class DefaultInvoiceModule extends AbstractModule implements InvoiceModul
     InvoiceConfig config;
 
     protected void installInvoiceDao() {
-        bind(InvoiceDao.class).to(AuditedInvoiceDao.class).asEagerSingleton();
+        bind(InvoiceDao.class).to(DefaultInvoiceDao.class).asEagerSingleton();
     }
 
     @Override

@@ -1,5 +1,6 @@
 group InvoiceDao: EntitySqlDao;
 
+tableName() ::= "invoices"
 
 tableFields(prefix) ::= <<
   <prefix>account_id
@@ -13,42 +14,42 @@ tableFields(prefix) ::= <<
 
 
 tableValues(prefix) ::= <<
-    <prefix>account_id
-    <prefix>invoice_date
-    <prefix>target_date
-    <prefix>currency
-    <prefix>migrated
-    <prefix>created_by
-    <prefix>created_date
+  accountId
+, :invoiceDate
+, :targetDate
+, :currency
+, :migrated
+, :createdBy
+, :createdDate
 >>
 
 getInvoicesByAccount() ::= <<
-  SELECT record_id as invoice_number, <invoiceFields()>
-  FROM invoices
+  SELECT record_id as invoice_number, <allTableFields()>
+  FROM <tableName()>
   WHERE account_id = :accountId AND migrated = '0'
   <AND_CHECK_TENANT()>
   ORDER BY target_date ASC;
 >>
 
 getAllInvoicesByAccount() ::= <<
-  SELECT record_id as invoice_number, <invoiceFields()>
-  FROM invoices
+  SELECT record_id as invoice_number, <allTableFields()>
+  FROM <tableName()>
   WHERE account_id = :accountId
   <AND_CHECK_TENANT()>
   ORDER BY target_date ASC;
 >>
 
 getInvoicesByAccountAfterDate() ::= <<
-  SELECT record_id as invoice_number, <invoiceFields()>
-  FROM invoices
+  SELECT record_id as invoice_number, <allTableFields()>
+  FROM <tableName()>
   WHERE account_id = :accountId AND target_date >= :fromDate AND migrated = '0'
   <AND_CHECK_TENANT()>
   ORDER BY target_date ASC;
 >>
 
 getInvoicesBySubscription() ::= <<
-  SELECT i.record_id as invoice_number, <invoiceFields("i.")>
-  FROM invoices i
+  SELECT i.record_id as invoice_number, <allTableFields("i.")>
+  FROM <tableName()> i
   JOIN invoice_items ii ON i.id = ii.invoice_id
   WHERE ii.subscription_id = :subscriptionId AND i.migrated = '0'
   <AND_CHECK_TENANT("i.")>
@@ -58,7 +59,7 @@ getInvoicesBySubscription() ::= <<
 
 getInvoiceIdByPaymentId() ::= <<
   SELECT i.id
-    FROM invoices i, invoice_payments ip
+    FROM <tableName()> i, invoice_payments ip
    WHERE ip.invoice_id = i.id
      AND ip.payment_id = :paymentId
    <AND_CHECK_TENANT("i.")>

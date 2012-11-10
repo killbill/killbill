@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.mockito.Mockito;
+import org.testng.Assert;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
@@ -29,13 +30,16 @@ import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.InvoicePayment.InvoicePaymentType;
+import com.ning.billing.invoice.dao.InvoiceItemModelDao;
 import com.ning.billing.invoice.dao.InvoiceItemSqlDao;
+import com.ning.billing.invoice.dao.InvoiceModelDao;
 import com.ning.billing.invoice.dao.InvoiceSqlDao;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.entity.EntityPersistenceException;
 import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
 
 import com.google.common.collect.ImmutableList;
@@ -76,12 +80,16 @@ public class InvoiceTestUtils {
         final List<InvoiceItem> invoiceItems = new ArrayList<InvoiceItem>();
         for (final BigDecimal amount : amounts) {
             final InvoiceItem invoiceItem = createInvoiceItem(clock, invoiceId, accountId, amount, currency);
-            invoiceItemSqlDao.create(invoiceItem, internalCallContextFactory.createInternalCallContext(accountId, callContext));
+            invoiceItemSqlDao.create(new InvoiceItemModelDao(invoiceItem), internalCallContextFactory.createInternalCallContext(accountId, callContext));
             invoiceItems.add(invoiceItem);
         }
         Mockito.when(invoice.getInvoiceItems()).thenReturn(invoiceItems);
 
-        invoiceSqlDao.create(invoice, internalCallContextFactory.createInternalCallContext(accountId, callContext));
+        try {
+            invoiceSqlDao.create(new InvoiceModelDao(invoice), internalCallContextFactory.createInternalCallContext(accountId, callContext));
+        } catch (EntityPersistenceException e) {
+            Assert.fail(e.getMessage());
+        }
 
         return invoice;
     }

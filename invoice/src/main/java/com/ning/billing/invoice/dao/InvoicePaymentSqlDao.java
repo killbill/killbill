@@ -28,14 +28,12 @@ import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlBatch;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
-import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.InvoicePayment.InvoicePaymentType;
-import com.ning.billing.invoice.model.DefaultInvoicePayment;
+import com.ning.billing.invoice.dao.InvoicePaymentSqlDao.InvoicePaymentModelDaoMapper;
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
@@ -46,48 +44,29 @@ import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 
 @EntitySqlDaoStringTemplate
-@RegisterMapper(InvoicePaymentSqlDao.InvoicePaymentMapper.class)
-public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePayment> {
+@RegisterMapper(InvoicePaymentModelDaoMapper.class)
+public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePaymentModelDao> {
 
     @SqlQuery
-    List<Long> getRecordIds(@Bind("invoiceId") final String invoiceId,
-                            @BindBean final InternalTenantContext context);
-
-    @SqlQuery
-    public InvoicePayment getByPaymentId(@Bind("paymentId") final String paymentId,
-                                         @BindBean final InternalTenantContext context);
-
-    @Override
-    @SqlQuery
-    public List<InvoicePayment> get(@BindBean final InternalTenantContext context);
-
-    @Override
-    @SqlUpdate
-    @Audited(ChangeType.INSERT)
-    public void create(@BindBean final InvoicePayment invoicePayment,
-                       @BindBean final InternalCallContext context);
+    public InvoicePaymentModelDao getByPaymentId(@Bind("paymentId") final String paymentId,
+                                                 @BindBean final InternalTenantContext context);
 
     @SqlBatch(transactional = false)
     @Audited(ChangeType.INSERT)
-    void batchCreateFromTransaction(@BindBean final List<InvoicePayment> items,
+    void batchCreateFromTransaction(@BindBean final List<InvoicePaymentModelDao> items,
                                     @BindBean final InternalCallContext context);
 
     @SqlQuery
-    public List<InvoicePayment> getPaymentsForInvoice(@Bind("invoiceId") final String invoiceId,
-                                                      @BindBean final InternalTenantContext context);
+    public List<InvoicePaymentModelDao> getPaymentsForInvoice(@Bind("invoiceId") final String invoiceId,
+                                                              @BindBean final InternalTenantContext context);
 
     @SqlQuery
-    List<InvoicePayment> getInvoicePayments(@Bind("paymentId") final String paymentId,
-                                            @BindBean final InternalTenantContext context);
+    List<InvoicePaymentModelDao> getInvoicePayments(@Bind("paymentId") final String paymentId,
+                                                    @BindBean final InternalTenantContext context);
 
     @SqlQuery
-    InvoicePayment getPaymentsForCookieId(@Bind("paymentCookieId") final String paymentCookieId,
-                                          @BindBean final InternalTenantContext context);
-
-    @SqlUpdate
-    @Audited(ChangeType.UPDATE)
-    void notifyOfPayment(@BindBean final InvoicePayment invoicePayment,
-                         @BindBean final InternalCallContext context);
+    InvoicePaymentModelDao getPaymentsForCookieId(@Bind("paymentCookieId") final String paymentCookieId,
+                                                  @BindBean final InternalTenantContext context);
 
     @SqlQuery
     BigDecimal getRemainingAmountPaid(@Bind("invoicePaymentId") final String invoicePaymentId,
@@ -99,17 +78,17 @@ public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePayment> {
                                           @BindBean final InternalTenantContext context);
 
     @SqlQuery
-    List<InvoicePayment> getChargeBacksByAccountId(@Bind("accountId") final String accountId,
-                                                   @BindBean final InternalTenantContext context);
+    List<InvoicePaymentModelDao> getChargeBacksByAccountId(@Bind("accountId") final String accountId,
+                                                           @BindBean final InternalTenantContext context);
 
     @SqlQuery
-    List<InvoicePayment> getChargebacksByPaymentId(@Bind("paymentId") final String paymentId,
-                                                   @BindBean final InternalTenantContext context);
+    List<InvoicePaymentModelDao> getChargebacksByPaymentId(@Bind("paymentId") final String paymentId,
+                                                           @BindBean final InternalTenantContext context);
 
-    public static class InvoicePaymentMapper extends MapperBase implements ResultSetMapper<InvoicePayment> {
+    public static class InvoicePaymentModelDaoMapper extends MapperBase implements ResultSetMapper<InvoicePaymentModelDao> {
 
         @Override
-        public InvoicePayment map(final int index, final ResultSet result, final StatementContext context) throws SQLException {
+        public InvoicePaymentModelDao map(final int index, final ResultSet result, final StatementContext context) throws SQLException {
             final UUID id = getUUID(result, "id");
             final InvoicePaymentType type = InvoicePaymentType.valueOf(result.getString("type"));
             final UUID paymentId = getUUID(result, "payment_id");
@@ -122,8 +101,8 @@ public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePayment> {
             final UUID linkedInvoicePaymentId = getUUID(result, "linked_invoice_payment_id");
             final DateTime createdDate = getDateTime(result, "created_date");
 
-            return new DefaultInvoicePayment(id, createdDate, type, paymentId, invoiceId, paymentDate,
-                                             amount, currency, paymentCookieId, linkedInvoicePaymentId);
+            return new InvoicePaymentModelDao(id, createdDate, type, paymentId, invoiceId, paymentDate,
+                                              amount, currency, paymentCookieId, linkedInvoicePaymentId);
         }
     }
 }

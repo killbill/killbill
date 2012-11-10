@@ -34,16 +34,8 @@ import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
-import com.ning.billing.invoice.model.CreditAdjInvoiceItem;
-import com.ning.billing.invoice.model.CreditBalanceAdjInvoiceItem;
-import com.ning.billing.invoice.model.ExternalChargeInvoiceItem;
-import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
-import com.ning.billing.invoice.model.ItemAdjInvoiceItem;
-import com.ning.billing.invoice.model.RecurringInvoiceItem;
-import com.ning.billing.invoice.model.RefundAdjInvoiceItem;
-import com.ning.billing.invoice.model.RepairAdjInvoiceItem;
+import com.ning.billing.invoice.dao.InvoiceItemSqlDao.InvoiceItemModelDaoSqlDaoMapper;
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
@@ -53,41 +45,36 @@ import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 
 @EntitySqlDaoStringTemplate
-@RegisterMapper(InvoiceItemSqlDao.InvoiceItemSqlDaoMapper.class)
-public interface InvoiceItemSqlDao extends EntitySqlDao<InvoiceItem> {
+@RegisterMapper(InvoiceItemModelDaoSqlDaoMapper.class)
+public interface InvoiceItemSqlDao extends EntitySqlDao<InvoiceItemModelDao> {
 
     @SqlQuery
-    List<Long> getRecordIds(@Bind("invoiceId") final String invoiceId,
-                            @BindBean final InternalTenantContext context);
+    List<InvoiceItemModelDao> getInvoiceItemsByInvoice(@Bind("invoiceId") final String invoiceId,
+                                                       @BindBean final InternalTenantContext context);
 
     @SqlQuery
-    List<InvoiceItem> getInvoiceItemsByInvoice(@Bind("invoiceId") final String invoiceId,
-                                               @BindBean final InternalTenantContext context);
+    List<InvoiceItemModelDao> getInvoiceItemsByAccount(@Bind("accountId") final String accountId,
+                                                       @BindBean final InternalTenantContext context);
 
     @SqlQuery
-    List<InvoiceItem> getInvoiceItemsByAccount(@Bind("accountId") final String accountId,
-                                               @BindBean final InternalTenantContext context);
-
-    @SqlQuery
-    List<InvoiceItem> getInvoiceItemsBySubscription(@Bind("subscriptionId") final String subscriptionId,
-                                                    @BindBean final InternalTenantContext context);
+    List<InvoiceItemModelDao> getInvoiceItemsBySubscription(@Bind("subscriptionId") final String subscriptionId,
+                                                            @BindBean final InternalTenantContext context);
 
     @Override
     @SqlUpdate
     @Audited(ChangeType.INSERT)
-    void create(@BindBean final InvoiceItem invoiceItem,
+    void create(@BindBean final InvoiceItemModelDao invoiceItem,
                 @BindBean final InternalCallContext context);
 
     @SqlBatch(transactional = false)
     @Audited(ChangeType.INSERT)
-    void batchCreateFromTransaction(@BindBean final List<InvoiceItem> items,
+    void batchCreateFromTransaction(@BindBean final List<InvoiceItemModelDao> items,
                                     @BindBean final InternalCallContext context);
 
-
-    public static class InvoiceItemSqlDaoMapper extends MapperBase implements ResultSetMapper<InvoiceItem> {
+    public static class InvoiceItemModelDaoSqlDaoMapper extends MapperBase implements ResultSetMapper<InvoiceItemModelDao> {
 
         @Override
-        public InvoiceItem map(final int index, final ResultSet result, final StatementContext context) throws SQLException {
+        public InvoiceItemModelDao map(final int index, final ResultSet result, final StatementContext context) throws SQLException {
             final UUID id = getUUID(result, "id");
             final InvoiceItemType type = InvoiceItemType.valueOf(result.getString("type"));
             final UUID invoiceId = getUUID(result, "invoice_id");
@@ -104,36 +91,8 @@ public interface InvoiceItemSqlDao extends EntitySqlDao<InvoiceItem> {
             final UUID linkedItemId = getUUID(result, "linked_item_id");
             final DateTime createdDate = getDateTime(result, "created_date");
 
-            final InvoiceItem item;
-            switch (type) {
-                case EXTERNAL_CHARGE:
-                    item = new ExternalChargeInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, planName, startDate, amount, currency);
-                    break;
-                case FIXED:
-                    item = new FixedPriceInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, amount, currency);
-                    break;
-                case RECURRING:
-                    item = new RecurringInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, rate, currency);
-                    break;
-                case CBA_ADJ:
-                    item = new CreditBalanceAdjInvoiceItem(id, createdDate, invoiceId, accountId, startDate, linkedItemId, amount, currency);
-                    break;
-                case CREDIT_ADJ:
-                    item = new CreditAdjInvoiceItem(id, createdDate, invoiceId, accountId, startDate, amount, currency);
-                    break;
-                case REFUND_ADJ:
-                    item = new RefundAdjInvoiceItem(id, createdDate, invoiceId, accountId, startDate, amount, currency);
-                    break;
-                case REPAIR_ADJ:
-                    item = new RepairAdjInvoiceItem(id, createdDate, invoiceId, accountId, startDate, endDate, amount, currency, linkedItemId);
-                    break;
-                case ITEM_ADJ:
-                    item = new ItemAdjInvoiceItem(id, createdDate, invoiceId, accountId, startDate, amount, currency, linkedItemId);
-                    break;
-                default:
-                    throw new RuntimeException("Unexpected type of event item " + type);
-            }
-            return item;
+            return new InvoiceItemModelDao(id, createdDate, type, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName,
+                                           startDate, endDate, amount, rate, currency, linkedItemId);
         }
     }
 }

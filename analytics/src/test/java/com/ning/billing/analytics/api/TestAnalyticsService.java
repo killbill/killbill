@@ -63,9 +63,14 @@ import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
-import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.user.DefaultInvoiceCreationEvent;
 import com.ning.billing.invoice.dao.InvoiceDao;
+import com.ning.billing.invoice.dao.InvoiceItemModelDao;
+import com.ning.billing.invoice.dao.InvoiceModelDao;
+import com.ning.billing.invoice.dao.InvoiceModelDaoHelper;
+import com.ning.billing.invoice.dao.InvoicePaymentModelDao;
 import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.mock.MockAccountBuilder;
@@ -84,6 +89,9 @@ import com.ning.billing.util.events.InvoiceCreationInternalEvent;
 import com.ning.billing.util.events.PaymentInfoInternalEvent;
 import com.ning.billing.util.svcsapi.bus.InternalBus;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
 import static org.testng.Assert.fail;
@@ -229,8 +237,25 @@ public class TestAnalyticsService extends AnalyticsTestSuiteWithEmbeddedDB {
                                                                             INVOICE_AMOUNT, ACCOUNT_CURRENCY);
         invoice.addInvoiceItem(invoiceItem);
 
-        invoiceDao.create(invoice, invoice.getTargetDate().getDayOfMonth(), true, internalCallContext);
-        final List<Invoice> invoices = invoiceDao.getInvoicesByAccount(account.getId(), internalCallContext);
+        final InvoiceModelDao invoiceModelDao = new InvoiceModelDao(invoice);
+        final List<InvoiceItemModelDao> invoiceItemModelDaos = ImmutableList.<InvoiceItemModelDao>copyOf(Collections2.transform(invoice.getInvoiceItems(),
+                                                                                                                                new Function<InvoiceItem, InvoiceItemModelDao>() {
+                                                                                                                                    @Override
+                                                                                                                                    public InvoiceItemModelDao apply(final InvoiceItem input) {
+                                                                                                                                        return new InvoiceItemModelDao(input);
+                                                                                                                                    }
+                                                                                                                                }));
+        // Not really needed, there shouldn't be any payment at this stage
+        final List<InvoicePaymentModelDao> invoicePaymentModelDaos = ImmutableList.<InvoicePaymentModelDao>copyOf(Collections2.transform(invoice.getPayments(),
+                                                                                                                                         new Function<InvoicePayment, InvoicePaymentModelDao>() {
+                                                                                                                                             @Override
+                                                                                                                                             public InvoicePaymentModelDao apply(final InvoicePayment input) {
+                                                                                                                                                 return new InvoicePaymentModelDao(input);
+                                                                                                                                             }
+                                                                                                                                         }));
+
+        invoiceDao.createInvoice(invoiceModelDao, invoiceItemModelDaos, invoicePaymentModelDaos, true, internalCallContext);
+        final List<InvoiceModelDao> invoices = invoiceDao.getInvoicesByAccount(account.getId(), internalCallContext);
         Assert.assertEquals(invoices.size(), 1);
         Assert.assertEquals(invoices.get(0).getInvoiceItems().size(), 1);
 
@@ -238,7 +263,7 @@ public class TestAnalyticsService extends AnalyticsTestSuiteWithEmbeddedDB {
         invoiceCreationNotification = new DefaultInvoiceCreationEvent(invoice.getId(), account.getId(),
                                                                       INVOICE_AMOUNT, ACCOUNT_CURRENCY, null, 1L, 1L);
 
-        paymentInfoNotification = new DefaultPaymentInfoEvent(account.getId(), invoices.get(0).getId(), null, invoices.get(0).getBalance(), -1,
+        paymentInfoNotification = new DefaultPaymentInfoEvent(account.getId(), invoices.get(0).getId(), null, InvoiceModelDaoHelper.getBalance(invoices.get(0)), -1,
                                                               PaymentStatus.UNKNOWN, null, null, null, clock.getUTCNow(), 1L, 1L);
 
         final PaymentModelDao paymentInfo = new PaymentModelDao(account.getId(), invoice.getId(), account.getPaymentMethodId(),

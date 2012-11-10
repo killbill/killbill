@@ -30,6 +30,7 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
+import com.ning.billing.invoice.dao.InvoiceModelDao;
 import com.ning.billing.util.entity.EntityBase;
 
 public class DefaultInvoice extends EntityBase implements Invoice {
@@ -64,6 +65,12 @@ public class DefaultInvoice extends EntityBase implements Invoice {
         this.targetDate = targetDate;
         this.currency = currency;
         this.migrationInvoice = isMigrationInvoice;
+    }
+
+    public DefaultInvoice(final InvoiceModelDao invoiceModelDao) {
+        this(invoiceModelDao.getId(), invoiceModelDao.getCreatedDate(), invoiceModelDao.getAccountId(),
+             invoiceModelDao.getInvoiceNumber(), invoiceModelDao.getInvoiceDate(), invoiceModelDao.getTargetDate(),
+             invoiceModelDao.getCurrency(), invoiceModelDao.isMigrated());
     }
 
     @Override
@@ -190,7 +197,7 @@ public class DefaultInvoice extends EntityBase implements Invoice {
 
     @Override
     public BigDecimal getBalance() {
-        return getChargedAmount().add(getTotalAdjAmount()).add(getCBAAmount()).subtract(getPaidAmount());
+        return invoiceItems.getBalance(getPaidAmount());
     }
 
     @Override

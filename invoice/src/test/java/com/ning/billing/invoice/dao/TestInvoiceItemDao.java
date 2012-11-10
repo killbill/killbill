@@ -50,9 +50,9 @@ public class TestInvoiceItemDao extends InvoiceDaoTestBase {
 
         final RecurringInvoiceItem item = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, "test plan", "test phase", startDate, endDate,
                                                                    rate, rate, Currency.USD);
-        invoiceItemSqlDao.create(item, internalCallContext);
+        createInvoiceItem(item, internalCallContext);
 
-        final RecurringInvoiceItem thisItem = (RecurringInvoiceItem) invoiceItemSqlDao.getById(item.getId().toString(), internalCallContext);
+        final InvoiceItemModelDao thisItem = invoiceItemSqlDao.getById(item.getId().toString(), internalCallContext);
         assertNotNull(thisItem);
         assertEquals(thisItem.getId(), item.getId());
         assertEquals(thisItem.getInvoiceId(), item.getInvoiceId());
@@ -80,10 +80,10 @@ public class TestInvoiceItemDao extends InvoiceDaoTestBase {
             final RecurringInvoiceItem item = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId,
                                                                        "test plan", "test phase", startDate.plusMonths(i), startDate.plusMonths(i + 1),
                                                                        rate, rate, Currency.USD);
-            invoiceItemSqlDao.create(item, internalCallContext);
+            createInvoiceItem(item, internalCallContext);
         }
 
-        final List<InvoiceItem> items = invoiceItemSqlDao.getInvoiceItemsBySubscription(subscriptionId.toString(), internalCallContext);
+        final List<InvoiceItemModelDao> items = invoiceItemSqlDao.getInvoiceItemsBySubscription(subscriptionId.toString(), internalCallContext);
         assertEquals(items.size(), 3);
     }
 
@@ -102,10 +102,10 @@ public class TestInvoiceItemDao extends InvoiceDaoTestBase {
             final RecurringInvoiceItem item = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId,
                                                                        "test plan", "test phase", startDate, startDate.plusMonths(1),
                                                                        amount, amount, Currency.USD);
-            invoiceItemSqlDao.create(item, internalCallContext);
+            createInvoiceItem(item, internalCallContext);
         }
 
-        final List<InvoiceItem> items = invoiceItemSqlDao.getInvoiceItemsByInvoice(invoiceId.toString(), internalCallContext);
+        final List<InvoiceItemModelDao> items = invoiceItemSqlDao.getInvoiceItemsByInvoice(invoiceId.toString(), internalCallContext);
         assertEquals(items.size(), 5);
     }
 
@@ -116,7 +116,7 @@ public class TestInvoiceItemDao extends InvoiceDaoTestBase {
         final LocalDate targetDate = new LocalDate(2011, 5, 23);
         final DefaultInvoice invoice = new DefaultInvoice(accountId, clock.getUTCToday(), targetDate, Currency.USD);
 
-        invoiceDao.create(invoice, targetDate.getDayOfMonth(), true, internalCallContext);
+        createInvoice(invoice, true, internalCallContext);
 
         final UUID invoiceId = invoice.getId();
         final LocalDate startDate = new LocalDate(2011, 3, 1);
@@ -127,9 +127,9 @@ public class TestInvoiceItemDao extends InvoiceDaoTestBase {
         final RecurringInvoiceItem item = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId,
                                                                    "test plan", "test phase", startDate, startDate.plusMonths(1),
                                                                    rate, rate, Currency.USD);
-        invoiceItemSqlDao.create(item, internalCallContext);
+        createInvoiceItem(item, internalCallContext);
 
-        final List<InvoiceItem> items = invoiceItemSqlDao.getInvoiceItemsByAccount(accountId.toString(), internalCallContext);
+        final List<InvoiceItemModelDao> items = invoiceItemSqlDao.getInvoiceItemsByAccount(accountId.toString(), internalCallContext);
         assertEquals(items.size(), 1);
     }
 
@@ -140,9 +140,9 @@ public class TestInvoiceItemDao extends InvoiceDaoTestBase {
         final LocalDate creditDate = new LocalDate(2012, 4, 1);
 
         final InvoiceItem creditInvoiceItem = new CreditBalanceAdjInvoiceItem(invoiceId, accountId, creditDate, TEN, Currency.USD);
-        invoiceItemSqlDao.create(creditInvoiceItem, internalCallContext);
+        createInvoiceItem(creditInvoiceItem, internalCallContext);
 
-        final InvoiceItem savedItem = invoiceItemSqlDao.getById(creditInvoiceItem.getId().toString(), internalCallContext);
+        final InvoiceItemModelDao savedItem = invoiceItemSqlDao.getById(creditInvoiceItem.getId().toString(), internalCallContext);
         assertEquals(savedItem, creditInvoiceItem);
     }
 
@@ -154,9 +154,9 @@ public class TestInvoiceItemDao extends InvoiceDaoTestBase {
 
         final InvoiceItem fixedPriceInvoiceItem = new FixedPriceInvoiceItem(invoiceId, accountId, UUID.randomUUID(),
                                                                             UUID.randomUUID(), "test plan", "test phase", startDate, TEN, Currency.USD);
-        invoiceItemSqlDao.create(fixedPriceInvoiceItem, internalCallContext);
+        createInvoiceItem(fixedPriceInvoiceItem, internalCallContext);
 
-        final InvoiceItem savedItem = invoiceItemSqlDao.getById(fixedPriceInvoiceItem.getId().toString(), internalCallContext);
+        final InvoiceItemModelDao savedItem = invoiceItemSqlDao.getById(fixedPriceInvoiceItem.getId().toString(), internalCallContext);
         assertEquals(savedItem, fixedPriceInvoiceItem);
     }
 
@@ -169,9 +169,9 @@ public class TestInvoiceItemDao extends InvoiceDaoTestBase {
         final LocalDate startDate = new LocalDate(2012, 4, 1);
         final InvoiceItem externalChargeInvoiceItem = new ExternalChargeInvoiceItem(invoiceId, accountId, bundleId, description,
                                                                                     startDate, TEN, Currency.USD);
-        invoiceItemSqlDao.create(externalChargeInvoiceItem, internalCallContext);
+        createInvoiceItem(externalChargeInvoiceItem, internalCallContext);
 
-        final InvoiceItem savedItem = invoiceItemSqlDao.getById(externalChargeInvoiceItem.getId().toString(), internalCallContext);
+        final InvoiceItemModelDao savedItem = invoiceItemSqlDao.getById(externalChargeInvoiceItem.getId().toString(), internalCallContext);
         assertEquals(savedItem, externalChargeInvoiceItem);
     }
 }

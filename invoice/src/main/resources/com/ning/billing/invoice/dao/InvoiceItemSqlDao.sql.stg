@@ -1,5 +1,7 @@
 group InvoiceItemSqlDao: EntitySqlDao;
 
+tableName() ::= "invoice_items"
+
 tableFields(prefix) ::= <<
   <prefix>type
 , <prefix>invoice_id
@@ -38,24 +40,24 @@ tableValues() ::= <<
 
 
 getInvoiceItemsByInvoice() ::= <<
-  SELECT <fields()>
-  FROM invoice_items
+  SELECT <allTableFields()>
+  FROM <tableName()>
   WHERE invoice_id = :invoiceId
   <AND_CHECK_TENANT()>
   ;
 >>
 
 getInvoiceItemsByAccount() ::= <<
-  SELECT <fields()>
-  FROM invoice_items
+  SELECT <allTableFields()>
+  FROM <tableName()>
   WHERE account_id = :accountId
   <AND_CHECK_TENANT()>
   ;
 >>
 
 getInvoiceItemsBySubscription() ::= <<
-  SELECT <fields()>
-  FROM invoice_items
+  SELECT <allTableFields()>
+  FROM <tableName()>
   WHERE subscription_id = :subscriptionId
   <AND_CHECK_TENANT()>
   ;

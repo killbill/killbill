@@ -1,5 +1,6 @@
 group InvoicePayment: EntitySqlDao;
 
+tableName() ::= "invoice_payments"
 
 tableFields(prefix) ::= <<
   <prefix>type
@@ -28,39 +29,32 @@ tableValues() ::= <<
 >>
 
 getByPaymentId() ::= <<
-  SELECT <invoicePaymentFields()>
-  FROM invoice_payments
+  SELECT <allTableFields()>
+  FROM <tableName()>
   WHERE payment_id = :paymentId
   <AND_CHECK_TENANT()>
   ;
 >>
 
-
 getPaymentsForCookieId() ::= <<
-  SELECT <invoicePaymentFields()>
-  FROM invoice_payments
+  SELECT <allTableFields()>
+  FROM <tableName()>
   WHERE payment_cookie_id = :paymentCookieId
   <AND_CHECK_TENANT()>
   ;
 >>
 
 getPaymentsForInvoice() ::= <<
-  SELECT <invoicePaymentFields()>
-  FROM invoice_payments
+  SELECT <allTableFields()>
+  FROM <tableName()>
   WHERE invoice_id = :invoiceId
   <AND_CHECK_TENANT()>
   ;
 >>
 
-notifyOfPayment() ::= <<
-  INSERT INTO invoice_payments(<invoicePaymentFields()>)
-  VALUES(:id, :type, :invoiceId, :paymentId, :paymentDate, :amount, :currency,
-         :paymentCookieId, :linkedInvoicePaymentId, :userName, :createdDate, :accountRecordId, :tenantRecordId);
->>
-
 getInvoicePayments() ::= <<
-    SELECT <invoicePaymentFields()>
-    FROM invoice_payments
+    SELECT <allTableFields()>
+    FROM <tableName()>
     WHERE payment_id = :paymentId
     <AND_CHECK_TENANT()>
     ;
@@ -68,15 +62,15 @@ getInvoicePayments() ::= <<
 
 getRemainingAmountPaid() ::= <<
     SELECT SUM(amount)
-    FROM invoice_payments
+    FROM <tableName()>
     WHERE (id = :invoicePaymentId OR linked_invoice_payment_id = :invoicePaymentId)
     <AND_CHECK_TENANT()>
     ;
 >>
 
 getAccountIdFromInvoicePaymentId() ::= <<
-    SELECT account_id
-    FROM invoice_payments ip
+    SELECT <tableName()>
+    FROM <tableName()> ip
     INNER JOIN invoices i ON i.id = ip.invoice_id
     WHERE ip.id = :invoicePaymentId
     <AND_CHECK_TENANT("i.")>
@@ -85,8 +79,8 @@ getAccountIdFromInvoicePaymentId() ::= <<
 >>
 
 getChargeBacksByAccountId() ::= <<
-    SELECT <invoicePaymentFields("ip.")>
-    FROM invoice_payments ip
+    SELECT <allTableFields("ip.")>
+    FROM <tableName()> ip
     INNER JOIN invoices i ON i.id = ip.invoice_id
     WHERE ip.type = 'CHARGED_BACK' AND i.account_id = :accountId
     <AND_CHECK_TENANT("i.")>
@@ -95,8 +89,8 @@ getChargeBacksByAccountId() ::= <<
 >>
 
 getChargebacksByPaymentId() ::= <<
-    SELECT <invoicePaymentFields()>
-    FROM invoice_payments
+    SELECT <allTableFields()>
+    FROM <tableName()>
     WHERE type = 'CHARGED_BACK'
     AND linked_invoice_payment_id IN (SELECT id FROM invoice_payments WHERE payment_id = :paymentId)
     <AND_CHECK_TENANT()>

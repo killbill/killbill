@@ -200,6 +200,7 @@ public enum ErrorCode {
     INVOICE_NO_SUCH_EXTERNAL_CHARGE(4014, "External charge item for id %s does not exist"),
     EXTERNAL_CHARGE_AMOUNT_INVALID(4015, "External charge amount %s should be strictly positive"),
     INVOICE_WOULD_BE_NEGATIVE(4016, "Cannot execute operation, the invoice balance would become negative"),
+    INVOICE_ALREADY_EXISTS(4017, "The invoice already exists %s"),
 
     /*
      *
