@@ -167,7 +167,7 @@ public class InvoiceItemModelDao extends EntityBase {
         if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
             return false;
         }
-        if (amount != null ? !amount.equals(that.amount) : that.amount != null) {
+        if (amount != null ? amount.compareTo(that.amount) != 0 : that.amount != null) {
             return false;
         }
         if (bundleId != null ? !bundleId.equals(that.bundleId) : that.bundleId != null) {
@@ -191,7 +191,7 @@ public class InvoiceItemModelDao extends EntityBase {
         if (planName != null ? !planName.equals(that.planName) : that.planName != null) {
             return false;
         }
-        if (rate != null ? !rate.equals(that.rate) : that.rate != null) {
+        if (rate != null ? rate.compareTo(that.rate) != 0 : that.rate != null) {
             return false;
         }
         if (startDate != null ? !startDate.equals(that.startDate) : that.startDate != null) {
