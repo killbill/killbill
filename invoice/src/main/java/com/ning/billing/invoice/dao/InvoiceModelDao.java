@@ -62,7 +62,8 @@ public class InvoiceModelDao extends EntityBase {
     }
 
     public InvoiceModelDao(final Invoice invoice) {
-        this(invoice.getId(), invoice.getInvoiceDate(), invoice.getTargetDate(), invoice.getCurrency(), invoice.isMigrationInvoice());
+        this(invoice.getId(), invoice.getCreatedDate(), invoice.getAccountId(), invoice.getInvoiceNumber(), invoice.getInvoiceDate(),
+             invoice.getTargetDate(), invoice.getCurrency(), invoice.isMigrationInvoice());
     }
 
     public void addInvoiceItems(final List<InvoiceItemModelDao> invoiceItems) {

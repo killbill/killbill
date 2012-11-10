@@ -25,6 +25,7 @@ import org.skife.jdbi.v2.tweak.transactions.SerializableTransactionRunner;
 import com.ning.billing.util.dao.DateTimeArgumentFactory;
 import com.ning.billing.util.dao.DateTimeZoneArgumentFactory;
 import com.ning.billing.util.dao.EnumArgumentFactory;
+import com.ning.billing.util.dao.LocalDateArgumentFactory;
 import com.ning.billing.util.dao.UUIDArgumentFactory;
 
 import com.google.inject.Inject;
@@ -67,6 +68,7 @@ public class DBIProvider implements Provider<IDBI> {
         dbi.registerArgumentFactory(new UUIDArgumentFactory());
         dbi.registerArgumentFactory(new DateTimeZoneArgumentFactory());
         dbi.registerArgumentFactory(new DateTimeArgumentFactory());
+        dbi.registerArgumentFactory(new LocalDateArgumentFactory());
         dbi.registerArgumentFactory(new EnumArgumentFactory());
 
         // Restart transactions in case of deadlocks

@@ -74,7 +74,7 @@ public class InvoiceItemModelDao extends EntityBase {
     }
 
     public InvoiceItemModelDao(final InvoiceItem invoiceItem) {
-        this(invoiceItem.getInvoiceItemType(), invoiceItem.getId(), invoiceItem.getAccountId(), invoiceItem.getBundleId(),
+        this(invoiceItem.getId(), invoiceItem.getCreatedDate(), invoiceItem.getInvoiceItemType(), invoiceItem.getInvoiceId(), invoiceItem.getAccountId(), invoiceItem.getBundleId(),
              invoiceItem.getSubscriptionId(), invoiceItem.getPlanName(), invoiceItem.getPhaseName(), invoiceItem.getStartDate(), invoiceItem.getEndDate(),
              invoiceItem.getAmount(), invoiceItem.getRate(), invoiceItem.getCurrency(), invoiceItem.getLinkedItemId());
     }

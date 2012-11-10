@@ -29,6 +29,7 @@ import com.ning.billing.invoice.model.CreditBalanceAdjInvoiceItem;
 import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.ExternalChargeInvoiceItem;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
+import com.ning.billing.invoice.model.InvoiceItemFactory;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.util.entity.EntityPersistenceException;
 
@@ -143,7 +144,7 @@ public class TestInvoiceItemDao extends InvoiceDaoTestBase {
         createInvoiceItem(creditInvoiceItem, internalCallContext);
 
         final InvoiceItemModelDao savedItem = invoiceItemSqlDao.getById(creditInvoiceItem.getId().toString(), internalCallContext);
-        assertEquals(savedItem, creditInvoiceItem);
+        assertEquals(InvoiceItemFactory.fromModelDao(savedItem), creditInvoiceItem);
     }
 
     @Test(groups = "slow")
@@ -157,7 +158,7 @@ public class TestInvoiceItemDao extends InvoiceDaoTestBase {
         createInvoiceItem(fixedPriceInvoiceItem, internalCallContext);
 
         final InvoiceItemModelDao savedItem = invoiceItemSqlDao.getById(fixedPriceInvoiceItem.getId().toString(), internalCallContext);
-        assertEquals(savedItem, fixedPriceInvoiceItem);
+        assertEquals(InvoiceItemFactory.fromModelDao(savedItem), fixedPriceInvoiceItem);
     }
 
     @Test(groups = "slow")
@@ -172,6 +173,6 @@ public class TestInvoiceItemDao extends InvoiceDaoTestBase {
         createInvoiceItem(externalChargeInvoiceItem, internalCallContext);
 
         final InvoiceItemModelDao savedItem = invoiceItemSqlDao.getById(externalChargeInvoiceItem.getId().toString(), internalCallContext);
-        assertEquals(savedItem, externalChargeInvoiceItem);
+        assertEquals(InvoiceItemFactory.fromModelDao(savedItem), externalChargeInvoiceItem);
     }
 }

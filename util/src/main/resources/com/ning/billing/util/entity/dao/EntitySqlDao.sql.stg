@@ -25,6 +25,9 @@ historyTableValues() ::= <<
 
 /****************************************************/
 
+/** Add extra fields for SELECT queries **/
+extraTableFieldsWithComma(prefix) ::= ""
+
 idField(prefix) ::= <<
 <prefix>id
 >>
@@ -85,6 +88,7 @@ allTableFields(prefix) ::= <<
   <recordIdField(prefix)>
 , <idField(prefix)>
 , <tableFields(prefix)>
+<extraTableFieldsWithComma(prefix)>
 <accountRecordIdFieldWithComma(prefix)>
 <tenantRecordIdFieldWithComma(prefix)>
 >>

@@ -14,13 +14,17 @@ tableFields(prefix) ::= <<
 
 
 tableValues(prefix) ::= <<
-  accountId
+  :accountId
 , :invoiceDate
 , :targetDate
 , :currency
 , :migrated
 , :createdBy
 , :createdDate
+>>
+
+extraTableFieldsWithComma(prefix) ::= <<
+, record_id as invoice_number
 >>
 
 getInvoicesByAccount() ::= <<
