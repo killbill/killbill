@@ -34,11 +34,6 @@ public class CreditBalanceAdjInvoiceItem extends AdjInvoiceItem {
         this(UUID.randomUUID(), null, invoiceId, accountId, date, null, amount, currency);
     }
 
-    public CreditBalanceAdjInvoiceItem(final UUID invoiceId, final UUID accountId, final LocalDate date, @Nullable final UUID linkedInvoiceItemId,
-                                       final BigDecimal amount, final Currency currency) {
-        this(UUID.randomUUID(), null, invoiceId, accountId, date, linkedInvoiceItemId, amount, currency);
-    }
-
     public CreditBalanceAdjInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId,
                                        final LocalDate date, final UUID linkedInvoiceItemId,
                                        final BigDecimal amount, final Currency currency) {

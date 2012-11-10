@@ -156,7 +156,7 @@ public class InvoiceDateUtils {
         return new LocalDate(proposedDateTime, accountTimeZone);
     }
 
-    public static DateTime calculateBillingCycleDateOnOrAfter(final DateTime date, final int billingCycleDayLocal) {
+    private static DateTime calculateBillingCycleDateOnOrAfter(final DateTime date, final int billingCycleDayLocal) {
         final int lastDayOfMonth = date.dayOfMonth().getMaximumValue();
 
         final MutableDateTime tmp = date.toMutableDateTime();
@@ -173,7 +173,7 @@ public class InvoiceDateUtils {
         return proposedDate;
     }
 
-    public static DateTime calculateBillingCycleDateAfter(final DateTime date, final int billingCycleDayLocal) {
+    private static DateTime calculateBillingCycleDateAfter(final DateTime date, final int billingCycleDayLocal) {
         DateTime proposedDate = calculateBillingCycleDateOnOrAfter(date, billingCycleDayLocal);
         if (date.compareTo(proposedDate) == 0) {
             proposedDate = proposedDate.plusMonths(1);

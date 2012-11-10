@@ -187,7 +187,7 @@ public class InvoiceDispatcher {
                     // We need to check whether this is just a 'shell' invoice or a real invoice with items on it
                     final boolean isRealInvoiceWithItems = Collections2.filter(invoice.getInvoiceItems(), new Predicate<InvoiceItem>() {
                         @Override
-                        public boolean apply(InvoiceItem input) {
+                        public boolean apply(final InvoiceItem input) {
                             return input.getInvoiceId().equals(invoice.getId());
                         }
                     }).size() > 0;

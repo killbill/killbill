@@ -91,7 +91,7 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
         }
         return Collections2.filter(invoicePayments, new Predicate<InvoicePayment>() {
             @Override
-            public boolean apply(InvoicePayment input) {
+            public boolean apply(final InvoicePayment input) {
                 return input.getType() == InvoicePaymentType.ATTEMPT;
             }
         }).iterator().next();

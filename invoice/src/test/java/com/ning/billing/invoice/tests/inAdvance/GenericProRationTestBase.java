@@ -19,12 +19,12 @@ package com.ning.billing.invoice.tests.inAdvance;
 import java.math.BigDecimal;
 
 import org.joda.time.LocalDate;
-import org.joda.time.LocalDate;
 import org.testng.annotations.Test;
 
 import com.ning.billing.invoice.model.InvalidDateSequenceException;
 
 public abstract class GenericProRationTestBase extends ProRationInAdvanceTestBase {
+
     /**
      * used for testing cancellation in less than a single billing period
      *

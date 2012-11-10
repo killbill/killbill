@@ -31,7 +31,7 @@ import com.ning.billing.catalog.api.BillingPeriod;
 public class TestInAdvanceBillingMode {
 
     private static final DateTimeZone TIMEZONE = DateTimeZone.forID("Pacific/Pitcairn");
-    public static final BillingPeriod BILLING_PERIOD = BillingPeriod.MONTHLY;
+    private static final BillingPeriod BILLING_PERIOD = BillingPeriod.MONTHLY;
 
     @Test(groups = "fast")
     public void testItemShouldNotStartInThePast() throws Exception {

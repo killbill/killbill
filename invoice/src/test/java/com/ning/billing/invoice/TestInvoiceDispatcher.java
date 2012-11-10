@@ -108,7 +108,6 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
     @Inject
     private InternalCallContextFactory internalCallContextFactory;
 
-
     private Account account;
     private Subscription subscription;
 
@@ -123,7 +122,6 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
         account = Mockito.mock(Account.class);
 
         final UUID accountId = UUID.randomUUID();
-
 
         Mockito.when(accountInternalApi.getAccountById(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(account);
 

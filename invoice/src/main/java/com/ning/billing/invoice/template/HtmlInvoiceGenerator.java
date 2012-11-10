@@ -16,13 +16,13 @@
 
 package com.ning.billing.invoice.template;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-import com.google.inject.Inject;
+import javax.annotation.Nullable;
+
 import com.ning.billing.account.api.Account;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.formatters.InvoiceFormatter;
@@ -32,7 +32,10 @@ import com.ning.billing.util.LocaleUtils;
 import com.ning.billing.util.email.templates.TemplateEngine;
 import com.ning.billing.util.template.translation.TranslatorConfig;
 
+import com.google.inject.Inject;
+
 public class HtmlInvoiceGenerator {
+
     private final InvoiceFormatterFactory factory;
     private final TemplateEngine templateEngine;
     private final TranslatorConfig config;

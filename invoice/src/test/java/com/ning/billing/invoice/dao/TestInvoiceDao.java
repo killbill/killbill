@@ -263,7 +263,6 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         final UUID invoiceId2 = invoice2.getId();
 
         startDate = endDate;
-        endDate = startDate.plusMonths(1);
 
         final FixedPriceInvoiceItem item5 = new FixedPriceInvoiceItem(invoiceId2, accountId, bundleId, subscriptionId1, "test plan", "test phase A", startDate,
                                                                       rate1, Currency.USD);
@@ -540,7 +539,6 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
 
         final BigDecimal rate1 = new BigDecimal("20.0");
         final BigDecimal refund1 = new BigDecimal("7.00");
-        final BigDecimal rate2 = new BigDecimal("10.0");
 
         // Recurring item
         final RecurringInvoiceItem item2 = new RecurringInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test plan", "test phase B", startDate,
@@ -613,7 +611,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         final InvoiceItem cbaItem = new CreditBalanceAdjInvoiceItem(invoice.getId(), accountId, startDate, amount, Currency.USD);
         createInvoiceItem(cbaItem, internalCallContext);
 
-        Map<UUID, BigDecimal> itemAdjustment = new HashMap<UUID, BigDecimal>();
+        final Map<UUID, BigDecimal> itemAdjustment = new HashMap<UUID, BigDecimal>();
         itemAdjustment.put(item2.getId(), refundAmount);
 
         invoiceDao.createRefund(paymentId, refundAmount, true, itemAdjustment, UUID.randomUUID(), internalCallContext);
@@ -635,29 +633,29 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
 
     @Test(groups = "slow")
     public void testAccountBalanceWithSmallRefundAndCBANoAdj() throws InvoiceApiException, EntityPersistenceException {
-        BigDecimal refundAmount = new BigDecimal("7.00");
-        BigDecimal expectedBalance = new BigDecimal("-3.00");
+        final BigDecimal refundAmount = new BigDecimal("7.00");
+        final BigDecimal expectedBalance = new BigDecimal("-3.00");
         testAccountBalanceWithRefundAndCBAInternal(false, refundAmount, expectedBalance);
     }
 
     @Test(groups = "slow")
     public void testAccountBalanceWithSmallRefundAndCBAWithAdj() throws InvoiceApiException, EntityPersistenceException {
-        BigDecimal refundAmount = new BigDecimal("7.00");
-        BigDecimal expectedBalance = new BigDecimal("-10.00");
+        final BigDecimal refundAmount = new BigDecimal("7.00");
+        final BigDecimal expectedBalance = new BigDecimal("-10.00");
         testAccountBalanceWithRefundAndCBAInternal(true, refundAmount, expectedBalance);
     }
 
     @Test(groups = "slow")
     public void testAccountBalanceWithLargeRefundAndCBANoAdj() throws InvoiceApiException, EntityPersistenceException {
-        BigDecimal refundAmount = new BigDecimal("20.00");
-        BigDecimal expectedBalance = new BigDecimal("10.00");
+        final BigDecimal refundAmount = new BigDecimal("20.00");
+        final BigDecimal expectedBalance = new BigDecimal("10.00");
         testAccountBalanceWithRefundAndCBAInternal(false, refundAmount, expectedBalance);
     }
 
     @Test(groups = "slow")
     public void testAccountBalanceWithLargeRefundAndCBAWithAdj() throws InvoiceApiException, EntityPersistenceException {
-        BigDecimal refundAmount = new BigDecimal("20.00");
-        BigDecimal expectedBalance = new BigDecimal("-10.00");
+        final BigDecimal refundAmount = new BigDecimal("20.00");
+        final BigDecimal expectedBalance = new BigDecimal("-10.00");
         testAccountBalanceWithRefundAndCBAInternal(true, refundAmount, expectedBalance);
     }
 
@@ -740,9 +738,9 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         final InvoiceItemModelDao charge = invoiceDao.insertExternalCharge(accountId, null, bundleId, "bla", new BigDecimal("15.0"), clock.getUTCNow().toLocalDate(), Currency.USD, internalCallContext);
 
         final InvoiceModelDao newInvoice = invoiceDao.getById(charge.getInvoiceId(), internalCallContext);
-        List<InvoiceItemModelDao> items = newInvoice.getInvoiceItems();
+        final List<InvoiceItemModelDao> items = newInvoice.getInvoiceItems();
         assertEquals(items.size(), 2);
-        for (InvoiceItemModelDao cur : items) {
+        for (final InvoiceItemModelDao cur : items) {
             if (!cur.getId().equals(charge.getId())) {
                 assertEquals(cur.getType(), InvoiceItemType.CBA_ADJ);
                 assertTrue(cur.getAmount().compareTo(new BigDecimal("-15.00")) == 0);

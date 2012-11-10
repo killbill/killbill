@@ -278,14 +278,17 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
 
     // Expose the fields for children classes. This is useful for further customization of the invoices
 
+    @SuppressWarnings("UnusedDeclaration")
     protected TranslatorConfig getConfig() {
         return config;
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     protected DateTimeFormatter getDateFormatter() {
         return dateFormatter;
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     protected Locale getLocale() {
         return locale;
     }

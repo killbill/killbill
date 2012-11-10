@@ -25,6 +25,7 @@ import com.ning.billing.catalog.api.Price;
 import static org.testng.Assert.fail;
 
 public class InternationalPriceMock implements InternationalPrice {
+
     private final BigDecimal rate;
 
     public InternationalPriceMock(final BigDecimal rate) {

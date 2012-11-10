@@ -16,8 +16,6 @@
 
 package com.ning.billing.invoice.glue;
 
-import static org.testng.Assert.assertNotNull;
-
 import java.io.IOException;
 import java.net.URL;
 
@@ -48,7 +46,10 @@ import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.junction.BillingInternalApi;
 
+import static org.testng.Assert.assertNotNull;
+
 public class InvoiceModuleWithEmbeddedDb extends DefaultInvoiceModule {
+
     private final MysqlTestingHelper helper = KillbillTestSuiteWithEmbeddedDB.getMysqlTestingHelper();
 
     private void installNotificationQueue() {

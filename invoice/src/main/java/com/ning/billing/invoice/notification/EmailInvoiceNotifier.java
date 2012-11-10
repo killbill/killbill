@@ -19,7 +19,6 @@ package com.ning.billing.invoice.notification;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.ObjectType;
@@ -44,6 +43,7 @@ import com.ning.billing.util.tag.Tag;
 import com.google.inject.Inject;
 
 public class EmailInvoiceNotifier implements InvoiceNotifier {
+
     private final AccountInternalApi accountApi;
     private final TagInternalApi tagUserApi;
     private final HtmlInvoiceGenerator generator;

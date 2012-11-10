@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
-import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -33,7 +32,6 @@ import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
-import com.ning.billing.util.callcontext.InternalCallContext;
 
 public class TestInvoiceDaoForItemAdjustment extends InvoiceDaoTestBase {
 
@@ -45,7 +43,6 @@ public class TestInvoiceDaoForItemAdjustment extends InvoiceDaoTestBase {
         final UUID invoiceId = UUID.randomUUID();
         final UUID invoiceItemId = UUID.randomUUID();
         final LocalDate effectiveDate = new LocalDate();
-        final InternalCallContext context = Mockito.mock(InternalCallContext.class);
 
         try {
             invoiceDao.insertInvoiceItemAdjustment(accountId, invoiceId, invoiceItemId, effectiveDate, null, null, internalCallContext);
@@ -104,7 +101,7 @@ public class TestInvoiceDaoForItemAdjustment extends InvoiceDaoTestBase {
     private InvoiceItemModelDao createAndCheckAdjustment(final Invoice invoice, final InvoiceItem invoiceItem, final BigDecimal amount) throws InvoiceApiException {
         final LocalDate effectiveDate = new LocalDate(2010, 1, 1);
         final InvoiceItemModelDao adjustedInvoiceItem = invoiceDao.insertInvoiceItemAdjustment(invoice.getAccountId(), invoice.getId(), invoiceItem.getId(),
-                                                                                       effectiveDate, amount, null, internalCallContext);
+                                                                                               effectiveDate, amount, null, internalCallContext);
         Assert.assertEquals(adjustedInvoiceItem.getAccountId(), invoiceItem.getAccountId());
         Assert.assertNull(adjustedInvoiceItem.getBundleId());
         Assert.assertEquals(adjustedInvoiceItem.getCurrency(), invoiceItem.getCurrency());

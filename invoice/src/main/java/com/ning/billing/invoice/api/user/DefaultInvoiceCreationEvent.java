@@ -55,7 +55,6 @@ public class DefaultInvoiceCreationEvent extends DefaultBusInternalEvent impleme
         return BusInternalEventType.INVOICE_CREATION;
     }
 
-
     @Override
     public UUID getInvoiceId() {
         return invoiceId;
@@ -83,15 +82,27 @@ public class DefaultInvoiceCreationEvent extends DefaultBusInternalEvent impleme
 
     @Override
     public boolean equals(final Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         final DefaultInvoiceCreationEvent that = (DefaultInvoiceCreationEvent) o;
 
-        if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) return false;
-        if (amountOwed != null ? !amountOwed.equals(that.amountOwed) : that.amountOwed != null) return false;
-        if (currency != that.currency) return false;
-        if (invoiceId != null ? !invoiceId.equals(that.invoiceId) : that.invoiceId != null) return false;
+        if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
+            return false;
+        }
+        if (amountOwed != null ? !amountOwed.equals(that.amountOwed) : that.amountOwed != null) {
+            return false;
+        }
+        if (currency != that.currency) {
+            return false;
+        }
+        if (invoiceId != null ? !invoiceId.equals(that.invoiceId) : that.invoiceId != null) {
+            return false;
+        }
         return true;
     }
 

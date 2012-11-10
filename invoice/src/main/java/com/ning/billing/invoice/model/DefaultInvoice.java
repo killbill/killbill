@@ -61,9 +61,9 @@ public class DefaultInvoice extends EntityBase implements Invoice {
     }
 
     // Used to hydrate invoice from persistence layer
-    public DefaultInvoice(final UUID invoiceId, @Nullable final DateTime createdDate, final UUID accountId,
-                          @Nullable final Integer invoiceNumber, final LocalDate invoiceDate,
-                          final LocalDate targetDate, final Currency currency, final boolean isMigrationInvoice) {
+    private DefaultInvoice(final UUID invoiceId, @Nullable final DateTime createdDate, final UUID accountId,
+                           @Nullable final Integer invoiceNumber, final LocalDate invoiceDate,
+                           final LocalDate targetDate, final Currency currency, final boolean isMigrationInvoice) {
         super(invoiceId, createdDate, createdDate);
         this.accountId = accountId;
         this.invoiceNumber = invoiceNumber;

@@ -42,6 +42,7 @@ import com.ning.billing.util.email.templates.TemplateEngine;
 import com.ning.billing.util.template.translation.TranslatorConfig;
 
 public class TestHtmlInvoiceGenerator extends InvoiceTestSuite {
+
     private HtmlInvoiceGenerator g;
 
     @BeforeSuite(groups = "fast")

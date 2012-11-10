@@ -66,7 +66,7 @@ public class InvoiceItemList extends ArrayList<InvoiceItem> {
         return getAmoutForItems(InvoiceItemType.CBA_ADJ);
     }
 
-    private BigDecimal getAmoutForItems(InvoiceItemType... types) {
+    private BigDecimal getAmoutForItems(final InvoiceItemType... types) {
         BigDecimal total = BigDecimal.ZERO.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
         for (final InvoiceItem item : this) {
             if (isFromType(item, types)) {
@@ -78,8 +78,8 @@ public class InvoiceItemList extends ArrayList<InvoiceItem> {
         return total.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
     }
 
-    private boolean isFromType(InvoiceItem item, InvoiceItemType... types) {
-        for (InvoiceItemType cur : types) {
+    private boolean isFromType(final InvoiceItem item, final InvoiceItemType... types) {
+        for (final InvoiceItemType cur : types) {
             if (item.getInvoiceItemType() == cur) {
                 return true;
             }

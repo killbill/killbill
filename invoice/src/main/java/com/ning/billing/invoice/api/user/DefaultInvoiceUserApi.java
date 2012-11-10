@@ -174,7 +174,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         // Retrieve the invoice for the account id
         final Invoice invoice = new DefaultInvoice(dao.getById(invoiceId, internalContext));
         // This is for overdue
-        notifyBusOfInvoiceAdjustment(invoiceId, invoice.getAccountId(), context.getUserToken(), internalCallContextFactory.createInternalCallContext(invoice.getAccountId(), context));
+        notifyBusOfInvoiceAdjustment(invoiceId, invoice.getAccountId(), internalCallContextFactory.createInternalCallContext(invoice.getAccountId(), context));
     }
 
     @Override
@@ -186,7 +186,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         // Retrieve the invoice for the account id
         final Invoice invoice = new DefaultInvoice(dao.getById(invoiceId, internalContext));
         // This is for overdue
-        notifyBusOfInvoiceAdjustment(invoiceId, invoice.getAccountId(), context.getUserToken(), internalCallContextFactory.createInternalCallContext(invoice.getAccountId(), context));
+        notifyBusOfInvoiceAdjustment(invoiceId, invoice.getAccountId(), internalCallContextFactory.createInternalCallContext(invoice.getAccountId(), context));
     }
 
     @Override
@@ -305,7 +305,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         return generator.generateInvoice(account, invoice, manualPay);
     }
 
-    private void notifyBusOfInvoiceAdjustment(final UUID invoiceId, final UUID accountId, final UUID userToken, final InternalCallContext context) {
+    private void notifyBusOfInvoiceAdjustment(final UUID invoiceId, final UUID accountId, final InternalCallContext context) {
         try {
             eventBus.post(new DefaultInvoiceAdjustmentEvent(invoiceId, accountId, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId()), context);
         } catch (EventBusException e) {

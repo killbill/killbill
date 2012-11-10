@@ -16,8 +16,9 @@
 
 package com.ning.billing.invoice.tests;
 
-import javax.annotation.Nullable;
 import java.math.BigDecimal;
+
+import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -33,11 +34,11 @@ import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.invoice.InvoiceTestSuiteWithEmbeddedDB;
 import com.ning.billing.invoice.model.InvoicingConfiguration;
-import com.ning.billing.mock.api.MockBillCycleDay;
 import com.ning.billing.util.svcapi.junction.BillingEvent;
 import com.ning.billing.util.svcapi.junction.BillingModeType;
 
 public abstract class InvoicingTestBase extends InvoiceTestSuiteWithEmbeddedDB {
+
     protected static final int NUMBER_OF_DECIMALS = InvoicingConfiguration.getNumberOfDecimals();
     protected static final int ROUNDING_METHOD = InvoicingConfiguration.getRoundingMode();
 
@@ -101,7 +102,7 @@ public abstract class InvoicingTestBase extends InvoiceTestSuiteWithEmbeddedDB {
                                       totalOrdering, type);
     }
 
-        protected BillingEvent createMockBillingEvent(@Nullable final Account account, final Subscription subscription,
+    protected BillingEvent createMockBillingEvent(@Nullable final Account account, final Subscription subscription,
                                                   final DateTime effectiveDate,
                                                   final Plan plan, final PlanPhase planPhase,
                                                   @Nullable final BigDecimal fixedPrice, @Nullable final BigDecimal recurringPrice,

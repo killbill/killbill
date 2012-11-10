@@ -111,7 +111,7 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
         }
         return Collections2.filter(invoicePayments, new Predicate<InvoicePayment>() {
             @Override
-            public boolean apply(InvoicePayment input) {
+            public boolean apply(final InvoicePayment input) {
                 return input.getType() == InvoicePaymentType.ATTEMPT;
             }
         }).iterator().next();
@@ -139,7 +139,6 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
                         return new DefaultInvoicePayment(input);
                     }
                 });
-                final UUID accountId = dao.getAccountIdFromInvoicePaymentId(invoicePayments.iterator().next().getId(), context);
 
                 return new DefaultInvoicePayment(dao.createRefund(paymentId, amount, isInvoiceAdjusted, invoiceItemIdsWithAmounts, paymentCookieId, context));
             }

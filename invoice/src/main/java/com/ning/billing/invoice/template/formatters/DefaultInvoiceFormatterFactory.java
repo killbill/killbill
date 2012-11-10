@@ -24,6 +24,7 @@ import com.ning.billing.invoice.api.formatters.InvoiceFormatterFactory;
 import com.ning.billing.util.template.translation.TranslatorConfig;
 
 public class DefaultInvoiceFormatterFactory implements InvoiceFormatterFactory {
+
     @Override
     public InvoiceFormatter createInvoiceFormatter(final TranslatorConfig config, final Invoice invoice, final Locale locale) {
         return new DefaultInvoiceFormatter(config, invoice, locale);
