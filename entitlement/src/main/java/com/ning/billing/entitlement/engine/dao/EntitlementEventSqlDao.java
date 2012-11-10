@@ -32,22 +32,9 @@ import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import com.ning.billing.entitlement.engine.dao.EntitlementEventSqlDao.EventSqlMapper;
-import com.ning.billing.entitlement.events.EntitlementEvent;
+import com.ning.billing.entitlement.engine.dao.model.EntitlementEventModelDao;
 import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
-import com.ning.billing.entitlement.events.EventBaseBuilder;
-import com.ning.billing.entitlement.events.phase.PhaseEventBuilder;
-import com.ning.billing.entitlement.events.phase.PhaseEventData;
-import com.ning.billing.entitlement.events.user.ApiEventBuilder;
-import com.ning.billing.entitlement.events.user.ApiEventCancel;
-import com.ning.billing.entitlement.events.user.ApiEventChange;
-import com.ning.billing.entitlement.events.user.ApiEventCreate;
-import com.ning.billing.entitlement.events.user.ApiEventMigrateBilling;
-import com.ning.billing.entitlement.events.user.ApiEventMigrateEntitlement;
-import com.ning.billing.entitlement.events.user.ApiEventReCreate;
-import com.ning.billing.entitlement.events.user.ApiEventTransfer;
 import com.ning.billing.entitlement.events.user.ApiEventType;
-import com.ning.billing.entitlement.events.user.ApiEventUncancel;
-import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
@@ -58,16 +45,7 @@ import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 
 @EntitySqlDaoStringTemplate
 @RegisterMapper(EventSqlMapper.class)
-public interface EntitlementEventSqlDao extends EntitySqlDao<EntitlementEvent> {
-
-    @SqlQuery
-    public EntitlementEvent getEventById(@Bind("id") String id,
-                                         @BindBean final InternalTenantContext context);
-
-    @SqlUpdate
-    @Audited(ChangeType.INSERT)
-    public void insertEvent(@BindBean final EntitlementEvent evt,
-                            @BindBean final InternalCallContext context);
+public interface EntitlementEventSqlDao extends EntitySqlDao<EntitlementEventModelDao> {
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
@@ -86,19 +64,19 @@ public interface EntitlementEventSqlDao extends EntitySqlDao<EntitlementEvent> {
                               @BindBean final InternalCallContext context);
 
     @SqlQuery
-    public List<EntitlementEvent> getFutureActiveEventForSubscription(@Bind("subscriptionId") String subscriptionId,
-                                                                      @Bind("now") Date now,
-                                                                      @BindBean final InternalTenantContext context);
+    public List<EntitlementEventModelDao> getFutureActiveEventForSubscription(@Bind("subscriptionId") String subscriptionId,
+                                                                              @Bind("now") Date now,
+                                                                              @BindBean final InternalTenantContext context);
 
     @SqlQuery
-    public List<EntitlementEvent> getEventsForSubscription(@Bind("subscriptionId") String subscriptionId,
-                                                           @BindBean final InternalTenantContext context);
+    public List<EntitlementEventModelDao> getEventsForSubscription(@Bind("subscriptionId") String subscriptionId,
+                                                                   @BindBean final InternalTenantContext context);
 
 
-    public static class EventSqlMapper extends MapperBase implements ResultSetMapper<EntitlementEvent> {
+    public static class EventSqlMapper extends MapperBase implements ResultSetMapper<EntitlementEventModelDao> {
 
         @Override
-        public EntitlementEvent map(final int index, final ResultSet r, final StatementContext ctx)
+        public EntitlementEventModelDao map(final int index, final ResultSet r, final StatementContext ctx)
                 throws SQLException {
 
             final long totalOrdering = r.getLong("record_id");
@@ -117,55 +95,9 @@ public interface EntitlementEventSqlDao extends EntitySqlDao<EntitlementEvent> {
             final boolean isActive = r.getBoolean("is_active");
             final UUID userToken = r.getString("user_token") != null ? UUID.fromString(r.getString("user_token")) : null;
 
-            final EventBaseBuilder<?> base = ((eventType == EventType.PHASE) ?
-                                              new PhaseEventBuilder() :
-                                              new ApiEventBuilder())
-                    .setTotalOrdering(totalOrdering)
-                    .setUuid(id)
-                    .setSubscriptionId(subscriptionId)
-                    .setCreatedDate(createdDate)
-                    .setUpdatedDate(updatedDate)
-                    .setRequestedDate(requestedDate)
-                    .setEffectiveDate(effectiveDate)
-                    .setProcessedDate(createdDate)
-                    .setActiveVersion(currentVersion)
-                    .setActive(isActive);
+            return new EntitlementEventModelDao(id, totalOrdering, eventType, userType, requestedDate, effectiveDate, subscriptionId,
+                                                planName, phaseName, priceListName, currentVersion, isActive, createdDate, updatedDate);
 
-            EntitlementEvent result = null;
-            if (eventType == EventType.PHASE) {
-                result = new PhaseEventData(new PhaseEventBuilder(base).setPhaseName(phaseName));
-            } else if (eventType == EventType.API_USER) {
-                final ApiEventBuilder builder = new ApiEventBuilder(base)
-                        .setEventPlan(planName)
-                        .setEventPlanPhase(phaseName)
-                        .setEventPriceList(priceListName)
-                        .setEventType(userType)
-                        .setUserToken(userToken)
-                        .setFromDisk(true);
-
-                if (userType == ApiEventType.CREATE) {
-                    result = new ApiEventCreate(builder);
-                } else if (userType == ApiEventType.RE_CREATE) {
-                    result = new ApiEventReCreate(builder);
-                } else if (userType == ApiEventType.MIGRATE_ENTITLEMENT) {
-                    result = new ApiEventMigrateEntitlement(builder);
-                } else if (userType == ApiEventType.MIGRATE_BILLING) {
-                    result = new ApiEventMigrateBilling(builder);
-                } else if (userType == ApiEventType.TRANSFER) {
-                    result = new ApiEventTransfer(builder);
-                } else if (userType == ApiEventType.CHANGE) {
-                    result = new ApiEventChange(builder);
-                } else if (userType == ApiEventType.CANCEL) {
-                    result = new ApiEventCancel(builder);
-                } else if (userType == ApiEventType.RE_CREATE) {
-                    result = new ApiEventReCreate(builder);
-                } else if (userType == ApiEventType.UNCANCEL) {
-                    result = new ApiEventUncancel(builder);
-                }
-            } else {
-                throw new EntitlementError(String.format("Can't deserialize event %s", eventType));
-            }
-            return result;
         }
     }
 }

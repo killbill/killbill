@@ -186,7 +186,7 @@ public class BusinessInvoiceDao {
         if (invoiceItem.getBundleId() != null) {
             try {
                 final SubscriptionBundle bundle = entitlementApi.getBundleFromId(invoiceItem.getBundleId(), context);
-                externalKey = bundle.getKey();
+                externalKey = bundle.getExternalKey();
             } catch (EntitlementUserApiException e) {
                 log.warn("Ignoring subscription fields for invoice item {} for bundle {} (bundle does not exist)",
                          invoiceItem.getId().toString(),

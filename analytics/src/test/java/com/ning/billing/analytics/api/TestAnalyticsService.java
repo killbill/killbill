@@ -177,7 +177,7 @@ public class TestAnalyticsService extends AnalyticsTestSuiteWithEmbeddedDB {
 
         // Verify we correctly initialized the account subsystem
         Assert.assertNotNull(bundle);
-        Assert.assertEquals(bundle.getKey(), BUNDLE_EXTERNAL_KEY);
+        Assert.assertEquals(bundle.getExternalKey(), BUNDLE_EXTERNAL_KEY);
 
         // Create a subscription transition event
         final UUID subscriptionId = UUID.randomUUID();

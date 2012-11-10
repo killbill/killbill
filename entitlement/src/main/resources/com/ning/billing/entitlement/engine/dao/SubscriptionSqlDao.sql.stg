@@ -1,5 +1,6 @@
 group SubscriptionSqlDao: EntitySqlDao;
 
+tableName() ::= "subscriptions"
 
 tableFields(prefix) ::= <<
   <prefix>bundle_id
@@ -31,53 +32,44 @@ tableValues() ::= <<
 
 
 getSubscriptionsFromBundleId() ::= <<
-    select
-      id
-      , bundle_id
-      , category
-      , start_date
-      , bundle_start_date
-      , active_version
-      , charged_through_date
-      , paid_through_date
-      , created_date
-      , updated_date
-    from subscriptions
-    where bundle_id = :bundleId
-    <AND_CHECK_TENANT()>
-    ;
+select
+<allTableFields()>
+from <tableName()>
+where bundle_id = :bundleId
+<AND_CHECK_TENANT()>
+;
 >>
 
 updateChargedThroughDate() ::= <<
-    update subscriptions
-    set
-      charged_through_date = :chargedThroughDate
-      , updated_by = :userName
-      , updated_date = :updatedDate
-    where id = :id
-    <AND_CHECK_TENANT()>
-    ;
+update <tableName()>
+set
+charged_through_date = :chargedThroughDate
+, updated_by = :userName
+, updated_date = :updatedDate
+where id = :id
+<AND_CHECK_TENANT()>
+;
 >>
 
 updateActiveVersion() ::= <<
-    update subscriptions
-    set
-      active_version = :activeVersion
-      , updated_by = :userName
-      , updated_date = :updatedDate
-    where id = :id
-    ;
+update <tableName()>
+set
+active_version = :activeVersion
+, updated_by = :userName
+, updated_date = :updatedDate
+where id = :id
+;
 >>
 
 updateForRepair() ::= <<
-    update subscriptions
-    set
-      active_version = :activeVersion
-      , start_date = :startDate
-      , bundle_start_date = :bundleStartDate
-      , updated_by = :userName
-      , updated_date = :updatedDate
-    where id = :id
-    <AND_CHECK_TENANT()>
-    ;
+update <tableName()>
+set
+active_version = :activeVersion
+, start_date = :startDate
+, bundle_start_date = :bundleStartDate
+, updated_by = :userName
+, updated_date = :updatedDate
+where id = :id
+<AND_CHECK_TENANT()>
+;
 >>

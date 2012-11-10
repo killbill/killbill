@@ -89,7 +89,7 @@ public class BusinessOverdueStatusDao {
         }
 
         final String accountKey = account.getExternalKey();
-        final String externalKey = bundle.getKey();
+        final String externalKey = bundle.getExternalKey();
 
         overdueStatusSqlDao.inTransaction(new Transaction<Void, BusinessOverdueStatusSqlDao>() {
             @Override

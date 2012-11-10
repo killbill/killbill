@@ -195,7 +195,7 @@ public class BundleResource extends JaxRsResourceBase {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         final SubscriptionBundle bundle = entitlementApi.getBundleFromId(UUID.fromString(id), callContext);
         final DateTime inputDate = (requestedDate != null) ? DATE_TIME_FORMATTER.parseDateTime(requestedDate) : null;
-        final SubscriptionBundle newBundle = transferApi.transferBundle(bundle.getAccountId(), UUID.fromString(json.getAccountId()), bundle.getKey(), inputDate, transferAddOn,
+        final SubscriptionBundle newBundle = transferApi.transferBundle(bundle.getAccountId(), UUID.fromString(json.getAccountId()), bundle.getExternalKey(), inputDate, transferAddOn,
                                                                         cancelImmediatley, callContext);
 
         return uriBuilder.buildResponse(BundleResource.class, "getBundle", newBundle.getId(), uriInfo.getBaseUri().toString());

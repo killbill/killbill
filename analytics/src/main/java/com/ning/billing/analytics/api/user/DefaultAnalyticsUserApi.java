@@ -135,8 +135,8 @@ public class DefaultAnalyticsUserApi implements AnalyticsUserApi {
         final Collection<BusinessSubscriptionTransition> businessSubscriptionTransitions = new ArrayList<BusinessSubscriptionTransition>();
         final Collection<BusinessOverdueStatus> businessOverdueStatuses = new ArrayList<BusinessOverdueStatus>();
         for (final SubscriptionBundle bundle : bundles) {
-            businessSubscriptionTransitions.addAll(getTransitionsForBundle(bundle.getKey(), context));
-            businessOverdueStatuses.addAll(getOverdueStatusesForBundle(bundle.getKey(), context));
+            businessSubscriptionTransitions.addAll(getTransitionsForBundle(bundle.getExternalKey(), context));
+            businessOverdueStatuses.addAll(getOverdueStatusesForBundle(bundle.getExternalKey(), context));
         }
 
         // Find all invoices for that account

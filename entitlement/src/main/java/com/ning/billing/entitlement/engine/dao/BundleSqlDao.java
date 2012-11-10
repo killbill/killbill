@@ -33,6 +33,7 @@ import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
+import com.ning.billing.entitlement.engine.dao.model.SubscriptionBundleModelDao;
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
@@ -43,12 +44,8 @@ import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 
 @EntitySqlDaoStringTemplate
 @RegisterMapper(BundleSqlDao.ISubscriptionBundleSqlMapper.class)
-public interface BundleSqlDao extends EntitySqlDao<SubscriptionBundle> {
+public interface BundleSqlDao extends EntitySqlDao<SubscriptionBundleModelDao> {
 
-    @SqlUpdate
-    @Audited(ChangeType.INSERT)
-    public void insertBundle(@BindBean SubscriptionBundleData bundle,
-                             @BindBean final InternalCallContext context);
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
@@ -57,32 +54,30 @@ public interface BundleSqlDao extends EntitySqlDao<SubscriptionBundle> {
                                         @BindBean final InternalCallContext context);
 
     @SqlQuery
-    public SubscriptionBundle getBundleFromId(@Bind("id") String id,
-                                              @BindBean final InternalTenantContext context);
-
-    @SqlQuery
-    public SubscriptionBundle getBundleFromAccountAndKey(@Bind("accountId") String accountId,
+    public SubscriptionBundleModelDao getBundleFromAccountAndKey(@Bind("accountId") String accountId,
                                                          @Bind("externalKey") String externalKey,
                                                          @BindBean final InternalTenantContext context);
 
     @SqlQuery
-    public List<SubscriptionBundle> getBundleFromAccount(@Bind("accountId") String accountId,
+    public List<SubscriptionBundleModelDao> getBundleFromAccount(@Bind("accountId") String accountId,
                                                          @BindBean final InternalTenantContext context);
 
     @SqlQuery
-    public List<SubscriptionBundle> getBundlesForKey(@Bind("externalKey") String externalKey,
+    public List<SubscriptionBundleModelDao> getBundlesForKey(@Bind("externalKey") String externalKey,
                                                      @BindBean final InternalTenantContext context);
 
 
-    public static class ISubscriptionBundleSqlMapper extends MapperBase implements ResultSetMapper<SubscriptionBundle> {
+    public static class ISubscriptionBundleSqlMapper extends MapperBase implements ResultSetMapper<SubscriptionBundleModelDao> {
 
         @Override
-        public SubscriptionBundle map(final int arg, final ResultSet r, final StatementContext ctx) throws SQLException {
+        public SubscriptionBundleModelDao map(final int arg, final ResultSet r, final StatementContext ctx) throws SQLException {
             final UUID id = UUID.fromString(r.getString("id"));
             final String key = r.getString("external_key");
             final UUID accountId = UUID.fromString(r.getString("account_id"));
             final DateTime lastSysUpdateDate = getDateTime(r, "last_sys_update_date");
-            return new SubscriptionBundleData(id, key, accountId, lastSysUpdateDate);
+            final DateTime createdDate = getDateTime(r, "created_date");
+            final DateTime updatedDate = getDateTime(r, "updated_date");
+            return new SubscriptionBundleModelDao(id, key, accountId, lastSysUpdateDate, createdDate, updatedDate);
         }
     }
 }

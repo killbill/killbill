@@ -58,6 +58,10 @@ CREATE TABLE bundles (
     external_key varchar(64) NOT NULL,
     account_id char(36) NOT NULL,
     last_sys_update_date datetime,
+    created_by varchar(50) NOT NULL,
+    created_date datetime NOT NULL,
+    updated_by varchar(50) NOT NULL,
+    updated_date datetime NOT NULL,
     account_record_id int(11) unsigned default null,
     tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)
