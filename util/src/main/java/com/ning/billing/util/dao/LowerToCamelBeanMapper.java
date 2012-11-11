@@ -75,7 +75,7 @@ public class LowerToCamelBeanMapper<T> implements ResultSetMapper<T> {
         final ResultSetMetaData metadata = rs.getMetaData();
 
         for (int i = 1; i <= metadata.getColumnCount(); ++i) {
-            final String name = metadata.getColumnName(i).toLowerCase();
+            final String name = metadata.getColumnLabel(i).toLowerCase();
 
             final PropertyDescriptor descriptor = properties.get(name);
 

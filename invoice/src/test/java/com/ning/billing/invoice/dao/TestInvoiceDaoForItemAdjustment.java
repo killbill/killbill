@@ -117,7 +117,19 @@ public class TestInvoiceDaoForItemAdjustment extends InvoiceDaoTestBase {
 
         // Retrieve the item by id
         final InvoiceItemModelDao retrievedInvoiceItem = invoiceItemSqlDao.getById(adjustedInvoiceItem.getId().toString(), internalCallContext);
-        Assert.assertEquals(retrievedInvoiceItem, adjustedInvoiceItem);
+        // TODO We can't use equals() due to the createdDate field
+        Assert.assertEquals(retrievedInvoiceItem.getAccountId(), adjustedInvoiceItem.getAccountId());
+        Assert.assertNull(retrievedInvoiceItem.getBundleId());
+        Assert.assertEquals(retrievedInvoiceItem.getCurrency(), adjustedInvoiceItem.getCurrency());
+        Assert.assertEquals(retrievedInvoiceItem.getEndDate(), adjustedInvoiceItem.getEndDate());
+        Assert.assertEquals(retrievedInvoiceItem.getInvoiceId(), adjustedInvoiceItem.getInvoiceId());
+        Assert.assertEquals(retrievedInvoiceItem.getType(), adjustedInvoiceItem.getType());
+        Assert.assertEquals(retrievedInvoiceItem.getLinkedItemId(), adjustedInvoiceItem.getLinkedItemId());
+        Assert.assertNull(retrievedInvoiceItem.getPhaseName());
+        Assert.assertNull(retrievedInvoiceItem.getPlanName());
+        Assert.assertNull(retrievedInvoiceItem.getRate());
+        Assert.assertEquals(retrievedInvoiceItem.getStartDate(), adjustedInvoiceItem.getStartDate());
+        Assert.assertNull(retrievedInvoiceItem.getSubscriptionId());
 
         // Retrieve the item by invoice id
         final InvoiceModelDao retrievedInvoice = invoiceDao.getById(adjustedInvoiceItem.getInvoiceId(), internalCallContext);
@@ -129,7 +141,19 @@ public class TestInvoiceDaoForItemAdjustment extends InvoiceDaoTestBase {
         } else {
             retrievedByInvoiceInvoiceItem = invoiceItems.get(1);
         }
-        Assert.assertEquals(retrievedByInvoiceInvoiceItem, adjustedInvoiceItem);
+        // TODO We can't use equals() due to the createdDate field
+        Assert.assertEquals(retrievedByInvoiceInvoiceItem.getAccountId(), adjustedInvoiceItem.getAccountId());
+        Assert.assertEquals(retrievedByInvoiceInvoiceItem.getBundleId(), adjustedInvoiceItem.getBundleId());
+        Assert.assertEquals(retrievedByInvoiceInvoiceItem.getCurrency(), adjustedInvoiceItem.getCurrency());
+        Assert.assertEquals(retrievedByInvoiceInvoiceItem.getEndDate(), adjustedInvoiceItem.getEndDate());
+        Assert.assertEquals(retrievedByInvoiceInvoiceItem.getInvoiceId(), adjustedInvoiceItem.getInvoiceId());
+        Assert.assertEquals(retrievedByInvoiceInvoiceItem.getType(), adjustedInvoiceItem.getType());
+        Assert.assertEquals(retrievedByInvoiceInvoiceItem.getLinkedItemId(), adjustedInvoiceItem.getLinkedItemId());
+        Assert.assertEquals(retrievedByInvoiceInvoiceItem.getPhaseName(), adjustedInvoiceItem.getPhaseName());
+        Assert.assertEquals(retrievedByInvoiceInvoiceItem.getPlanName(), adjustedInvoiceItem.getPlanName());
+        Assert.assertEquals(retrievedByInvoiceInvoiceItem.getRate(), adjustedInvoiceItem.getRate());
+        Assert.assertEquals(retrievedInvoiceItem.getStartDate(), adjustedInvoiceItem.getStartDate());
+        Assert.assertEquals(retrievedInvoiceItem.getSubscriptionId(), adjustedInvoiceItem.getSubscriptionId());
 
         // Verify the invoice balance
         if (amount == null) {
