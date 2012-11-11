@@ -28,14 +28,16 @@ import com.ning.billing.util.entity.EntityBase;
 
 public class InvoicePaymentModelDao extends EntityBase {
 
-    private final InvoicePaymentType type;
-    private final UUID invoiceId;
-    private final UUID paymentId;
-    private final DateTime paymentDate;
-    private final BigDecimal amount;
-    private final Currency currency;
-    private final UUID paymentCookieId;
-    private final UUID linkedInvoicePaymentId;
+    private InvoicePaymentType type;
+    private UUID invoiceId;
+    private UUID paymentId;
+    private DateTime paymentDate;
+    private BigDecimal amount;
+    private Currency currency;
+    private UUID paymentCookieId;
+    private UUID linkedInvoicePaymentId;
+
+    public InvoicePaymentModelDao() { /* For the DAO mapper */ }
 
     public InvoicePaymentModelDao(final UUID id, final DateTime createdDate, final InvoicePaymentType type, final UUID invoiceId,
                                   final UUID paymentId, final DateTime paymentDate, final BigDecimal amount, final Currency currency,

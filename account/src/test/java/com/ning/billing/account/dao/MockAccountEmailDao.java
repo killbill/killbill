@@ -22,17 +22,16 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.entity.dao.MockEntityDaoBase;
 
-public class MockAccountEmailDao extends MockEntityDaoBase<AccountEmail, AccountApiException> implements AccountEmailDao {
+public class MockAccountEmailDao extends MockEntityDaoBase<AccountEmailModelDao, AccountApiException> implements AccountEmailDao {
 
     @Override
-    public List<AccountEmail> getByAccountId(final UUID accountId, final InternalTenantContext context) {
-        final List<AccountEmail> accountEmails = new ArrayList<AccountEmail>();
-        for (final Map<Long, AccountEmail> accountEmail : entities.values()) {
-            final AccountEmail email = accountEmail.values().iterator().next();
+    public List<AccountEmailModelDao> getByAccountId(final UUID accountId, final InternalTenantContext context) {
+        final List<AccountEmailModelDao> accountEmails = new ArrayList<AccountEmailModelDao>();
+        for (final Map<Long, AccountEmailModelDao> accountEmail : entities.values()) {
+            final AccountEmailModelDao email = accountEmail.values().iterator().next();
             if (email.getAccountId().equals(accountId)) {
                 accountEmails.add(email);
             }

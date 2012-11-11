@@ -45,7 +45,6 @@ import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.config.InvoiceConfig;
 import com.ning.billing.util.entity.EntityPersistenceException;
 import com.ning.billing.util.svcsapi.bus.InternalBus;
-import com.ning.billing.util.tag.api.user.TagEventBuilder;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
@@ -55,8 +54,6 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
 public class InvoiceDaoTestBase extends InvoicingTestBase {
-
-    protected final TagEventBuilder tagEventBuilder = new TagEventBuilder();
 
     protected IDBI dbi;
     protected InvoiceDao invoiceDao;
@@ -137,7 +134,7 @@ public class InvoiceDaoTestBase extends InvoicingTestBase {
         }
     }
 
-    protected void createInvoiceItem(final InvoiceItem invoiceItem, final InternalCallContext internalCallContext) {
+    protected void createInvoiceItem(final InvoiceItem invoiceItem, final InternalCallContext internalCallContext) throws EntityPersistenceException {
         invoiceItemSqlDao.create(new InvoiceItemModelDao(invoiceItem), internalCallContext);
     }
 

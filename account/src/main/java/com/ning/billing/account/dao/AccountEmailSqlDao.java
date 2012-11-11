@@ -23,9 +23,7 @@ import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
-import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 
-import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
@@ -34,15 +32,14 @@ import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 
 @EntitySqlDaoStringTemplate
-@RegisterMapper(AccountEmailMapper.class)
-public interface AccountEmailSqlDao extends EntitySqlDao<AccountEmail> {
+public interface AccountEmailSqlDao extends EntitySqlDao<AccountEmailModelDao> {
 
     @SqlUpdate
     @Audited(ChangeType.DELETE)
-    public void delete(@BindBean final AccountEmail accountEmail,
+    public void delete(@BindBean final AccountEmailModelDao accountEmail,
                        @BindBean final InternalCallContext context);
 
     @SqlQuery
-    public List<AccountEmail> getEmailByAccountId(@Bind("accountId") final UUID accountId,
-                                                  @BindBean final InternalTenantContext context);
+    public List<AccountEmailModelDao> getEmailByAccountId(@Bind("accountId") final UUID accountId,
+                                                          @BindBean final InternalTenantContext context);
 }

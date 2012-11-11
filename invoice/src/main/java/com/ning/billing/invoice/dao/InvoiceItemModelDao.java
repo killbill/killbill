@@ -29,19 +29,21 @@ import com.ning.billing.util.entity.EntityBase;
 
 public class InvoiceItemModelDao extends EntityBase {
 
-    private final InvoiceItemType type;
-    private final UUID invoiceId;
-    private final UUID accountId;
-    private final UUID bundleId;
-    private final UUID subscriptionId;
-    private final String planName;
-    private final String phaseName;
-    private final LocalDate startDate;
-    private final LocalDate endDate;
-    private final BigDecimal amount;
-    private final BigDecimal rate;
-    private final Currency currency;
-    private final UUID linkedItemId;
+    private InvoiceItemType type;
+    private UUID invoiceId;
+    private UUID accountId;
+    private UUID bundleId;
+    private UUID subscriptionId;
+    private String planName;
+    private String phaseName;
+    private LocalDate startDate;
+    private LocalDate endDate;
+    private BigDecimal amount;
+    private BigDecimal rate;
+    private Currency currency;
+    private UUID linkedItemId;
+
+    public InvoiceItemModelDao() { /* For the DAO mapper */ }
 
     public InvoiceItemModelDao(final UUID id, final DateTime createdDate, final InvoiceItemType type, final UUID invoiceId,
                                final UUID accountId, final UUID bundleId, final UUID subscriptionId, final String planName,

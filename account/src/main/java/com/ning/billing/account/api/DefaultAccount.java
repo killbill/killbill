@@ -129,7 +129,7 @@ public class DefaultAccount extends EntityBase implements Account {
     public DefaultAccount(final AccountModelDao accountModelDao) {
         this(accountModelDao.getId(), accountModelDao.getCreatedDate(), accountModelDao.getUpdatedDate(), accountModelDao.getExternalKey(),
              accountModelDao.getEmail(), accountModelDao.getName(), accountModelDao.getFirstNameLength(), accountModelDao.getCurrency(),
-             new DefaultBillCycleDay(accountModelDao.getBillingCycleDayLocal(), accountModelDao.getBillingCycleDayUTC()), accountModelDao.getPaymentMethodId(),
+             new DefaultBillCycleDay(accountModelDao.getBillingCycleDayLocal(), accountModelDao.getBillingCycleDayUtc()), accountModelDao.getPaymentMethodId(),
              accountModelDao.getTimeZone(), accountModelDao.getLocale(), accountModelDao.getAddress1(), accountModelDao.getAddress2(),
              accountModelDao.getCompanyName(), accountModelDao.getCity(), accountModelDao.getStateOrProvince(), accountModelDao.getCountry(),
              accountModelDao.getPostalCode(), accountModelDao.getPhone(), accountModelDao.getMigrated(), accountModelDao.getIsNotifiedForInvoices());

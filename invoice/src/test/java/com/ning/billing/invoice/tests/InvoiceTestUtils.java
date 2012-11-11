@@ -55,8 +55,13 @@ public class InvoiceTestUtils {
                                                   final Currency currency,
                                                   final CallContext callContext,
                                                   final InternalCallContextFactory internalCallContextFactory) {
-        return createAndPersistInvoice(invoiceSqlDao, invoiceItemSqlDao, clock, ImmutableList.<BigDecimal>of(amount),
-                                       currency, callContext, internalCallContextFactory);
+        try {
+            return createAndPersistInvoice(invoiceSqlDao, invoiceItemSqlDao, clock, ImmutableList.<BigDecimal>of(amount),
+                                           currency, callContext, internalCallContextFactory);
+        } catch (EntityPersistenceException e) {
+            Assert.fail(e.getMessage());
+            return null;
+        }
     }
 
     public static Invoice createAndPersistInvoice(final InvoiceSqlDao invoiceSqlDao,
@@ -65,7 +70,7 @@ public class InvoiceTestUtils {
                                                   final List<BigDecimal> amounts,
                                                   final Currency currency,
                                                   final CallContext callContext,
-                                                  final InternalCallContextFactory internalCallContextFactory) {
+                                                  final InternalCallContextFactory internalCallContextFactory) throws EntityPersistenceException {
         final Invoice invoice = Mockito.mock(Invoice.class);
         final UUID invoiceId = UUID.randomUUID();
         final UUID accountId = UUID.randomUUID();

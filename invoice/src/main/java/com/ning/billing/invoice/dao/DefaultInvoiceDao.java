@@ -41,6 +41,7 @@ import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.entity.EntityPersistenceException;
 import com.ning.billing.util.entity.dao.EntityDaoBase;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
@@ -831,7 +832,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, InvoiceApi
      */
     private void insertItemAndAddCBAIfNeeded(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory,
                                              final InvoiceItemModelDao item,
-                                             final InternalCallContext context) {
+                                             final InternalCallContext context) throws EntityPersistenceException {
         final InvoiceItemSqlDao transInvoiceItemDao = entitySqlDaoWrapperFactory.become(InvoiceItemSqlDao.class);
         transInvoiceItemDao.create(item, context);
 
@@ -847,7 +848,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, InvoiceApi
      */
     private void addCBAIfNeeded(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory,
                                 final UUID invoiceId,
-                                final InternalCallContext context) {
+                                final InternalCallContext context) throws EntityPersistenceException {
         final InvoiceModelDao invoice = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class).getById(invoiceId.toString(), context);
         if (invoice != null) {
             populateChildren(invoice, entitySqlDaoWrapperFactory, context);

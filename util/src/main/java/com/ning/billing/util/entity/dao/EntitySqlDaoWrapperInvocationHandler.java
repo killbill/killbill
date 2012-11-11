@@ -150,7 +150,6 @@ public class EntitySqlDaoWrapperInvocationHandler<T extends EntitySqlDao<U>, U e
 
             for (final String entityId : entityIds) {
                 updateHistoryAndAudit(entityId, entities, entityRecordIds, changeType, context);
-
             }
         }
 

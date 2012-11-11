@@ -27,12 +27,18 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.account.api.DefaultAccount;
+import com.ning.billing.account.api.DefaultAccountEmail;
 import com.ning.billing.account.dao.AccountDao;
 import com.ning.billing.account.dao.AccountEmailDao;
+import com.ning.billing.account.dao.AccountEmailModelDao;
 import com.ning.billing.account.dao.AccountModelDao;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
+
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
 
 public class DefaultAccountInternalApi implements AccountInternalApi {
 
@@ -78,7 +84,13 @@ public class DefaultAccountInternalApi implements AccountInternalApi {
     @Override
     public List<AccountEmail> getEmails(final UUID accountId,
                                         final InternalTenantContext context) {
-        return accountEmailDao.getByAccountId(accountId, context);
+        return ImmutableList.<AccountEmail>copyOf(Collections2.transform(accountEmailDao.getByAccountId(accountId, context),
+                                                                         new Function<AccountEmailModelDao, AccountEmail>() {
+                                                                             @Override
+                                                                             public AccountEmail apply(final AccountEmailModelDao input) {
+                                                                                 return new DefaultAccountEmail(input);
+                                                                             }
+                                                                         }));
     }
 
     @Override

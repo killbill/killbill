@@ -23,7 +23,6 @@ import org.skife.jdbi.v2.IDBI;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.entity.dao.EntityDaoBase;
@@ -34,7 +33,7 @@ import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 
 import com.google.inject.Inject;
 
-public class DefaultAccountEmailDao extends EntityDaoBase<AccountEmail, AccountApiException> implements AccountEmailDao {
+public class DefaultAccountEmailDao extends EntityDaoBase<AccountEmailModelDao, AccountApiException> implements AccountEmailDao {
 
     @Inject
     public DefaultAccountEmailDao(final IDBI dbi) {
@@ -42,7 +41,7 @@ public class DefaultAccountEmailDao extends EntityDaoBase<AccountEmail, AccountA
     }
 
     @Override
-    public void delete(final AccountEmail email, final InternalCallContext context) {
+    public void delete(final AccountEmailModelDao email, final InternalCallContext context) {
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
@@ -53,17 +52,17 @@ public class DefaultAccountEmailDao extends EntityDaoBase<AccountEmail, AccountA
     }
 
     @Override
-    public List<AccountEmail> getByAccountId(final UUID accountId, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<AccountEmail>>() {
+    public List<AccountEmailModelDao> getByAccountId(final UUID accountId, final InternalTenantContext context) {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<AccountEmailModelDao>>() {
             @Override
-            public List<AccountEmail> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+            public List<AccountEmailModelDao> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
                 return entitySqlDaoWrapperFactory.become(AccountEmailSqlDao.class).getEmailByAccountId(accountId, context);
             }
         });
     }
 
     @Override
-    protected AccountApiException generateAlreadyExistsException(final AccountEmail entity, final InternalCallContext context) {
+    protected AccountApiException generateAlreadyExistsException(final AccountEmailModelDao entity, final InternalCallContext context) {
         return new AccountApiException(ErrorCode.ACCOUNT_EMAIL_ALREADY_EXISTS, entity.getId());
     }
 }

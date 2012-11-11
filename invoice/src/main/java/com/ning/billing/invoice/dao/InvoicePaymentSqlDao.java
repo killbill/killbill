@@ -17,34 +17,24 @@
 package com.ning.billing.invoice.dao;
 
 import java.math.BigDecimal;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
-import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlBatch;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
-import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.invoice.api.InvoicePayment.InvoicePaymentType;
-import com.ning.billing.invoice.dao.InvoicePaymentSqlDao.InvoicePaymentModelDaoMapper;
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.dao.MapperBase;
 import com.ning.billing.util.dao.UuidMapper;
 import com.ning.billing.util.entity.dao.Audited;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 
 @EntitySqlDaoStringTemplate
-@RegisterMapper(InvoicePaymentModelDaoMapper.class)
 public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePaymentModelDao> {
 
     @SqlQuery
@@ -84,25 +74,4 @@ public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePaymentModelDa
     @SqlQuery
     List<InvoicePaymentModelDao> getChargebacksByPaymentId(@Bind("paymentId") final String paymentId,
                                                            @BindBean final InternalTenantContext context);
-
-    public static class InvoicePaymentModelDaoMapper extends MapperBase implements ResultSetMapper<InvoicePaymentModelDao> {
-
-        @Override
-        public InvoicePaymentModelDao map(final int index, final ResultSet result, final StatementContext context) throws SQLException {
-            final UUID id = getUUID(result, "id");
-            final InvoicePaymentType type = InvoicePaymentType.valueOf(result.getString("type"));
-            final UUID paymentId = getUUID(result, "payment_id");
-            final UUID invoiceId = getUUID(result, "invoice_id");
-            final DateTime paymentDate = getDateTime(result, "payment_date");
-            final BigDecimal amount = result.getBigDecimal("amount");
-            final String currencyString = result.getString("currency");
-            final Currency currency = (currencyString == null) ? null : Currency.valueOf(currencyString);
-            final UUID paymentCookieId = getUUID(result, "payment_cookie_id");
-            final UUID linkedInvoicePaymentId = getUUID(result, "linked_invoice_payment_id");
-            final DateTime createdDate = getDateTime(result, "created_date");
-
-            return new InvoicePaymentModelDao(id, createdDate, type, invoiceId, paymentId, paymentDate,
-                                              amount, currency, paymentCookieId, linkedInvoicePaymentId);
-        }
-    }
 }

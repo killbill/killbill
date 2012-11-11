@@ -22,13 +22,19 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
 
+import org.skife.jdbi.v2.Query;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.sqlobject.SqlStatementCustomizer;
 import org.skife.jdbi.v2.sqlobject.SqlStatementCustomizingAnnotation;
+import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.StringTemplate3StatementLocator;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.UseStringTemplate3StatementLocator;
 import org.skife.jdbi.v2.tweak.StatementLocator;
+
+import com.ning.billing.util.dao.LowerToCamelBeanMapperFactory;
+import com.ning.billing.util.entity.Entity;
 
 @SqlStatementCustomizingAnnotation(EntitySqlDaoStringTemplate.EntitySqlDaoLocatorFactory.class)
 @Retention(RetentionPolicy.RUNTIME)
@@ -55,8 +61,30 @@ public @interface EntitySqlDaoStringTemplate {
             }
 
             return new SqlStatementCustomizer() {
-                public void apply(final SQLStatement q) {
-                    q.setStatementLocator(l);
+                public void apply(final SQLStatement statement) {
+                    statement.setStatementLocator(l);
+
+                    if (statement instanceof Query) {
+                        final Query query = (Query) statement;
+
+                        // Find the model class associated with this sqlObjectType (which is a SqlDao class) to register its mapper
+                        // If a custom mapper is defined via @RegisterMapper, don't register our generic one
+                        if (sqlObjectType.getGenericInterfaces() != null &&
+                            sqlObjectType.getAnnotation(RegisterMapper.class) == null) {
+                            for (int i = 0; i < sqlObjectType.getGenericInterfaces().length; i++) {
+                                if (sqlObjectType.getGenericInterfaces()[i] instanceof ParameterizedType) {
+                                    final ParameterizedType type = (ParameterizedType) sqlObjectType.getGenericInterfaces()[i];
+                                    for (int j = 0; j < type.getActualTypeArguments().length; j++) {
+                                        final Class modelClazz = (Class) type.getActualTypeArguments()[i];
+                                        if (Entity.class.isAssignableFrom(modelClazz)) {
+                                            query.registerMapper(new LowerToCamelBeanMapperFactory(modelClazz));
+                                        }
+                                    }
+                                }
+
+                            }
+                        }
+                    }
                 }
             };
         }

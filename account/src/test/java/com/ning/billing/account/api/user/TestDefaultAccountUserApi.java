@@ -96,7 +96,7 @@ public class TestDefaultAccountUserApi extends AccountTestSuite {
         Assert.assertEquals(account.getFirstNameLength(), firstNameLength);
         Assert.assertEquals(account.getCurrency(), currency);
         Assert.assertEquals(account.getBillingCycleDayLocal(), billCycleDay.getDayOfMonthLocal());
-        Assert.assertEquals(account.getBillingCycleDayUTC(), billCycleDay.getDayOfMonthUTC());
+        Assert.assertEquals(account.getBillingCycleDayUtc(), billCycleDay.getDayOfMonthUTC());
         Assert.assertEquals(account.getPaymentMethodId(), paymentMethodId);
         Assert.assertEquals(account.getTimeZone(), timeZone);
         Assert.assertEquals(account.getLocale(), locale);

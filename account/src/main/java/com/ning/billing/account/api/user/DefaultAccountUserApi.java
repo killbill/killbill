@@ -34,6 +34,7 @@ import com.ning.billing.account.api.DefaultAccountEmail;
 import com.ning.billing.account.api.MigrationAccountData;
 import com.ning.billing.account.dao.AccountDao;
 import com.ning.billing.account.dao.AccountEmailDao;
+import com.ning.billing.account.dao.AccountEmailModelDao;
 import com.ning.billing.account.dao.AccountModelDao;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextFactory;
@@ -164,16 +165,22 @@ public class DefaultAccountUserApi implements AccountUserApi {
 
     @Override
     public List<AccountEmail> getEmails(final UUID accountId, final TenantContext context) {
-        return accountEmailDao.getByAccountId(accountId, internalCallContextFactory.createInternalTenantContext(context));
+        return ImmutableList.<AccountEmail>copyOf(Collections2.transform(accountEmailDao.getByAccountId(accountId, internalCallContextFactory.createInternalTenantContext(context)),
+                                                                         new Function<AccountEmailModelDao, AccountEmail>() {
+                                                                             @Override
+                                                                             public AccountEmail apply(final AccountEmailModelDao input) {
+                                                                                 return new DefaultAccountEmail(input);
+                                                                             }
+                                                                         }));
     }
 
     @Override
     public void addEmail(final UUID accountId, final AccountEmail email, final CallContext context) throws AccountApiException {
-        accountEmailDao.create(email, internalCallContextFactory.createInternalCallContext(accountId, context));
+        accountEmailDao.create(new AccountEmailModelDao(email), internalCallContextFactory.createInternalCallContext(accountId, context));
     }
 
     @Override
     public void removeEmail(final UUID accountId, final AccountEmail email, final CallContext context) {
-        accountEmailDao.delete(email, internalCallContextFactory.createInternalCallContext(accountId, context));
+        accountEmailDao.delete(new AccountEmailModelDao(email), internalCallContextFactory.createInternalCallContext(accountId, context));
     }
 }

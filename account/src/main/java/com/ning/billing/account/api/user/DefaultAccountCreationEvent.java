@@ -135,7 +135,7 @@ public class DefaultAccountCreationEvent extends DefaultBusInternalEvent impleme
                  d.getName(),
                  d.getFirstNameLength(),
                  d.getEmail(),
-                 new DefaultBillCycleDay(d.getBillingCycleDayLocal(), d.getBillingCycleDayUTC()),
+                 new DefaultBillCycleDay(d.getBillingCycleDayLocal(), d.getBillingCycleDayUtc()),
                  d.getCurrency() != null ? d.getCurrency().name() : null,
                  d.getPaymentMethodId(),
                  d.getTimeZone() != null ? d.getTimeZone().getID() : null,

@@ -30,16 +30,18 @@ import com.ning.billing.util.entity.EntityBase;
 
 public class InvoiceModelDao extends EntityBase {
 
-    private final UUID accountId;
-    private final Integer invoiceNumber;
-    private final LocalDate invoiceDate;
-    private final LocalDate targetDate;
-    private final Currency currency;
-    private final boolean migrated;
+    private UUID accountId;
+    private Integer invoiceNumber;
+    private LocalDate invoiceDate;
+    private LocalDate targetDate;
+    private Currency currency;
+    private boolean migrated;
 
     // Note in the database, for convenience only
     private List<InvoiceItemModelDao> invoiceItems;
     private List<InvoicePaymentModelDao> invoicePayments;
+
+    public InvoiceModelDao() { /* For the DAO mapper */ }
 
     public InvoiceModelDao(final UUID id, @Nullable final DateTime createdDate, final UUID accountId,
                            @Nullable final Integer invoiceNumber, final LocalDate invoiceDate, final LocalDate targetDate,

@@ -29,30 +29,32 @@ import com.ning.billing.util.entity.EntityBase;
 
 public class AccountModelDao extends EntityBase {
 
-    private final String externalKey;
-    private final String email;
-    private final String name;
-    private final Integer firstNameLength;
-    private final Currency currency;
-    private final int billingCycleDayLocal;
-    private final int billingCycleDayUTC;
-    private final UUID paymentMethodId;
-    private final DateTimeZone timeZone;
-    private final String locale;
-    private final String address1;
-    private final String address2;
-    private final String companyName;
-    private final String city;
-    private final String stateOrProvince;
-    private final String country;
-    private final String postalCode;
-    private final String phone;
-    private final Boolean isMigrated;
-    private final Boolean isNotifiedForInvoices;
+    private String externalKey;
+    private String email;
+    private String name;
+    private Integer firstNameLength;
+    private Currency currency;
+    private int billingCycleDayLocal;
+    private int billingCycleDayUtc;
+    private UUID paymentMethodId;
+    private DateTimeZone timeZone;
+    private String locale;
+    private String address1;
+    private String address2;
+    private String companyName;
+    private String city;
+    private String stateOrProvince;
+    private String country;
+    private String postalCode;
+    private String phone;
+    private Boolean migrated;
+    private Boolean isNotifiedForInvoices;
+
+    public AccountModelDao() { /* For the DAO mapper */ }
 
     public AccountModelDao(final UUID id, final DateTime createdDate, final DateTime updatedDate, final String externalKey,
                            final String email, final String name, final Integer firstNameLength, final Currency currency,
-                           final int billingCycleDayLocal, final int billingCycleDayUTC, final UUID paymentMethodId, final DateTimeZone timeZone,
+                           final int billingCycleDayLocal, final int billingCycleDayUtc, final UUID paymentMethodId, final DateTimeZone timeZone,
                            final String locale, final String address1, final String address2, final String companyName,
                            final String city, final String stateOrProvince, final String country, final String postalCode,
                            final String phone, final Boolean migrated, final Boolean notifiedForInvoices) {
@@ -63,7 +65,7 @@ public class AccountModelDao extends EntityBase {
         this.firstNameLength = firstNameLength;
         this.currency = currency;
         this.billingCycleDayLocal = billingCycleDayLocal;
-        this.billingCycleDayUTC = billingCycleDayUTC;
+        this.billingCycleDayUtc = billingCycleDayUtc;
         this.paymentMethodId = paymentMethodId;
         this.timeZone = timeZone;
         this.locale = locale;
@@ -75,7 +77,7 @@ public class AccountModelDao extends EntityBase {
         this.country = country;
         this.postalCode = postalCode;
         this.phone = phone;
-        this.isMigrated = migrated;
+        this.migrated = migrated;
         this.isNotifiedForInvoices = notifiedForInvoices;
     }
 
@@ -119,8 +121,8 @@ public class AccountModelDao extends EntityBase {
         return billingCycleDayLocal;
     }
 
-    public int getBillingCycleDayUTC() {
-        return billingCycleDayUTC;
+    public int getBillingCycleDayUtc() {
+        return billingCycleDayUtc;
     }
 
     public UUID getPaymentMethodId() {
@@ -168,7 +170,7 @@ public class AccountModelDao extends EntityBase {
     }
 
     public Boolean getMigrated() {
-        return isMigrated;
+        return migrated;
     }
 
     // TODO Required for making the BindBeanFactory with Introspector work
@@ -187,7 +189,7 @@ public class AccountModelDao extends EntityBase {
         sb.append(", firstNameLength=").append(firstNameLength);
         sb.append(", currency=").append(currency);
         sb.append(", billingCycleDayLocal=").append(billingCycleDayLocal);
-        sb.append(", billingCycleDayUTC=").append(billingCycleDayUTC);
+        sb.append(", billingCycleDayUTC=").append(billingCycleDayUtc);
         sb.append(", paymentMethodId=").append(paymentMethodId);
         sb.append(", timeZone=").append(timeZone);
         sb.append(", locale='").append(locale).append('\'');
@@ -199,7 +201,7 @@ public class AccountModelDao extends EntityBase {
         sb.append(", country='").append(country).append('\'');
         sb.append(", postalCode='").append(postalCode).append('\'');
         sb.append(", phone='").append(phone).append('\'');
-        sb.append(", isMigrated=").append(isMigrated);
+        sb.append(", migrated=").append(migrated);
         sb.append(", isNotifiedForInvoices=").append(isNotifiedForInvoices);
         sb.append('}');
         return sb.toString();
@@ -222,7 +224,7 @@ public class AccountModelDao extends EntityBase {
         if (billingCycleDayLocal != that.billingCycleDayLocal) {
             return false;
         }
-        if (billingCycleDayUTC != that.billingCycleDayUTC) {
+        if (billingCycleDayUtc != that.billingCycleDayUtc) {
             return false;
         }
         if (address1 != null ? !address1.equals(that.address1) : that.address1 != null) {
@@ -252,7 +254,7 @@ public class AccountModelDao extends EntityBase {
         if (firstNameLength != null ? !firstNameLength.equals(that.firstNameLength) : that.firstNameLength != null) {
             return false;
         }
-        if (isMigrated != null ? !isMigrated.equals(that.isMigrated) : that.isMigrated != null) {
+        if (migrated != null ? !migrated.equals(that.migrated) : that.migrated != null) {
             return false;
         }
         if (isNotifiedForInvoices != null ? !isNotifiedForInvoices.equals(that.isNotifiedForInvoices) : that.isNotifiedForInvoices != null) {
@@ -292,7 +294,7 @@ public class AccountModelDao extends EntityBase {
         result = 31 * result + (firstNameLength != null ? firstNameLength.hashCode() : 0);
         result = 31 * result + (currency != null ? currency.hashCode() : 0);
         result = 31 * result + billingCycleDayLocal;
-        result = 31 * result + billingCycleDayUTC;
+        result = 31 * result + billingCycleDayUtc;
         result = 31 * result + (paymentMethodId != null ? paymentMethodId.hashCode() : 0);
         result = 31 * result + (timeZone != null ? timeZone.hashCode() : 0);
         result = 31 * result + (locale != null ? locale.hashCode() : 0);
@@ -304,7 +306,7 @@ public class AccountModelDao extends EntityBase {
         result = 31 * result + (country != null ? country.hashCode() : 0);
         result = 31 * result + (postalCode != null ? postalCode.hashCode() : 0);
         result = 31 * result + (phone != null ? phone.hashCode() : 0);
-        result = 31 * result + (isMigrated != null ? isMigrated.hashCode() : 0);
+        result = 31 * result + (migrated != null ? migrated.hashCode() : 0);
         result = 31 * result + (isNotifiedForInvoices != null ? isNotifiedForInvoices.hashCode() : 0);
         return result;
     }

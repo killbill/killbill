@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2012 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -14,36 +14,36 @@
  * under the License.
  */
 
-package com.ning.billing.account.api;
+package com.ning.billing.account.dao;
 
 import java.util.UUID;
 
-import com.ning.billing.account.dao.AccountEmailModelDao;
+import org.joda.time.DateTime;
+
+import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.util.entity.EntityBase;
 
-public class DefaultAccountEmail extends EntityBase implements AccountEmail {
+public class AccountEmailModelDao extends EntityBase {
 
-    private final UUID accountId;
-    private final String email;
+    private UUID accountId;
+    private String email;
 
-    public DefaultAccountEmail(final UUID accountId, final String email) {
-        super();
+    public AccountEmailModelDao() { /* For the DAO mapper */ }
+
+    public AccountEmailModelDao(final UUID id, final DateTime createdDate, final DateTime updatedDate, final UUID accountId, final String email) {
+        super(id, createdDate, updatedDate);
         this.accountId = accountId;
         this.email = email;
     }
 
-    public DefaultAccountEmail(final AccountEmailModelDao accountEmail) {
-        super(accountEmail.getId(), accountEmail.getCreatedDate(), accountEmail.getUpdatedDate());
-        this.accountId = accountEmail.getAccountId();
-        this.email = accountEmail.getEmail();
+    public AccountEmailModelDao(final AccountEmail email) {
+        this(email.getId(), email.getCreatedDate(), email.getUpdatedDate(), email.getAccountId(), email.getEmail());
     }
 
-    @Override
     public UUID getAccountId() {
         return accountId;
     }
 
-    @Override
     public String getEmail() {
         return email;
     }
@@ -51,7 +51,7 @@ public class DefaultAccountEmail extends EntityBase implements AccountEmail {
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
-        sb.append("DefaultAccountEmail");
+        sb.append("AccountEmailModelDao");
         sb.append("{accountId=").append(accountId);
         sb.append(", email='").append(email).append('\'');
         sb.append('}');
@@ -66,8 +66,11 @@ public class DefaultAccountEmail extends EntityBase implements AccountEmail {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
+        if (!super.equals(o)) {
+            return false;
+        }
 
-        final DefaultAccountEmail that = (DefaultAccountEmail) o;
+        final AccountEmailModelDao that = (AccountEmailModelDao) o;
 
         if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
             return false;
@@ -81,7 +84,8 @@ public class DefaultAccountEmail extends EntityBase implements AccountEmail {
 
     @Override
     public int hashCode() {
-        int result = accountId != null ? accountId.hashCode() : 0;
+        int result = super.hashCode();
+        result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
         result = 31 * result + (email != null ? email.hashCode() : 0);
         return result;
     }
