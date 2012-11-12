@@ -31,7 +31,7 @@ public class InternalCallContext extends InternalTenantContext {
     private final String createdBy;
     private final String updatedBy;
     private final CallOrigin callOrigin;
-    private final UserType userType;
+    private final UserType contextUserType;
     private final String reasonCode;
     private final String comments;
     private final DateTime createdDate;
@@ -45,7 +45,7 @@ public class InternalCallContext extends InternalTenantContext {
         this.createdBy = userName;
         this.updatedBy = userName;
         this.callOrigin = callOrigin;
-        this.userType = userType;
+        this.contextUserType = userType;
         this.reasonCode = reasonCode;
         this.comments = comment;
         this.createdDate = createdDate;
@@ -63,7 +63,7 @@ public class InternalCallContext extends InternalTenantContext {
     // Unfortunately not true as some APIs ae hidden in object-- e.g OverdueStateApplicator is doing subscription.cancelWithPolicy(polciy, context);
     //
     public CallContext toCallContext() {
-        return new DefaultCallContext(null, createdBy, callOrigin, userType, reasonCode, comments, userToken, createdDate, updatedDate);
+        return new DefaultCallContext(null, createdBy, callOrigin, contextUserType, reasonCode, comments, userToken, createdDate, updatedDate);
     }
 
     public UUID getUserToken() {
@@ -82,8 +82,8 @@ public class InternalCallContext extends InternalTenantContext {
         return callOrigin;
     }
 
-    public UserType getUserType() {
-        return userType;
+    public UserType getContextUserType() {
+        return contextUserType;
     }
 
     public String getReasonCode() {
@@ -110,7 +110,7 @@ public class InternalCallContext extends InternalTenantContext {
         sb.append(", createdBy='").append(createdBy).append('\'');
         sb.append(", updatedBy='").append(updatedBy).append('\'');
         sb.append(", callOrigin=").append(callOrigin);
-        sb.append(", userType=").append(userType);
+        sb.append(", contextUserType=").append(contextUserType);
         sb.append(", reasonCode='").append(reasonCode).append('\'');
         sb.append(", comments='").append(comments).append('\'');
         sb.append(", createdDate=").append(createdDate);
@@ -157,7 +157,7 @@ public class InternalCallContext extends InternalTenantContext {
         if (userToken != null ? !userToken.equals(that.userToken) : that.userToken != null) {
             return false;
         }
-        if (userType != that.userType) {
+        if (contextUserType != that.contextUserType) {
             return false;
         }
 
@@ -171,7 +171,7 @@ public class InternalCallContext extends InternalTenantContext {
         result = 31 * result + (createdBy != null ? createdBy.hashCode() : 0);
         result = 31 * result + (updatedBy != null ? updatedBy.hashCode() : 0);
         result = 31 * result + (callOrigin != null ? callOrigin.hashCode() : 0);
-        result = 31 * result + (userType != null ? userType.hashCode() : 0);
+        result = 31 * result + (contextUserType != null ? contextUserType.hashCode() : 0);
         result = 31 * result + (reasonCode != null ? reasonCode.hashCode() : 0);
         result = 31 * result + (comments != null ? comments.hashCode() : 0);
         result = 31 * result + (createdDate != null ? createdDate.hashCode() : 0);

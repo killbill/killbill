@@ -23,19 +23,19 @@ tableFields(prefix) ::= <<
 tableValues() ::= <<
   :eventType
 , :userType
-, :requested_date
-, :effective_date
-, :subscription_id
-, :plan_name
-, :phase_name
-, :price_list_name
-, :user_token
-, :current_version
-, :is_active
-, :created_by
-, :created_date
-, :updated_by
-, :updated_date
+, :requestedDate
+, :effectiveDate
+, :subscriptionId
+, :planName
+, :phaseName
+, :priceListName
+, :userToken
+, :currentVersion
+, :isActive
+, :createdBy
+, :createdDate
+, :updatedBy
+, :updatedDate
 >>
 
 
@@ -43,6 +43,8 @@ updateVersion() ::= <<
 update <tableName()>
 set
 current_version = :currentVersion
+, updated_by = :createdBy
+, updated_date = :createdDate
 where
 id = :id
 <AND_CHECK_TENANT()>
@@ -53,8 +55,8 @@ unactiveEvent() ::= <<
 update <tableName()>
 set
 is_active = 0
-, updated_by = :userName
-, updated_date = :updatedDate
+, updated_by = :createdBy
+, updated_date = :createdDate
 where
 id = :id
 <AND_CHECK_TENANT()>
@@ -65,8 +67,8 @@ reactiveEvent() ::= <<
 update <tableName()>
 set
 is_active = 1
-, updated_by = :userName
-, updated_date = :updatedDate
+, updated_by = :createdBy
+, updated_date = :createdDate
 where
 event_id = :eventId
 <AND_CHECK_TENANT()>

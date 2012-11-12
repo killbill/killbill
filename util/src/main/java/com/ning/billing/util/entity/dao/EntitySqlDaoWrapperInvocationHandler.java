@@ -165,7 +165,10 @@ public class EntitySqlDaoWrapperInvocationHandler<T extends EntitySqlDao<U>, U e
         final Long entityRecordId = Objects.firstNonNull(reHydratedEntityRecordId, entityRecordIds.get(entityId));
 
         final TableName tableName = retrieveTableNameFromEntity(entity);
-
+        // TODO
+        if (tableName == TableName.SUBSCRIPTION_EVENTS) {
+            return;
+        }
         // Note: audit entries point to the history record id
         final Long historyRecordId;
         if (tableName.getHistoryTableName() != null) {

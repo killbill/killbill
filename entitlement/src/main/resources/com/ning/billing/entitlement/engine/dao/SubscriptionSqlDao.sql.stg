@@ -44,8 +44,8 @@ updateChargedThroughDate() ::= <<
 update <tableName()>
 set
 charged_through_date = :chargedThroughDate
-, updated_by = :userName
-, updated_date = :updatedDate
+, updated_by = :createdBy
+, updated_date = :createdDate
 where id = :id
 <AND_CHECK_TENANT()>
 ;
@@ -55,8 +55,8 @@ updateActiveVersion() ::= <<
 update <tableName()>
 set
 active_version = :activeVersion
-, updated_by = :userName
-, updated_date = :updatedDate
+, updated_by = :createdBy
+, updated_date = :createdDate
 where id = :id
 ;
 >>
@@ -67,8 +67,8 @@ set
 active_version = :activeVersion
 , start_date = :startDate
 , bundle_start_date = :bundleStartDate
-, updated_by = :userName
-, updated_date = :updatedDate
+, updated_by = :createdBy
+, updated_date = :createdDate
 where id = :id
 <AND_CHECK_TENANT()>
 ;

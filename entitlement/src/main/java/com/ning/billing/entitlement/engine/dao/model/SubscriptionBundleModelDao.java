@@ -26,13 +26,13 @@ import com.ning.billing.util.entity.EntityBase;
 
 public class SubscriptionBundleModelDao extends EntityBase {
 
-    private final String key;
+    private final String externalKey;
     private final UUID accountId;
     private final DateTime lastSysUpdateDate;
 
     public SubscriptionBundleModelDao(final UUID id, final String key, final UUID accountId, final DateTime lastSysUpdateDate, final DateTime createdDate, final DateTime updateDate) {
         super(id, createdDate, updateDate);
-        this.key = key;
+        this.externalKey = key;
         this.accountId = accountId;
         this.lastSysUpdateDate = lastSysUpdateDate;
     }
@@ -42,8 +42,8 @@ public class SubscriptionBundleModelDao extends EntityBase {
         this(input.getId(), input.getExternalKey(), input.getAccountId(), input.getLastSysUpdateDate(), input.getCreatedDate(), input.getUpdatedDate());
     }
 
-    public String getKey() {
-        return key;
+    public String getExternalKey() {
+        return externalKey;
     }
 
     public UUID getAccountId() {
@@ -58,6 +58,6 @@ public class SubscriptionBundleModelDao extends EntityBase {
         if (src == null) {
             return null;
         }
-        return new SubscriptionBundleData(src.getId(), src.getKey(), src.getAccountId(), src.getLastSysUpdateDate());
+        return new SubscriptionBundleData(src.getId(), src.getExternalKey(), src.getAccountId(), src.getLastSysUpdateDate());
     }
 }

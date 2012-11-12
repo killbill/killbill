@@ -102,7 +102,7 @@ public class TestInternalCallContextFactory extends UtilTestSuiteWithEmbeddedDB 
         Assert.assertEquals(context.getUpdatedDate(), callContext.getUpdatedDate());
         Assert.assertEquals(context.getCreatedBy(), callContext.getUserName());
         Assert.assertEquals(context.getUserToken(), callContext.getUserToken());
-        Assert.assertEquals(context.getUserType(), callContext.getUserType());
+        Assert.assertEquals(context.getContextUserType(), callContext.getUserType());
         // Our test callContext doesn't have a tenant id
         Assert.assertEquals(context.getTenantRecordId(), (Long) InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID);
     }

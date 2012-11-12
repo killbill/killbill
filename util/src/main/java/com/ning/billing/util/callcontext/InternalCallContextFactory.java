@@ -199,14 +199,14 @@ public class InternalCallContextFactory {
     // Used when we need to re-hydrate the context with the account_record_id (when creating the account)
     public InternalCallContext createInternalCallContext(final Long accountRecordId, final InternalCallContext context) {
         return new InternalCallContext(context.getTenantRecordId(), accountRecordId, context.getUserToken(), context.getCreatedBy(),
-                                       context.getCallOrigin(), context.getUserType(), context.getReasonCode(), context.getComments(),
+                                       context.getCallOrigin(), context.getContextUserType(), context.getReasonCode(), context.getComments(),
                                        context.getCreatedDate(), context.getUpdatedDate());
     }
 
     // Used when we need to re-hydrate the context with the tenant_record_id and account_record_id (when claiming bus events)
     public InternalCallContext createInternalCallContext(final Long tenantRecordId, final Long accountRecordId, final InternalCallContext context) {
         return new InternalCallContext(tenantRecordId, accountRecordId, context.getUserToken(), context.getCreatedBy(),
-                                       context.getCallOrigin(), context.getUserType(), context.getReasonCode(), context.getComments(),
+                                       context.getCallOrigin(), context.getContextUserType(), context.getReasonCode(), context.getComments(),
                                        context.getCreatedDate(), context.getUpdatedDate());
     }
 

@@ -20,10 +20,10 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
 import com.ning.billing.entitlement.events.EventBaseBuilder;
+import com.ning.billing.entitlement.events.phase.PhaseEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEventBuilder;
 import com.ning.billing.entitlement.events.phase.PhaseEventData;
 import com.ning.billing.entitlement.events.user.ApiEvent;
@@ -81,7 +81,7 @@ public class EntitlementEventModelDao extends EntityBase {
         this.effectiveDate = src.getEffectiveDate();
         this.subscriptionId = src.getSubscriptionId();
         this.planName = eventType == EventType.API_USER ? ((ApiEvent) src).getEventPlan() : null;
-        this.phaseName = eventType == EventType.API_USER ? ((ApiEvent) src).getEventPlanPhase() : null;
+        this.phaseName = eventType == EventType.API_USER ? ((ApiEvent) src).getEventPlanPhase() : ((PhaseEvent) src).getPhase();
         this.priceListName = eventType == EventType.API_USER ? ((ApiEvent) src).getPriceList() : null;
         this.currentVersion = src.getActiveVersion();
         this.isActive = src.isActive();
@@ -91,11 +91,22 @@ public class EntitlementEventModelDao extends EntityBase {
         return totalOrdering;
     }
 
-    public EventType getEventType() {
+    public String getEventType() {
+        return eventType != null ? eventType.toString() : null;
+    }
+
+    // TODO required for bindings
+    public String getUserType() {
+        return userType != null ? userType.toString() : null;
+    }
+
+
+    public EventType getEventTypeX() {
         return eventType;
     }
 
-    public ApiEventType getUserType() {
+
+    public ApiEventType getUserTypeX() {
         return userType;
     }
 
@@ -127,13 +138,18 @@ public class EntitlementEventModelDao extends EntityBase {
         return currentVersion;
     }
 
+    // TODO required for jdbi binder
+    public boolean getIsActive() {
+        return isActive;
+    }
+
     public boolean isActive() {
         return isActive;
     }
 
     public static EntitlementEvent toEntitlementEvent(EntitlementEventModelDao src) {
 
-        final EventBaseBuilder<?> base = ((src.getEventType() == EventType.PHASE) ?
+        final EventBaseBuilder<?> base = ((src.getEventTypeX() == EventType.PHASE) ?
                                           new PhaseEventBuilder() :
                                           new ApiEventBuilder())
                 .setTotalOrdering(src.getTotalOrdering())
@@ -148,37 +164,37 @@ public class EntitlementEventModelDao extends EntityBase {
                 .setActive(src.isActive());
 
         EntitlementEvent result = null;
-        if (src.getEventType() == EventType.PHASE) {
+        if (src.getEventTypeX() == EventType.PHASE) {
             result = new PhaseEventData(new PhaseEventBuilder(base).setPhaseName(src.getPhaseName()));
-        } else if (src.getEventType() == EventType.API_USER) {
+        } else if (src.getEventTypeX() == EventType.API_USER) {
             final ApiEventBuilder builder = new ApiEventBuilder(base)
                     .setEventPlan(src.getPlanName())
                     .setEventPlanPhase(src.getPhaseName())
                     .setEventPriceList(src.getPriceListName())
-                    .setEventType(src.getUserType())
+                    .setEventType(src.getUserTypeX())
                     .setFromDisk(true);
 
-            if (src.getUserType() == ApiEventType.CREATE) {
+            if (src.getUserTypeX() == ApiEventType.CREATE) {
                 result = new ApiEventCreate(builder);
-            } else if (src.getUserType() == ApiEventType.RE_CREATE) {
+            } else if (src.getUserTypeX() == ApiEventType.RE_CREATE) {
                 result = new ApiEventReCreate(builder);
-            } else if (src.getUserType() == ApiEventType.MIGRATE_ENTITLEMENT) {
+            } else if (src.getUserTypeX() == ApiEventType.MIGRATE_ENTITLEMENT) {
                 result = new ApiEventMigrateEntitlement(builder);
-            } else if (src.getUserType() == ApiEventType.MIGRATE_BILLING) {
+            } else if (src.getUserTypeX() == ApiEventType.MIGRATE_BILLING) {
                 result = new ApiEventMigrateBilling(builder);
-            } else if (src.getUserType() == ApiEventType.TRANSFER) {
+            } else if (src.getUserTypeX() == ApiEventType.TRANSFER) {
                 result = new ApiEventTransfer(builder);
-            } else if (src.getUserType() == ApiEventType.CHANGE) {
+            } else if (src.getUserTypeX() == ApiEventType.CHANGE) {
                 result = new ApiEventChange(builder);
-            } else if (src.getUserType() == ApiEventType.CANCEL) {
+            } else if (src.getUserTypeX() == ApiEventType.CANCEL) {
                 result = new ApiEventCancel(builder);
-            } else if (src.getUserType() == ApiEventType.RE_CREATE) {
+            } else if (src.getUserTypeX() == ApiEventType.RE_CREATE) {
                 result = new ApiEventReCreate(builder);
-            } else if (src.getUserType() == ApiEventType.UNCANCEL) {
+            } else if (src.getUserTypeX() == ApiEventType.UNCANCEL) {
                 result = new ApiEventUncancel(builder);
             }
         } else {
-            throw new EntitlementError(String.format("Can't figure out event %s", src.getEventType()));
+            throw new EntitlementError(String.format("Can't figure out event %s", src.getEventTypeX()));
         }
         return result;
     }

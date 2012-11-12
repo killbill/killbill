@@ -60,7 +60,6 @@ import com.ning.billing.entitlement.engine.dao.model.SubscriptionBundleModelDao;
 import com.ning.billing.entitlement.engine.dao.model.SubscriptionModelDao;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
-import com.ning.billing.entitlement.events.user.ApiEvent;
 import com.ning.billing.entitlement.events.user.ApiEventBuilder;
 import com.ning.billing.entitlement.events.user.ApiEventCancel;
 import com.ning.billing.entitlement.events.user.ApiEventChange;
@@ -85,7 +84,6 @@ import com.ning.billing.util.svcsapi.bus.InternalBus.EventBusException;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableList;
 
 
 public class AuditedEntitlementDao implements EntitlementDao {
@@ -125,7 +123,8 @@ public class AuditedEntitlementDao implements EntitlementDao {
             @Override
             public List<SubscriptionBundle> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
                 final List<SubscriptionBundleModelDao> models = entitySqlDaoWrapperFactory.become(BundleSqlDao.class).getBundleFromAccount(accountId.toString(), context);
-                return ImmutableList.<SubscriptionBundle>copyOf(Collections2.transform(models, new Function<SubscriptionBundleModelDao, SubscriptionBundle>() {
+
+                return new ArrayList<SubscriptionBundle>(Collections2.transform(models, new Function<SubscriptionBundleModelDao, SubscriptionBundle>() {
                     @Override
                     public SubscriptionBundle apply(@Nullable final SubscriptionBundleModelDao input) {
                         return SubscriptionBundleModelDao.toSubscriptionbundle(input);
@@ -151,8 +150,8 @@ public class AuditedEntitlementDao implements EntitlementDao {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<SubscriptionBundle>>() {
             @Override
             public List<SubscriptionBundle> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                final List<SubscriptionBundleModelDao> models =  entitySqlDaoWrapperFactory.become(BundleSqlDao.class).getBundlesForKey(bundleKey, context);
-                return ImmutableList.<SubscriptionBundle>copyOf( Collections2.transform(models, new Function<SubscriptionBundleModelDao, SubscriptionBundle>() {
+                final List<SubscriptionBundleModelDao> models = entitySqlDaoWrapperFactory.become(BundleSqlDao.class).getBundlesForKey(bundleKey, context);
+                return new ArrayList<SubscriptionBundle>(Collections2.transform(models, new Function<SubscriptionBundleModelDao, SubscriptionBundle>() {
                     @Override
                     public SubscriptionBundle apply(@Nullable final SubscriptionBundleModelDao input) {
                         return SubscriptionBundleModelDao.toSubscriptionbundle(input);
@@ -217,7 +216,7 @@ public class AuditedEntitlementDao implements EntitlementDao {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Subscription>() {
             @Override
             public Subscription inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                final SubscriptionModelDao model =  entitySqlDaoWrapperFactory.become(SubscriptionSqlDao.class).getById(subscriptionId.toString(), context);
+                final SubscriptionModelDao model = entitySqlDaoWrapperFactory.become(SubscriptionSqlDao.class).getById(subscriptionId.toString(), context);
                 return SubscriptionModelDao.toSubscription(model);
             }
         });
@@ -233,8 +232,8 @@ public class AuditedEntitlementDao implements EntitlementDao {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<Subscription>>() {
             @Override
             public List<Subscription> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                final List<SubscriptionModelDao> models =  entitySqlDaoWrapperFactory.become(SubscriptionSqlDao.class).getSubscriptionsFromBundleId(bundleId.toString(), context);
-                return ImmutableList.<Subscription>copyOf( Collections2.transform(models, new Function<SubscriptionModelDao, Subscription>() {
+                final List<SubscriptionModelDao> models = entitySqlDaoWrapperFactory.become(SubscriptionSqlDao.class).getSubscriptionsFromBundleId(bundleId.toString(), context);
+                return new ArrayList<Subscription>(Collections2.transform(models, new Function<SubscriptionModelDao, Subscription>() {
                     @Override
                     public Subscription apply(@Nullable final SubscriptionModelDao input) {
                         return SubscriptionModelDao.toSubscription(input);
@@ -243,7 +242,6 @@ public class AuditedEntitlementDao implements EntitlementDao {
             }
         });
     }
-
 
 
     @Override
@@ -306,7 +304,7 @@ public class AuditedEntitlementDao implements EntitlementDao {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<EntitlementEvent>() {
             @Override
             public EntitlementEvent inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                EntitlementEventModelDao model =  entitySqlDaoWrapperFactory.become(EntitlementEventSqlDao.class).getById(eventId.toString(), context);
+                EntitlementEventModelDao model = entitySqlDaoWrapperFactory.become(EntitlementEventSqlDao.class).getById(eventId.toString(), context);
                 return EntitlementEventModelDao.toEntitlementEvent(model);
             }
         });
@@ -319,7 +317,7 @@ public class AuditedEntitlementDao implements EntitlementDao {
             public List<EntitlementEvent> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
                 final List<EntitlementEventModelDao> models = entitySqlDaoWrapperFactory.become(EntitlementEventSqlDao.class).getEventsForSubscription(subscriptionId.toString(), context);
 
-                return ImmutableList.<EntitlementEvent>copyOf( Collections2.transform(models, new Function<EntitlementEventModelDao, EntitlementEvent>() {
+                return new ArrayList<EntitlementEvent>(Collections2.transform(models, new Function<EntitlementEventModelDao, EntitlementEvent>() {
                     @Override
                     public EntitlementEvent apply(@Nullable final EntitlementEventModelDao input) {
                         return EntitlementEventModelDao.toEntitlementEvent(input);
@@ -345,7 +343,7 @@ public class AuditedEntitlementDao implements EntitlementDao {
                 final Map<UUID, List<EntitlementEvent>> result = new HashMap<UUID, List<EntitlementEvent>>();
                 for (final SubscriptionModelDao cur : subscriptionModels) {
                     final List<EntitlementEventModelDao> eventModels = eventsDaoFromSameTransaction.getEventsForSubscription(cur.getId().toString(), context);
-                    final List<EntitlementEvent> events = ImmutableList.<EntitlementEvent>copyOf(Collections2.transform(eventModels, new Function<EntitlementEventModelDao, EntitlementEvent>() {
+                    final List<EntitlementEvent> events = new ArrayList<EntitlementEvent>(Collections2.transform(eventModels, new Function<EntitlementEventModelDao, EntitlementEvent>() {
                         @Override
                         public EntitlementEvent apply(@Nullable final EntitlementEventModelDao input) {
                             return EntitlementEventModelDao.toEntitlementEvent(input);
@@ -366,7 +364,7 @@ public class AuditedEntitlementDao implements EntitlementDao {
             @Override
             public List<EntitlementEvent> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
                 final List<EntitlementEventModelDao> eventModels = entitySqlDaoWrapperFactory.become(EntitlementEventSqlDao.class).getFutureActiveEventForSubscription(subscriptionId.toString(), now, context);
-                final List<EntitlementEvent> events = ImmutableList.<EntitlementEvent>copyOf(Collections2.transform(eventModels, new Function<EntitlementEventModelDao, EntitlementEvent>() {
+                final List<EntitlementEvent> events = new ArrayList<EntitlementEvent>(Collections2.transform(eventModels, new Function<EntitlementEventModelDao, EntitlementEvent>() {
                     @Override
                     public EntitlementEvent apply(@Nullable final EntitlementEventModelDao input) {
                         return EntitlementEventModelDao.toEntitlementEvent(input);
@@ -450,7 +448,7 @@ public class AuditedEntitlementDao implements EntitlementDao {
                 final List<EntitlementEventModelDao> eventModels = transactional.getFutureActiveEventForSubscription(subscriptionId.toString(), now, context);
 
                 for (final EntitlementEventModelDao cur : eventModels) {
-                    if (cur.getUserType() == ApiEventType.CANCEL) {
+                    if (cur.getUserTypeX() == ApiEventType.CANCEL) {
                         if (cancelledEvent != null) {
                             throw new EntitlementError(String.format("Found multiple cancel active events for subscriptions %s", subscriptionId.toString()));
                         }
@@ -537,8 +535,8 @@ public class AuditedEntitlementDao implements EntitlementDao {
         final Date now = clock.getUTCNow().toDate();
         final List<EntitlementEventModelDao> eventModels = dao.become(EntitlementEventSqlDao.class).getFutureActiveEventForSubscription(subscriptionId.toString(), now, context);
         for (final EntitlementEventModelDao cur : eventModels) {
-            if (cur.getEventType() == type &&
-                (apiType == null || apiType == cur.getUserType())) {
+            if (cur.getEventTypeX() == type &&
+                (apiType == null || apiType == cur.getUserTypeX())) {
                 if (futureEvent != null) {
                     throw new EntitlementError(String.format("Found multiple future events for type %s for subscriptions %s",
                                                              type, subscriptionId.toString()));
