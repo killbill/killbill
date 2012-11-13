@@ -48,7 +48,10 @@ public abstract class EntityDaoBase<M extends EntityModelDao<E>, E extends Entit
                 final EntitySqlDao<M, E> transactional = entitySqlDaoWrapperFactory.become(realSqlDao);
                 transactional.create(entity, context);
 
-                postBusEventFromTransaction(entity, entity, ChangeType.INSERT, entitySqlDaoWrapperFactory, context);
+
+                final M refreshedEntity = transactional.getById(entity.getId().toString(), context);
+
+                postBusEventFromTransaction(entity, refreshedEntity, ChangeType.INSERT, entitySqlDaoWrapperFactory, context);
                 return null;
             }
         });

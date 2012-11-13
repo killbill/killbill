@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2012 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -185,7 +185,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                     final List<InvoiceItemModelDao> recurringInvoiceItems = ImmutableList.<InvoiceItemModelDao>copyOf(Collections2.filter(invoiceItems, new Predicate<InvoiceItemModelDao>() {
                         @Override
                         public boolean apply(@Nullable final InvoiceItemModelDao item) {
-                            return RecurringInvoiceItem.class.isInstance(item);
+                            return item.getType() == InvoiceItemType.RECURRING;
                         }
                     }));
                     notifyOfFutureBillingEvents(entitySqlDaoWrapperFactory, invoice.getAccountId(), recurringInvoiceItems);

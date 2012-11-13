@@ -27,16 +27,9 @@ import com.ning.billing.util.clock.Clock;
 
 public interface BlockingStateDao {
 
-    // Read
-    public BlockingState getBlockingStateFor(Blockable blockable, InternalTenantContext context);
-
     public BlockingState getBlockingStateFor(UUID blockableId, InternalTenantContext context);
-
-    public List<BlockingState> getBlockingHistoryFor(Blockable blockable, InternalTenantContext context);
 
     public List<BlockingState> getBlockingHistoryFor(UUID blockableId, InternalTenantContext context);
 
-    // Write
     <T extends Blockable> void setBlockingState(BlockingState state, Clock clock, InternalCallContext context);
-
-} 
+}

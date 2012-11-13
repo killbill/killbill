@@ -45,6 +45,11 @@ public class ApplicatorMockJunctionModule extends MockJunctionModule {
             return new BlockingState() {
 
                 @Override
+                public UUID getBlockedId() {
+                    return overdueable.getId();
+                }
+
+                @Override
                 public String getStateName() {
                     return DefaultBlockingState.CLEAR_STATE_NAME;
                 }
@@ -83,6 +88,11 @@ public class ApplicatorMockJunctionModule extends MockJunctionModule {
                 @Override
                 public String getDescription() {
                     return null;
+                }
+
+                @Override
+                public String getService() {
+                    return "whatever";
                 }
 
                 @Override

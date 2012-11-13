@@ -16,6 +16,8 @@
 
 package com.ning.billing.junction.api;
 
+import java.util.UUID;
+
 import org.joda.time.DateTime;
 
 import com.ning.billing.util.entity.Entity;
@@ -23,23 +25,27 @@ import com.ning.billing.util.entity.Entity;
 
 public interface BlockingState extends Entity, Comparable<BlockingState> {
 
-    public abstract String getStateName();
+    public UUID getBlockedId();
 
-    public abstract Blockable.Type getType();
+    public String getStateName();
 
-    public abstract DateTime getTimestamp();
+    public Blockable.Type getType();
 
-    public abstract boolean isBlockChange();
+    public DateTime getTimestamp();
 
-    public abstract boolean isBlockEntitlement();
+    public boolean isBlockChange();
 
-    public abstract boolean isBlockBilling();
+    public boolean isBlockEntitlement();
 
-    public abstract int compareTo(BlockingState arg0);
+    public boolean isBlockBilling();
 
-    public abstract int hashCode();
+    public int compareTo(BlockingState arg0);
 
-    public abstract String getDescription();
+    public int hashCode();
 
-    public abstract String toString();
+    public String getDescription();
+
+    public String toString();
+
+    public String getService();
 }

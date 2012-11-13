@@ -187,8 +187,8 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
     }
 
     private List<String> retrieveEntityIdsFromArguments(final Method method, final Object[] args) {
-        final Annotation[][] parameterAnnotations = method.getParameterAnnotations();
 
+        final Annotation[][] parameterAnnotations = method.getParameterAnnotations();
         int i = -1;
         for (final Object arg : args) {
             i++;
@@ -239,6 +239,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
         return entityIds;
     }
 
+
     private InternalCallContext retrieveContextFromArguments(final Object[] args) {
         for (final Object arg : args) {
             if (!(arg instanceof InternalCallContext)) {
@@ -246,7 +247,6 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
             }
             return (InternalCallContext) arg;
         }
-
         return null;
     }
 

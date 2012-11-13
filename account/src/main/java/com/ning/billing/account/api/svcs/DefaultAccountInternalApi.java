@@ -62,8 +62,13 @@ public class DefaultAccountInternalApi implements AccountInternalApi {
 
     @Override
     public Account getAccountByRecordId(final Long recordId, final InternalTenantContext context) throws AccountApiException {
+        try {
         final AccountModelDao account = accountDao.getByRecordId(recordId, context);
         return new DefaultAccount(account);
+        } catch (NullPointerException e) {
+            e.printStackTrace();;
+            return null;
+        }
     }
 
     @Override
