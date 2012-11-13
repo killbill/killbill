@@ -24,6 +24,7 @@ import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
+import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
@@ -32,7 +33,7 @@ import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 
 @EntitySqlDaoStringTemplate
-public interface AccountEmailSqlDao extends EntitySqlDao<AccountEmailModelDao> {
+public interface AccountEmailSqlDao extends EntitySqlDao<AccountEmailModelDao, AccountEmail> {
 
     @SqlUpdate
     @Audited(ChangeType.DELETE)

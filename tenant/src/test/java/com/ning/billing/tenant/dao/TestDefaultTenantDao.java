@@ -22,24 +22,22 @@ import java.util.UUID;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.UsernamePasswordToken;
-import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.tenant.TenantTestSuiteWithEmbeddedDb;
 import com.ning.billing.tenant.api.DefaultTenant;
 import com.ning.billing.tenant.security.KillbillCredentialsMatcher;
-import com.ning.billing.util.svcsapi.bus.InternalBus;
 
 public class TestDefaultTenantDao extends TenantTestSuiteWithEmbeddedDb {
 
     @Test(groups = "slow")
     public void testWeCanStoreAndMatchCredentials() throws Exception {
-        final DefaultTenantDao tenantDao = new DefaultTenantDao(getMysqlTestingHelper().getDBI(), Mockito.mock(InternalBus.class));
+        final DefaultTenantDao tenantDao = new DefaultTenantDao(getMysqlTestingHelper().getDBI());
 
         final DefaultTenant tenant = new DefaultTenant(UUID.randomUUID(), null, null, UUID.randomUUID().toString(),
-                UUID.randomUUID().toString(), UUID.randomUUID().toString());
-        tenantDao.create(tenant, internalCallContext);
+                                                       UUID.randomUUID().toString(), UUID.randomUUID().toString());
+        tenantDao.create(new TenantModelDao(tenant), internalCallContext);
 
         // Verify we can retrieve it
         Assert.assertEquals(tenantDao.getTenantByApiKey(tenant.getApiKey()).getId(), tenant.getId());
@@ -59,19 +57,19 @@ public class TestDefaultTenantDao extends TenantTestSuiteWithEmbeddedDb {
     @Test(groups = "slow")
     public void testTenantKeyValue() throws Exception {
 
-        final DefaultTenantDao tenantDao = new DefaultTenantDao(getMysqlTestingHelper().getDBI(), Mockito.mock(InternalBus.class));
+        final DefaultTenantDao tenantDao = new DefaultTenantDao(getMysqlTestingHelper().getDBI());
         final DefaultTenant tenant = new DefaultTenant(UUID.randomUUID(), null, null, UUID.randomUUID().toString(),
-                UUID.randomUUID().toString(), UUID.randomUUID().toString());
-        tenantDao.create(tenant, internalCallContext);
+                                                       UUID.randomUUID().toString(), UUID.randomUUID().toString());
+        tenantDao.create(new TenantModelDao(tenant), internalCallContext);
 
         tenantDao.addTenantKeyValue("TheKey", "TheValue", internalCallContext);
 
-        List<String> value  = tenantDao.getTenantValueForKey("TheKey", internalCallContext);
+        List<String> value = tenantDao.getTenantValueForKey("TheKey", internalCallContext);
         Assert.assertEquals(value.size(), 1);
         Assert.assertEquals(value.get(0), "TheValue");
 
         tenantDao.addTenantKeyValue("TheKey", "TheSecondValue", internalCallContext);
-        value  = tenantDao.getTenantValueForKey("TheKey", internalCallContext);
+        value = tenantDao.getTenantValueForKey("TheKey", internalCallContext);
         Assert.assertEquals(value.size(), 2);
 
         tenantDao.deleteTenantKey("TheKey", internalCallContext);

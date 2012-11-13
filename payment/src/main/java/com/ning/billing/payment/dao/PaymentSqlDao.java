@@ -23,35 +23,28 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
-import org.skife.jdbi.v2.sqlobject.Binder;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.callcontext.InternalTenantContextBinder;
-import com.ning.billing.util.dao.BinderBase;
-import com.ning.billing.util.dao.EntityHistory;
 import com.ning.billing.util.dao.MapperBase;
 import com.ning.billing.util.entity.dao.Audited;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
-import com.ning.billing.util.entity.dao.UpdatableEntitySqlDao;
 
 @EntitySqlDaoStringTemplate
 @RegisterMapper(PaymentSqlDao.PaymentModelDaoMapper.class)
-public interface PaymentSqlDao extends EntitySqlDao<PaymentModelDao> {
-
-
+public interface PaymentSqlDao extends EntitySqlDao<PaymentModelDao, Payment> {
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
@@ -67,7 +60,6 @@ public interface PaymentSqlDao extends EntitySqlDao<PaymentModelDao> {
                              @Bind("amount") final BigDecimal amount,
                              @BindBean final InternalCallContext context);
 
-
     @SqlQuery
     PaymentModelDao getLastPaymentForAccountAndPaymentMethod(@Bind("accountId") final String accountId,
                                                              @Bind("paymentMethodId") final String paymentMethodId,
@@ -80,8 +72,6 @@ public interface PaymentSqlDao extends EntitySqlDao<PaymentModelDao> {
     @SqlQuery
     List<PaymentModelDao> getPaymentsForAccount(@Bind("accountId") final String accountId,
                                                 @BindBean final InternalTenantContext context);
-
-
 
     public static class PaymentModelDaoMapper extends MapperBase implements ResultSetMapper<PaymentModelDao> {
 
@@ -101,7 +91,7 @@ public interface PaymentSqlDao extends EntitySqlDao<PaymentModelDao> {
             final String extSecondPaymentRefId = rs.getString("ext_second_payment_ref_id");
             final DateTime createdDate = getDateTime(rs, "created_date");
             final DateTime updatedDate = getDateTime(rs, "updated_date");
-            return new PaymentModelDao(id, createdDate, updatedDate, accountId , invoiceId, paymentMethodId, paymentNumber,
+            return new PaymentModelDao(id, createdDate, updatedDate, accountId, invoiceId, paymentMethodId, paymentNumber,
                                        amount, currency, paymentStatus, effectiveDate, extFirstPaymentRefId, extSecondPaymentRefId);
         }
     }

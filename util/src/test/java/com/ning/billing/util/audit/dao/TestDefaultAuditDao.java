@@ -18,7 +18,6 @@ package com.ning.billing.util.audit.dao;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import org.skife.jdbi.v2.Handle;
@@ -41,14 +40,13 @@ import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.glue.AuditModule;
 import com.ning.billing.util.svcsapi.bus.InternalBus;
-import com.ning.billing.util.tag.ControlTagType;
-import com.ning.billing.util.tag.DefaultControlTag;
 import com.ning.billing.util.tag.DescriptiveTag;
 import com.ning.billing.util.tag.MockTagStoreModuleSql;
 import com.ning.billing.util.tag.Tag;
-import com.ning.billing.util.tag.TagDefinition;
-import com.ning.billing.util.tag.dao.AuditedTagDao;
+import com.ning.billing.util.tag.dao.DefaultTagDao;
 import com.ning.billing.util.tag.dao.TagDefinitionDao;
+import com.ning.billing.util.tag.dao.TagDefinitionModelDao;
+import com.ning.billing.util.tag.dao.TagModelDao;
 
 import com.google.inject.Inject;
 
@@ -59,7 +57,7 @@ public class TestDefaultAuditDao extends UtilTestSuiteWithEmbeddedDB {
     private TagDefinitionDao tagDefinitionDao;
 
     @Inject
-    private AuditedTagDao tagDao;
+    private DefaultTagDao tagDao;
 
     @Inject
     private AuditDao auditDao;
@@ -112,21 +110,20 @@ public class TestDefaultAuditDao extends UtilTestSuiteWithEmbeddedDB {
 
     private void addTag() throws TagDefinitionApiException, TagApiException {
         // Create a tag definition
-        final TagDefinition tagDefinition = tagDefinitionDao.create(UUID.randomUUID().toString().substring(0, 5),
-                                                                    UUID.randomUUID().toString().substring(0, 5),
-                                                                    internalCallContext);
+        final TagDefinitionModelDao tagDefinition = tagDefinitionDao.create(UUID.randomUUID().toString().substring(0, 5),
+                                                                            UUID.randomUUID().toString().substring(0, 5),
+                                                                            internalCallContext);
         Assert.assertEquals(tagDefinitionDao.getById(tagDefinition.getId(), internalCallContext), tagDefinition);
 
         // Create a tag
         final UUID objectId = UUID.randomUUID();
 
-        final Tag tag = tagDefinition.isControlTag() ? new DefaultControlTag(ControlTagType.getTypeFromId(tagDefinition.getId()), ObjectType.ACCOUNT, objectId, clock.getUTCNow()) :
-                                                       new DescriptiveTag(tagDefinition.getId(), ObjectType.ACCOUNT, objectId, clock.getUTCNow());
+        final Tag tag = new DescriptiveTag(tagDefinition.getId(), ObjectType.ACCOUNT, objectId, clock.getUTCNow());
 
-        tagDao.create(tag, internalCallContext);
-        final List<Tag> tags = tagDao.getTags(objectId, ObjectType.ACCOUNT, internalCallContext);
+        tagDao.create(new TagModelDao(tag), internalCallContext);
+        final List<TagModelDao> tags = tagDao.getTags(objectId, ObjectType.ACCOUNT, internalCallContext);
         Assert.assertEquals(tags.size(), 1);
-        final Tag savedTag = tags.get(0);
+        final TagModelDao savedTag = tags.get(0);
         Assert.assertEquals(savedTag.getTagDefinitionId(), tagDefinition.getId());
         tagId = savedTag.getId();
     }

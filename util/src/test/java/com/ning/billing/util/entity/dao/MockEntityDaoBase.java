@@ -30,15 +30,15 @@ import com.ning.billing.util.entity.Entity;
 
 import com.google.common.collect.ImmutableMap;
 
-public class MockEntityDaoBase<T extends Entity, U extends BillingExceptionBase> implements EntityDao<T, U> {
+public class MockEntityDaoBase<M extends EntityModelDao<E>, E extends Entity, U extends BillingExceptionBase> implements EntityDao<M, E, U> {
 
     protected static final AtomicLong autoIncrement = new AtomicLong(1);
 
-    protected final Map<UUID, Map<Long, T>> entities = new HashMap<UUID, Map<Long, T>>();
+    protected final Map<UUID, Map<Long, M>> entities = new HashMap<UUID, Map<Long, M>>();
 
     @Override
-    public void create(final T entity, final InternalCallContext context) throws U {
-        entities.put(entity.getId(), ImmutableMap.<Long, T>of(autoIncrement.incrementAndGet(), entity));
+    public void create(final M entity, final InternalCallContext context) throws U {
+        entities.put(entity.getId(), ImmutableMap.<Long, M>of(autoIncrement.incrementAndGet(), entity));
     }
 
     @Override
@@ -47,8 +47,8 @@ public class MockEntityDaoBase<T extends Entity, U extends BillingExceptionBase>
     }
 
     @Override
-    public T getByRecordId(final Long recordId, final InternalTenantContext context) {
-        for (final Map<Long, T> cur : entities.values()) {
+    public M getByRecordId(final Long recordId, final InternalTenantContext context) {
+        for (final Map<Long, M> cur : entities.values()) {
             if (cur.keySet().iterator().next().equals(recordId)) {
                 cur.values().iterator().next();
             }
@@ -57,25 +57,25 @@ public class MockEntityDaoBase<T extends Entity, U extends BillingExceptionBase>
     }
 
     @Override
-    public T getById(final UUID id, final InternalTenantContext context) {
+    public M getById(final UUID id, final InternalTenantContext context) {
         return entities.get(id).values().iterator().next();
     }
 
     @Override
-    public List<T> get(final InternalTenantContext context) {
-        final List<T> result = new ArrayList<T>();
-        for (final Map<Long, T> cur : entities.values()) {
+    public List<M> get(final InternalTenantContext context) {
+        final List<M> result = new ArrayList<M>();
+        for (final Map<Long, M> cur : entities.values()) {
             result.add(cur.values().iterator().next());
         }
         return result;
     }
 
-    public void update(final T entity, final InternalCallContext context) {
+    public void update(final M entity, final InternalCallContext context) {
         final Long entityRecordId = getRecordId(entity.getId(), context);
         entities.get(entity.getId()).put(entityRecordId, entity);
     }
 
-    public void delete(final T entity, final InternalCallContext context) {
+    public void delete(final M entity, final InternalCallContext context) {
         entities.remove(entity.getId());
     }
 

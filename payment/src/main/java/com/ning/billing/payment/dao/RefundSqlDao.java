@@ -32,6 +32,7 @@ import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.payment.api.Refund;
 import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
@@ -43,7 +44,7 @@ import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 
 @EntitySqlDaoStringTemplate
 @RegisterMapper(RefundSqlDao.RefundModelDaoMapper.class)
-public interface RefundSqlDao extends EntitySqlDao<RefundModelDao> {
+public interface RefundSqlDao extends EntitySqlDao<RefundModelDao, Refund> {
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
@@ -58,7 +59,6 @@ public interface RefundSqlDao extends EntitySqlDao<RefundModelDao> {
     @SqlQuery
     List<RefundModelDao> getRefundsForAccount(@Bind("accountId") final String accountId,
                                               @BindBean final InternalTenantContext context);
-
 
     public static class RefundModelDaoMapper extends MapperBase implements ResultSetMapper<RefundModelDao> {
 

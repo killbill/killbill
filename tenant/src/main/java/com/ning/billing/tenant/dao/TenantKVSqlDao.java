@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.tenant.dao;
 
 import java.sql.ResultSet;
@@ -27,15 +28,12 @@ import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
-import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
-import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import com.ning.billing.tenant.api.DefaultTenantKV;
 import com.ning.billing.tenant.api.TenantKV;
 import com.ning.billing.tenant.dao.TenantKVSqlDao.TenantKVMapper;
 import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 import com.ning.billing.util.dao.MapperBase;
 import com.ning.billing.util.dao.UuidMapper;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
@@ -43,19 +41,24 @@ import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 
 @EntitySqlDaoStringTemplate
 @RegisterMapper({UuidMapper.class, TenantKVMapper.class})
-public interface TenantKVSqlDao extends EntitySqlDao<TenantKV> {
+public interface TenantKVSqlDao extends EntitySqlDao<TenantKVModelDao, TenantKV> {
 
     // TODO should take a context
 
     @SqlQuery
-    public List<TenantKV> getTenantValueForKey(@Bind("key") final String key, @Bind("tenantRecordId") Long tenantRecordId);
+    public List<TenantKVModelDao> getTenantValueForKey(@Bind("key") final String key,
+                                                       @Bind("tenantRecordId") Long tenantRecordId);
 
     @SqlUpdate
-    public void insertTenantKeyValue(@Bind("id") String id, @Bind("key") final String key, @Bind("value") final String value, @Bind("tenantRecordId") Long tenantRecordId, @BindBean final InternalCallContext context);
+    public void insertTenantKeyValue(@Bind("id") String id,
+                                     @Bind("key") final String key,
+                                     @Bind("value") final String value,
+                                     @Bind("tenantRecordId") Long tenantRecordId,
+                                     @BindBean final InternalCallContext context);
 
     @SqlUpdate
-    public void deleteTenantKey(@Bind("key") final String key, @Bind("tenantRecordId") Long tenantRecordId);
-
+    public void deleteTenantKey(@Bind("key") final String key,
+                                @Bind("tenantRecordId") Long tenantRecordId);
 
     public class TenantKVMapper extends MapperBase implements ResultSetMapper<TenantKV> {
 

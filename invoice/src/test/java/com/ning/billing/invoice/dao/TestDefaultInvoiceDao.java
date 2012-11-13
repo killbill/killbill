@@ -31,6 +31,7 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.invoice.InvoiceTestSuite;
+import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.util.callcontext.InternalTenantContext;
@@ -50,7 +51,7 @@ public class TestDefaultInvoiceDao extends InvoiceTestSuite {
         invoiceSqlDao = Mockito.mock(InvoiceSqlDao.class);
         Mockito.when(idbi.onDemand(InvoiceSqlDao.class)).thenReturn(invoiceSqlDao);
         Mockito.when(invoiceSqlDao.getById(Mockito.anyString(), Mockito.<InternalTenantContext>any())).thenReturn(Mockito.mock(InvoiceModelDao.class));
-        Mockito.when(invoiceSqlDao.inTransaction(Mockito.<Transaction<Void, EntitySqlDao<InvoiceModelDao>>>any())).thenAnswer(new Answer() {
+        Mockito.when(invoiceSqlDao.inTransaction(Mockito.<Transaction<Void, EntitySqlDao<InvoiceModelDao, Invoice>>>any())).thenAnswer(new Answer() {
             @Override
             public Object answer(final InvocationOnMock invocation) {
                 final Object[] args = invocation.getArguments();

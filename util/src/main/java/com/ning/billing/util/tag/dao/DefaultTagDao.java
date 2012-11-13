@@ -16,9 +16,7 @@
 
 package com.ning.billing.util.tag.dao;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import org.skife.jdbi.v2.IDBI;
@@ -32,7 +30,6 @@ import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.entity.dao.EntityDaoBase;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
@@ -41,58 +38,51 @@ import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import com.ning.billing.util.events.TagInternalEvent;
 import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.tag.ControlTagType;
-import com.ning.billing.util.tag.DefaultControlTag;
-import com.ning.billing.util.tag.DefaultTagDefinition;
-import com.ning.billing.util.tag.DescriptiveTag;
 import com.ning.billing.util.tag.Tag;
-import com.ning.billing.util.tag.TagDefinition;
 import com.ning.billing.util.tag.api.user.TagEventBuilder;
 
 import com.google.inject.Inject;
 
-public class AuditedTagDao extends EntityDaoBase<Tag, TagApiException> implements TagDao {
+public class DefaultTagDao extends EntityDaoBase<TagModelDao, Tag, TagApiException> implements TagDao {
 
-    private static final Logger log = LoggerFactory.getLogger(AuditedTagDao.class);
+    private static final Logger log = LoggerFactory.getLogger(DefaultTagDao.class);
 
-    private final TagSqlDao tagSqlDao;
     private final TagEventBuilder tagEventBuilder;
     private final InternalBus bus;
-    private final Clock clock;
 
     @Inject
-    public AuditedTagDao(final IDBI dbi, final TagEventBuilder tagEventBuilder, final InternalBus bus, final Clock clock) {
+    public DefaultTagDao(final IDBI dbi, final TagEventBuilder tagEventBuilder, final InternalBus bus) {
         super(new EntitySqlDaoTransactionalJdbiWrapper(dbi), TagSqlDao.class);
-        this.clock = clock;
         this.tagEventBuilder = tagEventBuilder;
         this.bus = bus;
-        this.tagSqlDao = dbi.onDemand(TagSqlDao.class);
     }
 
-
     @Override
-    public List<Tag> getTags(final UUID objectId, final ObjectType objectType, final InternalTenantContext internalTenantContext) {
-        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<Tag>>() {
+    public List<TagModelDao> getTags(final UUID objectId, final ObjectType objectType, final InternalTenantContext internalTenantContext) {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<TagModelDao>>() {
             @Override
-            public List<Tag> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+            public List<TagModelDao> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
                 return entitySqlDaoWrapperFactory.become(TagSqlDao.class).getTagsForObject(objectId, objectType, internalTenantContext);
             }
         });
     }
 
     @Override
-    protected void postBusEventFromTransaction(Tag tag, Tag savedTag, ChangeType changeType, final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final InternalCallContext context)
+    protected void postBusEventFromTransaction(final TagModelDao tag, final TagModelDao savedTag, final ChangeType changeType,
+                                               final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final InternalCallContext context)
             throws BillingExceptionBase {
 
         final TagInternalEvent tagEvent;
-        final TagDefinition tagDefinition = getTagDefinitionFromTransaction(tag.getTagDefinitionId(), entitySqlDaoWrapperFactory, context);
-        switch(changeType) {
+        final TagDefinitionModelDao tagDefinition = getTagDefinitionFromTransaction(tag.getTagDefinitionId(), entitySqlDaoWrapperFactory, context);
+        final boolean isControlTag = ControlTagType.getTypeFromId(tagDefinition.getId()) != null;
+        switch (changeType) {
             case INSERT:
-                tagEvent = (tagDefinition.isControlTag()) ?
+                tagEvent = (isControlTag) ?
                            tagEventBuilder.newControlTagCreationEvent(tag.getId(), tag.getObjectId(), tag.getObjectType(), tagDefinition, context) :
                            tagEventBuilder.newUserTagCreationEvent(tag.getId(), tag.getObjectId(), tag.getObjectType(), tagDefinition, context);
                 break;
             case DELETE:
-                tagEvent = (tagDefinition.isControlTag()) ?
+                tagEvent = (isControlTag) ?
                            tagEventBuilder.newControlTagDeletionEvent(tag.getId(), tag.getObjectId(), tag.getObjectType(), tagDefinition, context) :
                            tagEventBuilder.newUserTagDeletionEvent(tag.getId(), tag.getObjectId(), tag.getObjectType(), tagDefinition, context);
                 break;
@@ -107,17 +97,16 @@ public class AuditedTagDao extends EntityDaoBase<Tag, TagApiException> implement
         }
     }
 
-
     @Override
-    protected TagApiException generateAlreadyExistsException(final Tag entity, final InternalCallContext context) {
+    protected TagApiException generateAlreadyExistsException(final TagModelDao entity, final InternalCallContext context) {
         return new TagApiException(ErrorCode.TAG_ALREADY_EXISTS, entity.getId());
     }
 
-    private TagDefinition getTagDefinitionFromTransaction(final UUID tagDefinitionId, final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final InternalTenantContext context) throws TagApiException {
-        TagDefinition tagDefintion = null;
+    private TagDefinitionModelDao getTagDefinitionFromTransaction(final UUID tagDefinitionId, final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final InternalTenantContext context) throws TagApiException {
+        TagDefinitionModelDao tagDefintion = null;
         for (final ControlTagType t : ControlTagType.values()) {
             if (t.getId().equals(tagDefinitionId)) {
-                tagDefintion = new DefaultTagDefinition(t);
+                tagDefintion = new TagDefinitionModelDao(t);
                 break;
             }
         }
@@ -132,7 +121,6 @@ public class AuditedTagDao extends EntityDaoBase<Tag, TagApiException> implement
         return tagDefintion;
     }
 
-
     @Override
     public void deleteTag(final UUID objectId, final ObjectType objectType, final UUID tagDefinitionId, final InternalCallContext context) throws TagApiException {
 
@@ -141,11 +129,11 @@ public class AuditedTagDao extends EntityDaoBase<Tag, TagApiException> implement
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
 
-                final TagDefinition tagDefinition = getTagDefinitionFromTransaction(tagDefinitionId, entitySqlDaoWrapperFactory, context);
+                final TagDefinitionModelDao tagDefinition = getTagDefinitionFromTransaction(tagDefinitionId, entitySqlDaoWrapperFactory, context);
                 final TagSqlDao transactional = entitySqlDaoWrapperFactory.become(TagSqlDao.class);
-                final List<Tag> tags = transactional.getTagsForObject(objectId, objectType, context);
-                Tag tag = null;
-                for (Tag cur : tags) {
+                final List<TagModelDao> tags = transactional.getTagsForObject(objectId, objectType, context);
+                TagModelDao tag = null;
+                for (final TagModelDao cur : tags) {
                     if (cur.getTagDefinitionId().equals(tagDefinitionId)) {
                         tag = cur;
                         break;

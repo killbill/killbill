@@ -26,6 +26,7 @@ import org.skife.jdbi.v2.sqlobject.SqlBatch;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 
+import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
@@ -35,7 +36,7 @@ import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 
 @EntitySqlDaoStringTemplate
-public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePaymentModelDao> {
+public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePaymentModelDao, InvoicePayment> {
 
     @SqlQuery
     public InvoicePaymentModelDao getByPaymentId(@Bind("paymentId") final String paymentId,

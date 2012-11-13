@@ -24,9 +24,11 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
+import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.EntityBase;
+import com.ning.billing.util.entity.dao.EntityModelDao;
 
-public class SubscriptionModelDao extends EntityBase {
+public class SubscriptionModelDao extends EntityBase implements EntityModelDao<Subscription> {
 
     private final UUID bundleId;
     private final ProductCategory category;
@@ -81,7 +83,7 @@ public class SubscriptionModelDao extends EntityBase {
         return paidThroughDate;
     }
 
-    public static Subscription toSubscription(SubscriptionModelDao src) {
+    public static Subscription toSubscription(final SubscriptionModelDao src) {
         if (src == null) {
             return null;
         }
@@ -98,5 +100,77 @@ public class SubscriptionModelDao extends EntityBase {
                                             .setPaidThroughDate(src.getPaidThroughDate())
                                             .setCreatedDate(src.getCreatedDate())
                                             .setUpdatedDate(src.getUpdatedDate()));
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append("SubscriptionModelDao");
+        sb.append("{bundleId=").append(bundleId);
+        sb.append(", category=").append(category);
+        sb.append(", startDate=").append(startDate);
+        sb.append(", bundleStartDate=").append(bundleStartDate);
+        sb.append(", activeVersion=").append(activeVersion);
+        sb.append(", chargedThroughDate=").append(chargedThroughDate);
+        sb.append(", paidThroughDate=").append(paidThroughDate);
+        sb.append('}');
+        return sb.toString();
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+
+        final SubscriptionModelDao that = (SubscriptionModelDao) o;
+
+        if (activeVersion != that.activeVersion) {
+            return false;
+        }
+        if (bundleId != null ? !bundleId.equals(that.bundleId) : that.bundleId != null) {
+            return false;
+        }
+        if (bundleStartDate != null ? !bundleStartDate.equals(that.bundleStartDate) : that.bundleStartDate != null) {
+            return false;
+        }
+        if (category != that.category) {
+            return false;
+        }
+        if (chargedThroughDate != null ? !chargedThroughDate.equals(that.chargedThroughDate) : that.chargedThroughDate != null) {
+            return false;
+        }
+        if (paidThroughDate != null ? !paidThroughDate.equals(that.paidThroughDate) : that.paidThroughDate != null) {
+            return false;
+        }
+        if (startDate != null ? !startDate.equals(that.startDate) : that.startDate != null) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (bundleId != null ? bundleId.hashCode() : 0);
+        result = 31 * result + (category != null ? category.hashCode() : 0);
+        result = 31 * result + (startDate != null ? startDate.hashCode() : 0);
+        result = 31 * result + (bundleStartDate != null ? bundleStartDate.hashCode() : 0);
+        result = 31 * result + (int) (activeVersion ^ (activeVersion >>> 32));
+        result = 31 * result + (chargedThroughDate != null ? chargedThroughDate.hashCode() : 0);
+        result = 31 * result + (paidThroughDate != null ? paidThroughDate.hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public TableName getTableName() {
+        return TableName.SUBSCRIPTIONS;
     }
 }

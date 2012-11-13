@@ -19,7 +19,6 @@ package com.ning.billing.util.tag.dao;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import org.testng.Assert;
@@ -33,16 +32,14 @@ import com.ning.billing.ObjectType;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.api.TagDefinitionApiException;
-import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.events.BusInternalEvent;
 import com.ning.billing.util.events.TagInternalEvent;
+import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.tag.ControlTagType;
-import com.ning.billing.util.tag.DefaultControlTag;
 import com.ning.billing.util.tag.DescriptiveTag;
 import com.ning.billing.util.tag.MockTagStoreModuleSql;
 import com.ning.billing.util.tag.Tag;
-import com.ning.billing.util.tag.TagDefinition;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
@@ -59,7 +56,7 @@ public class TestAuditedTagDao extends UtilTestSuiteWithEmbeddedDB {
     private TagDefinitionDao tagDefinitionDao;
 
     @Inject
-    private AuditedTagDao tagDao;
+    private DefaultTagDao tagDao;
 
     @Inject
     private Clock clock;
@@ -90,14 +87,14 @@ public class TestAuditedTagDao extends UtilTestSuiteWithEmbeddedDB {
         final List<UUID> uuids = new ArrayList<UUID>();
 
         // Check with a empty Collection first
-        List<TagDefinition> result = tagDefinitionDao.getByIds(uuids, internalCallContext);
+        List<TagDefinitionModelDao> result = tagDefinitionDao.getByIds(uuids, internalCallContext);
         assertEquals(result.size(), 0);
 
-        final TagDefinition defYo = tagDefinitionDao.create("yo", "defintion yo", internalCallContext);
+        final TagDefinitionModelDao defYo = tagDefinitionDao.create("yo", "defintion yo", internalCallContext);
         uuids.add(defYo.getId());
-        final TagDefinition defBah = tagDefinitionDao.create("bah", "defintion bah", internalCallContext);
+        final TagDefinitionModelDao defBah = tagDefinitionDao.create("bah", "defintion bah", internalCallContext);
         uuids.add(defBah.getId());
-        final TagDefinition defZoo = tagDefinitionDao.create("zoo", "defintion zoo", internalCallContext);
+        final TagDefinitionModelDao defZoo = tagDefinitionDao.create("zoo", "defintion zoo", internalCallContext);
         uuids.add(defZoo.getId());
 
         result = tagDefinitionDao.getByIds(uuids, internalCallContext);
@@ -115,8 +112,8 @@ public class TestAuditedTagDao extends UtilTestSuiteWithEmbeddedDB {
     @Test(groups = "slow")
     public void testGetById() throws TagDefinitionApiException {
         // User Tag
-        final TagDefinition defYo = tagDefinitionDao.create("yo", "defintion yo", internalCallContext);
-        final TagDefinition resDefYo = tagDefinitionDao.getById(defYo.getId(), internalCallContext);
+        final TagDefinitionModelDao defYo = tagDefinitionDao.create("yo", "defintion yo", internalCallContext);
+        final TagDefinitionModelDao resDefYo = tagDefinitionDao.getById(defYo.getId(), internalCallContext);
         assertEquals(defYo, resDefYo);
 
         // Control Tag
@@ -125,7 +122,7 @@ public class TestAuditedTagDao extends UtilTestSuiteWithEmbeddedDB {
             Assert.fail("Should not be able to create a control tag");
         } catch (TagDefinitionApiException ignore) {
         }
-        final TagDefinition resdef_AUTO_INVOICING_OFF = tagDefinitionDao.getById(ControlTagType.AUTO_INVOICING_OFF.getId(), internalCallContext);
+        final TagDefinitionModelDao resdef_AUTO_INVOICING_OFF = tagDefinitionDao.getById(ControlTagType.AUTO_INVOICING_OFF.getId(), internalCallContext);
         assertEquals(resdef_AUTO_INVOICING_OFF.getId(), ControlTagType.AUTO_INVOICING_OFF.getId());
         assertEquals(resdef_AUTO_INVOICING_OFF.getName(), ControlTagType.AUTO_INVOICING_OFF.name());
         assertEquals(resdef_AUTO_INVOICING_OFF.getDescription(), ControlTagType.AUTO_INVOICING_OFF.getDescription());
@@ -134,8 +131,8 @@ public class TestAuditedTagDao extends UtilTestSuiteWithEmbeddedDB {
     @Test(groups = "slow")
     public void testGetByName() throws TagDefinitionApiException {
         // User Tag
-        final TagDefinition defYo = tagDefinitionDao.create("yo", "defintion yo", internalCallContext);
-        final TagDefinition resDefYo = tagDefinitionDao.getByName(defYo.getName(), internalCallContext);
+        final TagDefinitionModelDao defYo = tagDefinitionDao.create("yo", "defintion yo", internalCallContext);
+        final TagDefinitionModelDao resDefYo = tagDefinitionDao.getByName(defYo.getName(), internalCallContext);
         assertEquals(defYo, resDefYo);
 
         // Control Tag
@@ -144,7 +141,7 @@ public class TestAuditedTagDao extends UtilTestSuiteWithEmbeddedDB {
             Assert.fail("Should not be able to create a control tag");
         } catch (TagDefinitionApiException ignore) {
         }
-        final TagDefinition resdef_AUTO_PAY_OFF = tagDefinitionDao.getByName(ControlTagType.AUTO_PAY_OFF.name(), internalCallContext);
+        final TagDefinitionModelDao resdef_AUTO_PAY_OFF = tagDefinitionDao.getByName(ControlTagType.AUTO_PAY_OFF.name(), internalCallContext);
         assertEquals(resdef_AUTO_PAY_OFF.getId(), ControlTagType.AUTO_PAY_OFF.getId());
         assertEquals(resdef_AUTO_PAY_OFF.getName(), ControlTagType.AUTO_PAY_OFF.name());
         assertEquals(resdef_AUTO_PAY_OFF.getDescription(), ControlTagType.AUTO_PAY_OFF.getDescription());
@@ -162,17 +159,16 @@ public class TestAuditedTagDao extends UtilTestSuiteWithEmbeddedDB {
         Assert.assertEquals(eventsListener.getTagEvents().size(), 0);
 
         // Create a tag definition
-        final TagDefinition createdTagDefinition = tagDefinitionDao.create(definitionName, description, internalCallContext);
+        final TagDefinitionModelDao createdTagDefinition = tagDefinitionDao.create(definitionName, description, internalCallContext);
         Assert.assertEquals(createdTagDefinition.getName(), definitionName);
         Assert.assertEquals(createdTagDefinition.getDescription(), description);
 
         // Make sure we can create a tag
-        final Tag tag = createdTagDefinition.isControlTag() ? new DefaultControlTag(ControlTagType.getTypeFromId(createdTagDefinition.getId()), objectType, objectId, internalCallContext.getCreatedDate()) :
-                        new DescriptiveTag(createdTagDefinition.getId(), objectType, objectId, internalCallContext.getCreatedDate());
-        tagDao.create(tag, internalCallContext);
+        final Tag tag = new DescriptiveTag(createdTagDefinition.getId(), objectType, objectId, internalCallContext.getCreatedDate());
+        tagDao.create(new TagModelDao(tag), internalCallContext);
 
         // Make sure we can retrieve it via the DAO
-        final List<Tag> foundTags = tagDao.getTags(objectId, objectType, internalCallContext);
+        final List<TagModelDao> foundTags = tagDao.getTags(objectId, objectType, internalCallContext);
         Assert.assertEquals(foundTags.size(), 1);
         Assert.assertEquals(foundTags.get(0).getTagDefinitionId(), createdTagDefinition.getId());
 

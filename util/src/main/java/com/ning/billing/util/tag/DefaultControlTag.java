@@ -27,12 +27,12 @@ public class DefaultControlTag extends DescriptiveTag implements ControlTag {
     private final ControlTagType controlTagType;
 
     // use to create new objects
-    public DefaultControlTag(final ControlTagType controlTagType, ObjectType objectType, UUID objectId, DateTime createdDate) {
+    public DefaultControlTag(final ControlTagType controlTagType, final ObjectType objectType, final UUID objectId, final DateTime createdDate) {
         this(UUID.randomUUID(), controlTagType, objectType, objectId, createdDate);
     }
 
     // use to hydrate objects when loaded from the persistence layer
-    public DefaultControlTag(final UUID id, final ControlTagType controlTagType, ObjectType objectType, UUID objectId, DateTime createdDate) {
+    public DefaultControlTag(final UUID id, final ControlTagType controlTagType, final ObjectType objectType, final UUID objectId, final DateTime createdDate) {
         super(id, controlTagType.getId(), objectType, objectId, createdDate);
         this.controlTagType = controlTagType;
     }

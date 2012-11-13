@@ -22,23 +22,25 @@ import org.joda.time.DateTime;
 
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
+import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.EntityBase;
+import com.ning.billing.util.entity.dao.EntityModelDao;
 
-public class SubscriptionBundleModelDao extends EntityBase {
+public class SubscriptionBundleModelDao extends EntityBase implements EntityModelDao<SubscriptionBundle> {
 
     private final String externalKey;
     private final UUID accountId;
     private final DateTime lastSysUpdateDate;
 
-    public SubscriptionBundleModelDao(final UUID id, final String key, final UUID accountId, final DateTime lastSysUpdateDate, final DateTime createdDate, final DateTime updateDate) {
+    public SubscriptionBundleModelDao(final UUID id, final String key, final UUID accountId, final DateTime lastSysUpdateDate,
+                                      final DateTime createdDate, final DateTime updateDate) {
         super(id, createdDate, updateDate);
         this.externalKey = key;
         this.accountId = accountId;
         this.lastSysUpdateDate = lastSysUpdateDate;
     }
 
-
-    public SubscriptionBundleModelDao(SubscriptionBundleData input) {
+    public SubscriptionBundleModelDao(final SubscriptionBundleData input) {
         this(input.getId(), input.getExternalKey(), input.getAccountId(), input.getLastSysUpdateDate(), input.getCreatedDate(), input.getUpdatedDate());
     }
 
@@ -54,10 +56,62 @@ public class SubscriptionBundleModelDao extends EntityBase {
         return lastSysUpdateDate;
     }
 
-    public static SubscriptionBundle toSubscriptionbundle(SubscriptionBundleModelDao src) {
+    public static SubscriptionBundle toSubscriptionbundle(final SubscriptionBundleModelDao src) {
         if (src == null) {
             return null;
         }
         return new SubscriptionBundleData(src.getId(), src.getExternalKey(), src.getAccountId(), src.getLastSysUpdateDate());
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append("SubscriptionBundleModelDao");
+        sb.append("{externalKey='").append(externalKey).append('\'');
+        sb.append(", accountId=").append(accountId);
+        sb.append(", lastSysUpdateDate=").append(lastSysUpdateDate);
+        sb.append('}');
+        return sb.toString();
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+
+        final SubscriptionBundleModelDao that = (SubscriptionBundleModelDao) o;
+
+        if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
+            return false;
+        }
+        if (externalKey != null ? !externalKey.equals(that.externalKey) : that.externalKey != null) {
+            return false;
+        }
+        if (lastSysUpdateDate != null ? !lastSysUpdateDate.equals(that.lastSysUpdateDate) : that.lastSysUpdateDate != null) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (externalKey != null ? externalKey.hashCode() : 0);
+        result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
+        result = 31 * result + (lastSysUpdateDate != null ? lastSysUpdateDate.hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public TableName getTableName() {
+        return TableName.BUNDLES;
     }
 }

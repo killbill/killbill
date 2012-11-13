@@ -32,7 +32,8 @@ public enum ObjectType {
     REFUND("refund"),
     TAG("tag"),
     TAG_DEFINITION("tag definition"),
-    TENANT("tenant");
+    TENANT("tenant"),
+    TENANT_KVS("tenant kvs");
 
     private final String objectName;
 

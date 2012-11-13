@@ -16,23 +16,16 @@
 
 package com.ning.billing.util.dao;
 
-import java.util.List;
-
 import org.skife.jdbi.v2.sqlobject.BindBean;
-import org.skife.jdbi.v2.sqlobject.SqlBatch;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
 import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 import com.ning.billing.util.entity.Entity;
+import com.ning.billing.util.entity.dao.EntityModelDao;
 
-public interface HistorySqlDao<T extends Entity> {
-
-    @SqlBatch(transactional = false)
-    public void batchAddHistoryFromTransaction(List<EntityHistory> histories,
-                                               @InternalTenantContextBinder InternalCallContext context);
+public interface HistorySqlDao<M extends EntityModelDao<E>, E extends Entity> {
 
     @SqlUpdate
-    public void addHistoryFromTransaction(@EntityHistoryBinder EntityHistory<T> history,
+    public void addHistoryFromTransaction(@EntityHistoryBinder EntityHistoryModelDao<M, E> history,
                                           @BindBean InternalCallContext context);
 }

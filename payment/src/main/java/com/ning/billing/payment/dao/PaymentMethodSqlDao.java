@@ -22,11 +22,9 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
-import org.skife.jdbi.v2.sqlobject.Binder;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
@@ -36,8 +34,6 @@ import com.ning.billing.payment.api.PaymentMethod;
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.dao.BinderBase;
-import com.ning.billing.util.dao.EntityHistory;
 import com.ning.billing.util.dao.MapperBase;
 import com.ning.billing.util.entity.dao.Audited;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
@@ -45,7 +41,7 @@ import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 
 @EntitySqlDaoStringTemplate
 @RegisterMapper(PaymentMethodSqlDao.PaymentMethodDaoMapper.class)
-public interface PaymentMethodSqlDao extends EntitySqlDao<PaymentMethodModelDao> {
+public interface PaymentMethodSqlDao extends EntitySqlDao<PaymentMethodModelDao, PaymentMethod> {
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
@@ -57,14 +53,12 @@ public interface PaymentMethodSqlDao extends EntitySqlDao<PaymentMethodModelDao>
     void unmarkPaymentMethodAsDeleted(@Bind("id") final String paymentMethodId,
                                       @BindBean final InternalCallContext context);
 
-
     @SqlQuery
     PaymentMethodModelDao getPaymentMethodIncludedDelete(@Bind("id") final String paymentMethodId,
                                                          @BindBean final InternalTenantContext context);
 
     @SqlQuery
     List<PaymentMethodModelDao> getByAccountId(@Bind("accountId") final String accountId, @BindBean final InternalCallContext context);
-
 
     public static class PaymentMethodDaoMapper extends MapperBase implements ResultSetMapper<PaymentMethodModelDao> {
 

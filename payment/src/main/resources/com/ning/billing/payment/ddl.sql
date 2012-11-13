@@ -131,7 +131,7 @@ CREATE TABLE payment_method_history (
     tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
-CREATE UNIQUE INDEX payment_method_history_target_record_id ON payment_method_history(target_record_id);
+CREATE INDEX payment_method_history_target_record_id ON payment_method_history(target_record_id);
 CREATE INDEX payment_method_history_tenant_account_record_id ON payment_method_history(tenant_record_id, account_record_id);
 
 DROP TABLE IF EXISTS refunds; 

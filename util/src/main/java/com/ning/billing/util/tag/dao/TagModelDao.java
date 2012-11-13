@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2012 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -14,64 +14,60 @@
  * under the License.
  */
 
-package com.ning.billing.util.customfield;
+package com.ning.billing.util.tag.dao;
 
 import java.util.UUID;
 
 import org.joda.time.DateTime;
 
 import com.ning.billing.ObjectType;
-import com.ning.billing.util.customfield.dao.CustomFieldModelDao;
+import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.EntityBase;
+import com.ning.billing.util.entity.dao.EntityModelDao;
+import com.ning.billing.util.tag.Tag;
 
-public class StringCustomField extends EntityBase implements CustomField {
+public class TagModelDao extends EntityBase implements EntityModelDao<Tag> {
 
-    private final String fieldName;
-    private final String fieldValue;
-    private final UUID objectId;
-    private final ObjectType objectType;
+    private UUID tagDefinitionId;
+    private UUID objectId;
+    private ObjectType objectType;
 
-    public StringCustomField(final String name, final String value, final ObjectType objectType, final UUID objectId, final DateTime createdDate) {
-        this(UUID.randomUUID(), name, value, objectType, objectId, createdDate);
+    public TagModelDao() { /* For the DAO mapper */ }
+
+    public TagModelDao(final DateTime createdDate, final UUID tagDefinitionId,
+                       final UUID objectId, final ObjectType objectType) {
+        this(UUID.randomUUID(), createdDate, createdDate, tagDefinitionId, objectId, objectType);
     }
 
-    public StringCustomField(final UUID id, final String name, final String value, final ObjectType objectType, final UUID objectId, final DateTime createdDate) {
-        super(id, createdDate, createdDate);
-        this.fieldName = name;
-        this.fieldValue = value;
+    public TagModelDao(final UUID id, final DateTime createdDate, final DateTime updatedDate, final UUID tagDefinitionId,
+                       final UUID objectId, final ObjectType objectType) {
+        super(id, createdDate, updatedDate);
+        this.tagDefinitionId = tagDefinitionId;
         this.objectId = objectId;
         this.objectType = objectType;
-
     }
 
-    public StringCustomField(final CustomFieldModelDao input) {
-        this(input.getId(), input.getFieldName(), input.getFieldValue(), input.getObjectType(), input.getObjectId(), input.getCreatedDate());
+    public TagModelDao(final Tag tag) {
+        this(tag.getId(), tag.getCreatedDate(), tag.getUpdatedDate(), tag.getTagDefinitionId(), tag.getObjectId(), tag.getObjectType());
     }
 
-    @Override
-    public String getFieldName() {
-        return fieldName;
-    }
-
-    @Override
-    public String getFieldValue() {
-        return fieldValue;
-    }
-
-    public ObjectType getObjectType() {
-        return objectType;
+    public UUID getTagDefinitionId() {
+        return tagDefinitionId;
     }
 
     public UUID getObjectId() {
         return objectId;
     }
 
+    public ObjectType getObjectType() {
+        return objectType;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
-        sb.append("StringCustomField");
-        sb.append("{fieldName='").append(fieldName).append('\'');
-        sb.append(", fieldValue='").append(fieldValue).append('\'');
+        sb.append("TagModelDao");
+        sb.append("{tagDefinitionId=").append(tagDefinitionId);
         sb.append(", objectId=").append(objectId);
         sb.append(", objectType=").append(objectType);
         sb.append('}');
@@ -90,18 +86,15 @@ public class StringCustomField extends EntityBase implements CustomField {
             return false;
         }
 
-        final StringCustomField that = (StringCustomField) o;
+        final TagModelDao that = (TagModelDao) o;
 
-        if (fieldName != null ? !fieldName.equals(that.fieldName) : that.fieldName != null) {
-            return false;
-        }
-        if (fieldValue != null ? !fieldValue.equals(that.fieldValue) : that.fieldValue != null) {
-            return false;
-        }
         if (objectId != null ? !objectId.equals(that.objectId) : that.objectId != null) {
             return false;
         }
         if (objectType != that.objectType) {
+            return false;
+        }
+        if (tagDefinitionId != null ? !tagDefinitionId.equals(that.tagDefinitionId) : that.tagDefinitionId != null) {
             return false;
         }
 
@@ -111,10 +104,14 @@ public class StringCustomField extends EntityBase implements CustomField {
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + (fieldName != null ? fieldName.hashCode() : 0);
-        result = 31 * result + (fieldValue != null ? fieldValue.hashCode() : 0);
+        result = 31 * result + (tagDefinitionId != null ? tagDefinitionId.hashCode() : 0);
         result = 31 * result + (objectId != null ? objectId.hashCode() : 0);
         result = 31 * result + (objectType != null ? objectType.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public TableName getTableName() {
+        return TableName.TAG;
     }
 }

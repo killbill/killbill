@@ -23,6 +23,7 @@ import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
+import com.ning.billing.account.api.Account;
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
@@ -31,7 +32,7 @@ import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 
 @EntitySqlDaoStringTemplate
-public interface AccountSqlDao extends EntitySqlDao<AccountModelDao> {
+public interface AccountSqlDao extends EntitySqlDao<AccountModelDao, Account> {
 
     @SqlQuery
     public AccountModelDao getAccountByKey(@Bind("externalKey") final String key,

@@ -30,25 +30,23 @@ import com.ning.billing.ObjectType;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.api.CustomFieldApiException;
-import com.ning.billing.util.clock.DefaultClock;
-import com.ning.billing.util.customfield.dao.AuditedCustomFieldDao;
 import com.ning.billing.util.customfield.dao.CustomFieldDao;
-import com.ning.billing.util.customfield.dao.CustomFieldSqlDao;
+import com.ning.billing.util.customfield.dao.CustomFieldModelDao;
+import com.ning.billing.util.customfield.dao.DefaultCustomFieldDao;
 
-import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.fail;
 
 public class TestFieldStore extends UtilTestSuiteWithEmbeddedDB {
+
     private final Logger log = LoggerFactory.getLogger(TestFieldStore.class);
     private final MysqlTestingHelper helper = KillbillTestSuiteWithEmbeddedDB.getMysqlTestingHelper();
-    private IDBI dbi;
     private CustomFieldDao customFieldDao;
 
     @BeforeClass(groups = "slow")
     protected void setup() throws IOException {
         try {
-            dbi = helper.getDBI();
-            customFieldDao = new AuditedCustomFieldDao(dbi);
+            final IDBI dbi = helper.getDBI();
+            customFieldDao = new DefaultCustomFieldDao(dbi);
         } catch (Throwable t) {
             log.error("Setup failed", t);
             fail(t.toString());
@@ -60,16 +58,15 @@ public class TestFieldStore extends UtilTestSuiteWithEmbeddedDB {
         final UUID id = UUID.randomUUID();
         final ObjectType objectType = ObjectType.ACCOUNT;
 
-
         String fieldName = "TestField1";
         String fieldValue = "Kitty Hawk";
 
-        CustomField field = new StringCustomField(fieldName, fieldValue, objectType, id, internalCallContext.getCreatedDate());
-        customFieldDao.create(field, internalCallContext);
+        final CustomField field = new StringCustomField(fieldName, fieldValue, objectType, id, internalCallContext.getCreatedDate());
+        customFieldDao.create(new CustomFieldModelDao(field), internalCallContext);
 
         fieldName = "TestField2";
         fieldValue = "Cape Canaveral";
-        CustomField field2 = new StringCustomField(fieldName, fieldValue, objectType, id, internalCallContext.getCreatedDate());
-        customFieldDao.create(field2 ,internalCallContext);
+        final CustomField field2 = new StringCustomField(fieldName, fieldValue, objectType, id, internalCallContext.getCreatedDate());
+        customFieldDao.create(new CustomFieldModelDao(field2), internalCallContext);
     }
 }

@@ -23,11 +23,9 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
-import org.skife.jdbi.v2.sqlobject.Binder;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
@@ -38,7 +36,6 @@ import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.dao.BinderBase;
 import com.ning.billing.util.dao.MapperBase;
 import com.ning.billing.util.entity.dao.Audited;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
@@ -46,8 +43,7 @@ import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 
 @EntitySqlDaoStringTemplate
 @RegisterMapper(PaymentAttemptSqlDao.PaymentAttemptModelDaoMapper.class)
-public interface PaymentAttemptSqlDao extends EntitySqlDao<PaymentAttemptModelDao> {
-
+public interface PaymentAttemptSqlDao extends EntitySqlDao<PaymentAttemptModelDao, PaymentAttempt> {
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
@@ -60,7 +56,6 @@ public interface PaymentAttemptSqlDao extends EntitySqlDao<PaymentAttemptModelDa
     @SqlQuery
     List<PaymentAttemptModelDao> getByPaymentId(@Bind("paymentId") final String paymentId,
                                                 @BindBean final InternalTenantContext context);
-
 
     public static class PaymentAttemptModelDaoMapper extends MapperBase implements ResultSetMapper<PaymentAttemptModelDao> {
 

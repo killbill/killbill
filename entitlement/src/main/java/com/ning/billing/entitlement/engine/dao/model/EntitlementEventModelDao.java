@@ -38,9 +38,11 @@ import com.ning.billing.entitlement.events.user.ApiEventTransfer;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.events.user.ApiEventUncancel;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
+import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.EntityBase;
+import com.ning.billing.util.entity.dao.EntityModelDao;
 
-public class EntitlementEventModelDao extends EntityBase {
+public class EntitlementEventModelDao extends EntityBase implements EntityModelDao<EntitlementEvent> {
 
     private final long totalOrdering;
     private final EventType eventType;
@@ -100,11 +102,9 @@ public class EntitlementEventModelDao extends EntityBase {
         return userType != null ? userType.toString() : null;
     }
 
-
     public EventType getEventTypeX() {
         return eventType;
     }
-
 
     public ApiEventType getUserTypeX() {
         return userType;
@@ -147,7 +147,7 @@ public class EntitlementEventModelDao extends EntityBase {
         return isActive;
     }
 
-    public static EntitlementEvent toEntitlementEvent(EntitlementEventModelDao src) {
+    public static EntitlementEvent toEntitlementEvent(final EntitlementEventModelDao src) {
 
         final EventBaseBuilder<?> base = ((src.getEventTypeX() == EventType.PHASE) ?
                                           new PhaseEventBuilder() :
@@ -197,5 +197,97 @@ public class EntitlementEventModelDao extends EntityBase {
             throw new EntitlementError(String.format("Can't figure out event %s", src.getEventTypeX()));
         }
         return result;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append("EntitlementEventModelDao");
+        sb.append("{totalOrdering=").append(totalOrdering);
+        sb.append(", eventType=").append(eventType);
+        sb.append(", userType=").append(userType);
+        sb.append(", requestedDate=").append(requestedDate);
+        sb.append(", effectiveDate=").append(effectiveDate);
+        sb.append(", subscriptionId=").append(subscriptionId);
+        sb.append(", planName='").append(planName).append('\'');
+        sb.append(", phaseName='").append(phaseName).append('\'');
+        sb.append(", priceListName='").append(priceListName).append('\'');
+        sb.append(", currentVersion=").append(currentVersion);
+        sb.append(", isActive=").append(isActive);
+        sb.append('}');
+        return sb.toString();
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+
+        final EntitlementEventModelDao that = (EntitlementEventModelDao) o;
+
+        if (currentVersion != that.currentVersion) {
+            return false;
+        }
+        if (isActive != that.isActive) {
+            return false;
+        }
+        if (totalOrdering != that.totalOrdering) {
+            return false;
+        }
+        if (effectiveDate != null ? !effectiveDate.equals(that.effectiveDate) : that.effectiveDate != null) {
+            return false;
+        }
+        if (eventType != that.eventType) {
+            return false;
+        }
+        if (phaseName != null ? !phaseName.equals(that.phaseName) : that.phaseName != null) {
+            return false;
+        }
+        if (planName != null ? !planName.equals(that.planName) : that.planName != null) {
+            return false;
+        }
+        if (priceListName != null ? !priceListName.equals(that.priceListName) : that.priceListName != null) {
+            return false;
+        }
+        if (requestedDate != null ? !requestedDate.equals(that.requestedDate) : that.requestedDate != null) {
+            return false;
+        }
+        if (subscriptionId != null ? !subscriptionId.equals(that.subscriptionId) : that.subscriptionId != null) {
+            return false;
+        }
+        if (userType != that.userType) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (int) (totalOrdering ^ (totalOrdering >>> 32));
+        result = 31 * result + (eventType != null ? eventType.hashCode() : 0);
+        result = 31 * result + (userType != null ? userType.hashCode() : 0);
+        result = 31 * result + (requestedDate != null ? requestedDate.hashCode() : 0);
+        result = 31 * result + (effectiveDate != null ? effectiveDate.hashCode() : 0);
+        result = 31 * result + (subscriptionId != null ? subscriptionId.hashCode() : 0);
+        result = 31 * result + (planName != null ? planName.hashCode() : 0);
+        result = 31 * result + (phaseName != null ? phaseName.hashCode() : 0);
+        result = 31 * result + (priceListName != null ? priceListName.hashCode() : 0);
+        result = 31 * result + (int) (currentVersion ^ (currentVersion >>> 32));
+        result = 31 * result + (isActive ? 1 : 0);
+        return result;
+    }
+
+    @Override
+    public TableName getTableName() {
+        return TableName.SUBSCRIPTION_EVENTS;
     }
 }

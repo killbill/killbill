@@ -24,9 +24,9 @@ import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.entity.dao.EntityDao;
 
-public interface TenantDao extends EntityDao<Tenant, TenantApiException> {
+public interface TenantDao extends EntityDao<TenantModelDao, Tenant, TenantApiException> {
 
-    public Tenant getTenantByApiKey(final String key);
+    public TenantModelDao getTenantByApiKey(final String key);
 
     public List<String> getTenantValueForKey(final String key, final InternalTenantContext context);
 

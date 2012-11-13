@@ -22,10 +22,11 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.entity.dao.MockEntityDaoBase;
 
-public class MockAccountEmailDao extends MockEntityDaoBase<AccountEmailModelDao, AccountApiException> implements AccountEmailDao {
+public class MockAccountEmailDao extends MockEntityDaoBase<AccountEmailModelDao, AccountEmail, AccountApiException> implements AccountEmailDao {
 
     @Override
     public List<AccountEmailModelDao> getByAccountId(final UUID accountId, final InternalTenantContext context) {
