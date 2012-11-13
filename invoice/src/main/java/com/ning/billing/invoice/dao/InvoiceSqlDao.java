@@ -24,12 +24,13 @@ import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 
+import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 
 @EntitySqlDaoStringTemplate
-public interface InvoiceSqlDao extends EntitySqlDao<InvoiceModelDao> {
+public interface InvoiceSqlDao extends EntitySqlDao<InvoiceModelDao, Invoice> {
 
     @SqlQuery
     List<InvoiceModelDao> getInvoicesByAccount(@Bind("accountId") final String accountId,

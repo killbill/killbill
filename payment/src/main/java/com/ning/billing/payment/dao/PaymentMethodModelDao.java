@@ -22,9 +22,12 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.payment.api.PaymentMethod;
+import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.EntityBase;
+import com.ning.billing.util.entity.dao.EntityModelDao;
 
-public class PaymentMethodModelDao extends EntityBase {
+public class PaymentMethodModelDao extends EntityBase implements EntityModelDao<PaymentMethod> {
 
     private final UUID accountId;
     private final String pluginName;
@@ -117,5 +120,10 @@ public class PaymentMethodModelDao extends EntityBase {
         result = 31 * result + (isActive != null ? isActive.hashCode() : 0);
         result = 31 * result + (externalId != null ? externalId.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public TableName getTableName() {
+        return TableName.PAYMENT_METHODS;
     }
 }

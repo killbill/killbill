@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.invoice.api.InvoicePayment.InvoicePaymentType;
@@ -58,7 +59,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap.Builder;
 import com.google.inject.Inject;
 
-public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, InvoiceApiException> implements InvoiceDao {
+public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, InvoiceApiException> implements InvoiceDao {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultInvoiceDao.class);
 

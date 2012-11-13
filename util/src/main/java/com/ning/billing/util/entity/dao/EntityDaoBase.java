@@ -25,19 +25,19 @@ import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.entity.Entity;
 
-public abstract class EntityDaoBase<T extends Entity, U extends BillingExceptionBase> implements EntityDao<T, U> {
+public abstract class EntityDaoBase<M extends EntityModelDao<E>, E extends Entity, U extends BillingExceptionBase> implements EntityDao<M, E, U> {
 
     protected final EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao;
 
-    private Class<? extends EntitySqlDao<T>> realSqlDao;
+    private final Class<? extends EntitySqlDao<M, E>> realSqlDao;
 
-    public EntityDaoBase(final EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao, Class<? extends EntitySqlDao<T>> realSqlDao) {
+    public EntityDaoBase(final EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao, final Class<? extends EntitySqlDao<M, E>> realSqlDao) {
         this.transactionalSqlDao = transactionalSqlDao;
         this.realSqlDao = realSqlDao;
     }
 
     @Override
-    public void create(final T entity, final InternalCallContext context) throws U {
+    public void create(final M entity, final InternalCallContext context) throws U {
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
@@ -45,11 +45,11 @@ public abstract class EntityDaoBase<T extends Entity, U extends BillingException
                 if (getById(entity.getId(), context) != null) {
                     throw generateAlreadyExistsException(entity, context);
                 }
-                final EntitySqlDao<T> transactional = entitySqlDaoWrapperFactory.become(realSqlDao);
+                final EntitySqlDao<M, E> transactional = entitySqlDaoWrapperFactory.become(realSqlDao);
                 transactional.create(entity, context);
 
 
-                final T refreshedEntity = transactional.getById(entity.getId().toString(), context);
+                final M refreshedEntity = transactional.getById(entity.getId().toString(), context);
 
                 postBusEventFromTransaction(entity, refreshedEntity, ChangeType.INSERT, entitySqlDaoWrapperFactory, context);
                 return null;
@@ -57,11 +57,12 @@ public abstract class EntityDaoBase<T extends Entity, U extends BillingException
         });
     }
 
-    protected void postBusEventFromTransaction(T entity, T savedEntity, ChangeType changeType, final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final InternalCallContext context)
-            throws BillingExceptionBase {
+    protected void postBusEventFromTransaction(final M entity, final M savedEntity, final ChangeType changeType,
+                                               final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory,
+                                               final InternalCallContext context) throws BillingExceptionBase {
     }
 
-    protected abstract U generateAlreadyExistsException(final T entity, final InternalCallContext context);
+    protected abstract U generateAlreadyExistsException(final M entity, final InternalCallContext context);
 
     @Override
     public Long getRecordId(final UUID id, final InternalTenantContext context) {
@@ -69,43 +70,43 @@ public abstract class EntityDaoBase<T extends Entity, U extends BillingException
 
             @Override
             public Long inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                final EntitySqlDao<T> transactional = entitySqlDaoWrapperFactory.become(realSqlDao);
+                final EntitySqlDao<M, E> transactional = entitySqlDaoWrapperFactory.become(realSqlDao);
                 return transactional.getRecordId(id.toString(), context);
             }
         });
     }
 
     @Override
-    public T getByRecordId(final Long recordId, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<T>() {
+    public M getByRecordId(final Long recordId, final InternalTenantContext context) {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<M>() {
 
             @Override
-            public T inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                final EntitySqlDao<T> transactional = entitySqlDaoWrapperFactory.become(realSqlDao);
+            public M inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                final EntitySqlDao<M, E> transactional = entitySqlDaoWrapperFactory.become(realSqlDao);
                 return transactional.getByRecordId(recordId, context);
             }
         });
     }
 
     @Override
-    public T getById(final UUID id, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<T>() {
+    public M getById(final UUID id, final InternalTenantContext context) {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<M>() {
 
             @Override
-            public T inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                final EntitySqlDao<T> transactional = entitySqlDaoWrapperFactory.become(realSqlDao);
+            public M inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                final EntitySqlDao<M, E> transactional = entitySqlDaoWrapperFactory.become(realSqlDao);
                 return transactional.getById(id.toString(), context);
             }
         });
     }
 
     @Override
-    public List<T> get(final InternalTenantContext context) {
-        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<T>>() {
+    public List<M> get(final InternalTenantContext context) {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<M>>() {
 
             @Override
-            public List<T> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                final EntitySqlDao<T> transactional = entitySqlDaoWrapperFactory.become(realSqlDao);
+            public List<M> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                final EntitySqlDao<M, E> transactional = entitySqlDaoWrapperFactory.become(realSqlDao);
                 return transactional.get(context);
             }
         });
@@ -117,7 +118,7 @@ public abstract class EntityDaoBase<T extends Entity, U extends BillingException
 
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                final EntitySqlDao<T> transactional = entitySqlDaoWrapperFactory.become(realSqlDao);
+                final EntitySqlDao<M, E> transactional = entitySqlDaoWrapperFactory.become(realSqlDao);
                 transactional.test(context);
                 return null;
             }

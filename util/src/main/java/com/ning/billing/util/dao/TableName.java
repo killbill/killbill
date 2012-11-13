@@ -19,86 +19,60 @@ package com.ning.billing.util.dao;
 import javax.annotation.Nullable;
 
 import com.ning.billing.ObjectType;
-import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.AccountEmail;
-import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.invoice.api.InvoicePayment;
-import com.ning.billing.payment.api.Payment;
-import com.ning.billing.payment.api.Payment.PaymentAttempt;
-import com.ning.billing.payment.api.PaymentMethod;
-import com.ning.billing.payment.api.Refund;
-import com.ning.billing.tenant.api.Tenant;
-import com.ning.billing.util.customfield.CustomField;
-import com.ning.billing.util.entity.Entity;
-import com.ning.billing.util.tag.Tag;
-import com.ning.billing.util.tag.TagDefinition;
 
 /**
  * Map table names to entity object types and classes, and history tables (if exists)
  */
 public enum TableName {
     ACCOUNT_HISTORY("account_history"),
-    ACCOUNT("accounts", ObjectType.ACCOUNT, Account.class, ACCOUNT_HISTORY),
+    ACCOUNT("accounts", ObjectType.ACCOUNT, ACCOUNT_HISTORY),
     ACCOUNT_EMAIL_HISTORY("account_email_history"),
-    ACCOUNT_EMAIL("account_emails", ObjectType.ACCOUNT_EMAIL, AccountEmail.class, ACCOUNT_EMAIL_HISTORY),
-    BUNDLES("bundles", ObjectType.BUNDLE, SubscriptionBundle.class),
+    ACCOUNT_EMAIL("account_emails", ObjectType.ACCOUNT_EMAIL, ACCOUNT_EMAIL_HISTORY),
+    BUNDLES("bundles", ObjectType.BUNDLE),
+    BLOCKING_STATES("blocking_states"),
     CUSTOM_FIELD_HISTORY("custom_field_history"),
-    CUSTOM_FIELD("custom_fields", ObjectType.CUSTOM_FIELD, CustomField.class, CUSTOM_FIELD_HISTORY),
-    INVOICE_ITEMS("invoice_items", ObjectType.INVOICE_ITEM, InvoiceItem.class),
-    INVOICE_PAYMENTS("invoice_payments", ObjectType.INVOICE_PAYMENT, InvoicePayment.class),
-    INVOICES("invoices", ObjectType.INVOICE, Invoice.class),
+    CUSTOM_FIELD("custom_fields", ObjectType.CUSTOM_FIELD, CUSTOM_FIELD_HISTORY),
+    INVOICE_ITEMS("invoice_items", ObjectType.INVOICE_ITEM),
+    INVOICE_PAYMENTS("invoice_payments", ObjectType.INVOICE_PAYMENT),
+    INVOICES("invoices", ObjectType.INVOICE),
     PAYMENT_ATTEMPT_HISTORY("payment_attempt_history"),
-    PAYMENT_ATTEMPTS("payment_attempts", ObjectType.PAYMENT_ATTEMPT, PaymentAttempt.class, PAYMENT_ATTEMPT_HISTORY),
+    PAYMENT_ATTEMPTS("payment_attempts", ObjectType.PAYMENT_ATTEMPT, PAYMENT_ATTEMPT_HISTORY),
     PAYMENT_HISTORY("payment_history"),
-    PAYMENTS("payments", ObjectType.PAYMENT, Payment.class, PAYMENT_HISTORY),
+    PAYMENTS("payments", ObjectType.PAYMENT, PAYMENT_HISTORY),
     PAYMENT_METHOD_HISTORY("payment_method_history"),
-    PAYMENT_METHODS("payment_methods", ObjectType.PAYMENT_METHOD, PaymentMethod.class, PAYMENT_METHOD_HISTORY),
-    SUBSCRIPTIONS("subscriptions", ObjectType.SUBSCRIPTION, Subscription.class),
-    // TODO - entity class?
-    SUBSCRIPTION_EVENTS("subscription_events", ObjectType.SUBSCRIPTION_EVENT, null),
+    PAYMENT_METHODS("payment_methods", ObjectType.PAYMENT_METHOD, PAYMENT_METHOD_HISTORY),
+    SUBSCRIPTIONS("subscriptions", ObjectType.SUBSCRIPTION),
+    SUBSCRIPTION_EVENTS("subscription_events", ObjectType.SUBSCRIPTION_EVENT),
     REFUND_HISTORY("refund_history"),
-    REFUNDS("refunds", ObjectType.REFUND, Refund.class, REFUND_HISTORY),
+    REFUNDS("refunds", ObjectType.REFUND, REFUND_HISTORY),
     TAG_DEFINITION_HISTORY("tag_definition_history"),
-    TAG_DEFINITIONS("tag_definitions", ObjectType.TAG_DEFINITION, TagDefinition.class, TAG_DEFINITION_HISTORY),
+    TAG_DEFINITIONS("tag_definitions", ObjectType.TAG_DEFINITION, TAG_DEFINITION_HISTORY),
     TAG_HISTORY("tag_history"),
-    TENANT("tenants", ObjectType.TENANT, Tenant.class),
-    TAG("tags", ObjectType.TAG, Tag.class, TAG_HISTORY);
+    TENANT("tenants", ObjectType.TENANT),
+    TENANT_KVS("tenant_kvs", ObjectType.TENANT_KVS),
+    TAG("tags", ObjectType.TAG, TAG_HISTORY);
 
     private final String tableName;
     private final ObjectType objectType;
-    private final Class<? extends Entity> entityClass;
     private final TableName historyTableName;
 
-    TableName(final String tableName, @Nullable final ObjectType objectType, @Nullable final Class<? extends Entity> entityClass, @Nullable final TableName historyTableName) {
+    TableName(final String tableName, @Nullable final ObjectType objectType, @Nullable final TableName historyTableName) {
         this.tableName = tableName;
         this.objectType = objectType;
-        this.entityClass = entityClass;
         this.historyTableName = historyTableName;
     }
 
-    TableName(final String tableName, final ObjectType objectType, @Nullable final Class<? extends Entity> entityClass) {
-        this(tableName, objectType, entityClass, null);
+    TableName(final String tableName, final ObjectType objectType) {
+        this(tableName, objectType, null);
     }
 
     TableName(final String tableName) {
-        this(tableName, null, null, null);
+        this(tableName, null, null);
     }
 
     public static TableName fromObjectType(final ObjectType objectType) {
         for (final TableName tableName : values()) {
             if (tableName.getObjectType() != null && tableName.getObjectType().equals(objectType)) {
-                return tableName;
-            }
-        }
-        return null;
-    }
-
-    public static TableName fromEntityClass(final Class<? extends Entity> entityClass) {
-        for (final TableName tableName : values()) {
-            if (tableName.getEntityClass() != null && tableName.getEntityClass().isAssignableFrom(entityClass)) {
                 return tableName;
             }
         }
@@ -115,10 +89,6 @@ public enum TableName {
 
     public TableName getHistoryTableName() {
         return historyTableName;
-    }
-
-    public Class<? extends Entity> getEntityClass() {
-        return entityClass;
     }
 
     public boolean hasHistoryTable() {

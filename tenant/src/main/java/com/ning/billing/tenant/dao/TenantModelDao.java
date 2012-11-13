@@ -16,38 +16,40 @@
 
 package com.ning.billing.tenant.dao;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.util.UUID;
 
-import org.apache.shiro.authc.AuthenticationInfo;
-import org.apache.shiro.authc.SimpleAuthenticationInfo;
-import org.apache.shiro.codec.Base64;
-import org.apache.shiro.util.ByteSource;
-import org.skife.jdbi.v2.StatementContext;
-import org.skife.jdbi.v2.tweak.ResultSetMapper;
+import org.joda.time.DateTime;
 
-import com.ning.billing.util.dao.MapperBase;
+import com.ning.billing.tenant.api.Tenant;
+import com.ning.billing.util.dao.TableName;
+import com.ning.billing.util.entity.EntityBase;
+import com.ning.billing.util.entity.dao.EntityModelDao;
 
-/**
- * Not exposed in the APIs - mainly for testing
- */
-public final class TenantSecrets {
+public class TenantModelDao extends EntityBase implements EntityModelDao<Tenant> {
 
-    private final String apiKey;
-    // Encrypted secret
-    private final String apiSecret;
-    private final String apiSalt;
+    private String externalKey;
+    private String apiKey;
+    private String apiSecret;
+    private String apiSalt;
 
-   public TenantSecrets(final String apiKey, final String apiSecret, final String apiSalt) {
+    public TenantModelDao() { /* For the DAO mapper */ }
+
+    public TenantModelDao(final UUID id, final DateTime createdDate, final DateTime updatedDate, final String externalKey,
+                          final String apiKey, final String apiSecret, final String apiSalt) {
+        super(id, createdDate, updatedDate);
+        this.externalKey = externalKey;
         this.apiKey = apiKey;
         this.apiSecret = apiSecret;
         this.apiSalt = apiSalt;
     }
 
-    public AuthenticationInfo toAuthenticationInfo() {
-        final SimpleAuthenticationInfo authenticationInfo = new SimpleAuthenticationInfo(apiKey, apiSecret.toCharArray(), getClass().getSimpleName());
-        authenticationInfo.setCredentialsSalt(ByteSource.Util.bytes(Base64.decode(apiSalt)));
-        return authenticationInfo;
+    public TenantModelDao(final Tenant tenant) {
+        this(tenant.getId(), tenant.getCreatedDate(), tenant.getUpdatedDate(), tenant.getExternalKey(),
+             tenant.getApiKey(), tenant.getApiSecret(), null);
+    }
+
+    public String getExternalKey() {
+        return externalKey;
     }
 
     public String getApiKey() {
@@ -65,9 +67,11 @@ public final class TenantSecrets {
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
-        sb.append("TenantSecrets");
-        sb.append("{apiKey='").append(apiKey).append('\'');
-        // Don't print the secret nor salt
+        sb.append("TenantModelDao");
+        sb.append("{externalKey='").append(externalKey).append('\'');
+        sb.append(", apiKey='").append(apiKey).append('\'');
+        sb.append(", apiSecret='").append(apiSecret).append('\'');
+        sb.append(", apiSalt='").append(apiSalt).append('\'');
         sb.append('}');
         return sb.toString();
     }
@@ -80,8 +84,11 @@ public final class TenantSecrets {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
+        if (!super.equals(o)) {
+            return false;
+        }
 
-        final TenantSecrets that = (TenantSecrets) o;
+        final TenantModelDao that = (TenantModelDao) o;
 
         if (apiKey != null ? !apiKey.equals(that.apiKey) : that.apiKey != null) {
             return false;
@@ -92,15 +99,25 @@ public final class TenantSecrets {
         if (apiSecret != null ? !apiSecret.equals(that.apiSecret) : that.apiSecret != null) {
             return false;
         }
+        if (externalKey != null ? !externalKey.equals(that.externalKey) : that.externalKey != null) {
+            return false;
+        }
 
         return true;
     }
 
     @Override
     public int hashCode() {
-        int result = apiKey != null ? apiKey.hashCode() : 0;
+        int result = super.hashCode();
+        result = 31 * result + (externalKey != null ? externalKey.hashCode() : 0);
+        result = 31 * result + (apiKey != null ? apiKey.hashCode() : 0);
         result = 31 * result + (apiSecret != null ? apiSecret.hashCode() : 0);
         result = 31 * result + (apiSalt != null ? apiSalt.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public TableName getTableName() {
+        return TableName.TENANT;
     }
 }

@@ -38,10 +38,8 @@ import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import com.ning.billing.util.events.TagDefinitionInternalEvent;
-import com.ning.billing.util.events.TagInternalEvent;
 import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.tag.ControlTagType;
-import com.ning.billing.util.tag.DefaultTagDefinition;
 import com.ning.billing.util.tag.TagDefinition;
 import com.ning.billing.util.tag.api.user.TagEventBuilder;
 
@@ -49,11 +47,10 @@ import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
 
-public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinition, TagDefinitionApiException> implements TagDefinitionDao {
+public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinitionModelDao, TagDefinition, TagDefinitionApiException> implements TagDefinitionDao {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultTagDefinitionDao.class);
 
-    private final TagDefinitionSqlDao tagDefinitionSqlDao;
     private final TagEventBuilder tagEventBuilder;
     private final InternalBus bus;
 
@@ -62,92 +59,112 @@ public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinition, TagDef
         super(new EntitySqlDaoTransactionalJdbiWrapper(dbi), TagDefinitionSqlDao.class);
         this.tagEventBuilder = tagEventBuilder;
         this.bus = bus;
-        this.tagDefinitionSqlDao = dbi.onDemand(TagDefinitionSqlDao.class);
     }
 
     @Override
-    public List<TagDefinition> getTagDefinitions(final InternalTenantContext context) {
-        // Get user definitions from the database
-        final List<TagDefinition> definitionList = new LinkedList<TagDefinition>();
-        definitionList.addAll(tagDefinitionSqlDao.get(context));
+    public List<TagDefinitionModelDao> getTagDefinitions(final InternalTenantContext context) {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<TagDefinitionModelDao>>() {
+            @Override
+            public List<TagDefinitionModelDao> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                // Get user definitions from the database
+                final List<TagDefinitionModelDao> definitionList = new LinkedList<TagDefinitionModelDao>();
+                definitionList.addAll(entitySqlDaoWrapperFactory.become(TagDefinitionSqlDao.class).get(context));
 
-        // Add control tag definitions
-        for (final ControlTagType controlTag : ControlTagType.values()) {
-            definitionList.add(new DefaultTagDefinition(controlTag));
-        }
-        return definitionList;
-    }
-
-    @Override
-    public TagDefinition getByName(final String definitionName, final InternalTenantContext context) {
-        for (final ControlTagType controlTag : ControlTagType.values()) {
-            if (controlTag.name().equals(definitionName)) {
-                return new DefaultTagDefinition(controlTag);
-            }
-        }
-        return tagDefinitionSqlDao.getByName(definitionName, context);
-    }
-
-    @Override
-    public TagDefinition getById(final UUID definitionId, final InternalTenantContext context) {
-        for (final ControlTagType controlTag : ControlTagType.values()) {
-            if (controlTag.getId().equals(definitionId)) {
-                return new DefaultTagDefinition(controlTag);
-            }
-        }
-        return tagDefinitionSqlDao.getById(definitionId.toString(), context);
-    }
-
-    @Override
-    public List<TagDefinition> getByIds(final Collection<UUID> definitionIds, final InternalTenantContext context) {
-        final List<TagDefinition> result = new LinkedList<TagDefinition>();
-        for (final UUID cur : definitionIds) {
-            for (final ControlTagType controlTag : ControlTagType.values()) {
-                if (controlTag.getId().equals(cur)) {
-                    result.add(new DefaultTagDefinition(controlTag));
-                    break;
+                // Add control tag definitions
+                for (final ControlTagType controlTag : ControlTagType.values()) {
+                    definitionList.add(new TagDefinitionModelDao(controlTag));
                 }
+                return definitionList;
             }
-        }
-        if (definitionIds.size() > 0) {
-            result.addAll(tagDefinitionSqlDao.getByIds(Collections2.transform(definitionIds, new Function<UUID, String>() {
-                @Override
-                public String apply(final UUID input) {
-                    return input.toString();
-                }
-
-            }), context));
-        }
-        return result;
+        });
     }
 
     @Override
-    public TagDefinition create(final String definitionName, final String description,
-                                final InternalCallContext context) throws TagDefinitionApiException {
+    public TagDefinitionModelDao getByName(final String definitionName, final InternalTenantContext context) {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<TagDefinitionModelDao>() {
+            @Override
+            public TagDefinitionModelDao inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                for (final ControlTagType controlTag : ControlTagType.values()) {
+                    if (controlTag.name().equals(definitionName)) {
+                        return new TagDefinitionModelDao(controlTag);
+                    }
+                }
+                return entitySqlDaoWrapperFactory.become(TagDefinitionSqlDao.class).getByName(definitionName, context);
+            }
+        });
+    }
+
+    @Override
+    public TagDefinitionModelDao getById(final UUID definitionId, final InternalTenantContext context) {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<TagDefinitionModelDao>() {
+            @Override
+            public TagDefinitionModelDao inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                for (final ControlTagType controlTag : ControlTagType.values()) {
+                    if (controlTag.getId().equals(definitionId)) {
+                        return new TagDefinitionModelDao(controlTag);
+                    }
+                }
+                return entitySqlDaoWrapperFactory.become(TagDefinitionSqlDao.class).getById(definitionId.toString(), context);
+            }
+        });
+    }
+
+    @Override
+    public List<TagDefinitionModelDao> getByIds(final Collection<UUID> definitionIds, final InternalTenantContext context) {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<TagDefinitionModelDao>>() {
+            @Override
+            public List<TagDefinitionModelDao> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                final List<TagDefinitionModelDao> result = new LinkedList<TagDefinitionModelDao>();
+                for (final UUID cur : definitionIds) {
+                    for (final ControlTagType controlTag : ControlTagType.values()) {
+                        if (controlTag.getId().equals(cur)) {
+                            result.add(new TagDefinitionModelDao(controlTag));
+                            break;
+                        }
+                    }
+                }
+                if (definitionIds.size() > 0) {
+                    result.addAll(entitySqlDaoWrapperFactory.become(TagDefinitionSqlDao.class).getByIds(Collections2.transform(definitionIds, new Function<UUID, String>() {
+                        @Override
+                        public String apply(final UUID input) {
+                            return input.toString();
+                        }
+
+                    }), context));
+                }
+                return result;
+            }
+        });
+    }
+
+    @Override
+    public TagDefinitionModelDao create(final String definitionName, final String description,
+                                        final InternalCallContext context) throws TagDefinitionApiException {
         // Make sure a control tag with this name don't already exist
-        if (isControlTagName(definitionName)) {
+        if (TagModelDaoHelper.isControlTag(definitionName)) {
             throw new TagDefinitionApiException(ErrorCode.TAG_DEFINITION_CONFLICTS_WITH_CONTROL_TAG, definitionName);
         }
 
         try {
-            return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<TagDefinition>() {
+            return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<TagDefinitionModelDao>() {
                 @Override
-                public TagDefinition inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                public TagDefinitionModelDao inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
                     final TagDefinitionSqlDao tagDefinitionSqlDao = entitySqlDaoWrapperFactory.become(TagDefinitionSqlDao.class);
 
                     // Make sure the tag definition doesn't exist already
-                    final TagDefinition existingDefinition = tagDefinitionSqlDao.getByName(definitionName, context);
+                    final TagDefinitionModelDao existingDefinition = tagDefinitionSqlDao.getByName(definitionName, context);
                     if (existingDefinition != null) {
                         throw new TagDefinitionApiException(ErrorCode.TAG_DEFINITION_ALREADY_EXISTS, definitionName);
                     }
 
                     // Create it
-                    final TagDefinition tagDefinition = new DefaultTagDefinition(definitionName, description, false);
+                    final TagDefinitionModelDao tagDefinition = new TagDefinitionModelDao(context.getCreatedDate(), definitionName, description);
                     tagDefinitionSqlDao.create(tagDefinition, context);
 
                     // Post an event to the bus
+                    final boolean isControlTag = TagModelDaoHelper.isControlTag(tagDefinition.getName());
                     final TagDefinitionInternalEvent tagDefinitionEvent;
-                    if (tagDefinition.isControlTag()) {
+                    if (isControlTag) {
                         tagDefinitionEvent = tagEventBuilder.newControlTagDefinitionCreationEvent(tagDefinition.getId(), tagDefinition, context);
                     } else {
                         tagDefinitionEvent = tagEventBuilder.newUserTagDefinitionCreationEvent(tagDefinition.getId(), tagDefinition, context);
@@ -170,16 +187,6 @@ public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinition, TagDef
         }
     }
 
-    private boolean isControlTagName(final String definitionName) {
-        for (final ControlTagType controlTagName : ControlTagType.values()) {
-            if (controlTagName.toString().equals(definitionName)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     @Override
     public void deleteById(final UUID definitionId, final InternalCallContext context) throws TagDefinitionApiException {
         try {
@@ -189,7 +196,7 @@ public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinition, TagDef
                     final TagDefinitionSqlDao tagDefinitionSqlDao = entitySqlDaoWrapperFactory.become(TagDefinitionSqlDao.class);
 
                     // Make sure the tag definition exists
-                    final TagDefinition tagDefinition = tagDefinitionSqlDao.getById(definitionId.toString(), context);
+                    final TagDefinitionModelDao tagDefinition = tagDefinitionSqlDao.getById(definitionId.toString(), context);
                     if (tagDefinition == null) {
                         throw new TagDefinitionApiException(ErrorCode.TAG_DEFINITION_DOES_NOT_EXIST, definitionId);
                     }
@@ -215,20 +222,21 @@ public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinition, TagDef
         }
     }
 
-    protected void postBusEventFromTransaction(TagDefinition tagDefinition, TagDefinition savedTagDefinition, ChangeType changeType, final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final InternalCallContext context)
+    protected void postBusEventFromTransaction(final TagDefinitionModelDao tagDefinition, final TagDefinitionModelDao savedTagDefinition,
+                                               final ChangeType changeType, final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final InternalCallContext context)
             throws BillingExceptionBase {
 
-
         final TagDefinitionInternalEvent tagDefinitionEvent;
-        switch(changeType) {
+        final boolean isControlTag = TagModelDaoHelper.isControlTag(tagDefinition.getName());
+        switch (changeType) {
             case INSERT:
-                tagDefinitionEvent = (tagDefinition.isControlTag()) ?
+                tagDefinitionEvent = (isControlTag) ?
                                      tagEventBuilder.newControlTagDefinitionCreationEvent(tagDefinition.getId(), tagDefinition, context) :
                                      tagEventBuilder.newUserTagDefinitionCreationEvent(tagDefinition.getId(), tagDefinition, context);
 
                 break;
             case DELETE:
-                tagDefinitionEvent = (tagDefinition.isControlTag()) ?
+                tagDefinitionEvent = (isControlTag) ?
                                      tagEventBuilder.newControlTagDefinitionDeletionEvent(tagDefinition.getId(), tagDefinition, context) :
                                      tagEventBuilder.newUserTagDefinitionDeletionEvent(tagDefinition.getId(), tagDefinition, context);
                 break;
@@ -244,7 +252,7 @@ public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinition, TagDef
     }
 
     @Override
-    protected TagDefinitionApiException generateAlreadyExistsException(final TagDefinition entity, final InternalCallContext context) {
+    protected TagDefinitionApiException generateAlreadyExistsException(final TagDefinitionModelDao entity, final InternalCallContext context) {
         return new TagDefinitionApiException(ErrorCode.TAG_DEFINITION_ALREADY_EXISTS, entity.getId());
     }
 }

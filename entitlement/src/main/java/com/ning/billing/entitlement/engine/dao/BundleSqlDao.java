@@ -32,7 +32,6 @@ import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
 import com.ning.billing.entitlement.engine.dao.model.SubscriptionBundleModelDao;
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
@@ -44,8 +43,7 @@ import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 
 @EntitySqlDaoStringTemplate
 @RegisterMapper(BundleSqlDao.ISubscriptionBundleSqlMapper.class)
-public interface BundleSqlDao extends EntitySqlDao<SubscriptionBundleModelDao> {
-
+public interface BundleSqlDao extends EntitySqlDao<SubscriptionBundleModelDao, SubscriptionBundle> {
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
@@ -55,17 +53,16 @@ public interface BundleSqlDao extends EntitySqlDao<SubscriptionBundleModelDao> {
 
     @SqlQuery
     public SubscriptionBundleModelDao getBundleFromAccountAndKey(@Bind("accountId") String accountId,
-                                                         @Bind("externalKey") String externalKey,
-                                                         @BindBean final InternalTenantContext context);
+                                                                 @Bind("externalKey") String externalKey,
+                                                                 @BindBean final InternalTenantContext context);
 
     @SqlQuery
     public List<SubscriptionBundleModelDao> getBundleFromAccount(@Bind("accountId") String accountId,
-                                                         @BindBean final InternalTenantContext context);
+                                                                 @BindBean final InternalTenantContext context);
 
     @SqlQuery
     public List<SubscriptionBundleModelDao> getBundlesForKey(@Bind("externalKey") String externalKey,
-                                                     @BindBean final InternalTenantContext context);
-
+                                                             @BindBean final InternalTenantContext context);
 
     public static class ISubscriptionBundleSqlMapper extends MapperBase implements ResultSetMapper<SubscriptionBundleModelDao> {
 

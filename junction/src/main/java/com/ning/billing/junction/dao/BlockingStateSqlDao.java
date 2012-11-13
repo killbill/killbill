@@ -53,7 +53,7 @@ import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 
 @EntitySqlDaoStringTemplate
 @RegisterMapper(BlockingStateSqlDao.BlockingHistorySqlMapper.class)
-public interface BlockingStateSqlDao extends EntitySqlDao<BlockingStateModelDao> {
+public interface BlockingStateSqlDao extends EntitySqlDao<BlockingStateModelDao, BlockingState> {
 
     @SqlQuery
     public BlockingStateModelDao getBlockingStateFor(@Bind("blockableId") UUID blockableId, @BindBean final InternalTenantContext context);

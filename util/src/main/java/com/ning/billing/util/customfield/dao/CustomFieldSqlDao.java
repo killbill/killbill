@@ -16,33 +16,24 @@
 
 package com.ning.billing.util.customfield.dao;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
-import org.skife.jdbi.v2.sqlobject.SqlBatch;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
-import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
-import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
-import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
 import com.ning.billing.ObjectType;
-import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 import com.ning.billing.util.customfield.CustomField;
-import com.ning.billing.util.dao.EntityHistory;
-import com.ning.billing.util.dao.ObjectTypeBinder;
-import com.ning.billing.util.entity.collection.dao.UpdatableEntityCollectionSqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 
 @EntitySqlDaoStringTemplate
-@RegisterMapper(CustomFieldMapper.class)
-public interface CustomFieldSqlDao extends EntitySqlDao<CustomField> {
+public interface CustomFieldSqlDao extends EntitySqlDao<CustomFieldModelDao, CustomField> {
 
     @SqlQuery
-    List<CustomField> getCustomFieldsForObject(@Bind("objectId") UUID objectId, @Bind("objectType") ObjectType objectType, @BindBean InternalTenantContext internalTenantContext);
+    List<CustomFieldModelDao> getCustomFieldsForObject(@Bind("objectId") UUID objectId,
+                                                       @Bind("objectType") ObjectType objectType,
+                                                       @BindBean InternalTenantContext internalTenantContext);
 }

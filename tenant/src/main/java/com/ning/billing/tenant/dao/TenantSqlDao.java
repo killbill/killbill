@@ -17,33 +17,31 @@
 package com.ning.billing.tenant.dao;
 
 import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
-import org.skife.jdbi.v2.sqlobject.customizers.Mapper;
-import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 
 import com.ning.billing.tenant.api.Tenant;
+import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContextBinder;
-import com.ning.billing.util.dao.UuidMapper;
+import com.ning.billing.util.entity.dao.Audited;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 
 @EntitySqlDaoStringTemplate
-@RegisterMapper({UuidMapper.class, TenantMapper.class})
-public interface TenantSqlDao extends EntitySqlDao<Tenant> {
+public interface TenantSqlDao extends EntitySqlDao<TenantModelDao, Tenant> {
 
     @SqlQuery
-    public Tenant getByApiKey(@Bind("apiKey") final String apiKey);
+    public TenantModelDao getByApiKey(@Bind("apiKey") final String apiKey);
 
     @SqlUpdate
-    public void create(@TenantBinder final Tenant tenant,
+    @Audited(ChangeType.INSERT)
+    public void create(@BindBean final TenantModelDao tenant,
                        @Bind("apiSecret") final String apiSecret,
                        @Bind("apiSalt") final String apiSalt,
                        @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlQuery
-    @Mapper(TenantSecretsMapper.class)
-    public TenantSecrets getSecrets(@Bind("id") final String id);
-
+    public TenantModelDao getSecrets(@Bind("id") final String id);
 }

@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.dao.EntityAudit;
-import com.ning.billing.util.dao.EntityHistory;
+import com.ning.billing.util.dao.EntityHistoryModelDao;
 import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.Entity;
 
@@ -47,16 +47,18 @@ import com.google.common.collect.ImmutableList.Builder;
 /**
  * Wraps an instance of EntitySqlDao, performing extra work around each method (Sql query)
  *
- * @param <T> EntitySqlDao type of the wrapped instance
+ * @param <S> EntitySqlDao type of the wrapped instance
+ * @param <M> EntityModel associated with S
+ * @param <E> Entity associated with M
  */
-public class EntitySqlDaoWrapperInvocationHandler<T extends EntitySqlDao<U>, U extends Entity> implements InvocationHandler {
+public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, M extends EntityModelDao<E>, E extends Entity> implements InvocationHandler {
 
     private final Logger logger = LoggerFactory.getLogger(EntitySqlDaoWrapperInvocationHandler.class);
 
-    private final Class<T> sqlDaoClass;
-    private final T sqlDao;
+    private final Class<S> sqlDaoClass;
+    private final S sqlDao;
 
-    public EntitySqlDaoWrapperInvocationHandler(final Class<T> sqlDaoClass, final T sqlDao) {
+    public EntitySqlDaoWrapperInvocationHandler(final Class<S> sqlDaoClass, final S sqlDao) {
         this.sqlDaoClass = sqlDaoClass;
         this.sqlDao = sqlDao;
     }
@@ -128,12 +130,12 @@ public class EntitySqlDaoWrapperInvocationHandler<T extends EntitySqlDao<U>, U e
 
         InternalCallContext context = null;
         List<String> entityIds = null;
-        final Map<String, U> entities = new HashMap<String, U>();
+        final Map<String, M> entities = new HashMap<String, M>();
         final Map<String, Long> entityRecordIds = new HashMap<String, Long>();
         if (annotation != null) {
             // There will be some work required after the statement is executed,
             // get the id before in case the change is a delete
-            context = retrieveContextFromArguments(method, args);
+            context = retrieveContextFromArguments(args);
             entityIds = retrieveEntityIdsFromArguments(method, args);
             for (final String entityId : entityIds) {
                 entities.put(entityId, sqlDao.getById(entityId, context));
@@ -156,19 +158,15 @@ public class EntitySqlDaoWrapperInvocationHandler<T extends EntitySqlDao<U>, U e
         return obj;
     }
 
-    private void updateHistoryAndAudit(final String entityId, final Map<String, U> entities, final Map<String, Long> entityRecordIds,
+    private void updateHistoryAndAudit(final String entityId, final Map<String, M> entities, final Map<String, Long> entityRecordIds,
                                        final ChangeType changeType, final InternalCallContext context) {
         // Make sure to re-hydrate the object (especially needed for create calls)
-        final U reHydratedEntity = sqlDao.getById(entityId, context);
+        final M reHydratedEntity = sqlDao.getById(entityId, context);
         final Long reHydratedEntityRecordId = sqlDao.getRecordId(entityId, context);
-        final U entity = Objects.firstNonNull(reHydratedEntity, entities.get(entityId));
+        final M entity = Objects.firstNonNull(reHydratedEntity, entities.get(entityId));
         final Long entityRecordId = Objects.firstNonNull(reHydratedEntityRecordId, entityRecordIds.get(entityId));
+        final TableName tableName = entity.getTableName();
 
-        final TableName tableName = retrieveTableNameFromEntity(entity);
-        // TODO
-        if (tableName == TableName.SUBSCRIPTION_EVENTS) {
-            return;
-        }
         // Note: audit entries point to the history record id
         final Long historyRecordId;
         if (tableName.getHistoryTableName() != null) {
@@ -233,7 +231,8 @@ public class EntitySqlDaoWrapperInvocationHandler<T extends EntitySqlDao<U>, U e
         return entityIds;
     }
 
-    private InternalCallContext retrieveContextFromArguments(final Method method, final Object[] args) {
+
+    private InternalCallContext retrieveContextFromArguments(final Object[] args) {
         for (final Object arg : args) {
             if (!(arg instanceof InternalCallContext)) {
                 continue;
@@ -243,27 +242,15 @@ public class EntitySqlDaoWrapperInvocationHandler<T extends EntitySqlDao<U>, U e
         return null;
     }
 
-    private TableName retrieveTableNameFromEntity(final U entity) {
-        final TableName tableName = TableName.fromEntityClass(entity.getClass());
-        if (tableName == null) {
-            // Currently, this is only for EntitlementEvent which is not accessible from TableName (util)
-            // TODO what should we do about it?
-            return TableName.SUBSCRIPTION_EVENTS;
-        } else {
-            return tableName;
-        }
-    }
-
-    private Long insertHistory(final Long entityRecordId, final U entity, final ChangeType changeType, final InternalCallContext context) {
+    private Long insertHistory(final Long entityRecordId, final M entityModelDao, final ChangeType changeType, final InternalCallContext context) {
         // TODO use clock
-        EntityHistory<U> history = new EntityHistory<U>(entity, entityRecordId, changeType, context.getCreatedDate());
-
+        final EntityHistoryModelDao<M, E> history = new EntityHistoryModelDao<M, E>(entityModelDao, entityRecordId, changeType, context.getCreatedDate());
         sqlDao.addHistoryFromTransaction(history, context);
         return sqlDao.getHistoryRecordId(entityRecordId, context);
     }
 
     private void insertAudits(final TableName tableName, final Long historyRecordId, final ChangeType changeType, final InternalCallContext context) {
-        // STEPH can we trust context or should we use Clock?
+        // TODO use clock
         final TableName destinationTableName = Objects.firstNonNull(tableName.getHistoryTableName(), tableName);
         final EntityAudit audit = new EntityAudit(destinationTableName, historyRecordId, changeType, context.getCreatedDate());
         sqlDao.insertAuditFromTransaction(audit, context);

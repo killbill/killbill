@@ -23,11 +23,14 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
+import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.EntityBase;
+import com.ning.billing.util.entity.dao.EntityModelDao;
 
-public class AccountModelDao extends EntityBase {
+public class AccountModelDao extends EntityBase implements EntityModelDao<Account> {
 
     private String externalKey;
     private String email;
@@ -309,5 +312,10 @@ public class AccountModelDao extends EntityBase {
         result = 31 * result + (migrated != null ? migrated.hashCode() : 0);
         result = 31 * result + (isNotifiedForInvoices != null ? isNotifiedForInvoices.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public TableName getTableName() {
+        return TableName.ACCOUNT;
     }
 }

@@ -23,19 +23,18 @@ import com.ning.billing.BillingExceptionBase;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.entity.Entity;
-import com.ning.billing.util.entity.EntityPersistenceException;
 
-public interface EntityDao<T extends Entity, U extends BillingExceptionBase> {
+public interface EntityDao<M extends EntityModelDao<E>, E extends Entity, U extends BillingExceptionBase> {
 
-    public void create(T entity, InternalCallContext context) throws U;
+    public void create(M entity, InternalCallContext context) throws U;
 
     public Long getRecordId(UUID id, InternalTenantContext context);
 
-    public T getByRecordId(Long recordId, InternalTenantContext context);
+    public M getByRecordId(Long recordId, InternalTenantContext context);
 
-    public T getById(UUID id, InternalTenantContext context);
+    public M getById(UUID id, InternalTenantContext context);
 
-    public List<T> get(InternalTenantContext context);
+    public List<M> get(InternalTenantContext context);
 
     public void test(InternalTenantContext context);
 }

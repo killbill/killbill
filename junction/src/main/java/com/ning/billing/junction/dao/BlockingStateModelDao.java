@@ -24,10 +24,12 @@ import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.Blockable.Type;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.EntityBase;
+import com.ning.billing.util.entity.dao.EntityModelDao;
 import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 
-public class BlockingStateModelDao extends EntityBase {
+public class BlockingStateModelDao extends EntityBase implements EntityModelDao<BlockingState>{
 
     private final UUID blockableId;
     private final Type type;
@@ -88,5 +90,25 @@ public class BlockingStateModelDao extends EntityBase {
         }
         return new DefaultBlockingState(src.getId(), src.getBlockableId(),src.getState(), src.getType(), src.getService(), src.getBlockChange(), src.getBlockEntitlement(), src.getBlockBilling(),
                                  src.getCreatedDate(), src.getUpdatedDate());
+    }
+
+    @Override
+    public TableName getTableName() {
+        return TableName.BLOCKING_STATES;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append("BlockingStateModelDao");
+        sb.append("{blockableId=").append(blockableId);
+        sb.append(", type=").append(type);
+        sb.append(", state='").append(state).append('\'');
+        sb.append(", service='").append(service).append('\'');
+        sb.append(", blockChange=").append(blockChange);
+        sb.append(", blockEntitlement=").append(blockEntitlement);
+        sb.append(", blockBilling=").append(blockBilling);
+        sb.append('}');
+        return sb.toString();
     }
 }

@@ -21,7 +21,6 @@ import java.util.UUID;
 
 import org.skife.jdbi.v2.IDBI;
 
-import com.ning.billing.BillingExceptionBase;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.ObjectType;
 import com.ning.billing.util.api.CustomFieldApiException;
@@ -36,25 +35,25 @@ import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 
 import com.google.inject.Inject;
 
-public class AuditedCustomFieldDao extends EntityDaoBase<CustomField, CustomFieldApiException> implements CustomFieldDao {
+public class DefaultCustomFieldDao extends EntityDaoBase<CustomFieldModelDao, CustomField, CustomFieldApiException> implements CustomFieldDao {
 
     @Inject
-    public AuditedCustomFieldDao(final IDBI dbi) {
+    public DefaultCustomFieldDao(final IDBI dbi) {
         super(new EntitySqlDaoTransactionalJdbiWrapper(dbi), CustomFieldSqlDao.class);
     }
 
     @Override
-    public List<CustomField> getCustomFields(final UUID objectId, final ObjectType objectType, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<CustomField>>() {
+    public List<CustomFieldModelDao> getCustomFields(final UUID objectId, final ObjectType objectType, final InternalTenantContext context) {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<CustomFieldModelDao>>() {
             @Override
-            public List<CustomField> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+            public List<CustomFieldModelDao> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
                 return entitySqlDaoWrapperFactory.become(CustomFieldSqlDao.class).getCustomFieldsForObject(objectId, objectType, context);
             }
         });
     }
 
     @Override
-    protected CustomFieldApiException generateAlreadyExistsException(final CustomField entity, final InternalCallContext context) {
+    protected CustomFieldApiException generateAlreadyExistsException(final CustomFieldModelDao entity, final InternalCallContext context) {
         return new CustomFieldApiException(ErrorCode.CUSTOM_FIELD_ALREADY_EXISTS, entity.getId());
     }
 }

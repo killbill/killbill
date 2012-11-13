@@ -24,7 +24,6 @@ import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.mgt.DefaultSecurityManager;
 import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.subject.support.DelegatingSubject;
-import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -33,7 +32,7 @@ import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.server.ServerTestSuiteWithEmbeddedDB;
 import com.ning.billing.tenant.api.DefaultTenant;
 import com.ning.billing.tenant.dao.DefaultTenantDao;
-import com.ning.billing.util.svcsapi.bus.InternalBus;
+import com.ning.billing.tenant.dao.TenantModelDao;
 
 import com.jolbox.bonecp.BoneCPConfig;
 import com.jolbox.bonecp.BoneCPDataSource;
@@ -46,10 +45,10 @@ public class TestKillbillJdbcRealm extends ServerTestSuiteWithEmbeddedDB {
     @BeforeMethod(groups = "slow")
     public void setUp() throws Exception {
         // Create the tenant
-        final DefaultTenantDao tenantDao = new DefaultTenantDao(getMysqlTestingHelper().getDBI(), Mockito.mock(InternalBus.class));
+        final DefaultTenantDao tenantDao = new DefaultTenantDao(getMysqlTestingHelper().getDBI());
         tenant = new DefaultTenant(UUID.randomUUID(), null, null, UUID.randomUUID().toString(),
                                    UUID.randomUUID().toString(), UUID.randomUUID().toString());
-        tenantDao.create(tenant, internalCallContext);
+        tenantDao.create(new TenantModelDao(tenant), internalCallContext);
 
         // Setup the security manager
         final BoneCPConfig dbConfig = new BoneCPConfig();

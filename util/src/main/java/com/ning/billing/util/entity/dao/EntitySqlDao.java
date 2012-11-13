@@ -35,19 +35,19 @@ import com.ning.billing.util.entity.Entity;
 import com.ning.billing.util.entity.EntityPersistenceException;
 
 @EntitySqlDaoStringTemplate
-public interface EntitySqlDao<T extends Entity> extends AuditSqlDao, HistorySqlDao<T>, Transmogrifier, Transactional<EntitySqlDao<T>>, CloseMe {
+public interface EntitySqlDao<M extends EntityModelDao<E>, E extends Entity> extends AuditSqlDao, HistorySqlDao<M, E>, Transmogrifier, Transactional<EntitySqlDao<M, E>>, CloseMe {
 
     @SqlUpdate
     @Audited(ChangeType.INSERT)
-    public void create(@BindBean final T entity,
+    public void create(@BindBean final M entity,
                        @BindBean final InternalCallContext context) throws EntityPersistenceException;
 
     @SqlQuery
-    public T getById(@Bind("id") final String id,
+    public M getById(@Bind("id") final String id,
                      @BindBean final InternalTenantContext context);
 
     @SqlQuery
-    public T getByRecordId(@Bind("recordId") final Long recordId,
+    public M getByRecordId(@Bind("recordId") final Long recordId,
                            @BindBean final InternalTenantContext context);
 
     @SqlQuery
@@ -59,7 +59,7 @@ public interface EntitySqlDao<T extends Entity> extends AuditSqlDao, HistorySqlD
                                    @BindBean final InternalTenantContext context);
 
     @SqlQuery
-    public List<T> get(@BindBean final InternalTenantContext context);
+    public List<M> get(@BindBean final InternalTenantContext context);
 
     @SqlUpdate
     public void test(@BindBean final InternalTenantContext context);

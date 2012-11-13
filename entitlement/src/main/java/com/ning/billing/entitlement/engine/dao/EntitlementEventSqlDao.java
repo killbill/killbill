@@ -33,6 +33,7 @@ import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import com.ning.billing.entitlement.engine.dao.EntitlementEventSqlDao.EventSqlMapper;
 import com.ning.billing.entitlement.engine.dao.model.EntitlementEventModelDao;
+import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.util.audit.ChangeType;
@@ -45,7 +46,7 @@ import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 
 @EntitySqlDaoStringTemplate
 @RegisterMapper(EventSqlMapper.class)
-public interface EntitlementEventSqlDao extends EntitySqlDao<EntitlementEventModelDao> {
+public interface EntitlementEventSqlDao extends EntitySqlDao<EntitlementEventModelDao, EntitlementEvent> {
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
@@ -71,7 +72,6 @@ public interface EntitlementEventSqlDao extends EntitySqlDao<EntitlementEventMod
     @SqlQuery
     public List<EntitlementEventModelDao> getEventsForSubscription(@Bind("subscriptionId") String subscriptionId,
                                                                    @BindBean final InternalTenantContext context);
-
 
     public static class EventSqlMapper extends MapperBase implements ResultSetMapper<EntitlementEventModelDao> {
 

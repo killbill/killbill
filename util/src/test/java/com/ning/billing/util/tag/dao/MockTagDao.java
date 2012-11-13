@@ -23,11 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
-
-import org.joda.time.DateTime;
-import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
-
 import com.ning.billing.ObjectType;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.callcontext.InternalCallContext;
@@ -36,12 +31,12 @@ import com.ning.billing.util.tag.Tag;
 
 public class MockTagDao implements TagDao {
 
-    private final Map<UUID, List<Tag>> tagStore = new HashMap<UUID, List<Tag>>();
+    private final Map<UUID, List<TagModelDao>> tagStore = new HashMap<UUID, List<TagModelDao>>();
 
     @Override
-    public void create(final Tag tag, final InternalCallContext context) throws TagApiException {
+    public void create(final TagModelDao tag, final InternalCallContext context) throws TagApiException {
         if (tagStore.get(tag.getObjectId()) == null) {
-            tagStore.put(tag.getObjectId(), new ArrayList<Tag>());
+            tagStore.put(tag.getObjectId(), new ArrayList<TagModelDao>());
         }
         tagStore.get(tag.getObjectId()).add(tag);
     }
@@ -49,11 +44,11 @@ public class MockTagDao implements TagDao {
     @Override
     public void deleteTag(final UUID objectId, final ObjectType objectType,
                           final UUID tagDefinitionId, final InternalCallContext context) {
-        final List<Tag> tags = tagStore.get(objectId);
+        final List<TagModelDao> tags = tagStore.get(objectId);
         if (tags != null) {
-            final Iterator<Tag> tagIterator = tags.iterator();
+            final Iterator<TagModelDao> tagIterator = tags.iterator();
             while (tagIterator.hasNext()) {
-                final Tag tag = tagIterator.next();
+                final TagModelDao tag = tagIterator.next();
                 if (tag.getTagDefinitionId().equals(tagDefinitionId)) {
                     tagIterator.remove();
                 }
@@ -62,12 +57,12 @@ public class MockTagDao implements TagDao {
     }
 
     @Override
-    public Tag getById(final UUID tagId, final InternalTenantContext context) {
+    public TagModelDao getById(final UUID tagId, final InternalTenantContext context) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public List<Tag> getTags(final UUID objectId, final ObjectType objectType, final InternalTenantContext internalTenantContext) {
+    public List<TagModelDao> getTags(final UUID objectId, final ObjectType objectType, final InternalTenantContext internalTenantContext) {
         throw new UnsupportedOperationException();
     }
 }

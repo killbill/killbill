@@ -30,12 +30,11 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
-import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.events.BusInternalEvent;
 import com.ning.billing.util.events.TagDefinitionInternalEvent;
+import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.tag.MockTagStoreModuleSql;
-import com.ning.billing.util.tag.TagDefinition;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
@@ -83,12 +82,12 @@ public class TestDefaultTagDefinitionDao extends UtilTestSuiteWithEmbeddedDB {
         Assert.assertEquals(eventsListener.getTagDefinitionEvents().size(), 0);
 
         // Make sure we can create a tag definition
-        final TagDefinition createdTagDefinition = tagDefinitionDao.create(definitionName, description, internalCallContext);
+        final TagDefinitionModelDao createdTagDefinition = tagDefinitionDao.create(definitionName, description, internalCallContext);
         Assert.assertEquals(createdTagDefinition.getName(), definitionName);
         Assert.assertEquals(createdTagDefinition.getDescription(), description);
 
         // Make sure we can retrieve it via the DAO
-        final TagDefinition foundTagDefinition = tagDefinitionDao.getByName(definitionName, internalCallContext);
+        final TagDefinitionModelDao foundTagDefinition = tagDefinitionDao.getByName(definitionName, internalCallContext);
         Assert.assertEquals(foundTagDefinition, createdTagDefinition);
 
         // Verify we caught an event on the bus
@@ -97,7 +96,8 @@ public class TestDefaultTagDefinitionDao extends UtilTestSuiteWithEmbeddedDB {
         final TagDefinitionInternalEvent tagDefinitionFirstEventReceived = eventsListener.getTagDefinitionEvents().get(0);
         Assert.assertEquals(eventsListener.getEvents().get(0), tagDefinitionFirstEventReceived);
         Assert.assertEquals(tagDefinitionFirstEventReceived.getTagDefinitionId(), createdTagDefinition.getId());
-        Assert.assertEquals(tagDefinitionFirstEventReceived.getTagDefinition(), createdTagDefinition);
+        Assert.assertEquals(tagDefinitionFirstEventReceived.getTagDefinition().getName(), createdTagDefinition.getName());
+        Assert.assertEquals(tagDefinitionFirstEventReceived.getTagDefinition().getDescription(), createdTagDefinition.getDescription());
         Assert.assertEquals(tagDefinitionFirstEventReceived.getBusEventType(), BusInternalEvent.BusInternalEventType.USER_TAGDEFINITION_CREATION);
         Assert.assertEquals(tagDefinitionFirstEventReceived.getUserToken(), internalCallContext.getUserToken());
 
@@ -113,7 +113,8 @@ public class TestDefaultTagDefinitionDao extends UtilTestSuiteWithEmbeddedDB {
         final TagDefinitionInternalEvent tagDefinitionSecondEventReceived = eventsListener.getTagDefinitionEvents().get(1);
         Assert.assertEquals(eventsListener.getEvents().get(1), tagDefinitionSecondEventReceived);
         Assert.assertEquals(tagDefinitionSecondEventReceived.getTagDefinitionId(), createdTagDefinition.getId());
-        Assert.assertEquals(tagDefinitionSecondEventReceived.getTagDefinition(), createdTagDefinition);
+        Assert.assertEquals(tagDefinitionSecondEventReceived.getTagDefinition().getName(), createdTagDefinition.getName());
+        Assert.assertEquals(tagDefinitionSecondEventReceived.getTagDefinition().getDescription(), createdTagDefinition.getDescription());
         Assert.assertEquals(tagDefinitionSecondEventReceived.getBusEventType(), BusInternalEvent.BusInternalEventType.USER_TAGDEFINITION_DELETION);
         Assert.assertEquals(tagDefinitionSecondEventReceived.getUserToken(), internalCallContext.getUserToken());
     }

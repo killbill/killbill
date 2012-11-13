@@ -24,9 +24,12 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.payment.api.Refund;
+import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.EntityBase;
+import com.ning.billing.util.entity.dao.EntityModelDao;
 
-public class RefundModelDao extends EntityBase {
+public class RefundModelDao extends EntityBase implements EntityModelDao<Refund> {
 
     private final UUID accountId;
     private final UUID paymentId;
@@ -154,5 +157,10 @@ public class RefundModelDao extends EntityBase {
         result = 31 * result + (createdDate != null ? createdDate.hashCode() : 0);
         result = 31 * result + (updatedDate != null ? updatedDate.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public TableName getTableName() {
+        return TableName.REFUNDS;
     }
 }

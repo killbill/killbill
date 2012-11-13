@@ -17,23 +17,20 @@
 package com.ning.billing.util.tag.dao;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import com.ning.billing.ObjectType;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.dao.AuditedCollectionDao;
-import com.ning.billing.util.tag.Tag;
 
 public interface TagDao {
 
-    void create(Tag tag, InternalCallContext context) throws TagApiException;
+    void create(TagModelDao tag, InternalCallContext context) throws TagApiException;
 
     void deleteTag(UUID objectId, ObjectType objectType, UUID tagDefinition, InternalCallContext context) throws TagApiException;
 
-    Tag getById(UUID tagId, InternalTenantContext context);
+    TagModelDao getById(UUID tagId, InternalTenantContext context);
 
-    List<Tag> getTags(UUID objectId, ObjectType objectType, InternalTenantContext internalTenantContext);
+    List<TagModelDao> getTags(UUID objectId, ObjectType objectType, InternalTenantContext internalTenantContext);
 }

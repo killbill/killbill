@@ -18,8 +18,6 @@ package com.ning.billing.util.entity.dao;
 
 import java.lang.reflect.Proxy;
 
-import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
-
 import com.ning.billing.util.entity.Entity;
 
 /**
@@ -45,7 +43,9 @@ public class EntitySqlDaoWrapperFactory<InitialSqlDao extends EntitySqlDao> {
      * @param <NewSqlDao>    EntitySqlDao type to create
      * @return instance of NewSqlDao
      */
-    public <NewSqlDao extends EntitySqlDao<NewEntity>, NewEntity extends Entity> NewSqlDao become(final Class<NewSqlDao> newSqlDaoClass) {
+    public <NewSqlDao extends EntitySqlDao<NewEntityModelDao, NewEntity>,
+            NewEntityModelDao extends EntityModelDao<NewEntity>,
+            NewEntity extends Entity> NewSqlDao become(final Class<NewSqlDao> newSqlDaoClass) {
         return create(newSqlDaoClass, sqlDao.become(newSqlDaoClass));
     }
 
@@ -53,10 +53,13 @@ public class EntitySqlDaoWrapperFactory<InitialSqlDao extends EntitySqlDao> {
         return sqlDao.become(newTransactionalClass);
     }
 
-    private <NewSqlDao extends EntitySqlDao<NewEntity>, NewEntity extends Entity> NewSqlDao create(final Class<NewSqlDao> newSqlDaoClass, final NewSqlDao newSqlDao) {
+    private <NewSqlDao extends EntitySqlDao<NewEntityModelDao, NewEntity>,
+            NewEntityModelDao extends EntityModelDao<NewEntity>,
+            NewEntity extends Entity> NewSqlDao create(final Class<NewSqlDao> newSqlDaoClass, final NewSqlDao newSqlDao) {
         final ClassLoader classLoader = newSqlDao.getClass().getClassLoader();
         final Class[] interfacesToImplement = {newSqlDaoClass};
-        final EntitySqlDaoWrapperInvocationHandler<NewSqlDao, NewEntity> wrapperInvocationHandler = new EntitySqlDaoWrapperInvocationHandler<NewSqlDao, NewEntity>(newSqlDaoClass, newSqlDao);
+        final EntitySqlDaoWrapperInvocationHandler<NewSqlDao, NewEntityModelDao, NewEntity> wrapperInvocationHandler =
+                new EntitySqlDaoWrapperInvocationHandler<NewSqlDao, NewEntityModelDao, NewEntity>(newSqlDaoClass, newSqlDao);
 
         final Object newSqlDaoObject = Proxy.newProxyInstance(classLoader, interfacesToImplement, wrapperInvocationHandler);
         return newSqlDaoClass.cast(newSqlDaoObject);

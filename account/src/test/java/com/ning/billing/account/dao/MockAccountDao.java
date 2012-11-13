@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.ning.billing.ErrorCode;
+import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.account.api.DefaultMutableAccountData;
@@ -35,7 +36,7 @@ import com.ning.billing.util.svcsapi.bus.InternalBus.EventBusException;
 
 import com.google.inject.Inject;
 
-public class MockAccountDao extends MockEntityDaoBase<AccountModelDao, AccountApiException> implements AccountDao {
+public class MockAccountDao extends MockEntityDaoBase<AccountModelDao, Account, AccountApiException> implements AccountDao {
 
     private final InternalBus eventBus;
 

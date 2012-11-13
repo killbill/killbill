@@ -14,48 +14,44 @@
  * under the License.
  */
 
-package com.ning.billing.account.dao;
+package com.ning.billing.tenant.dao;
 
 import java.util.UUID;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.account.api.AccountEmail;
+import com.ning.billing.tenant.api.TenantKV;
 import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.EntityBase;
 import com.ning.billing.util.entity.dao.EntityModelDao;
 
-public class AccountEmailModelDao extends EntityBase implements EntityModelDao<AccountEmail> {
+public class TenantKVModelDao extends EntityBase implements EntityModelDao<TenantKV> {
 
-    private UUID accountId;
-    private String email;
+    private String key;
+    private String value;
 
-    public AccountEmailModelDao() { /* For the DAO mapper */ }
+    public TenantKVModelDao() { /* For the DAO mapper */ }
 
-    public AccountEmailModelDao(final UUID id, final DateTime createdDate, final DateTime updatedDate, final UUID accountId, final String email) {
+    public TenantKVModelDao(final UUID id, final DateTime createdDate, final DateTime updatedDate, final String key, final String value) {
         super(id, createdDate, updatedDate);
-        this.accountId = accountId;
-        this.email = email;
+        this.key = key;
+        this.value = value;
     }
 
-    public AccountEmailModelDao(final AccountEmail email) {
-        this(email.getId(), email.getCreatedDate(), email.getUpdatedDate(), email.getAccountId(), email.getEmail());
+    public String getKey() {
+        return key;
     }
 
-    public UUID getAccountId() {
-        return accountId;
-    }
-
-    public String getEmail() {
-        return email;
+    public String getValue() {
+        return value;
     }
 
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
-        sb.append("AccountEmailModelDao");
-        sb.append("{accountId=").append(accountId);
-        sb.append(", email='").append(email).append('\'');
+        sb.append("TenantKVModelDao");
+        sb.append("{key='").append(key).append('\'');
+        sb.append(", value='").append(value).append('\'');
         sb.append('}');
         return sb.toString();
     }
@@ -72,12 +68,12 @@ public class AccountEmailModelDao extends EntityBase implements EntityModelDao<A
             return false;
         }
 
-        final AccountEmailModelDao that = (AccountEmailModelDao) o;
+        final TenantKVModelDao that = (TenantKVModelDao) o;
 
-        if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
+        if (key != null ? !key.equals(that.key) : that.key != null) {
             return false;
         }
-        if (email != null ? !email.equals(that.email) : that.email != null) {
+        if (value != null ? !value.equals(that.value) : that.value != null) {
             return false;
         }
 
@@ -87,13 +83,13 @@ public class AccountEmailModelDao extends EntityBase implements EntityModelDao<A
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
-        result = 31 * result + (email != null ? email.hashCode() : 0);
+        result = 31 * result + (key != null ? key.hashCode() : 0);
+        result = 31 * result + (value != null ? value.hashCode() : 0);
         return result;
     }
 
     @Override
     public TableName getTableName() {
-        return TableName.ACCOUNT_EMAIL;
+        return TableName.TENANT_KVS;
     }
 }

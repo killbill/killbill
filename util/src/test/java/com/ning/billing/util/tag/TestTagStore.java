@@ -38,6 +38,8 @@ import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.tag.dao.TagDao;
 import com.ning.billing.util.tag.dao.TagDefinitionDao;
+import com.ning.billing.util.tag.dao.TagDefinitionModelDao;
+import com.ning.billing.util.tag.dao.TagModelDao;
 
 import com.google.inject.Inject;
 
@@ -69,7 +71,7 @@ public class TestTagStore extends UtilTestSuiteWithEmbeddedDB {
     @Inject
     private InternalBus bus;
 
-    private TagDefinition testTagDefinition;
+    private TagDefinitionModelDao testTagDefinition;
 
     private final Logger log = LoggerFactory.getLogger(TestTagStore.class);
 
@@ -107,27 +109,24 @@ public class TestTagStore extends UtilTestSuiteWithEmbeddedDB {
         final UUID accountId = UUID.randomUUID();
         final Tag tag = new DescriptiveTag(testTagDefinition.getId(), ObjectType.ACCOUNT, accountId, clock.getUTCNow());
 
-        tagDao.create(tag, internalCallContext);
+        tagDao.create(new TagModelDao(tag), internalCallContext);
 
-        final Tag savedTag = tagDao.getById(tag.getId(), internalCallContext);
+        final TagModelDao savedTag = tagDao.getById(tag.getId(), internalCallContext);
         assertEquals(savedTag.getTagDefinitionId(), tag.getTagDefinitionId());
         assertEquals(savedTag.getId(), tag.getId());
     }
-
 
     @Test(groups = "slow")
     public void testControlTagCreation() throws TagApiException {
         final UUID accountId = UUID.randomUUID();
 
         final ControlTag tag = new DefaultControlTag(ControlTagType.AUTO_INVOICING_OFF, ObjectType.ACCOUNT, accountId, clock.getUTCNow());
+        tagDao.create(new TagModelDao(tag), internalCallContext);
 
-        tagDao.create(tag, internalCallContext);
-
-        final Tag savedTag = tagDao.getById(tag.getId(), internalCallContext);
+        final TagModelDao savedTag = tagDao.getById(tag.getId(), internalCallContext);
         assertEquals(savedTag.getTagDefinitionId(), tag.getTagDefinitionId());
         assertEquals(savedTag.getId(), tag.getId());
     }
-
 
     @Test(groups = "slow", expectedExceptions = TagDefinitionApiException.class)
     public void testTagDefinitionCreationWithControlTagName() throws TagDefinitionApiException {
@@ -140,7 +139,7 @@ public class TestTagStore extends UtilTestSuiteWithEmbeddedDB {
         final String definitionName = "TestTag1234";
         tagDefinitionDao.create(definitionName, "Some test tag", internalCallContext);
 
-        TagDefinition tagDefinition = tagDefinitionDao.getByName(definitionName, internalCallContext);
+        TagDefinitionModelDao tagDefinition = tagDefinitionDao.getByName(definitionName, internalCallContext);
         assertNotNull(tagDefinition);
 
         tagDefinitionDao.deleteById(tagDefinition.getId(), internalCallContext);
@@ -153,13 +152,12 @@ public class TestTagStore extends UtilTestSuiteWithEmbeddedDB {
         final String definitionName = "TestTag12345";
         tagDefinitionDao.create(definitionName, "Some test tag", internalCallContext);
 
-        final TagDefinition tagDefinition = tagDefinitionDao.getByName(definitionName, internalCallContext);
+        final TagDefinitionModelDao tagDefinition = tagDefinitionDao.getByName(definitionName, internalCallContext);
         assertNotNull(tagDefinition);
 
         final UUID objectId = UUID.randomUUID();
-        final Tag tag = tagDefinition.isControlTag() ? new DefaultControlTag(ControlTagType.getTypeFromId(tagDefinition.getId()), ObjectType.ACCOUNT, objectId, internalCallContext.getCreatedDate()) :
-                        new DescriptiveTag(tagDefinition.getId(), ObjectType.ACCOUNT, objectId, internalCallContext.getCreatedDate());
-        tagDao.create(tag, internalCallContext);
+        final Tag tag = new DescriptiveTag(tagDefinition.getId(), ObjectType.ACCOUNT, objectId, internalCallContext.getCreatedDate());
+        tagDao.create(new TagModelDao(tag), internalCallContext);
 
         tagDefinitionDao.deleteById(tagDefinition.getId(), internalCallContext);
     }
@@ -173,16 +171,13 @@ public class TestTagStore extends UtilTestSuiteWithEmbeddedDB {
             fail("Could not create tag definition", e);
         }
 
-        final TagDefinition tagDefinition = tagDefinitionDao.getByName(definitionName, internalCallContext);
+        final TagDefinitionModelDao tagDefinition = tagDefinitionDao.getByName(definitionName, internalCallContext);
         assertNotNull(tagDefinition);
 
         final UUID objectId = UUID.randomUUID();
 
-
-        final Tag tag = tagDefinition.isControlTag() ? new DefaultControlTag(ControlTagType.getTypeFromId(tagDefinition.getId()), ObjectType.ACCOUNT, objectId, internalCallContext.getCreatedDate()) :
-                        new DescriptiveTag(tagDefinition.getId(), ObjectType.ACCOUNT, objectId, internalCallContext.getCreatedDate());
-
-        tagDao.create(tag, internalCallContext);
+        final Tag tag = new DescriptiveTag(tagDefinition.getId(), ObjectType.ACCOUNT, objectId, internalCallContext.getCreatedDate());
+        tagDao.create(new TagModelDao(tag), internalCallContext);
         tagDao.deleteTag(objectId, ObjectType.ACCOUNT, tagDefinition.getId(), internalCallContext);
 
         try {
@@ -194,7 +189,7 @@ public class TestTagStore extends UtilTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testGetTagDefinitions() {
-        final List<TagDefinition> definitionList = tagDefinitionDao.getTagDefinitions(internalCallContext);
+        final List<TagDefinitionModelDao> definitionList = tagDefinitionDao.getTagDefinitions(internalCallContext);
         assertTrue(definitionList.size() >= ControlTagType.values().length);
     }
 }

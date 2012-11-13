@@ -35,30 +35,29 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ning.billing.util.entity.Entity;
+import com.ning.billing.util.entity.dao.EntityModelDao;
 
 @BindingAnnotation(EntityHistoryBinder.EntityHistoryBinderFactory.class)
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.PARAMETER})
 public @interface EntityHistoryBinder {
 
-
-    public static class EntityHistoryBinderFactory<T extends Entity> implements BinderFactory {
+    public static class EntityHistoryBinderFactory<M extends EntityModelDao<E>, E extends Entity> implements BinderFactory {
 
         private static final Logger logger = LoggerFactory.getLogger(EntityHistoryBinder.class);
 
         @Override
         public Binder build(final Annotation annotation) {
-            return new Binder<EntityHistoryBinder, EntityHistory<T>>() {
-
+            return new Binder<EntityHistoryBinder, EntityHistoryModelDao<M, E>>() {
 
                 @Override
-                public void bind(final SQLStatement<?> q, final EntityHistoryBinder bind, final EntityHistory<T> history) {
+                public void bind(final SQLStatement<?> q, final EntityHistoryBinder bind, final EntityHistoryModelDao<M, E> history) {
                     try {
                         // Emulate @BndBean
-                        final Entity arg = history.getEntity();
+                        final M arg = history.getEntity();
                         final BeanInfo infos = Introspector.getBeanInfo(arg.getClass());
                         final PropertyDescriptor[] props = infos.getPropertyDescriptors();
-                        for (PropertyDescriptor prop : props) {
+                        for (final PropertyDescriptor prop : props) {
                             q.bind(prop.getName(), prop.getReadMethod().invoke(arg));
                         }
                         q.bind("id", history.getId());

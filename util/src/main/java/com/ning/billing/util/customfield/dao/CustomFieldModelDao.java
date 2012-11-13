@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2012 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -14,62 +14,61 @@
  * under the License.
  */
 
-package com.ning.billing.util.customfield;
+package com.ning.billing.util.customfield.dao;
 
 import java.util.UUID;
 
 import org.joda.time.DateTime;
 
 import com.ning.billing.ObjectType;
-import com.ning.billing.util.customfield.dao.CustomFieldModelDao;
+import com.ning.billing.util.customfield.CustomField;
+import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.EntityBase;
+import com.ning.billing.util.entity.dao.EntityModelDao;
 
-public class StringCustomField extends EntityBase implements CustomField {
+public class CustomFieldModelDao extends EntityBase implements EntityModelDao<CustomField> {
 
-    private final String fieldName;
-    private final String fieldValue;
-    private final UUID objectId;
-    private final ObjectType objectType;
+    private String fieldName;
+    private String fieldValue;
+    private UUID objectId;
+    private ObjectType objectType;
 
-    public StringCustomField(final String name, final String value, final ObjectType objectType, final UUID objectId, final DateTime createdDate) {
-        this(UUID.randomUUID(), name, value, objectType, objectId, createdDate);
-    }
+    public CustomFieldModelDao() {  /* For the DAO mapper */ }
 
-    public StringCustomField(final UUID id, final String name, final String value, final ObjectType objectType, final UUID objectId, final DateTime createdDate) {
-        super(id, createdDate, createdDate);
-        this.fieldName = name;
-        this.fieldValue = value;
+    public CustomFieldModelDao(final UUID id, final DateTime createdDate, final DateTime updatedDate, final String fieldName,
+                               final String fieldValue, final UUID objectId, final ObjectType objectType) {
+        super(id, createdDate, updatedDate);
+        this.fieldName = fieldName;
+        this.fieldValue = fieldValue;
         this.objectId = objectId;
         this.objectType = objectType;
-
     }
 
-    public StringCustomField(final CustomFieldModelDao input) {
-        this(input.getId(), input.getFieldName(), input.getFieldValue(), input.getObjectType(), input.getObjectId(), input.getCreatedDate());
+    public CustomFieldModelDao(final CustomField customField) {
+        this(customField.getId(), customField.getCreatedDate(), customField.getUpdatedDate(), customField.getFieldName(),
+             customField.getFieldValue(), customField.getObjectId(), customField.getObjectType());
     }
 
-    @Override
     public String getFieldName() {
         return fieldName;
     }
 
-    @Override
     public String getFieldValue() {
         return fieldValue;
-    }
-
-    public ObjectType getObjectType() {
-        return objectType;
     }
 
     public UUID getObjectId() {
         return objectId;
     }
 
+    public ObjectType getObjectType() {
+        return objectType;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
-        sb.append("StringCustomField");
+        sb.append("CustomFieldModelDao");
         sb.append("{fieldName='").append(fieldName).append('\'');
         sb.append(", fieldValue='").append(fieldValue).append('\'');
         sb.append(", objectId=").append(objectId);
@@ -90,7 +89,7 @@ public class StringCustomField extends EntityBase implements CustomField {
             return false;
         }
 
-        final StringCustomField that = (StringCustomField) o;
+        final CustomFieldModelDao that = (CustomFieldModelDao) o;
 
         if (fieldName != null ? !fieldName.equals(that.fieldName) : that.fieldName != null) {
             return false;
@@ -116,5 +115,10 @@ public class StringCustomField extends EntityBase implements CustomField {
         result = 31 * result + (objectId != null ? objectId.hashCode() : 0);
         result = 31 * result + (objectType != null ? objectType.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public TableName getTableName() {
+        return TableName.CUSTOM_FIELD;
     }
 }

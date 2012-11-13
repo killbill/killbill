@@ -18,7 +18,6 @@ package com.ning.billing.util.tag.api;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import com.ning.billing.ObjectType;
@@ -31,12 +30,19 @@ import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.DefaultControlTag;
+import com.ning.billing.util.tag.DefaultTagDefinition;
 import com.ning.billing.util.tag.DescriptiveTag;
 import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
 import com.ning.billing.util.tag.dao.TagDao;
 import com.ning.billing.util.tag.dao.TagDefinitionDao;
+import com.ning.billing.util.tag.dao.TagDefinitionModelDao;
+import com.ning.billing.util.tag.dao.TagModelDao;
+import com.ning.billing.util.tag.dao.TagModelDaoHelper;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
 public class DefaultTagUserApi implements TagUserApi {
@@ -54,12 +60,19 @@ public class DefaultTagUserApi implements TagUserApi {
 
     @Override
     public List<TagDefinition> getTagDefinitions(final TenantContext context) {
-        return tagDefinitionDao.getTagDefinitions(internalCallContextFactory.createInternalTenantContext(context));
+        return ImmutableList.<TagDefinition>copyOf(Collections2.transform(tagDefinitionDao.getTagDefinitions(internalCallContextFactory.createInternalTenantContext(context)),
+                                                                          new Function<TagDefinitionModelDao, TagDefinition>() {
+                                                                              @Override
+                                                                              public TagDefinition apply(final TagDefinitionModelDao input) {
+                                                                                  return new DefaultTagDefinition(input, TagModelDaoHelper.isControlTag(input.getName()));
+                                                                              }
+                                                                          }));
     }
 
     @Override
     public TagDefinition create(final String definitionName, final String description, final CallContext context) throws TagDefinitionApiException {
-        return tagDefinitionDao.create(definitionName, description, internalCallContextFactory.createInternalCallContext(context));
+        final TagDefinitionModelDao tagDefinitionModelDao = tagDefinitionDao.create(definitionName, description, internalCallContextFactory.createInternalCallContext(context));
+        return new DefaultTagDefinition(tagDefinitionModelDao, TagModelDaoHelper.isControlTag(tagDefinitionModelDao.getName()));
     }
 
     @Override
@@ -70,29 +83,33 @@ public class DefaultTagUserApi implements TagUserApi {
     @Override
     public TagDefinition getTagDefinition(final UUID tagDefinitionId, final TenantContext context)
             throws TagDefinitionApiException {
-        return tagDefinitionDao.getById(tagDefinitionId, internalCallContextFactory.createInternalTenantContext(context));
+        final TagDefinitionModelDao tagDefinitionModelDao = tagDefinitionDao.getById(tagDefinitionId, internalCallContextFactory.createInternalTenantContext(context));
+        return new DefaultTagDefinition(tagDefinitionModelDao, TagModelDaoHelper.isControlTag(tagDefinitionModelDao.getName()));
     }
 
     @Override
     public List<TagDefinition> getTagDefinitions(final Collection<UUID> tagDefinitionIds, final TenantContext context)
             throws TagDefinitionApiException {
-        return tagDefinitionDao.getByIds(tagDefinitionIds, internalCallContextFactory.createInternalTenantContext(context));
+        return ImmutableList.<TagDefinition>copyOf(Collections2.transform(tagDefinitionDao.getByIds(tagDefinitionIds, internalCallContextFactory.createInternalTenantContext(context)),
+                                                                          new Function<TagDefinitionModelDao, TagDefinition>() {
+                                                                              @Override
+                                                                              public TagDefinition apply(final TagDefinitionModelDao input) {
+                                                                                  return new DefaultTagDefinition(input, TagModelDaoHelper.isControlTag(input.getName()));
+                                                                              }
+                                                                          }));
     }
 
     @Override
     public void addTags(final UUID objectId, final ObjectType objectType, final Collection<UUID> tagDefinitionIds, final CallContext context) throws TagApiException {
         for (final UUID tagDefinitionId : tagDefinitionIds) {
-           addTag(objectId, objectType, tagDefinitionId,context);
+            addTag(objectId, objectType, tagDefinitionId, context);
         }
     }
 
     @Override
     public void addTag(final UUID objectId, final ObjectType objectType, final UUID tagDefinitionId, final CallContext context) throws TagApiException {
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(objectId, objectType, context);
-
-        final TagDefinition tagDefinition = tagDefinitionDao.getById(tagDefinitionId, internalContext);
-        final Tag tag = tagDefinition.isControlTag() ? new DefaultControlTag(ControlTagType.getTypeFromId(tagDefinition.getId()), objectType, objectId, context.getCreatedDate()) :
-                        new DescriptiveTag(tagDefinition.getId(), objectType, objectId, context.getCreatedDate());
+        final TagModelDao tag = new TagModelDao(context.getCreatedDate(), tagDefinitionId, objectId, objectType);
         tagDao.create(tag, internalContext);
     }
 
@@ -111,12 +128,21 @@ public class DefaultTagUserApi implements TagUserApi {
 
     @Override
     public List<Tag> getTags(final UUID objectId, final ObjectType objectType, final TenantContext context) {
-        return tagDao.getTags(objectId, objectType, internalCallContextFactory.createInternalTenantContext(context));
+        return ImmutableList.<Tag>copyOf(Collections2.transform(tagDao.getTags(objectId, objectType, internalCallContextFactory.createInternalTenantContext(context)),
+                                                                new Function<TagModelDao, Tag>() {
+                                                                    @Override
+                                                                    public Tag apply(final TagModelDao input) {
+                                                                        return TagModelDaoHelper.isControlTag(input.getTagDefinitionId()) ?
+                                                                               new DefaultControlTag(ControlTagType.getTypeFromId(input.getTagDefinitionId()), objectType, objectId, input.getCreatedDate()) :
+                                                                               new DescriptiveTag(input.getTagDefinitionId(), objectType, objectId, input.getCreatedDate());
+                                                                    }
+                                                                }));
     }
 
     @Override
     public TagDefinition getTagDefinitionForName(final String tagDefinitionName, final TenantContext context)
             throws TagDefinitionApiException {
-        return tagDefinitionDao.getByName(tagDefinitionName, internalCallContextFactory.createInternalTenantContext(context));
+        return new DefaultTagDefinition(tagDefinitionDao.getByName(tagDefinitionName, internalCallContextFactory.createInternalTenantContext(context)),
+                                        TagModelDaoHelper.isControlTag(tagDefinitionName));
     }
 }

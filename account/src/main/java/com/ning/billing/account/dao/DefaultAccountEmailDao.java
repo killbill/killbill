@@ -23,6 +23,7 @@ import org.skife.jdbi.v2.IDBI;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.entity.dao.EntityDaoBase;
@@ -33,7 +34,7 @@ import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 
 import com.google.inject.Inject;
 
-public class DefaultAccountEmailDao extends EntityDaoBase<AccountEmailModelDao, AccountApiException> implements AccountEmailDao {
+public class DefaultAccountEmailDao extends EntityDaoBase<AccountEmailModelDao, AccountEmail, AccountApiException> implements AccountEmailDao {
 
     @Inject
     public DefaultAccountEmailDao(final IDBI dbi) {

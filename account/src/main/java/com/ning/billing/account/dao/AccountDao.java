@@ -18,12 +18,13 @@ package com.ning.billing.account.dao;
 
 import java.util.UUID;
 
+import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.entity.dao.EntityDao;
 
-public interface AccountDao extends EntityDao<AccountModelDao, AccountApiException> {
+public interface AccountDao extends EntityDao<AccountModelDao, Account, AccountApiException> {
 
     public AccountModelDao getAccountByKey(String key, InternalTenantContext context);
 

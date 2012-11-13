@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import com.ning.billing.BillingExceptionBase;
 import com.ning.billing.ErrorCode;
+import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.user.DefaultAccountChangeEvent;
 import com.ning.billing.account.api.user.DefaultAccountCreationEvent;
@@ -44,7 +45,7 @@ import com.ning.billing.util.svcsapi.bus.InternalBus.EventBusException;
 
 import com.google.inject.Inject;
 
-public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, AccountApiException> implements AccountDao {
+public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, AccountApiException> implements AccountDao {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultAccountDao.class);
 

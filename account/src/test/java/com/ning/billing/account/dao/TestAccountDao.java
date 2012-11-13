@@ -41,21 +41,21 @@ import com.ning.billing.util.api.CustomFieldApiException;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.audit.dao.AuditDao;
 import com.ning.billing.util.audit.dao.DefaultAuditDao;
-import com.ning.billing.util.clock.DefaultClock;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.customfield.StringCustomField;
-import com.ning.billing.util.customfield.dao.AuditedCustomFieldDao;
 import com.ning.billing.util.customfield.dao.CustomFieldDao;
+import com.ning.billing.util.customfield.dao.CustomFieldModelDao;
+import com.ning.billing.util.customfield.dao.DefaultCustomFieldDao;
 import com.ning.billing.util.entity.EntityPersistenceException;
-import com.ning.billing.util.tag.ControlTagType;
-import com.ning.billing.util.tag.DefaultControlTag;
 import com.ning.billing.util.tag.DefaultTagDefinition;
 import com.ning.billing.util.tag.DescriptiveTag;
 import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
-import com.ning.billing.util.tag.dao.AuditedTagDao;
+import com.ning.billing.util.tag.dao.DefaultTagDao;
 import com.ning.billing.util.tag.dao.TagDao;
+import com.ning.billing.util.tag.dao.TagDefinitionModelDao;
 import com.ning.billing.util.tag.dao.TagDefinitionSqlDao;
+import com.ning.billing.util.tag.dao.TagModelDao;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -132,12 +132,12 @@ public class TestAccountDao extends AccountDaoTestBase {
         final UUID accountId = UUID.randomUUID();
 
         CustomField field = new StringCustomField(fieldName, fieldValue, ObjectType.ACCOUNT, accountId, internalCallContext.getCreatedDate());
-        final CustomFieldDao customFieldDao = new AuditedCustomFieldDao(dbi);
-        customFieldDao.create(field, internalCallContext);
+        final CustomFieldDao customFieldDao = new DefaultCustomFieldDao(dbi);
+        customFieldDao.create(new CustomFieldModelDao(field), internalCallContext);
 
-        final List<CustomField> customFieldMap = customFieldDao.getCustomFields(accountId, ObjectType.ACCOUNT, internalCallContext);
+        final List<CustomFieldModelDao> customFieldMap = customFieldDao.getCustomFields(accountId, ObjectType.ACCOUNT, internalCallContext);
         assertEquals(customFieldMap.size(), 1);
-        final CustomField customField = customFieldMap.get(0);
+        final CustomFieldModelDao customField = customFieldMap.get(0);
         assertEquals(customField.getFieldName(), fieldName);
         assertEquals(customField.getFieldValue(), fieldValue);
     }
@@ -147,17 +147,16 @@ public class TestAccountDao extends AccountDaoTestBase {
         final AccountModelDao account = createTestAccount(1);
         final TagDefinition definition = new DefaultTagDefinition("Test Tag", "For testing only", false);
         final TagDefinitionSqlDao tagDefinitionDao = dbi.onDemand(TagDefinitionSqlDao.class);
-        tagDefinitionDao.create(definition, internalCallContext);
+        tagDefinitionDao.create(new TagDefinitionModelDao(definition), internalCallContext);
 
-        final TagDao tagDao = new AuditedTagDao(dbi, tagEventBuilder, bus, new DefaultClock());
+        final TagDao tagDao = new DefaultTagDao(dbi, tagEventBuilder, bus);
 
-        final TagDefinition tagDefinition = tagDefinitionDao.getById(definition.getId().toString(), internalCallContext);
-        final Tag tag = tagDefinition.isControlTag() ? new DefaultControlTag(ControlTagType.getTypeFromId(tagDefinition.getId()), ObjectType.ACCOUNT, account.getId(), internalCallContext.getCreatedDate()) :
-                        new DescriptiveTag(tagDefinition.getId(), ObjectType.ACCOUNT, account.getId(), internalCallContext.getCreatedDate());
+        final TagDefinitionModelDao tagDefinition = tagDefinitionDao.getById(definition.getId().toString(), internalCallContext);
+        final Tag tag = new DescriptiveTag(tagDefinition.getId(), ObjectType.ACCOUNT, account.getId(), internalCallContext.getCreatedDate());
 
-        tagDao.create(tag, internalCallContext);
+        tagDao.create(new TagModelDao(tag), internalCallContext);
 
-        final List<Tag> tags = tagDao.getTags(account.getId(), ObjectType.ACCOUNT, internalCallContext);
+        final List<TagModelDao> tags = tagDao.getTags(account.getId(), ObjectType.ACCOUNT, internalCallContext);
         assertEquals(tags.size(), 1);
 
         assertEquals(tags.get(0).getTagDefinitionId(), definition.getId());

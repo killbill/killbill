@@ -20,11 +20,12 @@ import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.entity.dao.EntityDao;
 
-public interface AccountEmailDao extends EntityDao<AccountEmailModelDao, AccountApiException> {
+public interface AccountEmailDao extends EntityDao<AccountEmailModelDao, AccountEmail, AccountApiException> {
 
     public void delete(AccountEmailModelDao email, InternalCallContext context);
 

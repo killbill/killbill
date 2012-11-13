@@ -33,7 +33,7 @@ public class EntitySqlDaoTransactionalJdbiWrapper {
         this.dbi = dbi;
     }
 
-    class JdbiTransaction<ReturnType, T extends Entity> implements Transaction<ReturnType, EntitySqlDao<T>> {
+    class JdbiTransaction<ReturnType, M extends EntityModelDao<E>, E extends Entity> implements Transaction<ReturnType, EntitySqlDao<M, E>> {
 
         private final EntitySqlDaoTransactionWrapper<ReturnType> entitySqlDaoTransactionWrapper;
 
@@ -42,14 +42,14 @@ public class EntitySqlDaoTransactionalJdbiWrapper {
         }
 
         @Override
-        public ReturnType inTransaction(final EntitySqlDao<T> transactionalSqlDao, final TransactionStatus status) throws Exception {
+        public ReturnType inTransaction(final EntitySqlDao<M, E> transactionalSqlDao, final TransactionStatus status) throws Exception {
             final EntitySqlDaoWrapperFactory<EntitySqlDao> factoryEntitySqlDao = new EntitySqlDaoWrapperFactory<EntitySqlDao>(transactionalSqlDao);
             return entitySqlDaoTransactionWrapper.inTransaction(factoryEntitySqlDao);
         }
     }
 
     // To handle warnings only
-    interface InitialEntitySqlDao extends EntitySqlDao<Entity> {}
+    interface InitialEntitySqlDao extends EntitySqlDao<EntityModelDao<Entity>, Entity> {}
 
     /**
      * @param entitySqlDaoTransactionWrapper transaction to execute
@@ -57,7 +57,7 @@ public class EntitySqlDaoTransactionalJdbiWrapper {
      * @return result from the transaction fo type ReturnType
      */
     public <ReturnType> ReturnType execute(final EntitySqlDaoTransactionWrapper<ReturnType> entitySqlDaoTransactionWrapper) {
-        final EntitySqlDao<Entity> entitySqlDao = dbi.onDemand(InitialEntitySqlDao.class);
-        return entitySqlDao.inTransaction(new JdbiTransaction<ReturnType, Entity>(entitySqlDaoTransactionWrapper));
+        final EntitySqlDao<EntityModelDao<Entity>, Entity> entitySqlDao = dbi.onDemand(InitialEntitySqlDao.class);
+        return entitySqlDao.inTransaction(new JdbiTransaction<ReturnType, EntityModelDao<Entity>, Entity>(entitySqlDaoTransactionWrapper));
     }
 }

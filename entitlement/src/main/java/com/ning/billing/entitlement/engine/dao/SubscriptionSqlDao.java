@@ -23,27 +23,21 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
-import org.skife.jdbi.v2.sqlobject.Binder;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.engine.dao.SubscriptionSqlDao.SubscriptionMapper;
 import com.ning.billing.entitlement.engine.dao.model.SubscriptionModelDao;
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.callcontext.InternalTenantContextBinder;
-import com.ning.billing.util.dao.BinderBase;
 import com.ning.billing.util.dao.MapperBase;
 import com.ning.billing.util.entity.dao.Audited;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
@@ -51,11 +45,11 @@ import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 
 @EntitySqlDaoStringTemplate
 @RegisterMapper(SubscriptionMapper.class)
-public interface SubscriptionSqlDao extends EntitySqlDao<SubscriptionModelDao> {
+public interface SubscriptionSqlDao extends EntitySqlDao<SubscriptionModelDao, Subscription> {
 
     @SqlQuery
     public List<SubscriptionModelDao> getSubscriptionsFromBundleId(@Bind("bundleId") String bundleId,
-                                                           @BindBean final InternalTenantContext context);
+                                                                   @BindBean final InternalTenantContext context);
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
@@ -73,7 +67,6 @@ public interface SubscriptionSqlDao extends EntitySqlDao<SubscriptionModelDao> {
                                 @Bind("startDate") Date startDate,
                                 @Bind("bundleStartDate") Date bundleStartDate,
                                 @BindBean final InternalCallContext context);
-
 
     public static class SubscriptionMapper extends MapperBase implements ResultSetMapper<SubscriptionModelDao> {
 

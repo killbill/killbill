@@ -62,7 +62,7 @@ import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
-import com.ning.billing.util.customfield.dao.AuditedCustomFieldDao;
+import com.ning.billing.util.customfield.dao.DefaultCustomFieldDao;
 import com.ning.billing.util.customfield.dao.CustomFieldDao;
 import com.ning.billing.util.email.EmailModule;
 import com.ning.billing.util.email.templates.TemplateModule;
@@ -74,7 +74,7 @@ import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 import com.ning.billing.util.svcsapi.bus.InternalBus;
-import com.ning.billing.util.tag.dao.AuditedTagDao;
+import com.ning.billing.util.tag.dao.DefaultTagDao;
 import com.ning.billing.util.tag.dao.TagDao;
 
 import com.google.inject.Guice;
@@ -130,8 +130,8 @@ public class TestOverdueCheckNotifier extends OverdueTestSuiteWithEmbeddedDB {
                 bind(MysqlTestingHelper.class).toInstance(helper);
                 final IDBI dbi = helper.getDBI();
                 bind(IDBI.class).toInstance(dbi);
-                bind(TagDao.class).to(AuditedTagDao.class).asEagerSingleton();
-                bind(CustomFieldDao.class).to(AuditedCustomFieldDao.class).asEagerSingleton();
+                bind(TagDao.class).to(DefaultTagDao.class).asEagerSingleton();
+                bind(CustomFieldDao.class).to(DefaultCustomFieldDao.class).asEagerSingleton();
                 bind(GlobalLocker.class).to(MySqlGlobalLocker.class).asEagerSingleton();
                 install(new MockJunctionModule());
                 install(new EmailModule());

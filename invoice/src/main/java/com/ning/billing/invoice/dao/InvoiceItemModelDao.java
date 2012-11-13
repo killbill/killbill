@@ -25,9 +25,11 @@ import org.joda.time.LocalDate;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
+import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.EntityBase;
+import com.ning.billing.util.entity.dao.EntityModelDao;
 
-public class InvoiceItemModelDao extends EntityBase {
+public class InvoiceItemModelDao extends EntityBase implements EntityModelDao<InvoiceItem> {
 
     private InvoiceItemType type;
     private UUID invoiceId;
@@ -226,5 +228,10 @@ public class InvoiceItemModelDao extends EntityBase {
         result = 31 * result + (currency != null ? currency.hashCode() : 0);
         result = 31 * result + (linkedItemId != null ? linkedItemId.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public TableName getTableName() {
+        return TableName.INVOICE_ITEMS;
     }
 }

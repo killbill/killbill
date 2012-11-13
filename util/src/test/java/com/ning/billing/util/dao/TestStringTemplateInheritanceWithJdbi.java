@@ -24,6 +24,7 @@ import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.entity.Entity;
+import com.ning.billing.util.entity.dao.EntityModelDao;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 
@@ -33,8 +34,10 @@ public class TestStringTemplateInheritanceWithJdbi extends KillbillTestSuiteWith
 
     private static interface Kombucha extends Entity {}
 
+    private static interface KombuchaModelDao extends EntityModelDao<Kombucha> {}
+
     @EntitySqlDaoStringTemplate("/com/ning/billing/util/dao/Kombucha.sql.stg")
-    private static interface KombuchaSqlDao extends EntitySqlDao<Kombucha> {
+    private static interface KombuchaSqlDao extends EntitySqlDao<KombuchaModelDao, Kombucha> {
 
         @SqlQuery
         public boolean isIsTimeForKombucha();

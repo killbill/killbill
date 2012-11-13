@@ -26,27 +26,25 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.tag.DefaultTagDefinition;
-import com.ning.billing.util.tag.TagDefinition;
 
 public class MockTagDefinitionDao implements TagDefinitionDao {
 
-    private final Map<String, TagDefinition> tags = new ConcurrentHashMap<String, TagDefinition>();
+    private final Map<String, TagDefinitionModelDao> tags = new ConcurrentHashMap<String, TagDefinitionModelDao>();
 
     @Override
-    public List<TagDefinition> getTagDefinitions(final InternalTenantContext context) {
-        return new ArrayList<TagDefinition>(tags.values());
+    public List<TagDefinitionModelDao> getTagDefinitions(final InternalTenantContext context) {
+        return new ArrayList<TagDefinitionModelDao>(tags.values());
     }
 
     @Override
-    public TagDefinition getByName(final String definitionName, final InternalTenantContext context) {
+    public TagDefinitionModelDao getByName(final String definitionName, final InternalTenantContext context) {
         return tags.get(definitionName);
     }
 
     @Override
-    public TagDefinition create(final String definitionName, final String description,
-                                final InternalCallContext context) throws TagDefinitionApiException {
-        final TagDefinition tag = new DefaultTagDefinition(definitionName, description, false);
+    public TagDefinitionModelDao create(final String definitionName, final String description,
+                                        final InternalCallContext context) throws TagDefinitionApiException {
+        final TagDefinitionModelDao tag = new TagDefinitionModelDao(null, definitionName, description);
 
         tags.put(tag.getId().toString(), tag);
         return tag;
@@ -58,12 +56,12 @@ public class MockTagDefinitionDao implements TagDefinitionDao {
     }
 
     @Override
-    public TagDefinition getById(final UUID definitionId, final InternalTenantContext context) {
+    public TagDefinitionModelDao getById(final UUID definitionId, final InternalTenantContext context) {
         return null;
     }
 
     @Override
-    public List<TagDefinition> getByIds(final Collection<UUID> definitionIds, final InternalTenantContext context) {
+    public List<TagDefinitionModelDao> getByIds(final Collection<UUID> definitionIds, final InternalTenantContext context) {
         return null;
     }
 }
