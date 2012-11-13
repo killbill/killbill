@@ -1,11 +1,12 @@
 group BlockingStateSqlDao: EntitySqlDao;
 
 
+tableName() ::= "blocking_states"
+
 tableFields(prefix) ::= <<
- <prefix>id
-, <prefix>blockable_id
-, <prefix>state
+  <prefix>blockable_id
 , <prefix>type
+, <prefix>state
 , <prefix>service
 , <prefix>block_change
 , <prefix>block_entitlement
@@ -15,10 +16,9 @@ tableFields(prefix) ::= <<
 
 
 tableValues() ::= <<
- :id
-, :blockableId
-, :state
+  :blockableId
 , :type
+, :state
 , :service
 , :blockChange
 , :blockEntitlement
@@ -27,42 +27,26 @@ tableValues() ::= <<
 >>
 
 getBlockingStateFor() ::= <<
-    select
-        id
-      , blockable_id
-      , state
-      , type
-      , service
-      , block_change
-      , block_entitlement
-      , block_billing
-      , created_date
-      , tenant_record_id
-    from blocking_states
-    where blockable_id = :blockable_id
-    <AND_CHECK_TENANT()>
-    -- We want the current state, hence the order desc and limit 1
-    order by created_date desc, record_id desc
-    limit 1
-    ;
+select
+<allTableFields()>
+from
+<tableName()>
+where blockable_id = :blockableId
+<AND_CHECK_TENANT()>
+-- We want the current state, hence the order desc and limit 1
+order by created_date desc, record_id desc
+limit 1
+;
 >>
 
 getBlockingHistoryFor() ::= <<
-    select
-       id
-      , blockable_id
-      , state
-      , type
-      , service
-      , block_change
-      , block_entitlement
-      , block_billing
-      , created_date
-      , tenant_record_id
-    from blocking_states
-    where blockable_id = :blockable_id
-    <AND_CHECK_TENANT()>
-    -- We want the history in order
-    order by created_date asc, record_id asc
-    ;
+select
+<allTableFields()>
+from
+<tableName()>
+where blockable_id = :blockableId
+<AND_CHECK_TENANT()>
+-- We want the current state, hence the order desc and limit 1
+order by created_date asc, record_id asc
+;
 >>

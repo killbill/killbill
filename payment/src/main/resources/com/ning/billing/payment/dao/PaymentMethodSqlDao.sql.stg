@@ -57,7 +57,7 @@ where  id = :id
 getPaymentMethodIncludedDelete(accountId) ::= <<
 select <allTableFields()>
 from <tableName()>
-where account_id = :accountId
+where id = :id
 ;
 >>
 

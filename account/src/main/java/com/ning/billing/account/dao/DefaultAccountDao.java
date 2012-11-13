@@ -74,7 +74,7 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, AccountApi
                 return;
         }
 
-        final Long recordId = getRecordId(savedAccount.getId(), context);
+        final Long recordId = entitySqlDaoWrapperFactory.become(AccountSqlDao.class).getRecordId(savedAccount.getId().toString(), context);
         // We need to re-hydrate the context with the account record id
         final InternalCallContext rehydratedContext = internalCallContextFactory.createInternalCallContext(recordId, context);
         final AccountCreationInternalEvent creationEvent = new DefaultAccountCreationEvent(savedAccount,

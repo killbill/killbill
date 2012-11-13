@@ -48,7 +48,10 @@ public abstract class EntityDaoBase<T extends Entity, U extends BillingException
                 final EntitySqlDao<T> transactional = entitySqlDaoWrapperFactory.become(realSqlDao);
                 transactional.create(entity, context);
 
-                postBusEventFromTransaction(entity, entity, ChangeType.INSERT, entitySqlDaoWrapperFactory, context);
+
+                final T refreshedEntity = transactional.getById(entity.getId().toString(), context);
+
+                postBusEventFromTransaction(entity, refreshedEntity, ChangeType.INSERT, entitySqlDaoWrapperFactory, context);
                 return null;
             }
         });
