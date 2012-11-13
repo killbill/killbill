@@ -53,7 +53,7 @@ public @interface EntityHistoryBinder {
                 @Override
                 public void bind(final SQLStatement<?> q, final EntityHistoryBinder bind, final EntityHistoryModelDao<M, E> history) {
                     try {
-                        // Emulate @BndBean
+                        // Emulate @BindBean
                         final M arg = history.getEntity();
                         final BeanInfo infos = Introspector.getBeanInfo(arg.getClass());
                         final PropertyDescriptor[] props = infos.getPropertyDescriptors();
