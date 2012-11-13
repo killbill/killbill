@@ -16,36 +16,24 @@
 
 package com.ning.billing.entitlement.engine.dao;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 
-import org.joda.time.DateTime;
-import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
-import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
-import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import com.ning.billing.entitlement.engine.dao.EntitlementEventSqlDao.EventSqlMapper;
 import com.ning.billing.entitlement.engine.dao.model.EntitlementEventModelDao;
 import com.ning.billing.entitlement.events.EntitlementEvent;
-import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
-import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.dao.MapperBase;
 import com.ning.billing.util.entity.dao.Audited;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 
 @EntitySqlDaoStringTemplate
-@RegisterMapper(EventSqlMapper.class)
 public interface EntitlementEventSqlDao extends EntitySqlDao<EntitlementEventModelDao, EntitlementEvent> {
 
     @SqlUpdate
@@ -72,32 +60,4 @@ public interface EntitlementEventSqlDao extends EntitySqlDao<EntitlementEventMod
     @SqlQuery
     public List<EntitlementEventModelDao> getEventsForSubscription(@Bind("subscriptionId") String subscriptionId,
                                                                    @BindBean final InternalTenantContext context);
-
-    public static class EventSqlMapper extends MapperBase implements ResultSetMapper<EntitlementEventModelDao> {
-
-        @Override
-        public EntitlementEventModelDao map(final int index, final ResultSet r, final StatementContext ctx)
-                throws SQLException {
-
-            final long totalOrdering = r.getLong("record_id");
-            final UUID id = UUID.fromString(r.getString("id"));
-            final EventType eventType = EventType.valueOf(r.getString("event_type"));
-            final ApiEventType userType = (eventType == EventType.API_USER) ? ApiEventType.valueOf(r.getString("user_type")) : null;
-            final DateTime createdDate = getDateTime(r, "created_date");
-            final DateTime updatedDate = getDateTime(r, "updated_date");
-            final DateTime requestedDate = getDateTime(r, "requested_date");
-            final DateTime effectiveDate = getDateTime(r, "effective_date");
-            final UUID subscriptionId = UUID.fromString(r.getString("subscription_id"));
-            final String planName = r.getString("plan_name");
-            final String phaseName = r.getString("phase_name");
-            final String priceListName = r.getString("price_list_name");
-            final long currentVersion = r.getLong("current_version");
-            final boolean isActive = r.getBoolean("is_active");
-            final UUID userToken = r.getString("user_token") != null ? UUID.fromString(r.getString("user_token")) : null;
-
-            return new EntitlementEventModelDao(id, totalOrdering, eventType, userType, requestedDate, effectiveDate, subscriptionId,
-                                                planName, phaseName, priceListName, currentVersion, isActive, createdDate, updatedDate);
-
-        }
-    }
 }

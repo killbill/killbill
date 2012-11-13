@@ -448,7 +448,7 @@ public class AuditedEntitlementDao implements EntitlementDao {
                 final List<EntitlementEventModelDao> eventModels = transactional.getFutureActiveEventForSubscription(subscriptionId.toString(), now, context);
 
                 for (final EntitlementEventModelDao cur : eventModels) {
-                    if (cur.getUserTypeX() == ApiEventType.CANCEL) {
+                    if (cur.getUserType() == ApiEventType.CANCEL) {
                         if (cancelledEvent != null) {
                             throw new EntitlementError(String.format("Found multiple cancel active events for subscriptions %s", subscriptionId.toString()));
                         }
@@ -535,8 +535,8 @@ public class AuditedEntitlementDao implements EntitlementDao {
         final Date now = clock.getUTCNow().toDate();
         final List<EntitlementEventModelDao> eventModels = dao.become(EntitlementEventSqlDao.class).getFutureActiveEventForSubscription(subscriptionId.toString(), now, context);
         for (final EntitlementEventModelDao cur : eventModels) {
-            if (cur.getEventTypeX() == type &&
-                (apiType == null || apiType == cur.getUserTypeX())) {
+            if (cur.getEventType() == type &&
+                (apiType == null || apiType == cur.getUserType())) {
                 if (futureEvent != null) {
                     throw new EntitlementError(String.format("Found multiple future events for type %s for subscriptions %s",
                                                              type, subscriptionId.toString()));

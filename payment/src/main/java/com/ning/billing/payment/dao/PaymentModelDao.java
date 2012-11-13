@@ -34,16 +34,18 @@ public class PaymentModelDao extends EntityBase implements EntityModelDao<Paymen
 
     public static final Integer INVALID_PAYMENT_NUMBER = new Integer(-13);
 
-    private final UUID accountId;
-    private final UUID invoiceId;
-    private final UUID paymentMethodId;
-    private final BigDecimal amount;
-    private final Currency currency;
-    private final DateTime effectiveDate;
-    private final Integer paymentNumber;
-    private final PaymentStatus paymentStatus;
-    private final String extFirstPaymentRefId;
-    private final String extSecondPaymentRefId;
+    private UUID accountId;
+    private UUID invoiceId;
+    private UUID paymentMethodId;
+    private BigDecimal amount;
+    private Currency currency;
+    private DateTime effectiveDate;
+    private Integer paymentNumber;
+    private PaymentStatus paymentStatus;
+    private String extFirstPaymentRefId;
+    private String extSecondPaymentRefId;
+
+    public PaymentModelDao() { /* For the DAO mapper */ }
 
     public PaymentModelDao(final UUID id, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate, final UUID accountId,
                            final UUID invoiceId, final UUID paymentMethodId,
