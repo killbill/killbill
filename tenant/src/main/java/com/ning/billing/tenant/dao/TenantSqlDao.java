@@ -17,15 +17,9 @@
 package com.ning.billing.tenant.dao;
 
 import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
-import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
 import com.ning.billing.tenant.api.Tenant;
-import com.ning.billing.util.audit.ChangeType;
-import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.callcontext.InternalTenantContextBinder;
-import com.ning.billing.util.entity.dao.Audited;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 
@@ -34,13 +28,6 @@ public interface TenantSqlDao extends EntitySqlDao<TenantModelDao, Tenant> {
 
     @SqlQuery
     public TenantModelDao getByApiKey(@Bind("apiKey") final String apiKey);
-
-    @SqlUpdate
-    @Audited(ChangeType.INSERT)
-    public void create(@BindBean final TenantModelDao tenant,
-                       @Bind("apiSecret") final String apiSecret,
-                       @Bind("apiSalt") final String apiSalt,
-                       @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlQuery
     public TenantModelDao getSecrets(@Bind("id") final String id);
