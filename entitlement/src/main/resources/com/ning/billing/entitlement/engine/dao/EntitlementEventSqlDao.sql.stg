@@ -76,8 +76,10 @@ event_id = :eventId
 >>
 
 
+
 getFutureActiveEventForSubscription() ::= <<
 select <allTableFields()>
+, record_id as total_ordering
 from <tableName()>
 where
 subscription_id = :subscriptionId
@@ -92,6 +94,7 @@ effective_date asc
 
 getEventsForSubscription() ::= <<
 select <allTableFields()>
+, record_id as total_ordering
 from <tableName()>
 where
 subscription_id = :subscriptionId
@@ -99,5 +102,37 @@ subscription_id = :subscriptionId
 order by
 effective_date asc
 , record_id asc
+;
+>>
+
+/** Redefine the 3 base nethods to account for total_ordering **/
+
+get(limit) ::= <<
+select
+<allTableFields("t.")>
+, record_id as total_ordering
+from <tableName()> t
+where <CHECK_TENANT("t.")>
+<if(limit)>limit :limit<endif>
+;
+>>
+
+getById(id) ::= <<
+select
+<allTableFields()>
+, record_id as total_ordering
+from <tableName()> t
+where <idField()> = :id
+<AND_CHECK_TENANT()>
+;
+>>
+
+getByRecordId(recordId) ::= <<
+select
+<allTableFields()>
+, record_id as total_ordering
+from <tableName()>
+where <recordIdField()> = :recordId
+<AND_CHECK_TENANT()>
 ;
 >>
