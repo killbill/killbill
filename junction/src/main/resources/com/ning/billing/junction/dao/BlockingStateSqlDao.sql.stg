@@ -34,7 +34,7 @@ from
 where blockable_id = :blockableId
 <AND_CHECK_TENANT()>
 -- We want the current state, hence the order desc and limit 1
-order by created_date desc, record_id desc
+order by record_id desc
 limit 1
 ;
 >>
@@ -47,6 +47,6 @@ from
 where blockable_id = :blockableId
 <AND_CHECK_TENANT()>
 -- We want the current state, hence the order desc and limit 1
-order by created_date asc, record_id asc
+order by record_id asc
 ;
 >>
