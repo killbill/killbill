@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.skife.jdbi.v2.Binding;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.exceptions.DBIException;
 import org.skife.jdbi.v2.exceptions.StatementException;
@@ -69,20 +70,27 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
             return invokeSafely(proxy, method, args);
         } catch (Throwable t) {
             if (t.getCause() != null && t.getCause().getCause() != null && DBIException.class.isAssignableFrom(t.getCause().getClass())) {
-                // Likely the JDBC exception or a Billing exception we have thrown in the transaction
-                // If it's a JDBC error, try to extract the SQL statement
+                // Likely a JDBC error, try to extract the SQL statement and JDBI bindings
                 if (t.getCause() instanceof StatementException) {
                     final StatementContext statementContext = ((StatementException) t.getCause()).getStatementContext();
+
                     if (statementContext != null) {
+                        // Grumble, we need to rely on the suxxor toString() method as nothing is exposed
+                        final Binding binding = statementContext.getBinding();
+
                         final PreparedStatement statement = statementContext.getStatement();
                         if (statement != null) {
                             // Note: we rely on the JDBC driver to have a sane toString() method...
-                            errorDuringTransaction(t.getCause().getCause(), method, statement.toString());
-                            // Never reached
-                            return null;
+                            errorDuringTransaction(t.getCause().getCause(), method, statement.toString() + "\n" + binding.toString());
+                        } else {
+                            errorDuringTransaction(t.getCause().getCause(), method, binding.toString());
                         }
+
+                        // Never reached
+                        return null;
                     }
                 }
+
                 errorDuringTransaction(t.getCause().getCause(), method);
             } else if (t.getCause() != null) {
                 // t is likely not interesting (java.lang.reflect.InvocationTargetException)

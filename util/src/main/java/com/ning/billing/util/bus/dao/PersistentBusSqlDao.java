@@ -24,6 +24,7 @@ import org.joda.time.DateTime;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.Binder;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
@@ -35,7 +36,6 @@ import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 import com.ning.billing.util.dao.BinderBase;
 import com.ning.billing.util.dao.MapperBase;
 import com.ning.billing.util.queue.PersistentQueueEntryLifecycle.PersistentQueueEntryLifecycleState;
@@ -48,33 +48,33 @@ public interface PersistentBusSqlDao extends Transactional<PersistentBusSqlDao>,
     public BusEventEntry getNextBusEventEntry(@Bind("max") int max,
                                               @Bind("owner") String owner,
                                               @Bind("now") Date now,
-                                              @InternalTenantContextBinder final InternalTenantContext context);
+                                              @BindBean final InternalTenantContext context);
 
     @SqlUpdate
     public int claimBusEvent(@Bind("owner") String owner,
                              @Bind("nextAvailable") Date nextAvailable,
                              @Bind("recordId") Long id,
                              @Bind("now") Date now,
-                             @InternalTenantContextBinder final InternalCallContext context);
+                             @BindBean final InternalCallContext context);
 
     @SqlUpdate
     public void clearBusEvent(@Bind("recordId") Long id,
                               @Bind("owner") String owner,
-                              @InternalTenantContextBinder final InternalCallContext context);
+                              @BindBean final InternalCallContext context);
 
     @SqlUpdate
     public void removeBusEventsById(@Bind("recordId") Long id,
-                                    @InternalTenantContextBinder final InternalCallContext context);
+                                    @BindBean final InternalCallContext context);
 
     @SqlUpdate
     public void insertBusEvent(@Bind(binder = PersistentBusSqlBinder.class) BusEventEntry evt,
-                               @InternalTenantContextBinder final InternalCallContext context);
+                               @BindBean final InternalCallContext context);
 
     @SqlUpdate
     public void insertClaimedHistory(@Bind("ownerId") String owner,
                                      @Bind("claimedDate") Date claimedDate,
                                      @Bind("busEventId") long id,
-                                     @InternalTenantContextBinder final InternalCallContext context);
+                                     @BindBean final InternalCallContext context);
 
     public static class PersistentBusSqlBinder extends BinderBase implements Binder<Bind, BusEventEntry> {
 

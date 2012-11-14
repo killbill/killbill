@@ -24,13 +24,14 @@ import org.apache.shiro.authc.SimpleAuthenticationInfo;
 import org.apache.shiro.codec.Base64;
 import org.apache.shiro.crypto.RandomNumberGenerator;
 import org.apache.shiro.crypto.SecureRandomNumberGenerator;
-import org.apache.shiro.crypto.hash.Sha256Hash;
+import org.apache.shiro.crypto.hash.SimpleHash;
 import org.apache.shiro.util.ByteSource;
 import org.skife.jdbi.v2.IDBI;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.tenant.api.Tenant;
 import com.ning.billing.tenant.api.TenantApiException;
+import com.ning.billing.tenant.security.KillbillCredentialsMatcher;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.entity.dao.EntityDaoBase;
@@ -73,15 +74,17 @@ public class DefaultTenantDao extends EntityDaoBase<TenantModelDao, Tenant, Tena
     public void create(final TenantModelDao entity, final InternalCallContext context) throws TenantApiException {
         // Create the salt and password
         final ByteSource salt = rng.nextBytes();
-        // Hash the plain-text password with the random salt and multiple
-        // iterations and then Base64-encode the value (requires less space than Hex):
-        // TODO switch to bcrypt
-        final String hashedPasswordBase64 = new Sha256Hash(entity.getApiSecret(), salt, 1024).toBase64();
+        // Hash the plain-text password with the random salt and multiple iterations and then Base64-encode the value (requires less space than Hex)
+        final String hashedPasswordBase64 = new SimpleHash(KillbillCredentialsMatcher.HASH_ALGORITHM_NAME,
+                                                           entity.getApiSecret(), salt, KillbillCredentialsMatcher.HASH_ITERATIONS).toBase64();
 
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                entitySqlDaoWrapperFactory.become(TenantSqlDao.class).create(entity, hashedPasswordBase64, salt.toBase64(), context);
+                final TenantModelDao tenantModelDaoWithSecret = new TenantModelDao(entity.getId(), context.getCreatedDate(), context.getUpdatedDate(),
+                                                                                   entity.getExternalKey(), entity.getApiKey(),
+                                                                                   hashedPasswordBase64, salt.toBase64());
+                entitySqlDaoWrapperFactory.become(TenantSqlDao.class).create(tenantModelDaoWithSecret, context);
                 return null;
             }
         });

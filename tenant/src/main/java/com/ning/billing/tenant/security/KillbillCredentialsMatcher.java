@@ -18,19 +18,22 @@ package com.ning.billing.tenant.security;
 
 import org.apache.shiro.authc.credential.CredentialsMatcher;
 import org.apache.shiro.authc.credential.HashedCredentialsMatcher;
-import org.apache.shiro.crypto.hash.Sha256Hash;
+import org.apache.shiro.crypto.hash.Sha512Hash;
 
 public class KillbillCredentialsMatcher {
 
-    private KillbillCredentialsMatcher() {
-    }
+    // See http://www.stormpath.com/blog/strong-password-hashing-apache-shiro and https://issues.apache.org/jira/browse/SHIRO-290
+    public static final String HASH_ALGORITHM_NAME = Sha512Hash.ALGORITHM_NAME;
+    public static final int HASH_ITERATIONS = 500000;
+
+    private KillbillCredentialsMatcher() {}
 
     public static CredentialsMatcher getCredentialsMatcher() {
         // This needs to be in sync with DefaultTenantDao
-        final HashedCredentialsMatcher credentialsMatcher = new HashedCredentialsMatcher(Sha256Hash.ALGORITHM_NAME);
+        final HashedCredentialsMatcher credentialsMatcher = new HashedCredentialsMatcher(HASH_ALGORITHM_NAME);
         // base64 encoding, not hex
         credentialsMatcher.setStoredCredentialsHexEncoded(false);
-        credentialsMatcher.setHashIterations(1024);
+        credentialsMatcher.setHashIterations(HASH_ITERATIONS);
 
         return credentialsMatcher;
     }

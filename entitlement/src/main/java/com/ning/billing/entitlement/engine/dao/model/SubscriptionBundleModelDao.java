@@ -28,9 +28,11 @@ import com.ning.billing.util.entity.dao.EntityModelDao;
 
 public class SubscriptionBundleModelDao extends EntityBase implements EntityModelDao<SubscriptionBundle> {
 
-    private final String externalKey;
-    private final UUID accountId;
-    private final DateTime lastSysUpdateDate;
+    private String externalKey;
+    private UUID accountId;
+    private DateTime lastSysUpdateDate;
+
+    public SubscriptionBundleModelDao() { /* For the DAO mapper */ }
 
     public SubscriptionBundleModelDao(final UUID id, final String key, final UUID accountId, final DateTime lastSysUpdateDate,
                                       final DateTime createdDate, final DateTime updateDate) {

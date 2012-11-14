@@ -31,14 +31,16 @@ import com.ning.billing.util.entity.dao.EntityModelDao;
 
 public class PaymentAttemptModelDao extends EntityBase implements EntityModelDao<PaymentAttempt> {
 
-    private final UUID accountId;
-    private final UUID invoiceId;
-    private final UUID paymentId;
-    private final PaymentStatus processingStatus;
-    private final DateTime effectiveDate;
-    private final String gatewayErrorCode;
-    private final String gatewayErrorMsg;
-    private final BigDecimal requestedAmount;
+    private UUID accountId;
+    private UUID invoiceId;
+    private UUID paymentId;
+    private PaymentStatus processingStatus;
+    private DateTime effectiveDate;
+    private String gatewayErrorCode;
+    private String gatewayErrorMsg;
+    private BigDecimal requestedAmount;
+
+    public PaymentAttemptModelDao() { /* For the DAO mapper */ }
 
     public PaymentAttemptModelDao(final UUID id, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate,
                                   final UUID accountId, final UUID invoiceId,

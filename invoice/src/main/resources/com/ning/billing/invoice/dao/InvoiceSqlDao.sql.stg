@@ -12,8 +12,7 @@ tableFields(prefix) ::= <<
 , <prefix>created_date
 >>
 
-
-tableValues(prefix) ::= <<
+tableValues() ::= <<
   :accountId
 , :invoiceDate
 , :targetDate

@@ -29,10 +29,12 @@ import com.ning.billing.util.entity.dao.EntityModelDao;
 
 public class PaymentMethodModelDao extends EntityBase implements EntityModelDao<PaymentMethod> {
 
-    private final UUID accountId;
-    private final String pluginName;
-    private final Boolean isActive;
-    private final String externalId;
+    private UUID accountId;
+    private String pluginName;
+    private Boolean isActive;
+    private String externalId;
+
+    public PaymentMethodModelDao() { /* For the DAO mapper */ }
 
     public PaymentMethodModelDao(final UUID id, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate,
                                  final UUID accountId, final String pluginName,

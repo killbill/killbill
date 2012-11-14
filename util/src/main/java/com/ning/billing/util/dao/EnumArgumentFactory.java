@@ -19,7 +19,6 @@ package com.ning.billing.util.dao;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.UUID;
 
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.Argument;
@@ -56,6 +55,6 @@ public class EnumArgumentFactory implements ArgumentFactory<Enum> {
 
     @Override
     public boolean accepts(final Class expectedType, final Object value, final StatementContext ctx) {
-        return value != null && value.getClass().isEnum();
+        return value != null && (value instanceof Enum /* Works for Enum inside classes */ || value.getClass().isEnum());
     }
 }
