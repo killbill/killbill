@@ -99,7 +99,6 @@ CREATE TABLE tags (
 ) ENGINE = innodb;
 CREATE UNIQUE INDEX tags_id ON tags(id);
 CREATE INDEX tags_by_object ON tags(object_id);
-CREATE UNIQUE INDEX tags_unique ON tags(tag_definition_id, object_id);
 CREATE INDEX tags_tenant_account_record_id ON tags(tenant_record_id, account_record_id);
 
 DROP TABLE IF EXISTS tag_history;
