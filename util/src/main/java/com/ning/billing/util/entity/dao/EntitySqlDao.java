@@ -61,6 +61,6 @@ public interface EntitySqlDao<M extends EntityModelDao<E>, E extends Entity> ext
     @SqlQuery
     public List<M> get(@BindBean final InternalTenantContext context);
 
-    @SqlQuery
+    @SqlUpdate
     public void test(@BindBean final InternalTenantContext context);
 }
