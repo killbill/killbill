@@ -222,6 +222,8 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         lifecycle.fireStartupSequencePriorEventRegistration();
         busService.getBus().register(busHandler);
         lifecycle.fireStartupSequencePostEventRegistration();
+
+        paymentPlugin.clear();
     }
 
     @AfterMethod(groups = "slow")
