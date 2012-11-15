@@ -6,6 +6,7 @@ tableFields(prefix) ::= <<
   <prefix>tag_definition_id
 , <prefix>object_id
 , <prefix>object_type
+, <prefix>is_active
 , <prefix>created_by
 , <prefix>created_date
 , <prefix>updated_by
@@ -16,6 +17,7 @@ tableValues() ::= <<
   :tagDefinitionId
 , :objectId
 , :objectType
+, :isActive
 , :createdBy
 , :createdDate
 , :updatedBy
@@ -26,7 +28,7 @@ historyTableName() ::= "tag_history"
 
 markTagAsDeleted() ::= <<
 update <tableName()> t
-set is_active = 0
+set t.is_active = 0
 where <idField("t.")> = :id
 <AND_CHECK_TENANT("t.")>
 ;

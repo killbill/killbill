@@ -31,6 +31,7 @@ public class TagModelDao extends EntityBase implements EntityModelDao<Tag> {
     private UUID tagDefinitionId;
     private UUID objectId;
     private ObjectType objectType;
+    private Boolean isActive;
 
     public TagModelDao() { /* For the DAO mapper */ }
 
@@ -45,6 +46,7 @@ public class TagModelDao extends EntityBase implements EntityModelDao<Tag> {
         this.tagDefinitionId = tagDefinitionId;
         this.objectId = objectId;
         this.objectType = objectType;
+        this.isActive = true;
     }
 
     public TagModelDao(final Tag tag) {
@@ -63,6 +65,10 @@ public class TagModelDao extends EntityBase implements EntityModelDao<Tag> {
         return objectType;
     }
 
+    public Boolean getIsActive() {
+        return isActive;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
@@ -70,6 +76,7 @@ public class TagModelDao extends EntityBase implements EntityModelDao<Tag> {
         sb.append("{tagDefinitionId=").append(tagDefinitionId);
         sb.append(", objectId=").append(objectId);
         sb.append(", objectType=").append(objectType);
+        sb.append(", isActive=").append(isActive);
         sb.append('}');
         return sb.toString();
     }
@@ -88,6 +95,9 @@ public class TagModelDao extends EntityBase implements EntityModelDao<Tag> {
 
         final TagModelDao that = (TagModelDao) o;
 
+        if (isActive != null ? !isActive.equals(that.isActive) : that.isActive != null) {
+            return false;
+        }
         if (objectId != null ? !objectId.equals(that.objectId) : that.objectId != null) {
             return false;
         }
@@ -107,6 +117,7 @@ public class TagModelDao extends EntityBase implements EntityModelDao<Tag> {
         result = 31 * result + (tagDefinitionId != null ? tagDefinitionId.hashCode() : 0);
         result = 31 * result + (objectId != null ? objectId.hashCode() : 0);
         result = 31 * result + (objectType != null ? objectType.hashCode() : 0);
+        result = 31 * result + (isActive != null ? isActive.hashCode() : 0);
         return result;
     }
 
