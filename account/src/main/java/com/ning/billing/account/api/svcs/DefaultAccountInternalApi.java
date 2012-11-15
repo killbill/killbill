@@ -29,7 +29,6 @@ import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.account.api.DefaultAccountEmail;
 import com.ning.billing.account.dao.AccountDao;
-import com.ning.billing.account.dao.AccountEmailDao;
 import com.ning.billing.account.dao.AccountEmailModelDao;
 import com.ning.billing.account.dao.AccountModelDao;
 import com.ning.billing.util.callcontext.InternalCallContext;
@@ -43,12 +42,10 @@ import com.google.common.collect.ImmutableList;
 public class DefaultAccountInternalApi implements AccountInternalApi {
 
     private final AccountDao accountDao;
-    private final AccountEmailDao accountEmailDao;
 
     @Inject
-    public DefaultAccountInternalApi(final AccountDao accountDao, final AccountEmailDao accountEmailDao) {
+    public DefaultAccountInternalApi(final AccountDao accountDao) {
         this.accountDao = accountDao;
-        this.accountEmailDao = accountEmailDao;
     }
 
     @Override
@@ -63,10 +60,9 @@ public class DefaultAccountInternalApi implements AccountInternalApi {
     @Override
     public Account getAccountByRecordId(final Long recordId, final InternalTenantContext context) throws AccountApiException {
         try {
-        final AccountModelDao account = accountDao.getByRecordId(recordId, context);
-        return new DefaultAccount(account);
+            final AccountModelDao account = accountDao.getByRecordId(recordId, context);
+            return new DefaultAccount(account);
         } catch (NullPointerException e) {
-            e.printStackTrace();;
             return null;
         }
     }
@@ -89,7 +85,7 @@ public class DefaultAccountInternalApi implements AccountInternalApi {
     @Override
     public List<AccountEmail> getEmails(final UUID accountId,
                                         final InternalTenantContext context) {
-        return ImmutableList.<AccountEmail>copyOf(Collections2.transform(accountEmailDao.getByAccountId(accountId, context),
+        return ImmutableList.<AccountEmail>copyOf(Collections2.transform(accountDao.getEmailsByAccountId(accountId, context),
                                                                          new Function<AccountEmailModelDao, AccountEmail>() {
                                                                              @Override
                                                                              public AccountEmail apply(final AccountEmailModelDao input) {

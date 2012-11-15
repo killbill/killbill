@@ -33,7 +33,6 @@ import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.account.api.DefaultAccountEmail;
 import com.ning.billing.account.api.MigrationAccountData;
 import com.ning.billing.account.dao.AccountDao;
-import com.ning.billing.account.dao.AccountEmailDao;
 import com.ning.billing.account.dao.AccountEmailModelDao;
 import com.ning.billing.account.dao.AccountModelDao;
 import com.ning.billing.util.callcontext.CallContext;
@@ -51,15 +50,13 @@ public class DefaultAccountUserApi implements AccountUserApi {
     private final CallContextFactory callContextFactory;
     private final InternalCallContextFactory internalCallContextFactory;
     private final AccountDao accountDao;
-    private final AccountEmailDao accountEmailDao;
 
     @Inject
     public DefaultAccountUserApi(final CallContextFactory callContextFactory, final InternalCallContextFactory internalCallContextFactory,
-                                 final AccountDao accountDao, final AccountEmailDao accountEmailDao) {
+                                 final AccountDao accountDao) {
         this.callContextFactory = callContextFactory;
         this.internalCallContextFactory = internalCallContextFactory;
         this.accountDao = accountDao;
-        this.accountEmailDao = accountEmailDao;
     }
 
     @Override
@@ -165,7 +162,7 @@ public class DefaultAccountUserApi implements AccountUserApi {
 
     @Override
     public List<AccountEmail> getEmails(final UUID accountId, final TenantContext context) {
-        return ImmutableList.<AccountEmail>copyOf(Collections2.transform(accountEmailDao.getByAccountId(accountId, internalCallContextFactory.createInternalTenantContext(context)),
+        return ImmutableList.<AccountEmail>copyOf(Collections2.transform(accountDao.getEmailsByAccountId(accountId, internalCallContextFactory.createInternalTenantContext(context)),
                                                                          new Function<AccountEmailModelDao, AccountEmail>() {
                                                                              @Override
                                                                              public AccountEmail apply(final AccountEmailModelDao input) {
@@ -176,11 +173,11 @@ public class DefaultAccountUserApi implements AccountUserApi {
 
     @Override
     public void addEmail(final UUID accountId, final AccountEmail email, final CallContext context) throws AccountApiException {
-        accountEmailDao.create(new AccountEmailModelDao(email), internalCallContextFactory.createInternalCallContext(accountId, context));
+        accountDao.addEmail(new AccountEmailModelDao(email), internalCallContextFactory.createInternalCallContext(accountId, context));
     }
 
     @Override
     public void removeEmail(final UUID accountId, final AccountEmail email, final CallContext context) {
-        accountEmailDao.delete(new AccountEmailModelDao(email), internalCallContextFactory.createInternalCallContext(accountId, context));
+        accountDao.removeEmail(new AccountEmailModelDao(email, false), internalCallContextFactory.createInternalCallContext(accountId, context));
     }
 }

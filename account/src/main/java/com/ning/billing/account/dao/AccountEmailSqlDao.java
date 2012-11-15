@@ -37,8 +37,8 @@ public interface AccountEmailSqlDao extends EntitySqlDao<AccountEmailModelDao, A
 
     @SqlUpdate
     @Audited(ChangeType.DELETE)
-    public void delete(@BindBean final AccountEmailModelDao accountEmail,
-                       @BindBean final InternalCallContext context);
+    public void markEmailAsDeleted(@BindBean final AccountEmailModelDao accountEmail,
+                                   @BindBean final InternalCallContext context);
 
     @SqlQuery
     public List<AccountEmailModelDao> getEmailByAccountId(@Bind("accountId") final UUID accountId,

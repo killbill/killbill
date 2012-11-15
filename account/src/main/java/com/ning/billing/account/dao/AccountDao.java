@@ -16,6 +16,7 @@
 
 package com.ning.billing.account.dao;
 
+import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.account.api.Account;
@@ -40,4 +41,10 @@ public interface AccountDao extends EntityDao<AccountModelDao, Account, AccountA
     public void updatePaymentMethod(UUID accountId, UUID paymentMethodId, InternalCallContext context) throws AccountApiException;
 
     public void update(AccountModelDao account, InternalCallContext context) throws AccountApiException;
+
+    public void addEmail(AccountEmailModelDao email, InternalCallContext context) throws AccountApiException;
+
+    public void removeEmail(AccountEmailModelDao email, InternalCallContext context);
+
+    public List<AccountEmailModelDao> getEmailsByAccountId(UUID accountId, InternalTenantContext context);
 }

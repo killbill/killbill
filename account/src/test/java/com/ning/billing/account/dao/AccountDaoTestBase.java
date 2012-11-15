@@ -42,7 +42,6 @@ public abstract class AccountDaoTestBase extends AccountTestSuiteWithEmbeddedDB 
     protected final Clock clock = new ClockMock();
 
     protected AccountDao accountDao;
-    protected AccountEmailDao accountEmailDao;
     protected InternalCallContextFactory internalCallContextFactory;
     protected IDBI dbi;
     protected InternalBus bus;
@@ -60,10 +59,6 @@ public abstract class AccountDaoTestBase extends AccountTestSuiteWithEmbeddedDB 
             accountDao = new DefaultAccountDao(dbi, bus, internalCallContextFactory);
             // Health check test to make sure MySQL is setup properly
             accountDao.test(internalCallContext);
-
-            accountEmailDao = new DefaultAccountEmailDao(dbi);
-            // Health check test to make sure MySQL is setup properly
-            accountEmailDao.test(internalCallContext);
         } catch (Throwable t) {
             fail(t.toString());
         }

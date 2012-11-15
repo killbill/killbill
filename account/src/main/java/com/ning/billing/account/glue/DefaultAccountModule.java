@@ -22,9 +22,7 @@ import com.ning.billing.account.api.DefaultAccountService;
 import com.ning.billing.account.api.svcs.DefaultAccountInternalApi;
 import com.ning.billing.account.api.user.DefaultAccountUserApi;
 import com.ning.billing.account.dao.AccountDao;
-import com.ning.billing.account.dao.AccountEmailDao;
 import com.ning.billing.account.dao.DefaultAccountDao;
-import com.ning.billing.account.dao.DefaultAccountEmailDao;
 import com.ning.billing.glue.AccountModule;
 import com.ning.billing.util.glue.RealImplementation;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
@@ -37,7 +35,6 @@ public class DefaultAccountModule extends AbstractModule implements AccountModul
     }
 
     protected void installAccountDao() {
-        bind(AccountEmailDao.class).to(DefaultAccountEmailDao.class).asEagerSingleton();
         bind(AccountDao.class).to(DefaultAccountDao.class).asEagerSingleton();
     }
 

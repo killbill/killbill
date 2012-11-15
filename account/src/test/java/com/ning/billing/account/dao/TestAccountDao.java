@@ -346,14 +346,14 @@ public class TestAccountDao extends AccountDaoTestBase {
     public void testHandleDuplicateEmails() throws AccountApiException {
         final UUID accountId = UUID.randomUUID();
         final AccountEmail email = new DefaultAccountEmail(accountId, "test@gmail.com");
-        Assert.assertEquals(accountEmailDao.getByAccountId(accountId, internalCallContext).size(), 0);
+        Assert.assertEquals(accountDao.getEmailsByAccountId(accountId, internalCallContext).size(), 0);
 
         final AccountEmailModelDao accountEmailModelDao = new AccountEmailModelDao(email);
-        accountEmailDao.create(accountEmailModelDao, internalCallContext);
-        Assert.assertEquals(accountEmailDao.getByAccountId(accountId, internalCallContext).size(), 1);
+        accountDao.addEmail(accountEmailModelDao, internalCallContext);
+        Assert.assertEquals(accountDao.getEmailsByAccountId(accountId, internalCallContext).size(), 1);
 
         try {
-            accountEmailDao.create(accountEmailModelDao, internalCallContext);
+            accountDao.addEmail(accountEmailModelDao, internalCallContext);
             Assert.fail();
         } catch (TransactionFailedException e) {
             Assert.assertTrue(e.getCause() instanceof AccountApiException);
@@ -370,8 +370,8 @@ public class TestAccountDao extends AccountDaoTestBase {
 
         // add a new e-mail
         final AccountEmail email = new DefaultAccountEmail(accountId, "test@gmail.com");
-        accountEmailDao.create(new AccountEmailModelDao(email), internalCallContext);
-        emails = accountEmailDao.getByAccountId(accountId, internalCallContext);
+        accountDao.addEmail(new AccountEmailModelDao(email), internalCallContext);
+        emails = accountDao.getEmailsByAccountId(accountId, internalCallContext);
         assertEquals(emails.size(), 1);
 
         // verify that audit contains one entry
@@ -381,9 +381,9 @@ public class TestAccountDao extends AccountDaoTestBase {
         //assertEquals(auditLogs.size(), 1);
 
         // delete e-mail
-        accountEmailDao.delete(new AccountEmailModelDao(email), internalCallContext);
+        accountDao.removeEmail(new AccountEmailModelDao(email), internalCallContext);
 
-        emails = accountEmailDao.getByAccountId(accountId, internalCallContext);
+        emails = accountDao.getEmailsByAccountId(accountId, internalCallContext);
         assertEquals(emails.size(), 0);
     }
 
@@ -394,20 +394,20 @@ public class TestAccountDao extends AccountDaoTestBase {
         final String email2 = UUID.randomUUID().toString();
 
         // Verify the original state
-        assertEquals(accountEmailDao.getByAccountId(accountId, internalCallContext).size(), 0);
+        assertEquals(accountDao.getEmailsByAccountId(accountId, internalCallContext).size(), 0);
 
         // Add a new e-mail
         final AccountEmail accountEmail1 = new DefaultAccountEmail(accountId, email1);
-        accountEmailDao.create(new AccountEmailModelDao(accountEmail1), internalCallContext);
-        final List<AccountEmailModelDao> firstEmails = accountEmailDao.getByAccountId(accountId, internalCallContext);
+        accountDao.addEmail(new AccountEmailModelDao(accountEmail1), internalCallContext);
+        final List<AccountEmailModelDao> firstEmails = accountDao.getEmailsByAccountId(accountId, internalCallContext);
         assertEquals(firstEmails.size(), 1);
         assertEquals(firstEmails.get(0).getAccountId(), accountId);
         assertEquals(firstEmails.get(0).getEmail(), email1);
 
         // Add a second e-mail
         final AccountEmail accountEmail2 = new DefaultAccountEmail(accountId, email2);
-        accountEmailDao.create(new AccountEmailModelDao(accountEmail2), internalCallContext);
-        final List<AccountEmailModelDao> secondEmails = accountEmailDao.getByAccountId(accountId, internalCallContext);
+        accountDao.addEmail(new AccountEmailModelDao(accountEmail2), internalCallContext);
+        final List<AccountEmailModelDao> secondEmails = accountDao.getEmailsByAccountId(accountId, internalCallContext);
         assertEquals(secondEmails.size(), 2);
         assertTrue(secondEmails.get(0).getAccountId().equals(accountId));
         assertTrue(secondEmails.get(1).getAccountId().equals(accountId));
@@ -415,8 +415,8 @@ public class TestAccountDao extends AccountDaoTestBase {
         assertTrue(secondEmails.get(1).getEmail().equals(email1) || secondEmails.get(1).getEmail().equals(email2));
 
         // Delete the first e-mail
-        accountEmailDao.delete(new AccountEmailModelDao(accountEmail1), internalCallContext);
-        final List<AccountEmailModelDao> thirdEmails = accountEmailDao.getByAccountId(accountId, internalCallContext);
+        accountDao.removeEmail(new AccountEmailModelDao(accountEmail1), internalCallContext);
+        final List<AccountEmailModelDao> thirdEmails = accountDao.getEmailsByAccountId(accountId, internalCallContext);
         assertEquals(thirdEmails.size(), 1);
         assertEquals(thirdEmails.get(0).getAccountId(), accountId);
         assertEquals(thirdEmails.get(0).getEmail(), email2);

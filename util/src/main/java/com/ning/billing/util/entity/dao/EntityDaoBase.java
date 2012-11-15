@@ -41,13 +41,12 @@ public abstract class EntityDaoBase<M extends EntityModelDao<E>, E extends Entit
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                final EntitySqlDao<M, E> transactional = entitySqlDaoWrapperFactory.become(realSqlDao);
 
-                if (getById(entity.getId(), context) != null) {
+                if (transactional.getById(entity.getId().toString(), context) != null) {
                     throw generateAlreadyExistsException(entity, context);
                 }
-                final EntitySqlDao<M, E> transactional = entitySqlDaoWrapperFactory.become(realSqlDao);
                 transactional.create(entity, context);
-
 
                 final M refreshedEntity = transactional.getById(entity.getId().toString(), context);
 
