@@ -27,18 +27,18 @@ tableValues() ::= <<
 
 getEmailByAccountId() ::= <<
 select
-<allTableFields()>
-from <tableName()>
-where account_id = :accountId
-and is_active
-<AND_CHECK_TENANT()>
+  <allTableFields("t.")>
+from <tableName()> t
+where t.account_id = :accountId
+and t.is_active
+<AND_CHECK_TENANT("t.")>
 ;
 >>
 
 markEmailAsDeleted() ::= <<
-update <tableName()>
+update <tableName()> t
 set is_active = 0
-where  id = :id
-<AND_CHECK_TENANT()>
+where <idField("t.")> = :id
+<AND_CHECK_TENANT("t.")>
 ;
 >>

@@ -187,7 +187,6 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
     }
 
     private List<String> retrieveEntityIdsFromArguments(final Method method, final Object[] args) {
-
         final Annotation[][] parameterAnnotations = method.getParameterAnnotations();
         int i = -1;
         for (final Object arg : args) {
