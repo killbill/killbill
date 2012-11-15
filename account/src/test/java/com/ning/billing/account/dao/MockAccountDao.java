@@ -16,12 +16,17 @@
 
 package com.ning.billing.account.dao;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.testng.Assert;
+
+import com.ning.billing.BillingExceptionBase;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.account.api.DefaultMutableAccountData;
 import com.ning.billing.account.api.user.DefaultAccountChangeEvent;
@@ -34,10 +39,14 @@ import com.ning.billing.util.events.AccountChangeInternalEvent;
 import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.svcsapi.bus.InternalBus.EventBusException;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
 public class MockAccountDao extends MockEntityDaoBase<AccountModelDao, Account, AccountApiException> implements AccountDao {
 
+    private final MockEntityDaoBase<AccountEmailModelDao, AccountEmail, AccountApiException> accountEmailSqlDao = new MockEntityDaoBase<AccountEmailModelDao, AccountEmail, AccountApiException>();
     private final InternalBus eventBus;
 
     @Inject
@@ -108,5 +117,29 @@ public class MockAccountDao extends MockEntityDaoBase<AccountModelDao, Account, 
         updatedAccount.setPaymentMethodId(paymentMethodId);
 
         update(new AccountModelDao(accountId, updatedAccount), context);
+    }
+
+    @Override
+    public void addEmail(final AccountEmailModelDao email, final InternalCallContext context) {
+        try {
+            accountEmailSqlDao.create(email, context);
+        } catch (BillingExceptionBase billingExceptionBase) {
+            Assert.fail(billingExceptionBase.toString());
+        }
+    }
+
+    @Override
+    public void removeEmail(final AccountEmailModelDao email, final InternalCallContext context) {
+        accountEmailSqlDao.delete(email, context);
+    }
+
+    @Override
+    public List<AccountEmailModelDao> getEmailsByAccountId(final UUID accountId, final InternalTenantContext context) {
+        return ImmutableList.<AccountEmailModelDao>copyOf(Collections2.filter(accountEmailSqlDao.get(context), new Predicate<AccountEmailModelDao>() {
+            @Override
+            public boolean apply(final AccountEmailModelDao input) {
+                return input.getAccountId().equals(accountId);
+            }
+        }));
     }
 }

@@ -39,7 +39,7 @@ public class DefaultAccountUserApiTestWithDB extends AccountDaoTestBase {
     @BeforeMethod(groups = "slow")
     public void setUp() throws Exception {
         final DefaultCallContextFactory callContextFactory = new DefaultCallContextFactory(clock);
-        accountUserApi = new DefaultAccountUserApi(callContextFactory, internalCallContextFactory, accountDao, accountEmailDao);
+        accountUserApi = new DefaultAccountUserApi(callContextFactory, internalCallContextFactory, accountDao);
     }
 
     @Test(groups = "slow")

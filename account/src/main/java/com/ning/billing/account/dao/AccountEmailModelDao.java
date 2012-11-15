@@ -18,8 +18,6 @@ package com.ning.billing.account.dao;
 
 import java.util.UUID;
 
-import org.joda.time.DateTime;
-
 import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.EntityBase;
@@ -29,17 +27,19 @@ public class AccountEmailModelDao extends EntityBase implements EntityModelDao<A
 
     private UUID accountId;
     private String email;
+    private Boolean isActive;
 
     public AccountEmailModelDao() { /* For the DAO mapper */ }
 
-    public AccountEmailModelDao(final UUID id, final DateTime createdDate, final DateTime updatedDate, final UUID accountId, final String email) {
-        super(id, createdDate, updatedDate);
-        this.accountId = accountId;
-        this.email = email;
+    public AccountEmailModelDao(final AccountEmail email) {
+        this(email, true);
     }
 
-    public AccountEmailModelDao(final AccountEmail email) {
-        this(email.getId(), email.getCreatedDate(), email.getUpdatedDate(), email.getAccountId(), email.getEmail());
+    public AccountEmailModelDao(final AccountEmail email, final boolean isActive) {
+        super(email.getId(), email.getCreatedDate(), email.getUpdatedDate());
+        this.accountId = email.getAccountId();
+        this.email = email.getEmail();
+        this.isActive = isActive;
     }
 
     public UUID getAccountId() {
@@ -50,12 +50,17 @@ public class AccountEmailModelDao extends EntityBase implements EntityModelDao<A
         return email;
     }
 
+    public Boolean getIsActive() {
+        return isActive;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
         sb.append("AccountEmailModelDao");
         sb.append("{accountId=").append(accountId);
         sb.append(", email='").append(email).append('\'');
+        sb.append(", isActive=").append(isActive);
         sb.append('}');
         return sb.toString();
     }
@@ -74,6 +79,9 @@ public class AccountEmailModelDao extends EntityBase implements EntityModelDao<A
 
         final AccountEmailModelDao that = (AccountEmailModelDao) o;
 
+        if (isActive != that.isActive) {
+            return false;
+        }
         if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
             return false;
         }
@@ -89,6 +97,7 @@ public class AccountEmailModelDao extends EntityBase implements EntityModelDao<A
         int result = super.hashCode();
         result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
         result = 31 * result + (email != null ? email.hashCode() : 0);
+        result = 31 * result + (isActive ? 1 : 0);
         return result;
     }
 

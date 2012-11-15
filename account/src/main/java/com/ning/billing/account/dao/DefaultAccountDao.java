@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2012 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -16,6 +16,7 @@
 
 package com.ning.billing.account.dao;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.skife.jdbi.v2.IDBI;
@@ -173,6 +174,44 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
                     }
                 }
                 return null;
+            }
+        });
+    }
+
+    @Override
+    public void addEmail(final AccountEmailModelDao email, final InternalCallContext context) throws AccountApiException {
+        transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
+            @Override
+            public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                final AccountEmailSqlDao transactional = entitySqlDaoWrapperFactory.become(AccountEmailSqlDao.class);
+
+                if (transactional.getById(email.getId().toString(), context) != null) {
+                    throw new AccountApiException(ErrorCode.ACCOUNT_EMAIL_ALREADY_EXISTS, email.getId());
+                }
+
+                transactional.create(email, context);
+                return null;
+            }
+        });
+    }
+
+    @Override
+    public void removeEmail(final AccountEmailModelDao email, final InternalCallContext context) {
+        transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
+            @Override
+            public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                entitySqlDaoWrapperFactory.become(AccountEmailSqlDao.class).markEmailAsDeleted(email, context);
+                return null;
+            }
+        });
+    }
+
+    @Override
+    public List<AccountEmailModelDao> getEmailsByAccountId(final UUID accountId, final InternalTenantContext context) {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<AccountEmailModelDao>>() {
+            @Override
+            public List<AccountEmailModelDao> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                return entitySqlDaoWrapperFactory.become(AccountEmailSqlDao.class).getEmailByAccountId(accountId, context);
             }
         });
     }
