@@ -55,7 +55,7 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
     public void setup() throws IOException {
         clock = new DefaultClock();
         setupDb();
-        paymentDao = new AuditedPaymentDao(dbi);
+        paymentDao = new DefaultPaymentDao(dbi);
     }
 
     private void setupDb() {

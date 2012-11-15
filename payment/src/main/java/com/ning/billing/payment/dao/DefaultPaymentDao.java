@@ -36,12 +36,12 @@ import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 
 
-public class AuditedPaymentDao implements PaymentDao {
+public class DefaultPaymentDao implements PaymentDao {
 
     private final EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao;
 
     @Inject
-    public AuditedPaymentDao(final IDBI dbi) {
+    public DefaultPaymentDao(final IDBI dbi) {
         this.transactionalSqlDao = new EntitySqlDaoTransactionalJdbiWrapper(dbi);
     }
 
