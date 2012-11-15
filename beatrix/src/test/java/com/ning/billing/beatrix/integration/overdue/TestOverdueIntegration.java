@@ -16,9 +16,6 @@
 
 package com.ning.billing.beatrix.integration.overdue;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
-
 import java.math.BigDecimal;
 import java.util.Collection;
 
@@ -43,57 +40,60 @@ import com.ning.billing.junction.api.BlockingApiException;
 import com.ning.billing.payment.api.Payment;
 import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
+
+
 @Test(groups = "slow")
 @Guice(modules = {BeatrixModule.class})
 public class TestOverdueIntegration extends TestOverdueBase {
 
 
-
     @Override
     public String getOverdueConfig() {
         final String configXml = "<overdueConfig>" +
-        "   <bundleOverdueStates>" +
-        "       <state name=\"OD3\">" +
-        "           <condition>" +
-        "               <timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
-        "                   <unit>DAYS</unit><number>50</number>" +
-        "               </timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
-        "           </condition>" +
-        "           <externalMessage>Reached OD3</externalMessage>" +
-        "           <blockChanges>true</blockChanges>" +
-        "           <disableEntitlementAndChangesBlocked>true</disableEntitlementAndChangesBlocked>" +
-        "           <autoReevaluationInterval>" +
-        "               <unit>DAYS</unit><number>5</number>" +
-        "           </autoReevaluationInterval>" +
-        "       </state>" +
-        "       <state name=\"OD2\">" +
-        "           <condition>" +
-        "               <timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
-        "                   <unit>DAYS</unit><number>40</number>" +
-        "               </timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
-        "           </condition>" +
-        "           <externalMessage>Reached OD2</externalMessage>" +
-        "           <blockChanges>true</blockChanges>" +
-        "           <disableEntitlementAndChangesBlocked>true</disableEntitlementAndChangesBlocked>" +
-        "           <autoReevaluationInterval>" +
-        "               <unit>DAYS</unit><number>5</number>" +
-        "           </autoReevaluationInterval>" +
-        "       </state>" +
-        "       <state name=\"OD1\">" +
-        "           <condition>" +
-        "               <timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
-        "                   <unit>DAYS</unit><number>30</number>" +
-        "               </timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
-        "           </condition>" +
-        "           <externalMessage>Reached OD1</externalMessage>" +
-        "           <blockChanges>true</blockChanges>" +
-        "           <disableEntitlementAndChangesBlocked>false</disableEntitlementAndChangesBlocked>" +
-        "           <autoReevaluationInterval>" +
-        "               <unit>DAYS</unit><number>5</number>" +
-        "           </autoReevaluationInterval>" +
-        "       </state>" +
-        "   </bundleOverdueStates>" +
-        "</overdueConfig>";
+                                 "   <bundleOverdueStates>" +
+                                 "       <state name=\"OD3\">" +
+                                 "           <condition>" +
+                                 "               <timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
+                                 "                   <unit>DAYS</unit><number>50</number>" +
+                                 "               </timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
+                                 "           </condition>" +
+                                 "           <externalMessage>Reached OD3</externalMessage>" +
+                                 "           <blockChanges>true</blockChanges>" +
+                                 "           <disableEntitlementAndChangesBlocked>true</disableEntitlementAndChangesBlocked>" +
+                                 "           <autoReevaluationInterval>" +
+                                 "               <unit>DAYS</unit><number>5</number>" +
+                                 "           </autoReevaluationInterval>" +
+                                 "       </state>" +
+                                 "       <state name=\"OD2\">" +
+                                 "           <condition>" +
+                                 "               <timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
+                                 "                   <unit>DAYS</unit><number>40</number>" +
+                                 "               </timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
+                                 "           </condition>" +
+                                 "           <externalMessage>Reached OD2</externalMessage>" +
+                                 "           <blockChanges>true</blockChanges>" +
+                                 "           <disableEntitlementAndChangesBlocked>true</disableEntitlementAndChangesBlocked>" +
+                                 "           <autoReevaluationInterval>" +
+                                 "               <unit>DAYS</unit><number>5</number>" +
+                                 "           </autoReevaluationInterval>" +
+                                 "       </state>" +
+                                 "       <state name=\"OD1\">" +
+                                 "           <condition>" +
+                                 "               <timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
+                                 "                   <unit>DAYS</unit><number>30</number>" +
+                                 "               </timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
+                                 "           </condition>" +
+                                 "           <externalMessage>Reached OD1</externalMessage>" +
+                                 "           <blockChanges>true</blockChanges>" +
+                                 "           <disableEntitlementAndChangesBlocked>false</disableEntitlementAndChangesBlocked>" +
+                                 "           <autoReevaluationInterval>" +
+                                 "               <unit>DAYS</unit><number>5</number>" +
+                                 "           </autoReevaluationInterval>" +
+                                 "       </state>" +
+                                 "   </bundleOverdueStates>" +
+                                 "</overdueConfig>";
 
         return configXml;
     }
@@ -112,53 +112,55 @@ public class TestOverdueIntegration extends TestOverdueBase {
         invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
         invoiceChecker.checkChargedThroughDate(baseSubscription.getId(), new LocalDate(2012, 5, 1), callContext);
 
-        // DAY 30 have to get out of trial before first payment
+        // 2012, 5, 31 => DAY 30 have to get out of trial {I0, P0}
         addDaysAndCheckForCompletion(30, NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR);
 
         invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedItemCheck(new LocalDate(2012, 5, 31), new LocalDate(2012, 6, 30), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
         invoiceChecker.checkChargedThroughDate(baseSubscription.getId(), new LocalDate(2012, 6, 30), callContext);
 
-        // Should still be in clear state
+        // 2012, 6, 8 => Retry P0
+        addDaysAndCheckForCompletion(8, NextEvent.PAYMENT_ERROR);
         checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
 
-        // DAY 45 - 15 days after invoice
-        addDaysAndCheckForCompletion(15, NextEvent.PAYMENT_ERROR);
-
-        // Should still be in clear state
+        // 2012, 6, 16 => Retry P0
+        addDaysAndCheckForCompletion(8, NextEvent.PAYMENT_ERROR);
         checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
 
-        // Note: we have two tracks of payment retries because of the invoice generated at the phase change
+        // 2012, 6, 24 => Retry P0
+        addDaysAndCheckForCompletion(8, NextEvent.PAYMENT_ERROR);
+        checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
 
-        // DAY 65 - 35 days after invoice
-        addDaysAndCheckForCompletion(20, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR, NextEvent.PAYMENT_ERROR);
-
+        // 2012, 6, 31 => P1 (We se 6/31 instead of 6/30 because invoice might happen later in that day)
+        addDaysAndCheckForCompletion(7, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR);
+        checkODState("OD1");
+        checkChangePlanWithOverdueState(baseSubscription, true);
         invoiceChecker.checkInvoice(account.getId(), 3, callContext, new ExpectedItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
         invoiceChecker.checkChargedThroughDate(baseSubscription.getId(), new LocalDate(2012, 7, 31), callContext);
 
-        // Now we should be in OD1
+        // 2012, 7, 2 => Retry P0
+        addDaysAndCheckForCompletion(1, NextEvent.PAYMENT_ERROR);
         checkODState("OD1");
-        checkChangePlanWithOverdueState(baseSubscription, true);
 
-        // DAY 67 - 37 days after invoice
-        addDaysAndCheckForCompletion(2);
-
-        // Should still be in OD1
+        // 2012, 7, 9 => Retry P1
+        addDaysAndCheckForCompletion(7, NextEvent.PAYMENT_ERROR);
         checkODState("OD1");
-        checkChangePlanWithOverdueState(baseSubscription, true);
 
-        // DAY 75 - 45 days after invoice
-        addDaysAndCheckForCompletion(8, NextEvent.PAYMENT_ERROR, NextEvent.PAYMENT_ERROR);
-
-        // Should now be in OD2
+        // 2012, 7, 10 => Retry P0
+        addDaysAndCheckForCompletion(1, NextEvent.PAYMENT_ERROR);
         checkODState("OD2");
-        checkChangePlanWithOverdueState(baseSubscription, true);
 
-        // DAY 85 - 55 days after invoice
-        addDaysAndCheckForCompletion(10, NextEvent.PAYMENT_ERROR, NextEvent.PAYMENT_ERROR);
+        // 2012, 7, 17 => Retry P1
+        addDaysAndCheckForCompletion(7, NextEvent.PAYMENT_ERROR);
+        checkODState("OD2");
 
-        // Should now be in OD3
+        // 2012, 7, 18 => Retry P0
+        addDaysAndCheckForCompletion(1, NextEvent.PAYMENT_ERROR);
+        checkODState("OD2");
+
+        // 2012, 7, 23 => Should be 20 but notficationQ event occurs on 23...
+        addDaysAndCheckForCompletion(5);
         checkODState("OD3");
-        checkChangePlanWithOverdueState(baseSubscription, true);
+
 
         paymentPlugin.makeAllInvoicesFailWithError(false);
         final Collection<Invoice> invoices = invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext);
@@ -175,19 +177,19 @@ public class TestOverdueIntegration extends TestOverdueBase {
                                             callContext, new ExpectedItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")),
                                             // We paid up to 07-31, hence the adjustment
                                             new ExpectedItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-249.95")),
-                                            new ExpectedItemCheck(new LocalDate(2012, 7, 25), new LocalDate(2012, 7, 25), InvoiceItemType.CBA_ADJ, new BigDecimal("249.95")));
+                                            new ExpectedItemCheck(new LocalDate(2012, 7, 23), new LocalDate(2012, 7, 23), InvoiceItemType.CBA_ADJ, new BigDecimal("249.95")));
         invoiceChecker.checkInvoice(account.getId(), 4, callContext,
-                                    // Note the end date here is not 07-25, but 07-15. The overdue configuration disabled invoicing between 07-15 and 07-25 (e.g. the bundle
+                                    // Note the end date here is not 07-25, but 07-9. The overdue configuration disabled invoicing between 07-09 and 07-23 (e.g. the bundle
                                     // was inaccessible, hence we didn't want to charge the customer for that period, even though the account was overdue).
-                                    new ExpectedItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 15), InvoiceItemType.RECURRING, new BigDecimal("124.98")),
+                                    new ExpectedItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 9), InvoiceItemType.RECURRING, new BigDecimal("74.99")),
                                     // Item for the upgraded recurring plan
-                                    new ExpectedItemCheck(new LocalDate(2012, 7, 25), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("116.09")),
+                                    new ExpectedItemCheck(new LocalDate(2012, 7, 23), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("154.85")),
                                     // Credits consumed
-                                    new ExpectedItemCheck(new LocalDate(2012, 7, 25), new LocalDate(2012, 7, 25), InvoiceItemType.CBA_ADJ, new BigDecimal("-241.07")));
+                                    new ExpectedItemCheck(new LocalDate(2012, 7, 23), new LocalDate(2012, 7, 23), InvoiceItemType.CBA_ADJ, new BigDecimal("-229.84")));
         invoiceChecker.checkChargedThroughDate(baseSubscription.getId(), new LocalDate(2012, 7, 31), callContext);
 
-        // Verify the account balance: 249.95 - 124.98 - 116.09
-        assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(new BigDecimal("-8.88")), 0);
+        // Verify the account balance: 249.95 - 74.99 - 154.85
+        assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(new BigDecimal("-20.11")), 0);
     }
 
     @Test(groups = "slow")

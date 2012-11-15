@@ -89,22 +89,27 @@ public class OverdueStateApplicator<T extends Blockable> {
         this.bus = bus;
     }
 
+
     public void apply(final OverdueState<T> firstOverdueState, final BillingState<T> billingState,
                       final T overdueable, final String previousOverdueStateName,
                       final OverdueState<T> nextOverdueState, final InternalCallContext context) throws OverdueException {
         try {
-            // We did not reach first state, we we need to check if there is any pending condition for which we will not receive
-            // any notifications.. (last two conditions are there for test purpose)
-            if (nextOverdueState.isClearState() && firstOverdueState != null && billingState != null) {
-                final LocalDate firstUnpaidInvoice = billingState.getDateOfEarliestUnpaidInvoice();
-                if (firstUnpaidInvoice != null) {
-                    final Period reevaluationInterval = firstOverdueState.getReevaluationInterval();
-                    createFutureNotification(overdueable, firstUnpaidInvoice.toDateTimeAtCurrentTime().plus(reevaluationInterval), context);
-                }
+
+            log.debug("OverdueStateApplicator <enter> : time = " + clock.getUTCNow() + ", previousState = " + previousOverdueStateName + ", nextState = " + nextOverdueState);
+
+            final boolean conditionForNextNotfication = !nextOverdueState.isClearState() ||
+                                                        // We did not reach the first state yet but we have an unpaid invoice
+                                                        (firstOverdueState != null && billingState != null && billingState.getDateOfEarliestUnpaidInvoice() != null);
+
+            if (conditionForNextNotfication) {
+                final Period reevaluationInterval = nextOverdueState.isClearState() ? firstOverdueState.getReevaluationInterval() : nextOverdueState.getReevaluationInterval();
+                createFutureNotification(overdueable, clock.getUTCNow().plus(reevaluationInterval), context);
+
+                log.debug("OverdueStateApplicator <notificationQ> : inserting notification for time = " + clock.getUTCNow().plus(reevaluationInterval));
             }
 
             if (previousOverdueStateName.equals(nextOverdueState.getName())) {
-                return; // That's it, we are done...
+                return;
             }
 
             storeNewState(overdueable, nextOverdueState, context);
@@ -113,11 +118,6 @@ public class OverdueStateApplicator<T extends Blockable> {
 
             sendEmailIfRequired(billingState, overdueable, nextOverdueState, context);
 
-            // Add entry in notification queue
-            final Period reevaluationInterval = nextOverdueState.getReevaluationInterval();
-            if (!nextOverdueState.isClearState()) {
-                createFutureNotification(overdueable, clock.getUTCNow().plus(reevaluationInterval), context);
-            }
         } catch (OverdueApiException e) {
             if (e.getCode() != ErrorCode.OVERDUE_NO_REEVALUATION_INTERVAL.getCode()) {
                 throw new OverdueException(e);
