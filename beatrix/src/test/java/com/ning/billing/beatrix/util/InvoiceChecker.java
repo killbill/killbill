@@ -118,6 +118,9 @@ public class InvoiceChecker {
     public void checkNullChargedThroughDate(final UUID subscriptionId, final TenantContext context) {
         checkChargedThroughDate(subscriptionId, null, context);
     }
+// Checking CTD for subscription 2a8f1ca9-e463-4efb-bb4d-5314ec1a8e72 : expectedLocalCTD = 2012-05-01 => expectedCTD = 2012-05-01T00:03:42.000Z,
+//
+// got 2012-05-01T07:03:42.000Z expected:<true> but was:<false>
 
     public void checkChargedThroughDate(final UUID subscriptionId, final LocalDate expectedLocalCTD, final TenantContext context) {
         try {
@@ -125,7 +128,7 @@ public class InvoiceChecker {
             if (expectedLocalCTD == null) {
                 assertNull(subscription.getChargedThroughDate());
             } else {
-                final DateTime expectedCTD = expectedLocalCTD.toDateTime(new LocalTime(subscription.getStartDate().getMillis()), DateTimeZone.UTC);
+                final DateTime expectedCTD = expectedLocalCTD.toDateTime(new LocalTime(subscription.getStartDate().getMillis(), DateTimeZone.UTC), DateTimeZone.UTC);
                 final String msg = String.format("Checking CTD for subscription %s : expectedLocalCTD = %s => expectedCTD = %s, got %s",
                                                  subscriptionId, expectedLocalCTD, expectedCTD, subscription.getChargedThroughDate());
                 log.info(msg);

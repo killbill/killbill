@@ -74,6 +74,7 @@ import com.ning.billing.invoice.model.InvoicingConfiguration;
 import com.ning.billing.junction.plumbing.api.BlockingSubscription;
 import com.ning.billing.mock.MockAccountBuilder;
 import com.ning.billing.mock.api.MockBillCycleDay;
+import com.ning.billing.overdue.OverdueUserApi;
 import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
 import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.PaymentApi;
@@ -83,6 +84,7 @@ import com.ning.billing.payment.provider.MockPaymentProviderPlugin;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
+import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
 import com.ning.billing.util.svcsapi.bus.BusService;
 
 import com.google.common.base.Function;
@@ -141,10 +143,16 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     protected EntitlementTimelineApi repairApi;
 
     @Inject
+    protected OverdueUserApi overdueUserApi;
+
+    @Inject
     protected InvoiceUserApi invoiceUserApi;
 
     @Inject
     protected InvoicePaymentApi invoicePaymentApi;
+
+    @Inject
+    protected BlockingInternalApi blockingApi;
 
     @Inject
     protected PaymentApi paymentApi;

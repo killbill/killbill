@@ -163,7 +163,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
 
 
         paymentPlugin.makeAllInvoicesFailWithError(false);
-        final Collection<Invoice> invoices = invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext);
+        final Collection<Invoice> invoices = invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext);
         for (final Invoice invoice : invoices) {
             if (invoice.getBalance().compareTo(BigDecimal.ZERO) > 0) {
                 createPaymentAndCheckForCompletion(account, invoice, NextEvent.PAYMENT);
@@ -259,7 +259,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         paymentApi.addPaymentMethod(BeatrixModule.PLUGIN_NAME, account, true, paymentMethodPlugin, callContext);
 
         // Pay all invoices
-        final Collection<Invoice> invoices = invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext);
+        final Collection<Invoice> invoices = invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext);
         for (final Invoice invoice : invoices) {
             if (invoice.getBalance().compareTo(BigDecimal.ZERO) > 0) {
                 createPaymentAndCheckForCompletion(account, invoice, NextEvent.PAYMENT);
@@ -301,7 +301,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         // Create an external charge on a new invoice
         addDaysAndCheckForCompletion(5);
         busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
-        invoiceApi.insertExternalChargeForBundle(account.getId(), bundle.getId(), BigDecimal.TEN, "For overdue", new LocalDate(2012, 5, 6), Currency.USD, callContext);
+        invoiceUserApi.insertExternalChargeForBundle(account.getId(), bundle.getId(), BigDecimal.TEN, "For overdue", new LocalDate(2012, 5, 6), Currency.USD, callContext);
         assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
         invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedItemCheck(new LocalDate(2012, 5, 6), null, InvoiceItemType.EXTERNAL_CHARGE, BigDecimal.TEN));
@@ -314,7 +314,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
 
         // Should still be in clear state - the invoice for the bundle has been paid, but not the invoice with the external charge
         // We refresh overdue just to be safe, see below
-        overdueApi.refreshOverdueStateFor(bundle, callContext);
+        overdueUserApi.refreshOverdueStateFor(bundle, callContext);
         checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
 
         // Past 30 days since the external charge
@@ -322,12 +322,12 @@ public class TestOverdueIntegration extends TestOverdueBase {
         // Note! We need to explicitly refresh here because overdue won't get notified to refresh up until the next
         // payment (when the next invoice is generated)
         // TODO - we should fix this
-        overdueApi.refreshOverdueStateFor(bundle, callContext);
+        overdueUserApi.refreshOverdueStateFor(bundle, callContext);
         // We should now be in OD1
         checkODState("OD1");
 
         // Pay the invoice
-        final Invoice externalChargeInvoice = invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext).iterator().next();
+        final Invoice externalChargeInvoice = invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext).iterator().next();
         createExternalPaymentAndCheckForCompletion(account, externalChargeInvoice, NextEvent.PAYMENT);
         // We should be clear now
         checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
@@ -368,7 +368,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
 
         // Now, refund the second (first non-zero dollar) invoice
-        final Payment payment = paymentApi.getPayment(invoiceApi.getInvoicesByAccount(account.getId(), callContext).get(1).getPayments().get(0).getPaymentId(), callContext);
+        final Payment payment = paymentApi.getPayment(invoiceUserApi.getInvoicesByAccount(account.getId(), callContext).get(1).getPayments().get(0).getPaymentId(), callContext);
         refundPaymentAndCheckForCompletion(account, payment, NextEvent.INVOICE_ADJUSTMENT);
         // We should now be in OD1
         checkODState("OD1");
@@ -410,7 +410,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
 
         // Now, create a chargeback for the second (first non-zero dollar) invoice
-        final InvoicePayment payment = invoicePaymentApi.getInvoicePayments(invoiceApi.getInvoicesByAccount(account.getId(), callContext).get(1).getPayments().get(0).getPaymentId(), callContext).get(0);
+        final InvoicePayment payment = invoicePaymentApi.getInvoicePayments(invoiceUserApi.getInvoicesByAccount(account.getId(), callContext).get(1).getPayments().get(0).getPaymentId(), callContext).get(0);
         createChargeBackAndCheckForCompletion(payment, NextEvent.INVOICE_ADJUSTMENT);
         // We should now be in OD1
         checkODState("OD1");
@@ -456,7 +456,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         // We have two unpaid non-zero dollar invoices at this point
         // Pay the first one via an external payment - we should then be 5 days apart from the second invoice
         // (which is the earliest unpaid one) and hence come back to a clear state (see configuration)
-        final Invoice firstNonZeroInvoice = invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext).iterator().next();
+        final Invoice firstNonZeroInvoice = invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext).iterator().next();
         createExternalPaymentAndCheckForCompletion(account, firstNonZeroInvoice, NextEvent.PAYMENT);
         // We should be clear now
         checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
@@ -506,7 +506,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         // We have two unpaid non-zero dollar invoices at this point
         // Adjust the first (and only) item of the first invoice - we should then be 5 days apart from the second invoice
         // (which is the earliest unpaid one) and hence come back to a clear state (see configuration)
-        final Invoice firstNonZeroInvoice = invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext).iterator().next();
+        final Invoice firstNonZeroInvoice = invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext).iterator().next();
         fullyAdjustInvoiceItemAndCheckForCompletion(account, firstNonZeroInvoice, 1, NextEvent.INVOICE_ADJUSTMENT);
         // We should be clear now
         checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
@@ -538,7 +538,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         invoiceChecker.checkInvoice(account.getId(), 4, callContext, new ExpectedItemCheck(new LocalDate(2012, 7, 31), new LocalDate(2012, 8, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
 
         // Fully adjust all invoices
-        final Collection<Invoice> invoices = invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext);
+        final Collection<Invoice> invoices = invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext);
         for (final Invoice invoice : invoices) {
             if (invoice.getBalance().compareTo(BigDecimal.ZERO) > 0) {
                 fullyAdjustInvoiceAndCheckForCompletion(account, invoice, NextEvent.INVOICE_ADJUSTMENT);

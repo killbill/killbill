@@ -49,28 +49,6 @@ import com.google.inject.name.Named;
 
 public abstract class TestOverdueBase extends TestIntegrationBase {
 
-    @Inject
-    protected ClockMock clock;
-
-    @Named("yoyo")
-    @Inject
-    protected
-    MockPaymentProviderPlugin paymentPlugin;
-
-    @Inject
-    protected BlockingInternalApi blockingApi;
-
-    @Inject
-    protected OverdueWrapperFactory overdueWrapperFactory;
-
-    @Inject
-    protected OverdueUserApi overdueApi;
-
-    @Inject
-    protected PaymentApi paymentApi;
-
-    @Inject
-    protected InvoiceUserApi invoiceApi;
 
     protected Account account;
     protected SubscriptionBundle bundle;
