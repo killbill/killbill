@@ -26,7 +26,7 @@ import com.ning.billing.util.notificationq.NotificationQueueService;
 
 import com.google.inject.Inject;
 
-public class MockEntitlementDaoSql extends AuditedEntitlementDao {
+public class MockEntitlementDaoSql extends DefaultEntitlementDao {
     @Inject
     public MockEntitlementDaoSql(final IDBI dbi, final Clock clock, final AddonUtils addonUtils, final NotificationQueueService notificationQueueService,
                                  final InternalBus eventBus, final CatalogService catalogService) {
