@@ -29,6 +29,7 @@ public class TenantKVModelDao extends EntityBase implements EntityModelDao<Tenan
 
     private String key;
     private String value;
+    private Boolean isActive;
 
     public TenantKVModelDao() { /* For the DAO mapper */ }
 
@@ -36,6 +37,7 @@ public class TenantKVModelDao extends EntityBase implements EntityModelDao<Tenan
         super(id, createdDate, updatedDate);
         this.key = key;
         this.value = value;
+        this.isActive = true;
     }
 
     public String getKey() {
@@ -46,12 +48,17 @@ public class TenantKVModelDao extends EntityBase implements EntityModelDao<Tenan
         return value;
     }
 
+    public Boolean getIsActive() {
+        return isActive;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
         sb.append("TenantKVModelDao");
         sb.append("{key='").append(key).append('\'');
         sb.append(", value='").append(value).append('\'');
+        sb.append(", isActive=").append(isActive);
         sb.append('}');
         return sb.toString();
     }
@@ -70,6 +77,9 @@ public class TenantKVModelDao extends EntityBase implements EntityModelDao<Tenan
 
         final TenantKVModelDao that = (TenantKVModelDao) o;
 
+        if (isActive != null ? !isActive.equals(that.isActive) : that.isActive != null) {
+            return false;
+        }
         if (key != null ? !key.equals(that.key) : that.key != null) {
             return false;
         }
@@ -85,6 +95,7 @@ public class TenantKVModelDao extends EntityBase implements EntityModelDao<Tenan
         int result = super.hashCode();
         result = 31 * result + (key != null ? key.hashCode() : 0);
         result = 31 * result + (value != null ? value.hashCode() : 0);
+        result = 31 * result + (isActive != null ? isActive.hashCode() : 0);
         return result;
     }
 
