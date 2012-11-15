@@ -37,7 +37,7 @@ and t.is_active
 
 markEmailAsDeleted() ::= <<
 update <tableName()> t
-set is_active = 0
+set t.is_active = 0
 where <idField("t.")> = :id
 <AND_CHECK_TENANT("t.")>
 ;
