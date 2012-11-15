@@ -30,6 +30,7 @@ public class TagDefinitionModelDao extends EntityBase implements EntityModelDao<
 
     private String name;
     private String description;
+    private Boolean isActive;
 
     public TagDefinitionModelDao() { /* For the DAO mapper */ }
 
@@ -37,6 +38,7 @@ public class TagDefinitionModelDao extends EntityBase implements EntityModelDao<
         super(id, createdDate, updatedDate);
         this.name = name;
         this.description = description;
+        this.isActive = true;
     }
 
     public TagDefinitionModelDao(final ControlTagType tag) {
@@ -60,12 +62,17 @@ public class TagDefinitionModelDao extends EntityBase implements EntityModelDao<
         return description;
     }
 
+    public Boolean getIsActive() {
+        return isActive;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
         sb.append("TagDefinitionModelDao");
         sb.append("{name='").append(name).append('\'');
         sb.append(", description='").append(description).append('\'');
+        sb.append(", isActive=").append(isActive);
         sb.append('}');
         return sb.toString();
     }
@@ -87,6 +94,9 @@ public class TagDefinitionModelDao extends EntityBase implements EntityModelDao<
         if (description != null ? !description.equals(that.description) : that.description != null) {
             return false;
         }
+        if (isActive != null ? !isActive.equals(that.isActive) : that.isActive != null) {
+            return false;
+        }
         if (name != null ? !name.equals(that.name) : that.name != null) {
             return false;
         }
@@ -99,6 +109,7 @@ public class TagDefinitionModelDao extends EntityBase implements EntityModelDao<
         int result = super.hashCode();
         result = 31 * result + (name != null ? name.hashCode() : 0);
         result = 31 * result + (description != null ? description.hashCode() : 0);
+        result = 31 * result + (isActive != null ? isActive.hashCode() : 0);
         return result;
     }
 

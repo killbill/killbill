@@ -47,7 +47,7 @@ import com.google.inject.Inject;
 import static org.testng.Assert.assertEquals;
 
 @Guice(modules = MockTagStoreModuleSql.class)
-public class TestAuditedTagDao extends UtilTestSuiteWithEmbeddedDB {
+public class TestDefaultTagDao extends UtilTestSuiteWithEmbeddedDB {
 
     @Inject
     private MysqlTestingHelper helper;

@@ -20,13 +20,13 @@ import java.util.Collection;
 import java.util.List;
 
 import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 import com.ning.billing.util.entity.dao.Audited;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
@@ -37,18 +37,18 @@ public interface TagDefinitionSqlDao extends EntitySqlDao<TagDefinitionModelDao,
 
     @SqlQuery
     public TagDefinitionModelDao getByName(@Bind("name") final String definitionName,
-                                           @InternalTenantContextBinder final InternalTenantContext context);
+                                           @BindBean final InternalTenantContext context);
 
     @SqlUpdate
     @Audited(ChangeType.DELETE)
-    public void deleteTagDefinition(@Bind("id") final String definitionId,
-                                    @InternalTenantContextBinder final InternalCallContext context);
+    public void markTagDefinitionAsDeleted(@Bind("id") final String definitionId,
+                                           @BindBean final InternalCallContext context);
 
     @SqlQuery
     public int tagDefinitionUsageCount(@Bind("id") final String definitionId,
-                                       @InternalTenantContextBinder final InternalTenantContext context);
+                                       @BindBean final InternalTenantContext context);
 
     @SqlQuery
     public List<TagDefinitionModelDao> getByIds(@UUIDCollectionBinder final Collection<String> definitionIds,
-                                                @InternalTenantContextBinder final InternalTenantContext context);
+                                                @BindBean final InternalTenantContext context);
 }

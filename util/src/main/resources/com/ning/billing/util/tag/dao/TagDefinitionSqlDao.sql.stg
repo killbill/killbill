@@ -5,6 +5,7 @@ tableName() ::= "tag_definitions"
 tableFields(prefix) ::= <<
   <prefix>name
 , <prefix>description
+, <prefix>is_active
 , <prefix>created_by
 , <prefix>created_date
 , <prefix>updated_by
@@ -14,6 +15,7 @@ tableFields(prefix) ::= <<
 tableValues() ::= <<
   :name
 , :description
+, :isActive
 , :createdBy
 , :createdDate
 , :updatedBy
@@ -24,34 +26,42 @@ accountRecordIdFieldWithComma() ::= ""
 
 accountRecordIdValueWithComma() ::= ""
 
-
 historyTableName() ::= "tag_definition_history"
 
-deleteTagDefinition() ::= <<
-  DELETE FROM tag_definitions
-  WHERE id = :id
-  <AND_CHECK_TENANT()>
-  ;
+markTagDefinitionAsDeleted() ::= <<
+update <tableName()> t
+set t.is_active = 0
+where <idField("t.")> = :id
+<AND_CHECK_TENANT("t.")>
+;
 >>
 
 tagDefinitionUsageCount() ::= <<
-  SELECT COUNT(id)
-  FROM tags
-  WHERE tag_definition_id = :id
-  <AND_CHECK_TENANT()>
+select
+  count(<idField("t.")>)
+from tags t
+where t.is_active
+and t.tag_definition_id = :id
+<AND_CHECK_TENANT("t.")>
+;
 >>
 
 getByName() ::= <<
-  SELECT <allTableFields()>
-   FROM tag_definitions
-  WHERE name = :name
-  <AND_CHECK_TENANT()>
-  ;
+select
+  <allTableFields("t.")>
+from <tableName()> t
+where t.name = :name
+and t.is_active
+<AND_CHECK_TENANT("t.")>
+;
 >>
 
 getByIds(tag_definition_ids) ::= <<
-  SELECT <allTableFields()>
-  FROM tag_definitions
-  WHERE id IN (<tag_definition_ids: {id | :id_<i0>}; separator="," >)
-  <AND_CHECK_TENANT()>
+select
+  <allTableFields("t.")>
+from <tableName()> t
+where t.is_active
+and <idField("t.")> in (<tag_definition_ids: {id | :id_<i0>}; separator="," >)
+<AND_CHECK_TENANT("t.")>
+;
 >>

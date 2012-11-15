@@ -110,7 +110,7 @@ public class DefaultTenantDao extends EntityDaoBase<TenantModelDao, Tenant, Tena
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<String>>() {
             @Override
             public List<String> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                final List<TenantKVModelDao> tenantKV = entitySqlDaoWrapperFactory.become(TenantKVSqlDao.class).getTenantValueForKey(key, context.getTenantRecordId());
+                final List<TenantKVModelDao> tenantKV = entitySqlDaoWrapperFactory.become(TenantKVSqlDao.class).getTenantValueForKey(key, context);
                 return ImmutableList.copyOf(Collections2.transform(tenantKV, new Function<TenantKVModelDao, String>() {
                     @Override
                     public String apply(final TenantKVModelDao in) {
@@ -126,7 +126,8 @@ public class DefaultTenantDao extends EntityDaoBase<TenantModelDao, Tenant, Tena
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                entitySqlDaoWrapperFactory.become(TenantKVSqlDao.class).insertTenantKeyValue(UUID.randomUUID().toString(), key, value, context.getTenantRecordId(), context);
+                final TenantKVModelDao tenantKVModelDao = new TenantKVModelDao(UUID.randomUUID(), context.getCreatedDate(), context.getUpdatedDate(), key, value);
+                entitySqlDaoWrapperFactory.become(TenantKVSqlDao.class).create(tenantKVModelDao, context);
                 return null;
             }
         });
@@ -137,7 +138,7 @@ public class DefaultTenantDao extends EntityDaoBase<TenantModelDao, Tenant, Tena
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                entitySqlDaoWrapperFactory.become(TenantKVSqlDao.class).deleteTenantKey(key, context.getTenantRecordId());
+                entitySqlDaoWrapperFactory.become(TenantKVSqlDao.class).markTenantKeyAsDeleted(key, context);
                 return null;
             }
         });

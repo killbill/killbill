@@ -207,7 +207,7 @@ public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinitionModelDao
                     }
 
                     // Delete it
-                    tagDefinitionSqlDao.deleteTagDefinition(definitionId.toString(), context);
+                    tagDefinitionSqlDao.markTagDefinitionAsDeleted(definitionId.toString(), context);
 
                     postBusEventFromTransaction(tagDefinition, tagDefinition, ChangeType.DELETE, entitySqlDaoWrapperFactory, context);
                     return null;

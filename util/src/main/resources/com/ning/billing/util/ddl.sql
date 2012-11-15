@@ -47,6 +47,7 @@ CREATE TABLE tag_definitions (
     id char(36) NOT NULL,
     name varchar(20) NOT NULL,
     description varchar(200) NOT NULL,
+    is_active bool DEFAULT true,
     created_by varchar(50) NOT NULL,
     created_date datetime NOT NULL,
     updated_by varchar(50) NOT NULL,
@@ -65,6 +66,7 @@ CREATE TABLE tag_definition_history (
     target_record_id int(11) unsigned NOT NULL,
     name varchar(30) NOT NULL,
     description varchar(200),
+    is_active bool DEFAULT true,
     change_type char(6) NOT NULL,
     created_by varchar(50) NOT NULL,
     created_date datetime NOT NULL,
@@ -86,6 +88,7 @@ CREATE TABLE tags (
     tag_definition_id char(36) NOT NULL,
     object_id char(36) NOT NULL,
     object_type varchar(30) NOT NULL,
+    is_active bool DEFAULT true,
     created_by varchar(50) NOT NULL,
     created_date datetime NOT NULL,
     updated_by varchar(50) NOT NULL,
@@ -96,7 +99,6 @@ CREATE TABLE tags (
 ) ENGINE = innodb;
 CREATE UNIQUE INDEX tags_id ON tags(id);
 CREATE INDEX tags_by_object ON tags(object_id);
-CREATE UNIQUE INDEX tags_unique ON tags(tag_definition_id, object_id);
 CREATE INDEX tags_tenant_account_record_id ON tags(tenant_record_id, account_record_id);
 
 DROP TABLE IF EXISTS tag_history;
@@ -107,6 +109,7 @@ CREATE TABLE tag_history (
     object_id char(36) NOT NULL,
     object_type varchar(30) NOT NULL,
     tag_definition_id char(36) NOT NULL,
+    is_active bool DEFAULT true,
     change_type char(6) NOT NULL,
     created_by varchar(50) NOT NULL,
     created_date datetime NOT NULL,

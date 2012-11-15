@@ -1,58 +1,45 @@
-group TenantKVSqlDao;
+group TenantKVSqlDao: EntitySqlDao;
 
+tableName() ::= "tenant_kvs"
 
-tenantKVFields(prefix) ::= <<
-    <prefix>record_id,
-    <prefix>id,
-    <prefix>tenant_record_id,
-    <prefix>t_key,
-    <prefix>t_value,
-    <prefix>created_date,
-    <prefix>created_by,
-    <prefix>updated_date,
-    <prefix>updated_by
+tableFields(prefix) ::= <<
+  <prefix>t_key
+, <prefix>t_value
+, <prefix>is_active
+, <prefix>created_date
+, <prefix>created_by
+, <prefix>updated_date
+, <prefix>updated_by
 >>
 
-insertTenantKeyValue() ::= <<
-   INSERT INTO tenant_kvs (
-      id
-      , tenant_record_id
-      , t_key
-      , t_value
-      , created_date
-      , created_by
-      , updated_date
-      , updated_by
-    ) VALUES (
-      :id
-      , :tenantRecordId
-      , :key
-      , :value
-      , :createdDate
-      , :userName
-      , :updatedDate
-      , :userName
-    );
+tableValues() ::= <<
+  :key
+, :value
+, :isActive
+, :createdDate
+, :createdBy
+, :updatedDate
+, :updatedBy
 >>
+
+accountRecordIdFieldWithComma() ::= ""
+
+accountRecordIdValueWithComma() ::= ""
 
 
 getTenantValueForKey() ::= <<
-    SELECT <tenantKVFields()>
-    FROM tenant_kvs
-    WHERE
-        tenant_record_id = :tenantRecordId AND t_key = :key
-    ;
+select
+  <allTableFields("t.")>
+from <tableName()> t
+where t.t_key = :key
+<AND_CHECK_TENANT("t.")>
+;
 >>
 
-
-deleteTenantKey() ::= <<
-    DELETE FROM tenant_kvs
-    WHERE
-        tenant_record_id = :tenantRecordId AND t_key = :key
-    ;
->>
-
-
-test() ::= <<
-    SELECT 1 FROM tenants;
+markTenantKeyAsDeleted() ::= <<
+update <tableName()> t
+set t.is_active = 0
+where t.t_key = :key
+<AND_CHECK_TENANT("t.")>
+;
 >>

@@ -86,9 +86,9 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 
 
-public class AuditedEntitlementDao implements EntitlementDao {
+public class DefaultEntitlementDao implements EntitlementDao {
 
-    private static final Logger log = LoggerFactory.getLogger(AuditedEntitlementDao.class);
+    private static final Logger log = LoggerFactory.getLogger(DefaultEntitlementDao.class);
 
     private final Clock clock;
     private final EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao;
@@ -97,7 +97,7 @@ public class AuditedEntitlementDao implements EntitlementDao {
     private final InternalBus eventBus;
 
     @Inject
-    public AuditedEntitlementDao(final IDBI dbi, final Clock clock, final AddonUtils addonUtils,
+    public DefaultEntitlementDao(final IDBI dbi, final Clock clock, final AddonUtils addonUtils,
                                  final NotificationQueueService notificationQueueService, final InternalBus eventBus, final CatalogService catalogService) {
         this.clock = clock;
         this.transactionalSqlDao = new EntitySqlDaoTransactionalJdbiWrapper(dbi);
