@@ -62,7 +62,7 @@ public class TagDefinitionModelDao extends EntityBase implements EntityModelDao<
         return description;
     }
 
-    public Boolean getActive() {
+    public Boolean getIsActive() {
         return isActive;
     }
 
