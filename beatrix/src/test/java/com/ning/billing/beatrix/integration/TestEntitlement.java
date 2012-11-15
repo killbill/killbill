@@ -45,6 +45,7 @@ import static org.testng.Assert.assertTrue;
 @Guice(modules = {BeatrixModule.class})
 public class TestEntitlement extends TestIntegrationBase {
 
+
     @Test(groups = "slow")
     public void testForcePolicy() throws Exception {
         // We take april as it has 30 days (easier to play with BCD)
@@ -141,4 +142,5 @@ public class TestEntitlement extends TestIntegrationBase {
 
 
     }
+
 }
