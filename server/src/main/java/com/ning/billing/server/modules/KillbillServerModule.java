@@ -54,12 +54,12 @@ import com.ning.billing.util.glue.CustomFieldModule;
 import com.ning.billing.util.glue.ExportModule;
 import com.ning.billing.util.glue.GlobalLockerModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
-import com.ning.billing.util.glue.TagStoreModule;
 import com.ning.jetty.jdbi.guice.providers.DBIProvider;
 
 import com.google.inject.AbstractModule;
 
 public class KillbillServerModule extends AbstractModule {
+
     @Override
     protected void configure() {
         configureDao();
@@ -78,7 +78,7 @@ public class KillbillServerModule extends AbstractModule {
     protected void configureDao() {
         // Load mysql driver if needed
         try {
-            Class.forName ("com.mysql.jdbc.Driver").newInstance ();
+            Class.forName("com.mysql.jdbc.Driver").newInstance();
         } catch (final Exception ignore) {
         }
         bind(IDBI.class).to(DBI.class).asEagerSingleton();
@@ -107,7 +107,6 @@ public class KillbillServerModule extends AbstractModule {
         install(new EmailModule());
         install(new GlobalLockerModule());
         install(new CustomFieldModule());
-        install(new TagStoreModule());
         install(new AuditModule());
         install(new CatalogModule());
         install(new BusModule());

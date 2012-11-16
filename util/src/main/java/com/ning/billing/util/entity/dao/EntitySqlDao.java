@@ -34,6 +34,9 @@ import com.ning.billing.util.dao.HistorySqlDao;
 import com.ning.billing.util.entity.Entity;
 import com.ning.billing.util.entity.EntityPersistenceException;
 
+// TODO get rid of Transmogrifier, but code does not compile even if we create the
+// method  public <T> T become(Class<T> typeToBecome); ?
+//
 @EntitySqlDaoStringTemplate
 public interface EntitySqlDao<M extends EntityModelDao<E>, E extends Entity> extends AuditSqlDao, HistorySqlDao<M, E>, Transmogrifier, Transactional<EntitySqlDao<M, E>>, CloseMe {
 

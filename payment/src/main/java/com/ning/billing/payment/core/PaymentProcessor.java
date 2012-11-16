@@ -310,6 +310,7 @@ public class PaymentProcessor extends ProcessorBase {
     }
 
     public void retryFailedPayment(final UUID paymentId, final InternalCallContext context) {
+        log.info("STEPH retrying failed payment " + paymentId + " time = " + clock.getUTCNow());
         retryFailedPaymentInternal(paymentId, context, PaymentStatus.PAYMENT_FAILURE);
     }
 
@@ -449,6 +450,7 @@ public class PaymentProcessor extends ProcessorBase {
                 break;
 
             case ERROR:
+                log.info("STEPH payment failure...");
                 allAttempts = paymentDao.getAttemptsForPayment(paymentInput.getId(), context);
                 // Schedule if non instant payment and max attempt for retry not reached yet
                 if (!isInstantPayment) {
@@ -504,7 +506,12 @@ public class PaymentProcessor extends ProcessorBase {
         final List<PaymentAttemptModelDao> allAttempts = paymentDao.getAttemptsForPayment(paymentId, context);
         final int retryAttempt = getNumberAttemptsInState(paymentId, allAttempts,
                 PaymentStatus.UNKNOWN, PaymentStatus.PAYMENT_FAILURE);
+
+
         final boolean isScheduledForRetry = failedPaymentRetryService.scheduleRetry(paymentId, retryAttempt);
+
+        log.info("STEPH scheduleRetryOnPaymentFailure id = " + paymentId + ", retryAttempt = " + retryAttempt + ", retry :" + isScheduledForRetry);
+
         return isScheduledForRetry ? PaymentStatus.PAYMENT_FAILURE : PaymentStatus.PAYMENT_FAILURE_ABORTED;
     }
 

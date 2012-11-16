@@ -22,30 +22,17 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
-import org.skife.jdbi.v2.sqlobject.Binder;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
-import org.skife.jdbi.v2.sqlobject.SqlUpdate;
-import org.skife.jdbi.v2.sqlobject.customizers.Mapper;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
-import org.skife.jdbi.v2.sqlobject.mixins.CloseMe;
-import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
-import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import com.ning.billing.junction.api.Blockable;
+import com.ning.billing.junction.api.Blockable.Type;
 import com.ning.billing.junction.api.BlockingApiException;
 import com.ning.billing.junction.api.BlockingState;
-import com.ning.billing.junction.api.Blockable.Type;
-import com.ning.billing.overdue.OverdueState;
-import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.callcontext.InternalTenantContextBinder;
-import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.dao.BinderBase;
 import com.ning.billing.util.dao.MapperBase;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
@@ -60,7 +47,7 @@ public interface BlockingStateSqlDao extends EntitySqlDao<BlockingStateModelDao,
 
     @SqlQuery
     public abstract List<BlockingStateModelDao> getBlockingHistoryFor(@Bind("blockableId") UUID blockableId,
-                                                              @BindBean final InternalTenantContext context);
+                                                                      @BindBean final InternalTenantContext context);
 
     public class BlockingHistorySqlMapper extends MapperBase implements ResultSetMapper<BlockingStateModelDao> {
 
@@ -94,7 +81,7 @@ public interface BlockingStateSqlDao extends EntitySqlDao<BlockingStateModelDao,
             } catch (BlockingApiException e) {
                 throw new SQLException(e);
             }
-            return new BlockingStateModelDao(id, blockableId, type, stateName, service, blockChange,blockEntitlement, blockBilling, createdDate, createdDate);
+            return new BlockingStateModelDao(id, blockableId, type, stateName, service, blockChange, blockEntitlement, blockBilling, createdDate, createdDate);
         }
     }
 }
