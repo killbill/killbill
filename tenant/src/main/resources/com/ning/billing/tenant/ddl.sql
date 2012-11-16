@@ -21,13 +21,13 @@ CREATE TABLE tenant_kvs (
    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
    id char(36) NOT NULL,
    tenant_record_id int(11) unsigned default null,
-   t_key varchar(64) NOT NULL,
-   t_value varchar(1024) NOT NULL,
-   is_active bool default true,
+   tenant_key varchar(64) NOT NULL,
+   tenant_value varchar(1024) NOT NULL,
+   is_active bool DEFAULT 1,
    created_date datetime NOT NULL,
    created_by varchar(50) NOT NULL,
    updated_date datetime DEFAULT NULL,
    updated_by varchar(50) DEFAULT NULL,
    PRIMARY KEY(record_id)
 ) ENGINE=innodb;
-CREATE INDEX tenant_kvs_key ON tenant_kvs(tenant_record_id, t_key);
+CREATE INDEX tenant_kvs_key ON tenant_kvs(tenant_key);

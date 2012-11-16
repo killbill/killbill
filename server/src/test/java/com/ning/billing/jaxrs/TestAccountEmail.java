@@ -70,8 +70,8 @@ public class TestAccountEmail extends TestJaxrsBase {
         Assert.assertEquals(fourthEmails.get(0).getAccountId(), accountId);
         Assert.assertEquals(fourthEmails.get(0).getEmail(), email2);
 
-        // Try to add the same email
-        addEmailToAccount(accountId, accountEmailJson2);
+        // Try to add the same email -- that works because we removed the unique constraints for soft deletion.
+        // addEmailToAccount(accountId, accountEmailJson2);
         Assert.assertEquals(getEmailsForAccount(accountId), fourthEmails);
     }
 }

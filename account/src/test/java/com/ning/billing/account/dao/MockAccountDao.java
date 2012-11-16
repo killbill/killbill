@@ -42,14 +42,12 @@ import com.ning.billing.util.svcsapi.bus.InternalBus.EventBusException;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
 
 public class MockAccountDao extends MockEntityDaoBase<AccountModelDao, Account, AccountApiException> implements AccountDao {
 
     private final MockEntityDaoBase<AccountEmailModelDao, AccountEmail, AccountApiException> accountEmailSqlDao = new MockEntityDaoBase<AccountEmailModelDao, AccountEmail, AccountApiException>();
     private final InternalBus eventBus;
 
-    @Inject
     public MockAccountDao(final InternalBus eventBus) {
         this.eventBus = eventBus;
     }
@@ -64,15 +62,15 @@ public class MockAccountDao extends MockEntityDaoBase<AccountModelDao, Account, 
                                                         : context.getTenantRecordId();
             eventBus.post(new DefaultAccountCreationEvent(account, null, accountRecordId, tenantRecordId), context);
         } catch (final EventBusException ex) {
-            throw new RuntimeException(ex);
+            Assert.fail(ex.toString());
         }
     }
 
     @Override
     public void update(final AccountModelDao account, final InternalCallContext context) {
-        final AccountModelDao currentAccount = getById(account.getId(), context);
         super.update(account, context);
 
+        final AccountModelDao currentAccount = getById(account.getId(), context);
         final Long accountRecordId = getRecordId(account.getId(), context);
         final long tenantRecordId = context == null ? InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID
                                                     : context.getTenantRecordId();
@@ -82,7 +80,7 @@ public class MockAccountDao extends MockEntityDaoBase<AccountModelDao, Account, 
             try {
                 eventBus.post(changeEvent, context);
             } catch (final EventBusException ex) {
-                throw new RuntimeException(ex);
+                Assert.fail(ex.toString());
             }
         }
     }

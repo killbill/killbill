@@ -49,5 +49,5 @@ public interface PaymentMethodSqlDao extends EntitySqlDao<PaymentMethodModelDao,
                                                          @BindBean final InternalTenantContext context);
 
     @SqlQuery
-    List<PaymentMethodModelDao> getByAccountId(@Bind("accountId") final String accountId, @BindBean final InternalCallContext context);
+    List<PaymentMethodModelDao> getByAccountId(@Bind("accountId") final String accountId, @BindBean final InternalTenantContext context);
 }

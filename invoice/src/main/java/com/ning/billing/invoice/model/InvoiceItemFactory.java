@@ -32,6 +32,10 @@ public class InvoiceItemFactory {
     private InvoiceItemFactory() {}
 
     public static InvoiceItem fromModelDao(final InvoiceItemModelDao invoiceItemModelDao) {
+        if (invoiceItemModelDao == null) {
+            return null;
+        }
+
         final UUID id = invoiceItemModelDao.getId();
         final DateTime createdDate = invoiceItemModelDao.getCreatedDate();
         final UUID invoiceId = invoiceItemModelDao.getInvoiceId();

@@ -35,7 +35,6 @@ import com.ning.billing.util.bus.InMemoryBusModule;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.events.BusInternalEvent;
 import com.ning.billing.util.events.TagDefinitionInternalEvent;
-import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.ClockModule;
 import com.ning.billing.util.glue.TagStoreModule;
 import com.ning.billing.util.svcsapi.bus.InternalBus;

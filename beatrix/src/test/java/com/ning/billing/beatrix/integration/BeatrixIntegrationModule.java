@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2012 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -36,6 +36,7 @@ import com.ning.billing.beatrix.extbus.PersistentExternalBus;
 import com.ning.billing.beatrix.integration.overdue.IntegrationTestOverdueModule;
 import com.ning.billing.beatrix.lifecycle.DefaultLifecycle;
 import com.ning.billing.beatrix.lifecycle.Lifecycle;
+import com.ning.billing.beatrix.util.AuditChecker;
 import com.ning.billing.beatrix.util.InvoiceChecker;
 import com.ning.billing.beatrix.util.PaymentChecker;
 import com.ning.billing.catalog.api.CatalogService;
@@ -59,6 +60,7 @@ import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.config.PaymentConfig;
 import com.ning.billing.util.email.EmailModule;
 import com.ning.billing.util.email.templates.TemplateModule;
+import com.ning.billing.util.glue.AuditModule;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.CallContextModule;
 import com.ning.billing.util.glue.CustomFieldModule;
@@ -112,9 +114,11 @@ public class BeatrixIntegrationModule extends AbstractModule {
         install(new PaymentPluginMockModule());
         install(new DefaultJunctionModule());
         install(new IntegrationTestOverdueModule());
+        install(new AuditModule());
 
         bind(InvoiceChecker.class).asEagerSingleton();
         bind(PaymentChecker.class).asEagerSingleton();
+        bind(AuditChecker.class).asEagerSingleton();
 
         installPublicBus();
     }

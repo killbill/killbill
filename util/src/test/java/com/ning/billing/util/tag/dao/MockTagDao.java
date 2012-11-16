@@ -27,7 +27,10 @@ import com.ning.billing.ObjectType;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.tag.Tag;
+
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
 
 public class MockTagDao implements TagDao {
 
@@ -63,6 +66,15 @@ public class MockTagDao implements TagDao {
 
     @Override
     public List<TagModelDao> getTags(final UUID objectId, final ObjectType objectType, final InternalTenantContext internalTenantContext) {
-        throw new UnsupportedOperationException();
+        if (tagStore.get(objectId) == null) {
+            return ImmutableList.<TagModelDao>of();
+        }
+
+        return ImmutableList.<TagModelDao>copyOf(Collections2.filter(tagStore.get(objectId), new Predicate<TagModelDao>() {
+            @Override
+            public boolean apply(final TagModelDao input) {
+                return objectType.equals(input.getObjectType());
+            }
+        }));
     }
 }
