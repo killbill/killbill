@@ -56,6 +56,7 @@ import com.ning.billing.payment.glue.PaymentModule;
 import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.config.PaymentConfig;
 import com.ning.billing.util.email.EmailModule;
 import com.ning.billing.util.email.templates.TemplateModule;
 import com.ning.billing.util.glue.BusModule;
@@ -72,7 +73,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 
-public class BeatrixModule extends AbstractModule {
+public class BeatrixIntegrationModule extends AbstractModule {
     public static final String PLUGIN_NAME = "yoyo";
 
     @Override
@@ -101,7 +102,6 @@ public class BeatrixModule extends AbstractModule {
         install(new GlobalLockerModule());
         install(new BusModule());
         install(new NotificationQueueModule());
-        install(new TagStoreModule());
         install(new CustomFieldModule());
         install(new DefaultAccountModule());
         install(new AnalyticsModule());

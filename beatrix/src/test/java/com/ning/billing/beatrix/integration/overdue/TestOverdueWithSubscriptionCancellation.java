@@ -25,7 +25,7 @@ import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import com.ning.billing.api.TestApiListener.NextEvent;
-import com.ning.billing.beatrix.integration.BeatrixModule;
+import com.ning.billing.beatrix.integration.BeatrixIntegrationModule;
 import com.ning.billing.beatrix.util.InvoiceChecker.ExpectedItemCheck;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.Subscription;
@@ -34,7 +34,7 @@ import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 
 @Test(groups = "slow")
-@Guice(modules = {BeatrixModule.class})
+@Guice(modules = {BeatrixIntegrationModule.class})
 public class TestOverdueWithSubscriptionCancellation extends TestOverdueBase {
 
 

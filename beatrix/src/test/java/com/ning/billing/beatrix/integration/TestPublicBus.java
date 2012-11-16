@@ -37,7 +37,7 @@ import com.ning.billing.entitlement.api.user.SubscriptionData;
 
 import com.google.common.eventbus.Subscribe;
 
-@Guice(modules = {BeatrixModule.class})
+@Guice(modules = {BeatrixIntegrationModule.class})
 public class TestPublicBus extends TestIntegrationBase {
 
     private PublicListener publicListener;

@@ -43,7 +43,7 @@ import com.ning.billing.invoice.api.InvoiceItemType;
 
 import com.google.common.collect.ImmutableList;
 
-@Guice(modules = {BeatrixModule.class})
+@Guice(modules = {BeatrixIntegrationModule.class})
 public class TestBundleTransfer extends TestIntegrationBase {
 
 

@@ -25,7 +25,7 @@ import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import com.ning.billing.api.TestApiListener.NextEvent;
-import com.ning.billing.beatrix.integration.BeatrixModule;
+import com.ning.billing.beatrix.integration.BeatrixIntegrationModule;
 import com.ning.billing.beatrix.util.InvoiceChecker.ExpectedItemCheck;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
@@ -45,7 +45,7 @@ import static org.testng.Assert.assertTrue;
 
 
 @Test(groups = "slow")
-@Guice(modules = {BeatrixModule.class})
+@Guice(modules = {BeatrixIntegrationModule.class})
 public class TestOverdueIntegration extends TestOverdueBase {
 
 
@@ -256,7 +256,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkChangePlanWithOverdueState(baseSubscription, true);
 
         // Add a payment method and set it as default
-        paymentApi.addPaymentMethod(BeatrixModule.PLUGIN_NAME, account, true, paymentMethodPlugin, callContext);
+        paymentApi.addPaymentMethod(BeatrixIntegrationModule.PLUGIN_NAME, account, true, paymentMethodPlugin, callContext);
 
         // Pay all invoices
         final Collection<Invoice> invoices = invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext);

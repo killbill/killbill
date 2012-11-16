@@ -35,10 +35,10 @@ import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.events.BusInternalEvent;
 import com.ning.billing.util.events.TagInternalEvent;
+import com.ning.billing.util.glue.TagStoreModule;
 import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.DescriptiveTag;
-import com.ning.billing.util.tag.MockTagStoreModuleSql;
 import com.ning.billing.util.tag.Tag;
 
 import com.google.common.eventbus.Subscribe;
@@ -46,7 +46,7 @@ import com.google.inject.Inject;
 
 import static org.testng.Assert.assertEquals;
 
-@Guice(modules = MockTagStoreModuleSql.class)
+@Guice(modules = TagStoreModule.class)
 public class TestDefaultTagDao extends UtilTestSuiteWithEmbeddedDB {
 
     @Inject

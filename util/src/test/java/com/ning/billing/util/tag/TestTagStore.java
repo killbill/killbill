@@ -35,6 +35,7 @@ import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.glue.TagStoreModule;
 import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.tag.dao.TagDao;
 import com.ning.billing.util.tag.dao.TagDefinitionDao;
@@ -50,7 +51,7 @@ import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 @Test(groups = {"slow"})
-@Guice(modules = MockTagStoreModuleSql.class)
+@Guice(modules = TagStoreModule.class)
 public class TestTagStore extends UtilTestSuiteWithEmbeddedDB {
 
     @Inject

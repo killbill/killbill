@@ -45,7 +45,7 @@ import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItemType;
 
-@Guice(modules = {BeatrixModule.class})
+@Guice(modules = {BeatrixIntegrationModule.class})
 public class TestIntegration extends TestIntegrationBase {
 
     @Test(groups = "slow")

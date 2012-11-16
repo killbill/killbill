@@ -65,7 +65,7 @@ import com.ning.billing.util.tag.TagDefinition;
 
 import static org.testng.Assert.assertTrue;
 
-@Guice(modules = BeatrixModule.class)
+@Guice(modules = BeatrixIntegrationModule.class)
 public class TestAnalytics extends TestIntegrationBase {
 
     private Account account;
@@ -248,7 +248,7 @@ public class TestAnalytics extends TestIntegrationBase {
         Assert.assertNull(invoicePaymentsForAccount.get(0).getExtFirstPaymentRefId());
         Assert.assertNull(invoicePaymentsForAccount.get(0).getExtSecondPaymentRefId());
         Assert.assertEquals(invoicePaymentsForAccount.get(0).getProcessingStatus(), PaymentStatus.PAYMENT_FAILURE.toString());
-        Assert.assertEquals(invoicePaymentsForAccount.get(0).getPluginName(), BeatrixModule.PLUGIN_NAME);
+        Assert.assertEquals(invoicePaymentsForAccount.get(0).getPluginName(), BeatrixIntegrationModule.PLUGIN_NAME);
 
         // Verify the account object has been updated
         Assert.assertEquals(analyticsUserApi.getAccountByKey(account.getExternalKey(), callContext).getBalance(),

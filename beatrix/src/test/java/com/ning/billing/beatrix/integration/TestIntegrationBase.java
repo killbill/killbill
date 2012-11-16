@@ -157,7 +157,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     @Inject
     protected PaymentApi paymentApi;
 
-    @Named(BeatrixModule.PLUGIN_NAME)
+    @Named(BeatrixIntegrationModule.PLUGIN_NAME)
     @Inject
     protected MockPaymentProviderPlugin paymentPlugin;
 
@@ -314,7 +314,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             }
         };
 
-        paymentApi.addPaymentMethod(BeatrixModule.PLUGIN_NAME, account, true, info, callContext);
+        paymentApi.addPaymentMethod(BeatrixIntegrationModule.PLUGIN_NAME, account, true, info, callContext);
         return accountUserApi.getAccountById(account.getId(), callContext);
     }
 
