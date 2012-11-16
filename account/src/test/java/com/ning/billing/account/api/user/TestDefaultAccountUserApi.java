@@ -18,117 +18,78 @@ package com.ning.billing.account.api.user;
 
 import java.util.UUID;
 
-import org.joda.time.DateTimeZone;
-import org.mockito.Mockito;
 import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.ning.billing.account.AccountTestSuite;
-import com.ning.billing.account.api.AccountData;
-import com.ning.billing.account.api.AccountEmail;
+import com.ning.billing.account.AccountTestBase;
+import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.account.api.DefaultAccount;
-import com.ning.billing.account.api.DefaultAccountEmail;
-import com.ning.billing.account.api.DefaultBillCycleDay;
-import com.ning.billing.account.dao.AccountDao;
-import com.ning.billing.account.dao.AccountModelDao;
-import com.ning.billing.account.dao.MockAccountDao;
+import com.ning.billing.account.api.DefaultMutableAccountData;
+import com.ning.billing.account.api.MutableAccountData;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallContextFactory;
-import com.ning.billing.util.callcontext.InternalCallContextFactory;
-import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.svcsapi.bus.InternalBus;
 
-public class TestDefaultAccountUserApi extends AccountTestSuite {
+public class TestDefaultAccountUserApi extends AccountTestBase {
 
-    private final CallContextFactory factory = Mockito.mock(CallContextFactory.class);
-    private final InternalCallContextFactory internalFactory = Mockito.mock(InternalCallContextFactory.class);
-    private final CallContext callContext = Mockito.mock(CallContext.class);
-    private final InternalTenantContext tenantContext = Mockito.mock(InternalTenantContext.class);
+    @Test(groups = "slow")
+    public void testShouldBeAbleToPassNullForSomeFieldsToAvoidUpdate() throws Exception {
+        final Account account = accountUserApi.createAccount(new DefaultAccount(createTestAccount()), callContext);
 
-    private AccountDao accountDao;
-    private DefaultAccountUserApi accountUserApi;
+        // Update the address and leave other fields null
+        final MutableAccountData mutableAccountData = new DefaultMutableAccountData(null, null, null, 0, null, null, null,
+                                                                                    null, null, null, null, null, null, null,
+                                                                                    null, null, null, null, false, false);
+        final String newAddress1 = UUID.randomUUID().toString();
+        mutableAccountData.setAddress1(newAddress1);
 
-    @BeforeMethod(groups = "fast")
-    public void setUp() throws Exception {
-        accountDao = new MockAccountDao(Mockito.mock(InternalBus.class));
-        accountUserApi = new DefaultAccountUserApi(factory, internalFactory, accountDao);
+        accountUserApi.updateAccount(account.getId(), mutableAccountData, callContext);
+
+        final Account retrievedAccount = accountUserApi.getAccountById(account.getId(), callContext);
+        Assert.assertEquals(retrievedAccount.getAddress1(), newAddress1);
+        Assert.assertEquals(retrievedAccount.getAddress2(), account.getAddress2());
+        Assert.assertEquals(retrievedAccount.getCurrency(), account.getCurrency());
+        Assert.assertEquals(retrievedAccount.getExternalKey(), account.getExternalKey());
+        Assert.assertEquals(retrievedAccount.getBillCycleDay().getDayOfMonthLocal(), account.getBillCycleDay().getDayOfMonthLocal());
+        Assert.assertEquals(retrievedAccount.getBillCycleDay().getDayOfMonthUTC(), account.getBillCycleDay().getDayOfMonthUTC());
     }
 
-    @Test(groups = "fast")
-    public void testCreateAccount() throws Exception {
-        final UUID id = UUID.randomUUID();
-        final String externalKey = UUID.randomUUID().toString();
-        final String email = UUID.randomUUID().toString();
-        final String name = UUID.randomUUID().toString();
-        final Integer firstNameLength = Integer.MAX_VALUE;
-        final Currency currency = Currency.BRL;
-        final BillCycleDay billCycleDay = new DefaultBillCycleDay(Integer.MIN_VALUE, Integer.MAX_VALUE);
-        final UUID paymentMethodId = UUID.randomUUID();
-        final DateTimeZone timeZone = DateTimeZone.UTC;
-        final String locale = UUID.randomUUID().toString();
-        final String address1 = UUID.randomUUID().toString();
-        final String address2 = UUID.randomUUID().toString();
-        final String companyName = UUID.randomUUID().toString();
-        final String city = UUID.randomUUID().toString();
-        final String stateOrProvince = UUID.randomUUID().toString();
-        final String country = UUID.randomUUID().toString();
-        final String postalCode = UUID.randomUUID().toString();
-        final String phone = UUID.randomUUID().toString();
-        final Boolean isMigrated = true;
-        final Boolean isNotifiedForInvoices = false;
-        final AccountData data = new DefaultAccount(id, externalKey, email, name, firstNameLength, currency, billCycleDay,
-                                                    paymentMethodId, timeZone, locale, address1, address2, companyName,
-                                                    city, stateOrProvince, country, postalCode, phone, isMigrated, isNotifiedForInvoices);
+    @Test(groups = "slow", expectedExceptions = IllegalArgumentException.class)
+    public void testShouldntBeAbleToUpdateBillCycleDay() throws Exception {
+        final Account account = accountUserApi.createAccount(new DefaultAccount(createTestAccount()), callContext);
 
-        accountUserApi.createAccount(data, callContext);
+        final MutableAccountData otherAccount = new DefaultAccount(account.getId(), account).toMutableAccountData();
+        otherAccount.setBillCycleDay(new BillCycleDay() {
+            @Override
+            public int getDayOfMonthUTC() {
+                return account.getBillCycleDay().getDayOfMonthUTC() + 2;
+            }
 
-        final AccountModelDao account = accountDao.getAccountByKey(externalKey, tenantContext);
-        Assert.assertEquals(account.getExternalKey(), externalKey);
-        Assert.assertEquals(account.getEmail(), email);
-        Assert.assertEquals(account.getName(), name);
-        Assert.assertEquals(account.getFirstNameLength(), firstNameLength);
-        Assert.assertEquals(account.getCurrency(), currency);
-        Assert.assertEquals(account.getBillingCycleDayLocal(), billCycleDay.getDayOfMonthLocal());
-        Assert.assertEquals(account.getBillingCycleDayUtc(), billCycleDay.getDayOfMonthUTC());
-        Assert.assertEquals(account.getPaymentMethodId(), paymentMethodId);
-        Assert.assertEquals(account.getTimeZone(), timeZone);
-        Assert.assertEquals(account.getLocale(), locale);
-        Assert.assertEquals(account.getAddress1(), address1);
-        Assert.assertEquals(account.getAddress2(), address2);
-        Assert.assertEquals(account.getCompanyName(), companyName);
-        Assert.assertEquals(account.getCity(), city);
-        Assert.assertEquals(account.getStateOrProvince(), stateOrProvince);
-        Assert.assertEquals(account.getCountry(), country);
-        Assert.assertEquals(account.getPostalCode(), postalCode);
-        Assert.assertEquals(account.getPhone(), phone);
-        Assert.assertEquals(account.getMigrated(), isMigrated);
-        Assert.assertEquals(account.getIsNotifiedForInvoices(), isNotifiedForInvoices);
+            @Override
+            public int getDayOfMonthLocal() {
+                return account.getBillCycleDay().getDayOfMonthLocal() + 2;
+            }
+        });
+
+        accountUserApi.updateAccount(new DefaultAccount(account.getId(), otherAccount), callContext);
     }
 
-    @Test(groups = "fast")
-    public void testAddEmail() throws Exception {
-        final UUID accountId = UUID.randomUUID();
+    @Test(groups = "slow", expectedExceptions = IllegalArgumentException.class)
+    public void testShouldntBeAbleToUpdateCurrency() throws Exception {
+        final Account account = accountUserApi.createAccount(new DefaultAccount(createTestAccount()), callContext);
 
-        // Verify the initial state
-        Assert.assertEquals(accountDao.getEmailsByAccountId(accountId, tenantContext).size(), 0);
+        final MutableAccountData otherAccount = new DefaultAccount(account.getId(), account).toMutableAccountData();
+        otherAccount.setCurrency(Currency.GBP);
 
-        // Add the first email
-        final String emailAddress1 = UUID.randomUUID().toString();
-        final AccountEmail email1 = new DefaultAccountEmail(accountId, emailAddress1);
-        accountUserApi.addEmail(accountId, email1, callContext);
-        Assert.assertEquals(accountDao.getEmailsByAccountId(accountId, tenantContext).size(), 1);
+        accountUserApi.updateAccount(new DefaultAccount(account.getId(), otherAccount), callContext);
+    }
 
-        // Add a second one
-        final String emailAddress2 = UUID.randomUUID().toString();
-        final AccountEmail email2 = new DefaultAccountEmail(accountId, emailAddress2);
-        accountUserApi.addEmail(accountId, email2, callContext);
-        Assert.assertEquals(accountDao.getEmailsByAccountId(accountId, tenantContext).size(), 2);
+    @Test(groups = "slow", expectedExceptions = IllegalArgumentException.class)
+    public void testShouldntBeAbleToUpdateExternalKey() throws Exception {
+        final Account account = accountUserApi.createAccount(new DefaultAccount(createTestAccount()), callContext);
 
-        // Remove the first second one
-        accountUserApi.removeEmail(accountId, email1, callContext);
-        Assert.assertEquals(accountDao.getEmailsByAccountId(accountId, tenantContext).size(), 1);
+        final MutableAccountData otherAccount = new DefaultAccount(account.getId(), account).toMutableAccountData();
+        otherAccount.setExternalKey(UUID.randomUUID().toString());
+
+        accountUserApi.updateAccount(new DefaultAccount(account.getId(), otherAccount), callContext);
     }
 }
