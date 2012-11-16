@@ -66,5 +66,6 @@ select
 <allTableFields()>
 from <tableName()>
 where account_id = :accountId
+and is_active = 1
 ;
 >>

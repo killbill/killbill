@@ -55,13 +55,14 @@ public class EntitlementEventModelDao extends EntityBase implements EntityModelD
     private String priceListName;
     private long currentVersion;
     private boolean isActive;
+    private UUID userToken;
 
     public EntitlementEventModelDao() { /* For the DAO mapper */ }
 
     public EntitlementEventModelDao(final UUID id, final long totalOrdering, final EventType eventType, final ApiEventType userType,
                                     final DateTime requestedDate, final DateTime effectiveDate, final UUID subscriptionId,
                                     final String planName, final String phaseName, final String priceListName, final long currentVersion,
-                                    final boolean active, final DateTime createDate, final DateTime updateDate) {
+                                    final boolean active, final DateTime createDate, final DateTime updateDate, final UUID userToken) {
         super(id, createDate, updateDate);
         this.totalOrdering = totalOrdering;
         this.eventType = eventType;
@@ -74,6 +75,7 @@ public class EntitlementEventModelDao extends EntityBase implements EntityModelD
         this.priceListName = priceListName;
         this.currentVersion = currentVersion;
         this.isActive = active;
+        this.userToken = userToken;
     }
 
     public EntitlementEventModelDao(final EntitlementEvent src) {
@@ -94,6 +96,11 @@ public class EntitlementEventModelDao extends EntityBase implements EntityModelD
     public long getTotalOrdering() {
         return totalOrdering;
     }
+
+    public UUID getUserToken() {
+        return userToken;
+    }
+
 
     public EventType getEventType() {
         return eventType;
@@ -165,7 +172,8 @@ public class EntitlementEventModelDao extends EntityBase implements EntityModelD
                     .setEventPlanPhase(src.getPhaseName())
                     .setEventPriceList(src.getPriceListName())
                     .setEventType(src.getUserType())
-                    .setFromDisk(true);
+                    .setFromDisk(true)
+                    .setUserToken(src.getUserToken());
 
             if (src.getUserType() == ApiEventType.CREATE) {
                 result = new ApiEventCreate(builder);
