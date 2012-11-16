@@ -16,8 +16,6 @@
 
 package com.ning.billing.beatrix.integration;
 
-import static org.testng.Assert.assertNotNull;
-
 import java.io.IOException;
 import java.net.URL;
 import java.util.Set;
@@ -41,7 +39,6 @@ import com.ning.billing.beatrix.util.InvoiceChecker;
 import com.ning.billing.beatrix.util.PaymentChecker;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.glue.CatalogModule;
-import com.ning.billing.util.config.PaymentConfig;
 import com.ning.billing.dbi.DBIProvider;
 import com.ning.billing.dbi.DbiConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
@@ -74,8 +71,10 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
+import static org.testng.Assert.assertNotNull;
 
 public class BeatrixIntegrationModule extends AbstractModule {
+
     public static final String PLUGIN_NAME = "yoyo";
 
     @Override
@@ -104,6 +103,7 @@ public class BeatrixIntegrationModule extends AbstractModule {
         install(new GlobalLockerModule());
         install(new BusModule());
         install(new NotificationQueueModule());
+        install(new TagStoreModule());
         install(new CustomFieldModule());
         install(new DefaultAccountModule());
         install(new AnalyticsModule());
@@ -130,6 +130,7 @@ public class BeatrixIntegrationModule extends AbstractModule {
     }
 
     private static final class PaymentPluginMockModule extends PaymentModule {
+
         @Override
         protected void installPaymentProviderPlugins(final PaymentConfig config) {
             install(new MockPaymentProviderPluginModule(PLUGIN_NAME));
