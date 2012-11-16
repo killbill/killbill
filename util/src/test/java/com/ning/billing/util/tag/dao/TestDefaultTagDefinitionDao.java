@@ -29,17 +29,21 @@ import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import com.ning.billing.dbi.MysqlTestingHelper;
+import com.ning.billing.mock.glue.MockDbHelperModule;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
+import com.ning.billing.util.bus.InMemoryBusModule;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.events.BusInternalEvent;
 import com.ning.billing.util.events.TagDefinitionInternalEvent;
+import com.ning.billing.util.glue.BusModule;
+import com.ning.billing.util.glue.ClockModule;
 import com.ning.billing.util.glue.TagStoreModule;
 import com.ning.billing.util.svcsapi.bus.InternalBus;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
 
-@Guice(modules = TagStoreModule.class)
+@Guice(modules = {TagStoreModule.class, ClockModule.class, InMemoryBusModule.class, MockDbHelperModule.class})
 public class TestDefaultTagDefinitionDao extends UtilTestSuiteWithEmbeddedDB {
 
     @Inject
