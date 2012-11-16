@@ -27,25 +27,26 @@ import com.ning.billing.util.entity.dao.EntityModelDao;
 
 public class TenantKVModelDao extends EntityBase implements EntityModelDao<TenantKV> {
 
-    private String key;
-    private String value;
+    private String tenantKey;
+    private String tenantValue;
+
     private Boolean isActive;
 
     public TenantKVModelDao() { /* For the DAO mapper */ }
 
     public TenantKVModelDao(final UUID id, final DateTime createdDate, final DateTime updatedDate, final String key, final String value) {
         super(id, createdDate, updatedDate);
-        this.key = key;
-        this.value = value;
+        this.tenantKey = key;
+        this.tenantValue = value;
         this.isActive = true;
     }
 
-    public String getKey() {
-        return key;
+    public String getTenantKey() {
+        return tenantKey;
     }
 
-    public String getValue() {
-        return value;
+    public String getTenantValue() {
+        return tenantValue;
     }
 
     public Boolean getIsActive() {
@@ -56,8 +57,8 @@ public class TenantKVModelDao extends EntityBase implements EntityModelDao<Tenan
     public String toString() {
         final StringBuilder sb = new StringBuilder();
         sb.append("TenantKVModelDao");
-        sb.append("{key='").append(key).append('\'');
-        sb.append(", value='").append(value).append('\'');
+        sb.append("{key='").append(tenantKey).append('\'');
+        sb.append(", value='").append(tenantValue).append('\'');
         sb.append(", isActive=").append(isActive);
         sb.append('}');
         return sb.toString();
@@ -80,10 +81,10 @@ public class TenantKVModelDao extends EntityBase implements EntityModelDao<Tenan
         if (isActive != null ? !isActive.equals(that.isActive) : that.isActive != null) {
             return false;
         }
-        if (key != null ? !key.equals(that.key) : that.key != null) {
+        if (tenantKey != null ? !tenantKey.equals(that.tenantKey) : that.tenantKey != null) {
             return false;
         }
-        if (value != null ? !value.equals(that.value) : that.value != null) {
+        if (tenantValue != null ? !tenantValue.equals(that.tenantValue) : that.tenantValue != null) {
             return false;
         }
 
@@ -93,8 +94,8 @@ public class TenantKVModelDao extends EntityBase implements EntityModelDao<Tenan
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + (key != null ? key.hashCode() : 0);
-        result = 31 * result + (value != null ? value.hashCode() : 0);
+        result = 31 * result + (tenantKey != null ? tenantKey.hashCode() : 0);
+        result = 31 * result + (tenantValue != null ? tenantValue.hashCode() : 0);
         result = 31 * result + (isActive != null ? isActive.hashCode() : 0);
         return result;
     }

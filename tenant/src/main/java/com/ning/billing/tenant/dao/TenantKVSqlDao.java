@@ -35,11 +35,11 @@ import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 public interface TenantKVSqlDao extends EntitySqlDao<TenantKVModelDao, TenantKV> {
 
     @SqlQuery
-    public List<TenantKVModelDao> getTenantValueForKey(@Bind("key") final String key,
+    public List<TenantKVModelDao> getTenantValueForKey(@Bind("tenantKey") final String key,
                                                        @BindBean final InternalTenantContext context);
 
     @SqlUpdate
     @Audited(ChangeType.DELETE)
-    public void markTenantKeyAsDeleted(@Bind("key") final String key,
+    public void markTenantKeyAsDeleted(@Bind("id")final String id,
                                        @BindBean final InternalCallContext context);
 }

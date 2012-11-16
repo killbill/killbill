@@ -3,8 +3,8 @@ group TenantKVSqlDao: EntitySqlDao;
 tableName() ::= "tenant_kvs"
 
 tableFields(prefix) ::= <<
-  <prefix>t_key
-, <prefix>t_value
+  <prefix>tenant_key
+, <prefix>tenant_value
 , <prefix>is_active
 , <prefix>created_date
 , <prefix>created_by
@@ -13,8 +13,8 @@ tableFields(prefix) ::= <<
 >>
 
 tableValues() ::= <<
-  :key
-, :value
+  :tenantKey
+, :tenantValue
 , :isActive
 , :createdDate
 , :createdBy
@@ -31,7 +31,8 @@ getTenantValueForKey() ::= <<
 select
   <allTableFields("t.")>
 from <tableName()> t
-where t.t_key = :key
+where t.tenant_key = :tenantKey
+and  t.is_active = 1
 <AND_CHECK_TENANT("t.")>
 ;
 >>
@@ -39,7 +40,7 @@ where t.t_key = :key
 markTenantKeyAsDeleted() ::= <<
 update <tableName()> t
 set t.is_active = 0
-where t.t_key = :key
+where t.id = :id
 <AND_CHECK_TENANT("t.")>
 ;
 >>

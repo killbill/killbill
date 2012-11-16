@@ -114,7 +114,7 @@ public class DefaultTenantDao extends EntityDaoBase<TenantModelDao, Tenant, Tena
                 return ImmutableList.copyOf(Collections2.transform(tenantKV, new Function<TenantKVModelDao, String>() {
                     @Override
                     public String apply(final TenantKVModelDao in) {
-                        return in.getValue();
+                        return in.getTenantValue();
                     }
                 }));
             }
@@ -138,7 +138,12 @@ public class DefaultTenantDao extends EntityDaoBase<TenantModelDao, Tenant, Tena
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                entitySqlDaoWrapperFactory.become(TenantKVSqlDao.class).markTenantKeyAsDeleted(key, context);
+                final List<TenantKVModelDao> tenantKVs = entitySqlDaoWrapperFactory.become(TenantKVSqlDao.class).getTenantValueForKey(key, context);
+                for (TenantKVModelDao cur : tenantKVs) {
+                    if (cur.getTenantKey().equals(key)) {
+                        entitySqlDaoWrapperFactory.become(TenantKVSqlDao.class).markTenantKeyAsDeleted(cur.getId().toString(), context);
+                    }
+                }
                 return null;
             }
         });
