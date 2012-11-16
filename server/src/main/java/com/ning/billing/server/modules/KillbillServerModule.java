@@ -16,7 +16,6 @@
 
 package com.ning.billing.server.modules;
 
-
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.IDBI;
 
@@ -55,11 +54,11 @@ import com.ning.billing.util.glue.ExportModule;
 import com.ning.billing.util.glue.GlobalLockerModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.TagStoreModule;
-import com.ning.jetty.jdbi.guice.providers.DBIProvider;
 
 import com.google.inject.AbstractModule;
 
 public class KillbillServerModule extends AbstractModule {
+
     @Override
     protected void configure() {
         configureDao();
@@ -68,17 +67,15 @@ public class KillbillServerModule extends AbstractModule {
         configurePushNotification();
     }
 
-
     protected void configurePushNotification() {
         bind(ServerService.class).to(DefaultServerService.class).asEagerSingleton();
         bind(PushNotificationListener.class).asEagerSingleton();
     }
 
-
     protected void configureDao() {
         // Load mysql driver if needed
         try {
-            Class.forName ("com.mysql.jdbc.Driver").newInstance ();
+            Class.forName("com.mysql.jdbc.Driver").newInstance();
         } catch (final Exception ignore) {
         }
         bind(IDBI.class).to(DBI.class).asEagerSingleton();

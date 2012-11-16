@@ -22,7 +22,7 @@ tableValues() ::= <<
 , :updatedBy
 >>
 
-accountRecordIdFieldWithComma() ::= ""
+accountRecordIdFieldWithComma(prefix) ::= ""
 
 accountRecordIdValueWithComma() ::= ""
 
