@@ -94,6 +94,11 @@ public abstract class AccountTestBase extends AccountTestSuiteWithEmbeddedDB {
         }
     }
 
+    protected void checkAccountsEqual(final AccountData retrievedAccount, final AccountData account) {
+        final UUID fakeId = UUID.randomUUID();
+        checkAccountsEqual(new AccountModelDao(fakeId, retrievedAccount), new AccountModelDao(fakeId, account));
+    }
+
     protected void checkAccountsEqual(final AccountModelDao retrievedAccount, final AccountModelDao account) {
         if (retrievedAccount == null || account == null) {
             Assert.assertNull(retrievedAccount);
@@ -138,6 +143,15 @@ public abstract class AccountTestBase extends AccountTestSuiteWithEmbeddedDB {
     }
 
     private AccountModelDao createTestAccount(final int billCycleDayUTC, final int billCycleDayLocal, final String phone) {
+        final AccountData accountData = createAccountData(billCycleDayUTC, billCycleDayLocal, phone);
+        return new AccountModelDao(UUID.randomUUID(), accountData);
+    }
+
+    protected AccountData createAccountData() {
+        return createAccountData(30, 31, UUID.randomUUID().toString().substring(0, 4));
+    }
+
+    private AccountData createAccountData(final int billCycleDayUTC, final int billCycleDayLocal, final String phone) {
         final String externalKey = UUID.randomUUID().toString();
         final String email = UUID.randomUUID().toString().substring(0, 4) + '@' + UUID.randomUUID().toString().substring(0, 4);
         final String name = UUID.randomUUID().toString();
@@ -155,10 +169,9 @@ public abstract class AccountTestBase extends AccountTestSuiteWithEmbeddedDB {
         final String country = Locale.GERMANY.getCountry();
         final String postalCode = UUID.randomUUID().toString().substring(0, 4);
 
-        final AccountData accountData = new DefaultMutableAccountData(externalKey, email, name, firstNameLength, currency,
-                                                                      billCycleDay, paymentMethodId, null, timeZone,
-                                                                      locale, address1, address2, companyName, city, stateOrProvince,
-                                                                      country, postalCode, phone, false, true);
-        return new AccountModelDao(UUID.randomUUID(), accountData);
+        return new DefaultMutableAccountData(externalKey, email, name, firstNameLength, currency,
+                                             billCycleDay, paymentMethodId, null, timeZone,
+                                             locale, address1, address2, companyName, city, stateOrProvince,
+                                             country, postalCode, phone, false, true);
     }
 }
