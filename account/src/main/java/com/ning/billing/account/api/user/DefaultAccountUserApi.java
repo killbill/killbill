@@ -149,12 +149,14 @@ public class DefaultAccountUserApi implements AccountUserApi {
         final CallContext migrationContext = callContextFactory.toMigrationCallContext(context, createdDate, updatedDate);
 
         // Create the account
-        final Account account = new DefaultAccount(UUID.randomUUID(), data);
-        createAccount(account, migrationContext);
+        final Account account = createAccount(data, migrationContext);
 
         // Add associated contact emails
-        for (final String cur : data.getAdditionalContactEmails()) {
-            addEmail(account.getId(), new DefaultAccountEmail(account.getId(), cur), migrationContext);
+        // In Killbill, we never return null for empty lists, but MigrationAccountData is implemented outside of Killbill
+        if (data.getAdditionalContactEmails() != null) {
+            for (final String cur : data.getAdditionalContactEmails()) {
+                addEmail(account.getId(), new DefaultAccountEmail(account.getId(), cur), migrationContext);
+            }
         }
 
         return account;

@@ -16,20 +16,35 @@
 
 package com.ning.billing.account.api.user;
 
+import java.util.List;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.AccountTestBase;
 import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.account.api.DefaultMutableAccountData;
+import com.ning.billing.account.api.MigrationAccountData;
 import com.ning.billing.account.api.MutableAccountData;
 import com.ning.billing.catalog.api.Currency;
 
 public class TestDefaultAccountUserApi extends AccountTestBase {
+
+    @Test(groups = "slow")
+    public void testMigrate() throws Exception {
+        final MigrationAccountData accountData = new TestMigrationAccountData(createAccountData());
+        final Account account = accountUserApi.migrateAccount(accountData, callContext);
+        checkAccountsEqual(account.toMutableAccountData(), accountData);
+
+        // Make sure we can retrieve the migrated account
+        final Account retrievedAccount = accountUserApi.getAccountById(account.getId(), callContext);
+        checkAccountsEqual(retrievedAccount, account);
+    }
 
     @Test(groups = "slow")
     public void testShouldBeAbleToPassNullForSomeFieldsToAvoidUpdate() throws Exception {
@@ -91,5 +106,27 @@ public class TestDefaultAccountUserApi extends AccountTestBase {
         otherAccount.setExternalKey(UUID.randomUUID().toString());
 
         accountUserApi.updateAccount(new DefaultAccount(account.getId(), otherAccount), callContext);
+    }
+
+    private class TestMigrationAccountData extends DefaultMutableAccountData implements MigrationAccountData {
+
+        public TestMigrationAccountData(final AccountData accountData) {
+            super(accountData);
+        }
+
+        @Override
+        public DateTime getCreatedDate() {
+            return null;
+        }
+
+        @Override
+        public DateTime getUpdatedDate() {
+            return null;
+        }
+
+        @Override
+        public List<String> getAdditionalContactEmails() {
+            return null;
+        }
     }
 }
