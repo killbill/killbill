@@ -23,6 +23,7 @@ CREATE TABLE tenant_kvs (
    tenant_record_id int(11) unsigned default null,
    t_key varchar(64) NOT NULL,
    t_value varchar(1024) NOT NULL,
+   is_active bool default true,
    created_date datetime NOT NULL,
    created_by varchar(50) NOT NULL,
    updated_date datetime DEFAULT NULL,

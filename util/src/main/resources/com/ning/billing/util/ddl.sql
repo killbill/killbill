@@ -56,7 +56,6 @@ CREATE TABLE tag_definitions (
     PRIMARY KEY(record_id)
 ) ENGINE=innodb;
 CREATE UNIQUE INDEX tag_definitions_id ON tag_definitions(id);
-CREATE UNIQUE INDEX tag_definitions_name ON tag_definitions(name);
 CREATE INDEX tag_definitions_tenant_record_id ON tag_definitions(tenant_record_id);
 
 DROP TABLE IF EXISTS tag_definition_history;
