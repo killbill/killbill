@@ -2,6 +2,8 @@ group TagDefinitionDao: EntitySqlDao;
 
 tableName() ::= "tag_definitions"
 
+andCheckSoftDeletionWithComma(prefix) ::= "and <prefix>is_active"
+
 tableFields(prefix) ::= <<
   <prefix>name
 , <prefix>description
@@ -66,13 +68,3 @@ and <idField("t.")> in (<tag_definition_ids: {id | :id_<i0>}; separator="," >)
 ;
 >>
 
-get(limit) ::= <<
-select
-<allTableFields("t.")>
-from <tableName()> t
-where
-t.is_active
-<AND_CHECK_TENANT("t.")>
-<if(limit)>limit :limit<endif>
-;
->>

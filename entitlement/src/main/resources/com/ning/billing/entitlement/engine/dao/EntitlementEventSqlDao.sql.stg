@@ -2,6 +2,12 @@ group EventSqlDao: EntitySqlDao;
 
 tableName() ::= "subscription_events"
 
+andCheckSoftDeletionWithComma(prefix) ::= "and <prefix>is_active"
+
+extraTableFieldsWithComma(prefix) ::= <<
+, <prefix>record_id as total_ordering
+>>
+
 tableFields(prefix) ::= <<
   <prefix> event_type
 , <prefix> user_type
@@ -105,34 +111,3 @@ effective_date asc
 ;
 >>
 
-/** Redefine the 3 base nethods to account for total_ordering **/
-
-get(limit) ::= <<
-select
-<allTableFields("t.")>
-, record_id as total_ordering
-from <tableName()> t
-where <CHECK_TENANT("t.")>
-<if(limit)>limit :limit<endif>
-;
->>
-
-getById(id) ::= <<
-select
-<allTableFields()>
-, record_id as total_ordering
-from <tableName()> t
-where <idField()> = :id
-<AND_CHECK_TENANT()>
-;
->>
-
-getByRecordId(recordId) ::= <<
-select
-<allTableFields()>
-, record_id as total_ordering
-from <tableName()>
-where <recordIdField()> = :recordId
-<AND_CHECK_TENANT()>
-;
->>

@@ -1,6 +1,7 @@
 group EntitySqlDao;
 
-/** To override in each EntitySqlDao template file **/
+
+/******************   To override in each EntitySqlDao template file *****************************/
 
 tableName() ::= ""
 
@@ -23,10 +24,15 @@ historyTableValues() ::= <<
 , <tableValues()>
 >>
 
-/****************************************************/
+/** Used for entities that can be soft deleted to make we exclude those entries in base calls getById(), get() **/
+andCheckSoftDeletionWithComma(prefix) ::= ""
+
 
 /** Add extra fields for SELECT queries **/
 extraTableFieldsWithComma(prefix) ::= ""
+
+/******************   To override in each EntitySqlDao template file <end>  *****************************/
+
 
 idField(prefix) ::= <<
 <prefix>id
@@ -53,11 +59,10 @@ targetRecordIdField(prefix) ::= <<
 targetRecordIdValue() ::= ":targetRecordId"
 
 /** Override this if the Entity isn't tied to an account **/
-
-
 accountRecordIdField(prefix) ::= <<
 <prefix>account_record_id
 >>
+
 
 accountRecordIdFieldWithComma(prefix) ::= <<
 , <accountRecordIdField(prefix)>
@@ -83,6 +88,7 @@ tenantRecordIdValue() ::= ":tenantRecordId"
 tenantRecordIdValueWithComma() ::= <<
 , <tenantRecordIdValue()>
 >>
+
 
 allTableFields(prefix) ::= <<
   <recordIdField(prefix)>
@@ -127,11 +133,22 @@ allHistoryTableValues() ::= <<
 CHECK_TENANT(prefix) ::= "<prefix>tenant_record_id = :tenantRecordId"
 AND_CHECK_TENANT(prefix) ::= "and <CHECK_TENANT(prefix)>"
 
+get(limit) ::= <<
+select
+<allTableFields("t.")>
+from <tableName()> t
+where <CHECK_TENANT("t.")>
+<andCheckSoftDeletionWithComma("t.")>
+<if(limit)>limit :limit<endif>
+;
+>>
+
 getById(id) ::= <<
 select
 <allTableFields("t.")>
 from <tableName()> t
 where <idField("t.")> = :id
+<andCheckSoftDeletionWithComma("t.")>
 <AND_CHECK_TENANT("t.")>
 ;
 >>
@@ -182,14 +199,6 @@ where <targetRecordIdField("t.")> = :targetRecordId
 ;
 >>
 
-get(limit) ::= <<
-select
-<allTableFields("t.")>
-from <tableName()> t
-where <CHECK_TENANT("t.")>
-<if(limit)>limit :limit<endif>
-;
->>
 
 create() ::= <<
 insert into <tableName()> (

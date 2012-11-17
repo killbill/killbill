@@ -4,6 +4,8 @@ tableName() ::= "account_emails"
 
 historyTableName() ::= "account_email_history"
 
+andCheckSoftDeletionWithComma(prefix) ::= "and <prefix>is_active"
+
 tableFields(prefix) ::= <<
   account_id
 , email

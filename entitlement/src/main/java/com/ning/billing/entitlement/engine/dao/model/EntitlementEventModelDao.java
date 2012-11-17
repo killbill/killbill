@@ -149,6 +149,10 @@ public class EntitlementEventModelDao extends EntityBase implements EntityModelD
 
     public static EntitlementEvent toEntitlementEvent(final EntitlementEventModelDao src) {
 
+        if (src == null) {
+            return null;
+        }
+
         final EventBaseBuilder<?> base = ((src.getEventType() == EventType.PHASE) ?
                                           new PhaseEventBuilder() :
                                           new ApiEventBuilder())
