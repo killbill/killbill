@@ -2,6 +2,8 @@ group TenantKVSqlDao: EntitySqlDao;
 
 tableName() ::= "tenant_kvs"
 
+andCheckSoftDeletionWithComma(prefix) ::= "and <prefix>is_active"
+
 tableFields(prefix) ::= <<
   <prefix>tenant_key
 , <prefix>tenant_value
@@ -32,7 +34,7 @@ select
   <allTableFields("t.")>
 from <tableName()> t
 where t.tenant_key = :tenantKey
-and  t.is_active = 1
+and  t.is_active
 <AND_CHECK_TENANT("t.")>
 ;
 >>

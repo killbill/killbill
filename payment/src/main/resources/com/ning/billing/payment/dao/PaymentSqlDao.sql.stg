@@ -1,6 +1,10 @@
 group PaymentSqlDao: EntitySqlDao;
 
 
+extraTableFieldsWithComma(prefix) ::= <<
+, <prefix>record_id as payment_number
+>>
+
 tableFields(prefix) ::= <<
   <prefix>account_id
 , <prefix>invoice_id
@@ -47,7 +51,6 @@ where account_id = :accountId
 ;
 >>
 
-
 getPaymentsForInvoice() ::= <<
 select <allTableFields()>
 , record_id as payment_number
@@ -68,7 +71,6 @@ and payment_method_id = :paymentMethodId
 order by effective_date desc limit 1
 ;
 >>
-
 
 
 updatePaymentStatusAndExtRef() ::= <<

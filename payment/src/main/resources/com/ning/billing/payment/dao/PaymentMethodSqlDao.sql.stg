@@ -1,6 +1,13 @@
 group PaymentMethodSqlDao: EntitySqlDao;
 
 
+
+tableName() ::= "payment_methods"
+
+historyTableName() ::= "payment_method_history"
+
+andCheckSoftDeletionWithComma(prefix) ::= "and <prefix>is_active"
+
 tableFields(prefix) ::= <<
   <prefix>account_id
 , <prefix>plugin_name
@@ -23,20 +30,6 @@ tableValues() ::= <<
 , :updatedDate
 >>
 
-tableName() ::= "payment_methods"
-
-historyTableName() ::= "payment_method_history"
-
-
-getById(id) ::= <<
-select
-<allTableFields()>
-from <tableName()>
-where id = :id
-and is_active = 1
-<AND_CHECK_TENANT()>
-;
->>
 
 markPaymentMethodAsDeleted(id) ::= <<
 update <tableName()>
