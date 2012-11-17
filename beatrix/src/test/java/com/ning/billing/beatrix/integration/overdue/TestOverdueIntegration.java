@@ -26,7 +26,7 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.beatrix.integration.BeatrixIntegrationModule;
-import com.ning.billing.beatrix.util.InvoiceChecker.ExpectedItemCheck;
+import com.ning.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PriceListSet;
@@ -109,13 +109,13 @@ public class TestOverdueIntegration extends TestOverdueBase {
         paymentPlugin.makeAllInvoicesFailWithError(true);
         final Subscription baseSubscription = createSubscriptionAndCheckForCompletion(bundle.getId(), productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
 
-        invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
         invoiceChecker.checkChargedThroughDate(baseSubscription.getId(), new LocalDate(2012, 5, 1), callContext);
 
         // 2012, 5, 31 => DAY 30 have to get out of trial {I0, P0}
         addDaysAndCheckForCompletion(30, NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR);
 
-        invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedItemCheck(new LocalDate(2012, 5, 31), new LocalDate(2012, 6, 30), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 31), new LocalDate(2012, 6, 30), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
         invoiceChecker.checkChargedThroughDate(baseSubscription.getId(), new LocalDate(2012, 6, 30), callContext);
 
         // 2012, 6, 8 => Retry P0
@@ -134,7 +134,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         addDaysAndCheckForCompletion(7, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR);
         checkODState("OD1");
         checkChangePlanWithOverdueState(baseSubscription, true);
-        invoiceChecker.checkInvoice(account.getId(), 3, callContext, new ExpectedItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+        invoiceChecker.checkInvoice(account.getId(), 3, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
         invoiceChecker.checkChargedThroughDate(baseSubscription.getId(), new LocalDate(2012, 7, 31), callContext);
 
         // 2012, 7, 2 => Retry P0
@@ -174,18 +174,18 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkChangePlanWithOverdueState(baseSubscription, false);
 
         invoiceChecker.checkRepairedInvoice(account.getId(), 3,
-                                            callContext, new ExpectedItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")),
+                                            callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")),
                                             // We paid up to 07-31, hence the adjustment
-                                            new ExpectedItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-249.95")),
-                                            new ExpectedItemCheck(new LocalDate(2012, 7, 23), new LocalDate(2012, 7, 23), InvoiceItemType.CBA_ADJ, new BigDecimal("249.95")));
+                                            new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-249.95")),
+                                            new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 23), new LocalDate(2012, 7, 23), InvoiceItemType.CBA_ADJ, new BigDecimal("249.95")));
         invoiceChecker.checkInvoice(account.getId(), 4, callContext,
                                     // Note the end date here is not 07-25, but 07-9. The overdue configuration disabled invoicing between 07-09 and 07-23 (e.g. the bundle
                                     // was inaccessible, hence we didn't want to charge the customer for that period, even though the account was overdue).
-                                    new ExpectedItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 9), InvoiceItemType.RECURRING, new BigDecimal("74.99")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 9), InvoiceItemType.RECURRING, new BigDecimal("74.99")),
                                     // Item for the upgraded recurring plan
-                                    new ExpectedItemCheck(new LocalDate(2012, 7, 23), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("154.85")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 23), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("154.85")),
                                     // Credits consumed
-                                    new ExpectedItemCheck(new LocalDate(2012, 7, 23), new LocalDate(2012, 7, 23), InvoiceItemType.CBA_ADJ, new BigDecimal("-229.84")));
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 23), new LocalDate(2012, 7, 23), InvoiceItemType.CBA_ADJ, new BigDecimal("-229.84")));
         invoiceChecker.checkChargedThroughDate(baseSubscription.getId(), new LocalDate(2012, 7, 31), callContext);
 
         // Verify the account balance: 249.95 - 74.99 - 154.85
@@ -205,13 +205,13 @@ public class TestOverdueIntegration extends TestOverdueBase {
         // Create subscription
         final Subscription baseSubscription = createSubscriptionAndCheckForCompletion(bundle.getId(), productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
 
-        invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
         invoiceChecker.checkChargedThroughDate(baseSubscription.getId(), new LocalDate(2012, 5, 1), callContext);
 
         // DAY 30 have to get out of trial before first payment. A payment error, one for each invoice, should be on the bus (because there is no payment method)
         addDaysAndCheckForCompletion(30, NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR, NextEvent.PAYMENT_ERROR);
 
-        invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedItemCheck(new LocalDate(2012, 5, 31), new LocalDate(2012, 6, 30), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 31), new LocalDate(2012, 6, 30), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
         invoiceChecker.checkChargedThroughDate(baseSubscription.getId(), new LocalDate(2012, 6, 30), callContext);
 
         // Should still be in clear state
@@ -227,7 +227,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         // Single PAYMENT_ERROR here here triggered by the invoice
         addDaysAndCheckForCompletion(20, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR);
 
-        invoiceChecker.checkInvoice(account.getId(), 3, callContext, new ExpectedItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+        invoiceChecker.checkInvoice(account.getId(), 3, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
         invoiceChecker.checkChargedThroughDate(baseSubscription.getId(), new LocalDate(2012, 7, 31), callContext);
 
         // Now we should be in OD1
@@ -270,18 +270,18 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkChangePlanWithOverdueState(baseSubscription, false);
 
         invoiceChecker.checkRepairedInvoice(account.getId(), 3,
-                                            callContext, new ExpectedItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")),
+                                            callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")),
                                             // We paid up to 07-31, hence the adjustment
-                                            new ExpectedItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-249.95")),
-                                            new ExpectedItemCheck(new LocalDate(2012, 7, 25), new LocalDate(2012, 7, 25), InvoiceItemType.CBA_ADJ, new BigDecimal("249.95")));
+                                            new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-249.95")),
+                                            new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 25), new LocalDate(2012, 7, 25), InvoiceItemType.CBA_ADJ, new BigDecimal("249.95")));
         invoiceChecker.checkInvoice(account.getId(), 4, callContext,
                                     // Note the end date here is not 07-25, but 07-15. The overdue configuration disabled invoicing between 07-15 and 07-25 (e.g. the bundle
                                     // was inaccessible, hence we didn't want to charge the customer for that period, even though the account was overdue).
-                                    new ExpectedItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 15), InvoiceItemType.RECURRING, new BigDecimal("124.98")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 15), InvoiceItemType.RECURRING, new BigDecimal("124.98")),
                                     // Item for the upgraded recurring plan
-                                    new ExpectedItemCheck(new LocalDate(2012, 7, 25), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("116.09")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 25), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("116.09")),
                                     // Credits consumed
-                                    new ExpectedItemCheck(new LocalDate(2012, 7, 25), new LocalDate(2012, 7, 25), InvoiceItemType.CBA_ADJ, new BigDecimal("-241.07")));
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 25), new LocalDate(2012, 7, 25), InvoiceItemType.CBA_ADJ, new BigDecimal("-241.07")));
         invoiceChecker.checkChargedThroughDate(baseSubscription.getId(), new LocalDate(2012, 7, 31), callContext);
 
         // Verify the account balance: 249.95 - 124.98 - 116.09
@@ -295,7 +295,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         // Create a subscription without failing payments
         final Subscription baseSubscription = createSubscriptionAndCheckForCompletion(bundle.getId(), productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
 
-        invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
         invoiceChecker.checkChargedThroughDate(baseSubscription.getId(), new LocalDate(2012, 5, 1), callContext);
 
         // Create an external charge on a new invoice
@@ -304,12 +304,12 @@ public class TestOverdueIntegration extends TestOverdueBase {
         invoiceUserApi.insertExternalChargeForBundle(account.getId(), bundle.getId(), BigDecimal.TEN, "For overdue", new LocalDate(2012, 5, 6), Currency.USD, callContext);
         assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
-        invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedItemCheck(new LocalDate(2012, 5, 6), null, InvoiceItemType.EXTERNAL_CHARGE, BigDecimal.TEN));
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 6), null, InvoiceItemType.EXTERNAL_CHARGE, BigDecimal.TEN));
 
         // DAY 30 have to get out of trial before first payment
         addDaysAndCheckForCompletion(25, NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
 
-        invoiceChecker.checkInvoice(account.getId(), 3, callContext, new ExpectedItemCheck(new LocalDate(2012, 5, 31), new LocalDate(2012, 6, 30), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+        invoiceChecker.checkInvoice(account.getId(), 3, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 31), new LocalDate(2012, 6, 30), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
         invoiceChecker.checkChargedThroughDate(baseSubscription.getId(), new LocalDate(2012, 6, 30), callContext);
 
         // Should still be in clear state - the invoice for the bundle has been paid, but not the invoice with the external charge
@@ -340,13 +340,13 @@ public class TestOverdueIntegration extends TestOverdueBase {
         // Create subscription and don't fail payments
         final Subscription baseSubscription = createSubscriptionAndCheckForCompletion(bundle.getId(), productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
 
-        invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
         invoiceChecker.checkChargedThroughDate(baseSubscription.getId(), new LocalDate(2012, 5, 1), callContext);
 
         // DAY 30 have to get out of trial before first payment
         addDaysAndCheckForCompletion(30, NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
 
-        invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedItemCheck(new LocalDate(2012, 5, 31), new LocalDate(2012, 6, 30), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 31), new LocalDate(2012, 6, 30), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
         invoiceChecker.checkChargedThroughDate(baseSubscription.getId(), new LocalDate(2012, 6, 30), callContext);
 
         // Should still be in clear state
@@ -361,7 +361,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         // DAY 65 - 35 days after invoice
         addDaysAndCheckForCompletion(20, NextEvent.INVOICE, NextEvent.PAYMENT);
 
-        invoiceChecker.checkInvoice(account.getId(), 3, callContext, new ExpectedItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+        invoiceChecker.checkInvoice(account.getId(), 3, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
         invoiceChecker.checkChargedThroughDate(baseSubscription.getId(), new LocalDate(2012, 7, 31), callContext);
 
         // Should still be in clear state
@@ -382,13 +382,13 @@ public class TestOverdueIntegration extends TestOverdueBase {
         // Create subscription and don't fail payments
         final Subscription baseSubscription = createSubscriptionAndCheckForCompletion(bundle.getId(), productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
 
-        invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
         invoiceChecker.checkChargedThroughDate(baseSubscription.getId(), new LocalDate(2012, 5, 1), callContext);
 
         // DAY 30 have to get out of trial before first payment
         addDaysAndCheckForCompletion(30, NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
 
-        invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedItemCheck(new LocalDate(2012, 5, 31), new LocalDate(2012, 6, 30), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 31), new LocalDate(2012, 6, 30), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
         invoiceChecker.checkChargedThroughDate(baseSubscription.getId(), new LocalDate(2012, 6, 30), callContext);
 
         // Should still be in clear state
@@ -403,7 +403,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         // DAY 65 - 35 days after invoice
         addDaysAndCheckForCompletion(20, NextEvent.INVOICE, NextEvent.PAYMENT);
 
-        invoiceChecker.checkInvoice(account.getId(), 3, callContext, new ExpectedItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+        invoiceChecker.checkInvoice(account.getId(), 3, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
         invoiceChecker.checkChargedThroughDate(baseSubscription.getId(), new LocalDate(2012, 7, 31), callContext);
 
         // Should still be in clear state
@@ -425,13 +425,13 @@ public class TestOverdueIntegration extends TestOverdueBase {
         paymentPlugin.makeAllInvoicesFailWithError(true);
         final Subscription baseSubscription = createSubscriptionAndCheckForCompletion(bundle.getId(), productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
 
-        invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
         invoiceChecker.checkChargedThroughDate(baseSubscription.getId(), new LocalDate(2012, 5, 1), callContext);
 
         // DAY 30 have to get out of trial before first payment
         addDaysAndCheckForCompletion(30, NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR);
 
-        invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedItemCheck(new LocalDate(2012, 5, 31), new LocalDate(2012, 6, 30), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 31), new LocalDate(2012, 6, 30), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
         invoiceChecker.checkChargedThroughDate(baseSubscription.getId(), new LocalDate(2012, 6, 30), callContext);
 
         // Should still be in clear state
@@ -446,7 +446,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         // DAY 65 - 35 days after invoice
         addDaysAndCheckForCompletion(20, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR, NextEvent.PAYMENT_ERROR);
 
-        invoiceChecker.checkInvoice(account.getId(), 3, callContext, new ExpectedItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+        invoiceChecker.checkInvoice(account.getId(), 3, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
         invoiceChecker.checkChargedThroughDate(baseSubscription.getId(), new LocalDate(2012, 7, 31), callContext);
 
         // Now we should be in OD1
@@ -475,13 +475,13 @@ public class TestOverdueIntegration extends TestOverdueBase {
         paymentPlugin.makeAllInvoicesFailWithError(true);
         final Subscription baseSubscription = createSubscriptionAndCheckForCompletion(bundle.getId(), productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
 
-        invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
         invoiceChecker.checkChargedThroughDate(baseSubscription.getId(), new LocalDate(2012, 5, 1), callContext);
 
         // DAY 30 have to get out of trial before first payment
         addDaysAndCheckForCompletion(30, NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR);
 
-        invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedItemCheck(new LocalDate(2012, 5, 31), new LocalDate(2012, 6, 30), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 31), new LocalDate(2012, 6, 30), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
         invoiceChecker.checkChargedThroughDate(baseSubscription.getId(), new LocalDate(2012, 6, 30), callContext);
 
         // Should still be in clear state
@@ -496,7 +496,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         // DAY 65 - 35 days after invoice
         addDaysAndCheckForCompletion(20, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR, NextEvent.PAYMENT_ERROR);
 
-        invoiceChecker.checkInvoice(account.getId(), 3, callContext, new ExpectedItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+        invoiceChecker.checkInvoice(account.getId(), 3, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
         invoiceChecker.checkChargedThroughDate(baseSubscription.getId(), new LocalDate(2012, 7, 31), callContext);
 
         // Now we should be in OD1
@@ -512,8 +512,8 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
 
         invoiceChecker.checkRepairedInvoice(account.getId(), 2,
-                                            callContext, new ExpectedItemCheck(new LocalDate(2012, 5, 31), new LocalDate(2012, 6, 30), InvoiceItemType.RECURRING, new BigDecimal("249.95")),
-                                            new ExpectedItemCheck(new LocalDate(2012, 5, 31), new LocalDate(2012, 5, 31), InvoiceItemType.ITEM_ADJ, new BigDecimal("-249.95")));
+                                            callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 31), new LocalDate(2012, 6, 30), InvoiceItemType.RECURRING, new BigDecimal("249.95")),
+                                            new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 31), new LocalDate(2012, 5, 31), InvoiceItemType.ITEM_ADJ, new BigDecimal("-249.95")));
         invoiceChecker.checkChargedThroughDate(baseSubscription.getId(), new LocalDate(2012, 7, 31), callContext);
 
         // DAY 70 - 10 days after second invoice
@@ -535,7 +535,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkODState("OD1");
         checkChangePlanWithOverdueState(baseSubscription, true);
 
-        invoiceChecker.checkInvoice(account.getId(), 4, callContext, new ExpectedItemCheck(new LocalDate(2012, 7, 31), new LocalDate(2012, 8, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+        invoiceChecker.checkInvoice(account.getId(), 4, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 31), new LocalDate(2012, 8, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
 
         // Fully adjust all invoices
         final Collection<Invoice> invoices = invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext);

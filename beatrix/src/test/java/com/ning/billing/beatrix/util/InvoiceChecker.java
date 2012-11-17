@@ -61,35 +61,36 @@ public class InvoiceChecker {
         this.auditChecker = auditChecker;
     }
 
-    public void checkInvoice(final UUID accountId, final int invoiceOrderingNumber, final CallContext context, final ExpectedItemCheck... expected) throws InvoiceApiException {
-        checkInvoice(accountId, invoiceOrderingNumber, context, ImmutableList.<ExpectedItemCheck>copyOf(expected));
+    public Invoice checkInvoice(final UUID accountId, final int invoiceOrderingNumber, final CallContext context, final ExpectedInvoiceItemCheck... expected) throws InvoiceApiException {
+        return checkInvoice(accountId, invoiceOrderingNumber, context, ImmutableList.<ExpectedInvoiceItemCheck>copyOf(expected));
     }
 
-    public void checkInvoice(final UUID accountId, final int invoiceOrderingNumber, final CallContext context, final List<ExpectedItemCheck> expected) throws InvoiceApiException {
+    public Invoice checkInvoice(final UUID accountId, final int invoiceOrderingNumber, final CallContext context, final List<ExpectedInvoiceItemCheck> expected) throws InvoiceApiException {
         final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId, context);
         Assert.assertEquals(invoices.size(), invoiceOrderingNumber);
         final Invoice invoice = invoices.get(invoiceOrderingNumber - 1);
         checkInvoice(invoice.getId(), context, expected);
+        return invoice;
     }
 
-    public void checkRepairedInvoice(final UUID accountId, final int invoiceNb, final CallContext context, final ExpectedItemCheck... expected) throws InvoiceApiException {
-        checkRepairedInvoice(accountId, invoiceNb, context, ImmutableList.<ExpectedItemCheck>copyOf(expected));
+    public void checkRepairedInvoice(final UUID accountId, final int invoiceNb, final CallContext context, final ExpectedInvoiceItemCheck... expected) throws InvoiceApiException {
+        checkRepairedInvoice(accountId, invoiceNb, context, ImmutableList.<ExpectedInvoiceItemCheck>copyOf(expected));
     }
 
-    public void checkRepairedInvoice(final UUID accountId, final int invoiceNb, final CallContext context, final List<ExpectedItemCheck> expected) throws InvoiceApiException {
+    public void checkRepairedInvoice(final UUID accountId, final int invoiceNb, final CallContext context, final List<ExpectedInvoiceItemCheck> expected) throws InvoiceApiException {
         final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId, context);
         Assert.assertTrue(invoices.size() > invoiceNb);
         final Invoice invoice = invoices.get(invoiceNb - 1);
         checkInvoice(invoice.getId(), context, expected);
     }
 
-    public void checkInvoice(final UUID invoiceId, final CallContext context, final List<ExpectedItemCheck> expected) throws InvoiceApiException {
+    public void checkInvoice(final UUID invoiceId, final CallContext context, final List<ExpectedInvoiceItemCheck> expected) throws InvoiceApiException {
         final Invoice invoice = invoiceUserApi.getInvoice(invoiceId, context);
         Assert.assertNotNull(invoice);
 
         final List<InvoiceItem> actual = invoice.getInvoiceItems();
         Assert.assertEquals(expected.size(), actual.size());
-        for (final ExpectedItemCheck cur : expected) {
+        for (final ExpectedInvoiceItemCheck cur : expected) {
             boolean found = false;
             for (final InvoiceItem in : actual) {
                 // Match first on type and start date
@@ -140,15 +141,15 @@ public class InvoiceChecker {
         }
     }
 
-    public static class ExpectedItemCheck {
+    public static class ExpectedInvoiceItemCheck {
 
         private final LocalDate startDate;
         private final LocalDate endDate;
         private final InvoiceItemType type;
         private final BigDecimal Amount;
 
-        public ExpectedItemCheck(final LocalDate startDate, final LocalDate endDate,
-                                 final InvoiceItemType type, final BigDecimal amount) {
+        public ExpectedInvoiceItemCheck(final LocalDate startDate, final LocalDate endDate,
+                                        final InvoiceItemType type, final BigDecimal amount) {
             this.startDate = startDate;
             this.endDate = endDate;
             this.type = type;

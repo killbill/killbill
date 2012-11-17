@@ -16,10 +16,6 @@
 
 package com.ning.billing.beatrix.integration;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
-
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
@@ -32,7 +28,8 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.api.TestApiListener.NextEvent;
-import com.ning.billing.beatrix.util.InvoiceChecker.ExpectedItemCheck;
+import com.ning.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
+import com.ning.billing.beatrix.util.PaymentChecker.ExpectedPaymentCheck;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PhaseType;
@@ -44,6 +41,11 @@ import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItemType;
+import com.ning.billing.payment.api.PaymentStatus;
+
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 
 @Guice(modules = {BeatrixIntegrationModule.class})
 public class TestIntegration extends TestIntegrationBase {
@@ -63,24 +65,25 @@ public class TestIntegration extends TestIntegrationBase {
         // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
         //
         final Subscription bpSubscription = createSubscriptionAndCheckForCompletion(bundle.getId(), "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
-        invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
 
         //
         // ADD ADD_ON ON THE SAME DAY
         //
         createSubscriptionAndCheckForCompletion(bundle.getId(), "Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE, NextEvent.PAYMENT);
-        invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("399.95")));
+        Invoice invoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("399.95")));
+        paymentChecker.checkPayment(account.getId(), 1, callContext, new ExpectedPaymentCheck(new LocalDate(2012, 4, 1), new BigDecimal("399.95"), PaymentStatus.SUCCESS, invoice.getId(), Currency.USD));
 
-        //
-        // CANCEL BP ON THE SAME DAY (we should have two cancellations, BP and AO)
-        // There is no invoice created as we only adjust the previous invoice.
-        //
-        cancelSubscriptionAndCheckForCompletion(bpSubscription, clock.getUTCNow(), NextEvent.CANCEL, NextEvent.CANCEL);
+                                    //
+                                    // CANCEL BP ON THE SAME DAY (we should have two cancellations, BP and AO)
+                                    // There is no invoice created as we only adjust the previous invoice.
+                                    //
+                                    cancelSubscriptionAndCheckForCompletion(bpSubscription, clock.getUTCNow(), NextEvent.CANCEL, NextEvent.CANCEL);
         invoiceChecker.checkInvoice(account.getId(), 2,
-                                    callContext, new ExpectedItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("399.95")),
+                                    callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("399.95")),
                                     // The second invoice should be adjusted for the AO (we paid for the full period) and since we paid we should also see a CBA
-                                    new ExpectedItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-399.95")),
-                                    new ExpectedItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 4, 1), InvoiceItemType.CBA_ADJ, new BigDecimal("399.95")));
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-399.95")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 4, 1), InvoiceItemType.CBA_ADJ, new BigDecimal("399.95")));
     }
 
     @Test(groups = "slow")
@@ -102,7 +105,7 @@ public class TestIntegration extends TestIntegrationBase {
         // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
         //
         SubscriptionData subscription = subscriptionDataFromSubscription(createSubscriptionAndCheckForCompletion(bundle.getId(), "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE));
-        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedItemCheck(initialCreationDate.toLocalDate(), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(initialCreationDate.toLocalDate(), null, InvoiceItemType.FIXED, new BigDecimal("0")));
         // No end date for the trial item (fixed price of zero), and CTD should be today (i.e. when the trial started)
         invoiceChecker.checkChargedThroughDate(subscription.getId(), clock.getUTCToday(), callContext);
 
@@ -110,7 +113,7 @@ public class TestIntegration extends TestIntegrationBase {
         // CHANGE PLAN IMMEDIATELY AND EXPECT BOTH EVENTS: NextEvent.CHANGE NextEvent.INVOICE
         //
         subscription = subscriptionDataFromSubscription(changeSubscriptionAndCheckForCompletion(subscription, "Assault-Rifle", BillingPeriod.MONTHLY, NextEvent.CHANGE, NextEvent.INVOICE));
-        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedItemCheck(initialCreationDate.toLocalDate(), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(initialCreationDate.toLocalDate(), null, InvoiceItemType.FIXED, new BigDecimal("0")));
         invoiceChecker.checkChargedThroughDate(subscription.getId(), clock.getUTCToday(), callContext);
 
         //
@@ -120,8 +123,8 @@ public class TestIntegration extends TestIntegrationBase {
         setDateAndCheckForCompletion(new DateTime(2012, 2, 29, 23, 59, 59, 0, testTimeZone));
         setDateAndCheckForCompletion(new DateTime(2012, 3, 1, 23, 59, 59, 0, testTimeZone));
         setDateAndCheckForCompletion(new DateTime(2012, 3, 2, 23, 59, 59, 0, testTimeZone), NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
-        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedItemCheck(new LocalDate(2012, 3, 2),
-                                                                                               new LocalDate(2012, 3, 31), InvoiceItemType.RECURRING, new BigDecimal("561.25")));
+        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 2),
+                                                                                                                   new LocalDate(2012, 3, 31), InvoiceItemType.RECURRING, new BigDecimal("561.25")));
         invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 3, 31), callContext);
 
         //
@@ -135,22 +138,22 @@ public class TestIntegration extends TestIntegrationBase {
         final LocalDate firstRecurringPistolDate = subscription.getChargedThroughDate().toLocalDate();
         final LocalDate secondRecurringPistolDate = firstRecurringPistolDate.plusMonths(1);
         addDaysAndCheckForCompletion(31, NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.PAYMENT);
-        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedItemCheck(new LocalDate(2012, 3, 31), new LocalDate(2012, 4, 30), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 31), new LocalDate(2012, 4, 30), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
         invoiceChecker.checkChargedThroughDate(subscription.getId(), secondRecurringPistolDate, callContext);
 
         //
         // MOVE 3 * TIME AFTER NEXT BILL CYCLE DAY AND EXPECT EVENT : NextEvent.INVOICE, NextEvent.PAYMENT
         //
         addDaysAndCheckForCompletion(31, NextEvent.INVOICE, NextEvent.PAYMENT);
-        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedItemCheck(new LocalDate(2012, 4, 30), new LocalDate(2012, 5, 31), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 30), new LocalDate(2012, 5, 31), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
         invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 5, 31), callContext);
 
         addDaysAndCheckForCompletion(31, NextEvent.INVOICE, NextEvent.PAYMENT);
-        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedItemCheck(new LocalDate(2012, 5, 31), new LocalDate(2012, 6, 30), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 31), new LocalDate(2012, 6, 30), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
         invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 6, 30), callContext);
 
         addDaysAndCheckForCompletion(31, NextEvent.INVOICE, NextEvent.PAYMENT);
-        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
         invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 7, 31), callContext);
 
         //
@@ -184,7 +187,7 @@ public class TestIntegration extends TestIntegrationBase {
         // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
         //
         SubscriptionData subscription = subscriptionDataFromSubscription(createSubscriptionAndCheckForCompletion(bundle.getId(), "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE));
-        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedItemCheck(initialCreationDate.toLocalDate(), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(initialCreationDate.toLocalDate(), null, InvoiceItemType.FIXED, new BigDecimal("0")));
         // No end date for the trial item (fixed price of zero), and CTD should be today (i.e. when the trial started)
         invoiceChecker.checkChargedThroughDate(subscription.getId(), clock.getUTCToday(), callContext);
 
@@ -192,7 +195,7 @@ public class TestIntegration extends TestIntegrationBase {
         // CHANGE PLAN IMMEDIATELY AND EXPECT BOTH EVENTS: NextEvent.CHANGE NextEvent.INVOICE
         //
         subscription = subscriptionDataFromSubscription(changeSubscriptionAndCheckForCompletion(subscription, "Assault-Rifle", BillingPeriod.MONTHLY, NextEvent.CHANGE, NextEvent.INVOICE));
-        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedItemCheck(initialCreationDate.toLocalDate(), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(initialCreationDate.toLocalDate(), null, InvoiceItemType.FIXED, new BigDecimal("0")));
         invoiceChecker.checkChargedThroughDate(subscription.getId(), clock.getUTCToday(), callContext);
 
         //
@@ -202,8 +205,8 @@ public class TestIntegration extends TestIntegrationBase {
         setDateAndCheckForCompletion(new DateTime(2012, 2, 29, 23, 59, 59, 0, testTimeZone));
         setDateAndCheckForCompletion(new DateTime(2012, 3, 1, 23, 59, 59, 0, testTimeZone));
         setDateAndCheckForCompletion(new DateTime(2012, 3, 2, 23, 59, 59, 0, testTimeZone), NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
-        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedItemCheck(new LocalDate(2012, 3, 2),
-                                                                                               new LocalDate(2012, 4, 2), InvoiceItemType.RECURRING, new BigDecimal("599.95")));
+        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 2),
+                                                                                                                   new LocalDate(2012, 4, 2), InvoiceItemType.RECURRING, new BigDecimal("599.95")));
         invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 4, 2), callContext);
 
         //
@@ -217,22 +220,22 @@ public class TestIntegration extends TestIntegrationBase {
         final LocalDate firstRecurringPistolDate = subscription.getChargedThroughDate().toLocalDate();
         final LocalDate secondRecurringPistolDate = firstRecurringPistolDate.plusMonths(1);
         addDaysAndCheckForCompletion(31, NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.PAYMENT);
-        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedItemCheck(new LocalDate(2012, 4, 2), new LocalDate(2012, 5, 2), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 2), new LocalDate(2012, 5, 2), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
         invoiceChecker.checkChargedThroughDate(subscription.getId(), secondRecurringPistolDate, callContext);
 
         //
         // MOVE 3 * TIME AFTER NEXT BILL CYCLE DAY AND EXPECT EVENT : NextEvent.INVOICE, NextEvent.PAYMENT
         //
         addDaysAndCheckForCompletion(31, NextEvent.INVOICE, NextEvent.PAYMENT);
-        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedItemCheck(new LocalDate(2012, 5, 2), new LocalDate(2012, 6, 2), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 2), new LocalDate(2012, 6, 2), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
         invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 6, 2), callContext);
 
         addDaysAndCheckForCompletion(31, NextEvent.INVOICE, NextEvent.PAYMENT);
-        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedItemCheck(new LocalDate(2012, 6, 2), new LocalDate(2012, 7, 2), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 2), new LocalDate(2012, 7, 2), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
         invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 7, 2), callContext);
 
         addDaysAndCheckForCompletion(31, NextEvent.INVOICE, NextEvent.PAYMENT);
-        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedItemCheck(new LocalDate(2012, 7, 2), new LocalDate(2012, 8, 2), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 2), new LocalDate(2012, 8, 2), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
         invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 8, 2), callContext);
 
         //
@@ -268,7 +271,7 @@ public class TestIntegration extends TestIntegrationBase {
         SubscriptionData subscription = subscriptionDataFromSubscription(createSubscriptionAndCheckForCompletion(bundle.getId(), "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE));
 
 
-        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedItemCheck(initialCreationDate.toLocalDate(), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(initialCreationDate.toLocalDate(), null, InvoiceItemType.FIXED, new BigDecimal("0")));
         // No end date for the trial item (fixed price of zero), and CTD should be today (i.e. when the trial started)
         invoiceChecker.checkChargedThroughDate(subscription.getId(), clock.getUTCToday(), callContext);
 
@@ -276,24 +279,24 @@ public class TestIntegration extends TestIntegrationBase {
         // CHANGE PLAN IMMEDIATELY AND EXPECT BOTH EVENTS: NextEvent.CHANGE NextEvent.INVOICE
         //
         subscription = subscriptionDataFromSubscription(changeSubscriptionAndCheckForCompletion(subscription, "Assault-Rifle", BillingPeriod.MONTHLY, NextEvent.CHANGE, NextEvent.INVOICE));
-        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedItemCheck(initialCreationDate.toLocalDate(), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(initialCreationDate.toLocalDate(), null, InvoiceItemType.FIXED, new BigDecimal("0")));
         invoiceChecker.checkChargedThroughDate(subscription.getId(), clock.getUTCToday(), callContext);
 
         //
         // MOVE 4 * TIME THE CLOCK
         //
-        setDateAndCheckForCompletion(new DateTime(2012, 2, 28,  23, 59, 59, 0, testTimeZone));
-        setDateAndCheckForCompletion(new DateTime(2012, 2, 29,  23, 59, 59, 0, testTimeZone));
-        setDateAndCheckForCompletion(new DateTime(2012, 3, 1,  23, 59, 59, 0, testTimeZone));
-        setDateAndCheckForCompletion(new DateTime(2012, 3, 2,  23, 59, 59, 0, testTimeZone), NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
+        setDateAndCheckForCompletion(new DateTime(2012, 2, 28, 23, 59, 59, 0, testTimeZone));
+        setDateAndCheckForCompletion(new DateTime(2012, 2, 29, 23, 59, 59, 0, testTimeZone));
+        setDateAndCheckForCompletion(new DateTime(2012, 3, 1, 23, 59, 59, 0, testTimeZone));
+        setDateAndCheckForCompletion(new DateTime(2012, 3, 2, 23, 59, 59, 0, testTimeZone), NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
         // PRO_RATION
-        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedItemCheck(new LocalDate(2012, 3, 2),
-                                                                                               new LocalDate(2012, 3, 3), InvoiceItemType.RECURRING, new BigDecimal("20.70")));
+        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 2),
+                                                                                                                   new LocalDate(2012, 3, 3), InvoiceItemType.RECURRING, new BigDecimal("20.70")));
         invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 3, 3), callContext);
 
         setDateAndCheckForCompletion(new DateTime(2012, 3, 3, 23, 59, 59, 0, testTimeZone), NextEvent.INVOICE, NextEvent.PAYMENT);
-        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedItemCheck(new LocalDate(2012, 3, 3),
-                                                                                               new LocalDate(2012, 4, 3), InvoiceItemType.RECURRING, new BigDecimal("599.95")));
+        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 3),
+                                                                                                                   new LocalDate(2012, 4, 3), InvoiceItemType.RECURRING, new BigDecimal("599.95")));
         invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 4, 3), callContext);
 
         //
@@ -307,22 +310,22 @@ public class TestIntegration extends TestIntegrationBase {
         final LocalDate firstRecurringPistolDate = subscription.getChargedThroughDate().toLocalDate();
         final LocalDate secondRecurringPistolDate = firstRecurringPistolDate.plusMonths(1);
         addDaysAndCheckForCompletion(31, NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.PAYMENT);
-        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedItemCheck(new LocalDate(2012, 4, 3), new LocalDate(2012, 5, 3), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 3), new LocalDate(2012, 5, 3), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
         invoiceChecker.checkChargedThroughDate(subscription.getId(), secondRecurringPistolDate, callContext);
 
         //
         // MOVE 3 * TIME AFTER NEXT BILL CYCLE DAY AND EXPECT EVENT : NextEvent.INVOICE, NextEvent.PAYMENT
         //
         addDaysAndCheckForCompletion(31, NextEvent.INVOICE, NextEvent.PAYMENT);
-        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedItemCheck(new LocalDate(2012, 5, 3), new LocalDate(2012, 6, 3), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 3), new LocalDate(2012, 6, 3), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
         invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 6, 3), callContext);
 
         addDaysAndCheckForCompletion(31, NextEvent.INVOICE, NextEvent.PAYMENT);
-        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedItemCheck(new LocalDate(2012, 6, 3), new LocalDate(2012, 7, 3), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 3), new LocalDate(2012, 7, 3), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
         invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 7, 3), callContext);
 
         addDaysAndCheckForCompletion(31, NextEvent.INVOICE, NextEvent.PAYMENT);
-        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedItemCheck(new LocalDate(2012, 7, 3), new LocalDate(2012, 8, 3), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 3), new LocalDate(2012, 8, 3), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
         invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 8, 3), callContext);
 
         //

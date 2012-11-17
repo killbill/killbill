@@ -30,7 +30,7 @@ import org.testng.annotations.Test;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.api.TestApiListener.NextEvent;
-import com.ning.billing.beatrix.util.InvoiceChecker.ExpectedItemCheck;
+import com.ning.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
@@ -230,23 +230,23 @@ public class TestBundleTransfer extends TestIntegrationBase {
 
 
         // CHECK OLD ACCOUNTS ITEMS
-        ImmutableList<ExpectedItemCheck> toBeChecked = ImmutableList.<ExpectedItemCheck>of(
-                new ExpectedItemCheck(new LocalDate(2012,5,1), new LocalDate(2012,5,9), InvoiceItemType.RECURRING, new BigDecimal("66.66")),
-                new ExpectedItemCheck(new LocalDate(2012,5,1), new LocalDate(2012,5,9), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-66.66")),
-                new ExpectedItemCheck(new LocalDate(2012,5,3), new LocalDate(2012,5,3), InvoiceItemType.CBA_ADJ, new BigDecimal("66.66")));
+        ImmutableList<ExpectedInvoiceItemCheck> toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
+                new ExpectedInvoiceItemCheck(new LocalDate(2012,5,1), new LocalDate(2012,5,9), InvoiceItemType.RECURRING, new BigDecimal("66.66")),
+                new ExpectedInvoiceItemCheck(new LocalDate(2012,5,1), new LocalDate(2012,5,9), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-66.66")),
+                new ExpectedInvoiceItemCheck(new LocalDate(2012,5,3), new LocalDate(2012,5,3), InvoiceItemType.CBA_ADJ, new BigDecimal("66.66")));
         invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, toBeChecked);
 
-        toBeChecked = ImmutableList.<ExpectedItemCheck>of(
-                new ExpectedItemCheck(new LocalDate(2012,5,1), new LocalDate(2012,5,3), InvoiceItemType.RECURRING, new BigDecimal("16.67")),
-                new ExpectedItemCheck(new LocalDate(2012,5,3), new LocalDate(2012,5,3), InvoiceItemType.CBA_ADJ, new BigDecimal("-16.67")));
+        toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
+                new ExpectedInvoiceItemCheck(new LocalDate(2012,5,1), new LocalDate(2012,5,3), InvoiceItemType.RECURRING, new BigDecimal("16.67")),
+                new ExpectedInvoiceItemCheck(new LocalDate(2012,5,3), new LocalDate(2012,5,3), InvoiceItemType.CBA_ADJ, new BigDecimal("-16.67")));
         invoiceChecker.checkInvoice(invoices.get(2).getId(), callContext, toBeChecked);
 
         // CHECK NEW ACCOUNT ITEMS
         invoices =invoiceUserApi.getInvoicesByAccount(newAccount.getId(), callContext);
         assertEquals(invoices.size(), 1);
 
-        toBeChecked = ImmutableList.<ExpectedItemCheck>of(
-                new ExpectedItemCheck(new LocalDate(2012,5,3), new LocalDate(2012,5,15), InvoiceItemType.RECURRING, new BigDecimal("99.98")));
+        toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
+                new ExpectedInvoiceItemCheck(new LocalDate(2012,5,3), new LocalDate(2012,5,15), InvoiceItemType.RECURRING, new BigDecimal("99.98")));
         invoiceChecker.checkInvoice(invoices.get(0).getId(), callContext, toBeChecked);
     }
 }

@@ -30,6 +30,7 @@ import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.dao.AuditSqlDao;
+import com.ning.billing.util.dao.EntityHistoryModelDao;
 import com.ning.billing.util.dao.HistorySqlDao;
 import com.ning.billing.util.entity.Entity;
 import com.ning.billing.util.entity.EntityPersistenceException;
@@ -57,13 +58,21 @@ public interface EntitySqlDao<M extends EntityModelDao<E>, E extends Entity> ext
     public Long getRecordId(@Bind("id") final String id,
                             @BindBean final InternalTenantContext context);
 
+    // Given entity recordId find the history recordId (targetRecordId for history table = entity recordId)
     @SqlQuery
     public Long getHistoryRecordId(@Bind("targetRecordId") final Long targetRecordId,
                                    @BindBean final InternalTenantContext context);
+
+    // Given history recordId find the entity recordId (targetRecordId for history table = entity recordId)
+    @SqlQuery
+    public Long getHistoryTargetRecordId(@Bind("recordId") final Long recordId,
+                                         @BindBean final InternalTenantContext context);
 
     @SqlQuery
     public List<M> get(@BindBean final InternalTenantContext context);
 
     @SqlUpdate
     public void test(@BindBean final InternalTenantContext context);
+
+
 }
