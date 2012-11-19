@@ -55,7 +55,6 @@ public interface NotificationSqlDao extends Transactional<NotificationSqlDao>, C
     public List<Notification> getReadyNotifications(@Bind("now") Date now,
                                                     @Bind("owner") String owner,
                                                     @Bind("max") int max,
-                                                    @Bind("queueName") String queueName,
                                                     @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery

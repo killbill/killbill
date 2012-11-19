@@ -131,7 +131,7 @@ CREATE TABLE notifications (
     PRIMARY KEY(record_id)
 ) ENGINE=innodb;
 CREATE UNIQUE INDEX notifications_id ON notifications(id);
-CREATE INDEX  `idx_comp_where` ON notifications (`effective_date`, `queue_name`, `processing_state`,`processing_owner`,`processing_available_date`);
+CREATE INDEX  `idx_comp_where` ON notifications (`effective_date`, `processing_state`,`processing_owner`,`processing_available_date`);
 CREATE INDEX  `idx_update` ON notifications (`processing_state`,`processing_owner`,`processing_available_date`);
 CREATE INDEX  `idx_get_ready` ON notifications (`effective_date`,`created_date`,`id`);
 CREATE INDEX notifications_tenant_account_record_id ON notifications(tenant_record_id, account_record_id);

@@ -38,12 +38,12 @@ import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
-import com.ning.billing.util.config.NotificationConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.config.NotificationConfig;
 import com.ning.billing.util.io.IOUtils;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
 import com.ning.billing.util.notificationq.dao.NotificationSqlDao;
@@ -62,6 +62,7 @@ import static org.testng.Assert.assertEquals;
 
 @Guice(modules = TestNotificationQueue.TestNotificationQueueModule.class)
 public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
+
     private final Logger log = LoggerFactory.getLogger(TestNotificationQueue.class);
 
     private static final UUID accountId = UUID.randomUUID();
@@ -75,11 +76,18 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
     @Inject
     private Clock clock;
 
+    @Inject
+    NotificationQueueService queueService;
+
+    @Inject
+    NotificationConfig config;
+
     private DummySqlTest dao;
 
     private int eventsReceived;
 
     private static final class TestNotificationKey implements NotificationKey, Comparable<TestNotificationKey> {
+
         private final String value;
 
         @JsonCreator
@@ -95,6 +103,13 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
         @Override
         public int compareTo(TestNotificationKey arg0) {
             return value.compareTo(arg0.value);
+        }
+
+        @Override
+        public String toString() {
+            final StringBuilder sb = new StringBuilder();
+            sb.append(value);
+            return sb.toString();
         }
     }
 
@@ -133,20 +148,21 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
 
         final Map<NotificationKey, Boolean> expectedNotifications = new TreeMap<NotificationKey, Boolean>();
 
-        final DefaultNotificationQueue queue = new DefaultNotificationQueue(dbi, clock, "test-svc", "foo",
-                                                                            new NotificationQueueHandler() {
-                                                                                @Override
-                                                                                public void handleReadyNotification(final NotificationKey notificationKey, final DateTime eventDateTime, final Long accountRecordId, final Long tenantRecordId) {
-                                                                                    synchronized (expectedNotifications) {
-                                                                                        log.info("Handler received key: " + notificationKey);
+        final NotificationQueue queue = queueService.createNotificationQueue("test-svc",
+                                                                             "foo",
+                                                                             new NotificationQueueHandler() {
+                                                                                 @Override
+                                                                                 public void handleReadyNotification(final NotificationKey notificationKey, final DateTime eventDateTime, final Long accountRecordId, final Long tenantRecordId) {
+                                                                                     synchronized (expectedNotifications) {
+                                                                                         log.info("Handler received key: " + notificationKey);
 
-                                                                                        expectedNotifications.put(notificationKey, Boolean.TRUE);
-                                                                                        expectedNotifications.notify();
-                                                                                    }
-                                                                                }
-                                                                            },
-                                                                            getNotificationConfig(false, 100, 1, 10000),
-                                                                            new InternalCallContextFactory(dbi, clock));
+                                                                                         expectedNotifications.put(notificationKey, Boolean.TRUE);
+                                                                                         expectedNotifications.notify();
+                                                                                     }
+                                                                                 }
+                                                                             },
+                                                                             config);
+
 
         queue.startQueue();
 
@@ -188,21 +204,24 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
-    public void testManyNotifications() throws InterruptedException {
+    public void testManyNotifications() throws Exception {
         final Map<NotificationKey, Boolean> expectedNotifications = new TreeMap<NotificationKey, Boolean>();
 
-        final DefaultNotificationQueue queue = new DefaultNotificationQueue(dbi, clock, "test-svc", "many",
-                                                                            new NotificationQueueHandler() {
-                                                                                @Override
-                                                                                public void handleReadyNotification(final NotificationKey notificationKey, final DateTime eventDateTime, final Long accountRecordId, final Long tenantRecordId) {
-                                                                                    synchronized (expectedNotifications) {
-                                                                                        expectedNotifications.put(notificationKey, Boolean.TRUE);
-                                                                                        expectedNotifications.notify();
-                                                                                    }
-                                                                                }
-                                                                            },
-                                                                            getNotificationConfig(false, 100, 10, 10000),
-                                                                            new InternalCallContextFactory(dbi, clock));
+
+        final NotificationQueue queue = queueService.createNotificationQueue("test-svc",
+                                                                             "many",
+                                                                             new NotificationQueueHandler() {
+                                                                                 @Override
+                                                                                 public void handleReadyNotification(final NotificationKey notificationKey, final DateTime eventDateTime, final Long accountRecordId, final Long tenantRecordId) {
+                                                                                     synchronized (expectedNotifications) {
+                                                                                         log.info("Handler received key: " + notificationKey.toString());
+
+                                                                                         expectedNotifications.put(notificationKey, Boolean.TRUE);
+                                                                                         expectedNotifications.notify();
+                                                                                     }
+                                                                                 }
+                                                                             },
+                                                                             config);
 
         queue.startQueue();
 
@@ -216,7 +235,7 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
             final DummyObject obj = new DummyObject("foo", key);
             final int currentIteration = i;
 
-            final NotificationKey notificationKey = new TestNotificationKey(key.toString());
+            final NotificationKey notificationKey = new TestNotificationKey(new Integer(i).toString());
             expectedNotifications.put(notificationKey, Boolean.FALSE);
 
             dao.inTransaction(new Transaction<Void, DummySqlTest>() {
@@ -255,7 +274,7 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
                     success = true;
                     break;
                 }
-                //log.debug(String.format("BEFORE WAIT : Got %d notifications at time %s (real time %s)", completed.size(), clock.getUTCNow(), new DateTime()));
+                log.info(String.format("BEFORE WAIT : Got %d notifications at time %s (real time %s)", completed.size(), clock.getUTCNow(), new DateTime()));
                 expectedNotifications.wait(1000);
             }
         } while (nbTry-- > 0);
@@ -281,19 +300,9 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
         final Map<NotificationKey, Boolean> expectedNotificationsFred = new TreeMap<NotificationKey, Boolean>();
         final Map<NotificationKey, Boolean> expectedNotificationsBarney = new TreeMap<NotificationKey, Boolean>();
 
-        final NotificationQueueService notificationQueueService = new DefaultNotificationQueueService(dbi, clock, new InternalCallContextFactory(dbi, clock));
 
-        final NotificationConfig config = new NotificationConfig() {
-            @Override
-            public boolean isNotificationProcessingOff() {
-                return false;
-            }
+        final NotificationQueueService notificationQueueService = new DefaultNotificationQueueService(dbi, clock, config, new InternalCallContextFactory(dbi, clock));
 
-            @Override
-            public long getSleepTimeMs() {
-                return 10;
-            }
-        };
 
         final NotificationQueue queueFred = notificationQueueService.createNotificationQueue("UtilTest", "Fred", new NotificationQueueHandler() {
             @Override
@@ -367,39 +376,29 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
         Assert.assertFalse(expectedNotificationsFred.get(notificationKeyBarney));
     }
 
-    NotificationConfig getNotificationConfig(final boolean off, final long sleepTime, final int maxReadyEvents, final long claimTimeMs) {
-        return new NotificationConfig() {
-            @Override
-            public boolean isNotificationProcessingOff() {
-                return off;
-            }
-
-            @Override
-            public long getSleepTimeMs() {
-                return sleepTime;
-            }
-        };
-    }
 
     @Test(groups = "slow")
-    public void testRemoveNotifications() throws InterruptedException {
+    public void testRemoveNotifications() throws Exception  {
         final UUID key = UUID.randomUUID();
         final NotificationKey notificationKey = new TestNotificationKey(key.toString());
         final UUID key2 = UUID.randomUUID();
         final NotificationKey notificationKey2 = new TestNotificationKey(key2.toString());
 
-        final DefaultNotificationQueue queue = new DefaultNotificationQueue(dbi, clock, "test-svc", "many",
-                                                                            new NotificationQueueHandler() {
-                                                                                @Override
-                                                                                public void handleReadyNotification(final NotificationKey inputKey, final DateTime eventDateTime, final Long accountRecordId, final Long tenantRecordId) {
-                                                                                    if (inputKey.equals(notificationKey) || inputKey.equals(notificationKey2)) { //ignore stray events from other tests
-                                                                                        log.info("Received notification with key: " + notificationKey);
-                                                                                        eventsReceived++;
-                                                                                    }
-                                                                                }
-                                                                            },
-                                                                            getNotificationConfig(false, 100, 10, 10000),
-                                                                            new InternalCallContextFactory(dbi, clock));
+
+        final NotificationQueue queue = queueService.createNotificationQueue("test-svc",
+                                                                             "remove",
+                                                                             new NotificationQueueHandler() {
+                                                                                 @Override
+                                                                                 public void handleReadyNotification(final NotificationKey inputKey, final DateTime eventDateTime, final Long accountRecordId, final Long tenantRecordId) {
+                                                                                     if (inputKey.equals(notificationKey) || inputKey.equals(notificationKey2)) { //ignore stray events from other tests
+                                                                                         log.info("Received notification with key: " + notificationKey);
+                                                                                         eventsReceived++;
+                                                                                     }
+                                                                                 }
+                                                                             },
+                                                                             config);
+
+
 
         queue.startQueue();
 
@@ -440,10 +439,26 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
         queue.stopQueue();
     }
 
+
+    static NotificationConfig getNotificationConfig(final boolean off, final long sleepTime) {
+        return new NotificationConfig() {
+            @Override
+            public boolean isNotificationProcessingOff() {
+                return off;
+            }
+
+            @Override
+            public long getSleepTimeMs() {
+                return sleepTime;
+            }
+        };
+    }
+
     public static class TestNotificationQueueModule extends AbstractModule {
+
         @Override
         protected void configure() {
-            bind(Clock.class).to(ClockMock.class);
+            bind(Clock.class).to(ClockMock.class).asEagerSingleton();
 
             final MysqlTestingHelper helper = KillbillTestSuiteWithEmbeddedDB.getMysqlTestingHelper();
             bind(MysqlTestingHelper.class).toInstance(helper);
@@ -451,6 +466,8 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
             bind(IDBI.class).toInstance(dbi);
             final IDBI otherDbi = helper.getDBI();
             bind(IDBI.class).annotatedWith(Names.named("global-lock")).toInstance(otherDbi);
+            bind(NotificationQueueService.class).to(DefaultNotificationQueueService.class).asEagerSingleton();
+            bind(NotificationConfig.class).toInstance(getNotificationConfig(false, 100));
         }
     }
 }

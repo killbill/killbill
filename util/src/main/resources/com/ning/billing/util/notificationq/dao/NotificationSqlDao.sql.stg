@@ -23,7 +23,6 @@ getReadyNotifications() ::= <<
     FORCE INDEX (idx_comp_where)
     where
       effective_date \<= :now
-      and queue_name = :queueName
       and processing_state != 'PROCESSED'
       and processing_state != 'REMOVED'
       and (processing_owner IS NULL OR processing_available_date \<= :now)

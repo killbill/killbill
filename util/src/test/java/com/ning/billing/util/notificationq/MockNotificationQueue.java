@@ -26,6 +26,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
+import com.ning.billing.util.Hostname;
 import com.ning.billing.util.config.NotificationConfig;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.clock.Clock;
@@ -34,13 +35,27 @@ import com.ning.billing.util.queue.PersistentQueueEntryLifecycle.PersistentQueue
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class MockNotificationQueue extends NotificationQueueBase implements NotificationQueue {
+public class MockNotificationQueue implements NotificationQueue {
+
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
+    private final String hostname;
     private final TreeSet<Notification> notifications;
+    private final Clock clock;
+    private final String svcName;
+    private final String queueName;
+    private final NotificationQueueHandler handler;
 
-    public MockNotificationQueue(final Clock clock, final String svcName, final String queueName, final NotificationQueueHandler handler, final NotificationConfig config) {
-        super(clock, svcName, queueName, handler, config);
+    private volatile boolean isStarted;
+
+    public MockNotificationQueue(final Clock clock, final String svcName, final String queueName, final NotificationQueueHandler handler) {
+
+        this.svcName = svcName;
+        this.queueName = queueName;
+        this.handler = handler;
+        this.clock = clock;
+        this.hostname = Hostname.get();
+
         notifications = new TreeSet<Notification>(new Comparator<Notification>() {
             @Override
             public int compare(final Notification o1, final Notification o2) {
@@ -57,7 +72,7 @@ public class MockNotificationQueue extends NotificationQueueBase implements Noti
     public void recordFutureNotification(final DateTime futureNotificationTime, final UUID accountId,
                                          final NotificationKey notificationKey, final InternalCallContext context) throws IOException {
         final String json = objectMapper.writeValueAsString(notificationKey);
-        final Notification notification = new DefaultNotification("MockQueue", getHostname(), notificationKey.getClass().getName(), json, accountId, futureNotificationTime,
+        final Notification notification = new DefaultNotification("MockQueue", hostname, notificationKey.getClass().getName(), json, accountId, futureNotificationTime,
                                                                   null, 0L);
         synchronized (notifications) {
             notifications.add(notification);
@@ -70,58 +85,6 @@ public class MockNotificationQueue extends NotificationQueueBase implements Noti
         recordFutureNotification(futureNotificationTime, accountId, notificationKey, context);
     }
 
-    public List<Notification> getPendingEvents() {
-        final List<Notification> result = new ArrayList<Notification>();
-
-        for (final Notification notification : notifications) {
-            if (notification.getProcessingState() == PersistentQueueEntryLifecycleState.AVAILABLE) {
-                result.add(notification);
-            }
-        }
-
-        return result;
-    }
-
-    @Override
-    public int doProcessEvents() {
-        final int result;
-        final List<Notification> processedNotifications = new ArrayList<Notification>();
-        final List<Notification> oldNotifications = new ArrayList<Notification>();
-
-        final List<Notification> readyNotifications = new ArrayList<Notification>();
-        synchronized (notifications) {
-            for (final Notification cur : notifications) {
-                if (cur.isAvailableForProcessing(getClock().getUTCNow())) {
-                    readyNotifications.add(cur);
-                }
-            }
-        }
-
-        result = readyNotifications.size();
-        for (final Notification cur : readyNotifications) {
-            final NotificationKey key = deserializeEvent(cur.getNotificationKeyClass(), cur.getNotificationKey());
-            getHandler().handleReadyNotification(key, cur.getEffectiveDate(), cur.getAccountRecordId(), cur.getTenantRecordId());
-            final DefaultNotification processedNotification = new DefaultNotification(-1L, cur.getId(), getHostname(), getHostname(),
-                                                                                      "MockQueue", getClock().getUTCNow().plus(CLAIM_TIME_MS),
-                                                                                      PersistentQueueEntryLifecycleState.PROCESSED, cur.getNotificationKeyClass(),
-                                                                                      cur.getNotificationKey(), cur.getAccountId(), cur.getEffectiveDate(),
-                                                                                      cur.getAccountRecordId(), cur.getTenantRecordId());
-            oldNotifications.add(cur);
-            processedNotifications.add(processedNotification);
-        }
-
-        synchronized (notifications) {
-            if (oldNotifications.size() > 0) {
-                notifications.removeAll(oldNotifications);
-            }
-
-            if (processedNotifications.size() > 0) {
-                notifications.addAll(processedNotifications);
-            }
-        }
-
-        return result;
-    }
 
     @Override
     public void removeNotificationsByKey(final NotificationKey key, final InternalCallContext context) {
@@ -141,10 +104,88 @@ public class MockNotificationQueue extends NotificationQueueBase implements Noti
 
     @Override
     public List<Notification> getNotificationForAccountAndDate(final UUID accountId, final DateTime effectiveDate, final InternalCallContext context) {
-        return null;
+
+        final List<Notification> result = new ArrayList<Notification>();
+        synchronized (notifications) {
+            for (Notification cur : notifications) {
+                if (cur.getAccountId().equals(accountId) || cur.getEffectiveDate().compareTo(effectiveDate) == 0) {
+                    result.add(cur);
+                }
+            }
+        }
+        return result;
     }
 
     @Override
     public void removeNotification(final UUID notificationId, final InternalCallContext context) {
+        synchronized (notifications) {
+            for (Notification cur : notifications) {
+                if (cur.getId().equals(notificationId)) {
+                    notifications.remove(cur);
+                    break;
+                }
+            }
+        }
+
     }
+
+    @Override
+    public String getFullQName() {
+        return NotificationQueueDispatcher.getCompositeName(svcName, queueName);
+    }
+
+    @Override
+    public String getServiceName() {
+        return svcName;
+    }
+
+    @Override
+    public String getQueueName() {
+        return queueName;
+    }
+
+    @Override
+    public NotificationQueueHandler getHandler() {
+        return handler;
+    }
+
+    @Override
+    public void startQueue() {
+        isStarted = true;
+    }
+
+    @Override
+    public void stopQueue() {
+        isStarted = false;
+    }
+
+    @Override
+    public boolean isStarted() {
+        return isStarted;
+    }
+
+
+    public List<Notification> getReadyNotifications() {
+        final int result;
+        final List<Notification> processedNotifications = new ArrayList<Notification>();
+        final List<Notification> oldNotifications = new ArrayList<Notification>();
+
+        final List<Notification> readyNotifications = new ArrayList<Notification>();
+        synchronized (notifications) {
+            for (final Notification cur : notifications) {
+                if (cur.isAvailableForProcessing(clock.getUTCNow())) {
+                    readyNotifications.add(cur);
+                }
+            }
+        }
+        return readyNotifications;
+    }
+
+    public void markProcessedNotifications(final List<Notification> toBeremoved, final List<Notification> toBeAdded ) {
+        synchronized (notifications) {
+            notifications.removeAll(toBeremoved);
+            notifications.addAll(toBeAdded);
+        }
+    }
+
 }

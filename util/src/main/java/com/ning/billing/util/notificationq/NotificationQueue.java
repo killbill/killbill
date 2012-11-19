@@ -24,6 +24,7 @@ import org.joda.time.DateTime;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
 import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
 import com.ning.billing.util.queue.QueueLifecycle;
 
 public interface NotificationQueue extends QueueLifecycle {
@@ -67,13 +68,6 @@ public interface NotificationQueue extends QueueLifecycle {
     public void removeNotification(final UUID notificationId,
                                    final InternalCallContext context);
 
-    /**
-     * This is only valid when the queue has been configured with isNotificationProcessingOff is true
-     * In which case, it will callback users for all the ready notifications.
-     *
-     * @return the number of entries we processed
-     */
-    public int processReadyNotification();
 
     /**
      * @return the name of that queue
@@ -89,4 +83,6 @@ public interface NotificationQueue extends QueueLifecycle {
      * @return the queue name associated
      */
     public String getQueueName();
+
+    public NotificationQueueHandler getHandler();
 }

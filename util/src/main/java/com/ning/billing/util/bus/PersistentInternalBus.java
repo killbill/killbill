@@ -58,6 +58,8 @@ public class PersistentInternalBus extends PersistentQueueBase implements Intern
     private final String hostname;
     private final InternalCallContextFactory internalCallContextFactory;
 
+    private volatile boolean isStarted;
+
     private static final class EventBusDelegate extends EventBus {
 
         public EventBusDelegate(final String busName) {
@@ -94,16 +96,19 @@ public class PersistentInternalBus extends PersistentQueueBase implements Intern
         this.eventBusDelegate = new EventBusDelegate("Killbill EventBus");
         this.hostname = Hostname.get();
         this.internalCallContextFactory = internalCallContextFactory;
+        this.isStarted = false;
     }
 
     @Override
     public void start() {
         startQueue();
+        isStarted = true;
     }
 
     @Override
     public void stop() {
         stopQueue();
+        isStarted = false;
     }
 
     @Override
@@ -127,6 +132,11 @@ public class PersistentInternalBus extends PersistentQueueBase implements Intern
             dao.clearBusEvent(cur.getId(), hostname, rehydratedContext);
         }
         return result;
+    }
+
+    @Override
+    public boolean isStarted() {
+        return isStarted;
     }
 
     private List<BusEventEntry> getNextBusEvent(final InternalCallContext context) {

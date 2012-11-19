@@ -19,8 +19,9 @@ package com.ning.billing.util.notificationq;
 import org.joda.time.DateTime;
 
 import com.ning.billing.util.config.NotificationConfig;
+import com.ning.billing.util.queue.QueueLifecycle;
 
-public interface NotificationQueueService {
+public interface NotificationQueueService extends QueueLifecycle {
 
     public interface NotificationQueueHandler {
 
@@ -89,8 +90,7 @@ public interface NotificationQueueService {
             throws NoSuchNotificationQueue;
 
     /**
-     * @param services
      * @return the number of processed notifications
      */
-    public int triggerManualQueueProcessing(final String[] services, final Boolean keepRunning);
+    public int triggerManualQueueProcessing(final Boolean keepRunning);
 }
