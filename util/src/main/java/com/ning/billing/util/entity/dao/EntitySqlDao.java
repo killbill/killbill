@@ -30,7 +30,6 @@ import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.dao.AuditSqlDao;
-import com.ning.billing.util.dao.EntityHistoryModelDao;
 import com.ning.billing.util.dao.HistorySqlDao;
 import com.ning.billing.util.entity.Entity;
 import com.ning.billing.util.entity.EntityPersistenceException;
