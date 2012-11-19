@@ -31,7 +31,6 @@ import com.ning.billing.junction.api.Blockable.Type;
 import com.ning.billing.junction.api.svcs.DefaultInternalBlockingApi;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.junction.dao.BlockingStateDao;
-import com.ning.billing.junction.dao.BlockingStateSqlDao;
 import com.ning.billing.junction.dao.DefaultBlockingStateDao;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
@@ -44,7 +43,7 @@ public class TestDefaultBlockingApi extends JunctionTestSuiteWithEmbeddedDB {
 
     @BeforeMethod(groups = "slow")
     public void setUp() throws Exception {
-        final BlockingStateDao blockingStateDao = new DefaultBlockingStateDao(getMysqlTestingHelper().getDBI(), clock);
+        final BlockingStateDao blockingStateDao = new DefaultBlockingStateDao(getMysqlTestingHelper().getDBI());
         blockingApi = new DefaultInternalBlockingApi(blockingStateDao, clock);
     }
 

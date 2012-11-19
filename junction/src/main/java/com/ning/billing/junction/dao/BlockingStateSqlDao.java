@@ -56,7 +56,6 @@ public interface BlockingStateSqlDao extends EntitySqlDao<BlockingStateModelDao,
                 throws SQLException {
 
             final UUID id;
-            final DateTime timestamp;
             final UUID blockableId;
             final String stateName;
             final String service;
@@ -64,12 +63,10 @@ public interface BlockingStateSqlDao extends EntitySqlDao<BlockingStateModelDao,
             final boolean blockEntitlement;
             final boolean blockBilling;
             final Type type;
-            DateTime createdDate;
-            DateTime updatedDate;
+            final DateTime createdDate;
 
             try {
                 id = UUID.fromString(r.getString("id"));
-                timestamp = getDateTime(r, "created_date");
                 blockableId = UUID.fromString(r.getString("blockable_id"));
                 stateName = r.getString("state") == null ? DefaultBlockingState.CLEAR_STATE_NAME : r.getString("state");
                 type = Type.get(r.getString("type"));

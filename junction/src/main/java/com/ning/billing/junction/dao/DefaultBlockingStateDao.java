@@ -24,8 +24,6 @@ import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import org.skife.jdbi.v2.IDBI;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.BlockingState;
@@ -42,39 +40,31 @@ import com.google.common.collect.Collections2;
 
 public class DefaultBlockingStateDao implements BlockingStateDao {
 
-
-    private static final Logger log = LoggerFactory.getLogger(DefaultBlockingStateDao.class);
-
-    private final Clock clock;
     private final EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao;
 
     @Inject
-    public DefaultBlockingStateDao(final IDBI dbi, final Clock clock) {
-        this.clock = clock;
+    public DefaultBlockingStateDao(final IDBI dbi) {
         this.transactionalSqlDao = new EntitySqlDaoTransactionalJdbiWrapper(dbi);
     }
-
 
     @Override
     public BlockingState getBlockingStateFor(final UUID blockableId, final InternalTenantContext context) {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<BlockingState>() {
             @Override
             public BlockingState inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                final BlockingStateModelDao model =  entitySqlDaoWrapperFactory.become(BlockingStateSqlDao.class).getBlockingStateFor(blockableId, context);
+                final BlockingStateModelDao model = entitySqlDaoWrapperFactory.become(BlockingStateSqlDao.class).getBlockingStateFor(blockableId, context);
                 return BlockingStateModelDao.toBlockingState(model);
 
             }
         });
     }
 
-
-
     @Override
     public List<BlockingState> getBlockingHistoryFor(final UUID blockableId, final InternalTenantContext context) {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<BlockingState>>() {
             @Override
             public List<BlockingState> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                List<BlockingStateModelDao> models = entitySqlDaoWrapperFactory.become(BlockingStateSqlDao.class).getBlockingHistoryFor(blockableId, context);
+                final List<BlockingStateModelDao> models = entitySqlDaoWrapperFactory.become(BlockingStateSqlDao.class).getBlockingHistoryFor(blockableId, context);
                 return new ArrayList<BlockingState>(Collections2.transform(models, new Function<BlockingStateModelDao, BlockingState>() {
                     @Override
                     public BlockingState apply(@Nullable final BlockingStateModelDao src) {
