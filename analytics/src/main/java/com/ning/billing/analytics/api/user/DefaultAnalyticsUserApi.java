@@ -234,7 +234,7 @@ public class DefaultAnalyticsUserApi implements AnalyticsUserApi {
 
     @Override
     public void rebuildAnalyticsForAccount(final Account account, final CallContext context) {
-        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(context);
+        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), context);
 
         // Update the BAC row
         bacDao.accountUpdated(account.getId(), internalCallContext);
