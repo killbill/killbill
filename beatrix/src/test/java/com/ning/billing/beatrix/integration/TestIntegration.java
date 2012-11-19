@@ -27,6 +27,7 @@ import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountData;
 import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import com.ning.billing.beatrix.util.PaymentChecker.ExpectedPaymentCheck;
@@ -53,28 +54,34 @@ public class TestIntegration extends TestIntegrationBase {
     @Test(groups = "slow")
     public void testCancelBPWithAOTheSameDay() throws Exception {
 
-        final Account account = createAccountWithPaymentMethod(getAccountData(1));
+        final AccountData accountData = getAccountData(1);
+        final Account account = createAccountWithPaymentMethod(accountData);
+        accountChecker.checkAccount(account.getId(), accountData, callContext);
 
         // We take april as it has 30 days (easier to play with BCD)
         // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
         clock.setDay(new LocalDate(2012, 4, 1));
 
         final SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
+        entitlementChecker.checkBundleNoAudits(bundle.getId(), bundle.getAccountId(), bundle.getExternalKey(), callContext);
 
         //
         // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
         //
         final Subscription bpSubscription = createSubscriptionAndCheckForCompletion(bundle.getId(), "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
+        // Check bundle after BP got created otherwise we get an error from auditApi.
+        entitlementChecker.checkSubscriptionCreated(bpSubscription.getId(), callContext);
         invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
-
+        entitlementChecker.checkBundleAuditUpdated(bundle.getId(), callContext);
         //
         // ADD ADD_ON ON THE SAME DAY
         //
         createSubscriptionAndCheckForCompletion(bundle.getId(), "Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE, NextEvent.PAYMENT);
         Invoice invoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("399.95")));
         paymentChecker.checkPayment(account.getId(), 1, callContext, new ExpectedPaymentCheck(new LocalDate(2012, 4, 1), new BigDecimal("399.95"), PaymentStatus.SUCCESS, invoice.getId(), Currency.USD));
+        entitlementChecker.checkBundleAuditUpdated(bundle.getId(), callContext);
 
-                                    //
+        //
                                     // CANCEL BP ON THE SAME DAY (we should have two cancellations, BP and AO)
                                     // There is no invoice created as we only adjust the previous invoice.
                                     //
@@ -84,6 +91,8 @@ public class TestIntegration extends TestIntegrationBase {
                                     // The second invoice should be adjusted for the AO (we paid for the full period) and since we paid we should also see a CBA
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-399.95")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 4, 1), InvoiceItemType.CBA_ADJ, new BigDecimal("399.95")));
+        entitlementChecker.checkBundleAuditUpdated(bundle.getId(), callContext);
+
     }
 
     @Test(groups = "slow")

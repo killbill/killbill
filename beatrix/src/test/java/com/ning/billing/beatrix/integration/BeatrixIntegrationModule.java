@@ -34,7 +34,9 @@ import com.ning.billing.beatrix.extbus.PersistentExternalBus;
 import com.ning.billing.beatrix.integration.overdue.IntegrationTestOverdueModule;
 import com.ning.billing.beatrix.lifecycle.DefaultLifecycle;
 import com.ning.billing.beatrix.lifecycle.Lifecycle;
+import com.ning.billing.beatrix.util.AccountChecker;
 import com.ning.billing.beatrix.util.AuditChecker;
+import com.ning.billing.beatrix.util.EntitlementChecker;
 import com.ning.billing.beatrix.util.InvoiceChecker;
 import com.ning.billing.beatrix.util.PaymentChecker;
 import com.ning.billing.catalog.api.CatalogService;
@@ -116,6 +118,8 @@ public class BeatrixIntegrationModule extends AbstractModule {
         install(new IntegrationTestOverdueModule());
         install(new AuditModule());
 
+        bind(AccountChecker.class).asEagerSingleton();
+        bind(EntitlementChecker.class).asEagerSingleton();
         bind(InvoiceChecker.class).asEagerSingleton();
         bind(PaymentChecker.class).asEagerSingleton();
         bind(AuditChecker.class).asEagerSingleton();

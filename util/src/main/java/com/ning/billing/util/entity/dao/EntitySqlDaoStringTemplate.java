@@ -75,7 +75,7 @@ public @interface EntitySqlDaoStringTemplate {
                                 if (sqlObjectType.getGenericInterfaces()[i] instanceof ParameterizedType) {
                                     final ParameterizedType type = (ParameterizedType) sqlObjectType.getGenericInterfaces()[i];
                                     for (int j = 0; j < type.getActualTypeArguments().length; j++) {
-                                        final Class modelClazz = (Class) type.getActualTypeArguments()[i];
+                                        final Class modelClazz = (Class) type.getActualTypeArguments()[j];
                                         if (Entity.class.isAssignableFrom(modelClazz)) {
                                             query.registerMapper(new LowerToCamelBeanMapperFactory(modelClazz));
                                         }

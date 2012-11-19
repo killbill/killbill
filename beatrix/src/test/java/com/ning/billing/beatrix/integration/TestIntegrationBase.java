@@ -49,6 +49,8 @@ import com.ning.billing.api.TestListenerStatus;
 import com.ning.billing.beatrix.BeatrixTestSuiteWithEmbeddedDB;
 import com.ning.billing.beatrix.bus.api.ExternalBus;
 import com.ning.billing.beatrix.lifecycle.Lifecycle;
+import com.ning.billing.beatrix.util.AccountChecker;
+import com.ning.billing.beatrix.util.EntitlementChecker;
 import com.ning.billing.beatrix.util.InvoiceChecker;
 import com.ning.billing.beatrix.util.PaymentChecker;
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -183,7 +185,13 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     protected PaymentChecker paymentChecker;
 
     @Inject
+    protected AccountChecker accountChecker;
+
+    @Inject
     protected ExternalBus externalBus;
+
+    @Inject
+    protected EntitlementChecker entitlementChecker;
 
     @Inject
     protected AccountInternalApi accountInternalApi;

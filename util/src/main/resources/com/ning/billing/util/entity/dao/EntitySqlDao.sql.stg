@@ -292,7 +292,7 @@ from <auditTableName()> t
 where t.target_record_id = :targetRecordId
 and t.table_name = :tableName
 <AND_CHECK_TENANT("t.")>
-order by created_date ASC
+order by <recordIdField("t.")> ASC
 ;
 >>
 
