@@ -202,8 +202,9 @@ public class AuditChecker {
             Assert.assertEquals(auditLog.getUserName(), context.getUserName());
             Assert.assertEquals(auditLog.getComment(), context.getComments());
             //Assert.assertEquals(auditLog.getCreatedDate().comparesTo(context.getCreatedDate()));
+            // We can't take userToken oustide of the 'if' because for instance NextBillingDate invoice will not have it.
+            Assert.assertEquals(auditLog.getUserToken(), context.getUserToken().toString());
         }
-        Assert.assertEquals(auditLog.getUserToken(), context.getUserToken().toString());
         final M entityModel = extractEntityModelFromEntityWithTargetRecordId(auditLog.getId(), sqlDao, context, useHistory);
         Assert.assertEquals(entityModel.getId(), entityId);
 
