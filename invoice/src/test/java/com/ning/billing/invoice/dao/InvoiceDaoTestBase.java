@@ -164,4 +164,14 @@ public class InvoiceDaoTestBase extends InvoicingTestBase {
         Assert.assertEquals(InvoiceModelDaoHelper.getBalance(invoice).doubleValue(), balance);
         Assert.assertEquals(InvoiceModelDaoHelper.getCBAAmount(invoice).doubleValue(), cbaAmount);
     }
+
+    protected void checkInvoicesEqual(final InvoiceModelDao retrievedInvoice, final Invoice invoice) {
+        Assert.assertEquals(retrievedInvoice.getId(), invoice.getId());
+        Assert.assertEquals(retrievedInvoice.getAccountId(), invoice.getAccountId());
+        Assert.assertEquals(retrievedInvoice.getCurrency(), invoice.getCurrency());
+        Assert.assertEquals(retrievedInvoice.getInvoiceDate(), invoice.getInvoiceDate());
+        Assert.assertEquals(retrievedInvoice.getTargetDate(), invoice.getTargetDate());
+        Assert.assertEquals(retrievedInvoice.getInvoiceItems().size(), invoice.getInvoiceItems().size());
+        Assert.assertEquals(retrievedInvoice.getInvoicePayments().size(), invoice.getPayments().size());
+    }
 }

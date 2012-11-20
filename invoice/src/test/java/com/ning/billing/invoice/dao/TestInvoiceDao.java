@@ -75,6 +75,17 @@ import static org.testng.Assert.assertTrue;
 public class TestInvoiceDao extends InvoiceDaoTestBase {
 
     @Test(groups = "slow")
+    public void testSimple() throws Exception {
+        final UUID accountId = UUID.randomUUID();
+        final Invoice invoice = new DefaultInvoice(accountId, clock.getUTCToday(), clock.getUTCToday(), Currency.USD);
+        createInvoice(invoice, true, internalCallContext);
+
+        final InvoiceModelDao retrievedInvoice = invoiceDao.getById(invoice.getId(), internalCallContext);
+        checkInvoicesEqual(retrievedInvoice, invoice);
+        checkInvoicesEqual(invoiceDao.getByNumber(retrievedInvoice.getInvoiceNumber(), internalCallContext), invoice);
+    }
+
+    @Test(groups = "slow")
     public void testCreationAndRetrievalByAccount() {
         final UUID accountId = UUID.randomUUID();
         final Invoice invoice = new DefaultInvoice(accountId, clock.getUTCToday(), clock.getUTCToday(), Currency.USD);

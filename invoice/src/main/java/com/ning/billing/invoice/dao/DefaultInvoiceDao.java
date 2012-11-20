@@ -38,7 +38,6 @@ import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.invoice.api.InvoicePayment.InvoicePaymentType;
 import com.ning.billing.invoice.api.user.DefaultInvoiceAdjustmentEvent;
 import com.ning.billing.invoice.model.InvoiceItemList;
-import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
@@ -156,7 +155,24 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
     @Override
     public InvoiceModelDao getByNumber(final Integer number, final InternalTenantContext context) throws InvoiceApiException {
-        return getByRecordId(number.longValue(), context);
+
+        if (number == null) {
+            throw new InvoiceApiException(ErrorCode.INVOICE_INVALID_NUMBER, "(null)");
+        }
+
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<InvoiceModelDao>() {
+            @Override
+            public InvoiceModelDao inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                final InvoiceSqlDao invoiceDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
+
+                final InvoiceModelDao invoice = invoiceDao.getByRecordId(number.longValue(), context);
+                if (invoice == null) {
+                    throw new InvoiceApiException(ErrorCode.INVOICE_NUMBER_NOT_FOUND, number.longValue());
+                }
+                populateChildren(invoice, entitySqlDaoWrapperFactory, context);
+                return invoice;
+            }
+        });
     }
 
     @Override
