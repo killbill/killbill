@@ -37,7 +37,7 @@ public class TestDefaultAuditLog extends UtilTestSuite {
         final TableName tableName = TableName.ACCOUNT_EMAIL_HISTORY;
         final long recordId = Long.MAX_VALUE;
         final ChangeType changeType = ChangeType.DELETE;
-        final EntityAudit entityAudit = new EntityAudit(tableName, recordId, changeType);
+        final EntityAudit entityAudit = new EntityAudit(tableName, recordId, changeType, null);
 
         final UUID tenantId = UUID.randomUUID();
         final String userName = UUID.randomUUID().toString();
@@ -61,7 +61,7 @@ public class TestDefaultAuditLog extends UtilTestSuite {
         final TableName tableName = TableName.ACCOUNT_EMAIL_HISTORY;
         final long recordId = Long.MAX_VALUE;
         final ChangeType changeType = ChangeType.DELETE;
-        final EntityAudit entityAudit = new EntityAudit(tableName, recordId, changeType);
+        final EntityAudit entityAudit = new EntityAudit(tableName, recordId, changeType, null);
 
         final UUID tenantId = UUID.randomUUID();
         final String userName = UUID.randomUUID().toString();

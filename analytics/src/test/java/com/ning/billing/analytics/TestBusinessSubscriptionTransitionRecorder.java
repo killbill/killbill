@@ -60,7 +60,7 @@ public class TestBusinessSubscriptionTransitionRecorder extends AnalyticsTestSui
         final SubscriptionBundle bundle = Mockito.mock(SubscriptionBundle.class);
         Mockito.when(bundle.getId()).thenReturn(bundleId);
         Mockito.when(bundle.getAccountId()).thenReturn(accountId);
-        Mockito.when(bundle.getKey()).thenReturn(externalKey.toString());
+        Mockito.when(bundle.getExternalKey()).thenReturn(externalKey.toString());
         final EntitlementInternalApi entitlementApi = Mockito.mock(EntitlementInternalApi.class);
         Mockito.when(entitlementApi.getBundleFromId(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(bundle);
 

@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.ning.billing.BillingExceptionBase;
 import com.ning.billing.ObjectType;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TenantContext;
@@ -27,7 +28,7 @@ import com.ning.billing.util.customfield.CustomField;
 
 public interface CustomFieldUserApi {
 
-    Map<String, CustomField> getCustomFields(UUID objectId, ObjectType objectType, TenantContext context);
+    List<CustomField> getCustomFields(UUID objectId, ObjectType objectType, TenantContext context);
 
-    void saveCustomFields(UUID objectId, ObjectType objectType, List<CustomField> fields, CallContext context);
+    void addCustomFields(List<CustomField> fields, CallContext context) throws CustomFieldApiException;
 }

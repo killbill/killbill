@@ -24,14 +24,15 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.AccountTestSuite;
-import com.ning.billing.util.events.ChangedField;
 import com.ning.billing.account.api.DefaultBillCycleDay;
 import com.ning.billing.account.api.DefaultChangedField;
 import com.ning.billing.account.api.user.DefaultAccountCreationEvent.DefaultAccountData;
 import com.ning.billing.util.events.AccountChangeInternalEvent;
+import com.ning.billing.util.events.ChangedField;
 import com.ning.billing.util.jackson.ObjectMapper;
 
 public class TestEventJson extends AccountTestSuite {
+
     private final ObjectMapper mapper = new ObjectMapper();
 
     @Test(groups = "fast")
@@ -52,7 +53,7 @@ public class TestEventJson extends AccountTestSuite {
     public void testAccountCreationEvent() throws Exception {
         final DefaultAccountData data = new DefaultAccountData("dsfdsf", "bobo", 3, "bobo@yahoo.com", new DefaultBillCycleDay(12), "USD", UUID.randomUUID(),
                                                                "UTC", "US", "21 avenue", "", "Gling", "San Franciso", "CA", "94110", "USA", "4126789887", false, false);
-        final DefaultAccountCreationEvent e = new DefaultAccountCreationEvent(data, UUID.randomUUID(), UUID.randomUUID(),  1L, 45L);
+        final DefaultAccountCreationEvent e = new DefaultAccountCreationEvent(data, UUID.randomUUID(), UUID.randomUUID(), 1L, 45L);
         final String json = mapper.writeValueAsString(e);
 
         final DefaultAccountCreationEvent obj = mapper.readValue(json, DefaultAccountCreationEvent.class);

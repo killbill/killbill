@@ -19,6 +19,7 @@ package com.ning.billing.invoice.model;
 import java.math.BigDecimal;
 
 public class InvoicingConfiguration {
+
     private static final int roundingMethod = BigDecimal.ROUND_HALF_UP;
     private static final int numberOfDecimals = 2;
 

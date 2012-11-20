@@ -49,6 +49,7 @@ import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.invoice.dao.InvoiceDao;
+import com.ning.billing.invoice.dao.InvoiceModelDao;
 import com.ning.billing.invoice.generator.InvoiceGenerator;
 import com.ning.billing.invoice.notification.NextBillingDateNotifier;
 import com.ning.billing.invoice.notification.NullInvoiceNotifier;
@@ -107,7 +108,6 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
     @Inject
     private InternalCallContextFactory internalCallContextFactory;
 
-
     private Account account;
     private Subscription subscription;
 
@@ -122,7 +122,6 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
         account = Mockito.mock(Account.class);
 
         final UUID accountId = UUID.randomUUID();
-
 
         Mockito.when(accountInternalApi.getAccountById(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(account);
 
@@ -168,13 +167,13 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
         final InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
         final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountInternalApi, billingApi, entitlementInternalApi, invoiceDao,
                                                                    invoiceNotifier, locker, busService.getBus(),
-                                                                   clock, new InternalCallContextFactory(getMysqlTestingHelper().getDBI(), clock));
+                                                                   clock);
 
         Invoice invoice = dispatcher.processAccount(accountId, target, true, internalCallContext);
         Assert.assertNotNull(invoice);
 
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(callContext);
-        List<Invoice> invoices = invoiceDao.getInvoicesByAccount(accountId, internalTenantContext);
+        List<InvoiceModelDao> invoices = invoiceDao.getInvoicesByAccount(accountId, internalTenantContext);
         Assert.assertEquals(invoices.size(), 0);
 
         // Try it again to double check
@@ -222,7 +221,7 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
         final InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
         final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountInternalApi, billingApi, entitlementInternalApi, invoiceDao,
                                                                    invoiceNotifier, locker, busService.getBus(),
-                                                                   clock, internalCallContextFactory);
+                                                                   clock);
 
         final Invoice invoice = dispatcher.processAccount(account.getId(), new DateTime("2012-07-30T00:00:00.000Z"), false, internalCallContext);
         Assert.assertNotNull(invoice);

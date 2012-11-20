@@ -47,9 +47,6 @@ public abstract class TestUserApiCreate extends TestApiBase {
 
     private static final Logger log = LoggerFactory.getLogger(TestUserApiCreate.class);
 
-    private final InternalTenantContext internalTenantContext = Mockito.mock(InternalTenantContext.class);
-    private final TenantContext tenantContext = Mockito.mock(TenantContext.class);
-
     public void testCreateWithRequestedDate() {
         try {
             final DateTime init = clock.getUTCNow();
@@ -150,7 +147,7 @@ public abstract class TestUserApiCreate extends TestApiBase {
             assertEquals(currentPhase.getPhaseType(), PhaseType.TRIAL);
             assertTrue(testListener.isCompleted(5000));
 
-            final List<EntitlementEvent> events = dao.getPendingEventsForSubscription(subscription.getId(), internalTenantContext);
+            final List<EntitlementEvent> events = dao.getPendingEventsForSubscription(subscription.getId(), internalCallContext);
             assertNotNull(events);
             printEvents(events);
             assertTrue(events.size() == 1);
@@ -207,7 +204,7 @@ public abstract class TestUserApiCreate extends TestApiBase {
             clock.addDeltaFromReality(it.toDurationMillis());
             assertTrue(testListener.isCompleted(5000));
 
-            subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId(), tenantContext);
+            subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId(), callContext);
             currentPhase = subscription.getCurrentPhase();
             assertNotNull(currentPhase);
             assertEquals(currentPhase.getPhaseType(), PhaseType.EVERGREEN);

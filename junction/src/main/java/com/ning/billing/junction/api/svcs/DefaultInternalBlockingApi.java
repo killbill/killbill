@@ -43,7 +43,7 @@ public class DefaultInternalBlockingApi implements BlockingInternalApi {
 
     @Override
     public BlockingState getBlockingStateFor(final Blockable overdueable, final InternalTenantContext context) {
-        BlockingState state = dao.getBlockingStateFor(overdueable, context);
+        BlockingState state = dao.getBlockingStateFor(overdueable.getId(), context);
         if (state == null) {
             state = DefaultBlockingState.getClearState();
         }
@@ -57,7 +57,7 @@ public class DefaultInternalBlockingApi implements BlockingInternalApi {
 
     @Override
     public List<BlockingState> getBlockingHistory(final Blockable overdueable, final InternalTenantContext context) {
-        return dao.getBlockingHistoryFor(overdueable, context);
+        return dao.getBlockingHistoryFor(overdueable.getId(), context);
     }
 
     @Override

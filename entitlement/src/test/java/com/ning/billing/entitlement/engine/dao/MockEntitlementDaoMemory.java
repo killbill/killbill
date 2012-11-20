@@ -27,7 +27,6 @@ import java.util.TreeSet;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,6 +53,8 @@ import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.entity.dao.EntitySqlDao;
+import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import com.ning.billing.util.notificationq.NotificationKey;
 import com.ning.billing.util.notificationq.NotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService;
@@ -106,7 +107,7 @@ public class MockEntitlementDaoMemory implements EntitlementDao {
     public List<SubscriptionBundle> getSubscriptionBundlesForKey(final String bundleKey, final InternalTenantContext context) {
         final List<SubscriptionBundle> results = new ArrayList<SubscriptionBundle>();
         for (final SubscriptionBundle cur : bundles) {
-            if (cur.getKey().equals(bundleKey)) {
+            if (cur.getExternalKey().equals(bundleKey)) {
                 results.add(cur);
             }
         }
@@ -126,7 +127,7 @@ public class MockEntitlementDaoMemory implements EntitlementDao {
     @Override
     public SubscriptionBundle getSubscriptionBundleFromAccountAndKey(final UUID accountId, final String bundleKey, final InternalTenantContext context) {
         for (final SubscriptionBundle cur : bundles) {
-            if (cur.getKey().equals(bundleKey) && cur.getAccountId().equals(accountId)) {
+            if (cur.getExternalKey().equals(bundleKey) && cur.getAccountId().equals(accountId)) {
                 return cur;
             }
         }
@@ -158,7 +159,7 @@ public class MockEntitlementDaoMemory implements EntitlementDao {
     public List<Subscription> getSubscriptionsForAccountAndKey(final SubscriptionFactory factory, final UUID accountId, final String bundleKey, final InternalTenantContext context) {
 
         for (final SubscriptionBundle cur : bundles) {
-            if (cur.getKey().equals(bundleKey) && cur.getAccountId().equals(bundleKey)) {
+            if (cur.getExternalKey().equals(bundleKey) && cur.getAccountId().equals(bundleKey)) {
                 return getSubscriptions(factory, cur.getId(), context);
             }
         }
@@ -406,7 +407,7 @@ public class MockEntitlementDaoMemory implements EntitlementDao {
         return null;
     }
 
-    private void recordFutureNotificationFromTransaction(final Transmogrifier transactionalDao, final DateTime effectiveDate,
+    private void recordFutureNotificationFromTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> transactionalDao, final DateTime effectiveDate,
                                                          final NotificationKey notificationKey, final InternalCallContext context) {
         try {
             final NotificationQueue subscriptionEventQueue = notificationQueueService.getNotificationQueue(Engine.ENTITLEMENT_SERVICE_NAME,

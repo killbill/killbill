@@ -1,89 +1,63 @@
-group BundleSqlDao;
+group BundleSqlDao: EntitySqlDao;
 
-CHECK_TENANT() ::= "tenant_record_id = :tenantRecordId"
-AND_CHECK_TENANT() ::= "AND <CHECK_TENANT()>"
+tableName() ::= "bundles"
 
-fields(prefix) ::= <<
-    <prefix>id,
-    <prefix>external_key,
-    <prefix>account_id,
-    <prefix>last_sys_update_date,
-    <prefix>account_record_id,
-    <prefix>tenant_record_id
+
+tableFields(prefix) ::= <<
+  <prefix>external_key
+, <prefix>account_id
+, <prefix>last_sys_update_date
+, <prefix>created_by
+, <prefix>created_date
+, <prefix>updated_by
+, <prefix>updated_date
 >>
 
-insertBundle() ::= <<
-    insert into bundles (<fields()>)
-    values (:id, :externalKey, :accountId, :lastSysUpdateDate, :accountRecordId, :tenantRecordId);
+tableValues() ::= <<
+  :externalKey
+, :accountId
+, :lastSysUpdateDate
+, :createdBy
+, :createdDate
+, :updatedBy
+, :updatedDate
 >>
 
 updateBundleLastSysTime()  ::= <<
-    update bundles
-    set
-        last_sys_update_date = :lastSysUpdateDate
-    where id = :id
-    <AND_CHECK_TENANT()>
-    ;
->>
-
-getBundleFromId() ::= <<
-    select <fields()>
-    from bundles
-    where
-      id = :id
-    <AND_CHECK_TENANT()>
-    ;
+update <tableName()>
+set
+last_sys_update_date = :lastSysUpdateDate
+, updated_by = :createdBy
+, updated_date = :createdDate
+where id = :id
+<AND_CHECK_TENANT()>
+;
 >>
 
 getBundlesForKey() ::= <<
-    select <fields()>
-    from bundles
-    where
-      external_key = :externalKey
-    <AND_CHECK_TENANT()>
-    ;
+select <allTableFields()>
+from bundles
+where
+external_key = :externalKey
+<AND_CHECK_TENANT()>
+;
 >>
 
 getBundleFromAccountAndKey() ::= <<
-    select <fields()>
-    from bundles
-    where
-      external_key = :externalKey AND account_id = :accountId
-    <AND_CHECK_TENANT()>
-    ;
+select <allTableFields()>
+from bundles
+where
+external_key = :externalKey
+and account_id = :accountId
+<AND_CHECK_TENANT()>
+;
 >>
 
 getBundleFromAccount() ::= <<
-    select <fields()>
-    from bundles
-    where
-      account_id = :accountId
-    <AND_CHECK_TENANT()>
-    ;
->>
-
-getRecordId() ::= <<
-    SELECT record_id
-    FROM bundles
-    WHERE id = :id
-    <AND_CHECK_TENANT()>
-    ;
->>
-
-auditFields(prefix) ::= <<
-    <prefix>table_name,
-    <prefix>record_id,
-    <prefix>change_type,
-    <prefix>change_date,
-    <prefix>changed_by,
-    <prefix>reason_code,
-    <prefix>comments,
-    <prefix>user_token,
-    <prefix>account_record_id,
-    <prefix>tenant_record_id
->>
-
-insertAuditFromTransaction() ::= <<
-    INSERT INTO audit_log(<auditFields()>)
-    VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, :reasonCode, :comment, :userToken, :accountRecordId, :tenantRecordId);
+select <allTableFields()>
+from bundles
+where
+account_id = :accountId
+<AND_CHECK_TENANT()>
+;
 >>

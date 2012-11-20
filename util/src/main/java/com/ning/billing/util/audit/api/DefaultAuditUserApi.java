@@ -24,7 +24,10 @@ import java.util.UUID;
 import javax.inject.Inject;
 
 import com.ning.billing.ObjectType;
+import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.entitlement.api.timeline.BundleTimeline;
+import com.ning.billing.entitlement.api.timeline.EntitlementRepairException;
+import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
 import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline;
 import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline.ExistingEvent;
 import com.ning.billing.invoice.api.Invoice;
@@ -35,6 +38,7 @@ import com.ning.billing.payment.api.Refund;
 import com.ning.billing.util.api.AuditLevel;
 import com.ning.billing.util.api.AuditUserApi;
 import com.ning.billing.util.audit.AuditLog;
+import com.ning.billing.util.audit.AuditLogsForAccount;
 import com.ning.billing.util.audit.AuditLogsForBundles;
 import com.ning.billing.util.audit.AuditLogsForInvoicePayments;
 import com.ning.billing.util.audit.AuditLogsForInvoices;
@@ -55,12 +59,24 @@ import com.google.common.collect.ImmutableList;
 public class DefaultAuditUserApi implements AuditUserApi {
 
     private final AuditDao auditDao;
+    private final EntitlementTimelineApi timelineApi;
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
-    public DefaultAuditUserApi(final AuditDao auditDao, final InternalCallContextFactory internalCallContextFactory) {
+    public DefaultAuditUserApi(final AuditDao auditDao, final EntitlementTimelineApi timelineApi, final InternalCallContextFactory internalCallContextFactory) {
         this.auditDao = auditDao;
+        this.timelineApi = timelineApi;
         this.internalCallContextFactory = internalCallContextFactory;
+    }
+
+    @Override
+    public AuditLogsForAccount getAuditLogsForAccount(final UUID accountId, final AuditLevel auditLevel, final TenantContext context){
+        return new DefaultAuditLogsForAccount(getAuditLogs(accountId, ObjectType.ACCOUNT, auditLevel, context));
+    }
+
+    @Override
+    public AuditLogsForBundles getAuditLogsForBundle(final UUID bundleId, final AuditLevel auditLevel, final TenantContext context) throws EntitlementRepairException {
+        return getAuditLogsForBundles(ImmutableList.<BundleTimeline>of(timelineApi.getBundleTimeline(bundleId, context)), auditLevel, context);
     }
 
     @Override

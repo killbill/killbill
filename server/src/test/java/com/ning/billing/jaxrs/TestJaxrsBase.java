@@ -16,8 +16,6 @@
 
 package com.ning.billing.jaxrs;
 
-import static org.testng.Assert.assertNotNull;
-
 import java.io.IOException;
 import java.net.URL;
 import java.util.EventListener;
@@ -40,7 +38,6 @@ import com.ning.billing.analytics.setup.AnalyticsModule;
 import com.ning.billing.api.TestApiListener;
 import com.ning.billing.beatrix.glue.BeatrixModule;
 import com.ning.billing.catalog.glue.CatalogModule;
-import com.ning.billing.util.config.PaymentConfig;
 import com.ning.billing.dbi.DBIProvider;
 import com.ning.billing.dbi.DbiConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
@@ -57,6 +54,7 @@ import com.ning.billing.server.modules.KillbillServerModule;
 import com.ning.billing.tenant.glue.TenantModule;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.config.PaymentConfig;
 import com.ning.billing.util.email.EmailModule;
 import com.ning.billing.util.email.templates.TemplateModule;
 import com.ning.billing.util.glue.AuditModule;
@@ -77,6 +75,8 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Module;
+
+import static org.testng.Assert.assertNotNull;
 
 public class TestJaxrsBase extends KillbillClient {
 

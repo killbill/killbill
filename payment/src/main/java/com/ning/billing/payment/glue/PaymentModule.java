@@ -25,6 +25,7 @@ import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.config.SimplePropertyConfigSource;
 
+import com.ning.billing.payment.dao.DefaultPaymentDao;
 import com.ning.billing.util.config.PaymentConfig;
 import com.ning.billing.payment.api.DefaultPaymentApi;
 import com.ning.billing.payment.api.PaymentApi;
@@ -35,7 +36,6 @@ import com.ning.billing.payment.bus.TagHandler;
 import com.ning.billing.payment.core.PaymentMethodProcessor;
 import com.ning.billing.payment.core.PaymentProcessor;
 import com.ning.billing.payment.core.RefundProcessor;
-import com.ning.billing.payment.dao.AuditedPaymentDao;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
 import com.ning.billing.payment.retry.AutoPayRetryService;
@@ -72,7 +72,7 @@ public class PaymentModule extends AbstractModule {
     }
 
     protected void installPaymentDao() {
-        bind(PaymentDao.class).to(AuditedPaymentDao.class).asEagerSingleton();
+        bind(PaymentDao.class).to(DefaultPaymentDao.class).asEagerSingleton();
     }
 
     protected void installPaymentProviderPlugins(final PaymentConfig config) {

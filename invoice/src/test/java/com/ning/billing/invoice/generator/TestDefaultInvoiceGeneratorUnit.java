@@ -26,7 +26,6 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.util.config.InvoiceConfig;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
@@ -37,12 +36,14 @@ import com.ning.billing.invoice.model.RepairAdjInvoiceItem;
 import com.ning.billing.invoice.tests.InvoicingTestBase;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.config.InvoiceConfig;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
 
 public class TestDefaultInvoiceGeneratorUnit extends InvoicingTestBase {
+
     private DefaultInvoiceGenerator gen;
     private Clock clock;
 
@@ -55,6 +56,7 @@ public class TestDefaultInvoiceGeneratorUnit extends InvoicingTestBase {
     private final Currency currency = Currency.USD;
 
     public static final class TestDefaultInvoiceGeneratorMock extends DefaultInvoiceGenerator {
+
         public TestDefaultInvoiceGeneratorMock(final Clock clock, final InvoiceConfig config) {
             super(clock, config);
         }

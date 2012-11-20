@@ -18,8 +18,10 @@ package com.ning.billing.util.audit;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.util.entity.Entity;
 
-public interface AuditLog {
+
+public interface AuditLog extends Entity {
 
     /**
      * Get the type of change for this log entry

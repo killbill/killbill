@@ -1,134 +1,75 @@
-group SubscriptionSqlDao;
+group SubscriptionSqlDao: EntitySqlDao;
 
-CHECK_TENANT() ::= "tenant_record_id = :tenantRecordId"
-AND_CHECK_TENANT() ::= "AND <CHECK_TENANT()>"
+tableName() ::= "subscriptions"
 
-insertSubscription() ::= <<
-    insert into subscriptions (
-        id
-      , bundle_id
-      , category
-      , start_date
-      , bundle_start_date
-      , active_version
-      , charged_through_date
-      , paid_through_date
-      , created_by
-      , created_date
-      , updated_by
-      , updated_date
-      , account_record_id
-      , tenant_record_id
-    ) values (
-        :id
-      , :bundleId
-      , :category
-      , :startDate
-      , :bundleStartDate
-      , :activeVersion
-      , :chargedThroughDate
-      , :paidThroughDate
-      , :userName
-      , :createdDate
-      , :userName
-      , :updatedDate
-      , :accountRecordId
-      , :tenantRecordId
-    );
+tableFields(prefix) ::= <<
+  <prefix>bundle_id
+, <prefix>category
+, <prefix>start_date
+, <prefix>bundle_start_date
+, <prefix>active_version
+, <prefix>charged_through_date
+, <prefix>paid_through_date
+, <prefix>created_by
+, <prefix>created_date
+, <prefix>updated_by
+, <prefix>updated_date
 >>
 
-getSubscriptionFromId() ::= <<
-    select
-        id
-      , bundle_id
-      , category
-      , start_date
-      , bundle_start_date
-      , active_version
-      , charged_through_date
-      , paid_through_date
-      , created_date
-      , updated_date
-    from subscriptions
-    where id = :id
-    <AND_CHECK_TENANT()>
-    ;
+tableValues() ::= <<
+  :bundleId
+, :category
+, :startDate
+, :bundleStartDate
+, :activeVersion
+, :chargedThroughDate
+, :paidThroughDate
+, :createdBy
+, :createdDate
+, :updatedBy
+, :updatedDate
 >>
+
 
 getSubscriptionsFromBundleId() ::= <<
-    select
-      id
-      , bundle_id
-      , category
-      , start_date
-      , bundle_start_date
-      , active_version
-      , charged_through_date
-      , paid_through_date
-      , created_date
-      , updated_date
-    from subscriptions
-    where bundle_id = :bundleId
-    <AND_CHECK_TENANT()>
-    ;
+select
+<allTableFields()>
+from <tableName()>
+where bundle_id = :bundleId
+<AND_CHECK_TENANT()>
+;
 >>
 
 updateChargedThroughDate() ::= <<
-    update subscriptions
-    set
-      charged_through_date = :chargedThroughDate
-      , updated_by = :userName
-      , updated_date = :updatedDate
-    where id = :id
-    <AND_CHECK_TENANT()>
-    ;
+update <tableName()>
+set
+charged_through_date = :chargedThroughDate
+, updated_by = :createdBy
+, updated_date = :createdDate
+where id = :id
+<AND_CHECK_TENANT()>
+;
 >>
 
 updateActiveVersion() ::= <<
-    update subscriptions
-    set
-      active_version = :activeVersion
-      , updated_by = :userName
-      , updated_date = :updatedDate
-    where id = :id
-    ;
+update <tableName()>
+set
+active_version = :activeVersion
+, updated_by = :createdBy
+, updated_date = :createdDate
+where id = :id
+;
 >>
 
 updateForRepair() ::= <<
-    update subscriptions
-    set
-      active_version = :activeVersion
-      , start_date = :startDate
-      , bundle_start_date = :bundleStartDate
-      , updated_by = :userName
-      , updated_date = :updatedDate
-    where id = :id
-    <AND_CHECK_TENANT()>
-    ;
->>
-
-getRecordId() ::= <<
-    SELECT record_id
-    FROM subscriptions
-    WHERE id = :id
-    <AND_CHECK_TENANT()>
-    ;
->>
-
-auditFields(prefix) ::= <<
-    <prefix>table_name,
-    <prefix>record_id,
-    <prefix>change_type,
-    <prefix>change_date,
-    <prefix>changed_by,
-    <prefix>reason_code,
-    <prefix>comments,
-    <prefix>user_token,
-    <prefix>account_record_id,
-    <prefix>tenant_record_id
->>
-
-insertAuditFromTransaction() ::= <<
-    INSERT INTO audit_log(<auditFields()>)
-    VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, :reasonCode, :comment, :userToken, :accountRecordId, :tenantRecordId);
+update <tableName()>
+set
+active_version = :activeVersion
+, start_date = :startDate
+, bundle_start_date = :bundleStartDate
+, updated_by = :createdBy
+, updated_date = :createdDate
+where id = :id
+<AND_CHECK_TENANT()>
+;
 >>

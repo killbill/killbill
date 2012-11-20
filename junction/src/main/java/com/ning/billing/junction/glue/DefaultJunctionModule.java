@@ -26,12 +26,14 @@ import com.ning.billing.junction.block.BlockingChecker;
 import com.ning.billing.junction.block.DefaultBlockingChecker;
 import com.ning.billing.junction.dao.BlockingStateDao;
 import com.ning.billing.junction.dao.BlockingStateSqlDao;
+import com.ning.billing.junction.dao.DefaultBlockingStateDao;
 import com.ning.billing.junction.plumbing.api.BlockingAccountUserApi;
 import com.ning.billing.junction.plumbing.api.BlockingEntitlementUserApi;
 import com.ning.billing.junction.plumbing.billing.BlockingCalculator;
 import com.ning.billing.junction.plumbing.billing.DefaultInternalBillingApi;
 import com.ning.billing.util.svcapi.junction.BillingInternalApi;
 import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
+import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
@@ -63,7 +65,7 @@ public class DefaultJunctionModule extends AbstractModule implements JunctionMod
     }
 
     public void installBlockingStateDao() {
-        bind(BlockingStateDao.class).toProvider(BlockingDaoProvider.class);
+        bind(BlockingStateDao.class).to(DefaultBlockingStateDao.class).asEagerSingleton();
     }
 
     public void installAccountUserApi() {
@@ -80,20 +82,5 @@ public class DefaultJunctionModule extends AbstractModule implements JunctionMod
 
     public void installBlockingCalculator() {
         bind(BlockingCalculator.class).asEagerSingleton();
-    }
-
-    public static class BlockingDaoProvider implements Provider<BlockingStateDao> {
-        private final IDBI dbi;
-
-
-        @Inject
-        public BlockingDaoProvider(final IDBI dbi) {
-            this.dbi = dbi;
-        }
-
-        @Override
-        public BlockingStateDao get() {
-            return dbi.onDemand(BlockingStateSqlDao.class);
-        }
     }
 }

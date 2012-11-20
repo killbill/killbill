@@ -54,10 +54,8 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
     @BeforeSuite(groups = "slow")
     public void setup() throws IOException {
         clock = new DefaultClock();
-
         setupDb();
-
-        paymentDao = new AuditedPaymentDao(dbi, null);
+        paymentDao = new DefaultPaymentDao(dbi);
     }
 
     private void setupDb() {
@@ -87,7 +85,7 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(refundCheck.getPaymentId(), paymentId1);
         assertEquals(refundCheck.getAmount().compareTo(amount1), 0);
         assertEquals(refundCheck.getCurrency(), currency);
-        assertEquals(refundCheck.isAdjsuted(), true);
+        assertEquals(refundCheck.isAdjusted(), true);
         assertEquals(refundCheck.getRefundStatus(), RefundStatus.CREATED);
 
         final BigDecimal amount2 = new BigDecimal(7.00);
@@ -155,7 +153,7 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(savedAttempt.getPaymentId(), payment.getId());
         assertEquals(savedAttempt.getAccountId(), accountId);
         assertEquals(savedAttempt.getInvoiceId(), invoiceId);
-        assertEquals(savedAttempt.getPaymentStatus(), PaymentStatus.SUCCESS);
+        assertEquals(savedAttempt.getProcessingStatus(), PaymentStatus.SUCCESS);
         assertEquals(savedAttempt.getGatewayErrorCode(), gatewayErrorCode);
         assertEquals(savedAttempt.getRequestedAmount().compareTo(amount), 0);
     }
@@ -187,7 +185,7 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(savedAttempt.getPaymentId(), payment.getId());
         assertEquals(savedAttempt.getAccountId(), accountId);
         assertEquals(savedAttempt.getInvoiceId(), invoiceId);
-        assertEquals(savedAttempt.getPaymentStatus(), PaymentStatus.UNKNOWN);
+        assertEquals(savedAttempt.getProcessingStatus(), PaymentStatus.UNKNOWN);
 
         final List<PaymentModelDao> payments = paymentDao.getPaymentsForInvoice(invoiceId, internalCallContext);
         assertEquals(payments.size(), 1);
@@ -208,7 +206,7 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(savedAttempt.getPaymentId(), payment.getId());
         assertEquals(savedAttempt.getAccountId(), accountId);
         assertEquals(savedAttempt.getInvoiceId(), invoiceId);
-        assertEquals(savedAttempt.getPaymentStatus(), PaymentStatus.UNKNOWN);
+        assertEquals(savedAttempt.getProcessingStatus(), PaymentStatus.UNKNOWN);
 
     }
 
@@ -258,7 +256,7 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(savedAttempt1.getPaymentId(), payment.getId());
         assertEquals(savedAttempt1.getAccountId(), accountId);
         assertEquals(savedAttempt1.getInvoiceId(), invoiceId);
-        assertEquals(savedAttempt1.getPaymentStatus(), PaymentStatus.UNKNOWN);
+        assertEquals(savedAttempt1.getProcessingStatus(), PaymentStatus.UNKNOWN);
         assertEquals(savedAttempt1.getGatewayErrorCode(), null);
         assertEquals(savedAttempt1.getGatewayErrorMsg(), null);
         assertEquals(savedAttempt1.getRequestedAmount().compareTo(amount), 0);
@@ -267,7 +265,7 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(savedAttempt2.getPaymentId(), payment.getId());
         assertEquals(savedAttempt2.getAccountId(), accountId);
         assertEquals(savedAttempt2.getInvoiceId(), invoiceId);
-        assertEquals(savedAttempt2.getPaymentStatus(), PaymentStatus.UNKNOWN);
+        assertEquals(savedAttempt2.getProcessingStatus(), PaymentStatus.UNKNOWN);
         assertEquals(savedAttempt2.getGatewayErrorCode(), null);
         assertEquals(savedAttempt2.getGatewayErrorMsg(), null);
         assertEquals(savedAttempt2.getRequestedAmount().compareTo(newAmount), 0);

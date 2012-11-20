@@ -26,6 +26,7 @@ import com.ning.billing.invoice.model.InvalidDateSequenceException;
 import com.ning.billing.invoice.tests.inAdvance.ProRationInAdvanceTestBase;
 
 public class TestProRation extends ProRationInAdvanceTestBase {
+
     @Override
     protected BillingPeriod getBillingPeriod() {
         return BillingPeriod.ANNUAL;
@@ -50,7 +51,7 @@ public class TestProRation extends ProRationInAdvanceTestBase {
     }
 
     // TODO Test fails, needs to be investigated
-    @Test(groups = "fast", enabled=false)
+    @Test(groups = "fast", enabled = false)
     public void testSinglePlanDoubleProRation() throws InvalidDateSequenceException {
         final LocalDate startDate = buildDate(2011, 1, 10);
         final LocalDate endDate = buildDate(2012, 3, 4);

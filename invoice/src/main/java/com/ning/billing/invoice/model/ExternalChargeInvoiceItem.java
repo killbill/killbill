@@ -42,7 +42,7 @@ public class ExternalChargeInvoiceItem extends InvoiceItemBase {
 
     public ExternalChargeInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
                                      @Nullable final String description, final LocalDate date, final BigDecimal amount, final Currency currency) {
-        super(id, createdDate, invoiceId, accountId, bundleId, (UUID) null, description, null, date, null, amount, currency);
+        super(id, createdDate, invoiceId, accountId, bundleId, null, description, null, date, null, amount, currency);
     }
 
     @Override

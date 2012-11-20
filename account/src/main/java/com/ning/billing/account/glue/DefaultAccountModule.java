@@ -22,9 +22,7 @@ import com.ning.billing.account.api.DefaultAccountService;
 import com.ning.billing.account.api.svcs.DefaultAccountInternalApi;
 import com.ning.billing.account.api.user.DefaultAccountUserApi;
 import com.ning.billing.account.dao.AccountDao;
-import com.ning.billing.account.dao.AccountEmailDao;
-import com.ning.billing.account.dao.AuditedAccountDao;
-import com.ning.billing.account.dao.AuditedAccountEmailDao;
+import com.ning.billing.account.dao.DefaultAccountDao;
 import com.ning.billing.glue.AccountModule;
 import com.ning.billing.util.glue.RealImplementation;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
@@ -32,12 +30,12 @@ import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.google.inject.AbstractModule;
 
 public class DefaultAccountModule extends AbstractModule implements AccountModule {
+
     private void installConfig() {
     }
 
     protected void installAccountDao() {
-        bind(AccountEmailDao.class).to(AuditedAccountEmailDao.class).asEagerSingleton();
-        bind(AccountDao.class).to(AuditedAccountDao.class).asEagerSingleton();
+        bind(AccountDao.class).to(DefaultAccountDao.class).asEagerSingleton();
     }
 
     @Override
@@ -49,6 +47,7 @@ public class DefaultAccountModule extends AbstractModule implements AccountModul
     public void installInternalApi() {
         bind(AccountInternalApi.class).to(DefaultAccountInternalApi.class).asEagerSingleton();
     }
+
     private void installAccountService() {
         bind(AccountService.class).to(DefaultAccountService.class).asEagerSingleton();
     }

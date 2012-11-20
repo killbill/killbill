@@ -17,7 +17,7 @@
 package com.ning.billing.beatrix.integration;
 
 import java.util.Collection;
-import java.util.Map;
+import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -48,7 +48,7 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
-@Guice(modules = {BeatrixModule.class})
+@Guice(modules = {BeatrixIntegrationModule.class})
 public class TestIntegrationWithAutoInvoiceOffTag extends TestIntegrationBase {
 
     @Inject
@@ -175,7 +175,7 @@ public class TestIntegrationWithAutoInvoiceOffTag extends TestIntegrationBase {
 
     private void add_AUTO_INVOICING_OFF_Tag(final UUID id, final ObjectType type) throws TagDefinitionApiException, TagApiException {
         tagApi.addTag(id, type, ControlTagType.AUTO_INVOICING_OFF.getId(), callContext);
-        final Map<String, Tag> tags = tagApi.getTags(id, type, callContext);
+        final List<Tag> tags = tagApi.getTags(id, type, callContext);
         assertEquals(tags.size(), 1);
     }
 

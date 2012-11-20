@@ -25,7 +25,7 @@ import com.ning.billing.util.entity.Entity;
 public interface SubscriptionBundle extends Blockable, Entity {
     public UUID getAccountId();
 
-    public String getKey();
+    public String getExternalKey();
 
     public OverdueState<SubscriptionBundle> getOverdueState();
 }

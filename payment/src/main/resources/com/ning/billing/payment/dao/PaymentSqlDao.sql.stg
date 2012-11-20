@@ -1,147 +1,94 @@
-group PaymentSqlDao;
+group PaymentSqlDao: EntitySqlDao;
 
-CHECK_TENANT() ::= "tenant_record_id = :tenantRecordId"
-AND_CHECK_TENANT() ::= "AND <CHECK_TENANT()>"
 
-paymentFields(prefix) ::= <<
-    <prefix>id,
-    <prefix>account_id,
-    <prefix>invoice_id,   
-    <prefix>payment_method_id,
-    <prefix>amount,
-    <prefix>effective_date,
-    <prefix>currency,
-    <prefix>payment_status,
-    <prefix>ext_first_payment_ref_id,
-    <prefix>ext_second_payment_ref_id,    
-    <prefix>created_by,
-    <prefix>created_date,
-    <prefix>updated_by,
-    <prefix>updated_date,
-    <prefix>account_record_id,
-    <prefix>tenant_record_id
+extraTableFieldsWithComma(prefix) ::= <<
+, <prefix>record_id as payment_number
 >>
 
-insertPayment() ::= <<
-    INSERT INTO payments (<paymentFields()>)
-    VALUES (:id, :accountId, :invoiceId, :paymentMethodId, :amount, :effectiveDate, :currency, :paymentStatus,
-            :extFirstPaymentRefId, :extSecondPaymentRefId, :userName, :createdDate, :userName, :createdDate, :accountRecordId, :tenantRecordId);
+tableFields(prefix) ::= <<
+  <prefix>account_id
+, <prefix>invoice_id
+, <prefix>payment_method_id
+, <prefix>amount
+, <prefix>effective_date
+, <prefix>currency
+, <prefix>payment_status
+, <prefix>ext_first_payment_ref_id
+, <prefix>ext_second_payment_ref_id
+, <prefix>created_by
+, <prefix>created_date
+, <prefix>updated_by
+, <prefix>updated_date
 >>
 
-getPayment() ::= <<
-    SELECT <paymentFields()>
-    , record_id as payment_number
-      FROM payments
-    WHERE id = :id
-    <AND_CHECK_TENANT()>
-    ;
+tableValues() ::= <<
+  :accountId
+, :invoiceId
+, :paymentMethodId
+, :amount
+, :effectiveDate
+, :currency
+, :paymentStatus
+, :extFirstPaymentRefId
+, :extSecondPaymentRefId
+, :createdBy
+, :createdDate
+, :updatedBy
+, :updatedDate
 >>
 
-getLastPaymentForAccountAndPaymentMethod() ::= <<
-    SELECT <paymentFields()>
-    , record_id as payment_number
-      FROM payments
-    WHERE account_id = :accountId AND payment_method_id = :paymentMethodId
-    <AND_CHECK_TENANT()>
-    ORDER BY effective_date desc limit 1;
->> 
+tableName() ::= "payments"
 
-getPaymentsForInvoice() ::= <<
-    SELECT <paymentFields()>
-    , record_id as payment_number
-      FROM payments
-    WHERE invoice_id = :invoiceId
-    <AND_CHECK_TENANT()>
-    ;
->>
+historyTableName() ::= "payment_history"
+
 
 getPaymentsForAccount() ::= <<
-    SELECT <paymentFields()>
-    , record_id as payment_number
-      FROM payments
-    WHERE account_id = :accountId
-    <AND_CHECK_TENANT()>
-    ;
+select <allTableFields()>
+, record_id as payment_number
+from payments
+where account_id = :accountId
+<AND_CHECK_TENANT()>
+;
+>>
+
+getPaymentsForInvoice() ::= <<
+select <allTableFields()>
+, record_id as payment_number
+from payments
+where invoice_id = :invoiceId
+<AND_CHECK_TENANT()>
+;
+>>
+
+
+getLastPaymentForAccountAndPaymentMethod() ::= <<
+select <allTableFields()>
+, record_id as payment_number
+from payments
+where account_id = :accountId
+and payment_method_id = :paymentMethodId
+<AND_CHECK_TENANT()>
+order by effective_date desc limit 1
+;
 >>
 
 
 updatePaymentStatusAndExtRef() ::= <<
-    UPDATE payments
-    SET payment_status = :paymentStatus,
-        ext_first_payment_ref_id = :extFirstPaymentRefId,
-        ext_second_payment_ref_id = :extSecondPaymentRefId
-    WHERE id = :id
-    <AND_CHECK_TENANT()>
-    ;
+update payments
+set payment_status = :paymentStatus
+, ext_first_payment_ref_id = :extFirstPaymentRefId
+, ext_second_payment_ref_id = :extSecondPaymentRefId
+where id = :id
+<AND_CHECK_TENANT()>
+;
 >>
 
 updatePaymentAmount() ::= <<
-    UPDATE payments
-    SET amount = :amount
-    WHERE id = :id
-    <AND_CHECK_TENANT()>
-    ;
+update <tableName()>
+set amount = :amount
+where id = :id
+<AND_CHECK_TENANT()>
+;
 >>
 
-getRecordId() ::= <<
-    SELECT record_id
-    FROM payments
-    WHERE id = :id
-    <AND_CHECK_TENANT()>
-    ;
->>
-
-
-historyFields(prefix) ::= <<
-    <prefix>record_id,
-    <prefix>id,
-    <prefix>account_id,
-    <prefix>invoice_id,   
-    <prefix>payment_method_id,
-    <prefix>amount,
-    <prefix>effective_date,
-    <prefix>currency,
-    <prefix>payment_status,
-    <prefix>ext_first_payment_ref_id,
-    <prefix>ext_second_payment_ref_id,    
-    <prefix>created_by,
-    <prefix>created_date,
-    <prefix>updated_by,
-    <prefix>updated_date,
-    <prefix>account_record_id,
-    <prefix>tenant_record_id
->>
-
-insertHistoryFromTransaction() ::= <<
-    INSERT INTO payment_history (<historyFields()>)
-    VALUES (:recordId, :id, :accountId, :invoiceId, :paymentMethodId, :amount, :effectiveDate, :currency, :paymentStatus,
-            :extFirstPaymentRefId, :extSecondPaymentRefId, :userName, :createdDate, :userName, :updatedDate, :accountRecordId, :tenantRecordId);
->>
-
-
-getHistoryRecordId() ::= <<
-    SELECT MAX(history_record_id)
-    FROM payment_history
-    WHERE record_id = :recordId
-    <AND_CHECK_TENANT()>
-    ;
->>
-
-auditFields(prefix) ::= <<
-    <prefix>table_name,
-    <prefix>record_id,
-    <prefix>change_type,
-    <prefix>change_date,
-    <prefix>changed_by,
-    <prefix>reason_code,
-    <prefix>comments,
-    <prefix>user_token,
-    <prefix>account_record_id,
-    <prefix>tenant_record_id
->>
-
-insertAuditFromTransaction() ::= <<
-    INSERT INTO audit_log(<auditFields()>)
-    VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, :reasonCode, :comment, :userToken, :accountRecordId, :tenantRecordId);
->>
 

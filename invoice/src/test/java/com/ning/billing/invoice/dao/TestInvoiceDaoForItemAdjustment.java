@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
-import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -33,7 +32,6 @@ import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
-import com.ning.billing.util.callcontext.InternalCallContext;
 
 public class TestInvoiceDaoForItemAdjustment extends InvoiceDaoTestBase {
 
@@ -45,7 +43,6 @@ public class TestInvoiceDaoForItemAdjustment extends InvoiceDaoTestBase {
         final UUID invoiceId = UUID.randomUUID();
         final UUID invoiceItemId = UUID.randomUUID();
         final LocalDate effectiveDate = new LocalDate();
-        final InternalCallContext context = Mockito.mock(InternalCallContext.class);
 
         try {
             invoiceDao.insertInvoiceItemAdjustment(accountId, invoiceId, invoiceItemId, effectiveDate, null, null, internalCallContext);
@@ -63,7 +60,7 @@ public class TestInvoiceDaoForItemAdjustment extends InvoiceDaoTestBase {
                                                                  new LocalDate(2010, 1, 1), new LocalDate(2010, 4, 1),
                                                                  INVOICE_ITEM_AMOUNT, new BigDecimal("7.00"), Currency.USD);
         invoice.addInvoiceItem(invoiceItem);
-        invoiceDao.create(invoice, 1, true, internalCallContext);
+        createInvoice(invoice, true, internalCallContext);
 
         try {
             invoiceDao.insertInvoiceItemAdjustment(invoice.getAccountId(), UUID.randomUUID(), invoiceItem.getId(), new LocalDate(2010, 1, 1), null, null, internalCallContext);
@@ -81,9 +78,9 @@ public class TestInvoiceDaoForItemAdjustment extends InvoiceDaoTestBase {
                                                                  new LocalDate(2010, 1, 1), new LocalDate(2010, 4, 1),
                                                                  INVOICE_ITEM_AMOUNT, new BigDecimal("7.00"), Currency.USD);
         invoice.addInvoiceItem(invoiceItem);
-        invoiceDao.create(invoice, 1, true, internalCallContext);
+        createInvoice(invoice, true, internalCallContext);
 
-        final InvoiceItem adjustedInvoiceItem = createAndCheckAdjustment(invoice, invoiceItem, null);
+        final InvoiceItemModelDao adjustedInvoiceItem = createAndCheckAdjustment(invoice, invoiceItem, null);
         Assert.assertEquals(adjustedInvoiceItem.getAmount().compareTo(invoiceItem.getAmount().negate()), 0);
     }
 
@@ -95,23 +92,22 @@ public class TestInvoiceDaoForItemAdjustment extends InvoiceDaoTestBase {
                                                                  new LocalDate(2010, 1, 1), new LocalDate(2010, 4, 1),
                                                                  INVOICE_ITEM_AMOUNT, new BigDecimal("7.00"), Currency.USD);
         invoice.addInvoiceItem(invoiceItem);
-        invoiceDao.create(invoice, 1, true, internalCallContext);
+        createInvoice(invoice, true, internalCallContext);
 
-        final InvoiceItem adjustedInvoiceItem = createAndCheckAdjustment(invoice, invoiceItem, BigDecimal.TEN);
+        final InvoiceItemModelDao adjustedInvoiceItem = createAndCheckAdjustment(invoice, invoiceItem, BigDecimal.TEN);
         Assert.assertEquals(adjustedInvoiceItem.getAmount().compareTo(BigDecimal.TEN.negate()), 0);
     }
 
-    private InvoiceItem createAndCheckAdjustment(final Invoice invoice, final InvoiceItem invoiceItem, final BigDecimal amount) throws InvoiceApiException {
+    private InvoiceItemModelDao createAndCheckAdjustment(final Invoice invoice, final InvoiceItem invoiceItem, final BigDecimal amount) throws InvoiceApiException {
         final LocalDate effectiveDate = new LocalDate(2010, 1, 1);
-        final InvoiceItem adjustedInvoiceItem = invoiceDao.insertInvoiceItemAdjustment(invoice.getAccountId(), invoice.getId(), invoiceItem.getId(),
-                                                                                       effectiveDate, amount, null, internalCallContext);
+        final InvoiceItemModelDao adjustedInvoiceItem = invoiceDao.insertInvoiceItemAdjustment(invoice.getAccountId(), invoice.getId(), invoiceItem.getId(),
+                                                                                               effectiveDate, amount, null, internalCallContext);
         Assert.assertEquals(adjustedInvoiceItem.getAccountId(), invoiceItem.getAccountId());
         Assert.assertNull(adjustedInvoiceItem.getBundleId());
         Assert.assertEquals(adjustedInvoiceItem.getCurrency(), invoiceItem.getCurrency());
-        Assert.assertEquals(adjustedInvoiceItem.getDescription(), "Invoice item adjustment");
         Assert.assertEquals(adjustedInvoiceItem.getEndDate(), effectiveDate);
         Assert.assertEquals(adjustedInvoiceItem.getInvoiceId(), invoiceItem.getInvoiceId());
-        Assert.assertEquals(adjustedInvoiceItem.getInvoiceItemType(), InvoiceItemType.ITEM_ADJ);
+        Assert.assertEquals(adjustedInvoiceItem.getType(), InvoiceItemType.ITEM_ADJ);
         Assert.assertEquals(adjustedInvoiceItem.getLinkedItemId(), invoiceItem.getId());
         Assert.assertNull(adjustedInvoiceItem.getPhaseName());
         Assert.assertNull(adjustedInvoiceItem.getPlanName());
@@ -120,26 +116,50 @@ public class TestInvoiceDaoForItemAdjustment extends InvoiceDaoTestBase {
         Assert.assertNull(adjustedInvoiceItem.getSubscriptionId());
 
         // Retrieve the item by id
-        final InvoiceItem retrievedInvoiceItem = invoiceItemSqlDao.getById(adjustedInvoiceItem.getId().toString(), internalCallContext);
-        Assert.assertEquals(retrievedInvoiceItem, adjustedInvoiceItem);
+        final InvoiceItemModelDao retrievedInvoiceItem = invoiceItemSqlDao.getById(adjustedInvoiceItem.getId().toString(), internalCallContext);
+        // TODO We can't use equals() due to the createdDate field
+        Assert.assertEquals(retrievedInvoiceItem.getAccountId(), adjustedInvoiceItem.getAccountId());
+        Assert.assertNull(retrievedInvoiceItem.getBundleId());
+        Assert.assertEquals(retrievedInvoiceItem.getCurrency(), adjustedInvoiceItem.getCurrency());
+        Assert.assertEquals(retrievedInvoiceItem.getEndDate(), adjustedInvoiceItem.getEndDate());
+        Assert.assertEquals(retrievedInvoiceItem.getInvoiceId(), adjustedInvoiceItem.getInvoiceId());
+        Assert.assertEquals(retrievedInvoiceItem.getType(), adjustedInvoiceItem.getType());
+        Assert.assertEquals(retrievedInvoiceItem.getLinkedItemId(), adjustedInvoiceItem.getLinkedItemId());
+        Assert.assertNull(retrievedInvoiceItem.getPhaseName());
+        Assert.assertNull(retrievedInvoiceItem.getPlanName());
+        Assert.assertNull(retrievedInvoiceItem.getRate());
+        Assert.assertEquals(retrievedInvoiceItem.getStartDate(), adjustedInvoiceItem.getStartDate());
+        Assert.assertNull(retrievedInvoiceItem.getSubscriptionId());
 
         // Retrieve the item by invoice id
-        final Invoice retrievedInvoice = invoiceDao.getById(adjustedInvoiceItem.getInvoiceId(), internalCallContext);
-        final List<InvoiceItem> invoiceItems = retrievedInvoice.getInvoiceItems();
+        final InvoiceModelDao retrievedInvoice = invoiceDao.getById(adjustedInvoiceItem.getInvoiceId(), internalCallContext);
+        final List<InvoiceItemModelDao> invoiceItems = retrievedInvoice.getInvoiceItems();
         Assert.assertEquals(invoiceItems.size(), 2);
-        final InvoiceItem retrievedByInvoiceInvoiceItem;
+        final InvoiceItemModelDao retrievedByInvoiceInvoiceItem;
         if (invoiceItems.get(0).getId().equals(adjustedInvoiceItem.getId())) {
             retrievedByInvoiceInvoiceItem = invoiceItems.get(0);
         } else {
             retrievedByInvoiceInvoiceItem = invoiceItems.get(1);
         }
-        Assert.assertEquals(retrievedByInvoiceInvoiceItem, adjustedInvoiceItem);
+        // TODO We can't use equals() due to the createdDate field
+        Assert.assertEquals(retrievedByInvoiceInvoiceItem.getAccountId(), adjustedInvoiceItem.getAccountId());
+        Assert.assertEquals(retrievedByInvoiceInvoiceItem.getBundleId(), adjustedInvoiceItem.getBundleId());
+        Assert.assertEquals(retrievedByInvoiceInvoiceItem.getCurrency(), adjustedInvoiceItem.getCurrency());
+        Assert.assertEquals(retrievedByInvoiceInvoiceItem.getEndDate(), adjustedInvoiceItem.getEndDate());
+        Assert.assertEquals(retrievedByInvoiceInvoiceItem.getInvoiceId(), adjustedInvoiceItem.getInvoiceId());
+        Assert.assertEquals(retrievedByInvoiceInvoiceItem.getType(), adjustedInvoiceItem.getType());
+        Assert.assertEquals(retrievedByInvoiceInvoiceItem.getLinkedItemId(), adjustedInvoiceItem.getLinkedItemId());
+        Assert.assertEquals(retrievedByInvoiceInvoiceItem.getPhaseName(), adjustedInvoiceItem.getPhaseName());
+        Assert.assertEquals(retrievedByInvoiceInvoiceItem.getPlanName(), adjustedInvoiceItem.getPlanName());
+        Assert.assertEquals(retrievedByInvoiceInvoiceItem.getRate(), adjustedInvoiceItem.getRate());
+        Assert.assertEquals(retrievedInvoiceItem.getStartDate(), adjustedInvoiceItem.getStartDate());
+        Assert.assertEquals(retrievedInvoiceItem.getSubscriptionId(), adjustedInvoiceItem.getSubscriptionId());
 
         // Verify the invoice balance
         if (amount == null) {
-            Assert.assertEquals(retrievedInvoice.getBalance().compareTo(BigDecimal.ZERO), 0);
+            Assert.assertEquals(InvoiceModelDaoHelper.getBalance(retrievedInvoice).compareTo(BigDecimal.ZERO), 0);
         } else {
-            Assert.assertEquals(retrievedInvoice.getBalance().compareTo(INVOICE_ITEM_AMOUNT.add(amount.negate())), 0);
+            Assert.assertEquals(InvoiceModelDaoHelper.getBalance(retrievedInvoice).compareTo(INVOICE_ITEM_AMOUNT.add(amount.negate())), 0);
         }
 
         return adjustedInvoiceItem;

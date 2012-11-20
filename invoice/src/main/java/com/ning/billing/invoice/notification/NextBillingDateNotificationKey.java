@@ -13,15 +13,18 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.invoice.notification;
 
 import java.util.UUID;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ning.billing.util.notificationq.DefaultUUIDNotificationKey;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class NextBillingDateNotificationKey extends DefaultUUIDNotificationKey {
+
     @JsonCreator
     public NextBillingDateNotificationKey(@JsonProperty("uuidKey") final UUID uuidKey) {
         super(uuidKey);

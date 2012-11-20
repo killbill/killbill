@@ -63,7 +63,7 @@ public class TestCallContext implements CallContext {
     }
 
     @Override
-    public String getComment() {
+    public String getComments() {
         return null;
     }
 

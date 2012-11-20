@@ -54,7 +54,7 @@ public class TestAccountEmailJson extends JaxrsTestSuite {
         Assert.assertEquals(accountEmailJson.getAccountId(), accountId);
         Assert.assertEquals(accountEmailJson.getEmail(), email);
 
-        final AccountEmail accountEmail = accountEmailJson.toAccountEmail();
+        final AccountEmail accountEmail = accountEmailJson.toAccountEmail(UUID.randomUUID());
         Assert.assertEquals(accountEmail.getAccountId().toString(), accountId);
         Assert.assertEquals(accountEmail.getEmail(), email);
     }

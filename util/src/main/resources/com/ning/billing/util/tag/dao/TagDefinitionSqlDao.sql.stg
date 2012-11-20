@@ -1,74 +1,70 @@
-group TagDefinitionDao;
+group TagDefinitionDao: EntitySqlDao;
 
-CHECK_TENANT() ::= "tenant_record_id = :tenantRecordId"
-AND_CHECK_TENANT() ::= "AND <CHECK_TENANT()>"
+tableName() ::= "tag_definitions"
 
-fields(prefix) ::= <<
-    <prefix>id,
-    <prefix>name,
-    <prefix>description,
-    <prefix>created_by,
-    <prefix>created_date ,
-    <prefix>updated_by,
-    <prefix>updated_date,
-    <prefix>tenant_record_id
+andCheckSoftDeletionWithComma(prefix) ::= "and <prefix>is_active"
+
+tableFields(prefix) ::= <<
+  <prefix>name
+, <prefix>description
+, <prefix>is_active
+, <prefix>created_by
+, <prefix>created_date
+, <prefix>updated_by
+, <prefix>updated_date
 >>
 
-get() ::= <<
-  SELECT <fields()>
-  FROM tag_definitions
-  WHERE <CHECK_TENANT()>
-  ;
+tableValues() ::= <<
+  :name
+, :description
+, :isActive
+, :createdBy
+, :createdDate
+, :updatedBy
+, :updatedDate
 >>
 
-create() ::= <<
-  INSERT INTO tag_definitions(<fields()>)
-  VALUES(:id, :name, :description, :userName, :createdDate, :userName, :updatedDate, :tenantRecordId);
->>
+accountRecordIdFieldWithComma(prefix) ::= ""
 
-load() ::= <<
-  SELECT <fields()>
-  FROM tag_definitions
-  WHERE id = :id
-  <AND_CHECK_TENANT()>
-  ;
->>
+accountRecordIdValueWithComma() ::= ""
 
+historyTableName() ::= "tag_definition_history"
 
-deleteTagDefinition() ::= <<
-  DELETE FROM tag_definitions
-  WHERE id = :id
-  <AND_CHECK_TENANT()>
-  ;
+markTagDefinitionAsDeleted() ::= <<
+update <tableName()> t
+set t.is_active = 0
+where <idField("t.")> = :id
+<AND_CHECK_TENANT("t.")>
+;
 >>
 
 tagDefinitionUsageCount() ::= <<
-  SELECT COUNT(id)
-  FROM tags
-  WHERE tag_definition_id = :id
-  <AND_CHECK_TENANT()>
+select
+  count(<idField("t.")>)
+from tags t
+where t.is_active
+and t.tag_definition_id = :id
+<AND_CHECK_TENANT("t.")>
+;
 >>
 
 getByName() ::= <<
-  SELECT <fields()>
-   FROM tag_definitions
-  WHERE name = :name
-  <AND_CHECK_TENANT()>
-  ;
->>
-
-getById() ::= <<
-  SELECT <fields()>
-  FROM tag_definitions
-  WHERE id = :id
-  <AND_CHECK_TENANT()>
-  ;
+select
+  <allTableFields("t.")>
+from <tableName()> t
+where t.name = :name
+and t.is_active
+<AND_CHECK_TENANT("t.")>
+;
 >>
 
 getByIds(tag_definition_ids) ::= <<
-  SELECT <fields()>
-  FROM tag_definitions
-  WHERE id IN (<tag_definition_ids: {id | :id_<i0>}; separator="," >)
-  <AND_CHECK_TENANT()>
->>
+select
+  <allTableFields("t.")>
+from <tableName()> t
+where t.is_active
+and <idField("t.")> in (<tag_definition_ids: {id | :id_<i0>}; separator="," >)
+<AND_CHECK_TENANT("t.")>
 ;
+>>
+

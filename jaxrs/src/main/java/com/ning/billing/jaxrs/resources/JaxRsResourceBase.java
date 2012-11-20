@@ -20,7 +20,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -32,6 +31,7 @@ import org.joda.time.format.ISODateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ning.billing.BillingExceptionBase;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.ObjectType;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
@@ -39,6 +39,7 @@ import com.ning.billing.jaxrs.json.TagJson;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
 import com.ning.billing.util.api.AuditUserApi;
+import com.ning.billing.util.api.CustomFieldApiException;
 import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagDefinitionApiException;
@@ -83,10 +84,10 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
     }
 
     protected Response getTags(final UUID id, final boolean withAudit, final TenantContext context) throws TagDefinitionApiException {
-        final Map<String, Tag> tags = tagUserApi.getTags(id, getObjectType(), context);
+        final List<Tag> tags = tagUserApi.getTags(id, getObjectType(), context);
         final Collection<UUID> tagIdList = (tags.size() == 0) ?
                                            Collections.<UUID>emptyList() :
-                                           Collections2.transform(tags.values(), new Function<Tag, UUID>() {
+                                           Collections2.transform(tags, new Function<Tag, UUID>() {
                                                @Override
                                                public UUID apply(final Tag input) {
                                                    return input.getTagDefinitionId();
@@ -153,10 +154,10 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
     }
 
     protected Response getCustomFields(final UUID id, final TenantContext context) {
-        final Map<String, CustomField> fields = customFieldUserApi.getCustomFields(id, getObjectType(), context);
+        final List<CustomField> fields = customFieldUserApi.getCustomFields(id, getObjectType(), context);
 
         final List<CustomFieldJson> result = new LinkedList<CustomFieldJson>();
-        for (final CustomField cur : fields.values()) {
+        for (final CustomField cur : fields) {
             result.add(new CustomFieldJson(cur));
         }
 
@@ -165,13 +166,13 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
 
     protected Response createCustomFields(final UUID id,
                                           final List<CustomFieldJson> customFields,
-                                          final CallContext context) {
+                                          final CallContext context) throws CustomFieldApiException {
         final LinkedList<CustomField> input = new LinkedList<CustomField>();
         for (final CustomFieldJson cur : customFields) {
-            input.add(new StringCustomField(cur.getName(), cur.getValue()));
+            input.add(new StringCustomField(cur.getName(), cur.getValue(), getObjectType(), id, context.getCreatedDate()));
         }
 
-        customFieldUserApi.saveCustomFields(id, getObjectType(), input, context);
+        customFieldUserApi.addCustomFields(input, context);
         return uriBuilder.buildResponse(this.getClass(), "createCustomFields", id);
     }
 

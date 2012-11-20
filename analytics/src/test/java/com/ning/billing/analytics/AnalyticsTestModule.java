@@ -51,7 +51,6 @@ public class AnalyticsTestModule extends AnalyticsModule {
         install(new ClockModule());
         install(new CallContextModule());
         install(new CustomFieldModule());
-        install(new TagStoreModule());
         install(new DefaultAccountModule());
         install(new BusModule());
         install(new DefaultEntitlementModule());

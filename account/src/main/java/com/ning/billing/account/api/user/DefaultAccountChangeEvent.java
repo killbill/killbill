@@ -20,10 +20,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import com.ning.billing.account.api.Account;
-import com.ning.billing.util.events.ChangedField;
 import com.ning.billing.account.api.DefaultChangedField;
+import com.ning.billing.account.dao.AccountModelDao;
 import com.ning.billing.util.events.AccountChangeInternalEvent;
+import com.ning.billing.util.events.ChangedField;
 import com.ning.billing.util.events.DefaultBusInternalEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -49,8 +49,8 @@ public class DefaultAccountChangeEvent extends DefaultBusInternalEvent implement
         this.changedFields = changedFields;
     }
 
-    public DefaultAccountChangeEvent(final UUID id, final UUID userToken, final Account oldData, final Account newData,
-            final Long accountRecordId, final Long tenantRecordId) {
+    public DefaultAccountChangeEvent(final UUID id, final UUID userToken, final AccountModelDao oldData, final AccountModelDao newData,
+                                     final Long accountRecordId, final Long tenantRecordId) {
         super(userToken, accountRecordId, tenantRecordId);
         this.accountId = id;
         this.userToken = userToken;
@@ -134,7 +134,7 @@ public class DefaultAccountChangeEvent extends DefaultBusInternalEvent implement
         return true;
     }
 
-    private List<ChangedField> calculateChangedFields(final Account oldData, final Account newData) {
+    private List<ChangedField> calculateChangedFields(final AccountModelDao oldData, final AccountModelDao newData) {
 
         final List<ChangedField> tmpChangedFields = new ArrayList<ChangedField>();
 
@@ -152,8 +152,12 @@ public class DefaultAccountChangeEvent extends DefaultBusInternalEvent implement
                           (newData.getCurrency() != null) ? newData.getCurrency().toString() : null);
 
         addIfValueChanged(tmpChangedFields,
-                          "billCycleDay",
-                          oldData.getBillCycleDay().toString(), newData.getBillCycleDay().toString());
+                          "billCycleDayLocal",
+                          String.valueOf(oldData.getBillingCycleDayLocal()), String.valueOf(newData.getBillingCycleDayLocal()));
+
+        addIfValueChanged(tmpChangedFields,
+                          "billCycleDayUTC",
+                          String.valueOf(oldData.getBillingCycleDayUtc()), String.valueOf(newData.getBillingCycleDayUtc()));
 
         addIfValueChanged(tmpChangedFields, "paymentMethodId",
                           (oldData.getPaymentMethodId() != null) ? oldData.getPaymentMethodId().toString() : null,

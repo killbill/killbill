@@ -19,7 +19,6 @@ package com.ning.billing.invoice.notification;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.ObjectType;
@@ -44,6 +43,7 @@ import com.ning.billing.util.tag.Tag;
 import com.google.inject.Inject;
 
 public class EmailInvoiceNotifier implements InvoiceNotifier {
+
     private final AccountInternalApi accountApi;
     private final TagInternalApi tagUserApi;
     private final HtmlInvoiceGenerator generator;
@@ -77,8 +77,8 @@ public class EmailInvoiceNotifier implements InvoiceNotifier {
 
         // Check if this account has the MANUAL_PAY system tag
         boolean manualPay = false;
-        final Map<String, Tag> accountTags = tagUserApi.getTags(account.getId(), ObjectType.ACCOUNT, internalTenantContext);
-        for (final Tag tag : accountTags.values()) {
+        final List<Tag> accountTags = tagUserApi.getTags(account.getId(), ObjectType.ACCOUNT, internalTenantContext);
+        for (final Tag tag : accountTags) {
             if (ControlTagType.MANUAL_PAY.getId().equals(tag.getTagDefinitionId())) {
                 manualPay = true;
                 break;

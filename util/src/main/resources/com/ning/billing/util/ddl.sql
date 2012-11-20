@@ -21,21 +21,23 @@ CREATE INDEX custom_fields_tenant_account_record_id ON custom_fields(tenant_reco
 
 DROP TABLE IF EXISTS custom_field_history;
 CREATE TABLE custom_field_history (
-    history_record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
-    record_id int(11) unsigned NOT NULL,
+    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
     id char(36) NOT NULL,
+    target_record_id int(11) unsigned NOT NULL,
     object_id char(36) NOT NULL,
     object_type varchar(30) NOT NULL,
     field_name varchar(30),
     field_value varchar(255),
-    updated_by varchar(50) NOT NULL,
-    date datetime NOT NULL,
     change_type char(6) NOT NULL,
+    created_by varchar(50) NOT NULL,
+    created_date datetime NOT NULL,
+    updated_by varchar(50) NOT NULL,
+    updated_date datetime NOT NULL,
     account_record_id int(11) unsigned default null,
     tenant_record_id int(11) unsigned default null,
-    PRIMARY KEY(history_record_id)
+    PRIMARY KEY(record_id)
 ) ENGINE=innodb;
-CREATE INDEX custom_field_history_record_id ON custom_field_history(record_id);
+CREATE INDEX custom_field_history_target_record_id ON custom_field_history(target_record_id);
 CREATE INDEX custom_field_history_object_id_object_type ON custom_fields(object_id, object_type);
 CREATE INDEX custom_field_history_tenant_account_record_id ON custom_field_history(tenant_record_id, account_record_id);
 
@@ -45,6 +47,7 @@ CREATE TABLE tag_definitions (
     id char(36) NOT NULL,
     name varchar(20) NOT NULL,
     description varchar(200) NOT NULL,
+    is_active bool DEFAULT true,
     created_by varchar(50) NOT NULL,
     created_date datetime NOT NULL,
     updated_by varchar(50) NOT NULL,
@@ -53,25 +56,27 @@ CREATE TABLE tag_definitions (
     PRIMARY KEY(record_id)
 ) ENGINE=innodb;
 CREATE UNIQUE INDEX tag_definitions_id ON tag_definitions(id);
-CREATE UNIQUE INDEX tag_definitions_name ON tag_definitions(name);
 CREATE INDEX tag_definitions_tenant_record_id ON tag_definitions(tenant_record_id);
 
 DROP TABLE IF EXISTS tag_definition_history;
 CREATE TABLE tag_definition_history (
-    history_record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
-    record_id int(11) unsigned NOT NULL,
+    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
     id char(36) NOT NULL,
+    target_record_id int(11) unsigned NOT NULL,
     name varchar(30) NOT NULL,
-    created_by varchar(50),
     description varchar(200),
+    is_active bool DEFAULT true,
     change_type char(6) NOT NULL,
+    created_by varchar(50) NOT NULL,
+    created_date datetime NOT NULL,
     updated_by varchar(50) NOT NULL,
-    date datetime NOT NULL,
+    updated_date datetime NOT NULL,
+    account_record_id int(11) unsigned default null,
     tenant_record_id int(11) unsigned default null,
-    PRIMARY KEY(history_record_id)
+    PRIMARY KEY(record_id)
 ) ENGINE=innodb;
 CREATE INDEX tag_definition_history_id ON tag_definition_history(id);
-CREATE INDEX tag_definition_history_record_id ON tag_definition_history(record_id);
+CREATE INDEX tag_definition_history_target_record_id ON tag_definition_history(target_record_id);
 CREATE INDEX tag_definition_history_name ON tag_definition_history(name);
 CREATE INDEX tag_definition_history_tenant_record_id ON tag_definition_history(tenant_record_id);
 
@@ -82,33 +87,38 @@ CREATE TABLE tags (
     tag_definition_id char(36) NOT NULL,
     object_id char(36) NOT NULL,
     object_type varchar(30) NOT NULL,
+    is_active bool DEFAULT true,
     created_by varchar(50) NOT NULL,
     created_date datetime NOT NULL,
+    updated_by varchar(50) NOT NULL,
+    updated_date datetime NOT NULL,
     account_record_id int(11) unsigned default null,
     tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)
 ) ENGINE = innodb;
 CREATE UNIQUE INDEX tags_id ON tags(id);
 CREATE INDEX tags_by_object ON tags(object_id);
-CREATE UNIQUE INDEX tags_unique ON tags(tag_definition_id, object_id);
 CREATE INDEX tags_tenant_account_record_id ON tags(tenant_record_id, account_record_id);
 
 DROP TABLE IF EXISTS tag_history;
 CREATE TABLE tag_history (
-    history_record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
-    record_id int(11) unsigned NOT NULL,
+    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
     id char(36) NOT NULL,
+    target_record_id int(11) unsigned NOT NULL,
     object_id char(36) NOT NULL,
     object_type varchar(30) NOT NULL,
     tag_definition_id char(36) NOT NULL,
-    updated_by varchar(50) NOT NULL,
-    date datetime NOT NULL,
+    is_active bool DEFAULT true,
     change_type char(6) NOT NULL,
+    created_by varchar(50) NOT NULL,
+    created_date datetime NOT NULL,
+    updated_by varchar(50) NOT NULL,
+    updated_date datetime NOT NULL,
     account_record_id int(11) unsigned default null,
     tenant_record_id int(11) unsigned default null,
-    PRIMARY KEY(history_record_id)
+    PRIMARY KEY(record_id)
 ) ENGINE = innodb;
-CREATE INDEX tag_history_record_id ON tag_history(record_id);
+CREATE INDEX tag_history_target_record_id ON tag_history(target_record_id);
 CREATE INDEX tag_history_by_object ON tags(object_id);
 CREATE INDEX tag_history_tenant_account_record_id ON tag_history(tenant_record_id, account_record_id);
 
@@ -150,21 +160,22 @@ CREATE INDEX claimed_notifications_tenant_account_record_id ON claimed_notificat
 
 DROP TABLE IF EXISTS audit_log;
 CREATE TABLE audit_log (
-    id int(11) unsigned NOT NULL AUTO_INCREMENT,
+    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
+    id char(36) NOT NULL,
     table_name varchar(50) NOT NULL,
-    record_id int(11) NOT NULL,
+    target_record_id int(11) NOT NULL,
     change_type char(6) NOT NULL,
-    change_date datetime NOT NULL,
-    changed_by varchar(50) NOT NULL,
+    created_by varchar(50) NOT NULL,
     reason_code varchar(255) DEFAULT NULL,
     comments varchar(255) DEFAULT NULL,
     user_token char(36),
+    created_date datetime NOT NULL,
     account_record_id int(11) unsigned default null,
     tenant_record_id int(11) unsigned default null,
-    PRIMARY KEY(id)
+    PRIMARY KEY(record_id)
 ) ENGINE=innodb;
-CREATE INDEX audit_log_fetch_record ON audit_log(table_name, record_id);
-CREATE INDEX audit_log_user_name ON audit_log(changed_by);
+CREATE INDEX audit_log_fetch_target_record_id ON audit_log(table_name, target_record_id);
+CREATE INDEX audit_log_user_name ON audit_log(created_by);
 CREATE INDEX audit_log_tenant_account_record_id ON audit_log(tenant_record_id, account_record_id);
 
 DROP TABLE IF EXISTS bus_events;

@@ -65,4 +65,13 @@ public enum ControlTagType {
     public List<ObjectType> getApplicableObjectTypes() {
         return applicableObjectTypes;
     }
+
+    public static ControlTagType getTypeFromId(final UUID targetId) {
+        for (ControlTagType cur : values()) {
+            if (cur.getId().equals(targetId)) {
+                return cur;
+            }
+        }
+        return null;
+    }
 }

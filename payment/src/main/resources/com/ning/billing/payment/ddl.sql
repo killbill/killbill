@@ -26,9 +26,9 @@ CREATE INDEX payments_tenant_account_record_id ON payments(tenant_record_id, acc
 
 DROP TABLE IF EXISTS payment_history; 
 CREATE TABLE payment_history (
-    history_record_id int(11) unsigned NOT NULL AUTO_INCREMENT,    
-    record_id int(11) unsigned NOT NULL,
+    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
     id char(36) NOT NULL,
+    target_record_id int(11) unsigned NOT NULL,
     account_id char(36) COLLATE utf8_bin NOT NULL,
     invoice_id char(36) COLLATE utf8_bin NOT NULL,
     payment_method_id char(36) COLLATE utf8_bin NOT NULL,    
@@ -38,15 +38,16 @@ CREATE TABLE payment_history (
     payment_status varchar(50),
     ext_first_payment_ref_id varchar(128),
     ext_second_payment_ref_id varchar(128),    
+    change_type char(6) NOT NULL,
     created_by varchar(50) NOT NULL,
     created_date datetime NOT NULL,
     updated_by varchar(50) NOT NULL,
     updated_date datetime NOT NULL,
     account_record_id int(11) unsigned default null,
     tenant_record_id int(11) unsigned default null,
-    PRIMARY KEY (history_record_id)
+    PRIMARY KEY(record_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
-CREATE INDEX payment_history_record_id ON payment_history(record_id);
+CREATE INDEX payment_history_target_record_id ON payment_history(target_record_id);
 CREATE INDEX payment_history_tenant_account_record_id ON payment_history(tenant_record_id, account_record_id);
 
 DROP TABLE IF EXISTS payment_attempts;
@@ -72,23 +73,24 @@ CREATE INDEX payment_attempts_tenant_account_record_id ON payment_attempts(tenan
 
 DROP TABLE IF EXISTS payment_attempt_history;
 CREATE TABLE payment_attempt_history (
-    history_record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
-    record_id int(11) unsigned NOT NULL,
+    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
     id char(36) NOT NULL,
+    target_record_id int(11) unsigned NOT NULL,
     payment_id char(36) COLLATE utf8_bin NOT NULL,
     gateway_error_code varchar(32),              
     gateway_error_msg varchar(256),
     processing_status varchar(50),
     requested_amount numeric(10,4),
+    change_type char(6) NOT NULL,
     created_by varchar(50) NOT NULL,
     created_date datetime NOT NULL,
     updated_by varchar(50) NOT NULL,
     updated_date datetime NOT NULL,
     account_record_id int(11) unsigned default null,
     tenant_record_id int(11) unsigned default null,
-    PRIMARY KEY (history_record_id)
+    PRIMARY KEY(record_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
-CREATE INDEX payment_attempt_history_record_id ON payment_attempt_history(record_id);
+CREATE INDEX payment_attempt_history_target_record_id ON payment_attempt_history(target_record_id);
 CREATE INDEX payment_attempt_history_tenant_account_record_id ON payment_attempt_history(tenant_record_id, account_record_id);
 
 DROP TABLE IF EXISTS payment_methods;
@@ -113,22 +115,23 @@ CREATE INDEX payment_methods_tenant_account_record_id ON payment_methods(tenant_
 
 DROP TABLE IF EXISTS payment_method_history;
 CREATE TABLE payment_method_history (
-    history_record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
-    record_id int(11) unsigned NOT NULL,
+    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
     id char(36) NOT NULL,
+    target_record_id int(11) unsigned NOT NULL,
     account_id char(36) COLLATE utf8_bin NOT NULL,
     plugin_name varchar(20) DEFAULT NULL, 
     is_active bool DEFAULT true, 
     external_id varchar(64),                  
+    change_type char(6) NOT NULL,
     created_by varchar(50) NOT NULL,
     created_date datetime NOT NULL,
     updated_by varchar(50) NOT NULL,
     updated_date datetime NOT NULL,
     account_record_id int(11) unsigned default null,
     tenant_record_id int(11) unsigned default null,
-    PRIMARY KEY (history_record_id)
+    PRIMARY KEY(record_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
-CREATE UNIQUE INDEX payment_method_history_record_id ON payment_method_history(record_id);
+CREATE INDEX payment_method_history_target_record_id ON payment_method_history(target_record_id);
 CREATE INDEX payment_method_history_tenant_account_record_id ON payment_method_history(tenant_record_id, account_record_id);
 
 DROP TABLE IF EXISTS refunds; 
@@ -156,24 +159,25 @@ CREATE INDEX refunds_tenant_account_record_id ON refunds(tenant_record_id, accou
 
 DROP TABLE IF EXISTS refund_history; 
 CREATE TABLE refund_history (
-    history_record_id int(11) unsigned NOT NULL AUTO_INCREMENT, 
-    record_id int(11) unsigned NOT NULL,
+    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
     id char(36) NOT NULL,
+    target_record_id int(11) unsigned NOT NULL,
     account_id char(36) COLLATE utf8_bin NOT NULL,
     payment_id char(36) COLLATE utf8_bin NOT NULL,    
     amount numeric(10,4),
     currency char(3),   
     is_adjusted tinyint(1),
     refund_status varchar(50), 
+    change_type char(6) NOT NULL,
     created_by varchar(50) NOT NULL,
     created_date datetime NOT NULL,
     updated_by varchar(50) NOT NULL,
     updated_date datetime NOT NULL,
     account_record_id int(11) unsigned default null,
     tenant_record_id int(11) unsigned default null,
-    PRIMARY KEY (history_record_id)
+    PRIMARY KEY(record_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
-CREATE INDEX refund_history_record_id ON refund_history(record_id);
+CREATE INDEX refund_history_target_record_id ON refund_history(target_record_id);
 CREATE INDEX refund_history_tenant_account_record_id ON refund_history(tenant_record_id, account_record_id);
 
 

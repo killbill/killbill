@@ -16,75 +16,33 @@
 
 package com.ning.billing.util.tag.dao;
 
-import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 
 import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.SqlBatch;
+import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
-import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
-import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
-import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
-import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 
 import com.ning.billing.ObjectType;
+import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.callcontext.InternalTenantContextBinder;
-import com.ning.billing.util.dao.EntityHistory;
-import com.ning.billing.util.dao.ObjectTypeBinder;
-import com.ning.billing.util.entity.collection.dao.UpdatableEntityCollectionSqlDao;
+import com.ning.billing.util.entity.dao.Audited;
+import com.ning.billing.util.entity.dao.EntitySqlDao;
+import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 import com.ning.billing.util.tag.Tag;
 
-@ExternalizedSqlViaStringTemplate3
-@RegisterMapper(TagMapper.class)
-public interface TagSqlDao extends UpdatableEntityCollectionSqlDao<Tag>, Transactional<TagSqlDao>, Transmogrifier {
-
-    @Override
-    @SqlBatch(transactional = false)
-    public void insertFromTransaction(@Bind("objectId") final String objectId,
-                                      @ObjectTypeBinder final ObjectType objectType,
-                                      @TagBinder final Collection<Tag> tags,
-                                      @InternalTenantContextBinder final InternalCallContext context);
-
-    @Override
-    @SqlBatch(transactional = false)
-    public void updateFromTransaction(@Bind("objectId") final String objectId,
-                                      @ObjectTypeBinder final ObjectType objectType,
-                                      @TagBinder final Collection<Tag> tags,
-                                      @InternalTenantContextBinder final InternalCallContext context);
-
-    @Override
-    @SqlBatch(transactional = false)
-    public void deleteFromTransaction(@Bind("objectId") final String objectId,
-                                      @ObjectTypeBinder final ObjectType objectType,
-                                      @TagBinder final Collection<Tag> tags,
-                                      @InternalTenantContextBinder final InternalCallContext context);
-
-    @Override
-    @SqlBatch(transactional = false)
-    public void addHistoryFromTransaction(@Bind("objectId") final String objectId,
-                                          @ObjectTypeBinder final ObjectType objectType,
-                                          @TagHistoryBinder final List<EntityHistory<Tag>> histories,
-                                          @InternalTenantContextBinder final InternalCallContext context);
+@EntitySqlDaoStringTemplate
+public interface TagSqlDao extends EntitySqlDao<TagModelDao, Tag> {
 
     @SqlUpdate
-    public void addTagFromTransaction(@Bind("id") final String tagId,
-                                      @Bind("tagDefinitionId") final String tagDefinitionId,
-                                      @Bind("objectId") final String objectId,
-                                      @ObjectTypeBinder final ObjectType objectType,
-                                      @InternalTenantContextBinder final InternalCallContext context);
-
-    @SqlUpdate
-    public void removeTagFromTransaction(@Bind("tagDefinitionId") final String tagDefinitionId,
-                                         @Bind("objectId") final String objectId,
-                                         @ObjectTypeBinder final ObjectType objectType,
-                                         @InternalTenantContextBinder final InternalCallContext context);
+    @Audited(ChangeType.DELETE)
+    void markTagAsDeleted(@Bind("id") String tagId,
+                          @BindBean InternalCallContext context);
 
     @SqlQuery
-    public Tag findTag(@Bind("tagDefinitionId") final String tagDefinitionId,
-                       @Bind("objectId") final String objectId,
-                       @ObjectTypeBinder final ObjectType objectType,
-                       @InternalTenantContextBinder final InternalTenantContext context);
+    List<TagModelDao> getTagsForObject(@Bind("objectId") UUID objectId,
+                                       @Bind("objectType") ObjectType objectType,
+                                       @BindBean InternalTenantContext internalTenantContext);
 }

@@ -22,6 +22,7 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.tenant.dao.TenantModelDao;
 import com.ning.billing.util.entity.EntityBase;
 
 public class DefaultTenant extends EntityBase implements Tenant {
@@ -56,6 +57,11 @@ public class DefaultTenant extends EntityBase implements Tenant {
         this.externalKey = externalKey;
         this.apiKey = apiKey;
         this.apiSecret = apiSecret;
+    }
+
+    public DefaultTenant(final TenantModelDao tenant) {
+        this(tenant.getId(), tenant.getCreatedDate(), tenant.getUpdatedDate(), tenant.getExternalKey(), tenant.getApiKey(),
+             tenant.getApiSecret());
     }
 
     @Override

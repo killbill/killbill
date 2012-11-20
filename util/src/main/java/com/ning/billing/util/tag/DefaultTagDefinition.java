@@ -21,6 +21,7 @@ import java.util.UUID;
 
 import com.ning.billing.ObjectType;
 import com.ning.billing.util.entity.EntityBase;
+import com.ning.billing.util.tag.dao.TagDefinitionModelDao;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -32,6 +33,10 @@ public class DefaultTagDefinition extends EntityBase implements TagDefinition {
     private final String description;
     private final Boolean controlTag;
     private final List<ObjectType> applicableObjectTypes;
+
+    public DefaultTagDefinition(final TagDefinitionModelDao tagDefinitionModelDao, final boolean isControlTag) {
+        this(tagDefinitionModelDao.getId(), tagDefinitionModelDao.getName(), tagDefinitionModelDao.getDescription(), isControlTag);
+    }
 
     public DefaultTagDefinition(final String name, final String description, final Boolean isControlTag) {
         this(UUID.randomUUID(), name, description, isControlTag);

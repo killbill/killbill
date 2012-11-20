@@ -80,7 +80,7 @@ public class TestAuditLogJson extends JaxrsTestSuite {
         final TableName tableName = TableName.ACCOUNT_EMAIL_HISTORY;
         final long recordId = Long.MAX_VALUE;
         final ChangeType changeType = ChangeType.DELETE;
-        final EntityAudit entityAudit = new EntityAudit(tableName, recordId, changeType);
+        final EntityAudit entityAudit = new EntityAudit(tableName, recordId, changeType, null);
 
         final AuditLog auditLog = new DefaultAuditLog(entityAudit, callContext);
 
@@ -89,7 +89,7 @@ public class TestAuditLogJson extends JaxrsTestSuite {
         Assert.assertNotNull(auditLogJson.getChangeDate());
         Assert.assertEquals(auditLogJson.getChangedBy(), callContext.getUserName());
         Assert.assertEquals(auditLogJson.getReasonCode(), callContext.getReasonCode());
-        Assert.assertEquals(auditLogJson.getComments(), callContext.getComment());
+        Assert.assertEquals(auditLogJson.getComments(), callContext.getComments());
         Assert.assertEquals(auditLogJson.getUserToken(), callContext.getUserToken().toString());
     }
 }

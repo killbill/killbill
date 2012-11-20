@@ -24,16 +24,21 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.payment.api.Refund;
+import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.EntityBase;
+import com.ning.billing.util.entity.dao.EntityModelDao;
 
-public class RefundModelDao extends EntityBase {
+public class RefundModelDao extends EntityBase implements EntityModelDao<Refund> {
 
-    private final UUID accountId;
-    private final UUID paymentId;
-    private final BigDecimal amount;
-    private final Currency currency;
-    private final boolean isAdjusted;
-    private final RefundStatus refundStatus;
+    private UUID accountId;
+    private UUID paymentId;
+    private BigDecimal amount;
+    private Currency currency;
+    private boolean isAdjusted;
+    private RefundStatus refundStatus;
+
+    public RefundModelDao() { /* For the DAO mapper */ }
 
     public RefundModelDao(final UUID accountId, final UUID paymentId, final BigDecimal amount,
                           final Currency currency, final boolean isAdjusted) {
@@ -72,7 +77,13 @@ public class RefundModelDao extends EntityBase {
         return refundStatus;
     }
 
-    public boolean isAdjsuted() {
+    // TODO Required for making the BindBeanFactory with Introspector work
+    // see Introspector line 571; they look at public method.
+    public boolean getIsAdjusted() {
+        return isAdjusted;
+    }
+
+    public boolean isAdjusted() {
         return isAdjusted;
     }
 
@@ -148,5 +159,10 @@ public class RefundModelDao extends EntityBase {
         result = 31 * result + (createdDate != null ? createdDate.hashCode() : 0);
         result = 31 * result + (updatedDate != null ? updatedDate.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public TableName getTableName() {
+        return TableName.REFUNDS;
     }
 }

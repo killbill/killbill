@@ -20,17 +20,18 @@ import java.io.IOException;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ning.billing.ObjectType;
-import com.ning.billing.util.config.PaymentConfig;
 import com.ning.billing.payment.glue.DefaultPaymentService;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.config.PaymentConfig;
+import com.ning.billing.util.entity.dao.EntitySqlDao;
+import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import com.ning.billing.util.notificationq.NotificationKey;
 import com.ning.billing.util.notificationq.NotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService;
@@ -52,8 +53,8 @@ public abstract class BaseRetryService implements RetryService {
     private NotificationQueue retryQueue;
 
     public BaseRetryService(final NotificationQueueService notificationQueueService,
-            final PaymentConfig config,
-            final InternalCallContextFactory internalCallContextFactory) {
+                            final PaymentConfig config,
+                            final InternalCallContextFactory internalCallContextFactory) {
         this.notificationQueueService = notificationQueueService;
         this.config = config;
         this.internalCallContextFactory = internalCallContextFactory;
@@ -62,20 +63,20 @@ public abstract class BaseRetryService implements RetryService {
     @Override
     public void initialize(final String svcName) throws NotificationQueueAlreadyExists {
         retryQueue = notificationQueueService.createNotificationQueue(svcName,
-                getQueueName(),
-                new NotificationQueueHandler() {
-            @Override
-            public void handleReadyNotification(final NotificationKey notificationKey, final DateTime eventDateTime, final Long accountRecordId, final Long tenantRecordId) {
-                if (!(notificationKey instanceof PaymentRetryNotificationKey)) {
-                    log.error("Payment service got an unexpected notification type {}", notificationKey.getClass().getName());
-                    return;
-                }
-                final PaymentRetryNotificationKey key = (PaymentRetryNotificationKey) notificationKey;
-                final InternalCallContext callContext = internalCallContextFactory.createInternalCallContext(tenantRecordId, accountRecordId, PAYMENT_RETRY_SERVICE, CallOrigin.INTERNAL, UserType.SYSTEM, null);
-                retry(key.getUuidKey(), callContext);
-            }
-        },
-        config);
+                                                                      getQueueName(),
+                                                                      new NotificationQueueHandler() {
+                                                                          @Override
+                                                                          public void handleReadyNotification(final NotificationKey notificationKey, final DateTime eventDateTime, final Long accountRecordId, final Long tenantRecordId) {
+                                                                              if (!(notificationKey instanceof PaymentRetryNotificationKey)) {
+                                                                                  log.error("Payment service got an unexpected notification type {}", notificationKey.getClass().getName());
+                                                                                  return;
+                                                                              }
+                                                                              final PaymentRetryNotificationKey key = (PaymentRetryNotificationKey) notificationKey;
+                                                                              final InternalCallContext callContext = internalCallContextFactory.createInternalCallContext(tenantRecordId, accountRecordId, PAYMENT_RETRY_SERVICE, CallOrigin.INTERNAL, UserType.SYSTEM, null);
+                                                                              retry(key.getUuidKey(), callContext);
+                                                                          }
+                                                                      },
+                                                                      config);
     }
 
     @Override
@@ -101,13 +102,13 @@ public abstract class BaseRetryService implements RetryService {
 
         @Inject
         public RetryServiceScheduler(final NotificationQueueService notificationQueueService,
-                final InternalCallContextFactory internalCallContextFactory) {
+                                     final InternalCallContextFactory internalCallContextFactory) {
             this.notificationQueueService = notificationQueueService;
             this.internalCallContextFactory = internalCallContextFactory;
         }
 
-        public boolean scheduleRetryFromTransaction(final UUID paymentId, final DateTime timeOfRetry, final Transmogrifier transactionalDao) {
-            return scheduleRetryInternal(paymentId, timeOfRetry, transactionalDao);
+        public boolean scheduleRetryFromTransaction(final UUID paymentId, final DateTime timeOfRetry, final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) {
+            return scheduleRetryInternal(paymentId, timeOfRetry, entitySqlDaoWrapperFactory);
         }
 
         public boolean scheduleRetry(final UUID paymentId, final DateTime timeOfRetry) {
@@ -132,7 +133,7 @@ public abstract class BaseRetryService implements RetryService {
              */
         }
 
-        private boolean scheduleRetryInternal(final UUID paymentId, final DateTime timeOfRetry, final Transmogrifier transactionalDao) {
+        private boolean scheduleRetryInternal(final UUID paymentId, final DateTime timeOfRetry, final EntitySqlDaoWrapperFactory<EntitySqlDao> transactionalDao) {
             final InternalCallContext context = createCallContextFromPaymentId(paymentId);
 
             try {

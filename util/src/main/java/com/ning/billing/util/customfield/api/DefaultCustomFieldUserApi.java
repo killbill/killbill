@@ -17,17 +17,22 @@
 package com.ning.billing.util.customfield.api;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import com.ning.billing.ObjectType;
+import com.ning.billing.util.api.CustomFieldApiException;
 import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.customfield.CustomField;
+import com.ning.billing.util.customfield.StringCustomField;
 import com.ning.billing.util.customfield.dao.CustomFieldDao;
+import com.ning.billing.util.customfield.dao.CustomFieldModelDao;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
 public class DefaultCustomFieldUserApi implements CustomFieldUserApi {
@@ -42,12 +47,21 @@ public class DefaultCustomFieldUserApi implements CustomFieldUserApi {
     }
 
     @Override
-    public Map<String, CustomField> getCustomFields(final UUID objectId, final ObjectType objectType, final TenantContext context) {
-        return customFieldDao.loadEntities(objectId, objectType, internalCallContextFactory.createInternalTenantContext(context));
+    public List<CustomField> getCustomFields(final UUID objectId, final ObjectType objectType, final TenantContext context) {
+        return ImmutableList.<CustomField>copyOf(Collections2.transform(customFieldDao.getCustomFields(objectId, objectType, internalCallContextFactory.createInternalTenantContext(context)),
+                                                                        new Function<CustomFieldModelDao, CustomField>() {
+                                                                            @Override
+                                                                            public CustomField apply(final CustomFieldModelDao input) {
+                                                                                return new StringCustomField(input);
+                                                                            }
+                                                                        }));
     }
 
     @Override
-    public void saveCustomFields(final UUID objectId, final ObjectType objectType, final List<CustomField> fields, final CallContext context) {
-        customFieldDao.saveEntities(objectId, objectType, fields, internalCallContextFactory.createInternalCallContext(objectId, objectType, context));
+    public void addCustomFields(final List<CustomField> fields, final CallContext context) throws CustomFieldApiException {
+        // TODO make it transactional
+        for (final CustomField cur : fields) {
+            customFieldDao.create(new CustomFieldModelDao(cur), internalCallContextFactory.createInternalCallContext(cur.getObjectId(), cur.getObjectType(), context));
+        }
     }
 }

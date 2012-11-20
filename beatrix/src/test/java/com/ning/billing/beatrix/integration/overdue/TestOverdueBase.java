@@ -29,48 +29,16 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.beatrix.integration.BeatrixModule;
+import com.ning.billing.beatrix.integration.BeatrixIntegrationModule;
 import com.ning.billing.beatrix.integration.TestIntegrationBase;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.invoice.api.InvoiceUserApi;
-import com.ning.billing.overdue.OverdueUserApi;
 import com.ning.billing.overdue.config.OverdueConfig;
-import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
-import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
-import com.ning.billing.payment.provider.MockPaymentProviderPlugin;
-import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.config.catalog.XMLLoader;
-import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
-
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
 public abstract class TestOverdueBase extends TestIntegrationBase {
 
-    @Inject
-    protected ClockMock clock;
-
-    @Named("yoyo")
-    @Inject
-    protected
-    MockPaymentProviderPlugin paymentPlugin;
-
-    @Inject
-    protected BlockingInternalApi blockingApi;
-
-    @Inject
-    protected OverdueWrapperFactory overdueWrapperFactory;
-
-    @Inject
-    protected OverdueUserApi overdueApi;
-
-    @Inject
-    protected PaymentApi paymentApi;
-
-    @Inject
-    protected InvoiceUserApi invoiceApi;
 
     protected Account account;
     protected SubscriptionBundle bundle;
@@ -112,7 +80,7 @@ public abstract class TestOverdueBase extends TestIntegrationBase {
         account = createAccountWithPaymentMethod(getAccountData(0));
         assertNotNull(account);
 
-        paymentApi.addPaymentMethod(BeatrixModule.PLUGIN_NAME, account, true, paymentMethodPlugin, callContext);
+        paymentApi.addPaymentMethod(BeatrixIntegrationModule.PLUGIN_NAME, account, true, paymentMethodPlugin, callContext);
 
         bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
 

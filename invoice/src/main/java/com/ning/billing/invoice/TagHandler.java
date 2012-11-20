@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.invoice;
 
 import java.util.UUID;
@@ -43,8 +44,8 @@ public class TagHandler {
 
     @Inject
     public TagHandler(final Clock clock,
-            final InvoiceDispatcher dispatcher,
-            final InternalCallContextFactory internalCallContextFactory) {
+                      final InvoiceDispatcher dispatcher,
+                      final InternalCallContextFactory internalCallContextFactory) {
         this.clock = clock;
         this.dispatcher = dispatcher;
         this.internalCallContextFactory = internalCallContextFactory;
@@ -52,7 +53,7 @@ public class TagHandler {
 
     @Subscribe
     public void process_AUTO_INVOICING_OFF_removal(final ControlTagDeletionInternalEvent event) {
-        if (event.getTagDefinition().getName().equals(ControlTagType.AUTO_INVOICING_OFF.toString()) && event.getObjectType() ==  ObjectType.ACCOUNT) {
+        if (event.getTagDefinition().getName().equals(ControlTagType.AUTO_INVOICING_OFF.toString()) && event.getObjectType() == ObjectType.ACCOUNT) {
             final UUID accountId = event.getObjectId();
             final InternalCallContext context = internalCallContextFactory.createInternalCallContext(event.getTenantRecordId(), event.getAccountRecordId(), "InvoiceTagHandler", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
             processUnpaid_AUTO_INVOICING_OFF_invoices(accountId, context);

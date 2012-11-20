@@ -16,8 +16,6 @@
 
 package com.ning.billing.invoice;
 
-import static org.testng.Assert.assertNotNull;
-
 import java.io.IOException;
 import java.net.URL;
 
@@ -52,7 +50,10 @@ import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 
 import com.google.inject.AbstractModule;
 
+import static org.testng.Assert.assertNotNull;
+
 public class MockModule extends AbstractModule {
+
     @Override
     protected void configure() {
         loadSystemPropertiesFromClasspath("/resource.properties");

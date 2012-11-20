@@ -28,7 +28,7 @@ public abstract class CallContextBase implements CallContext {
     protected final CallOrigin callOrigin;
     protected final UserType userType;
     protected final String reasonCode;
-    protected final String comment;
+    protected final String comments;
 
     public CallContextBase(@Nullable final UUID tenantId, final String userName, final CallOrigin callOrigin, final UserType userType) {
         this(tenantId, userName, callOrigin, userType, null);
@@ -45,7 +45,7 @@ public abstract class CallContextBase implements CallContext {
         this.callOrigin = callOrigin;
         this.userType = userType;
         this.reasonCode = reasonCode;
-        this.comment = comment;
+        this.comments = comment;
         this.userToken = userToken;
     }
 
@@ -75,8 +75,8 @@ public abstract class CallContextBase implements CallContext {
     }
 
     @Override
-    public String getComment() {
-        return comment;
+    public String getComments() {
+        return comments;
     }
 
     @Override

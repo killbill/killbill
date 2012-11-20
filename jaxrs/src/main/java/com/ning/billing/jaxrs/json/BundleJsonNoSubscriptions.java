@@ -44,7 +44,7 @@ public class BundleJsonNoSubscriptions extends BundleJsonSimple {
     }
 
     public BundleJsonNoSubscriptions(final SubscriptionBundle bundle) {
-        super(bundle.getId().toString(), bundle.getKey(), null);
+        super(bundle.getId().toString(), bundle.getExternalKey(), null);
         this.accountId = bundle.getAccountId().toString();
     }
 

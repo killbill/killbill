@@ -276,10 +276,11 @@ public class TestBillingApi extends JunctionTestSuite {
 
         final Account account = createAccount(32);
 
-        final Map<String, Tag> tags = new HashMap<String, Tag>();
         final Tag aioTag = mock(Tag.class);
         when(aioTag.getTagDefinitionId()).thenReturn(ControlTagType.AUTO_INVOICING_OFF.getId());
-        tags.put(ControlTagType.AUTO_INVOICING_OFF.name(), aioTag);
+        final List<Tag> tags = new ArrayList<Tag>();
+        tags.add(aioTag);
+
         when(tagApi.getTags(account.getId(), ObjectType.ACCOUNT, internalCallContext)).thenReturn(tags);
         assertEquals(tagApi.getTags(account.getId(), ObjectType.ACCOUNT, internalCallContext), tags);
 
@@ -297,10 +298,10 @@ public class TestBillingApi extends JunctionTestSuite {
 
         final Account account = createAccount(32);
 
-        final Map<String, Tag> tags = new HashMap<String, Tag>();
+        final List<Tag> tags = new ArrayList<Tag>();
         final Tag aioTag = mock(Tag.class);
         when(aioTag.getTagDefinitionId()).thenReturn(ControlTagType.AUTO_INVOICING_OFF.getId());
-        tags.put(ControlTagType.AUTO_INVOICING_OFF.name(), aioTag);
+        tags.add(aioTag);
         when(tagApi.getTags(bunId, ObjectType.BUNDLE, internalCallContext)).thenReturn(tags);
 
         final BillingEventSet events = api.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), internalCallContext);

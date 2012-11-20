@@ -17,6 +17,7 @@
 package com.ning.billing.invoice.api;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -29,7 +30,7 @@ public interface Invoice extends Entity {
 
     boolean addInvoiceItem(InvoiceItem item);
 
-    boolean addInvoiceItems(List<InvoiceItem> items);
+    boolean addInvoiceItems(Collection<InvoiceItem> items);
 
     List<InvoiceItem> getInvoiceItems();
 
@@ -39,7 +40,7 @@ public interface Invoice extends Entity {
 
     boolean addPayment(InvoicePayment payment);
 
-    boolean addPayments(List<InvoicePayment> payments);
+    boolean addPayments(Collection<InvoicePayment> payments);
 
     List<InvoicePayment> getPayments();
 

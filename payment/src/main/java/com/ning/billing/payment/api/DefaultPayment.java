@@ -175,7 +175,7 @@ public class DefaultPayment extends EntityBase implements Payment {
                 return new PaymentAttempt() {
                     @Override
                     public PaymentStatus getPaymentStatus() {
-                        return input.getPaymentStatus();
+                        return input.getProcessingStatus();
                     }
 
                     @Override
@@ -186,6 +186,16 @@ public class DefaultPayment extends EntityBase implements Payment {
                     @Override
                     public UUID getId() {
                         return input.getId();
+                    }
+
+                    @Override
+                    public DateTime getCreatedDate() {
+                        throw new UnsupportedOperationException();
+                    }
+
+                    @Override
+                    public DateTime getUpdatedDate() {
+                        throw new UnsupportedOperationException();
                     }
 
                     @Override

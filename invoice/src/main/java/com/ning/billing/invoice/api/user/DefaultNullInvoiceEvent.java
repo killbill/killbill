@@ -49,7 +49,6 @@ public class DefaultNullInvoiceEvent extends DefaultBusInternalEvent implements 
         return BusInternalEventType.INVOICE_EMPTY;
     }
 
-
     @Override
     public UUID getAccountId() {
         return accountId;

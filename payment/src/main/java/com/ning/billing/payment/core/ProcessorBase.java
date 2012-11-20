@@ -16,6 +16,7 @@
 
 package com.ning.billing.payment.core;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Callable;
@@ -79,8 +80,8 @@ public abstract class ProcessorBase {
     }
 
     protected boolean isAccountAutoPayOff(final UUID accountId, final InternalTenantContext context) {
-        final Map<String, Tag> accountTags = tagInternalApi.getTags(accountId, ObjectType.ACCOUNT, context);
-        for (final Tag cur : accountTags.values()) {
+        final List<Tag> accountTags = tagInternalApi.getTags(accountId, ObjectType.ACCOUNT, context);
+        for (final Tag cur : accountTags) {
             if (ControlTagType.AUTO_PAY_OFF.getId().equals(cur.getTagDefinitionId())) {
                 return true;
             }

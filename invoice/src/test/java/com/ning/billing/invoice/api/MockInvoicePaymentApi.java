@@ -63,7 +63,6 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi {
         return null;
     }
 
-
     @Override
     public List<InvoicePayment> getInvoicePayments(final UUID paymentId, final TenantContext context) {
         final List<InvoicePayment> result = new LinkedList<InvoicePayment>();
@@ -84,7 +83,6 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi {
         }
         return null;
     }
-
 
     @Override
     public InvoicePayment createChargeback(final UUID invoicePaymentId, final BigDecimal amount, final CallContext context) throws InvoiceApiException {

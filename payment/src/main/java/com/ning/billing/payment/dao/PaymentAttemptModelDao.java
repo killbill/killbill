@@ -23,19 +23,24 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.payment.api.Payment.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentStatus;
+import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.EntityBase;
+import com.ning.billing.util.entity.dao.EntityModelDao;
 
-public class PaymentAttemptModelDao extends EntityBase {
+public class PaymentAttemptModelDao extends EntityBase implements EntityModelDao<PaymentAttempt> {
 
-    private final UUID accountId;
-    private final UUID invoiceId;
-    private final UUID paymentId;
-    private final PaymentStatus processingStatus;
-    private final DateTime effectiveDate;
-    private final String gatewayErrorCode;
-    private final String gatewayErrorMsg;
-    private final BigDecimal requestedAmount;
+    private UUID accountId;
+    private UUID invoiceId;
+    private UUID paymentId;
+    private PaymentStatus processingStatus;
+    private DateTime effectiveDate;
+    private String gatewayErrorCode;
+    private String gatewayErrorMsg;
+    private BigDecimal requestedAmount;
+
+    public PaymentAttemptModelDao() { /* For the DAO mapper */ }
 
     public PaymentAttemptModelDao(final UUID id, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate,
                                   final UUID accountId, final UUID invoiceId,
@@ -77,7 +82,7 @@ public class PaymentAttemptModelDao extends EntityBase {
         return paymentId;
     }
 
-    public PaymentStatus getPaymentStatus() {
+    public PaymentStatus getProcessingStatus() {
         return processingStatus;
     }
 
@@ -95,5 +100,82 @@ public class PaymentAttemptModelDao extends EntityBase {
 
     public BigDecimal getRequestedAmount() {
         return requestedAmount;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append("PaymentAttemptModelDao");
+        sb.append("{accountId=").append(accountId);
+        sb.append(", invoiceId=").append(invoiceId);
+        sb.append(", paymentId=").append(paymentId);
+        sb.append(", processingStatus=").append(processingStatus);
+        sb.append(", effectiveDate=").append(effectiveDate);
+        sb.append(", gatewayErrorCode='").append(gatewayErrorCode).append('\'');
+        sb.append(", gatewayErrorMsg='").append(gatewayErrorMsg).append('\'');
+        sb.append(", requestedAmount=").append(requestedAmount);
+        sb.append('}');
+        return sb.toString();
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+
+        final PaymentAttemptModelDao that = (PaymentAttemptModelDao) o;
+
+        if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
+            return false;
+        }
+        if (effectiveDate != null ? !effectiveDate.equals(that.effectiveDate) : that.effectiveDate != null) {
+            return false;
+        }
+        if (gatewayErrorCode != null ? !gatewayErrorCode.equals(that.gatewayErrorCode) : that.gatewayErrorCode != null) {
+            return false;
+        }
+        if (gatewayErrorMsg != null ? !gatewayErrorMsg.equals(that.gatewayErrorMsg) : that.gatewayErrorMsg != null) {
+            return false;
+        }
+        if (invoiceId != null ? !invoiceId.equals(that.invoiceId) : that.invoiceId != null) {
+            return false;
+        }
+        if (paymentId != null ? !paymentId.equals(that.paymentId) : that.paymentId != null) {
+            return false;
+        }
+        if (processingStatus != that.processingStatus) {
+            return false;
+        }
+        if (requestedAmount != null ? !requestedAmount.equals(that.requestedAmount) : that.requestedAmount != null) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
+        result = 31 * result + (invoiceId != null ? invoiceId.hashCode() : 0);
+        result = 31 * result + (paymentId != null ? paymentId.hashCode() : 0);
+        result = 31 * result + (processingStatus != null ? processingStatus.hashCode() : 0);
+        result = 31 * result + (effectiveDate != null ? effectiveDate.hashCode() : 0);
+        result = 31 * result + (gatewayErrorCode != null ? gatewayErrorCode.hashCode() : 0);
+        result = 31 * result + (gatewayErrorMsg != null ? gatewayErrorMsg.hashCode() : 0);
+        result = 31 * result + (requestedAmount != null ? requestedAmount.hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public TableName getTableName() {
+        return TableName.PAYMENT_ATTEMPTS;
     }
 }

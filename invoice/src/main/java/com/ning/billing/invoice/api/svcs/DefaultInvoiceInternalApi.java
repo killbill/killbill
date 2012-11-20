@@ -18,7 +18,6 @@ package com.ning.billing.invoice.api.svcs;
 
 import java.math.BigDecimal;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -35,11 +34,15 @@ import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.InvoicePayment.InvoicePaymentType;
 import com.ning.billing.invoice.dao.InvoiceDao;
+import com.ning.billing.invoice.dao.InvoiceModelDao;
+import com.ning.billing.invoice.dao.InvoicePaymentModelDao;
+import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.DefaultInvoicePayment;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
 
+import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 
@@ -56,17 +59,27 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
 
     @Override
     public Invoice getInvoiceById(final UUID invoiceId, final InternalTenantContext context) throws InvoiceApiException {
-        return dao.getById(invoiceId, context);
+        return new DefaultInvoice(dao.getById(invoiceId, context));
     }
 
     @Override
     public Collection<Invoice> getUnpaidInvoicesByAccountId(final UUID accountId, final LocalDate upToDate, final InternalTenantContext context) {
-        return dao.getUnpaidInvoicesByAccountId(accountId, upToDate, context);
+        return Collections2.transform(dao.getUnpaidInvoicesByAccountId(accountId, upToDate, context), new Function<InvoiceModelDao, Invoice>() {
+            @Override
+            public Invoice apply(final InvoiceModelDao input) {
+                return new DefaultInvoice(input);
+            }
+        });
     }
 
     @Override
     public Collection<Invoice> getInvoicesByAccountId(final UUID accountId, final InternalTenantContext context) {
-        return dao.getInvoicesByAccount(accountId, context);
+        return Collections2.transform(dao.getInvoicesByAccount(accountId, context), new Function<InvoiceModelDao, Invoice>() {
+            @Override
+            public Invoice apply(final InvoiceModelDao input) {
+                return new DefaultInvoice(input);
+            }
+        });
     }
 
     @Override
@@ -77,23 +90,28 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
     @Override
     public void notifyOfPayment(final UUID invoiceId, final BigDecimal amount, final Currency currency, final UUID paymentId, final DateTime paymentDate, final InternalCallContext context) throws InvoiceApiException {
         final InvoicePayment invoicePayment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentId, invoiceId, paymentDate, amount, currency);
-        dao.notifyOfPayment(invoicePayment, context);
+        notifyOfPayment(invoicePayment, context);
     }
 
     @Override
     public void notifyOfPayment(final InvoicePayment invoicePayment, final InternalCallContext context) throws InvoiceApiException {
-        dao.notifyOfPayment(invoicePayment, context);
+        dao.notifyOfPayment(new InvoicePaymentModelDao(invoicePayment), context);
     }
 
     @Override
     public InvoicePayment getInvoicePaymentForAttempt(final UUID paymentId, final InternalTenantContext context) throws InvoiceApiException {
-        final List<InvoicePayment> invoicePayments = dao.getInvoicePayments(paymentId, context);
+        final Collection<InvoicePayment> invoicePayments = Collections2.transform(dao.getInvoicePayments(paymentId, context), new Function<InvoicePaymentModelDao, InvoicePayment>() {
+            @Override
+            public InvoicePayment apply(final InvoicePaymentModelDao input) {
+                return new DefaultInvoicePayment(input);
+            }
+        });
         if (invoicePayments.size() == 0) {
             return null;
         }
         return Collections2.filter(invoicePayments, new Predicate<InvoicePayment>() {
             @Override
-            public boolean apply(InvoicePayment input) {
+            public boolean apply(final InvoicePayment input) {
                 return input.getType() == InvoicePaymentType.ATTEMPT;
             }
         }).iterator().next();
@@ -102,7 +120,7 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
     @Override
     public Invoice getInvoiceForPaymentId(final UUID paymentId, final InternalTenantContext context) throws InvoiceApiException {
         final UUID invoiceIdStr = dao.getInvoiceIdByPaymentId(paymentId, context);
-        return invoiceIdStr == null ? null : dao.getById(invoiceIdStr, context);
+        return invoiceIdStr == null ? null : new DefaultInvoice(dao.getById(invoiceIdStr, context));
     }
 
     @Override
@@ -115,10 +133,14 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
                     throw new InvoiceApiException(ErrorCode.PAYMENT_REFUND_AMOUNT_NEGATIVE_OR_NULL);
                 }
 
-                final List<InvoicePayment> invoicePayments = dao.getInvoicePayments(paymentId, context);
-                final UUID accountId = dao.getAccountIdFromInvoicePaymentId(invoicePayments.get(0).getId(), context);
+                final Collection<InvoicePayment> invoicePayments = Collections2.transform(dao.getInvoicePayments(paymentId, context), new Function<InvoicePaymentModelDao, InvoicePayment>() {
+                    @Override
+                    public InvoicePayment apply(final InvoicePaymentModelDao input) {
+                        return new DefaultInvoicePayment(input);
+                    }
+                });
 
-                return dao.createRefund(paymentId, amount, isInvoiceAdjusted, invoiceItemIdsWithAmounts, paymentCookieId, context);
+                return new DefaultInvoicePayment(dao.createRefund(paymentId, amount, isInvoiceAdjusted, invoiceItemIdsWithAmounts, paymentCookieId, context));
             }
         });
     }
