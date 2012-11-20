@@ -179,7 +179,6 @@ public enum ErrorCode {
     TAG_CANNOT_BE_REMOVED(3951, "The tag %s cannot be removed because %s"),
     TAG_ALREADY_EXISTS(3952, "The tag %s already exists"),
 
-
     /*
     *
     * Range 4000: INVOICE
@@ -201,6 +200,8 @@ public enum ErrorCode {
     EXTERNAL_CHARGE_AMOUNT_INVALID(4015, "External charge amount %s should be strictly positive"),
     INVOICE_WOULD_BE_NEGATIVE(4016, "Cannot execute operation, the invoice balance would become negative"),
     INVOICE_ALREADY_EXISTS(4017, "The invoice already exists %s"),
+    INVOICE_NUMBER_NOT_FOUND(4018, "No invoice could be found for number %s."),
+    INVOICE_INVALID_NUMBER(4019, "Invalid invoice number %s."),
 
     /*
      *
@@ -291,7 +292,6 @@ public enum ErrorCode {
     TENANT_CREATION_FAILED(10004, "Tenant creation failed."),
     TENANT_UPDATE_FAILED(10005, "Tenant update failed."),
     TENANT_NO_SUCH_KEY(10006, "Tenant %s does not have a key %s"),
-
 
     CUSTOM_FIELD_ALREADY_EXISTS(11000, "The custom field %s already exists"),
 
