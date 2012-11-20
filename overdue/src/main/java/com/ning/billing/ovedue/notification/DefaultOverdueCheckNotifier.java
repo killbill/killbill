@@ -55,18 +55,6 @@ public class DefaultOverdueCheckNotifier implements OverdueCheckNotifier {
 
     @Override
     public void initialize() {
-        final NotificationConfig notificationConfig = new NotificationConfig() {
-            @Override
-            public boolean isNotificationProcessingOff() {
-                return config.isNotificationProcessingOff();
-            }
-
-            @Override
-            public long getSleepTimeMs() {
-                return config.getSleepTimeMs();
-            }
-        };
-
         final NotificationQueueHandler notificationQueueHandler = new NotificationQueueHandler() {
             @Override
             public void handleReadyNotification(final NotificationKey notificationKey, final DateTime eventDate, final Long accountRecordId, final Long tenantRecordId) {
@@ -88,8 +76,7 @@ public class DefaultOverdueCheckNotifier implements OverdueCheckNotifier {
         try {
             overdueQueue = notificationQueueService.createNotificationQueue(DefaultOverdueService.OVERDUE_SERVICE_NAME,
                                                                             OVERDUE_CHECK_NOTIFIER_QUEUE,
-                                                                            notificationQueueHandler,
-                                                                            notificationConfig);
+                                                                            notificationQueueHandler);
         } catch (NotificationQueueAlreadyExists e) {
             throw new RuntimeException(e);
         }

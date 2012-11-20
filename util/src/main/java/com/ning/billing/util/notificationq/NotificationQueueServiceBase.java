@@ -17,38 +17,29 @@
 package com.ning.billing.util.notificationq;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 
 import org.skife.jdbi.v2.IDBI;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
-import com.ning.billing.util.config.NotificationConfig;
 import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.notificationq.dao.NotificationSqlDao;
 
-import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 
 public abstract class NotificationQueueServiceBase extends NotificationQueueDispatcher implements NotificationQueueService {
 
 
     @Inject
-    public NotificationQueueServiceBase(final Clock clock, final NotificationConfig config, final IDBI dbi,
+    public NotificationQueueServiceBase(final Clock clock, final NotificationQueueConfig config, final IDBI dbi,
                                         final InternalCallContextFactory internalCallContextFactory) {
-        super(clock, config, dbi,  internalCallContextFactory);
+        super(clock, config, dbi, internalCallContextFactory);
     }
 
     @Override
     public NotificationQueue createNotificationQueue(final String svcName,
                                                      final String queueName,
-                                                     final NotificationQueueHandler handler,
-                                                     final NotificationConfig config) throws NotificationQueueAlreadyExists {
-        if (svcName == null || queueName == null || handler == null || config == null) {
+                                                     final NotificationQueueHandler handler) throws NotificationQueueAlreadyExists {
+        if (svcName == null || queueName == null || handler == null) {
             throw new RuntimeException("Need to specify all parameters");
         }
 

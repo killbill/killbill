@@ -134,22 +134,9 @@ public class Engine implements EventListener, EntitlementService {
                 }
             };
 
-            final NotificationConfig notificationConfig = new NotificationConfig() {
-                @Override
-                public long getSleepTimeMs() {
-                    return config.getSleepTimeMs();
-                }
-
-                @Override
-                public boolean isNotificationProcessingOff() {
-                    return config.isNotificationProcessingOff();
-                }
-            };
-
             subscriptionEventQueue = notificationQueueService.createNotificationQueue(ENTITLEMENT_SERVICE_NAME,
                                                                                       NOTIFICATION_QUEUE_NAME,
-                                                                                      queueHandler,
-                                                                                      notificationConfig);
+                                                                                      queueHandler);
         } catch (NotificationQueueAlreadyExists e) {
             throw new RuntimeException(e);
         }

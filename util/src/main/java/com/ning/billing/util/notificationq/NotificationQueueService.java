@@ -59,12 +59,11 @@ public interface NotificationQueueService extends QueueLifecycle {
      * @param svcName   the name of the service using that queue
      * @param queueName a name for that queue (unique per service)
      * @param handler   the handler required for notifying the caller of state change
-     * @param config    the notification queue configuration
      * @return a new NotificationQueue
      * @throws com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists
      *          is the queue associated with that service and name already exits
      */
-    public NotificationQueue createNotificationQueue(final String svcName, final String queueName, final NotificationQueueHandler handler, final NotificationConfig config)
+    public NotificationQueue createNotificationQueue(final String svcName, final String queueName, final NotificationQueueHandler handler)
             throws NotificationQueueAlreadyExists;
 
     /**

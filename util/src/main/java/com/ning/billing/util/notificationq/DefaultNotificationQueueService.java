@@ -30,7 +30,7 @@ public class DefaultNotificationQueueService extends NotificationQueueServiceBas
     private final IDBI dbi;
 
     @Inject
-    public DefaultNotificationQueueService(final IDBI dbi, final Clock clock, final NotificationConfig config,
+    public DefaultNotificationQueueService(final IDBI dbi, final Clock clock, final NotificationQueueConfig config,
                                            final InternalCallContextFactory internalCallContextFactory) {
         super(clock, config, dbi, internalCallContextFactory);
         this.dbi = dbi;

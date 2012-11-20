@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2012 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -65,7 +65,7 @@ public class NotificationQueueDispatcher extends PersistentQueueBase {
     private AtomicBoolean isStarted;
 
     // Package visibility on purpose
-    NotificationQueueDispatcher(final Clock clock, final NotificationConfig config, final IDBI dbi, final InternalCallContextFactory internalCallContextFactory) {
+    NotificationQueueDispatcher(final Clock clock, final NotificationQueueConfig config, final IDBI dbi, final InternalCallContextFactory internalCallContextFactory) {
         super("NotificationQ", Executors.newFixedThreadPool(1, new ThreadFactory() {
             @Override
             public Thread newThread(final Runnable r) {
@@ -83,7 +83,7 @@ public class NotificationQueueDispatcher extends PersistentQueueBase {
 
         this.clock = clock;
         this.config = config;
-        this.dao = dbi.onDemand(NotificationSqlDao.class);
+        this.dao = (dbi != null) ? dbi.onDemand(NotificationSqlDao.class) : null;
         this.internalCallContextFactory = internalCallContextFactory;
         this.hostname = Hostname.get();
         this.nbProcessedEvents = new AtomicLong();

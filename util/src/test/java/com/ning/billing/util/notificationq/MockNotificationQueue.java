@@ -47,16 +47,18 @@ public class MockNotificationQueue implements NotificationQueue {
     private final String svcName;
     private final String queueName;
     private final NotificationQueueHandler handler;
+    private final MockNotificationQueueService queueService;
 
     private volatile boolean isStarted;
 
-    public MockNotificationQueue(final Clock clock, final String svcName, final String queueName, final NotificationQueueHandler handler) {
+    public MockNotificationQueue(final Clock clock, final String svcName, final String queueName, final NotificationQueueHandler handler, final MockNotificationQueueService mockNotificationQueueService) {
 
         this.svcName = svcName;
         this.queueName = queueName;
         this.handler = handler;
         this.clock = clock;
         this.hostname = Hostname.get();
+        this.queueService = mockNotificationQueueService;
 
         notifications = new TreeSet<Notification>(new Comparator<Notification>() {
             @Override
@@ -154,11 +156,13 @@ public class MockNotificationQueue implements NotificationQueue {
     @Override
     public void startQueue() {
         isStarted = true;
+        queueService.startQueue();
     }
 
     @Override
     public void stopQueue() {
         isStarted = false;
+        queueService.stopQueue();
     }
 
     @Override

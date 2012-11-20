@@ -45,7 +45,7 @@ public class FailedPaymentRetryService extends BaseRetryService implements Retry
                                      final PaymentConfig config,
                                      final PaymentProcessor paymentProcessor,
                                      final InternalCallContextFactory internalCallContextFactory) {
-        super(notificationQueueService, config, internalCallContextFactory);
+        super(notificationQueueService, internalCallContextFactory);
         this.paymentProcessor = paymentProcessor;
     }
 

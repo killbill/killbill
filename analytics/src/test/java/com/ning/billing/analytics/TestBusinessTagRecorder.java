@@ -59,6 +59,7 @@ import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.config.CatalogConfig;
 import com.ning.billing.util.config.NotificationConfig;
 import com.ning.billing.util.notificationq.DefaultNotificationQueueService;
+import com.ning.billing.util.notificationq.NotificationQueueConfig;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 
@@ -76,7 +77,7 @@ public class TestBusinessTagRecorder extends AnalyticsTestSuiteWithEmbeddedDB {
     private BusinessTagDao tagDao;
 
 
-    private NotificationConfig config = new NotificationConfig() {
+    private NotificationQueueConfig config = new NotificationQueueConfig() {
         @Override
         public boolean isNotificationProcessingOff() {
             return false;

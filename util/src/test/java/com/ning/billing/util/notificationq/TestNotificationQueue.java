@@ -85,11 +85,6 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
     @Inject
     NotificationQueueService queueService;
 
-    @Inject
-    NotificationConfig config;
-
-    private DummySqlTest dao;
-
     private int eventsReceived;
 
     private static final class TestNotificationKey implements NotificationKey, Comparable<TestNotificationKey> {
@@ -123,7 +118,6 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
     public void setup() throws Exception {
         final String testDdl = IOUtils.toString(NotificationSqlDao.class.getResourceAsStream("/com/ning/billing/util/ddl_test.sql"));
         helper.initDb(testDdl);
-        dao = dbi.onDemand(DummySqlTest.class);
         entitySqlDaoTransactionalJdbiWrapper = new EntitySqlDaoTransactionalJdbiWrapper(dbi);
     }
 
@@ -167,9 +161,7 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
                                                                                          expectedNotifications.notify();
                                                                                      }
                                                                                  }
-                                                                             },
-                                                                             config);
-
+                                                                             });
 
         queue.startQueue();
 
@@ -226,8 +218,7 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
                                                                                          expectedNotifications.notify();
                                                                                      }
                                                                                  }
-                                                                             },
-                                                                             config);
+                                                                             });
 
         queue.startQueue();
 
@@ -307,29 +298,24 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
         final Map<NotificationKey, Boolean> expectedNotificationsBarney = new TreeMap<NotificationKey, Boolean>();
 
 
-        final NotificationQueueService notificationQueueService = new DefaultNotificationQueueService(dbi, clock, config, new InternalCallContextFactory(dbi, clock));
 
-
-        final NotificationQueue queueFred = notificationQueueService.createNotificationQueue("UtilTest", "Fred", new NotificationQueueHandler() {
+        final NotificationQueue queueFred = queueService.createNotificationQueue("UtilTest", "Fred", new NotificationQueueHandler() {
             @Override
             public void handleReadyNotification(final NotificationKey notificationKey, final DateTime eventDateTime, final Long accountRecordId, final Long tenantRecordId) {
                 log.info("Fred received key: " + notificationKey);
                 expectedNotificationsFred.put(notificationKey, Boolean.TRUE);
                 eventsReceived++;
             }
-        },
-                                                                                             config);
+        });
 
-        final NotificationQueue queueBarney = notificationQueueService.createNotificationQueue("UtilTest", "Barney", new NotificationQueueHandler() {
+        final NotificationQueue queueBarney = queueService.createNotificationQueue("UtilTest", "Barney", new NotificationQueueHandler() {
             @Override
             public void handleReadyNotification(final NotificationKey notificationKey, final DateTime eventDateTime, final Long accountRecordId, final Long tenantRecordId) {
                 log.info("Barney received key: " + notificationKey);
                 expectedNotificationsBarney.put(notificationKey, Boolean.TRUE);
                 eventsReceived++;
             }
-        },
-                                                                                               config);
-
+        });
         queueFred.startQueue();
         //		We don't start Barney so it can never pick up notifications
 
@@ -399,10 +385,7 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
                                                                                          eventsReceived++;
                                                                                      }
                                                                                  }
-                                                                             },
-                                                                             config);
-
-
+                                                                             });
         queue.startQueue();
 
         final DateTime start = clock.getUTCNow().plusHours(1);
@@ -441,8 +424,8 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
     }
 
 
-    static NotificationConfig getNotificationConfig(final boolean off, final long sleepTime) {
-        return new NotificationConfig() {
+    static NotificationQueueConfig getNotificationConfig(final boolean off, final long sleepTime) {
+        return new NotificationQueueConfig() {
             @Override
             public boolean isNotificationProcessingOff() {
                 return off;
@@ -468,7 +451,7 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
             final IDBI otherDbi = helper.getDBI();
             bind(IDBI.class).annotatedWith(Names.named("global-lock")).toInstance(otherDbi);
             bind(NotificationQueueService.class).to(DefaultNotificationQueueService.class).asEagerSingleton();
-            bind(NotificationConfig.class).toInstance(getNotificationConfig(false, 100));
+            bind(NotificationQueueConfig.class).toInstance(getNotificationConfig(false, 100));
         }
     }
 }

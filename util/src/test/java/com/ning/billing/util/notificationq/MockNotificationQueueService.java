@@ -30,7 +30,7 @@ import com.google.inject.Inject;
 public class MockNotificationQueueService extends NotificationQueueServiceBase {
 
     @Inject
-    public MockNotificationQueueService(final Clock clock, final NotificationConfig config) {
+    public MockNotificationQueueService(final Clock clock, final NotificationQueueConfig config) {
         super(clock, config, null, null);
     }
 
@@ -38,7 +38,7 @@ public class MockNotificationQueueService extends NotificationQueueServiceBase {
     @Override
     protected NotificationQueue createNotificationQueueInternal(final String svcName, final String queueName,
                                                                 final NotificationQueueHandler handler) {
-        return new MockNotificationQueue(clock, svcName, queueName, handler);
+        return new MockNotificationQueue(clock, svcName, queueName, handler, this);
     }
 
 

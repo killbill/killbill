@@ -68,17 +68,6 @@ public class DefaultNextBillingDateNotifier implements NextBillingDateNotifier {
 
     @Override
     public void initialize() throws NotificationQueueAlreadyExists {
-        final NotificationConfig notificationConfig = new NotificationConfig() {
-            @Override
-            public long getSleepTimeMs() {
-                return config.getSleepTimeMs();
-            }
-
-            @Override
-            public boolean isNotificationProcessingOff() {
-                return config.isNotificationProcessingOff();
-            }
-        };
 
         final NotificationQueueHandler notificationQueueHandler = new NotificationQueueHandler() {
             @Override
@@ -108,8 +97,7 @@ public class DefaultNextBillingDateNotifier implements NextBillingDateNotifier {
 
         nextBillingQueue = notificationQueueService.createNotificationQueue(DefaultInvoiceService.INVOICE_SERVICE_NAME,
                                                                             NEXT_BILLING_DATE_NOTIFIER_QUEUE,
-                                                                            notificationQueueHandler,
-                                                                            notificationConfig);
+                                                                            notificationQueueHandler);
     }
 
     @Override

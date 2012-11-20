@@ -47,16 +47,13 @@ public abstract class BaseRetryService implements RetryService {
     private static final String PAYMENT_RETRY_SERVICE = "PaymentRetryService";
 
     private final NotificationQueueService notificationQueueService;
-    private final PaymentConfig config;
     private final InternalCallContextFactory internalCallContextFactory;
 
     private NotificationQueue retryQueue;
 
     public BaseRetryService(final NotificationQueueService notificationQueueService,
-                            final PaymentConfig config,
                             final InternalCallContextFactory internalCallContextFactory) {
         this.notificationQueueService = notificationQueueService;
-        this.config = config;
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
@@ -75,8 +72,7 @@ public abstract class BaseRetryService implements RetryService {
                                                                               final InternalCallContext callContext = internalCallContextFactory.createInternalCallContext(tenantRecordId, accountRecordId, PAYMENT_RETRY_SERVICE, CallOrigin.INTERNAL, UserType.SYSTEM, null);
                                                                               retry(key.getUuidKey(), callContext);
                                                                           }
-                                                                      },
-                                                                      config);
+                                                                      });
     }
 
     @Override

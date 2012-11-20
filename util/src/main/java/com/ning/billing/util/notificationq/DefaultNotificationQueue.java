@@ -143,8 +143,9 @@ public class DefaultNotificationQueue implements NotificationQueue {
 
     @Override
     public void stopQueue() {
-        notificationQueueService.stopQueue();
+        // Order matters...
         isStarted = false;
+        notificationQueueService.stopQueue();
     }
 
     @Override
