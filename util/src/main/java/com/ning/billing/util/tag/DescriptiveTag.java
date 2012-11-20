@@ -22,27 +22,44 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.ObjectType;
 import com.ning.billing.util.entity.EntityBase;
 
 public class DescriptiveTag extends EntityBase implements Tag {
 
     private final UUID tagDefinitionId;
+    private final UUID objectId;
+    private final ObjectType objectType;
 
     // use to hydrate objects from the persistence layer
-    public DescriptiveTag(final UUID id, @Nullable final DateTime createdDate, final UUID tagDefinitionId) {
+    public DescriptiveTag(final UUID id, final UUID tagDefinitionId, final ObjectType objectType, final UUID objectId, final DateTime createdDate) {
         super(id, createdDate, createdDate);
         this.tagDefinitionId = tagDefinitionId;
+        this.objectType = objectType;
+        this.objectId = objectId;
     }
 
     // use to create new objects
-    public DescriptiveTag(final UUID tagDefinitionId) {
-        super();
+    public DescriptiveTag(final UUID tagDefinitionId, final ObjectType objectType, final UUID objectId, final DateTime createdDate) {
+        super(UUID.randomUUID(), createdDate, createdDate);
         this.tagDefinitionId = tagDefinitionId;
+        this.objectType = objectType;
+        this.objectId = objectId;
     }
 
     @Override
     public UUID getTagDefinitionId() {
         return tagDefinitionId;
+    }
+
+    @Override
+    public ObjectType getObjectType() {
+        return objectType;
+    }
+
+    @Override
+    public UUID getObjectId() {
+        return objectId;
     }
 
     @Override

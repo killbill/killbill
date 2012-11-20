@@ -16,119 +16,117 @@
 
 package com.ning.billing.account.api.user;
 
+import java.util.List;
 import java.util.UUID;
 
-import org.joda.time.DateTimeZone;
-import org.mockito.Mockito;
+import org.joda.time.DateTime;
 import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.ning.billing.account.AccountTestSuite;
+import com.ning.billing.account.AccountTestBase;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.account.api.DefaultAccount;
-import com.ning.billing.account.api.DefaultAccountEmail;
-import com.ning.billing.account.api.DefaultBillCycleDay;
-import com.ning.billing.account.dao.AccountDao;
-import com.ning.billing.account.dao.AccountEmailDao;
-import com.ning.billing.account.dao.MockAccountDao;
-import com.ning.billing.account.dao.MockAccountEmailDao;
+import com.ning.billing.account.api.DefaultMutableAccountData;
+import com.ning.billing.account.api.MigrationAccountData;
+import com.ning.billing.account.api.MutableAccountData;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.util.svcsapi.bus.InternalBus;
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallContextFactory;
-import com.ning.billing.util.callcontext.InternalCallContextFactory;
-import com.ning.billing.util.callcontext.InternalTenantContext;
 
-public class TestDefaultAccountUserApi extends AccountTestSuite {
+public class TestDefaultAccountUserApi extends AccountTestBase {
 
-    private final CallContextFactory factory = Mockito.mock(CallContextFactory.class);
-    private final InternalCallContextFactory internalFactory = Mockito.mock(InternalCallContextFactory.class);
-    private final CallContext callContext = Mockito.mock(CallContext.class);
-    private final InternalTenantContext tenantContext = Mockito.mock(InternalTenantContext.class);
+    @Test(groups = "slow")
+    public void testMigrate() throws Exception {
+        final MigrationAccountData accountData = new TestMigrationAccountData(createAccountData());
+        final Account account = accountUserApi.migrateAccount(accountData, callContext);
+        checkAccountsEqual(account.toMutableAccountData(), accountData);
 
-    private AccountDao accountDao;
-    private AccountEmailDao accountEmailDao;
-    private DefaultAccountUserApi accountUserApi;
-
-    @BeforeMethod(groups = "fast")
-    public void setUp() throws Exception {
-        accountDao = new MockAccountDao(Mockito.mock(InternalBus.class));
-        accountEmailDao = new MockAccountEmailDao();
-        accountUserApi = new DefaultAccountUserApi(factory, internalFactory, accountDao, accountEmailDao);
+        // Make sure we can retrieve the migrated account
+        final Account retrievedAccount = accountUserApi.getAccountById(account.getId(), callContext);
+        checkAccountsEqual(retrievedAccount, account);
     }
 
-    @Test(groups = "fast")
-    public void testCreateAccount() throws Exception {
-        final UUID id = UUID.randomUUID();
-        final String externalKey = UUID.randomUUID().toString();
-        final String email = UUID.randomUUID().toString();
-        final String name = UUID.randomUUID().toString();
-        final Integer firstNameLength = Integer.MAX_VALUE;
-        final Currency currency = Currency.BRL;
-        final BillCycleDay billCycleDay = new DefaultBillCycleDay(Integer.MIN_VALUE, Integer.MAX_VALUE);
-        final UUID paymentMethodId = UUID.randomUUID();
-        final DateTimeZone timeZone = DateTimeZone.UTC;
-        final String locale = UUID.randomUUID().toString();
-        final String address1 = UUID.randomUUID().toString();
-        final String address2 = UUID.randomUUID().toString();
-        final String companyName = UUID.randomUUID().toString();
-        final String city = UUID.randomUUID().toString();
-        final String stateOrProvince = UUID.randomUUID().toString();
-        final String country = UUID.randomUUID().toString();
-        final String postalCode = UUID.randomUUID().toString();
-        final String phone = UUID.randomUUID().toString();
-        final Boolean isMigrated = true;
-        final Boolean isNotifiedForInvoices = false;
-        final AccountData data = new DefaultAccount(id, externalKey, email, name, firstNameLength, currency, billCycleDay,
-                                                    paymentMethodId, timeZone, locale, address1, address2, companyName,
-                                                    city, stateOrProvince, country, postalCode, phone, isMigrated, isNotifiedForInvoices);
+    @Test(groups = "slow")
+    public void testShouldBeAbleToPassNullForSomeFieldsToAvoidUpdate() throws Exception {
+        final Account account = accountUserApi.createAccount(new DefaultAccount(createTestAccount()), callContext);
 
-        accountUserApi.createAccount(data, callContext);
+        // Update the address and leave other fields null
+        final MutableAccountData mutableAccountData = new DefaultMutableAccountData(null, null, null, 0, null, null, null,
+                                                                                    null, null, null, null, null, null,
+                                                                                    null, null, null, null, false, false);
+        final String newAddress1 = UUID.randomUUID().toString();
+        mutableAccountData.setAddress1(newAddress1);
 
-        final Account account = accountDao.getAccountByKey(externalKey, tenantContext);
-        Assert.assertEquals(account.getExternalKey(), externalKey);
-        Assert.assertEquals(account.getEmail(), email);
-        Assert.assertEquals(account.getName(), name);
-        Assert.assertEquals(account.getFirstNameLength(), firstNameLength);
-        Assert.assertEquals(account.getCurrency(), currency);
-        Assert.assertEquals(account.getBillCycleDay(), billCycleDay);
-        Assert.assertEquals(account.getPaymentMethodId(), paymentMethodId);
-        Assert.assertEquals(account.getTimeZone(), timeZone);
-        Assert.assertEquals(account.getLocale(), locale);
-        Assert.assertEquals(account.getAddress1(), address1);
-        Assert.assertEquals(account.getAddress2(), address2);
-        Assert.assertEquals(account.getCompanyName(), companyName);
-        Assert.assertEquals(account.getCity(), city);
-        Assert.assertEquals(account.getStateOrProvince(), stateOrProvince);
-        Assert.assertEquals(account.getCountry(), country);
-        Assert.assertEquals(account.getPostalCode(), postalCode);
-        Assert.assertEquals(account.getPhone(), phone);
-        Assert.assertEquals(account.isMigrated(), isMigrated);
-        Assert.assertEquals(account.isNotifiedForInvoices(), isNotifiedForInvoices);
+        accountUserApi.updateAccount(account.getId(), mutableAccountData, callContext);
+
+        final Account retrievedAccount = accountUserApi.getAccountById(account.getId(), callContext);
+        Assert.assertEquals(retrievedAccount.getAddress1(), newAddress1);
+        Assert.assertEquals(retrievedAccount.getAddress2(), account.getAddress2());
+        Assert.assertEquals(retrievedAccount.getCurrency(), account.getCurrency());
+        Assert.assertEquals(retrievedAccount.getExternalKey(), account.getExternalKey());
+        Assert.assertEquals(retrievedAccount.getBillCycleDay().getDayOfMonthLocal(), account.getBillCycleDay().getDayOfMonthLocal());
+        Assert.assertEquals(retrievedAccount.getBillCycleDay().getDayOfMonthUTC(), account.getBillCycleDay().getDayOfMonthUTC());
     }
 
-    @Test(groups = "fast")
-    public void testAddEmail() throws Exception {
-        final UUID accountId = UUID.randomUUID();
+    @Test(groups = "slow", expectedExceptions = IllegalArgumentException.class)
+    public void testShouldntBeAbleToUpdateBillCycleDay() throws Exception {
+        final Account account = accountUserApi.createAccount(new DefaultAccount(createTestAccount()), callContext);
 
-        // Verify the initial state
-        Assert.assertEquals(accountEmailDao.getEmails(accountId, tenantContext).size(), 0);
+        final MutableAccountData otherAccount = new DefaultAccount(account.getId(), account).toMutableAccountData();
+        otherAccount.setBillCycleDay(new BillCycleDay() {
+            @Override
+            public int getDayOfMonthUTC() {
+                return account.getBillCycleDay().getDayOfMonthUTC() + 2;
+            }
 
-        // Add the first email
-        final String email1 = UUID.randomUUID().toString();
-        accountUserApi.addEmail(accountId, new DefaultAccountEmail(accountId, email1), callContext);
-        Assert.assertEquals(accountEmailDao.getEmails(accountId, tenantContext).size(), 1);
+            @Override
+            public int getDayOfMonthLocal() {
+                return account.getBillCycleDay().getDayOfMonthLocal() + 2;
+            }
+        });
 
-        // Add a second one
-        final String email2 = UUID.randomUUID().toString();
-        accountUserApi.addEmail(accountId, new DefaultAccountEmail(accountId, email2), callContext);
-        Assert.assertEquals(accountEmailDao.getEmails(accountId, tenantContext).size(), 2);
+        accountUserApi.updateAccount(new DefaultAccount(account.getId(), otherAccount), callContext);
+    }
 
-        // Remove the first second one
-        accountUserApi.removeEmail(accountId, new DefaultAccountEmail(accountId, email1), callContext);
-        Assert.assertEquals(accountEmailDao.getEmails(accountId, tenantContext).size(), 1);
+    @Test(groups = "slow", expectedExceptions = IllegalArgumentException.class)
+    public void testShouldntBeAbleToUpdateCurrency() throws Exception {
+        final Account account = accountUserApi.createAccount(new DefaultAccount(createTestAccount()), callContext);
+
+        final MutableAccountData otherAccount = new DefaultAccount(account.getId(), account).toMutableAccountData();
+        otherAccount.setCurrency(Currency.GBP);
+
+        accountUserApi.updateAccount(new DefaultAccount(account.getId(), otherAccount), callContext);
+    }
+
+    @Test(groups = "slow", expectedExceptions = IllegalArgumentException.class)
+    public void testShouldntBeAbleToUpdateExternalKey() throws Exception {
+        final Account account = accountUserApi.createAccount(new DefaultAccount(createTestAccount()), callContext);
+
+        final MutableAccountData otherAccount = new DefaultAccount(account.getId(), account).toMutableAccountData();
+        otherAccount.setExternalKey(UUID.randomUUID().toString());
+
+        accountUserApi.updateAccount(new DefaultAccount(account.getId(), otherAccount), callContext);
+    }
+
+    private class TestMigrationAccountData extends DefaultMutableAccountData implements MigrationAccountData {
+
+        public TestMigrationAccountData(final AccountData accountData) {
+            super(accountData);
+        }
+
+        @Override
+        public DateTime getCreatedDate() {
+            return null;
+        }
+
+        @Override
+        public DateTime getUpdatedDate() {
+            return null;
+        }
+
+        @Override
+        public List<String> getAdditionalContactEmails() {
+            return null;
+        }
     }
 }

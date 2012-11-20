@@ -16,91 +16,38 @@
 
 package com.ning.billing.payment.dao;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.List;
-import java.util.UUID;
 
-import org.joda.time.DateTime;
-import org.skife.jdbi.v2.SQLStatement;
-import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.Binder;
+import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
-import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
-import org.skife.jdbi.v2.sqlobject.mixins.CloseMe;
-import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
-import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
-import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
-import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
+import com.ning.billing.payment.api.PaymentMethod;
+import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.callcontext.InternalTenantContextBinder;
-import com.ning.billing.util.dao.BinderBase;
-import com.ning.billing.util.dao.EntityHistory;
-import com.ning.billing.util.dao.MapperBase;
-import com.ning.billing.util.entity.dao.UpdatableEntitySqlDao;
+import com.ning.billing.util.entity.dao.Audited;
+import com.ning.billing.util.entity.dao.EntitySqlDao;
+import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 
-@ExternalizedSqlViaStringTemplate3()
-@RegisterMapper(PaymentMethodSqlDao.PaymentMethodDaoMapper.class)
-public interface PaymentMethodSqlDao extends Transactional<PaymentMethodSqlDao>, UpdatableEntitySqlDao<PaymentMethodModelDao>, Transmogrifier, CloseMe {
+@EntitySqlDaoStringTemplate
+public interface PaymentMethodSqlDao extends EntitySqlDao<PaymentMethodModelDao, PaymentMethod> {
 
     @SqlUpdate
-    void insertPaymentMethod(@Bind(binder = PaymentMethodModelDaoBinder.class) final PaymentMethodModelDao paymentMethod,
-                             @InternalTenantContextBinder final InternalCallContext context);
-
-    @SqlUpdate
+    @Audited(ChangeType.UPDATE)
     void markPaymentMethodAsDeleted(@Bind("id") final String paymentMethodId,
-                                    @InternalTenantContextBinder final InternalCallContext context);
+                                    @BindBean final InternalCallContext context);
 
     @SqlUpdate
+    @Audited(ChangeType.UPDATE)
     void unmarkPaymentMethodAsDeleted(@Bind("id") final String paymentMethodId,
-                                      @InternalTenantContextBinder final InternalCallContext context);
-
-    @SqlQuery
-    PaymentMethodModelDao getPaymentMethod(@Bind("id") final String paymentMethodId,
-                                           @InternalTenantContextBinder final InternalTenantContext context);
+                                      @BindBean final InternalCallContext context);
 
     @SqlQuery
     PaymentMethodModelDao getPaymentMethodIncludedDelete(@Bind("id") final String paymentMethodId,
-                                                         @InternalTenantContextBinder final InternalTenantContext context);
+                                                         @BindBean final InternalTenantContext context);
 
     @SqlQuery
-    List<PaymentMethodModelDao> getPaymentMethods(@Bind("accountId") final String accountId,
-                                                  @InternalTenantContextBinder final InternalTenantContext context);
-
-    @Override
-    @SqlUpdate
-    public void insertHistoryFromTransaction(@PaymentMethodHistoryBinder final EntityHistory<PaymentMethodModelDao> payment,
-                                             @InternalTenantContextBinder final InternalCallContext context);
-
-    public static final class PaymentMethodModelDaoBinder extends BinderBase implements Binder<Bind, PaymentMethodModelDao> {
-
-        @Override
-        public void bind(@SuppressWarnings("rawtypes") final SQLStatement stmt, final Bind bind, final PaymentMethodModelDao method) {
-            stmt.bind("id", method.getId().toString());
-            stmt.bind("accountId", method.getAccountId().toString());
-            stmt.bind("pluginName", method.getPluginName());
-            stmt.bind("isActive", method.isActive());
-            stmt.bind("externalId", method.getExternalId());
-        }
-    }
-
-    public static class PaymentMethodDaoMapper extends MapperBase implements ResultSetMapper<PaymentMethodModelDao> {
-
-        @Override
-        public PaymentMethodModelDao map(final int index, final ResultSet rs, final StatementContext ctx)
-                throws SQLException {
-            final UUID id = getUUID(rs, "id");
-            final UUID accountId = getUUID(rs, "account_id");
-            final String pluginName = rs.getString("plugin_name");
-            final Boolean isActive = rs.getBoolean("is_active");
-            final String externalId = rs.getString("external_id");
-            final DateTime createdDate = getDateTime(rs, "created_date");
-            final DateTime updatedDate = getDateTime(rs, "updated_date");
-            return new PaymentMethodModelDao(id, createdDate, updatedDate, accountId, pluginName, isActive, externalId);
-        }
-    }
+    List<PaymentMethodModelDao> getByAccountId(@Bind("accountId") final String accountId, @BindBean final InternalTenantContext context);
 }

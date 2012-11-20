@@ -28,11 +28,12 @@ import org.joda.time.DateTime;
 public class InternalCallContext extends InternalTenantContext {
 
     private final UUID userToken;
-    private final String userName;
+    private final String createdBy;
+    private final String updatedBy;
     private final CallOrigin callOrigin;
-    private final UserType userType;
+    private final UserType contextUserType;
     private final String reasonCode;
-    private final String comment;
+    private final String comments;
     private final DateTime createdDate;
     private final DateTime updatedDate;
 
@@ -41,18 +42,19 @@ public class InternalCallContext extends InternalTenantContext {
                                final DateTime createdDate, final DateTime updatedDate) {
         super(tenantRecordId, accountRecordId);
         this.userToken = userToken;
-        this.userName = userName;
+        this.createdBy = userName;
+        this.updatedBy = userName;
         this.callOrigin = callOrigin;
-        this.userType = userType;
+        this.contextUserType = userType;
         this.reasonCode = reasonCode;
-        this.comment = comment;
+        this.comments = comment;
         this.createdDate = createdDate;
         this.updatedDate = updatedDate;
     }
 
     public InternalCallContext(final Long tenantRecordId, @Nullable final Long accountRecordId, final CallContext callContext) {
         this(tenantRecordId, accountRecordId, callContext.getUserToken(), callContext.getUserName(), callContext.getCallOrigin(),
-             callContext.getUserType(), callContext.getReasonCode(), callContext.getComment(), callContext.getCreatedDate(),
+             callContext.getUserType(), callContext.getReasonCode(), callContext.getComments(), callContext.getCreatedDate(),
              callContext.getUpdatedDate());
     }
 
@@ -61,31 +63,35 @@ public class InternalCallContext extends InternalTenantContext {
     // Unfortunately not true as some APIs ae hidden in object-- e.g OverdueStateApplicator is doing subscription.cancelWithPolicy(polciy, context);
     //
     public CallContext toCallContext() {
-        return new DefaultCallContext(null, userName, callOrigin, userType, reasonCode, comment, userToken, createdDate, updatedDate);
+        return new DefaultCallContext(null, createdBy, callOrigin, contextUserType, reasonCode, comments, userToken, createdDate, updatedDate);
     }
 
     public UUID getUserToken() {
         return userToken;
     }
 
-    public String getUserName() {
-        return userName;
+    public String getCreatedBy() {
+        return createdBy;
+    }
+
+    public String getUpdatedBy() {
+        return updatedBy;
     }
 
     public CallOrigin getCallOrigin() {
         return callOrigin;
     }
 
-    public UserType getUserType() {
-        return userType;
+    public UserType getContextUserType() {
+        return contextUserType;
     }
 
     public String getReasonCode() {
         return reasonCode;
     }
 
-    public String getComment() {
-        return comment;
+    public String getComments() {
+        return comments;
     }
 
     public DateTime getCreatedDate() {
@@ -101,11 +107,12 @@ public class InternalCallContext extends InternalTenantContext {
         final StringBuilder sb = new StringBuilder();
         sb.append("InternalCallContext");
         sb.append("{userToken=").append(userToken);
-        sb.append(", userName='").append(userName).append('\'');
+        sb.append(", createdBy='").append(createdBy).append('\'');
+        sb.append(", updatedBy='").append(updatedBy).append('\'');
         sb.append(", callOrigin=").append(callOrigin);
-        sb.append(", userType=").append(userType);
+        sb.append(", contextUserType=").append(contextUserType);
         sb.append(", reasonCode='").append(reasonCode).append('\'');
-        sb.append(", comment='").append(comment).append('\'');
+        sb.append(", comments='").append(comments).append('\'');
         sb.append(", createdDate=").append(createdDate);
         sb.append(", updatedDate=").append(updatedDate);
         sb.append('}');
@@ -129,7 +136,10 @@ public class InternalCallContext extends InternalTenantContext {
         if (callOrigin != that.callOrigin) {
             return false;
         }
-        if (comment != null ? !comment.equals(that.comment) : that.comment != null) {
+        if (comments != null ? !comments.equals(that.comments) : that.comments != null) {
+            return false;
+        }
+        if (createdBy != null ? !createdBy.equals(that.createdBy) : that.createdBy != null) {
             return false;
         }
         if (createdDate != null ? !createdDate.equals(that.createdDate) : that.createdDate != null) {
@@ -138,16 +148,16 @@ public class InternalCallContext extends InternalTenantContext {
         if (reasonCode != null ? !reasonCode.equals(that.reasonCode) : that.reasonCode != null) {
             return false;
         }
-        if (updatedDate != null ? !updatedDate.equals(that.updatedDate) : that.updatedDate != null) {
+        if (updatedBy != null ? !updatedBy.equals(that.updatedBy) : that.updatedBy != null) {
             return false;
         }
-        if (userName != null ? !userName.equals(that.userName) : that.userName != null) {
+        if (updatedDate != null ? !updatedDate.equals(that.updatedDate) : that.updatedDate != null) {
             return false;
         }
         if (userToken != null ? !userToken.equals(that.userToken) : that.userToken != null) {
             return false;
         }
-        if (userType != that.userType) {
+        if (contextUserType != that.contextUserType) {
             return false;
         }
 
@@ -158,11 +168,12 @@ public class InternalCallContext extends InternalTenantContext {
     public int hashCode() {
         int result = super.hashCode();
         result = 31 * result + (userToken != null ? userToken.hashCode() : 0);
-        result = 31 * result + (userName != null ? userName.hashCode() : 0);
+        result = 31 * result + (createdBy != null ? createdBy.hashCode() : 0);
+        result = 31 * result + (updatedBy != null ? updatedBy.hashCode() : 0);
         result = 31 * result + (callOrigin != null ? callOrigin.hashCode() : 0);
-        result = 31 * result + (userType != null ? userType.hashCode() : 0);
+        result = 31 * result + (contextUserType != null ? contextUserType.hashCode() : 0);
         result = 31 * result + (reasonCode != null ? reasonCode.hashCode() : 0);
-        result = 31 * result + (comment != null ? comment.hashCode() : 0);
+        result = 31 * result + (comments != null ? comments.hashCode() : 0);
         result = 31 * result + (createdDate != null ? createdDate.hashCode() : 0);
         result = 31 * result + (updatedDate != null ? updatedDate.hashCode() : 0);
         return result;

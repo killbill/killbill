@@ -89,7 +89,7 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
              null);
     }
 
-
+    @Override
     public UUID getBlockedId() {
         return blockingId;
     }
@@ -115,6 +115,7 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
         return timestamp;
     }
 
+    @Override
     public String getService() {
         return service;
     }

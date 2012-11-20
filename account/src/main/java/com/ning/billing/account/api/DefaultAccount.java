@@ -23,6 +23,7 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
+import com.ning.billing.account.dao.AccountModelDao;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.util.entity.EntityBase;
@@ -62,10 +63,6 @@ public class DefaultAccount extends EntityBase implements Account {
     private final String phone;
     private final Boolean isMigrated;
     private final Boolean isNotifiedForInvoices;
-
-    public DefaultAccount(final AccountData data) {
-        this(UUID.randomUUID(), data);
-    }
 
     /**
      * This call is used to update an existing account
@@ -127,6 +124,15 @@ public class DefaultAccount extends EntityBase implements Account {
         this.phone = phone;
         this.isMigrated = isMigrated;
         this.isNotifiedForInvoices = isNotifiedForInvoices;
+    }
+
+    public DefaultAccount(final AccountModelDao accountModelDao) {
+        this(accountModelDao.getId(), accountModelDao.getCreatedDate(), accountModelDao.getUpdatedDate(), accountModelDao.getExternalKey(),
+             accountModelDao.getEmail(), accountModelDao.getName(), accountModelDao.getFirstNameLength(), accountModelDao.getCurrency(),
+             new DefaultBillCycleDay(accountModelDao.getBillingCycleDayLocal(), accountModelDao.getBillingCycleDayUtc()), accountModelDao.getPaymentMethodId(),
+             accountModelDao.getTimeZone(), accountModelDao.getLocale(), accountModelDao.getAddress1(), accountModelDao.getAddress2(),
+             accountModelDao.getCompanyName(), accountModelDao.getCity(), accountModelDao.getStateOrProvince(), accountModelDao.getCountry(),
+             accountModelDao.getPostalCode(), accountModelDao.getPhone(), accountModelDao.getMigrated(), accountModelDao.getIsNotifiedForInvoices());
     }
 
     @Override

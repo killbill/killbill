@@ -66,7 +66,7 @@ public class InvoiceListener {
                 || transition.getRemainingEventsForUserOperation() > 0) {
                 return;
             }
-            final InternalCallContext context = internalCallContextFactory.createInternalCallContext(transition.getTenantRecordId(), transition.getAccountRecordId(), "Transition", CallOrigin.INTERNAL, UserType.SYSTEM, transition.getUserToken());
+            final InternalCallContext context = internalCallContextFactory.createInternalCallContext(transition.getTenantRecordId(), transition.getAccountRecordId(), "SubscriptionTransition", CallOrigin.INTERNAL, UserType.SYSTEM, transition.getUserToken());
             dispatcher.processSubscription(transition, context);
         } catch (InvoiceApiException e) {
             log.error(e.getMessage());

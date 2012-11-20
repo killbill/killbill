@@ -44,6 +44,10 @@ import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.entity.dao.EntitySqlDao;
+import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
+import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
+import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import com.ning.billing.util.io.IOUtils;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
 import com.ning.billing.util.notificationq.dao.NotificationSqlDao;
@@ -64,7 +68,10 @@ import static org.testng.Assert.assertEquals;
 public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
     private final Logger log = LoggerFactory.getLogger(TestNotificationQueue.class);
 
+
     private static final UUID accountId = UUID.randomUUID();
+
+    private EntitySqlDaoTransactionalJdbiWrapper entitySqlDaoTransactionalJdbiWrapper;
 
     @Inject
     private IDBI dbi;
@@ -103,6 +110,7 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
         final String testDdl = IOUtils.toString(NotificationSqlDao.class.getResourceAsStream("/com/ning/billing/util/ddl_test.sql"));
         helper.initDb(testDdl);
         dao = dbi.onDemand(DummySqlTest.class);
+        entitySqlDaoTransactionalJdbiWrapper = new EntitySqlDaoTransactionalJdbiWrapper(dbi);
     }
 
     @BeforeTest(groups = "slow")
@@ -159,13 +167,12 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
         expectedNotifications.put(notificationKey, Boolean.FALSE);
 
         // Insert dummy to be processed in 2 sec'
-        dao.inTransaction(new Transaction<Void, DummySqlTest>() {
+        entitySqlDaoTransactionalJdbiWrapper.execute(new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
-            public Void inTransaction(final DummySqlTest transactional,
-                                      final TransactionStatus status) throws Exception {
+            public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
 
-                transactional.insertDummy(obj);
-                queue.recordFutureNotificationFromTransaction(transactional, readyTime, accountId, notificationKey, internalCallContext);
+                entitySqlDaoWrapperFactory.transmogrify(DummySqlTest.class).insertDummy(obj);
+                queue.recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory, readyTime, accountId, notificationKey, internalCallContext);
                 log.info("Posted key: " + notificationKey);
 
                 return null;
@@ -219,17 +226,17 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
             final NotificationKey notificationKey = new TestNotificationKey(key.toString());
             expectedNotifications.put(notificationKey, Boolean.FALSE);
 
-            dao.inTransaction(new Transaction<Void, DummySqlTest>() {
+            entitySqlDaoTransactionalJdbiWrapper.execute(new EntitySqlDaoTransactionWrapper<Void>() {
                 @Override
-                public Void inTransaction(final DummySqlTest transactional,
-                                          final TransactionStatus status) throws Exception {
+                public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
 
-                    transactional.insertDummy(obj);
-                    queue.recordFutureNotificationFromTransaction(transactional, now.plus((currentIteration + 1) * nextReadyTimeIncrementMs),
+                    entitySqlDaoWrapperFactory.transmogrify(DummySqlTest.class).insertDummy(obj);
+                    queue.recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory, now.plus((currentIteration + 1) * nextReadyTimeIncrementMs),
                                                                   accountId, notificationKey, internalCallContext);
                     return null;
                 }
             });
+
 
             // Move time in the future after the notification effectiveDate
             if (i == 0) {
@@ -330,17 +337,15 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
         expectedNotificationsFred.put(notificationKeyBarney, Boolean.FALSE);
 
         // Insert dummy to be processed in 2 sec'
-        dao.inTransaction(new Transaction<Void, DummySqlTest>() {
+        entitySqlDaoTransactionalJdbiWrapper.execute(new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
-            public Void inTransaction(final DummySqlTest transactional,
-                                      final TransactionStatus status) throws Exception {
+            public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                entitySqlDaoWrapperFactory.transmogrify(DummySqlTest.class).insertDummy(obj);
 
-                transactional.insertDummy(obj);
-                queueFred.recordFutureNotificationFromTransaction(transactional, readyTime, accountId, notificationKeyFred, internalCallContext);
+                queueFred.recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory, readyTime, accountId, notificationKeyFred, internalCallContext);
                 log.info("posted key: " + notificationKeyFred.toString());
-                queueBarney.recordFutureNotificationFromTransaction(transactional, readyTime, accountId, notificationKeyBarney, internalCallContext);
+                queueBarney.recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory, readyTime, accountId, notificationKeyBarney, internalCallContext);
                 log.info("posted key: " + notificationKeyBarney.toString());
-
                 return null;
             }
         });
@@ -408,14 +413,12 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
 
         // add 3 events
 
-        dao.inTransaction(new Transaction<Void, DummySqlTest>() {
+        entitySqlDaoTransactionalJdbiWrapper.execute(new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
-            public Void inTransaction(final DummySqlTest transactional,
-                                      final TransactionStatus status) throws Exception {
-
-                queue.recordFutureNotificationFromTransaction(transactional, start.plus(nextReadyTimeIncrementMs), accountId, notificationKey, internalCallContext);
-                queue.recordFutureNotificationFromTransaction(transactional, start.plus(2 * nextReadyTimeIncrementMs), accountId, notificationKey, internalCallContext);
-                queue.recordFutureNotificationFromTransaction(transactional, start.plus(3 * nextReadyTimeIncrementMs), accountId, notificationKey2, internalCallContext);
+            public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                queue.recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory, start.plus(nextReadyTimeIncrementMs), accountId, notificationKey, internalCallContext);
+                queue.recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory, start.plus(2 * nextReadyTimeIncrementMs), accountId, notificationKey, internalCallContext);
+                queue.recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory, start.plus(3 * nextReadyTimeIncrementMs), accountId, notificationKey2, internalCallContext);
                 return null;
             }
         });

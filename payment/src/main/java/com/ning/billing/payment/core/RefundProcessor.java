@@ -16,8 +16,6 @@
 
 package com.ning.billing.payment.core;
 
-import static com.ning.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR_NAMED;
-
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -65,6 +63,8 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.name.Named;
+
+import static com.ning.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR_NAMED;
 
 public class RefundProcessor extends ProcessorBase {
 
@@ -174,7 +174,7 @@ public class RefundProcessor extends ProcessorBase {
                                              paymentId, refundInfo.getAmount(), account.getCurrency(),
                                              isAdjusted, refundInfo.getCreatedDate());
                 } catch (PaymentPluginApiException e) {
-                    throw new PaymentApiException(ErrorCode.PAYMENT_CREATE_REFUND, account.getId(), e.getMessage());
+                    throw new PaymentApiException(ErrorCode.PAYMENT_CREATE_REFUND, account.getId(), e.getErrorMessage());
                 } catch (InvoiceApiException e) {
                     throw new PaymentApiException(e);
                 }
@@ -239,7 +239,7 @@ public class RefundProcessor extends ProcessorBase {
         }
         return new DefaultRefund(result.getId(), result.getCreatedDate(), result.getUpdatedDate(),
                                  result.getPaymentId(), result.getAmount(), result.getCurrency(),
-                                 result.isAdjsuted(), result.getCreatedDate());
+                                 result.isAdjusted(), result.getCreatedDate());
     }
 
     public List<Refund> getAccountRefunds(final Account account, final InternalTenantContext context)
@@ -268,7 +268,7 @@ public class RefundProcessor extends ProcessorBase {
             public Refund apply(final RefundModelDao cur) {
                 return new DefaultRefund(cur.getId(), cur.getCreatedDate(), cur.getUpdatedDate(),
                                          cur.getPaymentId(), cur.getAmount(), cur.getCurrency(),
-                                         cur.isAdjsuted(), cur.getCreatedDate());
+                                         cur.isAdjusted(), cur.getCreatedDate());
             }
         }));
     }
@@ -304,7 +304,7 @@ public class RefundProcessor extends ProcessorBase {
                     try {
                         for (final RefundModelDao cur : refundsToBeFixed) {
                             // TODO - we currently don't save the items to be adjusted. If we crash, they won't be adjusted...
-                            invoiceApi.createRefund(cur.getPaymentId(), cur.getAmount(), cur.isAdjsuted(), ImmutableMap.<UUID, BigDecimal>of(), cur.getId(), context);
+                            invoiceApi.createRefund(cur.getPaymentId(), cur.getAmount(), cur.isAdjusted(), ImmutableMap.<UUID, BigDecimal>of(), cur.getId(), context);
                             paymentDao.updateRefundStatus(cur.getId(), RefundStatus.COMPLETED, context);
                         }
                     } catch (InvoiceApiException e) {

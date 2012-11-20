@@ -18,7 +18,6 @@ package com.ning.billing.util.audit.dao;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import org.skife.jdbi.v2.Handle;
@@ -30,32 +29,38 @@ import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import com.ning.billing.ObjectType;
+import com.ning.billing.mock.glue.MockDbHelperModule;
+import com.ning.billing.mock.glue.MockEntitlementModule;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.api.AuditLevel;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.audit.AuditLog;
 import com.ning.billing.util.audit.ChangeType;
-import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.glue.AuditModule;
-import com.ning.billing.util.tag.MockTagStoreModuleSql;
+import com.ning.billing.util.glue.BusModule;
+import com.ning.billing.util.glue.ClockModule;
+import com.ning.billing.util.glue.TagStoreModule;
+import com.ning.billing.util.svcsapi.bus.InternalBus;
+import com.ning.billing.util.tag.DescriptiveTag;
 import com.ning.billing.util.tag.Tag;
-import com.ning.billing.util.tag.TagDefinition;
-import com.ning.billing.util.tag.dao.AuditedTagDao;
+import com.ning.billing.util.tag.dao.DefaultTagDao;
 import com.ning.billing.util.tag.dao.TagDefinitionDao;
+import com.ning.billing.util.tag.dao.TagDefinitionModelDao;
+import com.ning.billing.util.tag.dao.TagModelDao;
 
 import com.google.inject.Inject;
 
-@Guice(modules = {MockTagStoreModuleSql.class, AuditModule.class})
+@Guice(modules = {TagStoreModule.class, AuditModule.class, MockEntitlementModule.class, ClockModule.class, BusModule.class, MockDbHelperModule.class})
 public class TestDefaultAuditDao extends UtilTestSuiteWithEmbeddedDB {
 
     @Inject
     private TagDefinitionDao tagDefinitionDao;
 
     @Inject
-    private AuditedTagDao tagDao;
+    private DefaultTagDao tagDao;
 
     @Inject
     private AuditDao auditDao;
@@ -108,19 +113,22 @@ public class TestDefaultAuditDao extends UtilTestSuiteWithEmbeddedDB {
 
     private void addTag() throws TagDefinitionApiException, TagApiException {
         // Create a tag definition
-        final TagDefinition tagDefinition = tagDefinitionDao.create(UUID.randomUUID().toString().substring(0, 5),
-                                                                    UUID.randomUUID().toString().substring(0, 5),
-                                                                    internalCallContext);
+        final TagDefinitionModelDao tagDefinition = tagDefinitionDao.create(UUID.randomUUID().toString().substring(0, 5),
+                                                                            UUID.randomUUID().toString().substring(0, 5),
+                                                                            internalCallContext);
         Assert.assertEquals(tagDefinitionDao.getById(tagDefinition.getId(), internalCallContext), tagDefinition);
 
         // Create a tag
         final UUID objectId = UUID.randomUUID();
-        tagDao.insertTag(objectId, ObjectType.ACCOUNT, tagDefinition.getId(), internalCallContext);
-        final Map<String, Tag> tags = tagDao.loadEntities(objectId, ObjectType.ACCOUNT, internalCallContext);
+
+        final Tag tag = new DescriptiveTag(tagDefinition.getId(), ObjectType.ACCOUNT, objectId, clock.getUTCNow());
+
+        tagDao.create(new TagModelDao(tag), internalCallContext);
+        final List<TagModelDao> tags = tagDao.getTags(objectId, ObjectType.ACCOUNT, internalCallContext);
         Assert.assertEquals(tags.size(), 1);
-        final Tag tag = tags.values().iterator().next();
-        Assert.assertEquals(tag.getTagDefinitionId(), tagDefinition.getId());
-        tagId = tag.getId();
+        final TagModelDao savedTag = tags.get(0);
+        Assert.assertEquals(savedTag.getTagDefinitionId(), tagDefinition.getId());
+        tagId = savedTag.getId();
     }
 
     private void verifyAuditLogsForTag(final List<AuditLog> auditLogs, final AuditLevel level) {
@@ -132,9 +140,9 @@ public class TestDefaultAuditDao extends UtilTestSuiteWithEmbeddedDB {
         Assert.assertEquals(auditLogs.size(), 1);
         Assert.assertEquals(auditLogs.get(0).getUserToken(), internalCallContext.getUserToken().toString());
         Assert.assertEquals(auditLogs.get(0).getChangeType(), ChangeType.INSERT);
-        Assert.assertEquals(auditLogs.get(0).getComment(), internalCallContext.getComment());
+        Assert.assertEquals(auditLogs.get(0).getComment(), internalCallContext.getComments());
         Assert.assertEquals(auditLogs.get(0).getReasonCode(), internalCallContext.getReasonCode());
-        Assert.assertEquals(auditLogs.get(0).getUserName(), internalCallContext.getUserName());
+        Assert.assertEquals(auditLogs.get(0).getUserName(), internalCallContext.getCreatedBy());
         Assert.assertNotNull(auditLogs.get(0).getCreatedDate());
     }
 }

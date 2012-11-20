@@ -18,81 +18,103 @@ package com.ning.billing.util.customfield;
 
 import java.util.UUID;
 
-import com.ning.billing.util.entity.Entity;
+import org.joda.time.DateTime;
+
+import com.ning.billing.ObjectType;
+import com.ning.billing.util.customfield.dao.CustomFieldModelDao;
 import com.ning.billing.util.entity.EntityBase;
 
-public class StringCustomField extends EntityBase implements CustomField, Entity {
-    private final String name;
-    private String value;
+public class StringCustomField extends EntityBase implements CustomField {
 
-    public StringCustomField(final String name, final String value) {
-        super();
-        this.name = name;
-        this.value = value;
+    private final String fieldName;
+    private final String fieldValue;
+    private final UUID objectId;
+    private final ObjectType objectType;
+
+    public StringCustomField(final String name, final String value, final ObjectType objectType, final UUID objectId, final DateTime createdDate) {
+        this(UUID.randomUUID(), name, value, objectType, objectId, createdDate);
     }
 
-    public StringCustomField(final UUID id, final String name, final String value) {
-        super(id);
-        this.name = name;
-        this.value = value;
+    public StringCustomField(final UUID id, final String name, final String value, final ObjectType objectType, final UUID objectId, final DateTime createdDate) {
+        super(id, createdDate, createdDate);
+        this.fieldName = name;
+        this.fieldValue = value;
+        this.objectId = objectId;
+        this.objectType = objectType;
+
+    }
+
+    public StringCustomField(final CustomFieldModelDao input) {
+        this(input.getId(), input.getFieldName(), input.getFieldValue(), input.getObjectType(), input.getObjectId(), input.getCreatedDate());
     }
 
     @Override
-    public String getName() {
-        return name;
+    public String getFieldName() {
+        return fieldName;
     }
 
     @Override
-    public String getValue() {
-        return value;
+    public String getFieldValue() {
+        return fieldValue;
     }
 
-    @Override
-    public void setValue(final String value) {
-        this.value = value;
+    public ObjectType getObjectType() {
+        return objectType;
+    }
+
+    public UUID getObjectId() {
+        return objectId;
     }
 
     @Override
     public String toString() {
-        return "StringCustomField [name=" + name + ", value=" + value + ", id=" + id + "]";
+        final StringBuilder sb = new StringBuilder();
+        sb.append("StringCustomField");
+        sb.append("{fieldName='").append(fieldName).append('\'');
+        sb.append(", fieldValue='").append(fieldValue).append('\'');
+        sb.append(", objectId=").append(objectId);
+        sb.append(", objectType=").append(objectType);
+        sb.append('}');
+        return sb.toString();
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+
+        final StringCustomField that = (StringCustomField) o;
+
+        if (fieldName != null ? !fieldName.equals(that.fieldName) : that.fieldName != null) {
+            return false;
+        }
+        if (fieldValue != null ? !fieldValue.equals(that.fieldValue) : that.fieldValue != null) {
+            return false;
+        }
+        if (objectId != null ? !objectId.equals(that.objectId) : that.objectId != null) {
+            return false;
+        }
+        if (objectType != that.objectType) {
+            return false;
+        }
+
+        return true;
     }
 
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((name == null) ? 0 : name.hashCode());
-        result = prime * result + ((value == null) ? 0 : value.hashCode());
+        int result = super.hashCode();
+        result = 31 * result + (fieldName != null ? fieldName.hashCode() : 0);
+        result = 31 * result + (fieldValue != null ? fieldValue.hashCode() : 0);
+        result = 31 * result + (objectId != null ? objectId.hashCode() : 0);
+        result = 31 * result + (objectType != null ? objectType.hashCode() : 0);
         return result;
     }
-
-    @Override
-    public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final StringCustomField other = (StringCustomField) obj;
-        if (name == null) {
-            if (other.name != null) {
-                return false;
-            }
-        } else if (!name.equals(other.name)) {
-            return false;
-        }
-        if (value == null) {
-            if (other.value != null) {
-                return false;
-            }
-        } else if (!value.equals(other.value)) {
-            return false;
-        }
-        return true;
-    }
-
 }

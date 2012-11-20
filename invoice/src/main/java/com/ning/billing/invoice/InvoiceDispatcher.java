@@ -39,15 +39,19 @@ import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceNotifier;
+import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.user.DefaultInvoiceCreationEvent;
 import com.ning.billing.invoice.api.user.DefaultNullInvoiceEvent;
 import com.ning.billing.invoice.dao.InvoiceDao;
+import com.ning.billing.invoice.dao.InvoiceItemModelDao;
+import com.ning.billing.invoice.dao.InvoiceModelDao;
+import com.ning.billing.invoice.dao.InvoicePaymentModelDao;
 import com.ning.billing.invoice.generator.InvoiceDateUtils;
 import com.ning.billing.invoice.generator.InvoiceGenerator;
+import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.events.BusInternalEvent;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
@@ -63,8 +67,10 @@ import com.ning.billing.util.svcapi.junction.BillingInternalApi;
 import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.svcsapi.bus.InternalBus.EventBusException;
 
+import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
 public class InvoiceDispatcher {
@@ -81,7 +87,6 @@ public class InvoiceDispatcher {
     private final GlobalLocker locker;
     private final InternalBus eventBus;
     private final Clock clock;
-    private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
     public InvoiceDispatcher(final InvoiceGenerator generator, final AccountInternalApi accountApi,
@@ -91,8 +96,7 @@ public class InvoiceDispatcher {
                              final InvoiceNotifier invoiceNotifier,
                              final GlobalLocker locker,
                              final InternalBus eventBus,
-                             final Clock clock,
-                             final InternalCallContextFactory internalCallContextFactory) {
+                             final Clock clock) {
         this.generator = generator;
         this.billingApi = billingApi;
         this.entitlementApi = entitlementApi;
@@ -102,7 +106,6 @@ public class InvoiceDispatcher {
         this.locker = locker;
         this.eventBus = eventBus;
         this.clock = clock;
-        this.internalCallContextFactory = internalCallContextFactory;
     }
 
     public void processSubscription(final EffectiveSubscriptionInternalEvent transition,
@@ -153,10 +156,16 @@ public class InvoiceDispatcher {
             // Make sure to first set the BCD if needed then get the account object (to have the BCD set)
             final BillingEventSet billingEvents = billingApi.getBillingEventsForAccountAndUpdateAccountBCD(accountId, context);
 
-            final Account account = accountApi.getAccountById(accountId,  context);
+            final Account account = accountApi.getAccountById(accountId, context);
             List<Invoice> invoices = new ArrayList<Invoice>();
             if (!billingEvents.isAccountAutoInvoiceOff()) {
-                invoices = invoiceDao.getInvoicesByAccount(accountId, context); //no need to fetch, invoicing is off on this account
+                invoices = ImmutableList.<Invoice>copyOf(Collections2.transform(invoiceDao.getInvoicesByAccount(accountId, context),
+                                                                                new Function<InvoiceModelDao, Invoice>() {
+                                                                                    @Override
+                                                                                    public Invoice apply(final InvoiceModelDao input) {
+                                                                                        return new DefaultInvoice(input);
+                                                                                    }
+                                                                                })); //no need to fetch, invoicing is off on this account
             }
 
             final Currency targetCurrency = account.getCurrency();
@@ -169,7 +178,7 @@ public class InvoiceDispatcher {
                 log.info("Generated null invoice.");
                 if (!dryRun) {
                     final BusInternalEvent event = new DefaultNullInvoiceEvent(accountId, clock.getUTCToday(), context.getUserToken(),
-                            context.getAccountRecordId(), context.getTenantRecordId());
+                                                                               context.getAccountRecordId(), context.getTenantRecordId());
                     postEvent(event, accountId, context);
                 }
             } else {
@@ -178,22 +187,38 @@ public class InvoiceDispatcher {
                     // We need to check whether this is just a 'shell' invoice or a real invoice with items on it
                     final boolean isRealInvoiceWithItems = Collections2.filter(invoice.getInvoiceItems(), new Predicate<InvoiceItem>() {
                         @Override
-                        public boolean apply(InvoiceItem input) {
+                        public boolean apply(final InvoiceItem input) {
                             return input.getInvoiceId().equals(invoice.getId());
                         }
                     }).size() > 0;
 
-                    invoiceDao.create(invoice, account.getBillCycleDay().getDayOfMonthUTC(), isRealInvoiceWithItems, context);
+                    final InvoiceModelDao invoiceModelDao = new InvoiceModelDao(invoice);
+                    final List<InvoiceItemModelDao> invoiceItemModelDaos = ImmutableList.<InvoiceItemModelDao>copyOf(Collections2.transform(invoice.getInvoiceItems(),
+                                                                                                                                            new Function<InvoiceItem, InvoiceItemModelDao>() {
+                                                                                                                                                @Override
+                                                                                                                                                public InvoiceItemModelDao apply(final InvoiceItem input) {
+                                                                                                                                                    return new InvoiceItemModelDao(input);
+                                                                                                                                                }
+                                                                                                                                            }));
+                    // Not really needed, there shouldn't be any payment at this stage
+                    final List<InvoicePaymentModelDao> invoicePaymentModelDaos = ImmutableList.<InvoicePaymentModelDao>copyOf(Collections2.transform(invoice.getPayments(),
+                                                                                                                                                     new Function<InvoicePayment, InvoicePaymentModelDao>() {
+                                                                                                                                                         @Override
+                                                                                                                                                         public InvoicePaymentModelDao apply(final InvoicePayment input) {
+                                                                                                                                                             return new InvoicePaymentModelDao(input);
+                                                                                                                                                         }
+                                                                                                                                                     }));
+                    invoiceDao.createInvoice(invoiceModelDao, invoiceItemModelDaos, invoicePaymentModelDaos, isRealInvoiceWithItems, context);
 
                     final List<InvoiceItem> fixedPriceInvoiceItems = invoice.getInvoiceItems(FixedPriceInvoiceItem.class);
                     final List<InvoiceItem> recurringInvoiceItems = invoice.getInvoiceItems(RecurringInvoiceItem.class);
                     setChargedThroughDates(account.getBillCycleDay(), account.getTimeZone(), fixedPriceInvoiceItems, recurringInvoiceItems, context);
 
                     final InvoiceCreationInternalEvent event = new DefaultInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
-                                                                                       invoice.getBalance(), invoice.getCurrency(),
-                                                                                       context.getUserToken(),
-                                                                                       context.getAccountRecordId(),
-                                                                                       context.getTenantRecordId());
+                                                                                               invoice.getBalance(), invoice.getCurrency(),
+                                                                                               context.getUserToken(),
+                                                                                               context.getAccountRecordId(),
+                                                                                               context.getTenantRecordId());
 
                     if (isRealInvoiceWithItems) {
                         postEvent(event, accountId, context);
@@ -204,7 +229,7 @@ public class InvoiceDispatcher {
             if (account.isNotifiedForInvoices() && invoice != null && !dryRun) {
                 // Need to re-hydrate the invoice object to get the invoice number (record id)
                 // API_FIX InvoiceNotifier public API?
-                invoiceNotifier.notify(account, invoiceDao.getById(invoice.getId(), context), context.toTenantContext());
+                invoiceNotifier.notify(account, new DefaultInvoice(invoiceDao.getById(invoice.getId(), context)), context.toTenantContext());
             }
 
             return invoice;

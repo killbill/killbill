@@ -52,7 +52,7 @@ public class TestBundleJsonNoSubscriptions extends JaxrsTestSuite {
         final String externalKey = UUID.randomUUID().toString();
         final UUID accountId = UUID.randomUUID();
         Mockito.when(bundle.getId()).thenReturn(bundleId);
-        Mockito.when(bundle.getKey()).thenReturn(externalKey);
+        Mockito.when(bundle.getExternalKey()).thenReturn(externalKey);
         Mockito.when(bundle.getAccountId()).thenReturn(accountId);
 
         final BundleJsonNoSubscriptions bundleJsonNoSubscriptions = new BundleJsonNoSubscriptions(bundle);

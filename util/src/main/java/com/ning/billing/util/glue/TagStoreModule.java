@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2012 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -20,7 +20,7 @@ import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.svcapi.tag.DefaultTagInternalApi;
 import com.ning.billing.util.svcapi.tag.TagInternalApi;
 import com.ning.billing.util.tag.api.DefaultTagUserApi;
-import com.ning.billing.util.tag.dao.AuditedTagDao;
+import com.ning.billing.util.tag.dao.DefaultTagDao;
 import com.ning.billing.util.tag.dao.DefaultTagDefinitionDao;
 import com.ning.billing.util.tag.dao.TagDao;
 import com.ning.billing.util.tag.dao.TagDefinitionDao;
@@ -30,7 +30,7 @@ import com.google.inject.AbstractModule;
 public class TagStoreModule extends AbstractModule {
     protected void installDaos() {
         bind(TagDefinitionDao.class).to(DefaultTagDefinitionDao.class).asEagerSingleton();
-        bind(TagDao.class).to(AuditedTagDao.class).asEagerSingleton();
+        bind(TagDao.class).to(DefaultTagDao.class).asEagerSingleton();
     }
 
     @Override

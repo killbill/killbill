@@ -34,18 +34,19 @@ public class AuditLogMapper extends MapperBase implements ResultSetMapper<AuditL
 
     @Override
     public AuditLog map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
+        final UUID id = getUUID(r, "id");
         final String tableName = r.getString("table_name");
-        final long recordId = r.getLong("record_id");
+        final long targetRecordId = r.getLong("target_record_id");
         final String changeType = r.getString("change_type");
-        final DateTime changeDate = getDateTime(r, "change_date");
-        final String changedBy = r.getString("changed_by");
+        final DateTime createdDate = getDateTime(r, "created_date");
+        final String createdBy = r.getString("created_by");
         final String reasonCode = r.getString("reason_code");
         final String comments = r.getString("comments");
         final UUID userToken = getUUID(r, "user_token");
 
-        final EntityAudit entityAudit = new EntityAudit(TableName.valueOf(tableName), recordId, ChangeType.valueOf(changeType));
+        final EntityAudit entityAudit = new EntityAudit(id, TableName.valueOf(tableName), targetRecordId, ChangeType.valueOf(changeType), createdDate);
         // TODO - we have the tenant_record_id but not the tenant id here
-        final CallContext callContext = new DefaultCallContext(null, changedBy, changeDate, reasonCode, comments, userToken);
+        final CallContext callContext = new DefaultCallContext(null, createdBy, createdDate, reasonCode, comments, userToken);
         return new DefaultAuditLog(entityAudit, callContext);
     }
 }

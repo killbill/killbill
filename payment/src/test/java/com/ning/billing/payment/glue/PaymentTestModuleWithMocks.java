@@ -45,6 +45,7 @@ import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.tag.TagInternalApi;
 import com.ning.billing.util.tag.Tag;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 public class PaymentTestModuleWithMocks extends PaymentModule {
@@ -93,7 +94,7 @@ public class PaymentTestModuleWithMocks extends PaymentModule {
 
         final TagInternalApi tagUserApi = Mockito.mock(TagInternalApi.class);
         bind(TagInternalApi.class).toInstance(tagUserApi);
-        Mockito.when(tagUserApi.getTags(Mockito.<UUID>any(), Mockito.<ObjectType>any(), Mockito.<InternalTenantContext>any())).thenReturn(ImmutableMap.<String, Tag>of());
+        Mockito.when(tagUserApi.getTags(Mockito.<UUID>any(), Mockito.<ObjectType>any(), Mockito.<InternalTenantContext>any())).thenReturn(ImmutableList.<Tag>of());
 
         bind(GlobalLocker.class).to(MockGlobalLocker.class).asEagerSingleton();
     }

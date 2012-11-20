@@ -45,6 +45,7 @@ import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.invoice.dao.InvoiceDao;
+import com.ning.billing.invoice.dao.InvoiceModelDao;
 import com.ning.billing.invoice.generator.InvoiceGenerator;
 import com.ning.billing.invoice.notification.NullInvoiceNotifier;
 import com.ning.billing.invoice.tests.InvoicingTestBase;
@@ -141,12 +142,12 @@ public abstract class InvoiceApiTestBase extends InvoicingTestBase {
         final InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
         final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountApi, billingApi, entitlementApi,
                                                                    invoiceDao, invoiceNotifier, locker, busService.getBus(),
-                                                                   clock, internalCallContextFactory);
+                                                                   clock);
 
         Invoice invoice = dispatcher.processAccount(account.getId(), targetDate, true, internalCallContext);
         Assert.assertNotNull(invoice);
 
-        List<Invoice> invoices = invoiceDao.getInvoicesByAccount(account.getId(), internalCallContext);
+        List<InvoiceModelDao> invoices = invoiceDao.getInvoicesByAccount(account.getId(), internalCallContext);
         Assert.assertEquals(invoices.size(), 0);
 
         invoice = dispatcher.processAccount(account.getId(), targetDate, false, internalCallContext);

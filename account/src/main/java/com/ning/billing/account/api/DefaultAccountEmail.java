@@ -18,10 +18,11 @@ package com.ning.billing.account.api;
 
 import java.util.UUID;
 
-import com.ning.billing.util.entity.Entity;
+import com.ning.billing.account.dao.AccountEmailModelDao;
 import com.ning.billing.util.entity.EntityBase;
 
-public class DefaultAccountEmail extends EntityBase implements AccountEmail, Entity {
+public class DefaultAccountEmail extends EntityBase implements AccountEmail {
+
     private final UUID accountId;
     private final String email;
 
@@ -31,14 +32,10 @@ public class DefaultAccountEmail extends EntityBase implements AccountEmail, Ent
         this.email = email;
     }
 
-    public DefaultAccountEmail(final AccountEmail source, final String newEmail) {
-        this(source.getAccountId(), newEmail);
-    }
-
-    public DefaultAccountEmail(final UUID id, final UUID accountId, final String email) {
-        super(id);
-        this.accountId = accountId;
-        this.email = email;
+    public DefaultAccountEmail(final AccountEmailModelDao accountEmail) {
+        super(accountEmail.getId(), accountEmail.getCreatedDate(), accountEmail.getUpdatedDate());
+        this.accountId = accountEmail.getAccountId();
+        this.email = accountEmail.getEmail();
     }
 
     @Override

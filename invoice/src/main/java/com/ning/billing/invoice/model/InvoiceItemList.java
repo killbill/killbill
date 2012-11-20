@@ -18,11 +18,11 @@ package com.ning.billing.invoice.model;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
+import com.ning.billing.invoice.dao.InvoiceItemModelDao;
 
 public class InvoiceItemList extends ArrayList<InvoiceItem> {
 
@@ -35,9 +35,15 @@ public class InvoiceItemList extends ArrayList<InvoiceItem> {
         super();
     }
 
-    public InvoiceItemList(final List<InvoiceItem> invoiceItems) {
+    public InvoiceItemList(final List<InvoiceItemModelDao> invoiceItems) {
         super();
-        this.addAll(invoiceItems);
+        for (final InvoiceItemModelDao invoiceItemModelDao : invoiceItems) {
+            this.add(InvoiceItemFactory.fromModelDao(invoiceItemModelDao));
+        }
+    }
+
+    public BigDecimal getBalance(final BigDecimal paidAmount) {
+        return getChargedAmount().add(getTotalAdjAmount()).add(getCBAAmount()).subtract(paidAmount);
     }
 
     public BigDecimal getTotalAdjAmount() {
@@ -60,8 +66,7 @@ public class InvoiceItemList extends ArrayList<InvoiceItem> {
         return getAmoutForItems(InvoiceItemType.CBA_ADJ);
     }
 
-
-    private BigDecimal getAmoutForItems(InvoiceItemType...types) {
+    private BigDecimal getAmoutForItems(final InvoiceItemType... types) {
         BigDecimal total = BigDecimal.ZERO.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
         for (final InvoiceItem item : this) {
             if (isFromType(item, types)) {
@@ -73,8 +78,8 @@ public class InvoiceItemList extends ArrayList<InvoiceItem> {
         return total.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
     }
 
-    private boolean isFromType(InvoiceItem item, InvoiceItemType...types) {
-        for (InvoiceItemType cur : types) {
+    private boolean isFromType(final InvoiceItem item, final InvoiceItemType... types) {
+        for (final InvoiceItemType cur : types) {
             if (item.getInvoiceItemType() == cur) {
                 return true;
             }

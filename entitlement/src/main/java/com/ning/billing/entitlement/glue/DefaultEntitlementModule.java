@@ -18,6 +18,7 @@ package com.ning.billing.entitlement.glue;
 
 import org.skife.config.ConfigurationObjectFactory;
 
+import com.ning.billing.entitlement.engine.dao.DefaultEntitlementDao;
 import com.ning.billing.util.config.EntitlementConfig;
 import com.ning.billing.entitlement.alignment.MigrationPlanAligner;
 import com.ning.billing.entitlement.alignment.PlanAligner;
@@ -40,7 +41,6 @@ import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.engine.addon.AddonUtils;
 import com.ning.billing.entitlement.engine.core.Engine;
-import com.ning.billing.entitlement.engine.dao.AuditedEntitlementDao;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.engine.dao.RepairEntitlementDao;
 import com.ning.billing.glue.EntitlementModule;
@@ -60,7 +60,7 @@ public class DefaultEntitlementModule extends AbstractModule implements Entitlem
     }
 
     protected void installEntitlementDao() {
-        bind(EntitlementDao.class).to(AuditedEntitlementDao.class).asEagerSingleton();
+        bind(EntitlementDao.class).to(DefaultEntitlementDao.class).asEagerSingleton();
         bind(EntitlementDao.class).annotatedWith(Names.named(REPAIR_NAMED)).to(RepairEntitlementDao.class);
         bind(RepairEntitlementLifecycleDao.class).annotatedWith(Names.named(REPAIR_NAMED)).to(RepairEntitlementDao.class);
         bind(RepairEntitlementDao.class).asEagerSingleton();

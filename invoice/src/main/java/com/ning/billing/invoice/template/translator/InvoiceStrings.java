@@ -17,6 +17,7 @@
 package com.ning.billing.invoice.template.translator;
 
 public interface InvoiceStrings {
+
     String getInvoiceTitle();
 
     String getInvoiceDate();

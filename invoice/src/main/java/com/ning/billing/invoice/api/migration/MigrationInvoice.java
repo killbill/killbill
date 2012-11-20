@@ -24,6 +24,7 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.model.DefaultInvoice;
 
 public class MigrationInvoice extends DefaultInvoice {
+
     public MigrationInvoice(final UUID accountId, final LocalDate invoiceDate, final LocalDate targetDate, final Currency currency) {
         super(UUID.randomUUID(), accountId, null, invoiceDate, targetDate, currency, true);
     }

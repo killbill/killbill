@@ -37,7 +37,6 @@ import org.slf4j.LoggerFactory;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.util.config.InvoiceConfig;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
@@ -53,6 +52,7 @@ import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.invoice.model.RecurringInvoiceItemData;
 import com.ning.billing.invoice.model.RepairAdjInvoiceItem;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.config.InvoiceConfig;
 import com.ning.billing.util.svcapi.junction.BillingEvent;
 import com.ning.billing.util.svcapi.junction.BillingEventSet;
 import com.ning.billing.util.svcapi.junction.BillingModeType;
@@ -182,21 +182,16 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
     //
     BigDecimal getAdjustedPositiveAmount(final List<InvoiceItem> existingItems, final UUID linkedItemId) {
         BigDecimal totalAdjustedOnItem = BigDecimal.ZERO;
-        final Collection<InvoiceItem> c = Collections2.filter(existingItems, new Predicate<InvoiceItem>() {
+        final Collection<InvoiceItem> invoiceItems = Collections2.filter(existingItems, new Predicate<InvoiceItem>() {
             @Override
-            public boolean apply(InvoiceItem item) {
-                if (item.getInvoiceItemType() == InvoiceItemType.ITEM_ADJ &&
-                    item.getLinkedItemId() != null && item.getLinkedItemId().equals(linkedItemId)) {
-                    return true;
-                } else {
-                    return false;
-                }
+            public boolean apply(final InvoiceItem item) {
+                return item.getInvoiceItemType() == InvoiceItemType.ITEM_ADJ &&
+                       item.getLinkedItemId() != null && item.getLinkedItemId().equals(linkedItemId);
             }
         });
 
-        final Iterator<InvoiceItem> it = c.iterator();
-        while (it.hasNext()) {
-            totalAdjustedOnItem = totalAdjustedOnItem.add(it.next().getAmount());
+        for (final InvoiceItem invoiceItem : invoiceItems) {
+            totalAdjustedOnItem = totalAdjustedOnItem.add(invoiceItem.getAmount());
         }
         return totalAdjustedOnItem.negate();
     }

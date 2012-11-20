@@ -79,7 +79,7 @@ public class DefaultEntitlementTimelineApi implements EntitlementTimelineApi {
     @Override
     public BundleTimeline getBundleTimeline(final SubscriptionBundle bundle, final TenantContext context)
             throws EntitlementRepairException {
-        return getBundleTimelineInternal(bundle, bundle.getKey(), context);
+        return getBundleTimelineInternal(bundle, bundle.getExternalKey(), context);
     }
 
     @Override
@@ -105,9 +105,9 @@ public class DefaultEntitlementTimelineApi implements EntitlementTimelineApi {
             if (subscriptions.size() == 0) {
                 throw new EntitlementRepairException(ErrorCode.ENT_REPAIR_NO_ACTIVE_SUBSCRIPTIONS, bundle.getId());
             }
-            final String viewId = getViewId(((SubscriptionBundleData) bundle).getLastSysUpdateTime(), subscriptions);
+            final String viewId = getViewId(((SubscriptionBundleData) bundle).getLastSysUpdateDate(), subscriptions);
             final List<SubscriptionTimeline> repairs = createGetSubscriptionRepairList(subscriptions, Collections.<SubscriptionTimeline>emptyList());
-            return createGetBundleRepair(bundle.getId(), bundle.getKey(), viewId, repairs);
+            return createGetBundleRepair(bundle.getId(), bundle.getExternalKey(), viewId, repairs);
         } catch (CatalogApiException e) {
             throw new EntitlementRepairException(e);
         }
@@ -128,7 +128,7 @@ public class DefaultEntitlementTimelineApi implements EntitlementTimelineApi {
                 throw new EntitlementRepairException(ErrorCode.ENT_REPAIR_NO_ACTIVE_SUBSCRIPTIONS, input.getId());
             }
 
-            final String viewId = getViewId(((SubscriptionBundleData) bundle).getLastSysUpdateTime(), subscriptions);
+            final String viewId = getViewId(((SubscriptionBundleData) bundle).getLastSysUpdateDate(), subscriptions);
             if (!viewId.equals(input.getViewId())) {
                 throw new EntitlementRepairException(ErrorCode.ENT_REPAIR_VIEW_CHANGED, input.getId(), input.getViewId(), viewId);
             }
@@ -232,7 +232,7 @@ public class DefaultEntitlementTimelineApi implements EntitlementTimelineApi {
                 baseSubscriptionRepair.addFutureAddonCancellation(addOnSubscriptionInRepair, context);
 
                 final List<SubscriptionTimeline> repairs = createGetSubscriptionRepairList(subscriptions, convertDataRepair(inRepair));
-                return createGetBundleRepair(input.getId(), bundle.getKey(), input.getViewId(), repairs);
+                return createGetBundleRepair(input.getId(), bundle.getExternalKey(), input.getViewId(), repairs);
             } else {
                 dao.repair(bundle.getAccountId(), input.getId(), inRepair, internalCallContextFactory.createInternalCallContext(bundle.getAccountId(), context));
                 return getBundleTimeline(input.getId(), context);

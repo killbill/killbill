@@ -23,97 +23,58 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
-
-import org.joda.time.DateTime;
-import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
-
 import com.ning.billing.ObjectType;
+import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.tag.Tag;
+
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
 
 public class MockTagDao implements TagDao {
 
-    private final Map<UUID, List<Tag>> tagStore = new HashMap<UUID, List<Tag>>();
+    private final Map<UUID, List<TagModelDao>> tagStore = new HashMap<UUID, List<TagModelDao>>();
 
     @Override
-    public void saveEntitiesFromTransaction(final Transmogrifier dao, final UUID objectId, final ObjectType objectType,
-                                            final List<Tag> tags, final InternalCallContext context) {
-        tagStore.put(objectId, tags);
-    }
-
-    @Override
-    public void saveEntities(final UUID objectId, final ObjectType objectType, final List<Tag> tags, final InternalCallContext context) {
-        tagStore.put(objectId, tags);
-    }
-
-    @Override
-    public Map<String, Tag> loadEntities(final UUID objectId, final ObjectType objectType, final InternalTenantContext context) {
-        return getMap(tagStore.get(objectId));
-    }
-
-    @Override
-    public Map<String, Tag> loadEntitiesFromTransaction(final Transmogrifier dao, final UUID objectId, final ObjectType objectType, final InternalTenantContext context) {
-        return getMap(tagStore.get(objectId));
-    }
-
-    private Map<String, Tag> getMap(@Nullable final List<Tag> tags) {
-        final Map<String, Tag> map = new HashMap<String, Tag>();
-        if (tags != null) {
-            for (final Tag tag : tags) {
-                map.put(tag.getTagDefinitionId().toString(), tag);
-            }
+    public void create(final TagModelDao tag, final InternalCallContext context) throws TagApiException {
+        if (tagStore.get(tag.getObjectId()) == null) {
+            tagStore.put(tag.getObjectId(), new ArrayList<TagModelDao>());
         }
-        return map;
-    }
-
-    @Override
-    public void insertTag(final UUID objectId, final ObjectType objectType,
-                          final UUID tagDefinitionId, final InternalCallContext context) {
-        final Tag tag = new Tag() {
-            private final UUID id = UUID.randomUUID();
-
-            @Override
-            public UUID getTagDefinitionId() {
-                return tagDefinitionId;
-            }
-
-            @Override
-            public UUID getId() {
-                return id;
-            }
-
-            @Override
-            public DateTime getCreatedDate() {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public DateTime getUpdatedDate() {
-                throw new UnsupportedOperationException();
-            }
-        };
-
-        if (tagStore.get(objectId) == null) {
-            tagStore.put(objectId, new ArrayList<Tag>());
-        }
-
-        tagStore.get(objectId).add(tag);
+        tagStore.get(tag.getObjectId()).add(tag);
     }
 
     @Override
     public void deleteTag(final UUID objectId, final ObjectType objectType,
                           final UUID tagDefinitionId, final InternalCallContext context) {
-        final List<Tag> tags = tagStore.get(objectId);
+        final List<TagModelDao> tags = tagStore.get(objectId);
         if (tags != null) {
-            final Iterator<Tag> tagIterator = tags.iterator();
+            final Iterator<TagModelDao> tagIterator = tags.iterator();
             while (tagIterator.hasNext()) {
-                final Tag tag = tagIterator.next();
+                final TagModelDao tag = tagIterator.next();
                 if (tag.getTagDefinitionId().equals(tagDefinitionId)) {
                     tagIterator.remove();
                 }
             }
         }
+    }
+
+    @Override
+    public TagModelDao getById(final UUID tagId, final InternalTenantContext context) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public List<TagModelDao> getTags(final UUID objectId, final ObjectType objectType, final InternalTenantContext internalTenantContext) {
+        if (tagStore.get(objectId) == null) {
+            return ImmutableList.<TagModelDao>of();
+        }
+
+        return ImmutableList.<TagModelDao>copyOf(Collections2.filter(tagStore.get(objectId), new Predicate<TagModelDao>() {
+            @Override
+            public boolean apply(final TagModelDao input) {
+                return objectType.equals(input.getObjectType());
+            }
+        }));
     }
 }

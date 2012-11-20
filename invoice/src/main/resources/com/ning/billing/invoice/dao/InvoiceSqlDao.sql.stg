@@ -1,55 +1,58 @@
-group InvoiceDao;
+group InvoiceDao: EntitySqlDao;
 
-CHECK_TENANT(prefix) ::= "<prefix>tenant_record_id = :tenantRecordId"
-AND_CHECK_TENANT(prefix) ::= "AND <CHECK_TENANT(prefix)>"
+tableName() ::= "invoices"
 
-invoiceFields(prefix) ::= <<
-    <prefix>id,
-    <prefix>account_id,
-    <prefix>invoice_date,
-    <prefix>target_date,
-    <prefix>currency,
-    <prefix>migrated,
-    <prefix>created_by,
-    <prefix>created_date,
-    <prefix>account_record_id,
-    <prefix>tenant_record_id
+tableFields(prefix) ::= <<
+  <prefix>account_id
+, <prefix>invoice_date
+, <prefix>target_date
+, <prefix>currency
+, <prefix>migrated
+, <prefix>created_by
+, <prefix>created_date
 >>
 
-get() ::= <<
-  SELECT record_id as invoice_number, <invoiceFields()>
-  FROM invoices
-  WHERE <CHECK_TENANT()>
-  ORDER BY target_date ASC;
+tableValues() ::= <<
+  :accountId
+, :invoiceDate
+, :targetDate
+, :currency
+, :migrated
+, :createdBy
+, :createdDate
+>>
+
+extraTableFieldsWithComma(prefix) ::= <<
+, <prefix>record_id as invoice_number
 >>
 
 getInvoicesByAccount() ::= <<
-  SELECT record_id as invoice_number, <invoiceFields()>
-  FROM invoices
+  SELECT <allTableFields()>
+  FROM <tableName()>
   WHERE account_id = :accountId AND migrated = '0'
   <AND_CHECK_TENANT()>
   ORDER BY target_date ASC;
 >>
 
 getAllInvoicesByAccount() ::= <<
-  SELECT record_id as invoice_number, <invoiceFields()>
-  FROM invoices
+  SELECT <allTableFields()>
+  FROM <tableName()>
   WHERE account_id = :accountId
   <AND_CHECK_TENANT()>
   ORDER BY target_date ASC;
 >>
 
 getInvoicesByAccountAfterDate() ::= <<
-  SELECT record_id as invoice_number, <invoiceFields()>
-  FROM invoices
+  SELECT <allTableFields()>
+  FROM <tableName()>
   WHERE account_id = :accountId AND target_date >= :fromDate AND migrated = '0'
   <AND_CHECK_TENANT()>
   ORDER BY target_date ASC;
 >>
 
 getInvoicesBySubscription() ::= <<
-  SELECT i.record_id as invoice_number, <invoiceFields("i.")>
-  FROM invoices i
+  SELECT <allTableFields("i.")>
+  FROM <tableName()> i
   JOIN invoice_items ii ON i.id = ii.invoice_id
   WHERE ii.subscription_id = :subscriptionId AND i.migrated = '0'
   <AND_CHECK_TENANT("i.")>
@@ -57,67 +60,11 @@ getInvoicesBySubscription() ::= <<
   ;
 >>
 
-getById() ::= <<
-  SELECT record_id as invoice_number, <invoiceFields()>
-  FROM invoices
-  WHERE id = :id
-  <AND_CHECK_TENANT()>
-  ;
->>
-
-getByRecordId() ::= <<
-  SELECT record_id as invoice_number, <invoiceFields()>
-  FROM invoices
-  WHERE record_id = :recordId
-  <AND_CHECK_TENANT()>
-  ;
->>
-
-create() ::= <<
-  INSERT INTO invoices(<invoiceFields()>)
-  VALUES (:id, :accountId, :invoiceDate, :targetDate, :currency, :migrated, :userName, :createdDate, :accountRecordId, :tenantRecordId);
->>
-
 getInvoiceIdByPaymentId() ::= <<
   SELECT i.id
-    FROM invoices i, invoice_payments ip
+    FROM <tableName()> i, invoice_payments ip
    WHERE ip.invoice_id = i.id
      AND ip.payment_id = :paymentId
    <AND_CHECK_TENANT("i.")>
    <AND_CHECK_TENANT("ip.")>
 >>
-
-
-getRecordId() ::= <<
-    SELECT record_id
-    FROM invoices
-    WHERE id = :id
-    <AND_CHECK_TENANT()>
-    ;
->>
-
-auditFields(prefix) ::= <<
-    <prefix>table_name,
-    <prefix>record_id,
-    <prefix>change_type,
-    <prefix>change_date,
-    <prefix>changed_by,
-    <prefix>reason_code,
-    <prefix>comments,
-    <prefix>user_token,
-    <prefix>account_record_id,
-    <prefix>tenant_record_id
->>
-
-insertAuditFromTransaction() ::= <<
-    INSERT INTO audit_log(<auditFields()>)
-    VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, :reasonCode, :comment, :userToken, :accountRecordId, :tenantRecordId);
->>
-
-test() ::= <<
-  SELECT 1
-  FROM invoices
-  WHERE <CHECK_TENANT()>
-  ;
->>
-;

@@ -53,16 +53,7 @@ public class TestBlockingChecker extends JunctionTestSuite {
     private BlockingState accountState;
 
     private final BlockingStateDao dao = new BlockingStateDao() {
-        @Override
-        public BlockingState getBlockingStateFor(final Blockable blockable, final InternalTenantContext context) {
-            if (blockable.getId() == account.getId()) {
-                return accountState;
-            } else if (blockable.getId() == subscription.getId()) {
-                return subscriptionState;
-            } else {
-                return bundleState;
-            }
-        }
+
 
         @Override
         public BlockingState getBlockingStateFor(final UUID blockableId, final InternalTenantContext context) {
@@ -75,10 +66,6 @@ public class TestBlockingChecker extends JunctionTestSuite {
             }
         }
 
-        @Override
-        public List<BlockingState> getBlockingHistoryFor(final Blockable overdueable, final InternalTenantContext context) {
-            throw new UnsupportedOperationException();
-        }
 
         @Override
         public List<BlockingState> getBlockingHistoryFor(final UUID overdueableId, final InternalTenantContext context) {
@@ -106,7 +93,7 @@ public class TestBlockingChecker extends JunctionTestSuite {
         Mockito.when(bundle.getAccountId()).thenReturn(accountId);
         final UUID bundleId = UUID.randomUUID();
         Mockito.when(bundle.getId()).thenReturn(bundleId);
-        Mockito.when(bundle.getKey()).thenReturn("key");
+        Mockito.when(bundle.getExternalKey()).thenReturn("key");
 
         subscription = Mockito.mock(Subscription.class);
         Mockito.when(subscription.getId()).thenReturn(UUID.randomUUID());

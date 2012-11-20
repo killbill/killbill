@@ -32,6 +32,8 @@ import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.clock.ClockMock;
 
 public class KillbillTestSuite {
 
@@ -40,10 +42,12 @@ public class KillbillTestSuite {
 
     private boolean hasFailed = false;
 
+    private Clock clock = new ClockMock();
+
     protected final InternalCallContext internalCallContext = new InternalCallContext(InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID, 1687L, UUID.randomUUID(),
                                                                                       UUID.randomUUID().toString(), CallOrigin.TEST,
                                                                                       UserType.TEST, "Testing", "This is a test",
-                                                                                      new DateTime(DateTimeZone.UTC), new DateTime(DateTimeZone.UTC));
+                                                                                      clock.getUTCNow(), clock.getUTCNow());
     protected final CallContext callContext = internalCallContext.toCallContext();
 
     @BeforeMethod(alwaysRun = true)

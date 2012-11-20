@@ -76,7 +76,6 @@ public class MysqlTestingHelper {
         }
     }
 
-
     public boolean isUsingLocalInstance() {
         return (System.getProperty(USE_LOCAL_DB_PROP) != null);
     }
@@ -163,7 +162,6 @@ public class MysqlTestingHelper {
         return allTables;
     }
 
-
     public void stopMysql() {
         try {
             if (mysqldResource != null) {
@@ -177,9 +175,14 @@ public class MysqlTestingHelper {
         }
     }
 
-    public IDBI getDBI() {
-        final String dbiString = getJdbcConnectionString() + "?createDatabaseIfNotExist=true&allowMultiQueries=true";
-        return new DBI(dbiString, USERNAME, PASSWORD);
+    private IDBI dbiInstance = null;
+
+    public synchronized IDBI getDBI() {
+        if (dbiInstance == null) {
+            final String dbiString = getJdbcConnectionString() + "?createDatabaseIfNotExist=true&allowMultiQueries=true";
+            dbiInstance = new DBIProvider(dbiString, USERNAME, PASSWORD).get();
+        }
+        return dbiInstance;
     }
 
     public String getJdbcConnectionString() {
@@ -228,14 +231,16 @@ public class MysqlTestingHelper {
                "account_record_id int(11) unsigned not null, tenant_record_id int(11) unsigned default 0, primary key(record_id)) engine=innodb;");
 
         for (final String pack : new String[]{"account", "analytics", "beatrix", "entitlement", "util", "payment", "invoice", "junction", "tenant"}) {
-            final String ddl;
-            try {
-                ddl = IOUtils.toString(Resources.getResource("com/ning/billing/" + pack + "/ddl.sql").openStream());
-            } catch (final IllegalArgumentException ignored) {
-                // The test doesn't have this module ddl in the classpath - that's fine
-                continue;
+            for (final String ddlFile : new String[]{"ddl.sql", "ddl_test.sql"}) {
+                final String ddl;
+                try {
+                    ddl = IOUtils.toString(Resources.getResource("com/ning/billing/" + pack + "/" + ddlFile).openStream());
+                } catch (final IllegalArgumentException ignored) {
+                    // The test doesn't have this module ddl in the classpath - that's fine
+                    continue;
+                }
+                initDb(ddl);
             }
-            initDb(ddl);
         }
     }
 
@@ -247,7 +252,7 @@ public class MysqlTestingHelper {
         dbi.withHandle(new HandleCallback<Void>() {
             @Override
             public Void withHandle(final Handle handle) throws Exception {
-                log.info("Executing DDL script: " + ddl);
+                log.debug("Executing DDL script: " + ddl);
                 handle.createScript(ddl).execute();
                 return null;
             }

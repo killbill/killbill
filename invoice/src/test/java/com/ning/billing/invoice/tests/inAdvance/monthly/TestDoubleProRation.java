@@ -26,6 +26,7 @@ import com.ning.billing.invoice.model.InvalidDateSequenceException;
 import com.ning.billing.invoice.tests.inAdvance.ProRationInAdvanceTestBase;
 
 public class TestDoubleProRation extends ProRationInAdvanceTestBase {
+
     @Override
     protected BillingPeriod getBillingPeriod() {
         return BillingPeriod.MONTHLY;

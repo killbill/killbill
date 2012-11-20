@@ -47,7 +47,6 @@ public class DefaultChangedField implements ChangedField {
         this(fieldName, oldValue, newValue, new DateTime());
     }
 
-
     @Override
     public String getFieldName() {
         return fieldName;
@@ -73,13 +72,13 @@ public class DefaultChangedField implements ChangedField {
         final int prime = 31;
         int result = 1;
         result = prime * result
-                + ((changeDate == null) ? 0 : changeDate.hashCode());
+                 + ((changeDate == null) ? 0 : changeDate.hashCode());
         result = prime * result
-                + ((fieldName == null) ? 0 : fieldName.hashCode());
+                 + ((fieldName == null) ? 0 : fieldName.hashCode());
         result = prime * result
-                + ((newValue == null) ? 0 : newValue.hashCode());
+                 + ((newValue == null) ? 0 : newValue.hashCode());
         result = prime * result
-                + ((oldValue == null) ? 0 : oldValue.hashCode());
+                 + ((oldValue == null) ? 0 : oldValue.hashCode());
         return result;
     }
 

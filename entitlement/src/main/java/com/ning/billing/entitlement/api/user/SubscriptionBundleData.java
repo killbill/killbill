@@ -30,7 +30,7 @@ public class SubscriptionBundleData extends EntityBase implements SubscriptionBu
 
     private final String key;
     private final UUID accountId;
-    private final DateTime lastSysTimeUpdate;
+    private final DateTime lastSysUpdateDate;
     private final OverdueState<SubscriptionBundle> overdueState;
 
     public SubscriptionBundleData(final String name, final UUID accountId, final DateTime startDate) {
@@ -46,12 +46,12 @@ public class SubscriptionBundleData extends EntityBase implements SubscriptionBu
         super(id, null, null);
         this.key = key;
         this.accountId = accountId;
-        this.lastSysTimeUpdate = lastSysUpdate;
+        this.lastSysUpdateDate = lastSysUpdate;
         this.overdueState = overdueState;
     }
 
     @Override
-    public String getKey() {
+    public String getExternalKey() {
         return key;
     }
 
@@ -60,8 +60,8 @@ public class SubscriptionBundleData extends EntityBase implements SubscriptionBu
         return accountId;
     }
 
-    public DateTime getLastSysUpdateTime() {
-        return lastSysTimeUpdate;
+    public DateTime getLastSysUpdateDate() {
+        return lastSysUpdateDate;
     }
 
     @Override
@@ -81,7 +81,7 @@ public class SubscriptionBundleData extends EntityBase implements SubscriptionBu
         sb.append("{accountId=").append(accountId);
         sb.append(", id=").append(id);
         sb.append(", key='").append(key).append('\'');
-        sb.append(", lastSysTimeUpdate=").append(lastSysTimeUpdate);
+        sb.append(", lastSysUpdateDate=").append(lastSysUpdateDate);
         sb.append(", overdueState=").append(overdueState);
         sb.append('}');
         return sb.toString();
@@ -107,7 +107,7 @@ public class SubscriptionBundleData extends EntityBase implements SubscriptionBu
         if (key != null ? !key.equals(that.key) : that.key != null) {
             return false;
         }
-        if (lastSysTimeUpdate != null ? !lastSysTimeUpdate.equals(that.lastSysTimeUpdate) : that.lastSysTimeUpdate != null) {
+        if (lastSysUpdateDate != null ? !lastSysUpdateDate.equals(that.lastSysUpdateDate) : that.lastSysUpdateDate != null) {
             return false;
         }
         if (overdueState != null ? !overdueState.equals(that.overdueState) : that.overdueState != null) {
@@ -122,7 +122,7 @@ public class SubscriptionBundleData extends EntityBase implements SubscriptionBu
         int result = id != null ? id.hashCode() : 0;
         result = 31 * result + (key != null ? key.hashCode() : 0);
         result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
-        result = 31 * result + (lastSysTimeUpdate != null ? lastSysTimeUpdate.hashCode() : 0);
+        result = 31 * result + (lastSysUpdateDate != null ? lastSysUpdateDate.hashCode() : 0);
         result = 31 * result + (overdueState != null ? overdueState.hashCode() : 0);
         return result;
     }

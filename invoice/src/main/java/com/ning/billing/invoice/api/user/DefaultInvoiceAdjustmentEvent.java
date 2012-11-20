@@ -57,7 +57,6 @@ public class DefaultInvoiceAdjustmentEvent extends DefaultBusInternalEvent imple
         return BusInternalEventType.INVOICE_ADJUSTMENT;
     }
 
-
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();

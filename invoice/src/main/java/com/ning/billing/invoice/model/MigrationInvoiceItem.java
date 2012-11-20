@@ -25,6 +25,7 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.MigrationPlan;
 
 public class MigrationInvoiceItem extends FixedPriceInvoiceItem {
+
     public MigrationInvoiceItem(final UUID invoiceId, final UUID accountId, final LocalDate startDate,
                                 final BigDecimal amount, final Currency currency) {
         super(invoiceId, accountId, null, null, MigrationPlan.MIGRATION_PLAN_NAME, MigrationPlan.MIGRATION_PLAN_PHASE_NAME,

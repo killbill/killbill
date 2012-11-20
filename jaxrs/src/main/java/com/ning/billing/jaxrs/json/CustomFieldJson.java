@@ -37,8 +37,8 @@ public class CustomFieldJson {
     }
 
     public CustomFieldJson(final CustomField input) {
-        this.name = input.getName();
-        this.value = input.getValue();
+        this.name = input.getFieldName();
+        this.value = input.getFieldValue();
     }
 
     public String getName() {

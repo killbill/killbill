@@ -16,12 +16,19 @@
 
 package com.ning.billing.util.customfield;
 
+import java.util.UUID;
+
+import com.ning.billing.ObjectType;
 import com.ning.billing.util.entity.Entity;
 
 public interface CustomField extends Entity {
-    public String getName();
 
-    public String getValue();
+    public UUID getObjectId();
 
-    public void setValue(String value);
+    public ObjectType getObjectType();
+
+    public String getFieldName();
+
+    public String getFieldValue();
+
 }

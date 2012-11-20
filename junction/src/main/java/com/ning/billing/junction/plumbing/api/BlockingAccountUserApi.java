@@ -101,7 +101,7 @@ public class BlockingAccountUserApi implements AccountUserApi {
     }
 
     @Override
-    public void addEmail(final UUID accountId, final AccountEmail email, final CallContext context) {
+    public void addEmail(final UUID accountId, final AccountEmail email, final CallContext context) throws AccountApiException {
         userApi.addEmail(accountId, email, context);
     }
 

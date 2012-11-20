@@ -19,50 +19,37 @@ package com.ning.billing.account.dao;
 import java.util.UUID;
 
 import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
-import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
-import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
-import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
-import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 
 import com.ning.billing.account.api.Account;
+import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.callcontext.InternalTenantContextBinder;
-import com.ning.billing.util.dao.EntityHistory;
-import com.ning.billing.util.dao.UuidMapper;
-import com.ning.billing.util.entity.dao.UpdatableEntitySqlDao;
+import com.ning.billing.util.entity.dao.Audited;
+import com.ning.billing.util.entity.dao.EntitySqlDao;
+import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 
-@ExternalizedSqlViaStringTemplate3
-@RegisterMapper({UuidMapper.class, AccountMapper.class})
-public interface AccountSqlDao extends UpdatableEntitySqlDao<Account>, Transactional<AccountSqlDao>, Transmogrifier {
+@EntitySqlDaoStringTemplate
+public interface AccountSqlDao extends EntitySqlDao<AccountModelDao, Account> {
 
     @SqlQuery
-    public Account getAccountByKey(@Bind("externalKey") final String key,
-                                   @InternalTenantContextBinder final InternalTenantContext context);
+    public AccountModelDao getAccountByKey(@Bind("externalKey") final String key,
+                                           @BindBean final InternalTenantContext context);
 
     @SqlQuery
     public UUID getIdFromKey(@Bind("externalKey") final String key,
-                             @InternalTenantContextBinder final InternalTenantContext context);
-
-    @Override
-    @SqlUpdate
-    public void create(@AccountBinder Account account,
-                       @InternalTenantContextBinder final InternalCallContext context);
-
-    @Override
-    @SqlUpdate
-    public void update(@AccountBinder Account account,
-                       @InternalTenantContextBinder final InternalCallContext context);
+                             @BindBean final InternalTenantContext context);
 
     @SqlUpdate
+    @Audited(ChangeType.UPDATE)
+    public void update(@BindBean final AccountModelDao account,
+                       @BindBean final InternalCallContext context);
+
+    @SqlUpdate
+    @Audited(ChangeType.UPDATE)
     public void updatePaymentMethod(@Bind("id") String accountId,
                                     @Bind("paymentMethodId") String paymentMethodId,
-                                    @InternalTenantContextBinder final InternalCallContext context);
-
-    @Override
-    @SqlUpdate
-    public void insertHistoryFromTransaction(@AccountHistoryBinder final EntityHistory<Account> account,
-                                             @InternalTenantContextBinder final InternalCallContext context);
+                                    @BindBean final InternalCallContext context);
 }

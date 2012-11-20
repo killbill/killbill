@@ -18,7 +18,6 @@ package com.ning.billing.invoice.glue;
 
 import org.skife.config.ConfigurationObjectFactory;
 
-import com.ning.billing.util.config.InvoiceConfig;
 import com.ning.billing.glue.InvoiceModule;
 import com.ning.billing.invoice.InvoiceListener;
 import com.ning.billing.invoice.TagHandler;
@@ -33,7 +32,7 @@ import com.ning.billing.invoice.api.invoice.DefaultInvoicePaymentApi;
 import com.ning.billing.invoice.api.migration.DefaultInvoiceMigrationApi;
 import com.ning.billing.invoice.api.svcs.DefaultInvoiceInternalApi;
 import com.ning.billing.invoice.api.user.DefaultInvoiceUserApi;
-import com.ning.billing.invoice.dao.AuditedInvoiceDao;
+import com.ning.billing.invoice.dao.DefaultInvoiceDao;
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.generator.DefaultInvoiceGenerator;
 import com.ning.billing.invoice.generator.InvoiceGenerator;
@@ -43,6 +42,7 @@ import com.ning.billing.invoice.notification.EmailInvoiceNotifier;
 import com.ning.billing.invoice.notification.NextBillingDateNotifier;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.invoice.notification.NullInvoiceNotifier;
+import com.ning.billing.util.config.InvoiceConfig;
 import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
 import com.ning.billing.util.template.translation.TranslatorConfig;
 
@@ -53,7 +53,7 @@ public class DefaultInvoiceModule extends AbstractModule implements InvoiceModul
     InvoiceConfig config;
 
     protected void installInvoiceDao() {
-        bind(InvoiceDao.class).to(AuditedInvoiceDao.class).asEagerSingleton();
+        bind(InvoiceDao.class).to(DefaultInvoiceDao.class).asEagerSingleton();
     }
 
     @Override
@@ -108,7 +108,6 @@ public class DefaultInvoiceModule extends AbstractModule implements InvoiceModul
     protected void installTagHandler() {
         bind(TagHandler.class).asEagerSingleton();
     }
-
 
     protected void installInvoiceGenerator() {
         bind(InvoiceGenerator.class).to(DefaultInvoiceGenerator.class).asEagerSingleton();

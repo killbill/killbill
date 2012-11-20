@@ -135,8 +135,8 @@ public class DefaultAnalyticsUserApi implements AnalyticsUserApi {
         final Collection<BusinessSubscriptionTransition> businessSubscriptionTransitions = new ArrayList<BusinessSubscriptionTransition>();
         final Collection<BusinessOverdueStatus> businessOverdueStatuses = new ArrayList<BusinessOverdueStatus>();
         for (final SubscriptionBundle bundle : bundles) {
-            businessSubscriptionTransitions.addAll(getTransitionsForBundle(bundle.getKey(), context));
-            businessOverdueStatuses.addAll(getOverdueStatusesForBundle(bundle.getKey(), context));
+            businessSubscriptionTransitions.addAll(getTransitionsForBundle(bundle.getExternalKey(), context));
+            businessOverdueStatuses.addAll(getOverdueStatusesForBundle(bundle.getExternalKey(), context));
         }
 
         // Find all invoices for that account
@@ -234,7 +234,7 @@ public class DefaultAnalyticsUserApi implements AnalyticsUserApi {
 
     @Override
     public void rebuildAnalyticsForAccount(final Account account, final CallContext context) {
-        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(context);
+        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), context);
 
         // Update the BAC row
         bacDao.accountUpdated(account.getId(), internalCallContext);
@@ -353,7 +353,7 @@ public class DefaultAnalyticsUserApi implements AnalyticsUserApi {
     private void updateTags(final Account account, final InternalCallContext internalCallContext) {
         // Find the current state of tags from util
         final List<TagDefinition> tagDefinitions = tagInternalApi.getTagDefinitions(internalCallContext);
-        final Collection<String> utilTags = Collections2.transform(tagInternalApi.getTags(account.getId(), ObjectType.ACCOUNT, internalCallContext).values(),
+        final Collection<String> utilTags = Collections2.transform(tagInternalApi.getTags(account.getId(), ObjectType.ACCOUNT, internalCallContext),
                                                                    new Function<Tag, String>() {
                                                                        @Override
                                                                        public String apply(@Nullable final Tag input) {

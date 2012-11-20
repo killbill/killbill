@@ -19,6 +19,8 @@ package com.ning.billing.util.svcsapi.bus;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
 import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.entity.dao.EntitySqlDao;
+import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import com.ning.billing.util.events.BusInternalEvent;
 
 import com.google.common.eventbus.Subscribe;
@@ -91,9 +93,11 @@ public interface InternalBus {
      * Guarantees that the event is persisted on disk from within the same transaction
      *
      * @param event   to be posted
-     * @param dao     a valid DAO object obtained through the DBI.onDemand() API.
+     * @param transactional     a valid transactional object
      * @param context call context. account record id and tenant id are expected to be populated
      * @throws EventBusException if bus not been started yet
      */
-    public void postFromTransaction(BusInternalEvent event, Transmogrifier dao, InternalCallContext context) throws EventBusException;
+    public void postFromTransaction(BusInternalEvent event, EntitySqlDaoWrapperFactory<EntitySqlDao> transactional, InternalCallContext context) throws EventBusException;
+
+
 }

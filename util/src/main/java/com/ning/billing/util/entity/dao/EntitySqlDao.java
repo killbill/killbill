@@ -22,38 +22,56 @@ import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
+import org.skife.jdbi.v2.sqlobject.mixins.CloseMe;
+import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
+import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
+import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.callcontext.InternalTenantContextBinder;
+import com.ning.billing.util.dao.AuditSqlDao;
+import com.ning.billing.util.dao.HistorySqlDao;
 import com.ning.billing.util.entity.Entity;
 import com.ning.billing.util.entity.EntityPersistenceException;
 
-public interface EntitySqlDao<T extends Entity> {
+// TODO get rid of Transmogrifier, but code does not compile even if we create the
+// method  public <T> T become(Class<T> typeToBecome); ?
+//
+@EntitySqlDaoStringTemplate
+public interface EntitySqlDao<M extends EntityModelDao<E>, E extends Entity> extends AuditSqlDao, HistorySqlDao<M, E>, Transmogrifier, Transactional<EntitySqlDao<M, E>>, CloseMe {
 
     @SqlUpdate
-    public void create(@BindBean final T entity,
-                       @InternalTenantContextBinder final InternalCallContext context) throws EntityPersistenceException;
+    @Audited(ChangeType.INSERT)
+    public void create(@BindBean final M entity,
+                       @BindBean final InternalCallContext context) throws EntityPersistenceException;
 
     @SqlQuery
-    public T getById(@Bind("id") final String id,
-                     @InternalTenantContextBinder final InternalTenantContext context);
+    public M getById(@Bind("id") final String id,
+                     @BindBean final InternalTenantContext context);
 
     @SqlQuery
-    public T getByRecordId(@Bind("recordId") final Long recordId,
-                           @InternalTenantContextBinder final InternalTenantContext context);
+    public M getByRecordId(@Bind("recordId") final Long recordId,
+                           @BindBean final InternalTenantContext context);
 
     @SqlQuery
     public Long getRecordId(@Bind("id") final String id,
-                            @InternalTenantContextBinder final InternalTenantContext context);
+                            @BindBean final InternalTenantContext context);
+
+    // Given entity recordId find the history recordId (targetRecordId for history table = entity recordId)
+    @SqlQuery
+    public Long getHistoryRecordId(@Bind("targetRecordId") final Long targetRecordId,
+                                   @BindBean final InternalTenantContext context);
+
+    // Given history recordId find the entity recordId (targetRecordId for history table = entity recordId)
+    @SqlQuery
+    public Long getHistoryTargetRecordId(@Bind("recordId") final Long recordId,
+                                         @BindBean final InternalTenantContext context);
 
     @SqlQuery
-    public Long getHistoryRecordId(@Bind("recordId") final Long recordId,
-                                   @InternalTenantContextBinder final InternalTenantContext context);
-
-    @SqlQuery
-    public List<T> get(@InternalTenantContextBinder final InternalTenantContext context);
+    public List<M> get(@BindBean final InternalTenantContext context);
 
     @SqlUpdate
-    public void test(@InternalTenantContextBinder final InternalTenantContext context);
+    public void test(@BindBean final InternalTenantContext context);
+
+
 }

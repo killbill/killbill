@@ -23,32 +23,35 @@ import org.joda.time.LocalDate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.catalog.api.MigrationPlan;
+import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.invoice.api.InvoiceMigrationApi;
-import com.ning.billing.invoice.dao.AuditedInvoiceDao;
-import com.ning.billing.invoice.model.MigrationInvoiceItem;
+import com.ning.billing.invoice.dao.DefaultInvoiceDao;
+import com.ning.billing.invoice.dao.InvoiceItemModelDao;
+import com.ning.billing.invoice.dao.InvoiceModelDao;
+import com.ning.billing.invoice.dao.InvoicePaymentModelDao;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
 public class DefaultInvoiceMigrationApi implements InvoiceMigrationApi {
+
     private static final Logger log = LoggerFactory.getLogger(DefaultInvoiceMigrationApi.class);
 
     private final AccountInternalApi accountUserApi;
-    private final AuditedInvoiceDao dao;
+    private final DefaultInvoiceDao dao;
     private final Clock clock;
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
     public DefaultInvoiceMigrationApi(final AccountInternalApi accountUserApi,
-                                      final AuditedInvoiceDao dao,
+                                      final DefaultInvoiceDao dao,
                                       final Clock clock,
                                       final InternalCallContextFactory internalCallContextFactory) {
         this.accountUserApi = accountUserApi;
@@ -59,19 +62,20 @@ public class DefaultInvoiceMigrationApi implements InvoiceMigrationApi {
 
     @Override
     public UUID createMigrationInvoice(final UUID accountId, final LocalDate targetDate, final BigDecimal balance, final Currency currency, final CallContext context) {
-        final Account account;
         try {
-            account = accountUserApi.getAccountById(accountId, internalCallContextFactory.createInternalTenantContext(context));
+            accountUserApi.getAccountById(accountId, internalCallContextFactory.createInternalTenantContext(context));
         } catch (AccountApiException e) {
             log.warn("Unable to find account for id {}", accountId);
             return null;
         }
 
-        final Invoice migrationInvoice = new MigrationInvoice(accountId, clock.getUTCToday(), targetDate, currency);
-        final InvoiceItem migrationInvoiceItem = new MigrationInvoiceItem(migrationInvoice.getId(), accountId, targetDate, balance, currency);
-        migrationInvoice.addInvoiceItem(migrationInvoiceItem);
+        final InvoiceModelDao migrationInvoice = new InvoiceModelDao(accountId, clock.getUTCToday(), targetDate, currency, true);
+        final InvoiceItemModelDao migrationInvoiceItem = new InvoiceItemModelDao(context.getCreatedDate(), InvoiceItemType.FIXED, migrationInvoice.getId(), accountId, null, null,
+                                                                                 MigrationPlan.MIGRATION_PLAN_NAME, MigrationPlan.MIGRATION_PLAN_PHASE_NAME,
+                                                                                 targetDate, null, balance, null, currency, null);
+        dao.createInvoice(migrationInvoice, ImmutableList.<InvoiceItemModelDao>of(migrationInvoiceItem),
+                          ImmutableList.<InvoicePaymentModelDao>of(), true, internalCallContextFactory.createInternalCallContext(accountId, context));
 
-        dao.create(migrationInvoice, account.getBillCycleDay().getDayOfMonthUTC(), true, internalCallContextFactory.createInternalCallContext(accountId, context));
         return migrationInvoice.getId();
     }
 }

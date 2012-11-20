@@ -29,6 +29,7 @@ import com.ning.billing.util.email.templates.TemplateModule;
 import com.ning.billing.util.template.translation.TranslatorConfig;
 
 public class MockModuleNoEntitlement extends MockModule {
+
     @Override
     protected void installInvoiceModule() {
         install(new DefaultInvoiceModule() {

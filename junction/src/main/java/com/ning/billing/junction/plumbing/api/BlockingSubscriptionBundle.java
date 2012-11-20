@@ -60,8 +60,8 @@ public class BlockingSubscriptionBundle implements SubscriptionBundle {
     }
 
     @Override
-    public String getKey() {
-        return subscriptionBundle.getKey();
+    public String getExternalKey() {
+        return subscriptionBundle.getExternalKey();
     }
 
     @Override

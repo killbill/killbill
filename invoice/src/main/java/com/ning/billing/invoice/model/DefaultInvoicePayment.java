@@ -25,6 +25,7 @@ import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoicePayment;
+import com.ning.billing.invoice.dao.InvoicePaymentModelDao;
 import com.ning.billing.util.entity.EntityBase;
 
 public class DefaultInvoicePayment extends EntityBase implements InvoicePayment {
@@ -61,6 +62,13 @@ public class DefaultInvoicePayment extends EntityBase implements InvoicePayment 
         this.currency = currency;
         this.paymentCookieId = paymentCookieId;
         this.linkedInvoicePaymentId = linkedInvoicePaymentId;
+    }
+
+    public DefaultInvoicePayment(final InvoicePaymentModelDao invoicePaymentModelDao) {
+        this(invoicePaymentModelDao.getId(), invoicePaymentModelDao.getCreatedDate(), invoicePaymentModelDao.getType(),
+             invoicePaymentModelDao.getPaymentId(), invoicePaymentModelDao.getInvoiceId(), invoicePaymentModelDao.getPaymentDate(),
+             invoicePaymentModelDao.getAmount(), invoicePaymentModelDao.getCurrency(), invoicePaymentModelDao.getPaymentCookieId(),
+             invoicePaymentModelDao.getLinkedInvoicePaymentId());
     }
 
     @Override

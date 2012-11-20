@@ -21,7 +21,6 @@ import java.util.UUID;
 import org.joda.time.DateTimeZone;
 
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.util.tag.TagStore;
 
 public class DefaultMutableAccountData implements MutableAccountData {
 
@@ -47,7 +46,7 @@ public class DefaultMutableAccountData implements MutableAccountData {
 
     public DefaultMutableAccountData(final String externalKey, final String email, final String name,
                                      final int firstNameLength, final Currency currency, final BillCycleDay billCycleDay,
-                                     final UUID paymentMethodId, final TagStore tags, final DateTimeZone timeZone,
+                                     final UUID paymentMethodId, final DateTimeZone timeZone,
                                      final String locale, final String address1, final String address2,
                                      final String companyName, final String city, final String stateOrProvince,
                                      final String country, final String postalCode, final String phone,

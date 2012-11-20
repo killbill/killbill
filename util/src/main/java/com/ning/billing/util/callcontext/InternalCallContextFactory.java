@@ -91,7 +91,7 @@ public class InternalCallContextFactory {
         //                         "tenant of the pointed object (%s) and the context (%s) don't match!", tenantRecordIdFromObject, tenantRecordIdFromContext);
 
         return createInternalCallContext(objectId, objectType, context.getUserName(), context.getCallOrigin(),
-                                         context.getUserType(), context.getUserToken(), context.getReasonCode(), context.getComment(),
+                                         context.getUserType(), context.getUserToken(), context.getReasonCode(), context.getComments(),
                                          context.getCreatedDate(), context.getUpdatedDate());
     }
 
@@ -106,7 +106,7 @@ public class InternalCallContextFactory {
      */
     public InternalCallContext createInternalCallContext(final UUID accountId, final CallContext context) {
         return createInternalCallContext(accountId, ObjectType.ACCOUNT, context.getUserName(), context.getCallOrigin(),
-                                         context.getUserType(), context.getUserToken(), context.getReasonCode(), context.getComment(),
+                                         context.getUserType(), context.getUserToken(), context.getReasonCode(), context.getComments(),
                                          context.getCreatedDate(), context.getUpdatedDate());
     }
 
@@ -198,15 +198,15 @@ public class InternalCallContextFactory {
 
     // Used when we need to re-hydrate the context with the account_record_id (when creating the account)
     public InternalCallContext createInternalCallContext(final Long accountRecordId, final InternalCallContext context) {
-        return new InternalCallContext(context.getTenantRecordId(), accountRecordId, context.getUserToken(), context.getUserName(),
-                                       context.getCallOrigin(), context.getUserType(), context.getReasonCode(), context.getComment(),
+        return new InternalCallContext(context.getTenantRecordId(), accountRecordId, context.getUserToken(), context.getCreatedBy(),
+                                       context.getCallOrigin(), context.getContextUserType(), context.getReasonCode(), context.getComments(),
                                        context.getCreatedDate(), context.getUpdatedDate());
     }
 
     // Used when we need to re-hydrate the context with the tenant_record_id and account_record_id (when claiming bus events)
     public InternalCallContext createInternalCallContext(final Long tenantRecordId, final Long accountRecordId, final InternalCallContext context) {
-        return new InternalCallContext(tenantRecordId, accountRecordId, context.getUserToken(), context.getUserName(),
-                                       context.getCallOrigin(), context.getUserType(), context.getReasonCode(), context.getComment(),
+        return new InternalCallContext(tenantRecordId, accountRecordId, context.getUserToken(), context.getCreatedBy(),
+                                       context.getCallOrigin(), context.getContextUserType(), context.getReasonCode(), context.getComments(),
                                        context.getCreatedDate(), context.getUpdatedDate());
     }
 
@@ -283,6 +283,4 @@ public class InternalCallContextFactory {
         }
         return tenantRecordId;
     }
-
-
 }

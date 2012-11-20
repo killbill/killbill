@@ -20,19 +20,23 @@ import javax.annotation.Nullable;
 
 import com.ning.billing.ObjectType;
 
+/**
+ * Map table names to entity object types and classes, and history tables (if exists)
+ */
 public enum TableName {
     ACCOUNT_HISTORY("account_history"),
     ACCOUNT("accounts", ObjectType.ACCOUNT, ACCOUNT_HISTORY),
     ACCOUNT_EMAIL_HISTORY("account_email_history"),
     ACCOUNT_EMAIL("account_emails", ObjectType.ACCOUNT_EMAIL, ACCOUNT_EMAIL_HISTORY),
     BUNDLES("bundles", ObjectType.BUNDLE),
+    BLOCKING_STATES("blocking_states"),
     CUSTOM_FIELD_HISTORY("custom_field_history"),
-    CUSTOM_FIELD("custom_fields", CUSTOM_FIELD_HISTORY),
+    CUSTOM_FIELD("custom_fields", ObjectType.CUSTOM_FIELD, CUSTOM_FIELD_HISTORY),
     INVOICE_ITEMS("invoice_items", ObjectType.INVOICE_ITEM),
     INVOICE_PAYMENTS("invoice_payments", ObjectType.INVOICE_PAYMENT),
     INVOICES("invoices", ObjectType.INVOICE),
     PAYMENT_ATTEMPT_HISTORY("payment_attempt_history"),
-    PAYMENT_ATTEMPTS("payment_attempts", PAYMENT_ATTEMPT_HISTORY),
+    PAYMENT_ATTEMPTS("payment_attempts", ObjectType.PAYMENT_ATTEMPT, PAYMENT_ATTEMPT_HISTORY),
     PAYMENT_HISTORY("payment_history"),
     PAYMENTS("payments", ObjectType.PAYMENT, PAYMENT_HISTORY),
     PAYMENT_METHOD_HISTORY("payment_method_history"),
@@ -45,7 +49,8 @@ public enum TableName {
     TAG_DEFINITIONS("tag_definitions", ObjectType.TAG_DEFINITION, TAG_DEFINITION_HISTORY),
     TAG_HISTORY("tag_history"),
     TENANT("tenants", ObjectType.TENANT),
-    TAG("tags", TAG_HISTORY);
+    TENANT_KVS("tenant_kvs", ObjectType.TENANT_KVS),
+    TAG("tags", ObjectType.TAG, TAG_HISTORY);
 
     private final String tableName;
     private final ObjectType objectType;
@@ -57,12 +62,8 @@ public enum TableName {
         this.historyTableName = historyTableName;
     }
 
-    TableName(final String tableName, @Nullable final ObjectType objectType) {
+    TableName(final String tableName, final ObjectType objectType) {
         this(tableName, objectType, null);
-    }
-
-    TableName(final String tableName, @Nullable final TableName historyTableName) {
-        this(tableName, null, historyTableName);
     }
 
     TableName(final String tableName) {

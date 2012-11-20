@@ -110,7 +110,7 @@ public class BusinessSubscriptionTransitionDao {
                         final BusinessSubscriptionTransitionModelDao transition = new BusinessSubscriptionTransitionModelDao(
                                 event.getTotalOrdering(),
                                 bundleId,
-                                bundle.getKey(),
+                                bundle.getExternalKey(),
                                 bundle.getAccountId(),
                                 account.getExternalKey(),
                                 subscription.getId(),
@@ -130,7 +130,7 @@ public class BusinessSubscriptionTransitionDao {
                             final BusinessSubscriptionTransitionModelDao systemCancelTransition = new BusinessSubscriptionTransitionModelDao(
                                     event.getTotalOrdering(),
                                     bundleId,
-                                    bundle.getKey(),
+                                    bundle.getExternalKey(),
                                     bundle.getAccountId(),
                                     account.getExternalKey(),
                                     subscription.getId(),

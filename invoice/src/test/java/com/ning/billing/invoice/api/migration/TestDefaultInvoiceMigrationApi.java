@@ -33,6 +33,8 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
+import com.ning.billing.invoice.dao.InvoiceModelDao;
+import com.ning.billing.invoice.dao.InvoiceModelDaoHelper;
 
 public class TestDefaultInvoiceMigrationApi extends InvoiceApiTestBase {
 
@@ -65,17 +67,17 @@ public class TestDefaultInvoiceMigrationApi extends InvoiceApiTestBase {
         Assert.assertNotNull(migrationInvoiceId);
         //Double check it was created and values are correct
 
-        final Invoice invoice = invoiceDao.getById(migrationInvoiceId, internalCallContext);
+        final InvoiceModelDao invoice = invoiceDao.getById(migrationInvoiceId, internalCallContext);
         Assert.assertNotNull(invoice);
 
         Assert.assertEquals(invoice.getAccountId(), accountId);
         Assert.assertEquals(invoice.getTargetDate().compareTo(date_migrated), 0); //temp to avoid tz test artifact
         //		Assert.assertEquals(invoice.getTargetDate(),now);
-        Assert.assertEquals(invoice.getNumberOfItems(), 1);
+        Assert.assertEquals(invoice.getInvoiceItems().size(), 1);
         Assert.assertEquals(invoice.getInvoiceItems().get(0).getAmount().compareTo(MIGRATION_INVOICE_AMOUNT), 0);
-        Assert.assertEquals(invoice.getBalance().compareTo(MIGRATION_INVOICE_AMOUNT), 0);
+        Assert.assertEquals(InvoiceModelDaoHelper.getBalance(invoice).compareTo(MIGRATION_INVOICE_AMOUNT), 0);
         Assert.assertEquals(invoice.getCurrency(), MIGRATION_INVOICE_CURRENCY);
-        Assert.assertTrue(invoice.isMigrationInvoice());
+        Assert.assertTrue(invoice.isMigrated());
 
         return migrationInvoiceId;
     }
@@ -105,10 +107,10 @@ public class TestDefaultInvoiceMigrationApi extends InvoiceApiTestBase {
 
     // ACCOUNT balance should reflect total of migration and non-migration invoices
     @Test(groups = "slow")
-    public void testBalance() throws InvoiceApiException{
-        final Invoice migrationInvoice = invoiceDao.getById(migrationInvoiceId, internalCallContext);
-        final Invoice regularInvoice = invoiceDao.getById(regularInvoiceId, internalCallContext);
-        final BigDecimal balanceOfAllInvoices = migrationInvoice.getBalance().add(regularInvoice.getBalance());
+    public void testBalance() throws InvoiceApiException {
+        final InvoiceModelDao migrationInvoice = invoiceDao.getById(migrationInvoiceId, internalCallContext);
+        final InvoiceModelDao regularInvoice = invoiceDao.getById(regularInvoiceId, internalCallContext);
+        final BigDecimal balanceOfAllInvoices = InvoiceModelDaoHelper.getBalance(migrationInvoice).add(InvoiceModelDaoHelper.getBalance(regularInvoice));
 
         final BigDecimal accountBalance = invoiceUserApi.getAccountBalance(accountId, callContext);
         log.info("ACCOUNT balance: " + accountBalance + " should equal the Balance Of All Invoices: " + balanceOfAllInvoices);

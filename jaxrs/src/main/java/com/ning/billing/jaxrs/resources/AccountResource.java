@@ -76,6 +76,7 @@ import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.PaymentMethod;
 import com.ning.billing.payment.api.Refund;
 import com.ning.billing.util.api.AuditUserApi;
+import com.ning.billing.util.api.CustomFieldApiException;
 import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagDefinitionApiException;
@@ -453,7 +454,7 @@ public class AccountResource extends JaxRsResourceBase {
                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                        @HeaderParam(HDR_REASON) final String reason,
                                        @HeaderParam(HDR_COMMENT) final String comment,
-                                       @javax.ws.rs.core.Context final HttpServletRequest request) {
+                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
         return super.createCustomFields(UUID.fromString(id), customFields,
                                         context.createContext(createdBy, reason, comment, request));
     }
@@ -568,7 +569,7 @@ public class AccountResource extends JaxRsResourceBase {
         // Make sure the account exist or we will confuse the history and auditing code
         accountApi.getAccountById(accountId, callContext);
 
-        accountApi.addEmail(accountId, json.toAccountEmail(), callContext);
+        accountApi.addEmail(accountId, json.toAccountEmail(UUID.randomUUID()), callContext);
 
         return uriBuilder.buildResponse(AccountResource.class, "getEmails", json.getAccountId());
     }
@@ -583,10 +584,15 @@ public class AccountResource extends JaxRsResourceBase {
                                 @HeaderParam(HDR_COMMENT) final String comment,
                                 @javax.ws.rs.core.Context final HttpServletRequest request) {
         final UUID accountId = UUID.fromString(id);
-        final AccountEmailJson accountEmailJson = new AccountEmailJson(id, email);
-        final AccountEmail accountEmail = accountEmailJson.toAccountEmail();
-        accountApi.removeEmail(accountId, accountEmail, context.createContext(createdBy, reason, comment, request));
 
+        final List<AccountEmail> emails = accountApi.getEmails(accountId, context.createContext(request));
+        for (AccountEmail cur : emails) {
+            if (cur.getEmail().equals(email)) {
+                final AccountEmailJson accountEmailJson = new AccountEmailJson(accountId.toString(), email);
+                final AccountEmail accountEmail = accountEmailJson.toAccountEmail(cur.getId());
+                accountApi.removeEmail(accountId, accountEmail, context.createContext(createdBy, reason, comment, request));
+            }
+        }
         return Response.status(Status.OK).build();
     }
 

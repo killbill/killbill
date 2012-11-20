@@ -61,13 +61,21 @@ public class DefaultBillCycleDay implements BillCycleDay {
 
     @Override
     public boolean equals(final Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         final DefaultBillCycleDay that = (DefaultBillCycleDay) o;
 
-        if (dayOfMonthLocal != that.dayOfMonthLocal) return false;
-        if (dayOfMonthUTC != that.dayOfMonthUTC) return false;
+        if (dayOfMonthLocal != that.dayOfMonthLocal) {
+            return false;
+        }
+        if (dayOfMonthUTC != that.dayOfMonthUTC) {
+            return false;
+        }
 
         return true;
     }

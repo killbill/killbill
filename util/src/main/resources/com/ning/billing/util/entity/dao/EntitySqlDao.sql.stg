@@ -1,0 +1,306 @@
+group EntitySqlDao;
+
+
+/******************   To override in each EntitySqlDao template file *****************************/
+
+tableName() ::= ""
+
+/** Leave out id, account_record_id and tenant_record_id **/
+tableFields(prefix) ::= ""
+
+tableValues() ::= ""
+
+historyTableName() ::= ""
+
+historyTableFields(prefix) ::= <<
+  <targetRecordIdField(prefix)>
+, <changeTypeField(prefix)>
+, <tableFields(prefix)>
+>>
+
+historyTableValues() ::= <<
+  <targetRecordIdValue()>
+, <changeTypeValue()>
+, <tableValues()>
+>>
+
+/** Used for entities that can be soft deleted to make we exclude those entries in base calls getById(), get() **/
+andCheckSoftDeletionWithComma(prefix) ::= ""
+
+
+/** Add extra fields for SELECT queries **/
+extraTableFieldsWithComma(prefix) ::= ""
+
+/******************   To override in each EntitySqlDao template file <end>  *****************************/
+
+
+idField(prefix) ::= <<
+<prefix>id
+>>
+
+idValue() ::= ":id"
+
+recordIdField(prefix) ::= <<
+<prefix>record_id
+>>
+
+recordIdValue() ::= ":recordId"
+
+changeTypeField(prefix) ::= <<
+<prefix>change_type
+>>
+
+changeTypeValue() ::= ":changeType"
+
+targetRecordIdField(prefix) ::= <<
+<prefix>target_record_id
+>>
+
+targetRecordIdValue() ::= ":targetRecordId"
+
+/** Override this if the Entity isn't tied to an account **/
+accountRecordIdField(prefix) ::= <<
+<prefix>account_record_id
+>>
+
+
+accountRecordIdFieldWithComma(prefix) ::= <<
+, <accountRecordIdField(prefix)>
+>>
+
+accountRecordIdValue() ::= ":accountRecordId"
+
+accountRecordIdValueWithComma() ::= <<
+, <accountRecordIdValue()>
+>>
+
+tenantRecordIdField(prefix) ::= <<
+<prefix>tenant_record_id
+>>
+
+tenantRecordIdFieldWithComma(prefix) ::= <<
+, <tenantRecordIdField(prefix)>
+>>
+
+
+tenantRecordIdValue() ::= ":tenantRecordId"
+
+tenantRecordIdValueWithComma() ::= <<
+, <tenantRecordIdValue()>
+>>
+
+
+allTableFields(prefix) ::= <<
+  <recordIdField(prefix)>
+, <idField(prefix)>
+, <tableFields(prefix)>
+<extraTableFieldsWithComma(prefix)>
+<accountRecordIdFieldWithComma(prefix)>
+<tenantRecordIdFieldWithComma(prefix)>
+>>
+
+
+
+allTableValues() ::= <<
+  <recordIdValue()>
+, <idValue()>
+, <tableValues()>
+<accountRecordIdValueWithComma()>
+<tenantRecordIdValueWithComma()>
+>>
+
+
+allHistoryTableFields(prefix) ::= <<
+  <recordIdField(prefix)>
+, <idField(prefix)>
+, <targetRecordIdField(prefix)>
+, <historyTableFields(prefix)>
+<accountRecordIdFieldWithComma(prefix)>
+<tenantRecordIdFieldWithComma(prefix)>
+>>
+
+allHistoryTableValues() ::= <<
+  <recordIdValue()>
+, <idValue()>
+,  <targetRecordIdValue()>
+, <historyTableValues()>
+<accountRecordIdValueWithComma()>
+<tenantRecordIdValueWithComma()>
+>>
+
+
+/** Macros used for multi-tenancy (almost any query should use them!) */
+CHECK_TENANT(prefix) ::= "<prefix>tenant_record_id = :tenantRecordId"
+AND_CHECK_TENANT(prefix) ::= "and <CHECK_TENANT(prefix)>"
+
+get(limit) ::= <<
+select
+<allTableFields("t.")>
+from <tableName()> t
+where <CHECK_TENANT("t.")>
+<andCheckSoftDeletionWithComma("t.")>
+<if(limit)>limit :limit<endif>
+;
+>>
+
+getById(id) ::= <<
+select
+<allTableFields("t.")>
+from <tableName()> t
+where <idField("t.")> = :id
+<andCheckSoftDeletionWithComma("t.")>
+<AND_CHECK_TENANT("t.")>
+;
+>>
+
+getByRecordId(recordId) ::= <<
+select
+<allTableFields("t.")>
+from <tableName()> t
+where <recordIdField("t.")> = :recordId
+<AND_CHECK_TENANT("t.")>
+;
+>>
+
+getHistoryTargetRecordId(recordId) ::= <<
+select
+<targetRecordIdField("t.")>
+from <historyTableName()> t
+where <recordIdField("t.")> = :recordId
+<AND_CHECK_TENANT("t.")>
+;
+>>
+
+
+getRecordId(id) ::= <<
+select
+  <recordIdField("t.")>
+from <tableName()> t
+where <idField("t.")> = :id
+<AND_CHECK_TENANT("t.")>
+;
+>>
+
+getRecordIdForTable(tableName) ::= <<
+select
+  <recordIdField("t.")>
+from <tableName> t
+where <idField("t.")> = :id
+<AND_CHECK_TENANT("t.")>
+;
+>>
+
+getHistoryRecordId(targetRecordId) ::= <<
+select
+  max(<recordIdField("t.")>)
+from <historyTableName()> t
+where <targetRecordIdField("t.")> = :targetRecordId
+<AND_CHECK_TENANT("t.")>
+;
+>>
+
+
+getHistoryRecordIdsForTable(historyTableName) ::= <<
+select
+  <recordIdField("t.")>
+from <historyTableName> t
+where <targetRecordIdField("t.")> = :targetRecordId
+<AND_CHECK_TENANT("t.")>
+;
+>>
+
+
+create() ::= <<
+insert into <tableName()> (
+  <idField()>
+, <tableFields()>
+<accountRecordIdFieldWithComma()>
+<tenantRecordIdFieldWithComma()>
+)
+values (
+  <idValue()>
+, <tableValues()>
+<accountRecordIdValueWithComma()>
+<tenantRecordIdValueWithComma()>
+)
+;
+>>
+
+/** Audits, History **/
+auditTableName() ::= "audit_log"
+
+auditTableFields(prefix) ::= <<
+  <prefix>id
+, <prefix>table_name
+, <prefix>target_record_id
+, <prefix>change_type
+, <prefix>created_by
+, <prefix>reason_code
+, <prefix>comments
+, <prefix>user_token
+, <prefix>created_date
+<if(accountRecordIdField(prefix))>, <accountRecordIdField(prefix)><endif>
+<if(tenantRecordIdField(prefix))>, <tenantRecordIdField(prefix)><endif>
+>>
+
+auditTableValues() ::= <<
+  :id
+, :tableName
+, :targetRecordId
+, :changeType
+, :createdBy
+, :reasonCode
+, :comments
+, :userToken
+, :createdDate
+<if(accountRecordIdField(""))>, <accountRecordIdValue()><endif>
+<if(tenantRecordIdField(""))>, <tenantRecordIdValue()><endif>
+>>
+
+
+addHistoryFromTransaction() ::= <<
+insert into <historyTableName()> (
+  <idField()>
+, <historyTableFields()>
+<accountRecordIdFieldWithComma()>
+<tenantRecordIdFieldWithComma()>
+)
+values (
+  <idValue()>
+, <historyTableValues()>
+<accountRecordIdValueWithComma()>
+<tenantRecordIdValueWithComma()>
+)
+;
+>>
+
+
+insertAuditFromTransaction() ::= <<
+insert into <auditTableName()> (
+<auditTableFields()>
+)
+values (
+<auditTableValues()>
+)
+;
+>>
+
+getAuditLogsForTargetRecordId() ::= <<
+select
+  <auditTableFields("t.")>
+from <auditTableName()> t
+where t.target_record_id = :targetRecordId
+and t.table_name = :tableName
+<AND_CHECK_TENANT("t.")>
+order by <recordIdField("t.")> ASC
+;
+>>
+
+test() ::= <<
+select
+<allTableFields("t.")>
+from <tableName()> t
+where <CHECK_TENANT("t.")>
+limit 1
+;
+>>

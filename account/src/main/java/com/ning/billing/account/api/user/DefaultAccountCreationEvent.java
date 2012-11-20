@@ -20,10 +20,10 @@ import java.util.UUID;
 
 import org.joda.time.DateTimeZone;
 
-import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.account.api.DefaultBillCycleDay;
+import com.ning.billing.account.dao.AccountModelDao;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.events.AccountCreationInternalEvent;
 import com.ning.billing.util.events.DefaultBusInternalEvent;
@@ -32,7 +32,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class DefaultAccountCreationEvent  extends DefaultBusInternalEvent implements AccountCreationInternalEvent {
+public class DefaultAccountCreationEvent extends DefaultBusInternalEvent implements AccountCreationInternalEvent {
 
     private final UUID id;
     private final AccountData data;
@@ -48,7 +48,7 @@ public class DefaultAccountCreationEvent  extends DefaultBusInternalEvent implem
         this.data = data;
     }
 
-    public DefaultAccountCreationEvent(final Account data, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
+    public DefaultAccountCreationEvent(final AccountModelDao data, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
         super(userToken, accountRecordId, tenantRecordId);
         this.id = data.getId();
         this.data = new DefaultAccountData(data);
@@ -69,7 +69,6 @@ public class DefaultAccountCreationEvent  extends DefaultBusInternalEvent implem
     public AccountData getData() {
         return data;
     }
-
 
     @Override
     public int hashCode() {
@@ -109,8 +108,8 @@ public class DefaultAccountCreationEvent  extends DefaultBusInternalEvent implem
         return true;
     }
 
-
     public static class DefaultAccountData implements AccountData {
+
         private final String externalKey;
         private final String name;
         private final Integer firstNameLength;
@@ -131,12 +130,12 @@ public class DefaultAccountCreationEvent  extends DefaultBusInternalEvent implem
         private final boolean isMigrated;
         private final boolean isNotifiedForInvoices;
 
-        public DefaultAccountData(final Account d) {
+        public DefaultAccountData(final AccountModelDao d) {
             this(d.getExternalKey() != null ? d.getExternalKey() : null,
                  d.getName(),
                  d.getFirstNameLength(),
                  d.getEmail(),
-                 new DefaultBillCycleDay(d.getBillCycleDay()),
+                 new DefaultBillCycleDay(d.getBillingCycleDayLocal(), d.getBillingCycleDayUtc()),
                  d.getCurrency() != null ? d.getCurrency().name() : null,
                  d.getPaymentMethodId(),
                  d.getTimeZone() != null ? d.getTimeZone().getID() : null,
@@ -149,8 +148,8 @@ public class DefaultAccountCreationEvent  extends DefaultBusInternalEvent implem
                  d.getPostalCode(),
                  d.getCountry(),
                  d.getPhone(),
-                 d.isMigrated(),
-                 d.isNotifiedForInvoices());
+                 d.getMigrated(),
+                 d.getIsNotifiedForInvoices());
         }
 
         @JsonCreator
@@ -303,41 +302,41 @@ public class DefaultAccountCreationEvent  extends DefaultBusInternalEvent implem
             final int prime = 31;
             int result = 1;
             result = prime * result
-                    + ((address1 == null) ? 0 : address1.hashCode());
+                     + ((address1 == null) ? 0 : address1.hashCode());
             result = prime * result
-                    + ((address2 == null) ? 0 : address2.hashCode());
+                     + ((address2 == null) ? 0 : address2.hashCode());
             result = prime * result
-                    + ((billCycleDay == null) ? 0 : billCycleDay.hashCode());
+                     + ((billCycleDay == null) ? 0 : billCycleDay.hashCode());
             result = prime * result + ((city == null) ? 0 : city.hashCode());
             result = prime * result
-                    + ((companyName == null) ? 0 : companyName.hashCode());
+                     + ((companyName == null) ? 0 : companyName.hashCode());
             result = prime * result
-                    + ((country == null) ? 0 : country.hashCode());
+                     + ((country == null) ? 0 : country.hashCode());
             result = prime * result
-                    + ((currency == null) ? 0 : currency.hashCode());
+                     + ((currency == null) ? 0 : currency.hashCode());
             result = prime * result + ((email == null) ? 0 : email.hashCode());
             result = prime * result
-                    + ((externalKey == null) ? 0 : externalKey.hashCode());
+                     + ((externalKey == null) ? 0 : externalKey.hashCode());
             result = prime
-                    * result
-                    + ((firstNameLength == null) ? 0 : firstNameLength
+                     * result
+                     + ((firstNameLength == null) ? 0 : firstNameLength
                     .hashCode());
             result = prime * result
-                    + ((locale == null) ? 0 : locale.hashCode());
+                     + ((locale == null) ? 0 : locale.hashCode());
             result = prime * result + ((name == null) ? 0 : name.hashCode());
             result = prime
-                    * result
-                    + ((paymentMethodId == null) ? 0 : paymentMethodId
+                     * result
+                     + ((paymentMethodId == null) ? 0 : paymentMethodId
                     .hashCode());
             result = prime * result + ((phone == null) ? 0 : phone.hashCode());
             result = prime * result
-                    + ((postalCode == null) ? 0 : postalCode.hashCode());
+                     + ((postalCode == null) ? 0 : postalCode.hashCode());
             result = prime
-                    * result
-                    + ((stateOrProvince == null) ? 0 : stateOrProvince
+                     * result
+                     + ((stateOrProvince == null) ? 0 : stateOrProvince
                     .hashCode());
             result = prime * result
-                    + ((timeZone == null) ? 0 : timeZone.hashCode());
+                     + ((timeZone == null) ? 0 : timeZone.hashCode());
             return result;
         }
 

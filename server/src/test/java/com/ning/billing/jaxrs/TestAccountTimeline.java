@@ -40,7 +40,7 @@ import com.ning.billing.util.audit.ChangeType;
 public class TestAccountTimeline extends TestJaxrsBase {
 
     private static final String PAYMENT_REQUEST_PROCESSOR = "PaymentRequestProcessor";
-    private static final String TRANSITION = "Transition";
+    private static final String TRANSITION = "SubscriptionTransition";
 
     @Test(groups = "slow")
     public void testAccountTimeline() throws Exception {

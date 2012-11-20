@@ -17,7 +17,7 @@
 package com.ning.billing.invoice.api.user;
 
 import java.math.BigDecimal;
-import java.util.Map;
+import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -328,9 +328,9 @@ public class TestDefaultInvoiceUserApi extends InvoiceApiTestBase {
     public void testAddRemoveWrittenOffTag() throws InvoiceApiException, TagApiException {
         invoiceUserApi.tagInvoiceAsWrittenOff(invoiceId, callContext);
 
-        Map<String, Tag> tags = tagUserApi.getTags(invoiceId, ObjectType.INVOICE, tenantContext);
+        List<Tag> tags = tagUserApi.getTags(invoiceId, ObjectType.INVOICE, tenantContext);
         assertEquals(tags.size(), 1);
-        assertEquals(tags.values().iterator().next().getTagDefinitionId(), ControlTagType.WRITTEN_OFF.getId());
+        assertEquals(tags.get(0).getTagDefinitionId(), ControlTagType.WRITTEN_OFF.getId());
 
         invoiceUserApi.tagInvoiceAsNotWrittenOff(invoiceId, callContext);
         tags = tagUserApi.getTags(invoiceId, ObjectType.INVOICE, tenantContext);

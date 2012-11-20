@@ -44,8 +44,7 @@ public class AccountEmailJson {
         return email;
     }
 
-    public AccountEmail toAccountEmail() {
-        final UUID accountEmailId = UUID.randomUUID();
+    public AccountEmail toAccountEmail(final UUID accountEmailId) {
 
         return new AccountEmail() {
             @Override

@@ -42,6 +42,12 @@ public abstract class EntityBase implements Entity {
         this.updatedDate = updatedDate;
     }
 
+    public EntityBase(final EntityBase target) {
+        this.id = UUID.randomUUID();
+        this.createdDate = target.getCreatedDate();
+        this.updatedDate = target.getUpdatedDate();
+    }
+
     @Override
     public UUID getId() {
         return id;
@@ -55,5 +61,37 @@ public abstract class EntityBase implements Entity {
     @Override
     public DateTime getUpdatedDate() {
         return updatedDate;
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        final EntityBase that = (EntityBase) o;
+
+        if (createdDate != null ? !createdDate.equals(that.createdDate) : that.createdDate != null) {
+            return false;
+        }
+        if (id != null ? !id.equals(that.id) : that.id != null) {
+            return false;
+        }
+        if (updatedDate != null ? !updatedDate.equals(that.updatedDate) : that.updatedDate != null) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = id != null ? id.hashCode() : 0;
+        result = 31 * result + (createdDate != null ? createdDate.hashCode() : 0);
+        result = 31 * result + (updatedDate != null ? updatedDate.hashCode() : 0);
+        return result;
     }
 }

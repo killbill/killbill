@@ -16,9 +16,6 @@
 
 package com.ning.billing.invoice.notification;
 
-import static com.jayway.awaitility.Awaitility.await;
-import static java.util.concurrent.TimeUnit.MINUTES;
-
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.UUID;
@@ -28,8 +25,6 @@ import org.joda.time.DateTime;
 import org.mockito.Mockito;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.IDBI;
-import org.skife.jdbi.v2.Transaction;
-import org.skife.jdbi.v2.TransactionStatus;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -37,7 +32,6 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.catalog.MockCatalogModule;
-import com.ning.billing.util.config.InvoiceConfig;
 import com.ning.billing.dbi.DBIProvider;
 import com.ning.billing.dbi.DbiConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
@@ -55,12 +49,16 @@ import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.config.InvoiceConfig;
 import com.ning.billing.util.email.templates.TemplateModule;
+import com.ning.billing.util.entity.dao.EntitySqlDao;
+import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
+import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
+import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.BusModule.BusType;
 import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.TagStoreModule;
-import com.ning.billing.util.notificationq.DummySqlTest;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
@@ -71,18 +69,21 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 
-
+import static com.jayway.awaitility.Awaitility.await;
+import static java.util.concurrent.TimeUnit.MINUTES;
 
 public class TestNextBillingDateNotifier extends InvoiceTestSuiteWithEmbeddedDB {
+
     private Clock clock;
     private DefaultNextBillingDateNotifier notifier;
-    private DummySqlTest dao;
     private InternalBus eventBus;
     private InvoiceListenerMock listener;
     private NotificationQueueService notificationQueueService;
     private InternalCallContextFactory internalCallContextFactory;
+    private EntitySqlDaoTransactionalJdbiWrapper entitySqlDaoTransactionalJdbiWrapper;
 
     private static final class InvoiceListenerMock extends InvoiceListener {
+
         int eventCount = 0;
         UUID latestSubscriptionId = null;
 
@@ -149,7 +150,9 @@ public class TestNextBillingDateNotifier extends InvoiceTestSuiteWithEmbeddedDB 
 
         clock = g.getInstance(Clock.class);
         final IDBI dbi = g.getInstance(IDBI.class);
-        dao = dbi.onDemand(DummySqlTest.class);
+
+        entitySqlDaoTransactionalJdbiWrapper = new EntitySqlDaoTransactionalJdbiWrapper(dbi);
+
         eventBus = g.getInstance(InternalBus.class);
         notificationQueueService = g.getInstance(NotificationQueueService.class);
         final InvoiceDispatcher dispatcher = g.getInstance(InvoiceDispatcher.class);
@@ -177,12 +180,10 @@ public class TestNextBillingDateNotifier extends InvoiceTestSuiteWithEmbeddedDB 
         notifier.initialize();
         notifier.start();
 
-        dao.inTransaction(new Transaction<Void, DummySqlTest>() {
+        entitySqlDaoTransactionalJdbiWrapper.execute(new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
-            public Void inTransaction(final DummySqlTest transactional,
-                                      final TransactionStatus status) throws Exception {
-
-                poster.insertNextBillingNotification(transactional, accountId, subscriptionId, readyTime);
+            public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                poster.insertNextBillingNotification(entitySqlDaoWrapperFactory, accountId, subscriptionId, readyTime);
                 return null;
             }
         });

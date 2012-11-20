@@ -1,63 +1,66 @@
-group TenantDaoSql;
+group TenantDaoSql: EntitySqlDao;
 
-tenantFields(prefix) ::= <<
-    <prefix>record_id,
-    <prefix>id,
-    <prefix>external_key,
-    <prefix>api_key,
-    <prefix>created_date,
-    <prefix>created_by,
-    <prefix>updated_date,
-    <prefix>updated_by
+tableName() ::= "tenants"
+
+/* Don't add api_secret and api_salt in these fields, we shouldn't need to retrieve them */
+tableFields(prefix) ::= <<
+  <prefix>external_key
+, <prefix>api_key
+, <prefix>created_date
+, <prefix>created_by
+, <prefix>updated_date
+, <prefix>updated_by
 >>
 
+tableValues() ::= <<
+  :externalKey
+, :apiKey
+, :createdDate
+, :createdBy
+, :updatedDate
+, :updatedBy
+>>
+
+/* No account_record_id field */
+accountRecordIdFieldWithComma(prefix) ::= ""
+accountRecordIdValueWithComma(prefix) ::= ""
+
+/* No tenant_record_id field */
+tenantRecordIdFieldWithComma(prefix) ::= ""
+tenantRecordIdValueWithComma(prefix) ::= ""
+CHECK_TENANT(prefix) ::= "1 = 1"
+
+/* Override default create call to include secrets */
 create() ::= <<
-    INSERT INTO tenants (
-        id
-      , external_key
-      , api_key
-      , api_secret
-      , api_salt
-      , created_date
-      , created_by
-      , updated_date
-      , updated_by
-    ) VALUES (
-        :id
-      , :externalKey
-      , :apiKey
-      , :apiSecret
-      , :apiSalt
-      , :createdDate
-      , :userName
-      , :updatedDate
-      , :userName
-    );
->>
-
-get() ::= <<
-    SELECT <tenantFields()>
-    FROM tenants;
->>
-
-getById() ::= <<
-    SELECT <tenantFields()>
-    FROM tenants
-    WHERE id = :id;
+insert into <tableName()> (
+  <idField()>
+, <tableFields()>
+, api_secret
+, api_salt
+)
+values (
+  <idValue()>
+, <tableValues()>
+, :apiSecret
+, :apiSalt
+)
+;
 >>
 
 getByApiKey() ::= <<
-    SELECT <tenantFields()>
-    FROM tenants
-    WHERE api_key = :apiKey;
+select
+  <allTableFields("t.")>
+from <tableName()> t
+where api_key = :apiKey
+;
 >>
 
 getSecrets() ::= <<
-    SELECT api_key, api_secret, api_salt
-    FROM tenants
-    WHERE id = :id;
->>
-
-test() ::= <<
-    SELECT 1 FROM tenants;
+select
+  <allTableFields("t.")>
+, t.api_secret
+, t.api_salt
+from <tableName()> t
+where <idField("t.")> = <idValue()>
+;
 >>

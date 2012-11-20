@@ -65,7 +65,7 @@ import com.ning.billing.util.tag.TagDefinition;
 
 import static org.testng.Assert.assertTrue;
 
-@Guice(modules = BeatrixModule.class)
+@Guice(modules = BeatrixIntegrationModule.class)
 public class TestAnalytics extends TestIntegrationBase {
 
     private Account account;
@@ -228,7 +228,7 @@ public class TestAnalytics extends TestIntegrationBase {
         Assert.assertNull(analyticsUserApi.getAccountByKey(account.getExternalKey(), callContext).getLastPaymentStatus());
 
         // Verify the initial overdue status
-        Assert.assertEquals(analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey(), callContext).size(), 0);
+        Assert.assertEquals(analyticsUserApi.getOverdueStatusesForBundle(bundle.getExternalKey(), callContext).size(), 0);
 
         // Move after trial
         busHandler.pushExpectedEvents(TestApiListener.NextEvent.PHASE, TestApiListener.NextEvent.INVOICE, TestApiListener.NextEvent.PAYMENT_ERROR);
@@ -248,7 +248,7 @@ public class TestAnalytics extends TestIntegrationBase {
         Assert.assertNull(invoicePaymentsForAccount.get(0).getExtFirstPaymentRefId());
         Assert.assertNull(invoicePaymentsForAccount.get(0).getExtSecondPaymentRefId());
         Assert.assertEquals(invoicePaymentsForAccount.get(0).getProcessingStatus(), PaymentStatus.PAYMENT_FAILURE.toString());
-        Assert.assertEquals(invoicePaymentsForAccount.get(0).getPluginName(), BeatrixModule.PLUGIN_NAME);
+        Assert.assertEquals(invoicePaymentsForAccount.get(0).getPluginName(), BeatrixIntegrationModule.PLUGIN_NAME);
 
         // Verify the account object has been updated
         Assert.assertEquals(analyticsUserApi.getAccountByKey(account.getExternalKey(), callContext).getBalance(),
@@ -260,7 +260,7 @@ public class TestAnalytics extends TestIntegrationBase {
                             invoicePaymentsForAccount.get(0).getAmount());
 
         // Verify overdue status - we should still be in clear state
-        Assert.assertEquals(analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey(), callContext).size(), 0);
+        Assert.assertEquals(analyticsUserApi.getOverdueStatusesForBundle(bundle.getExternalKey(), callContext).size(), 0);
 
         clock.addDays(15); // DAY 45 - 15 days after invoice
         assertTrue(busHandler.isCompleted(DELAY));
@@ -269,7 +269,7 @@ public class TestAnalytics extends TestIntegrationBase {
         verifyBSTWithTrialAndEvergreenPhases(account, bundle, subscription);
 
         // Verify overdue status - we should still be in clear state
-        Assert.assertEquals(analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey(), callContext).size(), 0);
+        Assert.assertEquals(analyticsUserApi.getOverdueStatusesForBundle(bundle.getExternalKey(), callContext).size(), 0);
 
         busHandler.pushExpectedEvents(TestApiListener.NextEvent.INVOICE, TestApiListener.NextEvent.PAYMENT_ERROR);
         clock.addDays(20); // DAY 65 - 35 days after invoice
@@ -277,7 +277,7 @@ public class TestAnalytics extends TestIntegrationBase {
         waitALittle();
 
         // Verify overdue status - we should be in OD1
-        final List<BusinessOverdueStatus> od1Bundle = analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey(), callContext);
+        final List<BusinessOverdueStatus> od1Bundle = analyticsUserApi.getOverdueStatusesForBundle(bundle.getExternalKey(), callContext);
         Assert.assertEquals(od1Bundle.size(), 1);
         Assert.assertEquals(od1Bundle.get(0).getStatus(), "OD1");
         Assert.assertEquals(od1Bundle.get(0).getId(), bundle.getId());
@@ -287,7 +287,7 @@ public class TestAnalytics extends TestIntegrationBase {
         assertTrue(busHandler.isCompleted(DELAY));
         waitALittle();
         // Verify overdue status - we should still be in OD1
-        final List<BusinessOverdueStatus> stillOd1Bundle = analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey(), callContext);
+        final List<BusinessOverdueStatus> stillOd1Bundle = analyticsUserApi.getOverdueStatusesForBundle(bundle.getExternalKey(), callContext);
         Assert.assertEquals(stillOd1Bundle.size(), 1);
         Assert.assertEquals(stillOd1Bundle.get(0).getStatus(), "OD1");
         Assert.assertEquals(stillOd1Bundle.get(0).getId(), bundle.getId());
@@ -297,7 +297,7 @@ public class TestAnalytics extends TestIntegrationBase {
         assertTrue(busHandler.isCompleted(DELAY));
         waitALittle();
         // Verify overdue status - we should be in OD2
-        final List<BusinessOverdueStatus> od2Bundle = analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey(), callContext);
+        final List<BusinessOverdueStatus> od2Bundle = analyticsUserApi.getOverdueStatusesForBundle(bundle.getExternalKey(), callContext);
         Assert.assertEquals(od2Bundle.size(), 2);
         Assert.assertEquals(od2Bundle.get(0).getStatus(), "OD1");
         Assert.assertEquals(od2Bundle.get(1).getStatus(), "OD2");
@@ -312,7 +312,7 @@ public class TestAnalytics extends TestIntegrationBase {
         assertTrue(busHandler.isCompleted(DELAY));
         waitALittle();
         // Verify overdue status - we should be in OD3
-        final List<BusinessOverdueStatus> od3Bundle = analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey(), callContext);
+        final List<BusinessOverdueStatus> od3Bundle = analyticsUserApi.getOverdueStatusesForBundle(bundle.getExternalKey(), callContext);
         Assert.assertEquals(od3Bundle.size(), 3);
         Assert.assertEquals(od3Bundle.get(0).getStatus(), "OD1");
         Assert.assertEquals(od3Bundle.get(1).getStatus(), "OD2");
@@ -422,7 +422,7 @@ public class TestAnalytics extends TestIntegrationBase {
         waitALittle();
 
         // Verify BST is still empty since no subscription has been added yet
-        Assert.assertEquals(analyticsUserApi.getTransitionsForBundle(bundle.getKey(), callContext).size(), 0);
+        Assert.assertEquals(analyticsUserApi.getTransitionsForBundle(bundle.getExternalKey(), callContext).size(), 0);
 
         // The account should still not have any invoice
         Assert.assertEquals(analyticsUserApi.getInvoicesForAccount(account.getExternalKey(), callContext).size(), 0);
@@ -468,7 +468,7 @@ public class TestAnalytics extends TestIntegrationBase {
         Assert.assertEquals(invoiceItem.getBillingPeriod(), subscription.getCurrentPhase().getBillingPeriod().toString());
         Assert.assertEquals(invoiceItem.getCurrency(), account.getCurrency());
         Assert.assertEquals(invoiceItem.getEndDate(), invoiceItem.getStartDate().plusDays(30));
-        Assert.assertEquals(invoiceItem.getExternalKey(), bundle.getKey());
+        Assert.assertEquals(invoiceItem.getExternalKey(), bundle.getExternalKey());
         Assert.assertEquals(invoiceItem.getInvoiceId(), invoice.getInvoiceId());
         Assert.assertEquals(invoiceItem.getItemType(), "FIXED");
         Assert.assertEquals(invoiceItem.getPhase(), subscription.getCurrentPhase().getPhaseType().toString());
@@ -484,7 +484,7 @@ public class TestAnalytics extends TestIntegrationBase {
 
     private void verifyBSTWithTrialAndEvergreenPhases(final Account account, final SubscriptionBundle bundle, final Subscription subscription) throws CatalogApiException {
         // BST should have two transitions
-        final List<BusinessSubscriptionTransition> transitions = analyticsUserApi.getTransitionsForBundle(bundle.getKey(), callContext);
+        final List<BusinessSubscriptionTransition> transitions = analyticsUserApi.getTransitionsForBundle(bundle.getExternalKey(), callContext);
         Assert.assertEquals(transitions.size(), 2);
 
         verifyTrialAndEvergreenPhases(account, bundle, subscription);
@@ -492,7 +492,7 @@ public class TestAnalytics extends TestIntegrationBase {
 
     private void verifyBSTWithTrialAndEvergreenPhasesAndCancellation(final Account account, final SubscriptionBundle bundle, final Subscription subscription) throws CatalogApiException {
         // BST should have three transitions
-        final List<BusinessSubscriptionTransition> transitions = analyticsUserApi.getTransitionsForBundle(bundle.getKey(), callContext);
+        final List<BusinessSubscriptionTransition> transitions = analyticsUserApi.getTransitionsForBundle(bundle.getExternalKey(), callContext);
         Assert.assertEquals(transitions.size(), 3);
 
         verifyTrialAndEvergreenPhases(account, bundle, subscription);
@@ -501,7 +501,7 @@ public class TestAnalytics extends TestIntegrationBase {
 
     private void verifyBSTWithTrialAndEvergreenPhasesAndCancellationAndSystemCancellation(final Account account, final SubscriptionBundle bundle, final Subscription subscription) throws CatalogApiException {
         // BST should have four transitions
-        final List<BusinessSubscriptionTransition> transitions = analyticsUserApi.getTransitionsForBundle(bundle.getKey(), callContext);
+        final List<BusinessSubscriptionTransition> transitions = analyticsUserApi.getTransitionsForBundle(bundle.getExternalKey(), callContext);
         Assert.assertEquals(transitions.size(), 4);
 
         verifyTrialAndEvergreenPhases(account, bundle, subscription);
@@ -511,12 +511,12 @@ public class TestAnalytics extends TestIntegrationBase {
 
     private void verifyTrialAndEvergreenPhases(final Account account, final SubscriptionBundle bundle, final Subscription subscription) throws CatalogApiException {
         final Product currentProduct = subscriptionPlan.getProduct();
-        final List<BusinessSubscriptionTransition> transitions = analyticsUserApi.getTransitionsForBundle(bundle.getKey(), callContext);
+        final List<BusinessSubscriptionTransition> transitions = analyticsUserApi.getTransitionsForBundle(bundle.getExternalKey(), callContext);
 
         // Check the first transition (into trial phase)
         final BusinessSubscriptionTransition initialTransition = transitions.get(0);
         Assert.assertEquals(initialTransition.getBundleId(), bundle.getId());
-        Assert.assertEquals(initialTransition.getExternalKey(), bundle.getKey());
+        Assert.assertEquals(initialTransition.getExternalKey(), bundle.getExternalKey());
         Assert.assertEquals(initialTransition.getAccountId(), account.getId());
         Assert.assertEquals(initialTransition.getAccountKey(), account.getExternalKey());
         Assert.assertEquals(initialTransition.getSubscriptionId(), subscription.getId());
@@ -541,7 +541,7 @@ public class TestAnalytics extends TestIntegrationBase {
 
         // Check the second transition (from trial to evergreen)
         final BusinessSubscriptionTransition futureTransition = transitions.get(1);
-        Assert.assertEquals(futureTransition.getExternalKey(), bundle.getKey());
+        Assert.assertEquals(futureTransition.getExternalKey(), bundle.getExternalKey());
         Assert.assertEquals(futureTransition.getAccountKey(), account.getExternalKey());
         Assert.assertEquals(futureTransition.getCategory(), currentProduct.getCategory().toString());
         Assert.assertEquals(futureTransition.getEventType(), BusinessSubscriptionEvent.EventType.SYSTEM_CHANGE.toString());
@@ -564,10 +564,10 @@ public class TestAnalytics extends TestIntegrationBase {
 
     private void verifyCancellationTransition(final Account account, final SubscriptionBundle bundle) throws CatalogApiException {
         final Product currentProduct = subscriptionPlan.getProduct();
-        final List<BusinessSubscriptionTransition> transitions = analyticsUserApi.getTransitionsForBundle(bundle.getKey(), callContext);
+        final List<BusinessSubscriptionTransition> transitions = analyticsUserApi.getTransitionsForBundle(bundle.getExternalKey(), callContext);
 
         final BusinessSubscriptionTransition cancellationRequest = transitions.get(2);
-        Assert.assertEquals(cancellationRequest.getExternalKey(), bundle.getKey());
+        Assert.assertEquals(cancellationRequest.getExternalKey(), bundle.getExternalKey());
         Assert.assertEquals(cancellationRequest.getAccountKey(), account.getExternalKey());
         Assert.assertEquals(cancellationRequest.getCategory(), currentProduct.getCategory().toString());
         Assert.assertEquals(cancellationRequest.getEventType(), BusinessSubscriptionEvent.EventType.CANCEL.toString());
@@ -576,10 +576,10 @@ public class TestAnalytics extends TestIntegrationBase {
     }
 
     private void verifySystemCancellationTransition(final Account account, final SubscriptionBundle bundle) throws CatalogApiException {
-        final List<BusinessSubscriptionTransition> transitions = analyticsUserApi.getTransitionsForBundle(bundle.getKey(), callContext);
+        final List<BusinessSubscriptionTransition> transitions = analyticsUserApi.getTransitionsForBundle(bundle.getExternalKey(), callContext);
 
         final BusinessSubscriptionTransition systemCancellation = transitions.get(3);
-        Assert.assertEquals(systemCancellation.getExternalKey(), bundle.getKey());
+        Assert.assertEquals(systemCancellation.getExternalKey(), bundle.getExternalKey());
         Assert.assertEquals(systemCancellation.getAccountKey(), account.getExternalKey());
         Assert.assertEquals(systemCancellation.getCategory(), ProductCategory.BASE.toString());
         Assert.assertEquals(systemCancellation.getEventType(), BusinessSubscriptionEvent.EventType.SYSTEM_CANCEL.toString());
@@ -597,12 +597,12 @@ public class TestAnalytics extends TestIntegrationBase {
         waitALittle();
 
         // BST should have three transitions (a ADD_BASE, CHANGE_BASE and SYSTEM_CHANGE_BASE)
-        final List<BusinessSubscriptionTransition> transitions = analyticsUserApi.getTransitionsForBundle(bundle.getKey(), callContext);
+        final List<BusinessSubscriptionTransition> transitions = analyticsUserApi.getTransitionsForBundle(bundle.getExternalKey(), callContext);
         Assert.assertEquals(transitions.size(), 3);
         final BusinessSubscriptionTransition previousTransition = transitions.get(0);
         final BusinessSubscriptionTransition transition = transitions.get(1);
         Assert.assertEquals(transition.getBundleId(), bundle.getId());
-        Assert.assertEquals(transition.getExternalKey(), bundle.getKey());
+        Assert.assertEquals(transition.getExternalKey(), bundle.getExternalKey());
         Assert.assertEquals(transition.getAccountId(), account.getId());
         Assert.assertEquals(transition.getAccountKey(), account.getExternalKey());
         Assert.assertEquals(transition.getSubscriptionId(), subscription.getId());
