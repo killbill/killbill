@@ -22,7 +22,7 @@ import org.skife.config.Config;
 import org.skife.config.Default;
 
 
-public interface PaymentConfig extends NotificationConfig, KillbillConfig {
+public interface PaymentConfig extends KillbillConfig {
     @Config("killbill.payment.provider.default")
     @Default("noop")
     public String getDefaultPaymentProvider();
