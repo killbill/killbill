@@ -55,7 +55,6 @@ import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.dao.InvoiceItemModelDao;
 import com.ning.billing.invoice.dao.InvoiceModelDao;
 import com.ning.billing.invoice.generator.InvoiceGenerator;
-import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.invoice.notification.NextBillingDateNotifier;
 import com.ning.billing.invoice.notification.NullInvoiceNotifier;
 import com.ning.billing.invoice.tests.InvoicingTestBase;
@@ -64,7 +63,6 @@ import com.ning.billing.util.bus.DefaultBusService;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
@@ -124,7 +122,6 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
 
         busService.getBus().start();
 
-        //accountInternalApi = Mockito.mock(AccountInternalApi.class);
         account = Mockito.mock(Account.class);
 
         final UUID accountId = UUID.randomUUID();
@@ -135,6 +132,8 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
         Mockito.when(account.getId()).thenReturn(accountId);
         Mockito.when(account.isNotifiedForInvoices()).thenReturn(true);
         Mockito.when(account.getBillCycleDay()).thenReturn(new MockBillCycleDay(30));
+        // The timezone is required to compute the date of the next invoice notification
+        Mockito.when(account.getTimeZone()).thenReturn(DateTimeZone.UTC);
 
         subscription = Mockito.mock(Subscription.class);
         final UUID subscriptionId = UUID.randomUUID();
