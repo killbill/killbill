@@ -84,20 +84,6 @@ public class ExternalChargeInvoiceItem extends InvoiceItemBase {
     }
 
     @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder();
-        sb.append("InvoiceItem = {").append("id = ").append(id.toString()).append(", ");
-        sb.append("invoiceId = ").append(invoiceId.toString()).append(", ");
-        sb.append("accountId = ").append(accountId.toString()).append(", ");
-        sb.append("bundleId = ").append(bundleId == null ? "null" : bundleId.toString()).append(", ");
-        sb.append("description = ").append(planName).append(", ");
-        sb.append("startDate = ").append(startDate.toString()).append(", ");
-        sb.append("amount = ").append(amount == null ? "null" : amount.toString()).append(", ");
-        sb.append("}");
-        return sb.toString();
-    }
-
-    @Override
     public boolean equals(final Object o) {
         if (this == o) {
             return true;

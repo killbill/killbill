@@ -72,14 +72,14 @@ public class DefaultOverdueUserApi implements OverdueUserApi {
 
     @Override
     public <T extends Blockable> BillingState<T> getBillingStateFor(final T overdueable, final TenantContext context) throws OverdueException {
-        log.info(String.format("Billing state of of %s requested", overdueable.getId()));
+        log.debug("Billing state of of {} requested", overdueable.getId());
         final OverdueWrapper<T> wrapper = factory.createOverdueWrapperFor(overdueable);
         return wrapper.billingState(internalCallContextFactory.createInternalTenantContext(context));
     }
 
     @Override
     public <T extends Blockable> OverdueState<T> refreshOverdueStateFor(final T blockable, final CallContext context) throws OverdueException, OverdueApiException {
-        log.info(String.format("Refresh of %s requested", blockable.getId()));
+        log.info("Refresh of blockable {} ({}) requested", blockable.getId(), blockable.getClass());
         final OverdueWrapper<T> wrapper = factory.createOverdueWrapperFor(blockable);
         return wrapper.refresh(createInternalCallContext(blockable, context));
     }

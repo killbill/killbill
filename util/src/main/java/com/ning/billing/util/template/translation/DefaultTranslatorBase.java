@@ -27,13 +27,13 @@ import java.util.ResourceBundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ning.billing.ErrorCode;
 import com.ning.billing.util.LocaleUtils;
 import com.ning.billing.util.config.catalog.UriAccessor;
 
 import com.google.inject.Inject;
 
 public abstract class DefaultTranslatorBase implements Translator {
+
     protected final TranslatorConfig config;
     protected final Logger log = LoggerFactory.getLogger(DefaultTranslatorBase.class);
 
@@ -58,7 +58,7 @@ public abstract class DefaultTranslatorBase implements Translator {
             return bundle.getString(originalText);
         } else {
             if (config.getDefaultLocale() == null) {
-                log.warn(String.format(ErrorCode.MISSING_DEFAULT_TRANSLATION_RESOURCE.toString(), getTranslationType()));
+                log.debug("No default locale configured, returning original text");
                 return originalText;
             }
 
@@ -72,7 +72,7 @@ public abstract class DefaultTranslatorBase implements Translator {
                     return originalText;
                 }
             } catch (MissingResourceException mrex) {
-                log.warn(String.format(ErrorCode.MISSING_TRANSLATION_RESOURCE.toString(), getTranslationType()));
+                log.warn("Missing translation bundle for locale {}", defaultLocale);
                 return originalText;
             }
         }
@@ -95,9 +95,6 @@ public abstract class DefaultTranslatorBase implements Translator {
             bundle = getBundleFromPropertiesFile(propertiesFileName);
         }
 
-        if (bundle == null) {
-            log.warn(String.format(ErrorCode.MISSING_TRANSLATION_RESOURCE.toString(), getTranslationType()));
-        }
         return bundle;
     }
 

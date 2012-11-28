@@ -49,20 +49,20 @@ public class OverdueListener {
 
     @Subscribe
     public void handlePaymentInfoEvent(final PaymentInfoInternalEvent event) {
-        log.info(String.format("Received PaymentInfo event %s", event.toString()));
+        log.debug("Received PaymentInfo event {}", event);
         dispatcher.processOverdueForAccount(event.getAccountId(), createCallContext(event.getUserToken(), event.getAccountRecordId(), event.getTenantRecordId()));
     }
 
     @Subscribe
     public void handlePaymentErrorEvent(final PaymentErrorInternalEvent event) {
-        log.info(String.format("Received PaymentError event %s", event.toString()));
+        log.debug("Received PaymentError event {}", event);
         final UUID accountId = event.getAccountId();
         dispatcher.processOverdueForAccount(accountId, createCallContext(event.getUserToken(), event.getAccountRecordId(), event.getTenantRecordId()));
     }
 
     @Subscribe
     public void handleInvoiceAdjustmentEvent(final InvoiceAdjustmentInternalEvent event) {
-        log.info(String.format("Received InvoiceAdjustment event %s", event.toString()));
+        log.debug("Received InvoiceAdjustment event {}", event);
         final UUID accountId = event.getAccountId();
         dispatcher.processOverdueForAccount(accountId, createCallContext(event.getUserToken(), event.getAccountRecordId(), event.getTenantRecordId()));
     }

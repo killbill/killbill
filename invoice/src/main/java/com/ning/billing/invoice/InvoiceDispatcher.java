@@ -116,7 +116,6 @@ public class InvoiceDispatcher {
                                     final InternalCallContext context) throws InvoiceApiException {
         final UUID subscriptionId = transition.getSubscriptionId();
         final DateTime targetDate = transition.getEffectiveTransitionTime();
-        log.info("Got subscription transition: type: " + transition.getTransitionType().toString() + "; id: " + subscriptionId.toString() + "; targetDate: " + targetDate.toString());
         processSubscription(subscriptionId, targetDate, context);
     }
 
@@ -179,14 +178,15 @@ public class InvoiceDispatcher {
 
             final Invoice invoice = generator.generateInvoice(accountId, billingEvents, invoices, targetDate, account.getTimeZone(), targetCurrency);
             if (invoice == null) {
-                log.info("Generated null invoice.");
+                log.info("Generated null invoice for accountId {} and targetDate {} (targetDateTime {})", new Object[]{accountId, targetDate, targetDateTime});
                 if (!dryRun) {
                     final BusInternalEvent event = new DefaultNullInvoiceEvent(accountId, clock.getUTCToday(), context.getUserToken(),
                                                                                context.getAccountRecordId(), context.getTenantRecordId());
                     postEvent(event, accountId, context);
                 }
             } else {
-                log.info("Generated invoice {} with {} items.", invoice.getId().toString(), invoice.getNumberOfItems());
+                log.info("Generated invoice {} with {} items for accountId {} and targetDate {} (targetDateTime {})", new Object[]{invoice.getId(), invoice.getNumberOfItems(),
+                                                                                                                                   accountId, targetDate, targetDateTime});
                 if (!dryRun) {
                     // We need to check whether this is just a 'shell' invoice or a real invoice with items on it
                     final boolean isRealInvoiceWithItems = Collections2.filter(invoice.getInvoiceItems(), new Predicate<InvoiceItem>() {
@@ -288,7 +288,6 @@ public class InvoiceDispatcher {
         for (final UUID subscriptionId : chargeThroughDates.keySet()) {
             if (subscriptionId != null) {
                 final LocalDate chargeThroughDate = chargeThroughDates.get(subscriptionId);
-                log.info("Setting CTD for subscription {} to {}", subscriptionId.toString(), chargeThroughDate.toString());
                 entitlementApi.setChargedThroughDate(subscriptionId, chargeThroughDate, context);
             }
         }

@@ -940,9 +940,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     }
 
     private void notifyOfFutureBillingEvents(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final UUID accountId, final Map<UUID, DateTime> callbackDateTimePerSubscriptions) {
-
-
-        for (UUID subscriptionId : callbackDateTimePerSubscriptions.keySet()) {
+        for (final UUID subscriptionId : callbackDateTimePerSubscriptions.keySet()) {
             final DateTime callbackDateTimeUTC = callbackDateTimePerSubscriptions.get(subscriptionId);
             nextBillingDatePoster.insertNextBillingNotification(entitySqlDaoWrapperFactory, accountId, subscriptionId, callbackDateTimeUTC);
         }

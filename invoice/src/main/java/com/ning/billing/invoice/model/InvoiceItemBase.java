@@ -53,12 +53,18 @@ public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem 
 
     @Override
     public String toString() {
-        return getInvoiceItemType() + ": [startDate=" + startDate + ", endDate="
-               + endDate + ", amount=" + amount + ", currency=" + currency
-               + ", invoiceId=" + invoiceId
-               + ", subscriptionId=" + subscriptionId + ", planName="
-               + planName + ", phaseName=" + phaseName + ", rate=" + rate
-               + ", linkedItemId=" + linkedItemId + "]";
+        // Note: we don't use all fields here, as the output would be overwhelming
+        // (we output all invoice items as they are generated).
+        final StringBuilder sb = new StringBuilder();
+        sb.append(getInvoiceItemType());
+        sb.append("{startDate=").append(startDate);
+        sb.append(", endDate=").append(endDate);
+        sb.append(", amount=").append(amount);
+        sb.append(", rate=").append(rate);
+        sb.append(", subscriptionId=").append(subscriptionId);
+        sb.append(", linkedItemId=").append(linkedItemId);
+        sb.append('}');
+        return sb.toString();
     }
 
     /*

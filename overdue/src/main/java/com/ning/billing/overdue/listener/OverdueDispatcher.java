@@ -22,11 +22,11 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ning.billing.BillingExceptionBase;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.api.Blockable;
-import com.ning.billing.overdue.OverdueApiException;
-import com.ning.billing.overdue.config.api.OverdueException;
+import com.ning.billing.junction.api.Blockable.Type;
 import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
@@ -34,15 +34,15 @@ import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 import com.google.inject.Inject;
 
 public class OverdueDispatcher {
+
     Logger log = LoggerFactory.getLogger(OverdueDispatcher.class);
 
     private final EntitlementInternalApi entitlementApi;
     private final OverdueWrapperFactory factory;
 
     @Inject
-    public OverdueDispatcher(
-            final EntitlementInternalApi entitlementApi,
-            final OverdueWrapperFactory factory) {
+    public OverdueDispatcher(final EntitlementInternalApi entitlementApi,
+                             final OverdueWrapperFactory factory) {
         this.entitlementApi = entitlementApi;
         this.factory = factory;
     }
@@ -50,37 +50,32 @@ public class OverdueDispatcher {
     public void processOverdueForAccount(final UUID accountId, final InternalCallContext context) {
         final List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(accountId, context);
         for (final SubscriptionBundle bundle : bundles) {
-            processOverdue(bundle, context);
+            processOverdue(Type.SUBSCRIPTION_BUNDLE, bundle, context);
         }
     }
 
     public void processOverdueForBundle(final UUID bundleId, final InternalCallContext context) {
         try {
             final SubscriptionBundle bundle = entitlementApi.getBundleFromId(bundleId, context);
-            processOverdue(bundle, context);
+            processOverdue(Type.SUBSCRIPTION_BUNDLE, bundle, context);
         } catch (EntitlementUserApiException e) {
-            log.error("Error processing Overdue for Bundle with id: " + bundleId.toString(), e);
+            log.error("Error processing Overdue for bundle with id: " + bundleId.toString(), e);
         }
     }
 
-    public void processOverdue(final Blockable blockable, final InternalCallContext context) {
+    public void processOverdue(final Blockable.Type type, final Blockable blockable, final InternalCallContext context) {
         try {
             factory.createOverdueWrapperFor(blockable).refresh(context);
-        } catch (OverdueException e) {
-            log.error("Error processing Overdue for Blockable with id: " + blockable.getId().toString(), e);
-        } catch (OverdueApiException e) {
-            log.error("Error processing Overdue for Blockable with id: " + blockable.getId().toString(), e);
+        } catch (BillingExceptionBase e) {
+            log.error(String.format("Error processing Overdue for blockable %s (type %s)", blockable.getId(), type), e);
         }
     }
 
     public void processOverdue(final Blockable.Type type, final UUID blockableId, final InternalCallContext context) {
         try {
             factory.createOverdueWrapperFor(type, blockableId, context).refresh(context);
-        } catch (OverdueException e) {
-            log.error("Error processing Overdue for Blockable with id: " + blockableId.toString(), e);
-        } catch (OverdueApiException e) {
-            log.error("Error processing Overdue for Blockable with id: " + blockableId.toString(), e);
+        } catch (BillingExceptionBase e) {
+            log.error(String.format("Error processing Overdue for blockable %s (type %s)", blockableId, type), e);
         }
     }
-
 }
