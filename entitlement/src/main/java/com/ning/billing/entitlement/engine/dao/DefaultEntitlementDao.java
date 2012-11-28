@@ -60,9 +60,12 @@ import com.ning.billing.entitlement.engine.dao.model.SubscriptionBundleModelDao;
 import com.ning.billing.entitlement.engine.dao.model.SubscriptionModelDao;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
+import com.ning.billing.entitlement.events.phase.PhaseEvent;
+import com.ning.billing.entitlement.events.user.ApiEvent;
 import com.ning.billing.entitlement.events.user.ApiEventBuilder;
 import com.ning.billing.entitlement.events.user.ApiEventCancel;
 import com.ning.billing.entitlement.events.user.ApiEventChange;
+import com.ning.billing.entitlement.events.user.ApiEventMigrateBilling;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.util.callcontext.InternalCallContext;
@@ -481,12 +484,19 @@ public class DefaultEntitlementDao implements EntitlementDao {
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                final EntitlementEventSqlDao transactional = entitySqlDaoWrapperFactory.become(EntitlementEventSqlDao.class);
 
+                final EntitlementEventSqlDao transactional = entitySqlDaoWrapperFactory.become(EntitlementEventSqlDao.class);
                 final UUID subscriptionId = subscription.getId();
+
+                final List<EntitlementEvent> changeEventsTweakedWithMigrateBilling = reinsertFutureMigrateBillingEventOnChangeFromTransaction(subscriptionId,
+                                                                                                                                              changeEvents,
+                                                                                                                                              entitySqlDaoWrapperFactory,
+                                                                                                                                              context);
+
                 cancelFutureEventsFromTransaction(subscriptionId, entitySqlDaoWrapperFactory, context);
 
-                for (final EntitlementEvent cur : changeEvents) {
+                for (final EntitlementEvent cur : changeEventsTweakedWithMigrateBilling) {
+
                     transactional.create(new EntitlementEventModelDao(cur), context);
                     recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory,
                                                             cur.getEffectiveDate(),
@@ -495,12 +505,102 @@ public class DefaultEntitlementDao implements EntitlementDao {
                 }
 
                 // Notify the Bus of the latest requested change
-                final EntitlementEvent finalEvent = changeEvents.get(changeEvents.size() - 1);
+                final EntitlementEvent finalEvent = changeEventsTweakedWithMigrateBilling.get(changeEvents.size() - 1);
                 notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, finalEvent, context);
 
                 return null;
             }
         });
+    }
+
+    //
+    // This piece of code has been isolated in its own method in order to allow for migrated subscriptions to have their plan to changed prior
+    // to MIGRATE_BILLING; the effect will be to reflect the change from an entitlement point of view while ignoring the change until we hit
+    // the begining of the billing, that is when we hit the MIGRATE_BILLING event. If we had a clear separation between entitlement and
+    // billing that would not be needed.
+    //
+    // If there is a change of plan prior to a future MIGRATE_BILLING, we want to modify the existing MIGRATE_BILLING so it reflects
+    // the new plan, phase, pricelist; Invoice will only see the MIGRATE_BILLING as things prior to that will be ignored, so we need to make sure
+    // that event reflects the correct entitlement information.
+    //
+    //
+    final List<EntitlementEvent> reinsertFutureMigrateBillingEventOnChangeFromTransaction(final UUID subscriptionId, final List<EntitlementEvent> changeEvents, final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final InternalCallContext context) {
+        final EntitlementEventModelDao migrateBillingEvent = findFutureEventFromTransaction(subscriptionId, entitySqlDaoWrapperFactory, EventType.API_USER, ApiEventType.MIGRATE_BILLING, context);
+        if (migrateBillingEvent == null) {
+            // No future migrate billing : returns same list
+            return changeEvents;
+        }
+
+        String prevPlan = null;
+        String prevPhase = null;
+        String prevPriceList = null;
+        String curPlan = null;
+        String curPhase = null;
+        String curPriceList = null;
+        for (EntitlementEvent cur : changeEvents) {
+            switch (cur.getType()) {
+                case API_USER:
+                    final ApiEvent apiEvent = (ApiEvent) cur;
+                    curPlan = apiEvent.getEventPlan();
+                    curPhase = apiEvent.getEventPlanPhase();
+                    curPriceList = apiEvent.getPriceList();
+                    break;
+
+                case PHASE:
+                    final PhaseEvent phaseEvent = (PhaseEvent) cur;
+                    curPhase = phaseEvent.getPhase();
+                    break;
+
+                default:
+                    throw new EntitlementError("Unknown event type " + cur.getType());
+            }
+
+            if (cur.getEffectiveDate().compareTo(migrateBillingEvent.getEffectiveDate()) > 0) {
+                if (cur.getType() == EventType.API_USER && ((ApiEvent) cur).getEventType() == ApiEventType.CHANGE) {
+                    // This is an EOT change that is occurring after the MigrateBilling : returns same list
+                    return changeEvents;
+                }
+                // We found the first event after the migrate billing
+                break;
+            }
+            prevPlan = curPlan;
+            prevPhase = curPhase;
+            prevPriceList = curPriceList;
+        }
+
+        if (prevPlan != null) {
+            // Create the new MIGRATE_BILLING with same effectiveDate but new plan information
+            final DateTime now = clock.getUTCNow();
+            final ApiEventBuilder builder = new ApiEventBuilder()
+                    .setActive(true)
+                    .setEventType(ApiEventType.MIGRATE_BILLING)
+                    .setFromDisk(true)
+                    .setTotalOrdering(migrateBillingEvent.getTotalOrdering())
+                    .setUuid(UUID.randomUUID())
+                    .setSubscriptionId(migrateBillingEvent.getSubscriptionId())
+                    .setCreatedDate(now)
+                    .setUpdatedDate(now)
+                    .setRequestedDate(migrateBillingEvent.getRequestedDate())
+                    .setEffectiveDate(migrateBillingEvent.getEffectiveDate())
+                    .setProcessedDate(now)
+                    .setActiveVersion(migrateBillingEvent.getCurrentVersion())
+                    .setUserToken(context.getUserToken())
+                    .setEventPlan(prevPlan)
+                    .setEventPlanPhase(prevPhase)
+                    .setEventPriceList(prevPriceList);
+
+            final EntitlementEvent newMigrateBillingEvent = new ApiEventMigrateBilling(builder);
+            changeEvents.add(newMigrateBillingEvent);
+
+            Collections.sort(changeEvents, new Comparator<EntitlementEvent>() {
+                @Override
+                public int compare(final EntitlementEvent o1, final EntitlementEvent o2) {
+                    return o1.getEffectiveDate().compareTo(o2.getEffectiveDate());
+                }
+            });
+        }
+
+        return changeEvents;
     }
 
     private void cancelSubscriptionFromTransaction(final SubscriptionData subscription, final EntitlementEvent cancelEvent, final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final InternalCallContext context, final int seqId)
@@ -531,6 +631,13 @@ public class DefaultEntitlementDao implements EntitlementDao {
 
     private void cancelFutureEventFromTransaction(final UUID subscriptionId, final EntitySqlDaoWrapperFactory<EntitySqlDao> dao, final EventType type,
                                                   @Nullable final ApiEventType apiType, final InternalCallContext context) {
+        final EntitlementEventModelDao futureEvent = findFutureEventFromTransaction(subscriptionId, dao, type, apiType, context);
+        unactivateEventFromTransaction(futureEvent, dao, context);
+    }
+
+    private EntitlementEventModelDao findFutureEventFromTransaction(final UUID subscriptionId, final EntitySqlDaoWrapperFactory<EntitySqlDao> dao, final EventType type,
+                                                                    @Nullable final ApiEventType apiType, final InternalCallContext context) {
+
         EntitlementEventModelDao futureEvent = null;
         final Date now = clock.getUTCNow().toDate();
         final List<EntitlementEventModelDao> eventModels = dao.become(EntitlementEventSqlDao.class).getFutureActiveEventForSubscription(subscriptionId.toString(), now, context);
@@ -542,9 +649,11 @@ public class DefaultEntitlementDao implements EntitlementDao {
                                                              type, subscriptionId.toString()));
                 }
                 futureEvent = cur;
+                // To check that there is only one such event
+                //break;
             }
         }
-        unactivateEventFromTransaction(futureEvent, dao, context);
+        return futureEvent;
     }
 
     private void unactivateEventFromTransaction(final EntitlementEventModelDao event, final EntitySqlDaoWrapperFactory<EntitySqlDao> dao, final InternalCallContext context) {
