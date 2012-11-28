@@ -16,6 +16,7 @@
 
 package com.ning.billing.invoice;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -26,6 +27,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
+import org.joda.time.LocalTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +40,7 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.user.DefaultInvoiceCreationEvent;
@@ -53,6 +56,8 @@ import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.entity.dao.EntitySqlDao;
+import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import com.ning.billing.util.events.BusInternalEvent;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 import com.ning.billing.util.events.InvoiceCreationInternalEvent;
@@ -208,7 +213,9 @@ public class InvoiceDispatcher {
                                                                                                                                                              return new InvoicePaymentModelDao(input);
                                                                                                                                                          }
                                                                                                                                                      }));
-                    invoiceDao.createInvoice(invoiceModelDao, invoiceItemModelDaos, invoicePaymentModelDaos, isRealInvoiceWithItems, context);
+
+                    final Map<UUID, DateTime> callbackDateTimePerSubscriptions = createNextFutureNotificationDate(invoiceItemModelDaos, account.getTimeZone());
+                    invoiceDao.createInvoice(invoiceModelDao, invoiceItemModelDaos, invoicePaymentModelDaos, isRealInvoiceWithItems, callbackDateTimePerSubscriptions, context);
 
                     final List<InvoiceItem> fixedPriceInvoiceItems = invoice.getInvoiceItems(FixedPriceInvoiceItem.class);
                     final List<InvoiceItem> recurringInvoiceItems = invoice.getInvoiceItems(RecurringInvoiceItem.class);
@@ -237,6 +244,37 @@ public class InvoiceDispatcher {
             log.error("Failed handling entitlement change.", e);
             return null;
         }
+    }
+
+
+    Map<UUID, DateTime> createNextFutureNotificationDate(final List<InvoiceItemModelDao> invoiceItems, final DateTimeZone accountTimeZone) {
+
+        final Map<UUID, DateTime> result = new HashMap<UUID, DateTime>();
+
+        // For each subscription that has a positive (amount) recurring item, create the date
+        // at which we should be called back for next invoice.
+        //
+        for (final InvoiceItemModelDao item : invoiceItems) {
+            if (item.getType() == InvoiceItemType.RECURRING) {
+                if ((item.getEndDate() != null) &&
+                    (item.getAmount() == null ||
+                     item.getAmount().compareTo(BigDecimal.ZERO) >= 0)) {
+
+                    //
+                    // Since we create the targetDate for next invoice using that date (on the way back), we need to make sure
+                    // that this datetime once transformed into a LocalDate points to the correct day.
+                    // e.g If accountTimeZone is -8 and we want to invoice on the 16, with a toDateTimeAtCurrentTime = 00:00:23,
+                    // we will generate a datetime that is 16T08:00:23 => LocalDate in that timeZone stays on the 16.
+                    //
+                    int deltaMs = accountTimeZone.getOffset(clock.getUTCNow());
+                    int negativeDeltaMs = -1 * deltaMs;
+
+                    final LocalTime localTime = clock.getUTCNow().toLocalTime();
+                    result.put(item.getSubscriptionId(), item.getEndDate().toDateTime(localTime, DateTimeZone.UTC).plusMillis(negativeDeltaMs));
+                }
+            }
+        }
+        return result;
     }
 
     private void setChargedThroughDates(final BillCycleDay billCycleDay,

@@ -92,6 +92,7 @@ import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import static org.testng.Assert.fail;
@@ -254,7 +255,7 @@ public class TestAnalyticsService extends AnalyticsTestSuiteWithEmbeddedDB {
                                                                                                                                              }
                                                                                                                                          }));
 
-        invoiceDao.createInvoice(invoiceModelDao, invoiceItemModelDaos, invoicePaymentModelDaos, true, internalCallContext);
+        invoiceDao.createInvoice(invoiceModelDao, invoiceItemModelDaos, invoicePaymentModelDaos, true, ImmutableMap.<UUID, DateTime>of(), internalCallContext);
         final List<InvoiceModelDao> invoices = invoiceDao.getInvoicesByAccount(account.getId(), internalCallContext);
         Assert.assertEquals(invoices.size(), 1);
         Assert.assertEquals(invoices.get(0).getInvoiceItems().size(), 1);
