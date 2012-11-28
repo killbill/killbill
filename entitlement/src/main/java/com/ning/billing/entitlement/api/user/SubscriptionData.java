@@ -45,6 +45,7 @@ import com.ning.billing.entitlement.api.user.SubscriptionTransitionDataIterator.
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionDataIterator.TimeLimit;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionDataIterator.Visibility;
 import com.ning.billing.entitlement.events.EntitlementEvent;
+import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
 import com.ning.billing.entitlement.events.user.ApiEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
@@ -379,8 +380,19 @@ public class SubscriptionData extends EntityBase implements Subscription {
         final SubscriptionTransitionDataIterator it = new SubscriptionTransitionDataIterator(
                 clock, transitions, Order.ASC_FROM_PAST, Kind.BILLING,
                 Visibility.ALL, TimeLimit.ALL);
+        // Remove anything prior to first CREATE or MIGRATE_BILLING
+        boolean foundInitialEvent = false;
         while (it.hasNext()) {
-            result.add(it.next());
+            final SubscriptionTransitionData curTransition = it.next();
+            if (!foundInitialEvent) {
+                foundInitialEvent = curTransition.getEventType() == EventType.API_USER &&
+                                    (curTransition.getApiEventType() == ApiEventType.CREATE ||
+                                       curTransition.getApiEventType() == ApiEventType.MIGRATE_BILLING ||
+                                       curTransition.getApiEventType() == ApiEventType.TRANSFER);
+            }
+            if (foundInitialEvent) {
+                result.add(curTransition);
+            }
         }
         return result;
     }

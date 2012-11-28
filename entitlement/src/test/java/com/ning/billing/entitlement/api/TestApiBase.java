@@ -495,7 +495,7 @@ public abstract class TestApiBase extends EntitlementTestSuiteWithEmbeddedDB imp
     protected EntitlementAccountMigration createAccountForMigrationWithRegularBasePlan(final DateTime startDate) {
         final List<EntitlementSubscriptionMigrationCaseWithCTD> cases = new LinkedList<EntitlementSubscriptionMigrationCaseWithCTD>();
         cases.add(new EntitlementSubscriptionMigrationCaseWithCTD(
-                new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN),
+                new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN),
                 startDate,
                 null,
                 startDate.plusYears(1)));
