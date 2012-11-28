@@ -56,8 +56,6 @@ import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.entity.dao.EntitySqlDao;
-import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import com.ning.billing.util.events.BusInternalEvent;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 import com.ning.billing.util.events.InvoiceCreationInternalEvent;
@@ -72,6 +70,7 @@ import com.ning.billing.util.svcapi.junction.BillingInternalApi;
 import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.svcsapi.bus.InternalBus.EventBusException;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
@@ -247,8 +246,8 @@ public class InvoiceDispatcher {
     }
 
 
+    @VisibleForTesting
     Map<UUID, DateTime> createNextFutureNotificationDate(final List<InvoiceItemModelDao> invoiceItems, final DateTimeZone accountTimeZone) {
-
         final Map<UUID, DateTime> result = new HashMap<UUID, DateTime>();
 
         // For each subscription that has a positive (amount) recurring item, create the date
@@ -266,8 +265,8 @@ public class InvoiceDispatcher {
                     // e.g If accountTimeZone is -8 and we want to invoice on the 16, with a toDateTimeAtCurrentTime = 00:00:23,
                     // we will generate a datetime that is 16T08:00:23 => LocalDate in that timeZone stays on the 16.
                     //
-                    int deltaMs = accountTimeZone.getOffset(clock.getUTCNow());
-                    int negativeDeltaMs = -1 * deltaMs;
+                    final int deltaMs = accountTimeZone.getOffset(clock.getUTCNow());
+                    final int negativeDeltaMs = -1 * deltaMs;
 
                     final LocalTime localTime = clock.getUTCNow().toLocalTime();
                     result.put(item.getSubscriptionId(), item.getEndDate().toDateTime(localTime, DateTimeZone.UTC).plusMillis(negativeDeltaMs));

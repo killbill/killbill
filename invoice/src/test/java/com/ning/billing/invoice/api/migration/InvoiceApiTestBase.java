@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.AfterSuite;
@@ -167,6 +168,8 @@ public abstract class InvoiceApiTestBase extends InvoicingTestBase {
         Mockito.when(account.getId()).thenReturn(accountId);
         Mockito.when(account.isNotifiedForInvoices()).thenReturn(true);
         Mockito.when(account.getBillCycleDay()).thenReturn(new MockBillCycleDay(31));
+        // The timezone is required to compute the date of the next invoice notification
+        Mockito.when(account.getTimeZone()).thenReturn(DateTimeZone.UTC);
 
         return account;
     }
