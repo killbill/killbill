@@ -26,8 +26,10 @@ import java.util.List;
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
 import org.testng.Assert;
+import org.testng.annotations.Test;
 
 import com.ning.billing.api.TestApiListener.NextEvent;
+import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
@@ -36,6 +38,9 @@ import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi.Entitl
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.entitlement.api.user.SubscriptionData;
+import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
+import com.ning.billing.entitlement.events.user.ApiEventType;
 
 public abstract class TestMigration extends TestApiBase {
     public void testSingleBasePlan() {
@@ -61,7 +66,7 @@ public abstract class TestMigration extends TestApiBase {
             assertEquals(subscription.getCurrentPriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
             assertEquals(subscription.getCurrentPhase().getPhaseType(), PhaseType.EVERGREEN);
             assertEquals(subscription.getState(), SubscriptionState.ACTIVE);
-            assertEquals(subscription.getCurrentPlan().getName(), "assault-rifle-annual");
+            assertEquals(subscription.getCurrentPlan().getName(), "shotgun-annual");
             assertEquals(subscription.getChargedThroughDate(), startDate.plusYears(1));
 
             assertListenerStatus();
@@ -255,5 +260,64 @@ public abstract class TestMigration extends TestApiBase {
         } catch (EntitlementMigrationApiException e) {
             Assert.fail("", e);
         }
+    }
+
+    public void testChangePriorMigrateBilling() throws Exception {
+        try {
+            final DateTime startDate = clock.getUTCNow().minusMonths(2);
+            final DateTime beforeMigration = clock.getUTCNow();
+            final EntitlementAccountMigration toBeMigrated = createAccountForMigrationWithRegularBasePlan(startDate);
+            final DateTime afterMigration = clock.getUTCNow();
+
+            testListener.pushExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
+            migrationApi.migrate(toBeMigrated, callContext);
+            assertTrue(testListener.isCompleted(5000));
+            assertListenerStatus();
+
+            final List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(toBeMigrated.getAccountKey(), callContext);
+            assertEquals(bundles.size(), 1);
+
+            final List<Subscription> subscriptions = entitlementApi.getSubscriptionsForBundle(bundles.get(0).getId(), callContext);
+            assertEquals(subscriptions.size(), 1);
+            final SubscriptionData subscription = (SubscriptionData) subscriptions.get(0);
+
+            final List<SubscriptionTransitionData> transitions = subscription.getAllTransitions();
+            assertEquals(transitions.size(), 2);
+            final SubscriptionTransitionData initialMigrateBilling = transitions.get(1);
+            assertEquals(initialMigrateBilling.getApiEventType(), ApiEventType.MIGRATE_BILLING);
+            assertTrue(initialMigrateBilling.getEffectiveTransitionTime().compareTo(subscription.getChargedThroughDate()) == 0);
+            assertEquals(initialMigrateBilling.getNextPlan().getName(), "shotgun-annual");
+            assertEquals(initialMigrateBilling.getNextPhase().getName(), "shotgun-annual-evergreen");
+
+            final List<SubscriptionTransitionData> billingTransitions = subscription.getBillingTransitions();
+            assertEquals(billingTransitions.size(), 1);
+            assertEquals(billingTransitions.get(0), initialMigrateBilling);
+
+            // Now make an IMMEDIATE change of plan
+            subscription.changePlan("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow(), callContext);
+
+            final List<SubscriptionTransitionData> newTransitions = subscription.getAllTransitions();
+            assertEquals(newTransitions.size(), 3);
+
+            final SubscriptionTransitionData changeTransition = newTransitions.get(1);
+            assertEquals(changeTransition.getApiEventType(), ApiEventType.CHANGE);
+
+            final SubscriptionTransitionData newMigrateBilling = newTransitions.get(2);
+            assertEquals(newMigrateBilling.getApiEventType(), ApiEventType.MIGRATE_BILLING);
+            assertTrue(newMigrateBilling.getEffectiveTransitionTime().compareTo(subscription.getChargedThroughDate()) == 0);
+            assertTrue(newMigrateBilling.getEffectiveTransitionTime().compareTo(initialMigrateBilling.getEffectiveTransitionTime()) == 0);
+            assertEquals(newMigrateBilling.getNextPlan().getName(), "assault-rifle-monthly");
+            assertEquals(newMigrateBilling.getNextPhase().getName(), "assault-rifle-monthly-evergreen");
+
+
+            final List<SubscriptionTransitionData> newBillingTransitions = subscription.getBillingTransitions();
+            assertEquals(newBillingTransitions.size(), 1);
+            assertEquals(newBillingTransitions.get(0), newMigrateBilling);
+
+
+        } catch (EntitlementMigrationApiException e) {
+            Assert.fail("", e);
+        }
+
     }
 }

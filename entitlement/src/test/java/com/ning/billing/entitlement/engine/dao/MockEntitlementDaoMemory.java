@@ -432,6 +432,7 @@ public class MockEntitlementDaoMemory implements EntitlementDao {
 
     @Override
     public void transfer(final UUID srcAccountId, final UUID destAccountId, final BundleMigrationData data,
-                         final List<TransferCancelData> transferCancelData, final InternalCallContext context) {
+                         final List<TransferCancelData> transferCancelData, final InternalCallContext fromContext,
+                         final InternalCallContext toContext) {
     }
 }

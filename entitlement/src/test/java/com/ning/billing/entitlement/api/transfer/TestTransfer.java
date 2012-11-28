@@ -88,7 +88,7 @@ public class TestTransfer extends TestApiBase {
             assertEquals(subscription.getCurrentPriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
             assertEquals(subscription.getCurrentPhase().getPhaseType(), PhaseType.EVERGREEN);
             assertEquals(subscription.getState(), SubscriptionState.ACTIVE);
-            assertEquals(subscription.getCurrentPlan().getName(), "assault-rifle-annual");
+            assertEquals(subscription.getCurrentPlan().getName(), "shotgun-annual");
             assertEquals(subscription.getChargedThroughDate(), startDate.plusYears(1));
             // WE should see MIGRATE_ENTITLEMENT and then MIGRATE_BILLING in the future
             assertEquals(entitlementInternalApi.getBillingTransitions(subscription, internalCallContext).size(), 1);
@@ -110,8 +110,8 @@ public class TestTransfer extends TestApiBase {
             final Subscription oldBaseSubscription = entitlementApi.getBaseSubscription(bundle.getId(), callContext);
             assertTrue(oldBaseSubscription.getState() == SubscriptionState.CANCELLED);
             // The MIGRATE_BILLING event should have been invalidated
-            assertEquals(entitlementInternalApi.getBillingTransitions(oldBaseSubscription, internalCallContext).size(), 1);
-            assertEquals(entitlementInternalApi.getBillingTransitions(oldBaseSubscription, internalCallContext).get(0).getTransitionType(), SubscriptionTransitionType.CANCEL);
+            assertEquals(entitlementInternalApi.getBillingTransitions(oldBaseSubscription, internalCallContext).size(), 0);
+            //assertEquals(entitlementInternalApi.getBillingTransitions(oldBaseSubscription, internalCallContext).get(0).getTransitionType(), SubscriptionTransitionType.CANCEL);
 
         } catch (EntitlementMigrationApiException e) {
             Assert.fail("", e);

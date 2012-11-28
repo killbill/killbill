@@ -21,6 +21,7 @@ import java.net.URL;
 import java.util.List;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.skife.jdbi.v2.IDBI;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
@@ -49,6 +50,7 @@ import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
@@ -146,7 +148,8 @@ public class InvoiceDaoTestBase extends InvoicingTestBase {
                                                                                                                                              }
                                                                                                                                          }));
 
-        invoiceDao.createInvoice(invoiceModelDao, invoiceItemModelDaos, invoicePaymentModelDaos, isRealInvoiceWithItems, internalCallContext);
+        // The test does not use the invoice callback notifier hence the empty map
+        invoiceDao.createInvoice(invoiceModelDao, invoiceItemModelDaos, invoicePaymentModelDaos, isRealInvoiceWithItems, ImmutableMap.<UUID, DateTime>of(), internalCallContext);
     }
 
     protected void verifyInvoice(final UUID invoiceId, final double balance, final double cbaAmount) throws InvoiceApiException {

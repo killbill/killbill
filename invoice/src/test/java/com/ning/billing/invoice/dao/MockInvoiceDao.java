@@ -26,6 +26,7 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 
 import com.ning.billing.catalog.api.Currency;
@@ -52,7 +53,7 @@ public class MockInvoiceDao implements InvoiceDao {
 
     @Override
     public void createInvoice(final InvoiceModelDao invoice, final List<InvoiceItemModelDao> invoiceItems,
-                              final List<InvoicePaymentModelDao> invoicePayments, final boolean isRealInvoice, final InternalCallContext context) {
+                              final List<InvoicePaymentModelDao> invoicePayments, final boolean isRealInvoice, final Map<UUID, DateTime> callbackDateTimePerSubscriptions, final InternalCallContext context) {
         synchronized (monitor) {
             invoices.put(invoice.getId(), invoice);
             for (final InvoiceItemModelDao invoiceItemModelDao : invoiceItems) {

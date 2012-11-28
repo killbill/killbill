@@ -290,7 +290,8 @@ public class RepairEntitlementDao implements EntitlementDao, RepairEntitlementLi
 
     @Override
     public void transfer(final UUID srcAccountId, final UUID destAccountId, final BundleMigrationData data,
-                         final List<TransferCancelData> transferCancelData, final InternalCallContext context) {
+                         final List<TransferCancelData> transferCancelData, final InternalCallContext fromContext,
+                         final InternalCallContext toContext) {
         throw new EntitlementError(NOT_IMPLEMENTED);
     }
 

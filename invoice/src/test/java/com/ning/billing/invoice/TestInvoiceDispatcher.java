@@ -17,10 +17,13 @@
 package com.ning.billing.invoice;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.mockito.Mockito;
 import org.slf4j.Logger;
@@ -49,6 +52,7 @@ import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.invoice.dao.InvoiceDao;
+import com.ning.billing.invoice.dao.InvoiceItemModelDao;
 import com.ning.billing.invoice.dao.InvoiceModelDao;
 import com.ning.billing.invoice.generator.InvoiceGenerator;
 import com.ning.billing.invoice.notification.NextBillingDateNotifier;
@@ -59,7 +63,7 @@ import com.ning.billing.util.bus.DefaultBusService;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
@@ -97,7 +101,7 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
     private BillingInternalApi billingApi;
 
     @Inject
-    private Clock clock;
+    private ClockMock clock;
 
     @Inject
     private AccountInternalApi accountInternalApi;
@@ -118,7 +122,6 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
 
         busService.getBus().start();
 
-        //accountInternalApi = Mockito.mock(AccountInternalApi.class);
         account = Mockito.mock(Account.class);
 
         final UUID accountId = UUID.randomUUID();
@@ -129,6 +132,8 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
         Mockito.when(account.getId()).thenReturn(accountId);
         Mockito.when(account.isNotifiedForInvoices()).thenReturn(true);
         Mockito.when(account.getBillCycleDay()).thenReturn(new MockBillCycleDay(30));
+        // The timezone is required to compute the date of the next invoice notification
+        Mockito.when(account.getTimeZone()).thenReturn(DateTimeZone.UTC);
 
         subscription = Mockito.mock(Subscription.class);
         final UUID subscriptionId = UUID.randomUUID();
@@ -262,6 +267,40 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
             Assert.assertEquals(item.getSubscriptionId(), subscription.getId());
         }
     }
+
+    @Test(groups= "slow")
+    public void testCreateNextFutureNotificationDate() throws Exception {
+
+        final LocalDate startDate = new LocalDate("2012-10-26");
+        final LocalDate endDate = new LocalDate("2012-11-26");
+
+        clock.setTime(new DateTime(2012, 10, 26, 1, 12, 23, DateTimeZone.UTC));
+        final InvoiceItemModelDao item = new InvoiceItemModelDao(UUID.randomUUID(), clock.getUTCNow(), InvoiceItemType.RECURRING, UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
+                                                           "planName", "phaseName", startDate, endDate, new BigDecimal("23.9"), new BigDecimal("23.9"), Currency.EUR, null);
+
+        final InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
+        final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountInternalApi, billingApi, entitlementInternalApi, invoiceDao,
+                                                                   invoiceNotifier, locker, busService.getBus(),
+                                                                   clock);
+
+        final DateTime expectedBefore = clock.getUTCNow();
+        final Map<UUID, DateTime> result = dispatcher.createNextFutureNotificationDate(Collections.singletonList(item), DateTimeZone.forID("Pacific/Pitcairn"));
+        final DateTime expectedAfter =  clock.getUTCNow();
+
+        Assert.assertEquals(result.size(), 1);
+
+        final DateTime receivedDate = result.get(item.getSubscriptionId());
+
+        final LocalDate receivedTargetDate = new LocalDate(receivedDate, DateTimeZone.forID("Pacific/Pitcairn"));
+        Assert.assertEquals(receivedTargetDate, endDate);
+
+
+
+        Assert.assertTrue(receivedDate.compareTo(new DateTime(2012, 11, 26, 9 /* 1 + 8 for Pitcairn */ , 12, 23, DateTimeZone.UTC)) >= 0);
+        Assert.assertTrue(receivedDate.compareTo(new DateTime(2012, 11, 26, 9, 13, 0, DateTimeZone.UTC)) <= 0);
+
+    }
+
 
     //MDW add a test to cover when the account auto-invoice-off tag is present
 }

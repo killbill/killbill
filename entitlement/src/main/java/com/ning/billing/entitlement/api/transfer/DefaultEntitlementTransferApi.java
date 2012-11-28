@@ -90,7 +90,11 @@ public class DefaultEntitlementTransferApi implements EntitlementTransferApi {
         final PlanPhaseSpecifier spec = existingEvent.getPlanPhaseSpecifier();
         final PlanPhase currentPhase = existingEvent.getPlanPhaseName() != null ? catalog.findPhase(existingEvent.getPlanPhaseName(), effectiveDate, subscription.getAlignStartDate()) : null;
 
-        final ApiEventBuilder apiBuilder = currentPhase != null ? new ApiEventBuilder()
+        if (spec == null || currentPhase == null) {
+            // Ignore cancellations - we assume that transferred subscriptions should always be active
+            return null;
+        }
+        final ApiEventBuilder apiBuilder = new ApiEventBuilder()
                 .setSubscriptionId(subscription.getId())
                 .setEventPlan(currentPhase.getPlan().getName())
                 .setEventPlanPhase(currentPhase.getName())
@@ -100,7 +104,7 @@ public class DefaultEntitlementTransferApi implements EntitlementTransferApi {
                 .setEffectiveDate(effectiveDate)
                 .setRequestedDate(effectiveDate)
                 .setUserToken(context.getUserToken())
-                .setFromDisk(true) : null;
+                .setFromDisk(true);
 
         switch (existingEvent.getSubscriptionTransitionType()) {
             case TRANSFER:
@@ -121,15 +125,17 @@ public class DefaultEntitlementTransferApi implements EntitlementTransferApi {
                 break;
 
             // Ignore these events except if it's the first event for the new subscription
-            case CANCEL:
-            case UNCANCEL:
             case MIGRATE_BILLING:
                 if (firstEvent) {
                     newEvent = new ApiEventTransfer(apiBuilder);
                 }
                 break;
+            case CANCEL:
+            case UNCANCEL:
+                break;
+
             default:
-                throw new EntitlementError(String.format("Unepxected transitionType %s", existingEvent.getSubscriptionTransitionType()));
+                throw new EntitlementError(String.format("Unexpected transitionType %s", existingEvent.getSubscriptionTransitionType()));
         }
         return newEvent;
     }
@@ -187,8 +193,8 @@ public class DefaultEntitlementTransferApi implements EntitlementTransferApi {
     public SubscriptionBundle transferBundle(final UUID sourceAccountId, final UUID destAccountId,
                                              final String bundleKey, final DateTime transferDate, final boolean transferAddOn,
                                              final boolean cancelImmediately, final CallContext context) throws EntitlementTransferApiException {
-        // Source or destination account?
-        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(sourceAccountId, context);
+        final InternalCallContext fromInternalCallContext = internalCallContextFactory.createInternalCallContext(sourceAccountId, context);
+        final InternalCallContext toInternalCallContext = internalCallContextFactory.createInternalCallContext(destAccountId, context);
 
         try {
             final DateTime effectiveTransferDate = transferDate == null ? clock.getUTCNow() : transferDate;
@@ -198,7 +204,7 @@ public class DefaultEntitlementTransferApi implements EntitlementTransferApi {
                 throw new EntitlementTransferApiException(ErrorCode.ENT_TRANSFER_INVALID_EFF_DATE, effectiveTransferDate);
             }
 
-            final SubscriptionBundle bundle = dao.getSubscriptionBundleFromAccountAndKey(sourceAccountId, bundleKey, internalCallContext);
+            final SubscriptionBundle bundle = dao.getSubscriptionBundleFromAccountAndKey(sourceAccountId, bundleKey, fromInternalCallContext);
             if (bundle == null) {
                 throw new EntitlementTransferApiException(ErrorCode.ENT_CREATE_NO_BUNDLE, bundleKey);
             }
@@ -214,7 +220,7 @@ public class DefaultEntitlementTransferApi implements EntitlementTransferApi {
             DateTime bundleStartdate = null;
 
             for (final SubscriptionTimeline cur : bundleTimeline.getSubscriptions()) {
-                final SubscriptionData oldSubscription = (SubscriptionData) dao.getSubscriptionFromId(subscriptionFactory, cur.getId(), internalCallContext);
+                final SubscriptionData oldSubscription = (SubscriptionData) dao.getSubscriptionFromId(subscriptionFactory, cur.getId(), fromInternalCallContext);
                 final List<ExistingEvent> existingEvents = cur.getExistingEvents();
                 final ProductCategory productCategory = existingEvents.get(0).getPlanPhaseSpecifier().getProductCategory();
                 if (productCategory == ProductCategory.ADD_ON) {
@@ -263,7 +269,7 @@ public class DefaultEntitlementTransferApi implements EntitlementTransferApi {
             BundleMigrationData bundleMigrationData = new BundleMigrationData(subscriptionBundleData, subscriptionMigrationDataList);
 
             // Atomically cancel all subscription on old account and create new bundle, subscriptions, events for new account
-            dao.transfer(sourceAccountId, destAccountId, bundleMigrationData, transferCancelDataList, internalCallContext);
+            dao.transfer(sourceAccountId, destAccountId, bundleMigrationData, transferCancelDataList, fromInternalCallContext, toInternalCallContext);
 
             return bundle;
         } catch (EntitlementRepairException e) {

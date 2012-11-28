@@ -19,6 +19,7 @@ package com.ning.billing.invoice.api.migration;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +39,7 @@ import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 public class DefaultInvoiceMigrationApi implements InvoiceMigrationApi {
@@ -74,7 +76,7 @@ public class DefaultInvoiceMigrationApi implements InvoiceMigrationApi {
                                                                                  MigrationPlan.MIGRATION_PLAN_NAME, MigrationPlan.MIGRATION_PLAN_PHASE_NAME,
                                                                                  targetDate, null, balance, null, currency, null);
         dao.createInvoice(migrationInvoice, ImmutableList.<InvoiceItemModelDao>of(migrationInvoiceItem),
-                          ImmutableList.<InvoicePaymentModelDao>of(), true, internalCallContextFactory.createInternalCallContext(accountId, context));
+                          ImmutableList.<InvoicePaymentModelDao>of(), true, ImmutableMap.<UUID, DateTime>of(), internalCallContextFactory.createInternalCallContext(accountId, context));
 
         return migrationInvoice.getId();
     }

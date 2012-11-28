@@ -25,6 +25,7 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
@@ -177,7 +178,8 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
     @Override
     public void createInvoice(final InvoiceModelDao invoice, final List<InvoiceItemModelDao> invoiceItems,
-                              final List<InvoicePaymentModelDao> invoicePayments, final boolean isRealInvoice, final InternalCallContext context) {
+                              final List<InvoicePaymentModelDao> invoicePayments, final boolean isRealInvoice, final Map<UUID, DateTime> callbackDateTimePerSubscriptions,
+                              final InternalCallContext context) {
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
@@ -197,14 +199,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                         transInvoiceItemSqlDao.create(invoiceItemModelDao, context);
                     }
 
-                    // Add entries in the notification queue for recurring items
-                    final List<InvoiceItemModelDao> recurringInvoiceItems = ImmutableList.<InvoiceItemModelDao>copyOf(Collections2.filter(invoiceItems, new Predicate<InvoiceItemModelDao>() {
-                        @Override
-                        public boolean apply(@Nullable final InvoiceItemModelDao item) {
-                            return item.getType() == InvoiceItemType.RECURRING;
-                        }
-                    }));
-                    notifyOfFutureBillingEvents(entitySqlDaoWrapperFactory, invoice.getAccountId(), recurringInvoiceItems);
+                    notifyOfFutureBillingEvents(entitySqlDaoWrapperFactory, invoice.getAccountId(), callbackDateTimePerSubscriptions);
 
                     // Create associated payments
                     final InvoicePaymentSqlDao invoicePaymentSqlDao = entitySqlDaoWrapperFactory.become(InvoicePaymentSqlDao.class);
@@ -944,20 +939,12 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
         invoice.addPayments(invoicePayments);
     }
 
-    private void notifyOfFutureBillingEvents(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final UUID accountId, final List<InvoiceItemModelDao> invoiceItems) {
+    private void notifyOfFutureBillingEvents(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final UUID accountId, final Map<UUID, DateTime> callbackDateTimePerSubscriptions) {
 
-        for (final InvoiceItemModelDao item : invoiceItems) {
-            if (item.getType() == InvoiceItemType.RECURRING) {
-                if ((item.getEndDate() != null) &&
-                    (item.getAmount() == null ||
-                     item.getAmount().compareTo(BigDecimal.ZERO) >= 0)) {
-                    //
-                    // We insert a future notification for each recurring subscription at the end of the service period  = new CTD of the subscription
-                    //
-                    nextBillingDatePoster.insertNextBillingNotification(entitySqlDaoWrapperFactory, accountId, item.getSubscriptionId(),
-                                                                        item.getEndDate().toDateTimeAtCurrentTime());
-                }
-            }
+
+        for (UUID subscriptionId : callbackDateTimePerSubscriptions.keySet()) {
+            final DateTime callbackDateTimeUTC = callbackDateTimePerSubscriptions.get(subscriptionId);
+            nextBillingDatePoster.insertNextBillingNotification(entitySqlDaoWrapperFactory, accountId, subscriptionId, callbackDateTimeUTC);
         }
     }
 
