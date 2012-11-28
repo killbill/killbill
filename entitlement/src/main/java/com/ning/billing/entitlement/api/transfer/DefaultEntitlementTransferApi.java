@@ -90,7 +90,11 @@ public class DefaultEntitlementTransferApi implements EntitlementTransferApi {
         final PlanPhaseSpecifier spec = existingEvent.getPlanPhaseSpecifier();
         final PlanPhase currentPhase = existingEvent.getPlanPhaseName() != null ? catalog.findPhase(existingEvent.getPlanPhaseName(), effectiveDate, subscription.getAlignStartDate()) : null;
 
-        final ApiEventBuilder apiBuilder = currentPhase != null ? new ApiEventBuilder()
+        if (spec == null || currentPhase == null) {
+            // Ignore cancellations - we assume that transferred subscriptions should always be active
+            return null;
+        }
+        final ApiEventBuilder apiBuilder = new ApiEventBuilder()
                 .setSubscriptionId(subscription.getId())
                 .setEventPlan(currentPhase.getPlan().getName())
                 .setEventPlanPhase(currentPhase.getName())
@@ -100,7 +104,7 @@ public class DefaultEntitlementTransferApi implements EntitlementTransferApi {
                 .setEffectiveDate(effectiveDate)
                 .setRequestedDate(effectiveDate)
                 .setUserToken(context.getUserToken())
-                .setFromDisk(true) : null;
+                .setFromDisk(true);
 
         switch (existingEvent.getSubscriptionTransitionType()) {
             case TRANSFER:
@@ -121,15 +125,17 @@ public class DefaultEntitlementTransferApi implements EntitlementTransferApi {
                 break;
 
             // Ignore these events except if it's the first event for the new subscription
-            case CANCEL:
-            case UNCANCEL:
             case MIGRATE_BILLING:
                 if (firstEvent) {
                     newEvent = new ApiEventTransfer(apiBuilder);
                 }
                 break;
+            case CANCEL:
+            case UNCANCEL:
+                break;
+
             default:
-                throw new EntitlementError(String.format("Unepxected transitionType %s", existingEvent.getSubscriptionTransitionType()));
+                throw new EntitlementError(String.format("Unexpected transitionType %s", existingEvent.getSubscriptionTransitionType()));
         }
         return newEvent;
     }
