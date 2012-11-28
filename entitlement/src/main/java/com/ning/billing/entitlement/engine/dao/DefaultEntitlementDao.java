@@ -516,7 +516,7 @@ public class DefaultEntitlementDao implements EntitlementDao {
     //
     // This piece of code has been isolated in its own method in order to allow for migrated subscriptions to have their plan to changed prior
     // to MIGRATE_BILLING; the effect will be to reflect the change from an entitlement point of view while ignoring the change until we hit
-    // the begining of the billing, that when we hit the MIGRATE_BILLING event. If we had a clear separation between entitlement and
+    // the begining of the billing, that is when we hit the MIGRATE_BILLING event. If we had a clear separation between entitlement and
     // billing that would not be needed.
     //
     // If there is a change of plan prior to a future MIGRATE_BILLING, we want to modify the existing MIGRATE_BILLING so it reflects
@@ -534,18 +534,21 @@ public class DefaultEntitlementDao implements EntitlementDao {
         String prevPlan = null;
         String prevPhase = null;
         String prevPriceList = null;
+        String curPlan = null;
+        String curPhase = null;
+        String curPriceList = null;
         for (EntitlementEvent cur : changeEvents) {
             switch (cur.getType()) {
                 case API_USER:
                     final ApiEvent apiEvent = (ApiEvent) cur;
-                    prevPlan = apiEvent.getEventPlan();
-                    prevPhase = apiEvent.getEventPlanPhase();
-                    prevPriceList = apiEvent.getPriceList();
+                    curPlan = apiEvent.getEventPlan();
+                    curPhase = apiEvent.getEventPlanPhase();
+                    curPriceList = apiEvent.getPriceList();
                     break;
 
                 case PHASE:
                     final PhaseEvent phaseEvent = (PhaseEvent) cur;
-                    prevPhase = phaseEvent.getPhase();
+                    curPhase = phaseEvent.getPhase();
                     break;
 
                 default:
@@ -560,6 +563,9 @@ public class DefaultEntitlementDao implements EntitlementDao {
                 // We found the first event after the migrate billing
                 break;
             }
+            prevPlan = curPlan;
+            prevPhase = curPhase;
+            prevPriceList = curPriceList;
         }
 
         if (prevPlan != null) {
