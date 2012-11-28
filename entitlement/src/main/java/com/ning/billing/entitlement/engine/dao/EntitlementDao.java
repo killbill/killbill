@@ -85,7 +85,7 @@ public interface EntitlementDao {
 
     public void migrate(UUID accountId, AccountMigrationData data, InternalCallContext context);
 
-    public void transfer(UUID srcAccountId, UUID destAccountId, BundleMigrationData data, List<TransferCancelData> transferCancelData, InternalCallContext context);
+    public void transfer(UUID srcAccountId, UUID destAccountId, BundleMigrationData data, List<TransferCancelData> transferCancelData, InternalCallContext fromContext, InternalCallContext toContext);
 
     // Repair
     public void repair(UUID accountId, UUID bundleId, List<SubscriptionDataRepair> inRepair, InternalCallContext context);

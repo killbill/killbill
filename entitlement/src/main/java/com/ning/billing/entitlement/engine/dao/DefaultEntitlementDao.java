@@ -711,7 +711,7 @@ public class DefaultEntitlementDao implements EntitlementDao {
 
     @Override
     public void transfer(final UUID srcAccountId, final UUID destAccountId, final BundleMigrationData bundleTransferData,
-                         final List<TransferCancelData> transferCancelData, final InternalCallContext context) {
+                         final List<TransferCancelData> transferCancelData, final InternalCallContext fromContext, final InternalCallContext toContext) {
 
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
@@ -720,10 +720,10 @@ public class DefaultEntitlementDao implements EntitlementDao {
 
                 // Cancel the subscriptions for the old bundle
                 for (final TransferCancelData cancel : transferCancelData) {
-                    cancelSubscriptionFromTransaction(cancel.getSubscription(), cancel.getCancelEvent(), entitySqlDaoWrapperFactory, context, 0);
+                    cancelSubscriptionFromTransaction(cancel.getSubscription(), cancel.getCancelEvent(), entitySqlDaoWrapperFactory, fromContext, 0);
                 }
 
-                migrateBundleDataFromTransaction(bundleTransferData, transactional, entitySqlDaoWrapperFactory, context);
+                migrateBundleDataFromTransaction(bundleTransferData, transactional, entitySqlDaoWrapperFactory, toContext);
                 return null;
             }
         });
