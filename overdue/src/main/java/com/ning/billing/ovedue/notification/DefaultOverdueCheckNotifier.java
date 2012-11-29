@@ -16,15 +16,16 @@
 
 package com.ning.billing.ovedue.notification;
 
+import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ning.billing.util.config.NotificationConfig;
 import com.ning.billing.overdue.OverdueProperties;
 import com.ning.billing.overdue.listener.OverdueListener;
 import com.ning.billing.overdue.service.DefaultOverdueService;
+import com.ning.billing.util.config.NotificationConfig;
 import com.ning.billing.util.notificationq.NotificationKey;
 import com.ning.billing.util.notificationq.NotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService;
@@ -69,7 +70,7 @@ public class DefaultOverdueCheckNotifier implements OverdueCheckNotifier {
 
         final NotificationQueueHandler notificationQueueHandler = new NotificationQueueHandler() {
             @Override
-            public void handleReadyNotification(final NotificationKey notificationKey, final DateTime eventDate, final Long accountRecordId, final Long tenantRecordId) {
+            public void handleReadyNotification(final NotificationKey notificationKey, final DateTime eventDate, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
                 try {
                     if (!(notificationKey instanceof OverdueCheckNotificationKey)) {
                         log.error("Overdue service received Unexpected notificationKey {}", notificationKey.getClass().getName());
@@ -77,7 +78,7 @@ public class DefaultOverdueCheckNotifier implements OverdueCheckNotifier {
                     }
 
                     final OverdueCheckNotificationKey key = (OverdueCheckNotificationKey) notificationKey;
-                    listener.handleNextOverdueCheck(key, accountRecordId, tenantRecordId);
+                    listener.handleNextOverdueCheck(key, userToken, accountRecordId, tenantRecordId);
                 } catch (IllegalArgumentException e) {
                     log.error("The key returned from the NextBillingNotificationQueue is not a valid UUID", e);
                 }

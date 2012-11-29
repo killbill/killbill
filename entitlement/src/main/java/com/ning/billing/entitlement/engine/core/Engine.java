@@ -115,7 +115,7 @@ public class Engine implements EventListener, EntitlementService {
         try {
             final NotificationQueueHandler queueHandler = new NotificationQueueHandler() {
                 @Override
-                public void handleReadyNotification(final NotificationKey inputKey, final DateTime eventDateTime, final Long accountRecordId, final Long tenantRecordId) {
+                public void handleReadyNotification(final NotificationKey inputKey, final DateTime eventDateTime, final UUID fromNotificationQueueUserToken, final Long accountRecordId, final Long tenantRecordId) {
                     if (!(inputKey instanceof EntitlementNotificationKey)) {
                         log.error("Entitlement service received an unexpected event type {}" + inputKey.getClass().getName());
                         return;
@@ -128,7 +128,8 @@ public class Engine implements EventListener, EntitlementService {
                         return;
                     }
 
-                    final UUID userToken = (event.getType() == EventType.API_USER) ? ((ApiEvent) event).getUserToken() : null;
+                    // TODO STEPH?
+                    final UUID userToken = (event.getType() == EventType.API_USER) ? ((ApiEvent) event).getUserToken() : fromNotificationQueueUserToken;
                     final InternalCallContext context = internalCallContextFactory.createInternalCallContext(tenantRecordId, accountRecordId, "SubscriptionEventQueue", CallOrigin.INTERNAL, UserType.SYSTEM, userToken);
                     processEventReady(event, key.getSeqId(), context);
                 }

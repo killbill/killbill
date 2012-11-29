@@ -24,11 +24,10 @@ import java.util.TreeSet;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
-import com.ning.billing.util.config.NotificationConfig;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.config.NotificationConfig;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
@@ -56,11 +55,10 @@ public class MockNotificationQueue extends NotificationQueueBase implements Noti
     }
 
     @Override
-    public void recordFutureNotification(final DateTime futureNotificationTime, final UUID accountId,
-                                         final NotificationKey notificationKey, final InternalCallContext context) throws IOException {
+    public void recordFutureNotification(final DateTime futureNotificationTime, final NotificationKey notificationKey, final InternalCallContext context) throws IOException {
         final String json = objectMapper.writeValueAsString(notificationKey);
-        final Notification notification = new DefaultNotification("MockQueue", getHostname(), notificationKey.getClass().getName(), json, accountId, futureNotificationTime,
-                                                                  null, 0L);
+        final Notification notification = new DefaultNotification("MockQueue", getHostname(), notificationKey.getClass().getName(), json, context.getUserToken(),
+                                                                  UUID.randomUUID(), futureNotificationTime, null, 0L);
         synchronized (notifications) {
             notifications.add(notification);
         }
@@ -68,8 +66,8 @@ public class MockNotificationQueue extends NotificationQueueBase implements Noti
 
     @Override
     public void recordFutureNotificationFromTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> transactionalDao, final DateTime futureNotificationTime,
-                                                        final UUID accountId, final NotificationKey notificationKey, final InternalCallContext context) throws IOException {
-        recordFutureNotification(futureNotificationTime, accountId, notificationKey, context);
+                                                        final NotificationKey notificationKey, final InternalCallContext context) throws IOException {
+        recordFutureNotification(futureNotificationTime, notificationKey, context);
     }
 
     public List<Notification> getPendingEvents() {
@@ -102,11 +100,11 @@ public class MockNotificationQueue extends NotificationQueueBase implements Noti
         result = readyNotifications.size();
         for (final Notification cur : readyNotifications) {
             final NotificationKey key = deserializeEvent(cur.getNotificationKeyClass(), cur.getNotificationKey());
-            getHandler().handleReadyNotification(key, cur.getEffectiveDate(), cur.getAccountRecordId(), cur.getTenantRecordId());
+            getHandler().handleReadyNotification(key, cur.getEffectiveDate(), cur.getFutureUserToken(), cur.getAccountRecordId(), cur.getTenantRecordId());
             final DefaultNotification processedNotification = new DefaultNotification(-1L, cur.getId(), getHostname(), getHostname(),
                                                                                       "MockQueue", getClock().getUTCNow().plus(CLAIM_TIME_MS),
                                                                                       PersistentQueueEntryLifecycleState.PROCESSED, cur.getNotificationKeyClass(),
-                                                                                      cur.getNotificationKey(), cur.getAccountId(), cur.getEffectiveDate(),
+                                                                                      cur.getNotificationKey(), cur.getUserToken(), UUID.randomUUID(), cur.getEffectiveDate(),
                                                                                       cur.getAccountRecordId(), cur.getTenantRecordId());
             oldNotifications.add(cur);
             processedNotifications.add(processedNotification);

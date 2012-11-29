@@ -52,8 +52,8 @@ public class DefaultNextBillingDatePoster implements NextBillingDatePoster {
 
     @Override
     public void insertNextBillingNotification(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final UUID accountId,
-                                              final UUID subscriptionId, final DateTime futureNotificationTime) {
-        final InternalCallContext context = createCallContext(accountId);
+                                              final UUID subscriptionId, final DateTime futureNotificationTime, final UUID userToken) {
+        final InternalCallContext context = createCallContext(accountId, userToken);
 
         final NotificationQueue nextBillingQueue;
         try {
@@ -61,7 +61,7 @@ public class DefaultNextBillingDatePoster implements NextBillingDatePoster {
                                                                              DefaultNextBillingDateNotifier.NEXT_BILLING_DATE_NOTIFIER_QUEUE);
             log.info("Queuing next billing date notification at {} for subscriptionId {}", futureNotificationTime.toString(), subscriptionId.toString());
 
-            nextBillingQueue.recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory, futureNotificationTime, accountId,
+            nextBillingQueue.recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory, futureNotificationTime,
                                                                      new NextBillingDateNotificationKey(subscriptionId), context);
         } catch (NoSuchNotificationQueue e) {
             log.error("Attempting to put items on a non-existent queue (NextBillingDateNotifier).", e);
@@ -70,7 +70,7 @@ public class DefaultNextBillingDatePoster implements NextBillingDatePoster {
         }
     }
 
-    private InternalCallContext createCallContext(final UUID accountId) {
-        return internalCallContextFactory.createInternalCallContext(accountId, "NextBillingDatePoster", CallOrigin.INTERNAL, UserType.SYSTEM, null);
+    private InternalCallContext createCallContext(final UUID accountId, final UUID userToken) {
+        return internalCallContextFactory.createInternalCallContext(accountId, "NextBillingDatePoster", CallOrigin.INTERNAL, UserType.SYSTEM, userToken);
     }
 }

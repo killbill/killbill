@@ -19,6 +19,7 @@ package com.ning.billing.util.bus.dao;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Date;
+import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.SQLStatement;
@@ -82,6 +83,7 @@ public interface PersistentBusSqlDao extends Transactional<PersistentBusSqlDao>,
         public void bind(@SuppressWarnings("rawtypes") final SQLStatement stmt, final Bind bind, final BusEventEntry evt) {
             stmt.bind("className", evt.getBusEventClass());
             stmt.bind("eventJson", evt.getBusEventJson());
+            stmt.bind("userToken", getUUIDString(evt.getUserToken()));
             stmt.bind("createdDate", getDate(new DateTime()));
             stmt.bind("creatingOwner", evt.getCreatedOwner());
             stmt.bind("processingAvailableDate", getDate(evt.getNextAvailableDate()));
@@ -100,6 +102,7 @@ public interface PersistentBusSqlDao extends Transactional<PersistentBusSqlDao>,
             final String className = r.getString("class_name");
             final String createdOwner = r.getString("creating_owner");
             final String eventJson = r.getString("event_json");
+            final UUID userToken = getUUID(r, "user_token");
             final DateTime nextAvailableDate = getDateTime(r, "processing_available_date");
             final String processingOwner = r.getString("processing_owner");
             final PersistentQueueEntryLifecycleState processingState = PersistentQueueEntryLifecycleState.valueOf(r.getString("processing_state"));
@@ -107,7 +110,7 @@ public interface PersistentBusSqlDao extends Transactional<PersistentBusSqlDao>,
             final Long tenantRecordId = r.getLong("tenant_record_id");
 
             return new BusEventEntry(recordId, createdOwner, processingOwner, nextAvailableDate, processingState, className,
-                                     eventJson, accountRecordId, tenantRecordId);
+                                     eventJson, userToken, accountRecordId, tenantRecordId);
         }
     }
 }

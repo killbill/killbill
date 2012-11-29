@@ -16,6 +16,8 @@
 
 package com.ning.billing.util.notificationq;
 
+import java.util.UUID;
+
 import org.joda.time.DateTime;
 
 import com.ning.billing.util.config.NotificationConfig;
@@ -28,10 +30,11 @@ public interface NotificationQueueService {
          * Called for each notification ready
          *
          * @param notificationKey the notification key associated to that notification entry
+         * @param userToken user token associated with that notification entry
          * @param accountRecordId account record id associated with that notification entry
          * @param tenantRecordId  tenant record id associated with that notification entry
          */
-        public void handleReadyNotification(NotificationKey notificationKey, DateTime eventDateTime, Long accountRecordId, Long tenantRecordId);
+        public void handleReadyNotification(NotificationKey notificationKey, DateTime eventDateTime, UUID userToken, Long accountRecordId, Long tenantRecordId);
     }
 
     public static final class NotificationQueueAlreadyExists extends Exception {

@@ -24,11 +24,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 import org.joda.time.DateTime;
-import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
-import org.skife.jdbi.v2.Transaction;
-import org.skife.jdbi.v2.TransactionStatus;
-import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -38,12 +34,12 @@ import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
-import com.ning.billing.util.config.NotificationConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.config.NotificationConfig;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
@@ -66,10 +62,8 @@ import static org.testng.Assert.assertEquals;
 
 @Guice(modules = TestNotificationQueue.TestNotificationQueueModule.class)
 public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
+
     private final Logger log = LoggerFactory.getLogger(TestNotificationQueue.class);
-
-
-    private static final UUID accountId = UUID.randomUUID();
 
     private EntitySqlDaoTransactionalJdbiWrapper entitySqlDaoTransactionalJdbiWrapper;
 
@@ -82,11 +76,10 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
     @Inject
     private Clock clock;
 
-    private DummySqlTest dao;
-
     private int eventsReceived;
 
     private static final class TestNotificationKey implements NotificationKey, Comparable<TestNotificationKey> {
+
         private final String value;
 
         @JsonCreator
@@ -109,22 +102,11 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
     public void setup() throws Exception {
         final String testDdl = IOUtils.toString(NotificationSqlDao.class.getResourceAsStream("/com/ning/billing/util/ddl_test.sql"));
         helper.initDb(testDdl);
-        dao = dbi.onDemand(DummySqlTest.class);
         entitySqlDaoTransactionalJdbiWrapper = new EntitySqlDaoTransactionalJdbiWrapper(dbi);
     }
 
     @BeforeTest(groups = "slow")
     public void beforeTest() {
-        dbi.withHandle(new HandleCallback<Void>() {
-
-            @Override
-            public Void withHandle(final Handle handle) throws Exception {
-                handle.execute("delete from notifications");
-                handle.execute("delete from claimed_notifications");
-                handle.execute("delete from dummy");
-                return null;
-            }
-        });
         // Reset time to real value
         ((ClockMock) clock).resetDeltaFromReality();
         eventsReceived = 0;
@@ -144,7 +126,7 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
         final DefaultNotificationQueue queue = new DefaultNotificationQueue(dbi, clock, "test-svc", "foo",
                                                                             new NotificationQueueHandler() {
                                                                                 @Override
-                                                                                public void handleReadyNotification(final NotificationKey notificationKey, final DateTime eventDateTime, final Long accountRecordId, final Long tenantRecordId) {
+                                                                                public void handleReadyNotification(final NotificationKey notificationKey, final DateTime eventDateTime, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
                                                                                     synchronized (expectedNotifications) {
                                                                                         log.info("Handler received key: " + notificationKey);
 
@@ -172,7 +154,7 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
             public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
 
                 entitySqlDaoWrapperFactory.transmogrify(DummySqlTest.class).insertDummy(obj);
-                queue.recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory, readyTime, accountId, notificationKey, internalCallContext);
+                queue.recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory, readyTime, notificationKey, internalCallContext);
                 log.info("Posted key: " + notificationKey);
 
                 return null;
@@ -201,7 +183,7 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
         final DefaultNotificationQueue queue = new DefaultNotificationQueue(dbi, clock, "test-svc", "many",
                                                                             new NotificationQueueHandler() {
                                                                                 @Override
-                                                                                public void handleReadyNotification(final NotificationKey notificationKey, final DateTime eventDateTime, final Long accountRecordId, final Long tenantRecordId) {
+                                                                                public void handleReadyNotification(final NotificationKey notificationKey, final DateTime eventDateTime, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
                                                                                     synchronized (expectedNotifications) {
                                                                                         expectedNotifications.put(notificationKey, Boolean.TRUE);
                                                                                         expectedNotifications.notify();
@@ -232,11 +214,10 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
 
                     entitySqlDaoWrapperFactory.transmogrify(DummySqlTest.class).insertDummy(obj);
                     queue.recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory, now.plus((currentIteration + 1) * nextReadyTimeIncrementMs),
-                                                                  accountId, notificationKey, internalCallContext);
+                                                                  notificationKey, internalCallContext);
                     return null;
                 }
             });
-
 
             // Move time in the future after the notification effectiveDate
             if (i == 0) {
@@ -304,7 +285,7 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
 
         final NotificationQueue queueFred = notificationQueueService.createNotificationQueue("UtilTest", "Fred", new NotificationQueueHandler() {
             @Override
-            public void handleReadyNotification(final NotificationKey notificationKey, final DateTime eventDateTime, final Long accountRecordId, final Long tenantRecordId) {
+            public void handleReadyNotification(final NotificationKey notificationKey, final DateTime eventDateTime, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
                 log.info("Fred received key: " + notificationKey);
                 expectedNotificationsFred.put(notificationKey, Boolean.TRUE);
                 eventsReceived++;
@@ -314,7 +295,7 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
 
         final NotificationQueue queueBarney = notificationQueueService.createNotificationQueue("UtilTest", "Barney", new NotificationQueueHandler() {
             @Override
-            public void handleReadyNotification(final NotificationKey notificationKey, final DateTime eventDateTime, final Long accountRecordId, final Long tenantRecordId) {
+            public void handleReadyNotification(final NotificationKey notificationKey, final DateTime eventDateTime, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
                 log.info("Barney received key: " + notificationKey);
                 expectedNotificationsBarney.put(notificationKey, Boolean.TRUE);
                 eventsReceived++;
@@ -342,9 +323,9 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
             public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
                 entitySqlDaoWrapperFactory.transmogrify(DummySqlTest.class).insertDummy(obj);
 
-                queueFred.recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory, readyTime, accountId, notificationKeyFred, internalCallContext);
+                queueFred.recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory, readyTime, notificationKeyFred, internalCallContext);
                 log.info("posted key: " + notificationKeyFred.toString());
-                queueBarney.recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory, readyTime, accountId, notificationKeyBarney, internalCallContext);
+                queueBarney.recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory, readyTime, notificationKeyBarney, internalCallContext);
                 log.info("posted key: " + notificationKeyBarney.toString());
                 return null;
             }
@@ -396,7 +377,7 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
         final DefaultNotificationQueue queue = new DefaultNotificationQueue(dbi, clock, "test-svc", "many",
                                                                             new NotificationQueueHandler() {
                                                                                 @Override
-                                                                                public void handleReadyNotification(final NotificationKey inputKey, final DateTime eventDateTime, final Long accountRecordId, final Long tenantRecordId) {
+                                                                                public void handleReadyNotification(final NotificationKey inputKey, final DateTime eventDateTime, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
                                                                                     if (inputKey.equals(notificationKey) || inputKey.equals(notificationKey2)) { //ignore stray events from other tests
                                                                                         log.info("Received notification with key: " + notificationKey);
                                                                                         eventsReceived++;
@@ -416,9 +397,9 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
         entitySqlDaoTransactionalJdbiWrapper.execute(new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                queue.recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory, start.plus(nextReadyTimeIncrementMs), accountId, notificationKey, internalCallContext);
-                queue.recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory, start.plus(2 * nextReadyTimeIncrementMs), accountId, notificationKey, internalCallContext);
-                queue.recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory, start.plus(3 * nextReadyTimeIncrementMs), accountId, notificationKey2, internalCallContext);
+                queue.recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory, start.plus(nextReadyTimeIncrementMs), notificationKey, internalCallContext);
+                queue.recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory, start.plus(2 * nextReadyTimeIncrementMs), notificationKey, internalCallContext);
+                queue.recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory, start.plus(3 * nextReadyTimeIncrementMs), notificationKey2, internalCallContext);
                 return null;
             }
         });
@@ -444,6 +425,7 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
     }
 
     public static class TestNotificationQueueModule extends AbstractModule {
+
         @Override
         protected void configure() {
             bind(Clock.class).to(ClockMock.class);

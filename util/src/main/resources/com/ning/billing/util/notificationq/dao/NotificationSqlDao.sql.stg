@@ -8,8 +8,9 @@ getReadyNotifications() ::= <<
       record_id
       , id
       , class_name
-      , account_id
       , notification_key
+      , user_token
+      , future_user_token
       , created_date
       , creating_owner
       , effective_date
@@ -37,11 +38,12 @@ getReadyNotifications() ::= <<
 
 getNotificationForAccountAndDate() ::= <<
    select
-     record_id
+       record_id
      , id
      , class_name
-     , account_id
      , notification_key
+     , user_token
+     , future_user_token
      , created_date
      , creating_owner
      , effective_date
@@ -53,7 +55,7 @@ getNotificationForAccountAndDate() ::= <<
      , tenant_record_id
    from notifications
    where
-   account_id = :accountId AND effective_date = :effectiveDate
+   account_record_id = :accountRecordId AND effective_date = :effectiveDate
    ;
 >>
 
@@ -102,8 +104,9 @@ insertNotification() ::= <<
     insert into notifications (
       id
       , class_name
-      , account_id
       , notification_key
+      , user_token
+      , future_user_token
       , created_date
       , creating_owner
       , effective_date
@@ -116,8 +119,9 @@ insertNotification() ::= <<
     ) values (
       :id
       , :className
-      , :accountId
       , :notificationKey
+      , :userToken
+      , :futureUserToken
       , :createdDate
       , :creatingOwner
       , :effectiveDate

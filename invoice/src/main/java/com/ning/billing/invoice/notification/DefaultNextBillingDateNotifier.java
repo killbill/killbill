@@ -82,7 +82,7 @@ public class DefaultNextBillingDateNotifier implements NextBillingDateNotifier {
 
         final NotificationQueueHandler notificationQueueHandler = new NotificationQueueHandler() {
             @Override
-            public void handleReadyNotification(final NotificationKey notificationKey, final DateTime eventDate, final Long accountRecordId, final Long tenantRecordId) {
+            public void handleReadyNotification(final NotificationKey notificationKey, final DateTime eventDate, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
                 try {
                     if (!(notificationKey instanceof NextBillingDateNotificationKey)) {
                         log.error("Invoice service received an unexpected event type {}", notificationKey.getClass().getName());
@@ -95,7 +95,7 @@ public class DefaultNextBillingDateNotifier implements NextBillingDateNotifier {
                         if (subscription == null) {
                             log.warn("Next Billing Date Notification Queue handled spurious notification (key: " + key + ")");
                         } else {
-                            processEvent(key.getUuidKey(), eventDate, accountRecordId, tenantRecordId);
+                            processEvent(key.getUuidKey(), eventDate, userToken, accountRecordId, tenantRecordId);
                         }
                     } catch (EntitlementUserApiException e) {
                         log.warn("Next Billing Date Notification Queue handled spurious notification (key: " + key + ")", e);
@@ -125,7 +125,7 @@ public class DefaultNextBillingDateNotifier implements NextBillingDateNotifier {
         }
     }
 
-    private void processEvent(final UUID subscriptionId, final DateTime eventDateTime, final Long accountRecordId, final Long tenantRecordId) {
-        listener.handleNextBillingDateEvent(subscriptionId, eventDateTime, accountRecordId, tenantRecordId);
+    private void processEvent(final UUID subscriptionId, final DateTime eventDateTime, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
+        listener.handleNextBillingDateEvent(subscriptionId, eventDateTime, userToken, accountRecordId, tenantRecordId);
     }
 }

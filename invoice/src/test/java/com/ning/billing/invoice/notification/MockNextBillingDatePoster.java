@@ -26,6 +26,7 @@ import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 public class MockNextBillingDatePoster implements NextBillingDatePoster {
 
     @Override
-    public void insertNextBillingNotification(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final UUID accountId, final UUID subscriptionId, final DateTime futureNotificationTime) {
+    public void insertNextBillingNotification(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final UUID accountId,
+                                              final UUID subscriptionId, final DateTime futureNotificationTime, final UUID userToken) {
     }
 }

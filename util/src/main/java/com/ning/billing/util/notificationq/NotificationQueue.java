@@ -21,10 +21,8 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
 import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.entity.dao.EntityDao;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import com.ning.billing.util.queue.QueueLifecycle;
@@ -38,7 +36,6 @@ public interface NotificationQueue extends QueueLifecycle {
      * @param notificationKey        the key for that notification
      */
     public void recordFutureNotification(final DateTime futureNotificationTime,
-                                         final UUID accountId,
                                          final NotificationKey notificationKey,
                                          final InternalCallContext context)
             throws IOException;
@@ -52,7 +49,6 @@ public interface NotificationQueue extends QueueLifecycle {
      */
     public void recordFutureNotificationFromTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> transactionalDao,
                                                         final DateTime futureNotificationTime,
-                                                        final UUID accountId,
                                                         final NotificationKey notificationKey,
                                                         final InternalCallContext context)
             throws IOException;

@@ -26,7 +26,6 @@ import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.testng.Assert;
 import org.testng.annotations.BeforeSuite;
-import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
@@ -46,7 +45,6 @@ import static org.testng.Assert.assertNotNull;
 
 @Guice(modules = TestNotificationSqlDao.TestNotificationSqlDaoModule.class)
 public class TestNotificationSqlDao extends UtilTestSuiteWithEmbeddedDB {
-    private static final UUID accountId = UUID.randomUUID();
     private static final String hostname = "Yop";
 
     @Inject
@@ -62,26 +60,15 @@ public class TestNotificationSqlDao extends UtilTestSuiteWithEmbeddedDB {
         dao = dbi.onDemand(NotificationSqlDao.class);
     }
 
-    @BeforeTest(groups = "slow")
-    public void cleanupDb() {
-        dbi.withHandle(new HandleCallback<Void>() {
-            @Override
-            public Void withHandle(final Handle handle) throws Exception {
-                handle.execute("delete from notifications");
-                handle.execute("delete from claimed_notifications");
-                return null;
-            }
-        });
-    }
-
     @Test(groups = "slow")
     public void testBasic() throws InterruptedException {
+        final long accountRecordId = 1242L;
         final String ownerId = UUID.randomUUID().toString();
 
         final String notificationKey = UUID.randomUUID().toString();
         final DateTime effDt = new DateTime();
-        final Notification notif = new DefaultNotification("testBasic", hostname, notificationKey.getClass().getName(), notificationKey, accountId, effDt,
-                                                           null, internalCallContext.getTenantRecordId());
+        final Notification notif = new DefaultNotification("testBasic", hostname, notificationKey.getClass().getName(), notificationKey, UUID.randomUUID(), UUID.randomUUID(), effDt,
+                                                           accountRecordId, internalCallContext.getTenantRecordId());
         dao.insertNotification(notif, internalCallContext);
 
         Thread.sleep(1000);
@@ -121,24 +108,25 @@ public class TestNotificationSqlDao extends UtilTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testGetByAccountAndDate() throws InterruptedException {
+        final long accountRecordId = 1242L;
         final String notificationKey = UUID.randomUUID().toString();
         final DateTime effDt = new DateTime();
-        final Notification notif1 = new DefaultNotification("testBasic1", hostname, notificationKey.getClass().getName(), notificationKey, accountId, effDt,
-                                                            null, internalCallContext.getTenantRecordId());
+        final Notification notif1 = new DefaultNotification("testBasic1", hostname, notificationKey.getClass().getName(), notificationKey, UUID.randomUUID(), UUID.randomUUID(), effDt,
+                                                            accountRecordId, internalCallContext.getTenantRecordId());
         dao.insertNotification(notif1, internalCallContext);
 
-        final Notification notif2 = new DefaultNotification("testBasic2", hostname, notificationKey.getClass().getName(), notificationKey, accountId, effDt,
-                                                            null, internalCallContext.getTenantRecordId());
+        final Notification notif2 = new DefaultNotification("testBasic2", hostname, notificationKey.getClass().getName(), notificationKey, UUID.randomUUID(), UUID.randomUUID(), effDt,
+                                                            accountRecordId, internalCallContext.getTenantRecordId());
         dao.insertNotification(notif2, internalCallContext);
 
-        List<Notification> notifications = dao.getNotificationForAccountAndDate(accountId.toString(), effDt.toDate(), internalCallContext);
+        List<Notification> notifications = dao.getNotificationForAccountAndDate(accountRecordId, effDt.toDate(), internalCallContext);
         assertEquals(notifications.size(), 2);
         for (final Notification cur : notifications) {
             Assert.assertEquals(cur.getProcessingState(), PersistentQueueEntryLifecycleState.AVAILABLE);
             dao.removeNotification(cur.getId().toString(), internalCallContext);
         }
 
-        notifications = dao.getNotificationForAccountAndDate(accountId.toString(), effDt.toDate(), internalCallContext);
+        notifications = dao.getNotificationForAccountAndDate(accountRecordId, effDt.toDate(), internalCallContext);
         assertEquals(notifications.size(), 2);
         for (final Notification cur : notifications) {
             Assert.assertEquals(cur.getProcessingState(), PersistentQueueEntryLifecycleState.REMOVED);
@@ -153,8 +141,9 @@ public class TestNotificationSqlDao extends UtilTestSuiteWithEmbeddedDB {
                                                   " record_id " +
                                                   ", id" +
                                                   ", class_name" +
-                                                  ", account_id" +
                                                   ", notification_key" +
+                                                  ", user_token" +
+                                                  ", future_user_token" +
                                                   ", created_date" +
                                                   ", creating_owner" +
                                                   ", effective_date" +

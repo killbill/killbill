@@ -16,9 +16,6 @@
 
 package com.ning.billing.overdue.notification;
 
-import static com.jayway.awaitility.Awaitility.await;
-import static java.util.concurrent.TimeUnit.MINUTES;
-
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.UUID;
@@ -38,8 +35,6 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.catalog.DefaultCatalogService;
 import com.ning.billing.catalog.api.CatalogService;
-import com.ning.billing.util.config.CatalogConfig;
-import com.ning.billing.util.config.InvoiceConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
@@ -62,8 +57,10 @@ import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
-import com.ning.billing.util.customfield.dao.DefaultCustomFieldDao;
+import com.ning.billing.util.config.CatalogConfig;
+import com.ning.billing.util.config.InvoiceConfig;
 import com.ning.billing.util.customfield.dao.CustomFieldDao;
+import com.ning.billing.util.customfield.dao.DefaultCustomFieldDao;
 import com.ning.billing.util.email.EmailModule;
 import com.ning.billing.util.email.templates.TemplateModule;
 import com.ning.billing.util.globallocker.GlobalLocker;
@@ -80,6 +77,9 @@ import com.ning.billing.util.tag.dao.TagDao;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
+
+import static com.jayway.awaitility.Awaitility.await;
+import static java.util.concurrent.TimeUnit.MINUTES;
 
 public class TestOverdueCheckNotifier extends OverdueTestSuiteWithEmbeddedDB {
     private Clock clock;
@@ -98,7 +98,7 @@ public class TestOverdueCheckNotifier extends OverdueTestSuiteWithEmbeddedDB {
         }
 
         @Override
-        public void handleNextOverdueCheck(final OverdueCheckNotificationKey key, final Long accountRecordId, final Long tenantRecordId) {
+        public void handleNextOverdueCheck(final OverdueCheckNotificationKey key, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
             eventCount++;
             latestSubscriptionId = key.getUuidKey();
         }

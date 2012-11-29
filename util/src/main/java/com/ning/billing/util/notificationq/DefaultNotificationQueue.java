@@ -20,31 +20,36 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
+import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
-import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
+import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ning.billing.util.config.NotificationConfig;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.config.NotificationConfig;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
 import com.ning.billing.util.notificationq.dao.NotificationSqlDao;
 
+import com.google.common.collect.ImmutableList;
+
 public class DefaultNotificationQueue extends NotificationQueueBase {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultNotificationQueue.class);
 
+    private final IDBI dbi;
     private final NotificationSqlDao dao;
     private final InternalCallContextFactory internalCallContextFactory;
 
@@ -52,6 +57,7 @@ public class DefaultNotificationQueue extends NotificationQueueBase {
                                     final NotificationQueueHandler handler, final NotificationConfig config,
                                     final InternalCallContextFactory internalCallContextFactory) {
         super(clock, svcName, queueName, handler, config);
+        this.dbi = dbi;
         this.dao = dbi.onDemand(NotificationSqlDao.class);
         this.internalCallContextFactory = internalCallContextFactory;
     }
@@ -60,7 +66,7 @@ public class DefaultNotificationQueue extends NotificationQueueBase {
     public int doProcessEvents() {
         logDebug("ENTER doProcessEvents");
         // Finding and claiming notifications is not done per tenant (yet?)
-        final List<Notification> notifications = getReadyNotifications(createCallContext(null, null));
+        final List<Notification> notifications = getReadyNotifications(createCallContext(null, null, null));
         if (notifications.size() == 0) {
             logDebug("EXIT doProcessEvents");
             return 0;
@@ -73,9 +79,9 @@ public class DefaultNotificationQueue extends NotificationQueueBase {
             getNbProcessedEvents().incrementAndGet();
             logDebug("handling notification %s, key = %s for time %s", cur.getId(), cur.getNotificationKey(), cur.getEffectiveDate());
             final NotificationKey key = deserializeEvent(cur.getNotificationKeyClass(), cur.getNotificationKey());
-            getHandler().handleReadyNotification(key, cur.getEffectiveDate(), cur.getAccountRecordId(), cur.getTenantRecordId());
+            getHandler().handleReadyNotification(key, cur.getEffectiveDate(), cur.getFutureUserToken(), cur.getAccountRecordId(), cur.getTenantRecordId());
             result++;
-            clearNotification(cur, createCallContext(cur.getTenantRecordId(), cur.getAccountRecordId()));
+            clearNotification(cur, createCallContext(cur.getUserToken(), cur.getTenantRecordId(), cur.getAccountRecordId()));
             logDebug("done handling notification %s, key = %s for time %s", cur.getId(), cur.getNotificationKey(), cur.getEffectiveDate());
         }
 
@@ -84,30 +90,31 @@ public class DefaultNotificationQueue extends NotificationQueueBase {
 
     @Override
     public void recordFutureNotification(final DateTime futureNotificationTime,
-                                         final UUID accountId,
                                          final NotificationKey notificationKey,
                                          final InternalCallContext context) throws IOException {
-        recordFutureNotificationInternal(futureNotificationTime, accountId, notificationKey, dao, context);
+        recordFutureNotificationInternal(futureNotificationTime, notificationKey, dao, context);
     }
 
     @Override
     public void recordFutureNotificationFromTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> transactionalDao,
                                                         final DateTime futureNotificationTime,
-                                                        final UUID accountId,
                                                         final NotificationKey notificationKey,
                                                         final InternalCallContext context) throws IOException {
         final NotificationSqlDao transactionalNotificationDao = transactionalDao.transmogrify(NotificationSqlDao.class);
-        recordFutureNotificationInternal(futureNotificationTime, accountId, notificationKey, transactionalNotificationDao, context);
+        recordFutureNotificationInternal(futureNotificationTime, notificationKey, transactionalNotificationDao, context);
     }
 
     private void recordFutureNotificationInternal(final DateTime futureNotificationTime,
-                                                  final UUID accountId,
                                                   final NotificationKey notificationKey,
                                                   final NotificationSqlDao thisDao,
                                                   final InternalCallContext context) throws IOException {
         final String json = objectMapper.writeValueAsString(notificationKey);
+        // Create a new user token. This will be used in the future, when this notification is triggered, to trace
+        // generated bus events
+        final UUID futureUserToken = UUID.randomUUID();
         final Notification notification = new DefaultNotification(getFullQName(), getHostname(), notificationKey.getClass().getName(), json,
-                                                                  accountId, futureNotificationTime, context.getAccountRecordId(), context.getTenantRecordId());
+                                                                  context.getUserToken(), futureUserToken, futureNotificationTime,
+                                                                  context.getAccountRecordId(), context.getTenantRecordId());
         thisDao.insertNotification(notification, context);
     }
 
@@ -158,7 +165,24 @@ public class DefaultNotificationQueue extends NotificationQueueBase {
 
     @Override
     public List<Notification> getNotificationForAccountAndDate(final UUID accountId, final DateTime effectiveDate, final InternalCallContext context) {
-        return dao.getNotificationForAccountAndDate(accountId.toString(), effectiveDate.toDate(), context);
+        // TODO we have the same use case in InternalCallContextFactory, do we need some sort of helper class?
+        final Long accountRecordId = dbi.withHandle(new HandleCallback<Long>() {
+            @Override
+            public Long withHandle(final Handle handle) throws Exception {
+                final List<Map<String, Object>> values = handle.select("select record_id from accounts where id = " + accountId.toString());
+                if (values.size() == 0) {
+                    return null;
+                } else {
+                    return (Long) values.get(0).get("record_id");
+                }
+            }
+        });
+
+        if (accountId == null) {
+            return ImmutableList.<Notification>of();
+        } else {
+            return dao.getNotificationForAccountAndDate(accountRecordId, effectiveDate.toDate(), context);
+        }
     }
 
     @Override
@@ -166,7 +190,7 @@ public class DefaultNotificationQueue extends NotificationQueueBase {
         dao.removeNotification(notificationId.toString(), context);
     }
 
-    private InternalCallContext createCallContext(@Nullable final Long tenantRecordId, @Nullable final Long accountRecordId) {
-        return internalCallContextFactory.createInternalCallContext(tenantRecordId, accountRecordId, "NotificationQueue", CallOrigin.INTERNAL, UserType.SYSTEM, null);
+    private InternalCallContext createCallContext(final UUID userToken, @Nullable final Long tenantRecordId, @Nullable final Long accountRecordId) {
+        return internalCallContextFactory.createInternalCallContext(tenantRecordId, accountRecordId, "NotificationQueue", CallOrigin.INTERNAL, UserType.SYSTEM, userToken);
     }
 }
