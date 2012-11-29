@@ -173,8 +173,8 @@ public class TestDefaultBillingEvent extends JunctionTestSuite {
     @Test(groups = "fast")
     public void testToString() throws Exception {
         // Simple test to ensure we have an easy to read toString representation
-        final BillingEvent event = createEvent(subscription(ID_ZERO), new DateTime("2012-01-01T00:02:04.000Z"), SubscriptionTransitionType.CREATE);
-        Assert.assertEquals(event.toString(), "DefaultBillingEvent{type=CREATE, effectiveDate=2011-12-31T16:02:04.000-08:00, planPhaseName=Test-trial, subscriptionId=00000000-0000-0000-0000-000000000000, totalOrdering=1, accountId=" + event.getAccount().getId().toString() + "}");
+        final BillingEvent event = createEvent(subscription(ID_ZERO), new DateTime("2012-01-01T00:02:04.000Z", DateTimeZone.UTC), SubscriptionTransitionType.CREATE);
+        Assert.assertEquals(event.toString(), "DefaultBillingEvent{type=CREATE, effectiveDate=2012-01-01T00:02:04.000Z, planPhaseName=Test-trial, subscriptionId=00000000-0000-0000-0000-000000000000, totalOrdering=1, accountId=" + event.getAccount().getId().toString() + "}");
     }
 
     private BillingEvent createEvent(final Subscription sub, final DateTime effectiveDate, final SubscriptionTransitionType type) {
