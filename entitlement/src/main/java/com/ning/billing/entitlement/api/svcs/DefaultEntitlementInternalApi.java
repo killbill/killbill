@@ -15,6 +15,7 @@
  */
 package com.ning.billing.entitlement.api.svcs;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -28,6 +29,7 @@ import org.joda.time.LocalTime;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.entitlement.api.SubscriptionFactory;
 import com.ning.billing.entitlement.api.user.DefaultEffectiveSubscriptionEvent;
+import com.ning.billing.entitlement.api.user.DefaultSubscriptionApiService;
 import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
@@ -37,6 +39,7 @@ import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 
@@ -48,12 +51,16 @@ import com.google.inject.Inject;
 public class DefaultEntitlementInternalApi implements EntitlementInternalApi {
 
     private final EntitlementDao dao;
-    private final SubscriptionFactory subscriptionFactory;
+    private final DefaultSubscriptionApiService apiService;
+    private final Clock clock;
+
     @Inject
     public DefaultEntitlementInternalApi(final EntitlementDao dao,
-            final SubscriptionFactory subscriptionFactory) {
+            final DefaultSubscriptionApiService apiService,
+            final Clock clock) {
         this.dao = dao;
-        this.subscriptionFactory = subscriptionFactory;
+        this.apiService = apiService;
+        this.clock = clock;
     }
 
     @Override
@@ -65,27 +72,28 @@ public class DefaultEntitlementInternalApi implements EntitlementInternalApi {
     @Override
     public List<Subscription> getSubscriptionsForBundle(UUID bundleId,
             InternalTenantContext context) {
-        return dao.getSubscriptions(subscriptionFactory, bundleId, context);
+        final List<Subscription> internalSubscriptions =  dao.getSubscriptions(bundleId, context);
+        return createSubscriptionsForApiUse(internalSubscriptions);
     }
 
     @Override
     public Subscription getBaseSubscription(UUID bundleId,
             InternalTenantContext context) throws EntitlementUserApiException {
-        final Subscription result = dao.getBaseSubscription(subscriptionFactory, bundleId, context);
+        final Subscription result = dao.getBaseSubscription(bundleId, context);
         if (result == null) {
             throw new EntitlementUserApiException(ErrorCode.ENT_GET_NO_SUCH_BASE_SUBSCRIPTION, bundleId);
         }
-        return result;
+        return createSubscriptionForApiUse(result);
     }
 
     @Override
     public Subscription getSubscriptionFromId(UUID id,
             InternalTenantContext context) throws EntitlementUserApiException {
-        final Subscription result = dao.getSubscriptionFromId(subscriptionFactory, id, context);
+        final Subscription result = dao.getSubscriptionFromId(id, context);
         if (result == null) {
             throw new EntitlementUserApiException(ErrorCode.ENT_INVALID_SUBSCRIPTION_ID, id);
         }
-        return result;
+        return createSubscriptionForApiUse(result);
     }
 
     @Override
@@ -108,7 +116,7 @@ public class DefaultEntitlementInternalApi implements EntitlementInternalApi {
     @Override
     public void setChargedThroughDate(UUID subscriptionId,
             LocalDate localChargedThruDate, InternalCallContext context) {
-        final SubscriptionData subscription = (SubscriptionData) dao.getSubscriptionFromId(subscriptionFactory, subscriptionId, context);
+        final SubscriptionData subscription = (SubscriptionData) dao.getSubscriptionFromId(subscriptionId, context);
         final DateTime chargedThroughDate = localChargedThruDate.toDateTime(new LocalTime(subscription.getStartDate(), DateTimeZone.UTC), DateTimeZone.UTC);
         final SubscriptionBuilder builder = new SubscriptionBuilder(subscription)
                 .setChargedThroughDate(chargedThroughDate)
@@ -137,5 +145,20 @@ public class DefaultEntitlementInternalApi implements EntitlementInternalApi {
                 return new DefaultEffectiveSubscriptionEvent(input, ((SubscriptionData) subscription).getAlignStartDate(), context.getAccountRecordId(), context.getTenantRecordId());
             }
         }));
+    }
+
+
+    // TODO Copied from DefaultEntitlemenUserApi. should probably share that in a base class
+    private List<Subscription> createSubscriptionsForApiUse(final List<Subscription> internalSubscriptions) {
+        return new ArrayList<Subscription>(Collections2.transform(internalSubscriptions, new Function<Subscription, Subscription>() {
+            @Override
+            public Subscription apply(final Subscription subscription) {
+                return createSubscriptionForApiUse((SubscriptionData) subscription);
+            }
+        }));
+    }
+
+    private Subscription createSubscriptionForApiUse(final Subscription internalSubscription) {
+        return new SubscriptionData((SubscriptionData) internalSubscription, apiService, clock);
     }
 }

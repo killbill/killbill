@@ -85,6 +85,14 @@ public class SubscriptionData extends EntityBase implements Subscription {
     //
     private LinkedList<SubscriptionTransitionData> transitions;
 
+    // Low level events are ONLY used for Repair APIs
+    protected List<EntitlementEvent> events;
+
+
+    public List<EntitlementEvent> getEvents() {
+        return events;
+    }
+
     // Transient object never returned at the API
     public SubscriptionData(final SubscriptionBuilder builder) {
         this(builder, null, null);
@@ -101,6 +109,22 @@ public class SubscriptionData extends EntityBase implements Subscription {
         this.activeVersion = builder.getActiveVersion();
         this.chargedThroughDate = builder.getChargedThroughDate();
         this.paidThroughDate = builder.getPaidThroughDate();
+    }
+
+    // Used for API to make sure we have a clock and an apiService set before we return the object
+    public SubscriptionData(final SubscriptionData internalSubscription, final SubscriptionApiService apiService, final Clock clock) {
+        super(internalSubscription.getId(), internalSubscription.getCreatedDate(), internalSubscription.getUpdatedDate());
+        this.apiService = apiService;
+        this.clock = clock;
+        this.bundleId = internalSubscription.getBundleId();
+        this.alignStartDate = internalSubscription.getAlignStartDate();
+        this.bundleStartDate = internalSubscription.getBundleStartDate();
+        this.category = internalSubscription.getCategory();
+        this.activeVersion = internalSubscription.getActiveVersion();
+        this.chargedThroughDate = internalSubscription.getChargedThroughDate();
+        this.paidThroughDate = internalSubscription.getPaidThroughDate();
+        this.transitions = new LinkedList<SubscriptionTransitionData>(internalSubscription.getAllTransitions());
+        this.events = internalSubscription.getEvents();
     }
 
     @Override
@@ -490,6 +514,8 @@ public class SubscriptionData extends EntityBase implements Subscription {
         if (inputEvents == null) {
             return;
         }
+
+        this.events = inputEvents;
 
         SubscriptionState nextState = null;
         String nextPlanName = null;

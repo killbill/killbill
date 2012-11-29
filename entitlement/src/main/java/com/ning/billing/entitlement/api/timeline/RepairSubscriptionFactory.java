@@ -55,9 +55,14 @@ public class RepairSubscriptionFactory extends DefaultSubscriptionFactory implem
     @Override
     public SubscriptionData createSubscription(final SubscriptionBuilder builder,
                                                final List<EntitlementEvent> events) {
+
+
+        /*
         final SubscriptionData subscription = new SubscriptionDataRepair(builder, events, getApiService(), repairDao, getClock(),
                                                                          addonUtils, getCatalogService(), internalCallContextFactory);
         subscription.rebuildTransitions(events, getCatalogService().getFullCatalog());
         return subscription;
+*/
+        return null;
     }
 }

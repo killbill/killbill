@@ -220,7 +220,7 @@ public class DefaultEntitlementTransferApi implements EntitlementTransferApi {
             DateTime bundleStartdate = null;
 
             for (final SubscriptionTimeline cur : bundleTimeline.getSubscriptions()) {
-                final SubscriptionData oldSubscription = (SubscriptionData) dao.getSubscriptionFromId(subscriptionFactory, cur.getId(), fromInternalCallContext);
+                final SubscriptionData oldSubscription = (SubscriptionData) dao.getSubscriptionFromId(cur.getId(), fromInternalCallContext);
                 final List<ExistingEvent> existingEvents = cur.getExistingEvents();
                 final ProductCategory productCategory = existingEvents.get(0).getPlanPhaseSpecifier().getProductCategory();
                 if (productCategory == ProductCategory.ADD_ON) {

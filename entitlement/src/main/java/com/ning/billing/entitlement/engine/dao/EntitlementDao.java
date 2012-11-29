@@ -46,17 +46,17 @@ public interface EntitlementDao {
 
     public SubscriptionBundle createSubscriptionBundle(SubscriptionBundleData bundle, InternalCallContext context);
 
-    public Subscription getSubscriptionFromId(SubscriptionFactory factory, UUID subscriptionId, InternalTenantContext context);
+    public Subscription getSubscriptionFromId(UUID subscriptionId, InternalTenantContext context);
 
     // ACCOUNT retrieval
     public UUID getAccountIdFromSubscriptionId(UUID subscriptionId, InternalTenantContext context);
 
     // Subscription retrieval
-    public Subscription getBaseSubscription(SubscriptionFactory factory, UUID bundleId, InternalTenantContext context);
+    public Subscription getBaseSubscription(UUID bundleId, InternalTenantContext context);
 
-    public List<Subscription> getSubscriptions(SubscriptionFactory factory, UUID bundleId, InternalTenantContext context);
+    public List<Subscription> getSubscriptions(UUID bundleId, InternalTenantContext context);
 
-    public List<Subscription> getSubscriptionsForAccountAndKey(SubscriptionFactory factory, UUID accountId, String bundleKey, InternalTenantContext context);
+    public List<Subscription> getSubscriptionsForAccountAndKey(UUID accountId, String bundleKey, InternalTenantContext context);
 
     // Update
     public void updateChargedThroughDate(SubscriptionData subscription, InternalCallContext context);

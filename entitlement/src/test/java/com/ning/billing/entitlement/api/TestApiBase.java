@@ -275,6 +275,10 @@ public abstract class TestApiBase extends EntitlementTestSuiteWithEmbeddedDB imp
                                                                                                    new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSet, null),
                                                                                                    requestedDate == null ? clock.getUTCNow() : requestedDate, callContext);
         assertNotNull(subscription);
+
+
+        //try {Thread.sleep(100000000); } catch (Exception e) {};
+
         assertTrue(testListener.isCompleted(5000));
         return subscription;
     }
