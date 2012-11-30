@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -45,12 +46,14 @@ import com.ning.billing.entitlement.api.migration.AccountMigrationData.Subscript
 import com.ning.billing.entitlement.api.timeline.DefaultRepairEntitlementEvent;
 import com.ning.billing.entitlement.api.timeline.SubscriptionDataRepair;
 import com.ning.billing.entitlement.api.transfer.TransferCancelData;
+import com.ning.billing.entitlement.api.user.DefaultEffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.DefaultRequestedSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
+import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
 import com.ning.billing.entitlement.engine.addon.AddonUtils;
 import com.ning.billing.entitlement.engine.core.Engine;
 import com.ning.billing.entitlement.engine.core.EntitlementNotificationKey;
@@ -75,6 +78,7 @@ import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
+import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 import com.ning.billing.util.events.RepairEntitlementInternalEvent;
 import com.ning.billing.util.notificationq.NotificationKey;
 import com.ning.billing.util.notificationq.NotificationQueue;
@@ -387,10 +391,10 @@ public class DefaultEntitlementDao implements EntitlementDao {
                 final EntitlementEventSqlDao eventsDaoFromSameTransaction = entitySqlDaoWrapperFactory.become(EntitlementEventSqlDao.class);
                 for (final EntitlementEvent cur : initialEvents) {
                     eventsDaoFromSameTransaction.create(new EntitlementEventModelDao(cur), context);
-                    recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory,
-                                                            cur.getEffectiveDate(),
-                                                            new EntitlementNotificationKey(cur.getId()),
-                                                            context);
+
+                    final boolean isBusEvent = cur.getEffectiveDate().compareTo(clock.getUTCNow()) <= 0 && (cur.getType() == EventType.API_USER);
+                    recordBusOrFutureNotificationFromTransaction(subscription, cur, entitySqlDaoWrapperFactory, isBusEvent, 0, context);
+
                 }
                 // Notify the Bus of the latest requested change, if needed
                 if (initialEvents.size() > 0) {
@@ -401,6 +405,8 @@ public class DefaultEntitlementDao implements EntitlementDao {
         });
     }
 
+
+
     @Override
     public void recreateSubscription(final SubscriptionData subscription, final List<EntitlementEvent> recreateEvents, final InternalCallContext context) {
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
@@ -410,11 +416,9 @@ public class DefaultEntitlementDao implements EntitlementDao {
 
                 for (final EntitlementEvent cur : recreateEvents) {
                     transactional.create(new EntitlementEventModelDao(cur), context);
-                    recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory,
-                                                            cur.getEffectiveDate(),
-                                                            new EntitlementNotificationKey(cur.getId()),
-                                                            context);
 
+                    final boolean isBusEvent = cur.getEffectiveDate().compareTo(clock.getUTCNow()) <= 0 && (cur.getType() == EventType.API_USER);
+                    recordBusOrFutureNotificationFromTransaction(subscription, cur, entitySqlDaoWrapperFactory, isBusEvent, 0, context);
                 }
 
                 // Notify the Bus of the latest requested change
@@ -424,6 +428,24 @@ public class DefaultEntitlementDao implements EntitlementDao {
             }
         });
     }
+
+    @Override
+    public void cancelSubscriptions(final List<SubscriptionData> subscriptions, final List<EntitlementEvent> cancelEvents, final InternalCallContext context) {
+
+        transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
+            @Override
+            public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                for (int i = 0; i < subscriptions.size(); i++) {
+                    final SubscriptionData subscription = subscriptions.get(i);
+                    final EntitlementEvent cancelEvent = cancelEvents.get(i);
+                    cancelSubscriptionFromTransaction(subscription, cancelEvent, entitySqlDaoWrapperFactory, context, i);
+                }
+                return null;
+            }
+        });
+    }
+
+
 
     @Override
     public void cancelSubscription(final SubscriptionData subscription, final EntitlementEvent cancelEvent, final InternalCallContext context, final int seqId) {
@@ -496,10 +518,9 @@ public class DefaultEntitlementDao implements EntitlementDao {
                 for (final EntitlementEvent cur : changeEventsTweakedWithMigrateBilling) {
 
                     transactional.create(new EntitlementEventModelDao(cur), context);
-                    recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory,
-                                                            cur.getEffectiveDate(),
-                                                            new EntitlementNotificationKey(cur.getId()),
-                                                            context);
+
+                    final boolean isBusEvent = cur.getEffectiveDate().compareTo(clock.getUTCNow()) <= 0 && (cur.getType() == EventType.API_USER);
+                    recordBusOrFutureNotificationFromTransaction(subscription, cur, entitySqlDaoWrapperFactory, isBusEvent, 0, context);
                 }
 
                 // Notify the Bus of the latest requested change
@@ -606,10 +627,9 @@ public class DefaultEntitlementDao implements EntitlementDao {
         final UUID subscriptionId = subscription.getId();
         cancelFutureEventsFromTransaction(subscriptionId, entitySqlDaoWrapperFactory, context);
         entitySqlDaoWrapperFactory.become(EntitlementEventSqlDao.class).create(new EntitlementEventModelDao(cancelEvent), context);
-        recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory,
-                                                cancelEvent.getEffectiveDate(),
-                                                new EntitlementNotificationKey(cancelEvent.getId(), seqId),
-                                                context);
+
+        final boolean isBusEvent = cancelEvent.getEffectiveDate().compareTo(clock.getUTCNow()) <= 0;
+        recordBusOrFutureNotificationFromTransaction(subscription, cancelEvent, entitySqlDaoWrapperFactory, isBusEvent, seqId, context);
 
         // Notify the Bus of the requested change
         notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, cancelEvent, context);
@@ -763,15 +783,6 @@ public class DefaultEntitlementDao implements EntitlementDao {
         return result;
     }
 
-
-    private SubscriptionData createSubscriptionForInternalUse(final Subscription shellSubscription, final List<EntitlementEvent> events) {
-        final SubscriptionData result = new SubscriptionData(new SubscriptionBuilder(((SubscriptionData) shellSubscription)), null, clock);
-        if (events.size() > 0) {
-            result.rebuildTransitions(events, catalogService.getFullCatalog());
-        }
-        return result;
-    }
-
     @Override
     public void migrate(final UUID accountId, final AccountMigrationData accountData, final InternalCallContext context) {
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
@@ -845,6 +856,14 @@ public class DefaultEntitlementDao implements EntitlementDao {
         });
     }
 
+    private SubscriptionData createSubscriptionForInternalUse(final Subscription shellSubscription, final List<EntitlementEvent> events) {
+        final SubscriptionData result = new SubscriptionData(new SubscriptionBuilder(((SubscriptionData) shellSubscription)), null, clock);
+        if (events.size() > 0) {
+            result.rebuildTransitions(events, catalogService.getFullCatalog());
+        }
+        return result;
+    }
+
     private Subscription getBaseSubscription(final UUID bundleId, final boolean rebuildSubscription, final InternalTenantContext context) {
         final List<Subscription> subscriptions = getSubscriptionFromBundleId(bundleId, context);
         for (final Subscription cur : subscriptions) {
@@ -853,6 +872,53 @@ public class DefaultEntitlementDao implements EntitlementDao {
             }
         }
         return null;
+    }
+
+
+    //
+    // Either records a notfication or sends a bus event is operation is immediate
+    //
+    private void recordBusOrFutureNotificationFromTransaction(final SubscriptionData subscription, final EntitlementEvent event, final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final boolean busEvent,
+                                                              final int seqId, final InternalCallContext context) {
+        if (busEvent) {
+            notifyBusOfEffectiveImmediateChange(entitySqlDaoWrapperFactory, subscription, event, seqId, context);
+        } else {
+            recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory,
+                                                    event.getEffectiveDate(),
+                                                    new EntitlementNotificationKey(event.getId()),
+                                                    context);
+        }
+    }
+
+    //
+    // Sends bus notification for event on effecfive date-- only used for operation that happen immediately:
+    // - CREATE,
+    // - IMM CANCEL or CHANGE
+    //
+    private void notifyBusOfEffectiveImmediateChange(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final SubscriptionData subscription,
+                                            final EntitlementEvent immediateEvent, final int seqId, final InternalCallContext context) {
+        try {
+
+            final SubscriptionData upToDateSubscription = createSubscriptionWithNewEvent(subscription, immediateEvent);
+
+            final SubscriptionTransitionData transition = upToDateSubscription.getTransitionFromEvent(immediateEvent, seqId);
+            final EffectiveSubscriptionInternalEvent busEvent = new DefaultEffectiveSubscriptionEvent(transition, upToDateSubscription.getAlignStartDate(),
+                                                                                                      context.getAccountRecordId(), context.getTenantRecordId());
+
+
+            eventBus.postFromTransaction(busEvent, entitySqlDaoWrapperFactory, context);
+        } catch (EventBusException e) {
+            log.warn("Failed to post effective event for subscription " + subscription.getId(), e);
+        }
+    }
+
+    private void notifyBusOfRequestedChange(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final SubscriptionData subscription,
+                                            final EntitlementEvent nextEvent, final InternalCallContext context) {
+        try {
+            eventBus.postFromTransaction(new DefaultRequestedSubscriptionEvent(subscription, nextEvent, context.getAccountRecordId(), context.getTenantRecordId()), entitySqlDaoWrapperFactory, context);
+        } catch (EventBusException e) {
+            log.warn("Failed to post requested change event for subscription " + subscription.getId(), e);
+        }
     }
 
     private void recordFutureNotificationFromTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final DateTime effectiveDate,
@@ -867,16 +933,6 @@ public class DefaultEntitlementDao implements EntitlementDao {
             throw new RuntimeException(e);
         }
     }
-
-    private void notifyBusOfRequestedChange(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final SubscriptionData subscription,
-                                            final EntitlementEvent nextEvent, final InternalCallContext context) {
-        try {
-            eventBus.postFromTransaction(new DefaultRequestedSubscriptionEvent(subscription, nextEvent, context.getAccountRecordId(), context.getTenantRecordId()), entitySqlDaoWrapperFactory, context);
-        } catch (EventBusException e) {
-            log.warn("Failed to post requested change event for subscription " + subscription.getId(), e);
-        }
-    }
-
     private void migrateBundleDataFromTransaction(final BundleMigrationData bundleTransferData, final EntitlementEventSqlDao transactional,
                                                   final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final InternalCallContext context) throws EntityPersistenceException {
 
@@ -909,4 +965,20 @@ public class DefaultEntitlementDao implements EntitlementDao {
 
         transBundleDao.create(new SubscriptionBundleModelDao(bundleData), context);
     }
+
+    //
+    // Creates a copy of the existing subscriptions whose 'transitions' will reflect the new event
+    //
+    private SubscriptionData createSubscriptionWithNewEvent(final SubscriptionData subscription, EntitlementEvent newEvent) {
+
+        final SubscriptionData subscriptionWithNewEvent = new SubscriptionData(subscription, null, clock);
+        final List<EntitlementEvent> allEvents = new LinkedList<EntitlementEvent>();
+        if (subscriptionWithNewEvent.getEvents() != null) {
+            allEvents.addAll(subscriptionWithNewEvent.getEvents());
+        }
+        allEvents.add(newEvent);
+        subscriptionWithNewEvent.rebuildTransitions(allEvents, catalogService.getFullCatalog());
+        return subscriptionWithNewEvent;
+    }
+
 }

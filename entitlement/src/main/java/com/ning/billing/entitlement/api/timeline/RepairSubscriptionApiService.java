@@ -16,12 +16,17 @@
 
 package com.ning.billing.entitlement.api.timeline;
 
+import org.joda.time.DateTime;
+
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.entitlement.alignment.PlanAligner;
 import com.ning.billing.entitlement.api.SubscriptionApiService;
 import com.ning.billing.entitlement.api.user.DefaultSubscriptionApiService;
+import com.ning.billing.entitlement.api.user.SubscriptionData;
+import com.ning.billing.entitlement.engine.addon.AddonUtils;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
+import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 
@@ -35,7 +40,14 @@ public class RepairSubscriptionApiService extends DefaultSubscriptionApiService 
                                         @Named(DefaultEntitlementModule.REPAIR_NAMED) final EntitlementDao dao,
                                         final CatalogService catalogService,
                                         final PlanAligner planAligner,
+                                        final AddonUtils addonUtils,
                                         final InternalCallContextFactory internalCallContextFactory) {
-        super(clock, dao, catalogService, planAligner, internalCallContextFactory);
+        super(clock, dao, catalogService, planAligner, addonUtils, internalCallContextFactory);
+    }
+
+    // Nothing to do for repair as we pass all the repair events in the stream
+    @Override
+    public int cancelAddOnsIfRequired(final SubscriptionData baseSubscription, final DateTime effectiveDate, final InternalCallContext context) {
+        return 0;
     }
 }

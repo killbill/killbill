@@ -31,6 +31,7 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.alignment.PlanAligner;
 import com.ning.billing.entitlement.alignment.TimedPhase;
 import com.ning.billing.entitlement.api.EntitlementService;
+import com.ning.billing.entitlement.api.SubscriptionApiService;
 import com.ning.billing.entitlement.api.user.DefaultEffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
@@ -80,11 +81,14 @@ public class Engine implements EventListener, EntitlementService {
     private final NotificationQueueService notificationQueueService;
     private final InternalCallContextFactory internalCallContextFactory;
     private NotificationQueue subscriptionEventQueue;
+    private final SubscriptionApiService apiService;
 
     @Inject
     public Engine(final Clock clock, final EntitlementDao dao, final PlanAligner planAligner,
                   final AddonUtils addonUtils, final InternalBus eventBus,
-                  final NotificationQueueService notificationQueueService, final InternalCallContextFactory internalCallContextFactory) {
+                  final NotificationQueueService notificationQueueService,
+                  final InternalCallContextFactory internalCallContextFactory,
+                  final SubscriptionApiService apiService) {
         this.clock = clock;
         this.dao = dao;
         this.planAligner = planAligner;
@@ -92,6 +96,7 @@ public class Engine implements EventListener, EntitlementService {
         this.eventBus = eventBus;
         this.notificationQueueService = notificationQueueService;
         this.internalCallContextFactory = internalCallContextFactory;
+        this.apiService = apiService;
     }
 
     @Override
@@ -163,7 +168,6 @@ public class Engine implements EventListener, EntitlementService {
         //
         // Do any internal processing on that event before we send the event to the bus
         //
-
         int theRealSeqId = seqId;
         if (event.getType() == EventType.PHASE) {
             onPhaseEvent(subscription, context);
@@ -174,7 +178,7 @@ public class Engine implements EventListener, EntitlementService {
         try {
             final SubscriptionTransitionData transition = (subscription.getTransitionFromEvent(event, theRealSeqId));
             final EffectiveSubscriptionInternalEvent busEvent = new DefaultEffectiveSubscriptionEvent(transition, subscription.getAlignStartDate(),
-                    context.getAccountRecordId(), context.getTenantRecordId());
+                                                                                                      context.getAccountRecordId(), context.getTenantRecordId());
             eventBus.post(busEvent, context);
         } catch (EventBusException e) {
             log.warn("Failed to post entitlement event " + event, e);
@@ -197,47 +201,8 @@ public class Engine implements EventListener, EntitlementService {
     }
 
     private int onBasePlanEvent(final SubscriptionData baseSubscription, final ApiEvent event, final InternalCallContext context) {
-        final DateTime now = clock.getUTCNow();
-        final Product baseProduct = (baseSubscription.getState() == SubscriptionState.CANCELLED) ? null : baseSubscription.getCurrentPlan().getProduct();
-
-        final List<Subscription> subscriptions = dao.getSubscriptions(baseSubscription.getBundleId(), context);
-
-        final Map<UUID, EntitlementEvent> addOnCancellations = new HashMap<UUID, EntitlementEvent>();
-        final Map<UUID, SubscriptionData> addOnCancellationSubscriptions = new HashMap<UUID, SubscriptionData>();
-        for (final Subscription subscription : subscriptions) {
-            final SubscriptionData cur = (SubscriptionData) subscription;
-            if (cur.getState() == SubscriptionState.CANCELLED ||
-                cur.getCategory() != ProductCategory.ADD_ON) {
-                continue;
-            }
-
-            final Plan addonCurrentPlan = cur.getCurrentPlan();
-            if (baseProduct == null ||
-                addonUtils.isAddonIncluded(baseProduct, addonCurrentPlan) ||
-                !addonUtils.isAddonAvailable(baseProduct, addonCurrentPlan)) {
-                //
-                // Perform AO cancellation using the effectiveDate of the BP
-                //
-                final EntitlementEvent cancelEvent = new ApiEventCancel(new ApiEventBuilder()
-                                                                                .setSubscriptionId(cur.getId())
-                                                                                .setActiveVersion(cur.getActiveVersion())
-                                                                                .setProcessedDate(now)
-                                                                                .setEffectiveDate(event.getEffectiveDate())
-                                                                                .setRequestedDate(now)
-                                                                                .setUserToken(context.getUserToken())
-                                                                                .setFromDisk(true));
-
-                addOnCancellations.put(cur.getId(), cancelEvent);
-                addOnCancellationSubscriptions.put(cur.getId(), cur);
-            }
-        }
-
-        final int addOnSize = addOnCancellations.size();
-        int cancelSeq = addOnSize - 1;
-        for (final UUID key : addOnCancellations.keySet()) {
-            dao.cancelSubscription(addOnCancellationSubscriptions.get(key), addOnCancellations.get(key), context, cancelSeq);
-            cancelSeq--;
-        }
-        return addOnSize;
+        return apiService.cancelAddOnsIfRequired(baseSubscription, event.getEffectiveDate(), context);
     }
+
+
 }

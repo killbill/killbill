@@ -507,8 +507,7 @@ public class SubscriptionData extends EntityBase implements Subscription {
                 "Failed to find CurrentPhaseStart id = %s", getId().toString()));
     }
 
-    public void rebuildTransitions(final List<EntitlementEvent> inputEvents,
-            final Catalog catalog) {
+    public void rebuildTransitions(final List<EntitlementEvent> inputEvents, final Catalog catalog) {
 
         if (inputEvents == null) {
             return;

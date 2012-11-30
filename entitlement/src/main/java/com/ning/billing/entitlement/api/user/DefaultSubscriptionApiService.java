@@ -17,6 +17,8 @@
 package com.ning.billing.entitlement.api.user;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
@@ -37,10 +39,12 @@ import com.ning.billing.catalog.api.PlanSpecifier;
 import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.Product;
+import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.alignment.PlanAligner;
 import com.ning.billing.entitlement.alignment.TimedPhase;
 import com.ning.billing.entitlement.api.SubscriptionApiService;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
+import com.ning.billing.entitlement.engine.addon.AddonUtils;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
@@ -67,17 +71,21 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
     private final EntitlementDao dao;
     private final CatalogService catalogService;
     private final PlanAligner planAligner;
+    private final AddonUtils addonUtils;
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
     public DefaultSubscriptionApiService(final Clock clock, final EntitlementDao dao, final CatalogService catalogService,
-                                         final PlanAligner planAligner, final InternalCallContextFactory internalCallContextFactory) {
+                                         final PlanAligner planAligner, final AddonUtils addonUtils,
+                                         final InternalCallContextFactory internalCallContextFactory) {
         this.clock = clock;
         this.catalogService = catalogService;
         this.planAligner = planAligner;
         this.dao = dao;
+        this.addonUtils = addonUtils;
         this.internalCallContextFactory = internalCallContextFactory;
     }
+
 
     @Override
     public SubscriptionData createPlan(final SubscriptionBuilder builder, final Plan plan, final PhaseType initialPhase,
@@ -214,6 +222,9 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
         final InternalCallContext internalCallContext = createCallContextFromBundleId(subscription.getBundleId(), context);
         dao.cancelSubscription(subscription, cancelEvent, internalCallContext, 0);
         subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId(), internalCallContext), catalogService.getFullCatalog());
+
+        cancelAddOnsIfRequired(subscription, effectiveDate, internalCallContext);
+
         return (policy == ActionPolicy.IMMEDIATE);
     }
 
@@ -353,7 +364,56 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
         dao.changePlan(subscription, changeEvents, internalCallContext);
         subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId(), internalCallContext), catalogService.getFullCatalog());
 
+        cancelAddOnsIfRequired(subscription, effectiveDate, internalCallContext);
+
         return (policy == ActionPolicy.IMMEDIATE);
+    }
+
+
+    public int cancelAddOnsIfRequired(final SubscriptionData baseSubscription, final DateTime effectiveDate, final InternalCallContext context) {
+
+        // If cancellation/change occur in the future, there is nothing to do
+        final DateTime now = clock.getUTCNow();
+        if (effectiveDate.compareTo(now) > 0) {
+            return 0;
+        }
+
+        final Product baseProduct = (baseSubscription.getState() == SubscriptionState.CANCELLED) ? null : baseSubscription.getCurrentPlan().getProduct();
+
+        final List<Subscription> subscriptions = dao.getSubscriptions(baseSubscription.getBundleId(), context);
+
+        final List<SubscriptionData> subscriptionsToBeCancelled = new LinkedList<SubscriptionData>();
+        final List<EntitlementEvent> cancelEvents = new LinkedList<EntitlementEvent>();
+
+        for (final Subscription subscription : subscriptions) {
+            final SubscriptionData cur = (SubscriptionData) subscription;
+            if (cur.getState() == SubscriptionState.CANCELLED ||
+                cur.getCategory() != ProductCategory.ADD_ON) {
+                continue;
+            }
+
+            final Plan addonCurrentPlan = cur.getCurrentPlan();
+            if (baseProduct == null ||
+                addonUtils.isAddonIncluded(baseProduct, addonCurrentPlan) ||
+                !addonUtils.isAddonAvailable(baseProduct, addonCurrentPlan)) {
+                //
+                // Perform AO cancellation using the effectiveDate of the BP
+                //
+                final EntitlementEvent cancelEvent = new ApiEventCancel(new ApiEventBuilder()
+                                                                                .setSubscriptionId(cur.getId())
+                                                                                .setActiveVersion(cur.getActiveVersion())
+                                                                                .setProcessedDate(now)
+                                                                                .setEffectiveDate(effectiveDate)
+                                                                                .setRequestedDate(now)
+                                                                                .setUserToken(context.getUserToken())
+                                                                                .setFromDisk(true));
+                subscriptionsToBeCancelled.add(cur);
+                cancelEvents.add(cancelEvent);
+            }
+        }
+
+        dao.cancelSubscriptions(subscriptionsToBeCancelled, cancelEvents, context);
+        return subscriptionsToBeCancelled.size();
     }
 
     private void validateRequestedDate(final SubscriptionData subscription, final DateTime now, final DateTime requestedDate)
@@ -363,7 +423,7 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
             throw new EntitlementUserApiException(ErrorCode.ENT_INVALID_REQUESTED_FUTURE_DATE, requestedDate.toString());
         }
 
-        final SubscriptionTransition  previousTransition = subscription.getPreviousTransition();
+        final SubscriptionTransition previousTransition = subscription.getPreviousTransition();
         if (previousTransition != null && previousTransition.getEffectiveTransitionTime().isAfter(requestedDate)) {
             throw new EntitlementUserApiException(ErrorCode.ENT_INVALID_REQUESTED_DATE,
                                                   requestedDate.toString(), previousTransition.getEffectiveTransitionTime());

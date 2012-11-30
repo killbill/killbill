@@ -27,6 +27,7 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.InternalCallContext;
 
 public interface SubscriptionApiService {
 
@@ -54,4 +55,6 @@ public interface SubscriptionApiService {
     public boolean changePlanWithPolicy(SubscriptionData subscription, String productName, BillingPeriod term,
                                         String priceList, DateTime requestedDate, ActionPolicy policy, CallContext context)
             throws EntitlementUserApiException;
+
+    public int cancelAddOnsIfRequired(final SubscriptionData baseSubscription, final DateTime effectiveDate, final InternalCallContext context);
 }

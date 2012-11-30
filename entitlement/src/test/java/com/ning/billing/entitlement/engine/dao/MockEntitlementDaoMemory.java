@@ -280,6 +280,15 @@ public class MockEntitlementDaoMemory implements EntitlementDao {
     }
 
     @Override
+    public void cancelSubscriptions(final List<SubscriptionData> subscriptions, final List<EntitlementEvent> cancelEvents, final InternalCallContext context) {
+        synchronized (events) {
+            for (int i = 0; i < subscriptions.size(); i++) {
+                cancelSubscription(subscriptions.get(i), cancelEvents.get(i), context, 0);
+            }
+        }
+    }
+
+    @Override
     public void changePlan(final SubscriptionData subscription, final List<EntitlementEvent> changeEvents, final InternalCallContext context) {
         synchronized (events) {
             cancelNextChangeEvent(subscription.getId());
