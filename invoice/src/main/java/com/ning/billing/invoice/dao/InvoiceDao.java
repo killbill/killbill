@@ -163,4 +163,11 @@ public interface InvoiceDao {
     void deleteCBA(UUID accountId, UUID invoiceId, UUID invoiceItemId, InternalCallContext context) throws InvoiceApiException;
 
     void notifyOfPayment(InvoicePaymentModelDao invoicePayment, InternalCallContext context);
+
+    /**
+     *
+     * @param accountId the account for which we need to rebalance the CBA
+     * @param context the callContext
+     */
+    public void consumeExstingCBAOnAccountWithUnpaidInvoices(final UUID accountId, final InternalCallContext context);
 }
