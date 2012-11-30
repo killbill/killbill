@@ -24,11 +24,11 @@ import org.joda.time.DateTime;
 import org.skife.jdbi.v2.exceptions.CallbackFailedException;
 import org.skife.jdbi.v2.exceptions.UnableToObtainConnectionException;
 
-import com.ning.billing.meter.timeline.categories.CategoryIdAndMetric;
+import com.ning.billing.meter.timeline.categories.CategoryRecordIdAndMetric;
 import com.ning.billing.meter.timeline.chunks.TimelineChunk;
 import com.ning.billing.meter.timeline.consumer.TimelineChunkConsumer;
 import com.ning.billing.meter.timeline.shutdown.StartTimes;
-import com.ning.billing.meter.timeline.sources.SourceIdAndMetricId;
+import com.ning.billing.meter.timeline.sources.SourceRecordIdAndMetricRecordId;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 
@@ -60,15 +60,15 @@ public interface TimelineDao {
 
     Integer getMetricId(int eventCategory, String metric, InternalTenantContext context) throws UnableToObtainConnectionException, CallbackFailedException;
 
-    CategoryIdAndMetric getCategoryIdAndMetric(Integer metricId, InternalTenantContext context) throws UnableToObtainConnectionException, CallbackFailedException;
+    CategoryRecordIdAndMetric getCategoryIdAndMetric(Integer metricId, InternalTenantContext context) throws UnableToObtainConnectionException, CallbackFailedException;
 
-    BiMap<Integer, CategoryIdAndMetric> getMetrics(InternalTenantContext context) throws UnableToObtainConnectionException, CallbackFailedException;
+    BiMap<Integer, CategoryRecordIdAndMetric> getMetrics(InternalTenantContext context) throws UnableToObtainConnectionException, CallbackFailedException;
 
     int getOrAddMetric(Integer sourceId, Integer eventCategoryId, String metric, InternalCallContext context) throws UnableToObtainConnectionException, CallbackFailedException;
 
     Iterable<Integer> getMetricIdsBySourceId(Integer sourceId, InternalTenantContext context) throws UnableToObtainConnectionException, CallbackFailedException;
 
-    Iterable<SourceIdAndMetricId> getMetricIdsForAllSources(InternalTenantContext context) throws UnableToObtainConnectionException, CallbackFailedException;
+    Iterable<SourceRecordIdAndMetricRecordId> getMetricIdsForAllSources(InternalTenantContext context) throws UnableToObtainConnectionException, CallbackFailedException;
 
     // Timelines tables
 
@@ -86,12 +86,6 @@ public interface TimelineDao {
     StartTimes getLastStartTimes(InternalTenantContext context);
 
     void deleteLastStartTimes(InternalCallContext context);
-
-    void bulkInsertSources(List<String> sources, InternalCallContext context) throws UnableToObtainConnectionException, CallbackFailedException;
-
-    void bulkInsertEventCategories(List<String> categoryNames, InternalCallContext context) throws UnableToObtainConnectionException, CallbackFailedException;
-
-    void bulkInsertMetrics(List<CategoryIdAndMetric> categoryAndKinds, InternalCallContext context);
 
     void bulkInsertTimelineChunks(List<TimelineChunk> timelineChunkList, InternalCallContext context);
 

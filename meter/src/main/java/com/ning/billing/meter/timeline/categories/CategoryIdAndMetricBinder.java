@@ -37,10 +37,10 @@ public @interface CategoryIdAndMetricBinder {
     public static class CategoryIdAndMetricBinderFactory implements BinderFactory {
 
         public Binder build(final Annotation annotation) {
-            return new Binder<CategoryIdAndMetricBinder, CategoryIdAndMetric>() {
-                public void bind(final SQLStatement query, final CategoryIdAndMetricBinder binder, final CategoryIdAndMetric categoryAndKind) {
-                    query.bind("eventCategoryId", categoryAndKind.getEventCategoryId())
-                         .bind("metric", categoryAndKind.getMetric());
+            return new Binder<CategoryIdAndMetricBinder, CategoryRecordIdAndMetric>() {
+                public void bind(final SQLStatement query, final CategoryIdAndMetricBinder binder, final CategoryRecordIdAndMetric categoryRecordAndKind) {
+                    query.bind("eventCategoryId", categoryRecordAndKind.getEventCategoryId())
+                         .bind("metric", categoryRecordAndKind.getMetric());
                 }
             };
         }

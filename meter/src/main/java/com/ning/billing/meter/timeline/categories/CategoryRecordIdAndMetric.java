@@ -20,12 +20,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class CategoryIdAndMetric {
+public class CategoryRecordIdAndMetric {
 
     private final int eventCategoryId;
     private final String metric;
 
-    public CategoryIdAndMetric(final int eventCategoryId, final String metric) {
+    public CategoryRecordIdAndMetric(final int eventCategoryId, final String metric) {
         this.eventCategoryId = eventCategoryId;
         this.metric = metric;
     }
@@ -40,10 +40,10 @@ public class CategoryIdAndMetric {
 
     @Override
     public boolean equals(final Object other) {
-        if (other == null || !(other instanceof CategoryIdAndMetric)) {
+        if (other == null || !(other instanceof CategoryRecordIdAndMetric)) {
             return false;
         } else {
-            final CategoryIdAndMetric typedOther = (CategoryIdAndMetric) other;
+            final CategoryRecordIdAndMetric typedOther = (CategoryRecordIdAndMetric) other;
             return eventCategoryId == typedOther.getEventCategoryId() && metric.equals(typedOther.getMetric());
         }
     }
@@ -58,10 +58,10 @@ public class CategoryIdAndMetric {
         return String.format("EventCategoryIdAndMetric(eventCategoryId %d, metric %s)", eventCategoryId, metric);
     }
 
-    public static List<String> extractMetrics(final Collection<CategoryIdAndMetric> categoryIdsAndMetrics) {
+    public static List<String> extractMetrics(final Collection<CategoryRecordIdAndMetric> categoryRecordIdsAndMetrics) {
         final List<String> metrics = new ArrayList<String>();
-        for (final CategoryIdAndMetric categoryIdAndMetric : categoryIdsAndMetrics) {
-            metrics.add(categoryIdAndMetric.getMetric());
+        for (final CategoryRecordIdAndMetric categoryRecordIdAndMetric : categoryRecordIdsAndMetrics) {
+            metrics.add(categoryRecordIdAndMetric.getMetric());
         }
         return metrics;
     }

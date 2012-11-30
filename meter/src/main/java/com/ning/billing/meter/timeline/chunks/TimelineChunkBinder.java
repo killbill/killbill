@@ -49,8 +49,8 @@ public @interface TimelineChunkBinder {
         public Binder build(final Annotation annotation) {
             return new Binder<TimelineChunkBinder, TimelineChunk>() {
                 public void bind(final SQLStatement query, final TimelineChunkBinder binder, final TimelineChunk timelineChunk) {
-                    query.bind("sourceId", timelineChunk.getSourceId())
-                         .bind("metricId", timelineChunk.getMetricId())
+                    query.bind("sourceRecordId", timelineChunk.getSourceId())
+                         .bind("metricRecordId", timelineChunk.getMetricId())
                          .bind("sampleCount", timelineChunk.getSampleCount())
                          .bind("startTime", DateTimeUtils.unixSeconds(timelineChunk.getStartTime()))
                          .bind("endTime", DateTimeUtils.unixSeconds(timelineChunk.getEndTime()))

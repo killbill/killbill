@@ -22,10 +22,10 @@ import java.sql.SQLException;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-public class SourceIdAndMetricIdMapper implements ResultSetMapper<SourceIdAndMetricId> {
+public class SourceIdAndMetricIdMapper implements ResultSetMapper<SourceRecordIdAndMetricRecordId> {
 
     @Override
-    public SourceIdAndMetricId map(final int index, final ResultSet rs, final StatementContext ctx) throws SQLException {
-        return new SourceIdAndMetricId(rs.getInt("source_id"), rs.getInt("sample_kind_id"));
+    public SourceRecordIdAndMetricRecordId map(final int index, final ResultSet rs, final StatementContext ctx) throws SQLException {
+        return new SourceRecordIdAndMetricRecordId(rs.getInt("source_record_id"), rs.getInt("metric_record_id"));
     }
 }

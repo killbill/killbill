@@ -22,12 +22,12 @@ import java.sql.SQLException;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-public class CategoryIdAndMetricMapper implements ResultSetMapper<CategoryIdAndMetric> {
+public class CategoryIdAndMetricMapper implements ResultSetMapper<CategoryRecordIdAndMetric> {
 
     @Override
-    public CategoryIdAndMetric map(final int index, final ResultSet rs, final StatementContext ctx) throws SQLException {
-        final int eventCategoryId = rs.getInt("event_category_id");
-        final String metric = rs.getString("sample_kind");
-        return new CategoryIdAndMetric(eventCategoryId, metric);
+    public CategoryRecordIdAndMetric map(final int index, final ResultSet rs, final StatementContext ctx) throws SQLException {
+        final int categoryRecordId = rs.getInt("category_record_id");
+        final String metric = rs.getString("metric");
+        return new CategoryRecordIdAndMetric(categoryRecordId, metric);
     }
 }

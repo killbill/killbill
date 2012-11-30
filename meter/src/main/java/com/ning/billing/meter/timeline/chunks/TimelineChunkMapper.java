@@ -34,9 +34,9 @@ public class TimelineChunkMapper implements ResultSetMapper<TimelineChunk> {
 
     @Override
     public TimelineChunk map(final int index, final ResultSet rs, final StatementContext ctx) throws SQLException {
-        final int chunkId = rs.getInt("chunk_id");
-        final int sourceId = rs.getInt("source_id");
-        final int metricId = rs.getInt("sample_kind_id");
+        final int chunkId = rs.getInt("record_id");
+        final int sourceId = rs.getInt("source_record_id");
+        final int metricId = rs.getInt("metric_record_id");
         final int sampleCount = rs.getInt("sample_count");
         final DateTime startTime = DateTimeUtils.dateTimeFromUnixSeconds(rs.getInt("start_time"));
         final DateTime endTime = DateTimeUtils.dateTimeFromUnixSeconds(rs.getInt("end_time"));

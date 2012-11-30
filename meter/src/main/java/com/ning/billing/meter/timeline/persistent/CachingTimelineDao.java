@@ -30,11 +30,11 @@ import org.skife.jdbi.v2.exceptions.UnableToObtainConnectionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ning.billing.meter.timeline.categories.CategoryIdAndMetric;
+import com.ning.billing.meter.timeline.categories.CategoryRecordIdAndMetric;
 import com.ning.billing.meter.timeline.chunks.TimelineChunk;
 import com.ning.billing.meter.timeline.consumer.TimelineChunkConsumer;
 import com.ning.billing.meter.timeline.shutdown.StartTimes;
-import com.ning.billing.meter.timeline.sources.SourceIdAndMetricId;
+import com.ning.billing.meter.timeline.sources.SourceRecordIdAndMetricRecordId;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 
@@ -47,7 +47,7 @@ public class CachingTimelineDao implements TimelineDao {
 
     private final BiMap<Integer, String> sourcesCache;
     private final Map<Integer, Set<Integer>> sourceIdsMetricIdsCache;
-    private final BiMap<Integer, CategoryIdAndMetric> metricsCache;
+    private final BiMap<Integer, CategoryRecordIdAndMetric> metricsCache;
     private final BiMap<Integer, String> eventCategoriesCache;
 
     private final TimelineDao delegate;
@@ -60,7 +60,7 @@ public class CachingTimelineDao implements TimelineDao {
         metricsCache = delegate.getMetrics(context);
         eventCategoriesCache = delegate.getEventCategories(context);
         sourceIdsMetricIdsCache = new HashMap<Integer, Set<Integer>>();
-        for (final SourceIdAndMetricId both : delegate.getMetricIdsForAllSources(context)) {
+        for (final SourceRecordIdAndMetricRecordId both : delegate.getMetricIdsForAllSources(context)) {
             final int sourceId = both.getSourceId();
             final int metricId = both.getMetricId();
             Set<Integer> metricIds = sourceIdsMetricIdsCache.get(sourceId);
@@ -125,26 +125,26 @@ public class CachingTimelineDao implements TimelineDao {
 
     @Override
     public Integer getMetricId(final int eventCategoryId, final String metric, final InternalTenantContext context) throws UnableToObtainConnectionException {
-        return metricsCache.inverse().get(new CategoryIdAndMetric(eventCategoryId, metric));
+        return metricsCache.inverse().get(new CategoryRecordIdAndMetric(eventCategoryId, metric));
     }
 
     @Override
-    public CategoryIdAndMetric getCategoryIdAndMetric(final Integer metricId, final InternalTenantContext context) throws UnableToObtainConnectionException {
+    public CategoryRecordIdAndMetric getCategoryIdAndMetric(final Integer metricId, final InternalTenantContext context) throws UnableToObtainConnectionException {
         return metricsCache.get(metricId);
     }
 
     @Override
-    public BiMap<Integer, CategoryIdAndMetric> getMetrics(final InternalTenantContext context) throws UnableToObtainConnectionException, CallbackFailedException {
+    public BiMap<Integer, CategoryRecordIdAndMetric> getMetrics(final InternalTenantContext context) throws UnableToObtainConnectionException, CallbackFailedException {
         return delegate.getMetrics(context);
     }
 
     @Override
     public synchronized int getOrAddMetric(final Integer sourceId, final Integer eventCategoryId, final String metric, final InternalCallContext context) throws UnableToObtainConnectionException, CallbackFailedException {
-        final CategoryIdAndMetric categoryIdAndMetric = new CategoryIdAndMetric(eventCategoryId, metric);
-        Integer metricId = metricsCache.inverse().get(categoryIdAndMetric);
+        final CategoryRecordIdAndMetric categoryRecordIdAndMetric = new CategoryRecordIdAndMetric(eventCategoryId, metric);
+        Integer metricId = metricsCache.inverse().get(categoryRecordIdAndMetric);
         if (metricId == null) {
             metricId = delegate.getOrAddMetric(sourceId, eventCategoryId, metric, context);
-            metricsCache.put(metricId, categoryIdAndMetric);
+            metricsCache.put(metricId, categoryRecordIdAndMetric);
         }
         if (sourceId != null) {
             Set<Integer> metricIds = sourceIdsMetricIdsCache.get(sourceId);
@@ -163,7 +163,7 @@ public class CachingTimelineDao implements TimelineDao {
     }
 
     @Override
-    public Iterable<SourceIdAndMetricId> getMetricIdsForAllSources(final InternalTenantContext context) throws UnableToObtainConnectionException, CallbackFailedException {
+    public Iterable<SourceRecordIdAndMetricRecordId> getMetricIdsForAllSources(final InternalTenantContext context) throws UnableToObtainConnectionException, CallbackFailedException {
         return delegate.getMetricIdsForAllSources(context);
     }
 
@@ -192,21 +192,6 @@ public class CachingTimelineDao implements TimelineDao {
     @Override
     public void deleteLastStartTimes(final InternalCallContext context) {
         delegate.deleteLastStartTimes(context);
-    }
-
-    @Override
-    public void bulkInsertEventCategories(final List<String> categoryNames, final InternalCallContext context) throws UnableToObtainConnectionException, CallbackFailedException {
-        delegate.bulkInsertEventCategories(categoryNames, context);
-    }
-
-    @Override
-    public void bulkInsertSources(final List<String> sources, final InternalCallContext context) throws UnableToObtainConnectionException, CallbackFailedException {
-        delegate.bulkInsertSources(sources, context);
-    }
-
-    @Override
-    public void bulkInsertMetrics(final List<CategoryIdAndMetric> categoryAndKinds, final InternalCallContext context) {
-        delegate.bulkInsertMetrics(categoryAndKinds, context);
     }
 
     @Override

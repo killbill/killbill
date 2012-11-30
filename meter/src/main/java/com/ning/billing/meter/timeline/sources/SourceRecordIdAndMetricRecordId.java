@@ -16,12 +16,12 @@
 
 package com.ning.billing.meter.timeline.sources;
 
-public class SourceIdAndMetricId {
+public class SourceRecordIdAndMetricRecordId {
 
     private final int sourceId;
     private final int metricId;
 
-    public SourceIdAndMetricId(final int sourceId, final int metricId) {
+    public SourceRecordIdAndMetricRecordId(final int sourceId, final int metricId) {
         this.sourceId = sourceId;
         this.metricId = metricId;
     }
@@ -37,7 +37,7 @@ public class SourceIdAndMetricId {
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
-        sb.append("SourceIdAndMetricId");
+        sb.append("SourceRecordIdAndMetricRecordId");
         sb.append("{sourceId=").append(sourceId);
         sb.append(", metricId=").append(metricId);
         sb.append('}');
@@ -53,7 +53,7 @@ public class SourceIdAndMetricId {
             return false;
         }
 
-        final SourceIdAndMetricId that = (SourceIdAndMetricId) o;
+        final SourceRecordIdAndMetricRecordId that = (SourceRecordIdAndMetricRecordId) o;
 
         if (metricId != that.metricId) {
             return false;
