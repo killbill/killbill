@@ -20,7 +20,6 @@ getReadyNotifications() ::= <<
       , account_record_id
       , tenant_record_id
     from notifications
-    FORCE INDEX (idx_comp_where)
     where
       effective_date \<= :now
       and queue_name = :queueName

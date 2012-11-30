@@ -31,8 +31,8 @@ import org.testng.annotations.Test;
 import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.dbi.DBIProvider;
+import com.ning.billing.dbi.DBTestingHelper;
 import com.ning.billing.dbi.DbiConfig;
-import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.payment.PaymentTestSuiteWithEmbeddedDB;
 import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
@@ -47,7 +47,7 @@ import static org.testng.Assert.fail;
 public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
 
     private PaymentDao paymentDao;
-    private MysqlTestingHelper helper;
+    private DBTestingHelper helper;
     private IDBI dbi;
     private Clock clock;
 
@@ -59,7 +59,7 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
     }
 
     private void setupDb() {
-        helper = KillbillTestSuiteWithEmbeddedDB.getMysqlTestingHelper();
+        helper = KillbillTestSuiteWithEmbeddedDB.getDBTestingHelper();
         if (helper.isUsingLocalInstance()) {
             final DbiConfig config = new ConfigurationObjectFactory(System.getProperties()).build(DbiConfig.class);
             final DBIProvider provider = new DBIProvider(config);

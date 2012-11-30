@@ -29,9 +29,7 @@ import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Test;
 
 import com.ning.billing.ErrorCode;
-import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.invoice.InvoiceTestSuiteWithEmbeddedDB;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
@@ -77,8 +75,7 @@ public class TestChargeBacks extends InvoiceTestSuiteWithEmbeddedDB {
     public void setup() throws IOException {
         loadSystemPropertiesFromClasspath("/resource.properties");
 
-        final MysqlTestingHelper helper = KillbillTestSuiteWithEmbeddedDB.getMysqlTestingHelper();
-        final IDBI dbi = helper.getDBI();
+        final IDBI dbi = getDBI();
 
         invoiceSqlDao = dbi.onDemand(InvoiceSqlDao.class);
         invoiceSqlDao.test(internalCallContext);

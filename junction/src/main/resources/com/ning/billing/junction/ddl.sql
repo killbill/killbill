@@ -1,3 +1,5 @@
+/*! SET storage_engine=INNODB */;
+
 DROP TABLE IF EXISTS blocking_states;
 CREATE TABLE blocking_states (
     record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
@@ -13,6 +15,6 @@ CREATE TABLE blocking_states (
     account_record_id int(11) unsigned default null,
     tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)
-) ENGINE=innodb;
+);
 CREATE INDEX blocking_states_id ON blocking_states(blockable_id);
 CREATE INDEX blocking_states_tenant_account_record_id ON blocking_states(tenant_record_id, account_record_id);

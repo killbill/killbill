@@ -45,7 +45,7 @@ public class TestStringTemplateInheritanceWithJdbi extends KillbillTestSuiteWith
 
     @Test(groups = "slow")
     public void testInheritQueries() throws Exception {
-        final KombuchaSqlDao dao = getMysqlTestingHelper().getDBI().onDemand(KombuchaSqlDao.class);
+        final KombuchaSqlDao dao = getDBI().onDemand(KombuchaSqlDao.class);
 
         // Verify non inherited template
         Assert.assertEquals(dao.isIsTimeForKombucha(), clock.getUTCNow().getHourOfDay() == 17);

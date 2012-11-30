@@ -24,7 +24,6 @@ import org.skife.jdbi.v2.IDBI;
 
 import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.catalog.glue.CatalogModule;
-import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.invoice.notification.MockNextBillingDateNotifier;
 import com.ning.billing.invoice.notification.MockNextBillingDatePoster;
@@ -50,8 +49,6 @@ import static org.testng.Assert.assertNotNull;
 
 public class InvoiceModuleWithEmbeddedDb extends DefaultInvoiceModule {
 
-    private final MysqlTestingHelper helper = KillbillTestSuiteWithEmbeddedDB.getMysqlTestingHelper();
-
     private void installNotificationQueue() {
         bind(NotificationQueueService.class).to(MockNotificationQueueService.class).asEagerSingleton();
     }
@@ -67,7 +64,7 @@ public class InvoiceModuleWithEmbeddedDb extends DefaultInvoiceModule {
     public void configure() {
         loadSystemPropertiesFromClasspath("/resource.properties");
 
-        final IDBI dbi = helper.getDBI();
+        final IDBI dbi = KillbillTestSuiteWithEmbeddedDB.getDBI();
         bind(IDBI.class).toInstance(dbi);
 
         bind(Clock.class).to(DefaultClock.class).asEagerSingleton();

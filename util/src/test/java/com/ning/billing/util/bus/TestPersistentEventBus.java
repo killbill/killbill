@@ -23,22 +23,20 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.dbi.DBIProvider;
+import com.ning.billing.dbi.DBTestingHelper;
 import com.ning.billing.dbi.DbiConfig;
-import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.BusModule.BusType;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
 
 @Guice(modules = TestPersistentEventBus.PersistentBusModuleTest.class)
 public class TestPersistentEventBus extends TestEventBusBase {
-    @Inject
-    private MysqlTestingHelper helper;
 
     public static class PersistentBusModuleTest extends AbstractModule {
+
         @Override
         protected void configure() {
             //System.setProperty("com.ning.billing.dbi.test.useLocalDb", "true");
@@ -46,8 +44,7 @@ public class TestPersistentEventBus extends TestEventBusBase {
             bind(Clock.class).to(ClockMock.class).asEagerSingleton();
             bind(ClockMock.class).asEagerSingleton();
 
-            final MysqlTestingHelper helper = KillbillTestSuiteWithEmbeddedDB.getMysqlTestingHelper();
-            bind(MysqlTestingHelper.class).toInstance(helper);
+            final DBTestingHelper helper = KillbillTestSuiteWithEmbeddedDB.getDBTestingHelper();
             if (helper.isUsingLocalInstance()) {
                 bind(IDBI.class).toProvider(DBIProvider.class).asEagerSingleton();
                 final DbiConfig config = new ConfigurationObjectFactory(System.getProperties()).build(DbiConfig.class);

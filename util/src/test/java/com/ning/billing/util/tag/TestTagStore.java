@@ -30,7 +30,6 @@ import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import com.ning.billing.ObjectType;
-import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.mock.glue.MockDbHelperModule;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.api.TagApiException;
@@ -56,9 +55,6 @@ import static org.testng.Assert.fail;
 @Test(groups = {"slow"})
 @Guice(modules = {TagStoreModule.class, ClockModule.class, BusModule.class, MockDbHelperModule.class})
 public class TestTagStore extends UtilTestSuiteWithEmbeddedDB {
-
-    @Inject
-    private MysqlTestingHelper helper;
 
     @Inject
     private IDBI dbi;

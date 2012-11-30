@@ -30,8 +30,6 @@ import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
-import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
-import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.notificationq.DefaultNotification;
 import com.ning.billing.util.notificationq.Notification;
@@ -46,14 +44,12 @@ import static org.testng.Assert.assertNotNull;
 
 @Guice(modules = TestNotificationSqlDao.TestNotificationSqlDaoModule.class)
 public class TestNotificationSqlDao extends UtilTestSuiteWithEmbeddedDB {
+
     private static final UUID accountId = UUID.randomUUID();
     private static final String hostname = "Yop";
 
     @Inject
     private IDBI dbi;
-
-    @Inject
-    MysqlTestingHelper helper;
 
     private NotificationSqlDao dao;
 
@@ -150,23 +146,23 @@ public class TestNotificationSqlDao extends UtilTestSuiteWithEmbeddedDB {
             @Override
             public Notification withHandle(final Handle handle) throws Exception {
                 return handle.createQuery("   select" +
-                                                  " record_id " +
-                                                  ", id" +
-                                                  ", class_name" +
-                                                  ", account_id" +
-                                                  ", notification_key" +
-                                                  ", created_date" +
-                                                  ", creating_owner" +
-                                                  ", effective_date" +
-                                                  ", queue_name" +
-                                                  ", processing_owner" +
-                                                  ", processing_available_date" +
-                                                  ", processing_state" +
-                                                  ", account_record_id" +
-                                                  ", tenant_record_id" +
-                                                  "    from notifications " +
-                                                  " where " +
-                                                  " id = '" + notificationId + "';")
+                                          " record_id " +
+                                          ", id" +
+                                          ", class_name" +
+                                          ", account_id" +
+                                          ", notification_key" +
+                                          ", created_date" +
+                                          ", creating_owner" +
+                                          ", effective_date" +
+                                          ", queue_name" +
+                                          ", processing_owner" +
+                                          ", processing_available_date" +
+                                          ", processing_state" +
+                                          ", account_record_id" +
+                                          ", tenant_record_id" +
+                                          "    from notifications " +
+                                          " where " +
+                                          " id = '" + notificationId + "';")
                              .map(new NotificationSqlMapper())
                              .first();
             }
@@ -194,11 +190,10 @@ public class TestNotificationSqlDao extends UtilTestSuiteWithEmbeddedDB {
     }
 
     public static class TestNotificationSqlDaoModule extends AbstractModule {
+
         @Override
         protected void configure() {
-            final MysqlTestingHelper helper = KillbillTestSuiteWithEmbeddedDB.getMysqlTestingHelper();
-            bind(MysqlTestingHelper.class).toInstance(helper);
-            final IDBI dbi = helper.getDBI();
+            final IDBI dbi = getDBI();
             bind(IDBI.class).toInstance(dbi);
         }
     }

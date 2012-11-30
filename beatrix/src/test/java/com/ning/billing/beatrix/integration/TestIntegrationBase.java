@@ -16,10 +16,6 @@
 
 package com.ning.billing.beatrix.integration;
 
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.fail;
-
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
@@ -58,7 +54,6 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.api.EntitlementService;
 import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
 import com.ning.billing.entitlement.api.transfer.EntitlementTransferApi;
@@ -93,6 +88,10 @@ import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implements TestListenerStatus {
 
@@ -131,9 +130,6 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
     @Inject
     protected AccountService accountService;
-
-    @Inject
-    protected MysqlTestingHelper helper;
 
     @Inject
     protected EntitlementUserApi entitlementUserApi;
@@ -252,38 +248,37 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     }
 
     protected void verifyTestResult(final UUID accountId, final UUID subscriptionId,
-            final DateTime startDate, @Nullable final DateTime endDate,
-            final BigDecimal amount, final DateTime chargeThroughDate,
-            final int totalInvoiceItemCount) throws EntitlementUserApiException {
+                                    final DateTime startDate, @Nullable final DateTime endDate,
+                                    final BigDecimal amount, final DateTime chargeThroughDate,
+                                    final int totalInvoiceItemCount) throws EntitlementUserApiException {
         final SubscriptionData subscription = subscriptionDataFromSubscription(entitlementUserApi.getSubscriptionFromId(subscriptionId, callContext));
 
-
         /*
-        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId);
-        final List<InvoiceItem> invoiceItems = new ArrayList<InvoiceItem>();
-        for (final Invoice invoice : invoices) {
-            invoiceItems.addAll(invoice.getInvoiceItems());
-        }
-        assertEquals(invoiceItems.size(), totalInvoiceItemCount);
+                final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId);
+                final List<InvoiceItem> invoiceItems = new ArrayList<InvoiceItem>();
+                for (final Invoice invoice : invoices) {
+                    invoiceItems.addAll(invoice.getInvoiceItems());
+                }
+                assertEquals(invoiceItems.size(), totalInvoiceItemCount);
 
-        boolean wasFound = false;
+                boolean wasFound = false;
 
-        // We implicitly assume here that the account timezone is the same as the one for startDate/endDate
-        for (final InvoiceItem item : invoiceItems) {
-            if (item.getStartDate().compareTo(new LocalDate(startDate)) == 0) {
-                if ((item.getEndDate() == null && endDate == null) || (item.getEndDate() != null && new LocalDate(endDate).compareTo(item.getEndDate()) == 0)) {
-                    if (item.getAmount().compareTo(amount) == 0) {
-                        wasFound = true;
-                        break;
+                // We implicitly assume here that the account timezone is the same as the one for startDate/endDate
+                for (final InvoiceItem item : invoiceItems) {
+                    if (item.getStartDate().compareTo(new LocalDate(startDate)) == 0) {
+                        if ((item.getEndDate() == null && endDate == null) || (item.getEndDate() != null && new LocalDate(endDate).compareTo(item.getEndDate()) == 0)) {
+                            if (item.getAmount().compareTo(amount) == 0) {
+                                wasFound = true;
+                                break;
+                            }
+                        }
                     }
                 }
-            }
-        }
 
-        if (!wasFound) {
-            fail();
-        }
-*/
+                if (!wasFound) {
+                    fail();
+                }
+        */
         final DateTime ctd = subscription.getChargedThroughDate();
         assertNotNull(ctd);
         log.info("Checking CTD: " + ctd.toString() + "; clock is " + clock.getUTCNow().toString());
@@ -328,17 +323,17 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
     protected AccountData getAccountData(final int billingDay) {
         return new MockAccountBuilder().name(UUID.randomUUID().toString().substring(1, 8))
-        .firstNameLength(6)
-        .email(UUID.randomUUID().toString().substring(1, 8))
-        .phone(UUID.randomUUID().toString().substring(1, 8))
-        .migrated(false)
-        .isNotifiedForInvoices(false)
-        .externalKey(UUID.randomUUID().toString().substring(1, 8))
-        .billingCycleDay(new MockBillCycleDay(billingDay))
-        .currency(Currency.USD)
-        .paymentMethodId(UUID.randomUUID())
-        .timeZone(DateTimeZone.UTC)
-        .build();
+                                       .firstNameLength(6)
+                                       .email(UUID.randomUUID().toString().substring(1, 8))
+                                       .phone(UUID.randomUUID().toString().substring(1, 8))
+                                       .migrated(false)
+                                       .isNotifiedForInvoices(false)
+                                       .externalKey(UUID.randomUUID().toString().substring(1, 8))
+                                       .billingCycleDay(new MockBillCycleDay(billingDay))
+                                       .currency(Currency.USD)
+                                       .paymentMethodId(UUID.randomUUID())
+                                       .timeZone(DateTimeZone.UTC)
+                                       .build();
     }
 
     protected void addMonthsAndCheckForCompletion(final int nbMonth, final NextEvent... events) {
@@ -366,7 +361,6 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             }
         }, events);
     }
-
 
     protected void addDaysAndCheckForCompletion(final int nbDays, final NextEvent... events) {
         doCallAndCheckForCompletion(new Function<Void, Void>() {
@@ -435,18 +429,18 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     }
 
     protected Subscription createSubscriptionAndCheckForCompletion(final UUID bundleId,
-            final String productName,
-            final ProductCategory productCategory,
-            final BillingPeriod billingPeriod,
-            final NextEvent... events) {
+                                                                   final String productName,
+                                                                   final ProductCategory productCategory,
+                                                                   final BillingPeriod billingPeriod,
+                                                                   final NextEvent... events) {
         return doCallAndCheckForCompletion(new Function<Void, Subscription>() {
             @Override
             public Subscription apply(@Nullable final Void dontcare) {
                 try {
                     final Subscription subscription = entitlementUserApi.createSubscription(bundleId,
-                            new PlanPhaseSpecifier(productName, productCategory, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, null),
-                            null,
-                            callContext);
+                                                                                            new PlanPhaseSpecifier(productName, productCategory, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, null),
+                                                                                            null,
+                                                                                            callContext);
                     assertNotNull(subscription);
                     return subscription;
                 } catch (EntitlementUserApiException e) {
@@ -458,9 +452,9 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     }
 
     protected Subscription changeSubscriptionAndCheckForCompletion(final Subscription subscription,
-            final String productName,
-            final BillingPeriod billingPeriod,
-            final NextEvent... events) {
+                                                                   final String productName,
+                                                                   final BillingPeriod billingPeriod,
+                                                                   final NextEvent... events) {
         return doCallAndCheckForCompletion(new Function<Void, Subscription>() {
             @Override
             public Subscription apply(@Nullable final Void dontcare) {
@@ -478,8 +472,8 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     }
 
     protected Subscription cancelSubscriptionAndCheckForCompletion(final Subscription subscription,
-            final DateTime requestedDate,
-            final NextEvent... events) {
+                                                                   final DateTime requestedDate,
+                                                                   final NextEvent... events) {
         return doCallAndCheckForCompletion(new Function<Void, Subscription>() {
             @Override
             public Subscription apply(@Nullable final Void dontcare) {

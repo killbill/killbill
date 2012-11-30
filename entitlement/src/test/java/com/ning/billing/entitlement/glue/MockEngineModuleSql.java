@@ -21,8 +21,8 @@ import org.skife.jdbi.v2.IDBI;
 
 import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.dbi.DBIProvider;
+import com.ning.billing.dbi.DBTestingHelper;
 import com.ning.billing.dbi.DbiConfig;
-import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.api.timeline.RepairEntitlementLifecycleDao;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.engine.dao.MockEntitlementDaoSql;
@@ -44,8 +44,7 @@ public class MockEngineModuleSql extends MockEngineModule {
     }
 
     protected void installDBI() {
-        final MysqlTestingHelper helper = KillbillTestSuiteWithEmbeddedDB.getMysqlTestingHelper();
-        bind(MysqlTestingHelper.class).toInstance(helper);
+        final DBTestingHelper helper = KillbillTestSuiteWithEmbeddedDB.getDBTestingHelper();
         if (helper.isUsingLocalInstance()) {
             bind(IDBI.class).toProvider(DBIProvider.class).asEagerSingleton();
             final DbiConfig config = new ConfigurationObjectFactory(System.getProperties()).build(DbiConfig.class);

@@ -42,8 +42,8 @@ import com.ning.billing.beatrix.util.PaymentChecker;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.dbi.DBIProvider;
+import com.ning.billing.dbi.DBTestingHelper;
 import com.ning.billing.dbi.DbiConfig;
-import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.api.EntitlementService;
 import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
 import com.ning.billing.invoice.api.InvoiceService;
@@ -88,8 +88,7 @@ public class BeatrixIntegrationModule extends AbstractModule {
         bind(ClockMock.class).asEagerSingleton();
         bind(Lifecycle.class).to(SubsetDefaultLifecycle.class).asEagerSingleton();
 
-        final MysqlTestingHelper helper = KillbillTestSuiteWithEmbeddedDB.getMysqlTestingHelper();
-        bind(MysqlTestingHelper.class).toInstance(helper);
+        final DBTestingHelper helper = KillbillTestSuiteWithEmbeddedDB.getDBTestingHelper();
         final IDBI dbi;
         if (helper.isUsingLocalInstance()) {
             final DbiConfig config = new ConfigurationObjectFactory(System.getProperties()).build(DbiConfig.class);

@@ -19,11 +19,11 @@ package com.ning.billing.analytics;
 import org.mockito.Mockito;
 import org.skife.jdbi.v2.IDBI;
 
+import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.account.glue.DefaultAccountModule;
 import com.ning.billing.analytics.setup.AnalyticsModule;
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogService;
-import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
 import com.ning.billing.invoice.glue.DefaultInvoiceModule;
 import com.ning.billing.junction.glue.DefaultJunctionModule;
@@ -62,9 +62,7 @@ public class AnalyticsTestModule extends AnalyticsModule {
         install(new DefaultJunctionModule());
 
         // Install the Dao layer
-        final MysqlTestingHelper helper = AnalyticsTestSuiteWithEmbeddedDB.getMysqlTestingHelper();
-        bind(MysqlTestingHelper.class).toInstance(helper);
-        final IDBI dbi = helper.getDBI();
+        final IDBI dbi = KillbillTestSuiteWithEmbeddedDB.getDBI();
         bind(IDBI.class).toInstance(dbi);
 
         bind(TagDefinitionSqlDao.class).toInstance(dbi.onDemand(TagDefinitionSqlDao.class));

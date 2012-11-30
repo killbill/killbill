@@ -1,3 +1,5 @@
+/*! SET storage_engine=INNODB */;
+
 DROP TABLE IF EXISTS payments;
 CREATE TABLE payments (
     record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
@@ -18,7 +20,7 @@ CREATE TABLE payments (
     account_record_id int(11) unsigned default null,
     tenant_record_id int(11) unsigned default null,
     PRIMARY KEY (record_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+) DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 CREATE UNIQUE INDEX payments_id ON payments(id);
 CREATE INDEX payments_inv ON payments(invoice_id);
 CREATE INDEX payments_accnt ON payments(account_id);
@@ -46,7 +48,7 @@ CREATE TABLE payment_history (
     account_record_id int(11) unsigned default null,
     tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+) DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 CREATE INDEX payment_history_target_record_id ON payment_history(target_record_id);
 CREATE INDEX payment_history_tenant_account_record_id ON payment_history(tenant_record_id, account_record_id);
 
@@ -66,7 +68,7 @@ CREATE TABLE payment_attempts (
     account_record_id int(11) unsigned default null,
     tenant_record_id int(11) unsigned default null,
     PRIMARY KEY (record_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+) DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 CREATE UNIQUE INDEX payment_attempts_id ON payment_attempts(id);
 CREATE INDEX payment_attempts_payment ON payment_attempts(payment_id);
 CREATE INDEX payment_attempts_tenant_account_record_id ON payment_attempts(tenant_record_id, account_record_id);
@@ -89,7 +91,7 @@ CREATE TABLE payment_attempt_history (
     account_record_id int(11) unsigned default null,
     tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+) DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 CREATE INDEX payment_attempt_history_target_record_id ON payment_attempt_history(target_record_id);
 CREATE INDEX payment_attempt_history_tenant_account_record_id ON payment_attempt_history(tenant_record_id, account_record_id);
 
@@ -108,7 +110,7 @@ CREATE TABLE payment_methods (
     account_record_id int(11) unsigned default null,
     tenant_record_id int(11) unsigned default null,
     PRIMARY KEY (record_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+) DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 CREATE UNIQUE INDEX payment_methods_id ON payment_methods(id);
 CREATE INDEX payment_methods_active_accnt ON payment_methods(is_active, account_id);
 CREATE INDEX payment_methods_tenant_account_record_id ON payment_methods(tenant_record_id, account_record_id);
@@ -130,7 +132,7 @@ CREATE TABLE payment_method_history (
     account_record_id int(11) unsigned default null,
     tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+) DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 CREATE INDEX payment_method_history_target_record_id ON payment_method_history(target_record_id);
 CREATE INDEX payment_method_history_tenant_account_record_id ON payment_method_history(tenant_record_id, account_record_id);
 
@@ -151,7 +153,7 @@ CREATE TABLE refunds (
     account_record_id int(11) unsigned default null,
     tenant_record_id int(11) unsigned default null,
     PRIMARY KEY (record_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+) DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 CREATE UNIQUE INDEX refunds_id ON refunds(id);
 CREATE INDEX refunds_pay ON refunds(payment_id);
 CREATE INDEX refunds_accnt ON refunds(account_id);
@@ -176,7 +178,7 @@ CREATE TABLE refund_history (
     account_record_id int(11) unsigned default null,
     tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+) DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 CREATE INDEX refund_history_target_record_id ON refund_history(target_record_id);
 CREATE INDEX refund_history_tenant_account_record_id ON refund_history(tenant_record_id, account_record_id);
 

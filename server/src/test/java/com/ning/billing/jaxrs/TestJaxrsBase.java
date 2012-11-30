@@ -39,6 +39,7 @@ import com.ning.billing.api.TestApiListener;
 import com.ning.billing.beatrix.glue.BeatrixModule;
 import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.dbi.DBIProvider;
+import com.ning.billing.dbi.DBTestingHelper;
 import com.ning.billing.dbi.DbiConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
@@ -86,7 +87,7 @@ public class TestJaxrsBase extends KillbillClient {
 
     protected static TestKillbillGuiceListener listener;
 
-    private final MysqlTestingHelper helper = KillbillTestSuiteWithEmbeddedDB.getMysqlTestingHelper();
+    private final DBTestingHelper helper = KillbillTestSuiteWithEmbeddedDB.getDBTestingHelper();
 
     private HttpServer server;
     protected TestApiListener busHandler;
@@ -103,10 +104,10 @@ public class TestJaxrsBase extends KillbillClient {
 
     public static class TestKillbillGuiceListener extends KillbillGuiceListener {
 
-        private final MysqlTestingHelper helper;
+        private final DBTestingHelper helper;
         private final Clock clock;
 
-        public TestKillbillGuiceListener(final MysqlTestingHelper helper, final Clock clock) {
+        public TestKillbillGuiceListener(final DBTestingHelper helper, final Clock clock) {
             super();
             this.helper = helper;
             this.clock = clock;
@@ -132,10 +133,10 @@ public class TestJaxrsBase extends KillbillClient {
 
     public static class TestKillbillServerModule extends KillbillServerModule {
 
-        private final MysqlTestingHelper helper;
+        private final DBTestingHelper helper;
         private final Clock clock;
 
-        public TestKillbillServerModule(final MysqlTestingHelper helper, final Clock clock) {
+        public TestKillbillServerModule(final DBTestingHelper helper, final Clock clock) {
             super();
             this.helper = helper;
             this.clock = clock;
@@ -188,7 +189,6 @@ public class TestJaxrsBase extends KillbillClient {
 
         @Override
         protected void configureDao() {
-            bind(MysqlTestingHelper.class).toInstance(helper);
             if (helper.isUsingLocalInstance()) {
                 bind(IDBI.class).toProvider(DBIProvider.class).asEagerSingleton();
                 final DbiConfig config = new ConfigurationObjectFactory(System.getProperties()).build(DbiConfig.class);

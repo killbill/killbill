@@ -35,7 +35,7 @@ public class TestInternalCallContextFactory extends UtilTestSuiteWithEmbeddedDB 
 
     @BeforeMethod(groups = "slow")
     public void setUp() throws Exception {
-        internalCallContextFactory = new InternalCallContextFactory(getMysqlTestingHelper().getDBI(), new ClockMock());
+        internalCallContextFactory = new InternalCallContextFactory(getDBI(), new ClockMock());
     }
 
     @Test(groups = "slow")
@@ -43,7 +43,7 @@ public class TestInternalCallContextFactory extends UtilTestSuiteWithEmbeddedDB 
         final UUID invoiceId = UUID.randomUUID();
         final Long accountRecordId = 19384012L;
 
-        getMysqlTestingHelper().getDBI().withHandle(new HandleCallback<Void>() {
+        getDBI().withHandle(new HandleCallback<Void>() {
             @Override
             public Void withHandle(final Handle handle) throws Exception {
                 handle.execute("DROP TABLE IF EXISTS invoices;\n" +
@@ -60,7 +60,7 @@ public class TestInternalCallContextFactory extends UtilTestSuiteWithEmbeddedDB 
                                "    account_record_id int(11) unsigned default null,\n" +
                                "    tenant_record_id int(11) unsigned default null,\n" +
                                "    PRIMARY KEY(record_id)\n" +
-                               ") ENGINE=innodb;");
+                               ");");
                 handle.execute("insert into invoices (id, account_id, invoice_date, target_date, currency, migrated, created_by, created_date, account_record_id) values " +
                                "(?, ?, now(), now(), 'USD', 0, 'test', now(), ?)", invoiceId.toString(), UUID.randomUUID().toString(), accountRecordId);
                 return null;
@@ -78,7 +78,7 @@ public class TestInternalCallContextFactory extends UtilTestSuiteWithEmbeddedDB 
         final UUID accountId = UUID.randomUUID();
         final Long accountRecordId = 19384012L;
 
-        getMysqlTestingHelper().getDBI().withHandle(new HandleCallback<Void>() {
+        getDBTestingHelper().getDBI().withHandle(new HandleCallback<Void>() {
             @Override
             public Void withHandle(final Handle handle) throws Exception {
                 // Note: we always create an accounts table, see MysqlTestingHelper

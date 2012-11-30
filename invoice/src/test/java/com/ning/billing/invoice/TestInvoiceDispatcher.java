@@ -43,7 +43,6 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
-import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.invoice.api.Invoice;
@@ -87,9 +86,6 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
 
     @Inject
     private GlobalLocker locker;
-
-    @Inject
-    private MysqlTestingHelper helper;
 
     @Inject
     private NextBillingDateNotifier notifier;
@@ -268,7 +264,7 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
         }
     }
 
-    @Test(groups= "slow")
+    @Test(groups = "slow")
     public void testCreateNextFutureNotificationDate() throws Exception {
 
         final LocalDate startDate = new LocalDate("2012-10-26");
@@ -276,7 +272,7 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
 
         clock.setTime(new DateTime(2012, 10, 26, 1, 12, 23, DateTimeZone.UTC));
         final InvoiceItemModelDao item = new InvoiceItemModelDao(UUID.randomUUID(), clock.getUTCNow(), InvoiceItemType.RECURRING, UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
-                                                           "planName", "phaseName", startDate, endDate, new BigDecimal("23.9"), new BigDecimal("23.9"), Currency.EUR, null);
+                                                                 "planName", "phaseName", startDate, endDate, new BigDecimal("23.9"), new BigDecimal("23.9"), Currency.EUR, null);
 
         final InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
         final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountInternalApi, billingApi, entitlementInternalApi, invoiceDao,
@@ -285,7 +281,7 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
 
         final DateTime expectedBefore = clock.getUTCNow();
         final Map<UUID, DateTime> result = dispatcher.createNextFutureNotificationDate(Collections.singletonList(item), DateTimeZone.forID("Pacific/Pitcairn"));
-        final DateTime expectedAfter =  clock.getUTCNow();
+        final DateTime expectedAfter = clock.getUTCNow();
 
         Assert.assertEquals(result.size(), 1);
 
@@ -294,13 +290,10 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
         final LocalDate receivedTargetDate = new LocalDate(receivedDate, DateTimeZone.forID("Pacific/Pitcairn"));
         Assert.assertEquals(receivedTargetDate, endDate);
 
-
-
-        Assert.assertTrue(receivedDate.compareTo(new DateTime(2012, 11, 26, 9 /* 1 + 8 for Pitcairn */ , 12, 23, DateTimeZone.UTC)) >= 0);
+        Assert.assertTrue(receivedDate.compareTo(new DateTime(2012, 11, 26, 9 /* 1 + 8 for Pitcairn */, 12, 23, DateTimeZone.UTC)) >= 0);
         Assert.assertTrue(receivedDate.compareTo(new DateTime(2012, 11, 26, 9, 13, 0, DateTimeZone.UTC)) <= 0);
 
     }
-
 
     //MDW add a test to cover when the account auto-invoice-off tag is present
 }

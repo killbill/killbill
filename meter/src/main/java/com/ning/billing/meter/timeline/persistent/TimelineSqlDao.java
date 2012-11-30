@@ -30,7 +30,7 @@ import org.skife.jdbi.v2.sqlobject.customizers.Mapper;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
-import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
+import org.skife.jdbi.v2.sqlobject.stringtemplate.UseStringTemplate3StatementLocator;
 
 import com.ning.billing.meter.timeline.categories.CategoryIdAndMetric;
 import com.ning.billing.meter.timeline.categories.CategoryIdAndMetricBinder;
@@ -46,7 +46,7 @@ import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 
-@ExternalizedSqlViaStringTemplate3()
+@UseStringTemplate3StatementLocator()
 @RegisterMapper({CategoryIdAndMetricMapper.class, StartTimesMapper.class, SourceIdAndMetricIdMapper.class})
 public interface TimelineSqlDao extends Transactional<TimelineSqlDao>, Transmogrifier {
 

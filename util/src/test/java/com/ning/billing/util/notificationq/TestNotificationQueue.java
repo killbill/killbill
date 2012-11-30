@@ -26,8 +26,6 @@ import java.util.concurrent.TimeUnit;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
-import org.skife.jdbi.v2.Transaction;
-import org.skife.jdbi.v2.TransactionStatus;
 import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,13 +35,11 @@ import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
-import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
-import com.ning.billing.util.config.NotificationConfig;
-import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.config.NotificationConfig;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
@@ -66,8 +62,8 @@ import static org.testng.Assert.assertEquals;
 
 @Guice(modules = TestNotificationQueue.TestNotificationQueueModule.class)
 public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
-    private final Logger log = LoggerFactory.getLogger(TestNotificationQueue.class);
 
+    private final Logger log = LoggerFactory.getLogger(TestNotificationQueue.class);
 
     private static final UUID accountId = UUID.randomUUID();
 
@@ -77,9 +73,6 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
     private IDBI dbi;
 
     @Inject
-    MysqlTestingHelper helper;
-
-    @Inject
     private Clock clock;
 
     private DummySqlTest dao;
@@ -87,6 +80,7 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
     private int eventsReceived;
 
     private static final class TestNotificationKey implements NotificationKey, Comparable<TestNotificationKey> {
+
         private final String value;
 
         @JsonCreator
@@ -236,7 +230,6 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
                     return null;
                 }
             });
-
 
             // Move time in the future after the notification effectiveDate
             if (i == 0) {
@@ -444,15 +437,14 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
     }
 
     public static class TestNotificationQueueModule extends AbstractModule {
+
         @Override
         protected void configure() {
             bind(Clock.class).to(ClockMock.class);
 
-            final MysqlTestingHelper helper = KillbillTestSuiteWithEmbeddedDB.getMysqlTestingHelper();
-            bind(MysqlTestingHelper.class).toInstance(helper);
-            final IDBI dbi = helper.getDBI();
+            final IDBI dbi = getDBI();
             bind(IDBI.class).toInstance(dbi);
-            final IDBI otherDbi = helper.getDBI();
+            final IDBI otherDbi = getDBI();
             bind(IDBI.class).annotatedWith(Names.named("global-lock")).toInstance(otherDbi);
         }
     }

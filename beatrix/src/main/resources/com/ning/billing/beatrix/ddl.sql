@@ -1,4 +1,4 @@
-
+/*! SET storage_engine=INNODB */;
 
 DROP TABLE IF EXISTS bus_ext_events;
 CREATE TABLE bus_ext_events (
@@ -14,7 +14,7 @@ CREATE TABLE bus_ext_events (
     account_record_id int(11) unsigned default null,
     tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)
-) ENGINE=innodb;
+);
 CREATE INDEX  `idx_bus_ext_where` ON bus_ext_events (`processing_state`,`processing_owner`,`processing_available_date`);
 CREATE INDEX bus_ext_events_tenant_account_record_id ON bus_ext_events(tenant_record_id, account_record_id);
 
@@ -27,5 +27,5 @@ CREATE TABLE claimed_bus_ext_events (
     account_record_id int(11) unsigned default null,
     tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)
-) ENGINE=innodb;
+);
 CREATE INDEX claimed_bus_ext_events_tenant_account_record_id ON claimed_bus_ext_events(tenant_record_id, account_record_id);

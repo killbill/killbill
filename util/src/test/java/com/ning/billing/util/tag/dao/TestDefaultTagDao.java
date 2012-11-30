@@ -29,7 +29,6 @@ import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import com.ning.billing.ObjectType;
-import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.mock.glue.MockDbHelperModule;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.api.TagDefinitionApiException;
@@ -51,9 +50,6 @@ import static org.testng.Assert.assertEquals;
 
 @Guice(modules = {TagStoreModule.class, ClockModule.class, InMemoryBusModule.class, MockDbHelperModule.class})
 public class TestDefaultTagDao extends UtilTestSuiteWithEmbeddedDB {
-
-    @Inject
-    private MysqlTestingHelper helper;
 
     @Inject
     private TagDefinitionDao tagDefinitionDao;

@@ -44,8 +44,8 @@ public class TestDefaultCustomFieldUserApi extends UtilTestSuiteWithEmbeddedDB {
 
     @BeforeMethod(groups = "slow")
     public void setUp() throws Exception {
-        final InternalCallContextFactory internalCallContextFactory = new InternalCallContextFactory(getMysqlTestingHelper().getDBI(), new ClockMock());
-        final CustomFieldDao customFieldDao = new DefaultCustomFieldDao(getMysqlTestingHelper().getDBI());
+        final InternalCallContextFactory internalCallContextFactory = new InternalCallContextFactory(getDBI(), new ClockMock());
+        final CustomFieldDao customFieldDao = new DefaultCustomFieldDao(getDBI());
         customFieldUserApi = new DefaultCustomFieldUserApi(internalCallContextFactory, customFieldDao);
     }
 
@@ -54,7 +54,7 @@ public class TestDefaultCustomFieldUserApi extends UtilTestSuiteWithEmbeddedDB {
         final UUID accountId = UUID.randomUUID();
         final Long accountRecordId = 19384012L;
 
-        getMysqlTestingHelper().getDBI().withHandle(new HandleCallback<Void>() {
+        getDBI().withHandle(new HandleCallback<Void>() {
             @Override
             public Void withHandle(final Handle handle) throws Exception {
                 // Note: we always create an accounts table, see MysqlTestingHelper
@@ -73,7 +73,7 @@ public class TestDefaultCustomFieldUserApi extends UtilTestSuiteWithEmbeddedDB {
         Assert.assertEquals(customFields.size(), 1);
         Assert.assertEquals(customFields.get(0), customField);
         // Verify the account_record_id was populated
-        getMysqlTestingHelper().getDBI().withHandle(new HandleCallback<Void>() {
+        getDBTestingHelper().getDBI().withHandle(new HandleCallback<Void>() {
             @Override
             public Void withHandle(final Handle handle) throws Exception {
                 final List<Map<String, Object>> values = handle.select("select account_record_id from custom_fields where object_id = ?", accountId.toString());

@@ -1,3 +1,5 @@
+/*! SET storage_engine=INNODB */;
+
 DROP TABLE IF EXISTS custom_fields;
 CREATE TABLE custom_fields (
     record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
@@ -13,7 +15,7 @@ CREATE TABLE custom_fields (
     account_record_id int(11) unsigned default null,
     tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)
-) ENGINE=innodb;
+);
 CREATE UNIQUE INDEX custom_fields_id ON custom_fields(id);
 CREATE INDEX custom_fields_object_id_object_type ON custom_fields(object_id, object_type);
 CREATE UNIQUE INDEX custom_fields_unique ON custom_fields(object_id, object_type, field_name);
@@ -36,7 +38,7 @@ CREATE TABLE custom_field_history (
     account_record_id int(11) unsigned default null,
     tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)
-) ENGINE=innodb;
+);
 CREATE INDEX custom_field_history_target_record_id ON custom_field_history(target_record_id);
 CREATE INDEX custom_field_history_object_id_object_type ON custom_fields(object_id, object_type);
 CREATE INDEX custom_field_history_tenant_account_record_id ON custom_field_history(tenant_record_id, account_record_id);
@@ -54,7 +56,7 @@ CREATE TABLE tag_definitions (
     updated_date datetime NOT NULL,
     tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)
-) ENGINE=innodb;
+);
 CREATE UNIQUE INDEX tag_definitions_id ON tag_definitions(id);
 CREATE INDEX tag_definitions_tenant_record_id ON tag_definitions(tenant_record_id);
 
@@ -74,7 +76,7 @@ CREATE TABLE tag_definition_history (
     account_record_id int(11) unsigned default null,
     tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)
-) ENGINE=innodb;
+);
 CREATE INDEX tag_definition_history_id ON tag_definition_history(id);
 CREATE INDEX tag_definition_history_target_record_id ON tag_definition_history(target_record_id);
 CREATE INDEX tag_definition_history_name ON tag_definition_history(name);
@@ -95,7 +97,7 @@ CREATE TABLE tags (
     account_record_id int(11) unsigned default null,
     tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)
-) ENGINE = innodb;
+);
 CREATE UNIQUE INDEX tags_id ON tags(id);
 CREATE INDEX tags_by_object ON tags(object_id);
 CREATE INDEX tags_tenant_account_record_id ON tags(tenant_record_id, account_record_id);
@@ -117,7 +119,7 @@ CREATE TABLE tag_history (
     account_record_id int(11) unsigned default null,
     tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)
-) ENGINE = innodb;
+);
 CREATE INDEX tag_history_target_record_id ON tag_history(target_record_id);
 CREATE INDEX tag_history_by_object ON tags(object_id);
 CREATE INDEX tag_history_tenant_account_record_id ON tag_history(tenant_record_id, account_record_id);
@@ -139,7 +141,7 @@ CREATE TABLE notifications (
     account_record_id int(11) unsigned default null,
     tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)
-) ENGINE=innodb;
+);
 CREATE UNIQUE INDEX notifications_id ON notifications(id);
 CREATE INDEX  `idx_comp_where` ON notifications (`effective_date`, `queue_name`, `processing_state`,`processing_owner`,`processing_available_date`);
 CREATE INDEX  `idx_update` ON notifications (`processing_state`,`processing_owner`,`processing_available_date`);
@@ -155,10 +157,12 @@ CREATE TABLE claimed_notifications (
     account_record_id int(11) unsigned default null,
     tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)
-) ENGINE=innodb;
+);
 CREATE INDEX claimed_notifications_tenant_account_record_id ON claimed_notifications(tenant_record_id, account_record_id);
 
 DROP TABLE IF EXISTS audit_log;
+/*! SET storage_engine=INNODB */;
+
 CREATE TABLE audit_log (
     record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
     id char(36) NOT NULL,
@@ -173,7 +177,7 @@ CREATE TABLE audit_log (
     account_record_id int(11) unsigned default null,
     tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)
-) ENGINE=innodb;
+);
 CREATE INDEX audit_log_fetch_target_record_id ON audit_log(table_name, target_record_id);
 CREATE INDEX audit_log_user_name ON audit_log(created_by);
 CREATE INDEX audit_log_tenant_account_record_id ON audit_log(tenant_record_id, account_record_id);
@@ -191,7 +195,7 @@ CREATE TABLE bus_events (
     account_record_id int(11) unsigned default null,
     tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)
-) ENGINE=innodb;
+);
 CREATE INDEX  `idx_bus_where` ON bus_events (`processing_state`,`processing_owner`,`processing_available_date`);
 CREATE INDEX bus_events_tenant_account_record_id ON bus_events(tenant_record_id, account_record_id);
 
@@ -204,5 +208,5 @@ CREATE TABLE claimed_bus_events (
     account_record_id int(11) unsigned default null,
     tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)
-) ENGINE=innodb;
+);
 CREATE INDEX claimed_bus_events_tenant_account_record_id ON claimed_bus_events(tenant_record_id, account_record_id);

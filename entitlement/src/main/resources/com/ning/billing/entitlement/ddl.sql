@@ -1,3 +1,5 @@
+/*! SET storage_engine=INNODB */;
+
 DROP TABLE IF EXISTS events;
 DROP TABLE IF EXISTS entitlement_events;
 DROP TABLE IF EXISTS subscription_events;
@@ -22,7 +24,7 @@ CREATE TABLE subscription_events (
     account_record_id int(11) unsigned default null,
     tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)
-) ENGINE=innodb;
+);
 CREATE UNIQUE INDEX subscription_events_id ON subscription_events(id);
 CREATE INDEX idx_ent_1 ON subscription_events(subscription_id, is_active, effective_date);
 CREATE INDEX idx_ent_2 ON subscription_events(subscription_id, effective_date, created_date, requested_date,id);
@@ -46,7 +48,7 @@ CREATE TABLE subscriptions (
     account_record_id int(11) unsigned default null,
     tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)
-) ENGINE=innodb;
+);
 CREATE UNIQUE INDEX subscriptions_id ON subscriptions(id);
 CREATE INDEX subscriptions_bundle_id ON subscriptions(bundle_id);
 CREATE INDEX subscriptions_tenant_account_record_id ON subscriptions(tenant_record_id, account_record_id);
@@ -65,7 +67,7 @@ CREATE TABLE bundles (
     account_record_id int(11) unsigned default null,
     tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)
-) ENGINE=innodb;
+);
 CREATE UNIQUE INDEX bundles_id ON bundles(id);
 CREATE INDEX bundles_key ON bundles(external_key);
 CREATE INDEX bundles_account ON bundles(account_id);

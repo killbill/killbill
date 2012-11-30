@@ -72,7 +72,7 @@ public abstract class AccountTestBase extends AccountTestSuiteWithEmbeddedDB {
     @BeforeClass(groups = "slow")
     protected void setup() throws IOException {
         try {
-            final IDBI dbi = getMysqlTestingHelper().getDBI();
+            final IDBI dbi = getDBI();
 
             final InternalCallContextFactory internalCallContextFactory = new InternalCallContextFactory(dbi, clock);
             accountDao = new DefaultAccountDao(dbi, bus, internalCallContextFactory);

@@ -25,9 +25,7 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.ObjectType;
-import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.api.CustomFieldApiException;
 import com.ning.billing.util.customfield.dao.CustomFieldDao;
@@ -39,13 +37,12 @@ import static org.testng.Assert.fail;
 public class TestFieldStore extends UtilTestSuiteWithEmbeddedDB {
 
     private final Logger log = LoggerFactory.getLogger(TestFieldStore.class);
-    private final MysqlTestingHelper helper = KillbillTestSuiteWithEmbeddedDB.getMysqlTestingHelper();
     private CustomFieldDao customFieldDao;
 
     @BeforeClass(groups = "slow")
     protected void setup() throws IOException {
         try {
-            final IDBI dbi = helper.getDBI();
+            final IDBI dbi = getDBI();
             customFieldDao = new DefaultCustomFieldDao(dbi);
         } catch (Throwable t) {
             log.error("Setup failed", t);

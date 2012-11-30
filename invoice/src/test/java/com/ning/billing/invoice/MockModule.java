@@ -26,8 +26,8 @@ import org.skife.jdbi.v2.IDBI;
 import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.dbi.DBIProvider;
+import com.ning.billing.dbi.DBTestingHelper;
 import com.ning.billing.dbi.DbiConfig;
-import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.invoice.api.formatters.InvoiceFormatterFactory;
 import com.ning.billing.invoice.api.migration.TestDefaultInvoiceMigrationApi;
 import com.ning.billing.invoice.glue.DefaultInvoiceModule;
@@ -65,8 +65,7 @@ public class MockModule extends AbstractModule {
         install(new TagStoreModule());
         install(new CustomFieldModule());
 
-        final MysqlTestingHelper helper = KillbillTestSuiteWithEmbeddedDB.getMysqlTestingHelper();
-        bind(MysqlTestingHelper.class).toInstance(helper);
+        final DBTestingHelper helper = KillbillTestSuiteWithEmbeddedDB.getDBTestingHelper();
         if (helper.isUsingLocalInstance()) {
             bind(IDBI.class).toProvider(DBIProvider.class).asEagerSingleton();
             final DbiConfig config = new ConfigurationObjectFactory(System.getProperties()).build(DbiConfig.class);

@@ -45,14 +45,14 @@ public class TestKillbillJdbcRealm extends ServerTestSuiteWithEmbeddedDB {
     @BeforeMethod(groups = "slow")
     public void setUp() throws Exception {
         // Create the tenant
-        final DefaultTenantDao tenantDao = new DefaultTenantDao(getMysqlTestingHelper().getDBI());
+        final DefaultTenantDao tenantDao = new DefaultTenantDao(getDBI());
         tenant = new DefaultTenant(UUID.randomUUID(), null, null, UUID.randomUUID().toString(),
                                    UUID.randomUUID().toString(), UUID.randomUUID().toString());
         tenantDao.create(new TenantModelDao(tenant), internalCallContext);
 
         // Setup the security manager
         final BoneCPConfig dbConfig = new BoneCPConfig();
-        dbConfig.setJdbcUrl(getMysqlTestingHelper().getJdbcConnectionString());
+        dbConfig.setJdbcUrl(getDBTestingHelper().getJdbcConnectionString());
         dbConfig.setUsername(MysqlTestingHelper.USERNAME);
         dbConfig.setPassword(MysqlTestingHelper.PASSWORD);
 

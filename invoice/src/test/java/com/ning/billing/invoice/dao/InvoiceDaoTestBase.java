@@ -28,7 +28,6 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 
 import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
-import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
@@ -102,8 +101,7 @@ public class InvoiceDaoTestBase extends InvoicingTestBase {
 
         loadSystemPropertiesFromClasspath("/resource.properties");
 
-        final MysqlTestingHelper mysqlTestingHelper = KillbillTestSuiteWithEmbeddedDB.getMysqlTestingHelper();
-        dbi = mysqlTestingHelper.getDBI();
+        dbi = KillbillTestSuiteWithEmbeddedDB.getDBI();
 
         clock = new ClockMock();
 

@@ -33,7 +33,7 @@ public class TestDefaultTenantDao extends TenantTestSuiteWithEmbeddedDb {
 
     @Test(groups = "slow")
     public void testWeCanStoreAndMatchCredentials() throws Exception {
-        final DefaultTenantDao tenantDao = new DefaultTenantDao(getMysqlTestingHelper().getDBI());
+        final DefaultTenantDao tenantDao = new DefaultTenantDao(getDBI());
 
         final DefaultTenant tenant = new DefaultTenant(UUID.randomUUID(), null, null, UUID.randomUUID().toString(),
                                                        UUID.randomUUID().toString(), UUID.randomUUID().toString());
@@ -56,7 +56,7 @@ public class TestDefaultTenantDao extends TenantTestSuiteWithEmbeddedDb {
 
     @Test(groups = "slow")
     public void testTenantKeyValue() throws Exception {
-        final DefaultTenantDao tenantDao = new DefaultTenantDao(getMysqlTestingHelper().getDBI());
+        final DefaultTenantDao tenantDao = new DefaultTenantDao(getDBI());
         final DefaultTenant tenant = new DefaultTenant(UUID.randomUUID(), null, null, UUID.randomUUID().toString(),
                                                        UUID.randomUUID().toString(), UUID.randomUUID().toString());
         tenantDao.create(new TenantModelDao(tenant), internalCallContext);

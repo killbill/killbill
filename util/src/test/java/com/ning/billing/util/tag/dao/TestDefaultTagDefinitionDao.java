@@ -28,7 +28,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
-import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.mock.glue.MockDbHelperModule;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.bus.InMemoryBusModule;
@@ -44,9 +43,6 @@ import com.google.inject.Inject;
 
 @Guice(modules = {TagStoreModule.class, ClockModule.class, InMemoryBusModule.class, MockDbHelperModule.class})
 public class TestDefaultTagDefinitionDao extends UtilTestSuiteWithEmbeddedDB {
-
-    @Inject
-    private MysqlTestingHelper helper;
 
     @Inject
     private TagDefinitionDao tagDefinitionDao;

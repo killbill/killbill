@@ -24,8 +24,6 @@ import org.skife.jdbi.v2.IDBI;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
-import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.globallocker.TestMysqlGlobalLocker;
 import com.ning.billing.util.io.IOUtils;
@@ -38,7 +36,6 @@ import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 public class TestValidationManager extends UtilTestSuiteWithEmbeddedDB {
-    private final MysqlTestingHelper helper = KillbillTestSuiteWithEmbeddedDB.getMysqlTestingHelper();
     private static final String TABLE_NAME = "validation_test";
 
     private ValidationManager vm;

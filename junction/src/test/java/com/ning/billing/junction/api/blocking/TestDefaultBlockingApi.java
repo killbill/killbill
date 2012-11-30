@@ -43,7 +43,7 @@ public class TestDefaultBlockingApi extends JunctionTestSuiteWithEmbeddedDB {
 
     @BeforeMethod(groups = "slow")
     public void setUp() throws Exception {
-        final BlockingStateDao blockingStateDao = new DefaultBlockingStateDao(getMysqlTestingHelper().getDBI());
+        final BlockingStateDao blockingStateDao = new DefaultBlockingStateDao(getDBI());
         blockingApi = new DefaultInternalBlockingApi(blockingStateDao, clock);
     }
 
@@ -51,7 +51,7 @@ public class TestDefaultBlockingApi extends JunctionTestSuiteWithEmbeddedDB {
     public void testSetBlockingStateOnBundle() throws Exception {
         final UUID bundleId = UUID.randomUUID();
         final Long accountRecordId = 123049714L;
-        getMysqlTestingHelper().getDBI().withHandle(new HandleCallback<Void>() {
+        getDBI().withHandle(new HandleCallback<Void>() {
             @Override
             public Void withHandle(final Handle handle) throws Exception {
                 handle.execute("DROP TABLE IF EXISTS bundles;\n" +
@@ -79,7 +79,7 @@ public class TestDefaultBlockingApi extends JunctionTestSuiteWithEmbeddedDB {
 
         Assert.assertEquals(resultState.getStateName(), blockingState.getStateName());
         // Verify the account_record_id was populated
-        getMysqlTestingHelper().getDBI().withHandle(new HandleCallback<Void>() {
+        getDBI().withHandle(new HandleCallback<Void>() {
             @Override
             public Void withHandle(final Handle handle) throws Exception {
                 final List<Map<String, Object>> values = handle.select("select account_record_id from blocking_states where id = ?", bundleId.toString());

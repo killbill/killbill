@@ -1,3 +1,5 @@
+/*! SET storage_engine=INNODB */;
+
 create table sources (
   record_id int(11) unsigned not null auto_increment
 , bundle_id char(36) default null
@@ -10,7 +12,7 @@ create table sources (
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
 , index created_date_record_id_dx (created_date, record_id)
-) engine = innodb default charset = latin1;
+) default charset = latin1;
 create index sources_tenant_account_record_id on sources(tenant_record_id, account_record_id);
 
 create table event_categories (
@@ -19,7 +21,7 @@ create table event_categories (
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
 , unique index event_category_unq (event_category)
-) engine = innodb default charset = latin1;
+) default charset = latin1;
 create index event_categories_tenant_record_id on event_categories(tenant_record_id);
 
 create table metrics (
@@ -29,7 +31,7 @@ create table metrics (
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
 , unique index metric_unq (event_category_id, metric)
-) engine = innodb default charset = latin1;
+) default charset = latin1;
 create index metrics_tenant_record_id on metrics(tenant_record_id);
 
 create table timeline_chunks (
@@ -47,12 +49,12 @@ create table timeline_chunks (
 , primary key(record_id)
 , unique index source_id_timeline_chunk_metric_idx (source_id, metric_id, start_time, aggregation_level)
 , index valid_agg_host_start_time (not_valid, aggregation_level, source_id, metric_id, start_time)
-) engine = innodb default charset = latin1;
+) default charset = latin1;
 
 create table last_start_times (
   time_inserted int not null primary key
 , start_times mediumtext not null
-) engine = innodb default charset = latin1;
+) default charset = latin1;
 
 insert ignore into timeline_chunks(record_id, source_id, metric_id, sample_count, start_time, end_time, in_row_samples, blob_samples)
                            values (0, 0, 0, 0, 0, 0, null, null);
@@ -67,5 +69,5 @@ create table timeline_rolled_up_chunk (
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
-) engine = innodb default charset = latin1;
+) default charset = latin1;
 create index timeline_rolled_up_chunk_tenant_account_record_id on timeline_rolled_up_chunk(tenant_record_id, account_record_id);

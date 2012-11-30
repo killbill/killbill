@@ -28,8 +28,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
-import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
-import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.globallocker.GlobalLocker.LockerType;
 import com.ning.billing.util.io.IOUtils;
@@ -39,11 +37,9 @@ import com.google.inject.Inject;
 
 @Guice(modules = TestMysqlGlobalLocker.TestMysqlGlobalLockerModule.class)
 public class TestMysqlGlobalLocker extends UtilTestSuiteWithEmbeddedDB {
-    @Inject
-    private IDBI dbi;
 
     @Inject
-    private MysqlTestingHelper helper;
+    private IDBI dbi;
 
     @BeforeMethod(groups = "slow")
     public void setup() throws IOException {
@@ -83,11 +79,10 @@ public class TestMysqlGlobalLocker extends UtilTestSuiteWithEmbeddedDB {
     }
 
     public static final class TestMysqlGlobalLockerModule extends AbstractModule {
+
         @Override
         protected void configure() {
-            final MysqlTestingHelper helper = KillbillTestSuiteWithEmbeddedDB.getMysqlTestingHelper();
-            bind(MysqlTestingHelper.class).toInstance(helper);
-            final IDBI dbi = helper.getDBI();
+            final IDBI dbi = getDBI();
             bind(IDBI.class).toInstance(dbi);
         }
     }

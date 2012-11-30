@@ -1,3 +1,5 @@
+/*! SET storage_engine=INNODB */;
+
 DROP TABLE IF EXISTS rolled_up_usage;
 CREATE TABLE rolled_up_usage (
     record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
@@ -12,7 +14,7 @@ CREATE TABLE rolled_up_usage (
     account_record_id int(11) unsigned default null,
     tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)
-) ENGINE=innodb;
+);
 CREATE UNIQUE INDEX rolled_up_usage_id ON rolled_up_usage(id);
 CREATE INDEX rolled_up_usage_subscription_id ON rolled_up_usage(subscription_id ASC);
 CREATE INDEX rolled_up_usage_tenant_account_record_id ON rolled_up_usage(tenant_record_id, account_record_id);
