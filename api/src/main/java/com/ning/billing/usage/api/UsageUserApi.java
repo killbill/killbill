@@ -16,46 +16,37 @@
 
 package com.ning.billing.usage.api;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.TenantContext;
 
 public interface UsageUserApi {
 
     /**
-     * Shortcut API to record a usage value of "1" for a given metric.
+     * Bulk usage API when the external system (or the meter module) rolls-up usage data.
+     * <p/>
+     * This is used to record e.g. "X has used 12 minutes of his data plan between 2012/02/04 and 2012/02/06".
      *
-     * @param bundleId   bundle id source
-     * @param metricName metric name for this usage
-     * @param context    call context
+     * @param subscriptionId subscription id source
+     * @param unitType       unit type for this usage
+     * @param startTime      start date of the usage period
+     * @param endTime        end date of the usage period
+     * @param amount         value to record
+     * @param context        tenant context
      */
-    public void incrementUsage(UUID bundleId, String metricName, CallContext context) throws EntitlementUserApiException;
+    public void recordRolledUpUsage(UUID subscriptionId, String unitType, DateTime startTime, DateTime endTime,
+                                    BigDecimal amount, CallContext context);
 
     /**
-     * Fine grained usage API if the external system doesn't roll its usage data. This is used to record e.g. "X has used
-     * 2 credits from his plan at 2012/02/04 4:12pm".
+     * Get usage information for a given subscription.
      *
-     * @param bundleId   bundle id source
-     * @param metricName metric name for this usage
-     * @param timestamp  timestamp of this usage
-     * @param value      value to record
-     * @param context    tenant context
+     * @param subscriptionId subscription id
+     * @param context        tenant context
+     * @return usage data (rolled-up)
      */
-    public void recordUsage(UUID bundleId, String metricName, DateTime timestamp, long value, CallContext context) throws EntitlementUserApiException;
-
-    /**
-     * Bulk usage API if the external system rolls-up usage data. This is used to record e.g. "X has used 12 minutes
-     * of his data plan between 2012/02/04 and 2012/02/06".
-     *
-     * @param bundleId   bundle id source
-     * @param metricName metric name for this usage
-     * @param startDate  start date of the usage period
-     * @param endDate    end date of the usage period
-     * @param value      value to record
-     * @param context    tenant context
-     */
-    public void recordRolledUpUsage(UUID bundleId, String metricName, DateTime startDate, DateTime endDate, long value, CallContext context) throws EntitlementUserApiException;
+    public RolledUpUsage getUsageForSubscription(UUID subscriptionId, TenantContext context);
 }

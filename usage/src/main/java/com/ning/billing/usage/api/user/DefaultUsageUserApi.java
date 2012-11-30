@@ -16,76 +16,45 @@
 
 package com.ning.billing.usage.api.user;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 import javax.inject.Inject;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.ObjectType;
+import com.ning.billing.usage.api.RolledUpUsage;
 import com.ning.billing.usage.api.UsageUserApi;
 import com.ning.billing.usage.dao.RolledUpUsageDao;
-import com.ning.billing.usage.timeline.TimelineEventHandler;
+import com.ning.billing.usage.dao.RolledUpUsageModelDao;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
-import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
-
-import com.google.common.collect.ImmutableMap;
+import com.ning.billing.util.callcontext.TenantContext;
 
 public class DefaultUsageUserApi implements UsageUserApi {
 
-    private static final String DEFAULT_EVENT_TYPE = "__DefaultUsageUserApi__";
-
     private final RolledUpUsageDao rolledUpUsageDao;
-    private final TimelineEventHandler timelineEventHandler;
-    private final EntitlementInternalApi entitlementApi;
-    private final Clock clock;
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
     public DefaultUsageUserApi(final RolledUpUsageDao rolledUpUsageDao,
-                               final TimelineEventHandler timelineEventHandler,
-                               final EntitlementInternalApi entitlementApi,
-                               final Clock clock,
                                final InternalCallContextFactory internalCallContextFactory) {
         this.rolledUpUsageDao = rolledUpUsageDao;
-        this.timelineEventHandler = timelineEventHandler;
-        this.entitlementApi = entitlementApi;
-        this.clock = clock;
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
     @Override
-    public void incrementUsage(final UUID bundleId, final String metricName, final CallContext context) throws EntitlementUserApiException {
-        recordUsage(bundleId, metricName, clock.getUTCNow(), 1, context);
+    public void recordRolledUpUsage(final UUID subscriptionId, final String unitType, final DateTime startTime, final DateTime endTime,
+                                    final BigDecimal amount, final CallContext context) {
+        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(subscriptionId, ObjectType.SUBSCRIPTION, context);
+        rolledUpUsageDao.record(subscriptionId, unitType, startTime, endTime, amount, internalCallContext);
     }
 
     @Override
-    public void recordUsage(final UUID bundleId, final String metricName, final DateTime timestamp, final long value, final CallContext context) throws EntitlementUserApiException {
-        final String sourceName = getSourceNameFromBundleId(bundleId);
-        timelineEventHandler.record(sourceName, DEFAULT_EVENT_TYPE, timestamp, ImmutableMap.<String, Object>of(metricName, value), createInternalCallContext(bundleId, context));
-    }
-
-    @Override
-    public void recordRolledUpUsage(final UUID bundleId, final String metricName, final DateTime startDate, final DateTime endDate,
-                                    final long value, final CallContext context) throws EntitlementUserApiException {
-        final String sourceName = getSourceNameFromBundleId(bundleId);
-
-        rolledUpUsageDao.record(sourceName, DEFAULT_EVENT_TYPE, metricName, startDate, endDate, value, createInternalCallContext(bundleId, context));
-    }
-
-    private InternalCallContext createInternalCallContext(final UUID bundleId, final CallContext context) throws EntitlementUserApiException {
-        // Retrieve the bundle to get the account id for the internal call context
-        // API_FIX
-        final SubscriptionBundle bundle = null; // entitlementApi.getBundleFromId(bundleId, context);
-        return internalCallContextFactory.createInternalCallContext(bundle.getAccountId(), context);
-    }
-
-    private String getSourceNameFromBundleId(final UUID bundleId) {
-        // TODO we should do better
-        return bundleId.toString();
+    public RolledUpUsage getUsageForSubscription(final UUID subscriptionId, final TenantContext context) {
+        final RolledUpUsageModelDao usageForSubscription = rolledUpUsageDao.getUsageForSubscription(subscriptionId, internalCallContextFactory.createInternalTenantContext(context));
+        return new DefaultRolledUpUsage(usageForSubscription);
     }
 }

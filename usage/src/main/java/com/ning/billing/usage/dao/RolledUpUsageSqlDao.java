@@ -16,25 +16,26 @@
 
 package com.ning.billing.usage.dao;
 
-import java.util.Date;
+import java.util.UUID;
 
 import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.BindBean;
+import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
-import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
-import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
-import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
+import org.skife.jdbi.v2.sqlobject.stringtemplate.UseStringTemplate3StatementLocator;
 
 import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 
-@ExternalizedSqlViaStringTemplate3()
-public interface RolledUpUsageSqlDao extends Transactional<RolledUpUsageSqlDao>, Transmogrifier {
+@UseStringTemplate3StatementLocator()
+public interface RolledUpUsageSqlDao {
 
     @SqlUpdate
-    public void record(@Bind("sourceId") final int sourceId,
-                       @Bind("metricId") final int metricId,
-                       @Bind("startTime") final Date startTime,
-                       @Bind("endTime") final Date endTime,
-                       @Bind("value") final long value,
+    public void create(@BindBean RolledUpUsageModelDao rolledUpUsage,
                        @InternalTenantContextBinder final InternalCallContext context);
+
+    @SqlQuery
+    public RolledUpUsageModelDao getUsageForSubscription(@Bind("subscriptionId") final UUID subscriptionId,
+                                                         @InternalTenantContextBinder final InternalTenantContext context);
 }

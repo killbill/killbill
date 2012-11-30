@@ -197,11 +197,19 @@
         </dependency>
         <dependency>
             <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-meter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing</groupId>
             <artifactId>killbill-overdue</artifactId>
         </dependency>
         <dependency>
             <groupId>com.ning.billing</groupId>
             <artifactId>killbill-tenant</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-usage</artifactId>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>

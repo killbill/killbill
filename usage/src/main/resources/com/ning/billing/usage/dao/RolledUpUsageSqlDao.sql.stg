@@ -1,0 +1,51 @@
+group RolledUpUsageSqlDao;
+
+tableName() ::= "usage"
+
+tableFields(prefix) ::= <<
+  <prefix>id
+, <prefix>subscription_id
+, <prefix>unit_type
+, <prefix>start_time
+, <prefix>end_time
+, <prefix>amount
+, <prefix>created_by
+, <prefix>created_date
+, <prefix>account_record_id
+, <prefix>tenant_record_id
+>>
+
+tableValues() ::= <<
+  :id
+, :subscriptionId
+, :unitType
+, :startTime
+, :endTime
+, :amount
+, :userName
+, :createdDate
+, :accountRecordId
+, :tenantRecordId
+>>
+
+CHECK_TENANT(prefix) ::= "<prefix>tenant_record_id = :tenantRecordId"
+AND_CHECK_TENANT(prefix) ::= "and <CHECK_TENANT(prefix)>"
+
+create() ::= <<
+insert into <tableName()> (
+  <tableFields()>
+)
+values (
+  <tableValues()>
+)
+;
+>>
+
+getUsageForSubscription() ::= <<
+select
+  <tableFields("t.")>
+from <tableName()> t
+where subscription_id = :subscriptionId
+<AND_CHECK_TENANT()>
+;
+>>

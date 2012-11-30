@@ -46,6 +46,7 @@
         <module>entitlement</module>
         <module>invoice</module>
         <module>junction</module>
+        <module>meter</module>
         <module>overdue</module>
         <module>payment</module>
         <module>usage</module>
@@ -190,6 +191,11 @@
             <dependency>
                 <groupId>com.ning.billing</groupId>
                 <artifactId>killbill-usage</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.ning.billing</groupId>
+                <artifactId>killbill-meter</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
