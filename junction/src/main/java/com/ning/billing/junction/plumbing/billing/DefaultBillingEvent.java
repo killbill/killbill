@@ -225,23 +225,16 @@ public class DefaultBillingEvent implements BillingEvent {
 
     @Override
     public String toString() {
+        // Note: we don't use all fields here, as the output would be overwhelming
+        // (these events are printed in the logs in junction and invoice).
         final StringBuilder sb = new StringBuilder();
         sb.append("DefaultBillingEvent");
-        sb.append("{account=").append(account);
-        sb.append(", billCycleDay=").append(billCycleDay);
-        sb.append(", subscription=").append(subscription);
+        sb.append("{type=").append(type);
         sb.append(", effectiveDate=").append(effectiveDate);
-        sb.append(", planPhase=").append(planPhase);
-        sb.append(", plan=").append(plan);
-        sb.append(", fixedPrice=").append(fixedPrice);
-        sb.append(", recurringPrice=").append(recurringPrice);
-        sb.append(", currency=").append(currency);
-        sb.append(", description='").append(description).append('\'');
-        sb.append(", billingModeType=").append(billingModeType);
-        sb.append(", billingPeriod=").append(billingPeriod);
-        sb.append(", type=").append(type);
+        sb.append(", planPhaseName=").append(planPhase.getName());
+        sb.append(", subscriptionId=").append(subscription.getId());
         sb.append(", totalOrdering=").append(totalOrdering);
-        sb.append(", timeZone=").append(timeZone);
+        sb.append(", accountId=").append(account.getId());
         sb.append('}');
         return sb.toString();
     }

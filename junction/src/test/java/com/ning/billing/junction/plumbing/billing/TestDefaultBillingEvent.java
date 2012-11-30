@@ -30,6 +30,7 @@ import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.ning.billing.account.api.Account;
 import com.ning.billing.catalog.DefaultPrice;
 import com.ning.billing.catalog.MockInternationalPrice;
 import com.ning.billing.catalog.MockPlan;
@@ -42,6 +43,7 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.junction.JunctionTestSuite;
+import com.ning.billing.mock.MockAccountBuilder;
 import com.ning.billing.mock.api.MockBillCycleDay;
 import com.ning.billing.util.svcapi.junction.BillingEvent;
 import com.ning.billing.util.svcapi.junction.BillingModeType;
@@ -168,6 +170,13 @@ public class TestDefaultBillingEvent extends JunctionTestSuite {
         Assert.assertEquals(event2, it.next());
     }
 
+    @Test(groups = "fast")
+    public void testToString() throws Exception {
+        // Simple test to ensure we have an easy to read toString representation
+        final BillingEvent event = createEvent(subscription(ID_ZERO), new DateTime("2012-01-01T00:02:04.000Z", DateTimeZone.UTC), SubscriptionTransitionType.CREATE);
+        Assert.assertEquals(event.toString(), "DefaultBillingEvent{type=CREATE, effectiveDate=2012-01-01T00:02:04.000Z, planPhaseName=Test-trial, subscriptionId=00000000-0000-0000-0000-000000000000, totalOrdering=1, accountId=" + event.getAccount().getId().toString() + "}");
+    }
+
     private BillingEvent createEvent(final Subscription sub, final DateTime effectiveDate, final SubscriptionTransitionType type) {
         return createEvent(sub, effectiveDate, type, 1L);
     }
@@ -178,7 +187,8 @@ public class TestDefaultBillingEvent extends JunctionTestSuite {
         final Plan shotgun = new MockPlan();
         final PlanPhase shotgunMonthly = createMockMonthlyPlanPhase(null, BigDecimal.ZERO, PhaseType.TRIAL);
 
-        return new DefaultBillingEvent(null, sub, effectiveDate,
+        final Account account = new MockAccountBuilder().build();
+        return new DefaultBillingEvent(account, sub, effectiveDate,
                                        shotgun, shotgunMonthly,
                                        BigDecimal.ZERO, null, Currency.USD, BillingPeriod.NO_BILLING_PERIOD, new MockBillCycleDay(billCycleDay),
                                        BillingModeType.IN_ADVANCE, "Test Event 1", totalOrdering, type, DateTimeZone.UTC);

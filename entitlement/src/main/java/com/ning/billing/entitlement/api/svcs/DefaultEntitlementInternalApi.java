@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.entitlement.api.svcs;
 
 import java.util.ArrayList;
@@ -25,6 +26,8 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.joda.time.LocalTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.entitlement.api.SubscriptionFactory;
@@ -50,7 +53,10 @@ import com.google.inject.Inject;
 
 public class DefaultEntitlementInternalApi implements EntitlementInternalApi {
 
+    private final Logger log = LoggerFactory.getLogger(DefaultEntitlementInternalApi.class);
+
     private final EntitlementDao dao;
+
     private final DefaultSubscriptionApiService apiService;
     private final Clock clock;
 
@@ -64,8 +70,7 @@ public class DefaultEntitlementInternalApi implements EntitlementInternalApi {
     }
 
     @Override
-    public List<SubscriptionBundle> getBundlesForAccount(UUID accountId,
-            InternalTenantContext context) {
+    public List<SubscriptionBundle> getBundlesForAccount(final UUID accountId, final InternalTenantContext context) {
         return dao.getSubscriptionBundleForAccount(accountId, context);
     }
 
@@ -87,6 +92,7 @@ public class DefaultEntitlementInternalApi implements EntitlementInternalApi {
     }
 
     @Override
+
     public Subscription getSubscriptionFromId(UUID id,
             InternalTenantContext context) throws EntitlementUserApiException {
         final Subscription result = dao.getSubscriptionFromId(id, context);
@@ -97,8 +103,7 @@ public class DefaultEntitlementInternalApi implements EntitlementInternalApi {
     }
 
     @Override
-    public SubscriptionBundle getBundleFromId(UUID id,
-            InternalTenantContext context) throws EntitlementUserApiException {
+    public SubscriptionBundle getBundleFromId(final UUID id, final InternalTenantContext context) throws EntitlementUserApiException {
         final SubscriptionBundle result = dao.getSubscriptionBundleFromId(id, context);
         if (result == null) {
             throw new EntitlementUserApiException(ErrorCode.ENT_GET_INVALID_BUNDLE_ID, id.toString());
@@ -107,9 +112,7 @@ public class DefaultEntitlementInternalApi implements EntitlementInternalApi {
     }
 
     @Override
-    public UUID getAccountIdFromSubscriptionId(UUID subscriptionId,
-            InternalTenantContext context)
-            throws EntitlementUserApiException {
+    public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId, final InternalTenantContext context) throws EntitlementUserApiException {
         return dao.getAccountIdFromSubscriptionId(subscriptionId, context);
     }
 
@@ -121,6 +124,8 @@ public class DefaultEntitlementInternalApi implements EntitlementInternalApi {
         final SubscriptionBuilder builder = new SubscriptionBuilder(subscription)
                 .setChargedThroughDate(chargedThroughDate)
                 .setPaidThroughDate(subscription.getPaidThroughDate());
+
+        log.info("Setting CTD for subscription {} to {} ({} local)", new Object[]{subscriptionId, chargedThroughDate, localChargedThruDate});
         dao.updateChargedThroughDate(new SubscriptionData(builder), context);
     }
 
@@ -131,13 +136,13 @@ public class DefaultEntitlementInternalApi implements EntitlementInternalApi {
     }
 
     @Override
-    public List<EffectiveSubscriptionInternalEvent> getBillingTransitions(Subscription subscription, final InternalTenantContext context) {
+    public List<EffectiveSubscriptionInternalEvent> getBillingTransitions(final Subscription subscription, final InternalTenantContext context) {
         final List<SubscriptionTransitionData> transitions = ((SubscriptionData) subscription).getBillingTransitions();
         return convertEffectiveSubscriptionInternalEventFromSubscriptionTransitions(subscription, context, transitions);
     }
 
     private List<EffectiveSubscriptionInternalEvent> convertEffectiveSubscriptionInternalEventFromSubscriptionTransitions(final Subscription subscription,
-            final InternalTenantContext context, final List<SubscriptionTransitionData> transitions) {
+                                                                                                                          final InternalTenantContext context, final List<SubscriptionTransitionData> transitions) {
         return ImmutableList.<EffectiveSubscriptionInternalEvent>copyOf(Collections2.transform(transitions, new Function<SubscriptionTransitionData, EffectiveSubscriptionInternalEvent>() {
             @Override
             @Nullable

@@ -94,10 +94,10 @@ public class DefaultLifecycle implements Lifecycle {
         final Set<KillbillService> result = new HashSet<KillbillService>();
         final Set<Class<? extends KillbillService>> services = serviceFinder.getServices();
         for (final Class<? extends KillbillService> cur : services) {
-            log.info("Found service {}", cur.getName());
+            log.debug("Found service {}", cur.getName());
             try {
                 final KillbillService instance = injector.getInstance(cur);
-                log.info("got instance {}", instance.getName());
+                log.debug("got instance {}", instance.getName());
                 result.add(instance);
             } catch (final Exception e) {
                 logWarn("Failed to inject " + cur.getName(), e);

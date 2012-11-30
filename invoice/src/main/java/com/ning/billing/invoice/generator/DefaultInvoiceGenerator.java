@@ -305,8 +305,13 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
             return items;
         }
 
-        final Iterator<BillingEvent> eventIt = events.iterator();
+        // Pretty-print the generated invoice items from the junction events
+        final StringBuilder logStringBuilder = new StringBuilder("Invoice items generated for invoiceId ")
+                .append(invoiceId)
+                .append(" and accountId ")
+                .append(accountId);
 
+        final Iterator<BillingEvent> eventIt = events.iterator();
         BillingEvent nextEvent = eventIt.next();
         while (eventIt.hasNext()) {
             final BillingEvent thisEvent = nextEvent;
@@ -314,29 +319,20 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
             if (!events.getSubscriptionIdsWithAutoInvoiceOff().
                     contains(thisEvent.getSubscription().getId())) { // don't consider events for subscriptions that have auto_invoice_off
                 final BillingEvent adjustedNextEvent = (thisEvent.getSubscription().getId() == nextEvent.getSubscription().getId()) ? nextEvent : null;
-                items.addAll(processEvents(invoiceId, accountId, thisEvent, adjustedNextEvent, targetDate, accountTimeZone, currency));
+                items.addAll(processEvents(invoiceId, accountId, thisEvent, adjustedNextEvent, targetDate, accountTimeZone, currency, logStringBuilder));
             }
         }
-        items.addAll(processEvents(invoiceId, accountId, nextEvent, null, targetDate, accountTimeZone, currency));
+        items.addAll(processEvents(invoiceId, accountId, nextEvent, null, targetDate, accountTimeZone, currency, logStringBuilder));
 
-        // The above should reproduce the semantics of the code below using iterator instead of list.
-        //
-        //        for (int i = 0; i < events.size(); i++) {
-        //            BillingEvent thisEvent = events.get(i);
-        //            BillingEvent nextEvent = events.isLast(thisEvent) ? null : events.get(i + 1);
-        //            if (nextEvent != null) {
-        //                nextEvent = (thisEvent.getSubscription().getId() == nextEvent.getSubscription().getId()) ? nextEvent : null;
-        //            }
-        //
-        //            items.addAll(processEvents(invoiceId, accountId, thisEvent, nextEvent, targetDate, currency));
-        //        }
+        log.info(logStringBuilder.toString());
 
         return items;
     }
 
     // Turn a set of events into a list of invoice items. Note that the dates on the invoice items will be rounded (granularity of a day)
     private List<InvoiceItem> processEvents(final UUID invoiceId, final UUID accountId, final BillingEvent thisEvent, @Nullable final BillingEvent nextEvent,
-                                            final LocalDate targetDate, final DateTimeZone accountTimeZone, final Currency currency) throws InvoiceApiException {
+                                            final LocalDate targetDate, final DateTimeZone accountTimeZone, final Currency currency,
+                                            final StringBuilder logStringBuilder) throws InvoiceApiException {
         final List<InvoiceItem> items = new ArrayList<InvoiceItem>();
 
         // Handle fixed price items
@@ -383,7 +379,14 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
             }
         }
 
-        log.info("Generated invoice items [{}] from event [{}]", items, thisEvent);
+        // For debugging purposes
+        logStringBuilder.append("\n")
+                        .append(thisEvent);
+        for (final InvoiceItem item : items) {
+            logStringBuilder.append("\n\t")
+                            .append(item);
+        }
+
         return items;
     }
 

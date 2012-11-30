@@ -17,7 +17,6 @@
 package com.ning.billing.junction.plumbing.billing;
 
 import java.util.List;
-import java.util.Map;
 import java.util.SortedSet;
 import java.util.UUID;
 
@@ -58,10 +57,10 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
 
     @Inject
     public DefaultInternalBillingApi(final AccountInternalApi accountApi,
-            final BillCycleDayCalculator bcdCalculator,
-            final EntitlementInternalApi entitlementApi,
-            final BlockingCalculator blockCalculator,
-            final CatalogService catalogService, final TagInternalApi tagApi) {
+                                     final BillCycleDayCalculator bcdCalculator,
+                                     final EntitlementInternalApi entitlementApi,
+                                     final BlockingCalculator blockCalculator,
+                                     final CatalogService catalogService, final TagInternalApi tagApi) {
         this.accountApi = accountApi;
         this.bcdCalculator = bcdCalculator;
         this.entitlementApi = entitlementApi;
@@ -72,9 +71,6 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
 
     @Override
     public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(final UUID accountId, final InternalCallContext context) {
-
-        //final TenantContext context = factory.createTenantContext(API_USER_NAME, CallOrigin.INTERNAL, UserType.SYSTEM);
-
         final List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(accountId, context);
         final DefaultBillingEventSet result = new DefaultBillingEventSet();
 
@@ -95,23 +91,25 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
             log.warn("Failed while getting BillingEvent", e);
         }
 
-        debugLog(result, "********* Billing Events Raw");
+        // Pretty-print the events, before and after the blocking calculator does its magic
+        final StringBuilder logStringBuilder = new StringBuilder("Computed billing events for accountId ").append(accountId);
+        eventsToString(logStringBuilder, result, "\nBilling Events Raw");
         blockCalculator.insertBlockingEvents(result, context);
-        debugLog(result, "*********  Billing Events After Blocking");
+        eventsToString(logStringBuilder, result, "\nBilling Events After Blocking");
+        log.info(logStringBuilder.toString());
 
         return result;
     }
 
-
-    private void debugLog(final SortedSet<BillingEvent> result, final String title) {
-        log.info(title);
-        for (final BillingEvent aResult : result) {
-            log.info(aResult.toString());
+    private void eventsToString(final StringBuilder stringBuilder, final SortedSet<BillingEvent> events, final String title) {
+        stringBuilder.append(title);
+        for (final BillingEvent event : events) {
+            stringBuilder.append("\n").append(event.toString());
         }
     }
 
     private void addBillingEventsForBundles(final List<SubscriptionBundle> bundles, final Account account, final InternalCallContext context,
-            final DefaultBillingEventSet result) {
+                                            final DefaultBillingEventSet result) {
         for (final SubscriptionBundle bundle : bundles) {
             final List<Subscription> subscriptions = entitlementApi.getSubscriptionsForBundle(bundle.getId(), context);
 
@@ -151,29 +149,11 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
                     result.add(event);
                 } catch (CatalogApiException e) {
                     log.error("Failing to identify catalog components while creating BillingEvent from transition: " +
-                            transition.getId().toString(), e);
+                              transition.getId().toString(), e);
                 } catch (Exception e) {
                     log.warn("Failed while getting BillingEvent", e);
                 }
             }
         }
     }
-
-    /*
-
-    @Override
-    public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId, final InternalTenantContext context) throws EntitlementUserApiException {
-        final UUID result = entitlementApi.getAccountIdFromSubscriptionId(subscriptionId, context);
-        if (result == null) {
-            throw new EntitlementBillingApiException(ErrorCode.ENT_INVALID_SUBSCRIPTION_ID, subscriptionId.toString());
-        }
-        return result;
-    }
-
-    @Override
-    public void setChargedThroughDate(final UUID subscriptionId, final LocalDate ctd, final InternalCallContext context) {
-        entitlementApi.setChargedThroughDate(subscriptionId, ctd, context);
-    }
-
-     */
 }
