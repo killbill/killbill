@@ -44,7 +44,6 @@ import com.ning.billing.entitlement.alignment.PlanAligner;
 import com.ning.billing.entitlement.api.svcs.DefaultEntitlementInternalApi;
 import com.ning.billing.entitlement.api.user.DefaultEntitlementUserApi;
 import com.ning.billing.entitlement.api.user.DefaultSubscriptionApiService;
-import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.engine.addon.AddonUtils;
@@ -57,7 +56,6 @@ import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.config.CatalogConfig;
-import com.ning.billing.util.config.NotificationConfig;
 import com.ning.billing.util.notificationq.DefaultNotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueConfig;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
@@ -109,7 +107,7 @@ public class TestBusinessTagRecorder extends AnalyticsTestSuiteWithEmbeddedDB {
         final EntitlementDao entitlementDao = new DefaultEntitlementDao(dbi, clock, addonUtils, notificationQueueService, eventBus, catalogService);
         final PlanAligner planAligner = new PlanAligner(catalogService);
         final DefaultSubscriptionApiService apiService = new DefaultSubscriptionApiService(clock, entitlementDao, catalogService, planAligner, internalCallContextFactory);
-        entitlementApi = new DefaultEntitlementInternalApi(entitlementDao, apiService, clock);
+        entitlementApi = new DefaultEntitlementInternalApi(entitlementDao, apiService, clock, catalogService);
         entitlementUserApi = new DefaultEntitlementUserApi(clock, entitlementDao, catalogService, apiService, addonUtils, internalCallContextFactory);
         tagDao = new BusinessTagDao(accountTagSqlDao, invoicePaymentTagSqlDao, invoiceTagSqlDao, subscriptionTransitionTagSqlDao,
                                     accountApi, entitlementApi);

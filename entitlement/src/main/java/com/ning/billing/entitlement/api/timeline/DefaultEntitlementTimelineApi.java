@@ -36,11 +36,10 @@ import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.EntitlementApiBase;
 import com.ning.billing.entitlement.api.SubscriptionApiService;
-import com.ning.billing.entitlement.api.SubscriptionFactory;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline.NewEvent;
-import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.entitlement.api.user.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
@@ -81,7 +80,7 @@ public class DefaultEntitlementTimelineApi extends EntitlementApiBase implements
                                          @Named(DefaultEntitlementModule.REPAIR_NAMED) final RepairEntitlementLifecycleDao repairDao, final EntitlementDao dao,
                                          @Named(DefaultEntitlementModule.REPAIR_NAMED) final SubscriptionApiService repairApiService,
                                          final InternalCallContextFactory internalCallContextFactory, final Clock clock, final AddonUtils addonUtils) {
-        super(dao, apiService, clock);
+        super(dao, apiService, clock, catalogService);
         this.catalogService = catalogService;
         this.repairDao = repairDao;
         this.internalCallContextFactory = internalCallContextFactory;

@@ -19,10 +19,12 @@ package com.ning.billing.entitlement.api;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.ning.billing.entitlement.api.user.DefaultSubscriptionApiService;
+import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.entitlement.api.user.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
+import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.util.clock.Clock;
 
 import com.google.common.base.Function;
@@ -34,11 +36,13 @@ public class EntitlementApiBase {
 
     protected final SubscriptionApiService apiService;
     protected final Clock clock;
+    protected final CatalogService catalogService;
 
-    public EntitlementApiBase(final EntitlementDao dao, final SubscriptionApiService apiService, final Clock clock) {
+    public EntitlementApiBase(final EntitlementDao dao, final SubscriptionApiService apiService, final Clock clock, final CatalogService catalogService) {
         this.dao = dao;
         this.apiService = apiService;
         this.clock = clock;
+        this.catalogService = catalogService;
     }
 
     protected List<Subscription> createSubscriptionsForApiUse(final List<Subscription> internalSubscriptions) {
@@ -50,7 +54,15 @@ public class EntitlementApiBase {
         }));
     }
 
-    protected Subscription createSubscriptionForApiUse(final Subscription internalSubscription) {
+    protected SubscriptionData createSubscriptionForApiUse(final Subscription internalSubscription) {
         return new SubscriptionData((SubscriptionData) internalSubscription, apiService, clock);
+    }
+
+    protected SubscriptionData createSubscriptionForApiUse(SubscriptionBuilder builder, List<EntitlementEvent> events) {
+        final SubscriptionData subscription = new SubscriptionData(builder, apiService, clock);
+        if (events.size() > 0) {
+            subscription.rebuildTransitions(events, catalogService.getFullCatalog());
+        }
+        return subscription;
     }
 }

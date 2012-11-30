@@ -16,7 +16,6 @@
 
 package com.ning.billing.entitlement.api.svcs;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -30,13 +29,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ning.billing.ErrorCode;
+import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.entitlement.api.EntitlementApiBase;
-import com.ning.billing.entitlement.api.SubscriptionFactory;
 import com.ning.billing.entitlement.api.user.DefaultEffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.DefaultSubscriptionApiService;
-import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.entitlement.api.user.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
@@ -59,9 +58,10 @@ public class DefaultEntitlementInternalApi extends EntitlementApiBase implements
 
     @Inject
     public DefaultEntitlementInternalApi(final EntitlementDao dao,
-            final DefaultSubscriptionApiService apiService,
-            final Clock clock) {
-        super(dao, apiService, clock);
+                                         final DefaultSubscriptionApiService apiService,
+                                         final Clock clock,
+                                         final CatalogService catalogService) {
+        super(dao, apiService, clock, catalogService);
     }
 
     @Override
@@ -71,14 +71,14 @@ public class DefaultEntitlementInternalApi extends EntitlementApiBase implements
 
     @Override
     public List<Subscription> getSubscriptionsForBundle(UUID bundleId,
-            InternalTenantContext context) {
-        final List<Subscription> internalSubscriptions =  dao.getSubscriptions(bundleId, context);
+                                                        InternalTenantContext context) {
+        final List<Subscription> internalSubscriptions = dao.getSubscriptions(bundleId, context);
         return createSubscriptionsForApiUse(internalSubscriptions);
     }
 
     @Override
     public Subscription getBaseSubscription(UUID bundleId,
-            InternalTenantContext context) throws EntitlementUserApiException {
+                                            InternalTenantContext context) throws EntitlementUserApiException {
         final Subscription result = dao.getBaseSubscription(bundleId, context);
         if (result == null) {
             throw new EntitlementUserApiException(ErrorCode.ENT_GET_NO_SUCH_BASE_SUBSCRIPTION, bundleId);
@@ -89,7 +89,7 @@ public class DefaultEntitlementInternalApi extends EntitlementApiBase implements
     @Override
 
     public Subscription getSubscriptionFromId(UUID id,
-            InternalTenantContext context) throws EntitlementUserApiException {
+                                              InternalTenantContext context) throws EntitlementUserApiException {
         final Subscription result = dao.getSubscriptionFromId(id, context);
         if (result == null) {
             throw new EntitlementUserApiException(ErrorCode.ENT_INVALID_SUBSCRIPTION_ID, id);
@@ -113,7 +113,7 @@ public class DefaultEntitlementInternalApi extends EntitlementApiBase implements
 
     @Override
     public void setChargedThroughDate(UUID subscriptionId,
-            LocalDate localChargedThruDate, InternalCallContext context) {
+                                      LocalDate localChargedThruDate, InternalCallContext context) {
         final SubscriptionData subscription = (SubscriptionData) dao.getSubscriptionFromId(subscriptionId, context);
         final DateTime chargedThroughDate = localChargedThruDate.toDateTime(new LocalTime(subscription.getStartDate(), DateTimeZone.UTC), DateTimeZone.UTC);
         final SubscriptionBuilder builder = new SubscriptionBuilder(subscription)

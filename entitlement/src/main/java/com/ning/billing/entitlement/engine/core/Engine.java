@@ -25,17 +25,12 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.entitlement.api.SubscriptionApiService;
-import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory;
-import com.ning.billing.util.config.EntitlementConfig;
 import com.ning.billing.entitlement.alignment.PlanAligner;
 import com.ning.billing.entitlement.alignment.TimedPhase;
 import com.ning.billing.entitlement.api.EntitlementService;
-import com.ning.billing.entitlement.api.SubscriptionFactory;
 import com.ning.billing.entitlement.api.user.DefaultEffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;

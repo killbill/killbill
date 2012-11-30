@@ -16,7 +16,6 @@
 
 package com.ning.billing.entitlement.api.user;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -35,8 +34,6 @@ import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.EntitlementApiBase;
-import com.ning.billing.entitlement.api.SubscriptionFactory;
-import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.api.user.SubscriptionStatusDryRun.DryRunChangeReason;
 import com.ning.billing.entitlement.engine.addon.AddonUtils;
@@ -48,8 +45,6 @@ import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
 
 public class DefaultEntitlementUserApi extends EntitlementApiBase implements EntitlementUserApi {
@@ -62,7 +57,7 @@ public class DefaultEntitlementUserApi extends EntitlementApiBase implements Ent
     public DefaultEntitlementUserApi(final Clock clock, final EntitlementDao dao, final CatalogService catalogService,
                                      final DefaultSubscriptionApiService apiService,
                                      final AddonUtils addonUtils, final InternalCallContextFactory internalCallContextFactory) {
-        super(dao, apiService, clock);
+        super(dao, apiService, clock, catalogService);
         this.catalogService = catalogService;
         this.addonUtils = addonUtils;
         this.internalCallContextFactory = internalCallContextFactory;

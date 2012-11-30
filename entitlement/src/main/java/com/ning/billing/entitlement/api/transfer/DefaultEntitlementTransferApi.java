@@ -31,7 +31,6 @@ import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.EntitlementApiBase;
 import com.ning.billing.entitlement.api.SubscriptionApiService;
-import com.ning.billing.entitlement.api.SubscriptionFactory;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData.BundleMigrationData;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData.SubscriptionMigrationData;
 import com.ning.billing.entitlement.api.timeline.BundleTimeline;
@@ -39,8 +38,8 @@ import com.ning.billing.entitlement.api.timeline.EntitlementRepairException;
 import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
 import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline;
 import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline.ExistingEvent;
-import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory;
-import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
+
+import com.ning.billing.entitlement.api.user.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
@@ -64,18 +63,16 @@ import com.google.inject.Inject;
 public class DefaultEntitlementTransferApi extends EntitlementApiBase implements EntitlementTransferApi {
 
     private final CatalogService catalogService;
-    private final SubscriptionFactory subscriptionFactory;
     private final EntitlementTimelineApi timelineApi;
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
     public DefaultEntitlementTransferApi(final Clock clock, final EntitlementDao dao, final EntitlementTimelineApi timelineApi, final CatalogService catalogService,
                                          final SubscriptionApiService apiService, final InternalCallContextFactory internalCallContextFactory) {
-        super(dao, apiService, clock);
+        super(dao, apiService, clock, catalogService);
         this.catalogService = catalogService;
         this.timelineApi = timelineApi;
         this.internalCallContextFactory = internalCallContextFactory;
-        this.subscriptionFactory = new DefaultSubscriptionFactory(apiService, clock, catalogService);
     }
 
     private EntitlementEvent createEvent(final boolean firstEvent, final ExistingEvent existingEvent, final SubscriptionData subscription, final DateTime transferDate, final CallContext context)
@@ -254,13 +251,13 @@ public class DefaultEntitlementTransferApi extends EntitlementApiBase implements
                 }
 
                 // Create the new subscription for the new bundle on the new account
-                final SubscriptionData subscriptionData = subscriptionFactory.createSubscription(new SubscriptionBuilder()
-                                                                                                         .setId(UUID.randomUUID())
-                                                                                                         .setBundleId(subscriptionBundleData.getId())
-                                                                                                         .setCategory(productCategory)
-                                                                                                         .setBundleStartDate(effectiveTransferDate)
-                                                                                                         .setAlignStartDate(subscriptionAlignStartDate),
-                                                                                                 ImmutableList.<EntitlementEvent>of());
+                final SubscriptionData subscriptionData = createSubscriptionForApiUse(new SubscriptionBuilder()
+                                                                                              .setId(UUID.randomUUID())
+                                                                                              .setBundleId(subscriptionBundleData.getId())
+                                                                                              .setCategory(productCategory)
+                                                                                              .setBundleStartDate(effectiveTransferDate)
+                                                                                              .setAlignStartDate(subscriptionAlignStartDate),
+                                                                                      ImmutableList.<EntitlementEvent>of());
 
                 final List<EntitlementEvent> events = toEvents(existingEvents, subscriptionData, effectiveTransferDate, context);
                 final SubscriptionMigrationData curData = new SubscriptionMigrationData(subscriptionData, events, null);

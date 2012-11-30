@@ -31,11 +31,9 @@ import com.ning.billing.entitlement.alignment.MigrationPlanAligner;
 import com.ning.billing.entitlement.alignment.TimedMigration;
 import com.ning.billing.entitlement.api.EntitlementApiBase;
 import com.ning.billing.entitlement.api.SubscriptionApiService;
-import com.ning.billing.entitlement.api.SubscriptionFactory;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData.BundleMigrationData;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData.SubscriptionMigrationData;
-import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory;
-import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
+import com.ning.billing.entitlement.api.user.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
@@ -61,7 +59,6 @@ import com.google.inject.Inject;
 public class DefaultEntitlementMigrationApi extends EntitlementApiBase implements EntitlementMigrationApi {
 
     private final MigrationPlanAligner migrationAligner;
-    private final SubscriptionFactory factory;
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
@@ -71,10 +68,9 @@ public class DefaultEntitlementMigrationApi extends EntitlementApiBase implement
                                           final EntitlementDao dao,
                                           final Clock clock,
                                           final InternalCallContextFactory internalCallContextFactory) {
-        super(dao, apiService, clock);
+        super(dao, apiService, clock, catalogService);
         this.migrationAligner = migrationAligner;
         this.internalCallContextFactory = internalCallContextFactory;
-        this.factory = new DefaultSubscriptionFactory(apiService, clock, catalogService);
     }
 
     @Override
@@ -143,13 +139,13 @@ public class DefaultEntitlementMigrationApi extends EntitlementApiBase implement
         final TimedMigration[] events = migrationAligner.getEventsMigration(input, now);
         final DateTime migrationStartDate = events[0].getEventTime();
         final List<EntitlementEvent> emptyEvents = Collections.emptyList();
-        final SubscriptionData subscriptionData = factory.createSubscription(new SubscriptionBuilder()
-                                                                                     .setId(UUID.randomUUID())
-                                                                                     .setBundleId(bundleId)
-                                                                                     .setCategory(productCategory)
-                                                                                     .setBundleStartDate(migrationStartDate)
-                                                                                     .setAlignStartDate(migrationStartDate),
-                                                                             emptyEvents);
+        final SubscriptionData subscriptionData = createSubscriptionForApiUse(new SubscriptionBuilder()
+                                                                                      .setId(UUID.randomUUID())
+                                                                                      .setBundleId(bundleId)
+                                                                                      .setCategory(productCategory)
+                                                                                      .setBundleStartDate(migrationStartDate)
+                                                                                      .setAlignStartDate(migrationStartDate),
+                                                                              emptyEvents);
         return new SubscriptionMigrationData(subscriptionData, toEvents(subscriptionData, now, ctd, events, context), ctd);
     }
 
@@ -159,13 +155,13 @@ public class DefaultEntitlementMigrationApi extends EntitlementApiBase implement
         final TimedMigration[] events = migrationAligner.getEventsMigration(input, now);
         final DateTime migrationStartDate = events[0].getEventTime();
         final List<EntitlementEvent> emptyEvents = Collections.emptyList();
-        final SubscriptionData subscriptionData = factory.createSubscription(new SubscriptionBuilder()
-                                                                                     .setId(UUID.randomUUID())
-                                                                                     .setBundleId(bundleId)
-                                                                                     .setCategory(productCategory)
-                                                                                     .setBundleStartDate(bundleStartDate)
-                                                                                     .setAlignStartDate(migrationStartDate),
-                                                                             emptyEvents);
+        final SubscriptionData subscriptionData = createSubscriptionForApiUse(new SubscriptionBuilder()
+                                                                                      .setId(UUID.randomUUID())
+                                                                                      .setBundleId(bundleId)
+                                                                                      .setCategory(productCategory)
+                                                                                      .setBundleStartDate(bundleStartDate)
+                                                                                      .setAlignStartDate(migrationStartDate),
+                                                                              emptyEvents);
         return new SubscriptionMigrationData(subscriptionData, toEvents(subscriptionData, now, ctd, events, context), ctd);
     }
 

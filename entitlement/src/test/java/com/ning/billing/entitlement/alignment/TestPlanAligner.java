@@ -33,8 +33,8 @@ import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.io.VersionedCatalogLoader;
+import com.ning.billing.entitlement.api.user.SubscriptionBuilder;
 import com.ning.billing.util.config.CatalogConfig;
-import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
@@ -164,7 +164,7 @@ public class TestPlanAligner extends KillbillTestSuite {
     }
 
     private SubscriptionData createSubscriptionStartedInThePast(final String productName, final PhaseType phaseType) {
-        final DefaultSubscriptionFactory.SubscriptionBuilder builder = new DefaultSubscriptionFactory.SubscriptionBuilder();
+        final SubscriptionBuilder builder = new SubscriptionBuilder();
         builder.setBundleStartDate(clock.getUTCNow().minusHours(10));
         // Make sure to set the dates apart
         builder.setAlignStartDate(new DateTime(builder.getBundleStartDate().plusHours(5)));

@@ -39,7 +39,6 @@ import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.SubscriptionApiService;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
-import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionDataIterator.Kind;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionDataIterator.Order;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionDataIterator.TimeLimit;
