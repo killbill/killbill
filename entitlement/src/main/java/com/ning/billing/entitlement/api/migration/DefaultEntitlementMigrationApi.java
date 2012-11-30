@@ -25,12 +25,16 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.alignment.MigrationPlanAligner;
 import com.ning.billing.entitlement.alignment.TimedMigration;
+import com.ning.billing.entitlement.api.EntitlementApiBase;
+import com.ning.billing.entitlement.api.SubscriptionApiService;
 import com.ning.billing.entitlement.api.SubscriptionFactory;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData.BundleMigrationData;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData.SubscriptionMigrationData;
+import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory;
 import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
@@ -54,25 +58,23 @@ import com.ning.billing.util.clock.Clock;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
-public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
+public class DefaultEntitlementMigrationApi extends EntitlementApiBase implements EntitlementMigrationApi {
 
-    private final EntitlementDao dao;
     private final MigrationPlanAligner migrationAligner;
     private final SubscriptionFactory factory;
-    private final Clock clock;
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
     public DefaultEntitlementMigrationApi(final MigrationPlanAligner migrationAligner,
-                                          final SubscriptionFactory factory,
+                                          final SubscriptionApiService apiService,
+                                          final CatalogService catalogService,
                                           final EntitlementDao dao,
                                           final Clock clock,
                                           final InternalCallContextFactory internalCallContextFactory) {
-        this.dao = dao;
+        super(dao, apiService, clock);
         this.migrationAligner = migrationAligner;
-        this.factory = factory;
-        this.clock = clock;
         this.internalCallContextFactory = internalCallContextFactory;
+        this.factory = new DefaultSubscriptionFactory(apiService, clock, catalogService);
     }
 
     @Override

@@ -29,6 +29,8 @@ import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.entitlement.api.EntitlementApiBase;
+import com.ning.billing.entitlement.api.SubscriptionApiService;
 import com.ning.billing.entitlement.api.SubscriptionFactory;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData.BundleMigrationData;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData.SubscriptionMigrationData;
@@ -37,6 +39,7 @@ import com.ning.billing.entitlement.api.timeline.EntitlementRepairException;
 import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
 import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline;
 import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline.ExistingEvent;
+import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory;
 import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
@@ -58,10 +61,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
-public class DefaultEntitlementTransferApi implements EntitlementTransferApi {
+public class DefaultEntitlementTransferApi extends EntitlementApiBase implements EntitlementTransferApi {
 
-    private final Clock clock;
-    private final EntitlementDao dao;
     private final CatalogService catalogService;
     private final SubscriptionFactory subscriptionFactory;
     private final EntitlementTimelineApi timelineApi;
@@ -69,13 +70,12 @@ public class DefaultEntitlementTransferApi implements EntitlementTransferApi {
 
     @Inject
     public DefaultEntitlementTransferApi(final Clock clock, final EntitlementDao dao, final EntitlementTimelineApi timelineApi, final CatalogService catalogService,
-                                         final SubscriptionFactory subscriptionFactory, final InternalCallContextFactory internalCallContextFactory) {
-        this.clock = clock;
-        this.dao = dao;
+                                         final SubscriptionApiService apiService, final InternalCallContextFactory internalCallContextFactory) {
+        super(dao, apiService, clock);
         this.catalogService = catalogService;
-        this.subscriptionFactory = subscriptionFactory;
         this.timelineApi = timelineApi;
         this.internalCallContextFactory = internalCallContextFactory;
+        this.subscriptionFactory = new DefaultSubscriptionFactory(apiService, clock, catalogService);
     }
 
     private EntitlementEvent createEvent(final boolean firstEvent, final ExistingEvent existingEvent, final SubscriptionData subscription, final DateTime transferDate, final CallContext context)

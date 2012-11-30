@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ning.billing.ErrorCode;
+import com.ning.billing.entitlement.api.EntitlementApiBase;
 import com.ning.billing.entitlement.api.SubscriptionFactory;
 import com.ning.billing.entitlement.api.user.DefaultEffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.DefaultSubscriptionApiService;
@@ -51,22 +52,16 @@ import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
-public class DefaultEntitlementInternalApi implements EntitlementInternalApi {
+public class DefaultEntitlementInternalApi extends EntitlementApiBase implements EntitlementInternalApi {
 
     private final Logger log = LoggerFactory.getLogger(DefaultEntitlementInternalApi.class);
 
-    private final EntitlementDao dao;
-
-    private final DefaultSubscriptionApiService apiService;
-    private final Clock clock;
 
     @Inject
     public DefaultEntitlementInternalApi(final EntitlementDao dao,
             final DefaultSubscriptionApiService apiService,
             final Clock clock) {
-        this.dao = dao;
-        this.apiService = apiService;
-        this.clock = clock;
+        super(dao, apiService, clock);
     }
 
     @Override
@@ -150,20 +145,5 @@ public class DefaultEntitlementInternalApi implements EntitlementInternalApi {
                 return new DefaultEffectiveSubscriptionEvent(input, ((SubscriptionData) subscription).getAlignStartDate(), context.getAccountRecordId(), context.getTenantRecordId());
             }
         }));
-    }
-
-
-    // TODO Copied from DefaultEntitlemenUserApi. should probably share that in a base class
-    private List<Subscription> createSubscriptionsForApiUse(final List<Subscription> internalSubscriptions) {
-        return new ArrayList<Subscription>(Collections2.transform(internalSubscriptions, new Function<Subscription, Subscription>() {
-            @Override
-            public Subscription apply(final Subscription subscription) {
-                return createSubscriptionForApiUse((SubscriptionData) subscription);
-            }
-        }));
-    }
-
-    private Subscription createSubscriptionForApiUse(final Subscription internalSubscription) {
-        return new SubscriptionData((SubscriptionData) internalSubscription, apiService, clock);
     }
 }

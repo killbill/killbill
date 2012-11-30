@@ -34,6 +34,7 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.entitlement.api.EntitlementApiBase;
 import com.ning.billing.entitlement.api.SubscriptionFactory;
 import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
@@ -51,12 +52,9 @@ import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
 
-public class DefaultEntitlementUserApi implements EntitlementUserApi {
+public class DefaultEntitlementUserApi extends EntitlementApiBase implements EntitlementUserApi {
 
-    private final Clock clock;
-    private final EntitlementDao dao;
     private final CatalogService catalogService;
-    private final DefaultSubscriptionApiService apiService;
     private final AddonUtils addonUtils;
     private final InternalCallContextFactory internalCallContextFactory;
 
@@ -64,9 +62,7 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
     public DefaultEntitlementUserApi(final Clock clock, final EntitlementDao dao, final CatalogService catalogService,
                                      final DefaultSubscriptionApiService apiService,
                                      final AddonUtils addonUtils, final InternalCallContextFactory internalCallContextFactory) {
-        this.clock = clock;
-        this.apiService = apiService;
-        this.dao = dao;
+        super(dao, apiService, clock);
         this.catalogService = catalogService;
         this.addonUtils = addonUtils;
         this.internalCallContextFactory = internalCallContextFactory;
@@ -131,19 +127,6 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
         return createSubscriptionForApiUse(result);
     }
 
-
-    private List<Subscription> createSubscriptionsForApiUse(final List<Subscription> internalSubscriptions) {
-        return new ArrayList<Subscription>(Collections2.transform(internalSubscriptions, new Function<Subscription, Subscription>() {
-            @Override
-            public Subscription apply(final Subscription subscription) {
-                return createSubscriptionForApiUse((SubscriptionData) subscription);
-            }
-        }));
-    }
-
-    private Subscription createSubscriptionForApiUse(final Subscription internalSubscription) {
-        return new SubscriptionData((SubscriptionData) internalSubscription, apiService, clock);
-    }
 
     @Override
     public SubscriptionBundle createBundleForAccount(final UUID accountId, final String bundleName, final CallContext context)

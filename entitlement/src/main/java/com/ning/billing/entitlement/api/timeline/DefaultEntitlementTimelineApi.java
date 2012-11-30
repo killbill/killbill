@@ -34,6 +34,7 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.entitlement.api.EntitlementApiBase;
 import com.ning.billing.entitlement.api.SubscriptionApiService;
 import com.ning.billing.entitlement.api.SubscriptionFactory;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
@@ -59,17 +60,13 @@ import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
-public class DefaultEntitlementTimelineApi implements EntitlementTimelineApi {
+public class DefaultEntitlementTimelineApi extends EntitlementApiBase implements EntitlementTimelineApi {
 
-    private final EntitlementDao dao;
-    private final SubscriptionFactory factory;
     private final RepairEntitlementLifecycleDao repairDao;
     private final CatalogService catalogService;
     private final InternalCallContextFactory internalCallContextFactory;
-    private final Clock clock;
     private final AddonUtils addonUtils;
 
-    private final SubscriptionApiService apiService;
     private final SubscriptionApiService repairApiService;
 
     private enum RepairType {
@@ -79,20 +76,16 @@ public class DefaultEntitlementTimelineApi implements EntitlementTimelineApi {
     }
 
     @Inject
-    public DefaultEntitlementTimelineApi(@Named(DefaultEntitlementModule.REPAIR_NAMED) final SubscriptionFactory factory, final CatalogService catalogService,
-                                         @Named(DefaultEntitlementModule.REPAIR_NAMED) final RepairEntitlementLifecycleDao repairDao, final EntitlementDao dao,
+    public DefaultEntitlementTimelineApi(final CatalogService catalogService,
                                          final SubscriptionApiService apiService,
+                                         @Named(DefaultEntitlementModule.REPAIR_NAMED) final RepairEntitlementLifecycleDao repairDao, final EntitlementDao dao,
                                          @Named(DefaultEntitlementModule.REPAIR_NAMED) final SubscriptionApiService repairApiService,
                                          final InternalCallContextFactory internalCallContextFactory, final Clock clock, final AddonUtils addonUtils) {
+        super(dao, apiService, clock);
         this.catalogService = catalogService;
-        this.dao = dao;
         this.repairDao = repairDao;
-        this.factory = factory;
         this.internalCallContextFactory = internalCallContextFactory;
-
-        this.apiService = apiService;
         this.repairApiService = repairApiService;
-        this.clock = clock;
         this.addonUtils = addonUtils;
     }
 

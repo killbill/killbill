@@ -35,6 +35,7 @@ import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.EntitlementTestSuite;
+import com.ning.billing.entitlement.api.SubscriptionApiService;
 import com.ning.billing.entitlement.api.SubscriptionFactory;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
@@ -63,10 +64,10 @@ public class TestDefaultEntitlementTransferApi extends EntitlementTestSuite {
     public void setUp() throws Exception {
         final EntitlementDao dao = Mockito.mock(EntitlementDao.class);
         final CatalogService catalogService = new MockCatalogService(new MockCatalog());
-        final SubscriptionFactory subscriptionFactory = Mockito.mock(SubscriptionFactory.class);
+        final SubscriptionApiService apiService =  Mockito.mock(SubscriptionApiService.class);
         final EntitlementTimelineApi timelineApi = Mockito.mock(EntitlementTimelineApi.class);
         final InternalCallContextFactory internalCallContextFactory = new InternalCallContextFactory(Mockito.mock(IDBI.class), clock);
-        transferApi = new DefaultEntitlementTransferApi(clock, dao, timelineApi, catalogService, subscriptionFactory, internalCallContextFactory);
+        transferApi = new DefaultEntitlementTransferApi(clock, dao, timelineApi, catalogService, apiService, internalCallContextFactory);
     }
 
     @Test(groups = "fast")

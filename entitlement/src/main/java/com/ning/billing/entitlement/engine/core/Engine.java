@@ -25,9 +25,12 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.entitlement.api.SubscriptionApiService;
+import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory;
 import com.ning.billing.util.config.EntitlementConfig;
 import com.ning.billing.entitlement.alignment.PlanAligner;
 import com.ning.billing.entitlement.alignment.TimedPhase;
@@ -79,28 +82,20 @@ public class Engine implements EventListener, EntitlementService {
     private final PlanAligner planAligner;
     private final AddonUtils addonUtils;
     private final InternalBus eventBus;
-    private final EntitlementConfig config;
     private final NotificationQueueService notificationQueueService;
-    private final SubscriptionFactory subscriptionFactory;
     private final InternalCallContextFactory internalCallContextFactory;
-
     private NotificationQueue subscriptionEventQueue;
 
     @Inject
     public Engine(final Clock clock, final EntitlementDao dao, final PlanAligner planAligner,
-                  final EntitlementConfig config,
                   final AddonUtils addonUtils, final InternalBus eventBus,
-                  final NotificationQueueService notificationQueueService,
-                  final SubscriptionFactory subscriptionFactory,
-                  final InternalCallContextFactory internalCallContextFactory) {
+                  final NotificationQueueService notificationQueueService, final InternalCallContextFactory internalCallContextFactory) {
         this.clock = clock;
         this.dao = dao;
         this.planAligner = planAligner;
         this.addonUtils = addonUtils;
-        this.config = config;
         this.eventBus = eventBus;
         this.notificationQueueService = notificationQueueService;
-        this.subscriptionFactory = subscriptionFactory;
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
