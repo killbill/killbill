@@ -603,7 +603,6 @@ public class DefaultEntitlementDao implements EntitlementDao {
                     .setEffectiveDate(migrateBillingEvent.getEffectiveDate())
                     .setProcessedDate(now)
                     .setActiveVersion(migrateBillingEvent.getCurrentVersion())
-                    .setUserToken(context.getUserToken())
                     .setEventPlan(prevPlan)
                     .setEventPlanPhase(prevPhase)
                     .setEventPriceList(prevPriceList);
@@ -902,6 +901,7 @@ public class DefaultEntitlementDao implements EntitlementDao {
 
             final SubscriptionTransitionData transition = upToDateSubscription.getTransitionFromEvent(immediateEvent, seqId);
             final EffectiveSubscriptionInternalEvent busEvent = new DefaultEffectiveSubscriptionEvent(transition, upToDateSubscription.getAlignStartDate(),
+                                                                                                      context.getUserToken(),
                                                                                                       context.getAccountRecordId(), context.getTenantRecordId());
 
 

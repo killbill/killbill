@@ -181,7 +181,6 @@ public class SubscriptionDataRepair extends SubscriptionData {
                                                                                 .setProcessedDate(now)
                                                                                 .setEffectiveDate(effectiveDate)
                                                                                 .setRequestedDate(now)
-                                                                                .setUserToken(context.getUserToken())
                                                                                 .setFromDisk(true));
                 repairDao.cancelSubscription(cur, cancelEvent, internalCallContextFactory.createInternalCallContext(cur.getId(), ObjectType.SUBSCRIPTION, context), 0);
                 cur.rebuildTransitions(repairDao.getEventsForSubscription(cur.getId(), internalCallContextFactory.createInternalTenantContext(context)), catalogService.getFullCatalog());

@@ -145,7 +145,6 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
                     .setProcessedDate(processedDate)
                     .setEffectiveDate(effectiveDate)
                     .setRequestedDate(requestedDate)
-                    .setUserToken(context.getUserToken())
                     .setFromDisk(true);
             final ApiEvent creationEvent = (reCreate) ? new ApiEventReCreate(createBuilder) : new ApiEventCreate(createBuilder);
 
@@ -216,7 +215,6 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
                                                                         .setProcessedDate(now)
                                                                         .setEffectiveDate(effectiveDate)
                                                                         .setRequestedDate(requestedDate)
-                                                                        .setUserToken(context.getUserToken())
                                                                         .setFromDisk(true));
 
         final InternalCallContext internalCallContext = createCallContextFromBundleId(subscription.getBundleId(), context);
@@ -241,7 +239,6 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
                                                                             .setProcessedDate(now)
                                                                             .setRequestedDate(now)
                                                                             .setEffectiveDate(now)
-                                                                            .setUserToken(context.getUserToken())
                                                                             .setFromDisk(true));
 
         final List<EntitlementEvent> uncancelEvents = new ArrayList<EntitlementEvent>();
@@ -345,7 +342,6 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
                                                                         .setProcessedDate(now)
                                                                         .setEffectiveDate(effectiveDate)
                                                                         .setRequestedDate(requestedDate)
-                                                                        .setUserToken(context.getUserToken())
                                                                         .setFromDisk(true));
 
         final TimedPhase nextTimedPhase = planAligner.getNextTimedPhaseOnChange(subscription, newPlan, newPriceList.getName(), requestedDate, effectiveDate);
@@ -405,7 +401,6 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
                                                                                 .setProcessedDate(now)
                                                                                 .setEffectiveDate(effectiveDate)
                                                                                 .setRequestedDate(now)
-                                                                                .setUserToken(context.getUserToken())
                                                                                 .setFromDisk(true));
                 subscriptionsToBeCancelled.add(cur);
                 cancelEvents.add(cancelEvent);

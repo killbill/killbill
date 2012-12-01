@@ -122,9 +122,7 @@ public class Engine implements EventListener, EntitlementService {
                         return;
                     }
 
-                    // TODO STEPH?
-                    final UUID userToken = (event.getType() == EventType.API_USER) ? ((ApiEvent) event).getUserToken() : fromNotificationQueueUserToken;
-                    final InternalCallContext context = internalCallContextFactory.createInternalCallContext(tenantRecordId, accountRecordId, "SubscriptionEventQueue", CallOrigin.INTERNAL, UserType.SYSTEM, userToken);
+                    final InternalCallContext context = internalCallContextFactory.createInternalCallContext(tenantRecordId, accountRecordId, "SubscriptionEventQueue", CallOrigin.INTERNAL, UserType.SYSTEM, fromNotificationQueueUserToken);
                     processEventReady(event, key.getSeqId(), context);
                 }
             };
@@ -179,6 +177,7 @@ public class Engine implements EventListener, EntitlementService {
         try {
             final SubscriptionTransitionData transition = (subscription.getTransitionFromEvent(event, theRealSeqId));
             final EffectiveSubscriptionInternalEvent busEvent = new DefaultEffectiveSubscriptionEvent(transition, subscription.getAlignStartDate(),
+                                                                                                      context.getUserToken(),
                                                                                                       context.getAccountRecordId(), context.getTenantRecordId());
             eventBus.post(busEvent, context);
         } catch (EventBusException e) {

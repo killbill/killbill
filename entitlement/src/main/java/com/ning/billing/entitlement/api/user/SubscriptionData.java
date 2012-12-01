@@ -549,7 +549,6 @@ public class SubscriptionData extends EntityBase implements Subscription {
                 final ApiEvent userEV = (ApiEvent) cur;
                 apiEventType = userEV.getEventType();
                 isFromDisk = userEV.isFromDisk();
-                nextUserToken = userEV.getUserToken();
 
                 switch (apiEventType) {
                 case TRANSFER:

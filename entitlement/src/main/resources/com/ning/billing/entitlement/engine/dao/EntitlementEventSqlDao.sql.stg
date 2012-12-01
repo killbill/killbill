@@ -17,7 +17,6 @@ tableFields(prefix) ::= <<
 , <prefix> plan_name
 , <prefix> phase_name
 , <prefix> price_list_name
-, <prefix> user_token
 , <prefix> current_version
 , <prefix> is_active
 , <prefix> created_by
@@ -35,7 +34,6 @@ tableValues() ::= <<
 , :planName
 , :phaseName
 , :priceListName
-, :userToken
 , :currentVersion
 , :isActive
 , :createdBy
