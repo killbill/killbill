@@ -26,8 +26,10 @@ import com.ning.billing.meter.timeline.sources.SourceSamplesForTimestamp;
 
 import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.smile.SmileFactory;
 import com.fasterxml.jackson.dataformat.smile.SmileGenerator;
+import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.fasterxml.util.membuf.MemBuffersForBytes;
 import com.fasterxml.util.membuf.StreamyBytesMemBuffer;
 import com.google.common.annotations.VisibleForTesting;
@@ -40,7 +42,7 @@ public class FileBackedBuffer {
     private static final Logger log = LoggerFactory.getLogger(FileBackedBuffer.class);
 
     private static final SmileFactory smileFactory = new SmileFactory();
-    private static final ObjectMapper smileObjectMapper = new ObjectMapper(smileFactory);
+    private final ObjectMapper smileObjectMapper;
 
     static {
         // Disable all magic for now as we don't write the Smile header (we share the same smileGenerator
@@ -67,6 +69,10 @@ public class FileBackedBuffer {
         this.basePath = basePath;
         this.prefix = prefix;
         this.deleteFilesOnClose = deleteFilesOnClose;
+
+        smileObjectMapper = new ObjectMapper(smileFactory);
+        smileObjectMapper.registerModule(new JodaModule());
+        smileObjectMapper.enable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
         final MemBuffersForBytes bufs = new MemBuffersForBytes(segmentsSize, 1, maxNbSegments);
         inputBuffer = bufs.createStreamyBuffer(1, maxNbSegments);

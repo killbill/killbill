@@ -37,17 +37,17 @@ import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ning.billing.util.config.MeterConfig;
 import com.ning.billing.meter.timeline.chunks.TimelineChunk;
 import com.ning.billing.meter.timeline.chunks.TimelineChunkMapper;
 import com.ning.billing.meter.timeline.codec.SampleCoder;
 import com.ning.billing.meter.timeline.consumer.TimelineChunkConsumer;
-import com.ning.billing.meter.timeline.persistent.DefaultTimelineDao;
+import com.ning.billing.meter.timeline.persistent.TimelineDao;
 import com.ning.billing.meter.timeline.times.TimelineCoder;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.config.MeterConfig;
 
 import com.google.inject.Inject;
 
@@ -61,7 +61,7 @@ public class TimelineAggregator {
     private static final Logger log = LoggerFactory.getLogger(TimelineAggregator.class);
 
     private final IDBI dbi;
-    private final DefaultTimelineDao timelineDao;
+    private final TimelineDao timelineDao;
     private final TimelineCoder timelineCoder;
     private final SampleCoder sampleCoder;
     private final MeterConfig config;
@@ -94,7 +94,7 @@ public class TimelineAggregator {
     private final List<Long> chunkIdsToInvalidateOrDelete = new ArrayList<Long>();
 
     @Inject
-    public TimelineAggregator(final IDBI dbi, final DefaultTimelineDao timelineDao, final TimelineCoder timelineCoder,
+    public TimelineAggregator(final IDBI dbi, final TimelineDao timelineDao, final TimelineCoder timelineCoder,
                               final SampleCoder sampleCoder, final MeterConfig config, final InternalCallContextFactory internalCallContextFactory) {
         this.dbi = dbi;
         this.timelineDao = timelineDao;
@@ -295,7 +295,8 @@ public class TimelineAggregator {
                 public Void withHandle(final Handle handle) throws Exception {
                     final Query<Map<String, Object>> query = handle.createQuery("getStreamingAggregationCandidates")
                                                                    .setFetchSize(Integer.MIN_VALUE)
-                                                                   .bind("aggregationLevel", aggregationLevel);
+                                                                   .bind("aggregationLevel", aggregationLevel)
+                                                                   .bind("tenantRecordId", createCallContext().getTenantRecordId());
                     query.setStatementLocator(new StringTemplate3StatementLocator(TimelineAggregatorSqlDao.class));
                     ResultIterator<TimelineChunk> iterator = null;
                     try {

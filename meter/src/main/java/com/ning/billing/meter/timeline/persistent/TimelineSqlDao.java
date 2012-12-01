@@ -87,9 +87,6 @@ public interface TimelineSqlDao extends Transactional<TimelineSqlDao> {
                                                          @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
-    Iterable<SourceRecordIdAndMetricRecordId> getMetricRecordIdsForAllSources(@InternalTenantContextBinder final InternalTenantContext context);
-
-    @SqlQuery
     CategoryRecordIdAndMetric getCategoryRecordIdAndMetric(@Bind("recordId") final Integer metricRecordId,
                                                            @InternalTenantContextBinder final InternalTenantContext context);
 

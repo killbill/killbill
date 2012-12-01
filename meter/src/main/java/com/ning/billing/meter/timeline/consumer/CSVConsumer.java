@@ -36,6 +36,10 @@ public class CSVConsumer {
         return rangeSampleProcessor.getSampleConsumer().toString();
     }
 
+    public static String getSamplesAsCSV(final SampleCoder sampleCoder, final TimelineChunk chunk) throws IOException {
+        return getSamplesAsCSV(sampleCoder, chunk, null, null);
+    }
+
     public static String getSamplesAsCSV(final SampleCoder sampleCoder, final TimelineChunk chunk, @Nullable final DateTime startTime, @Nullable final DateTime endTime) throws IOException {
         final CSVOutputProcessor processor = new CSVOutputProcessor(startTime, endTime);
         sampleCoder.scan(chunk, processor);

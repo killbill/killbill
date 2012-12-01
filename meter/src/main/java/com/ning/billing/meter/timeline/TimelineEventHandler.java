@@ -221,7 +221,7 @@ public class TimelineEventHandler {
 
             // Extract and parse samples
             final Map<Integer, ScalarSample> scalarSamples = new LinkedHashMap<Integer, ScalarSample>();
-            convertSamplesToScalarSamples(sourceId, eventType, samples, scalarSamples, context);
+            convertSamplesToScalarSamples(eventType, samples, scalarSamples, context);
 
             if (scalarSamples.isEmpty()) {
                 eventsDiscarded.incrementAndGet();
@@ -275,16 +275,17 @@ public class TimelineEventHandler {
 
     public Collection<? extends TimelineChunk> getInMemoryTimelineChunks(final Integer sourceId, @Nullable final DateTime filterStartTime,
                                                                          @Nullable final DateTime filterEndTime, final InternalTenantContext context) throws IOException, ExecutionException {
-        return getInMemoryTimelineChunks(sourceId, ImmutableList.copyOf(timelineDAO.getMetricIdsBySourceId(sourceId, context)), filterStartTime, filterEndTime);
+        return getInMemoryTimelineChunks(sourceId, ImmutableList.copyOf(timelineDAO.getMetrics(context).keySet()), filterStartTime, filterEndTime, context);
     }
 
     public Collection<? extends TimelineChunk> getInMemoryTimelineChunks(final Integer sourceId, final Integer metricId, @Nullable final DateTime filterStartTime,
-                                                                         @Nullable final DateTime filterEndTime) throws IOException, ExecutionException {
-        return getInMemoryTimelineChunks(sourceId, ImmutableList.<Integer>of(metricId), filterStartTime, filterEndTime);
+                                                                         @Nullable final DateTime filterEndTime, final InternalTenantContext context) throws IOException, ExecutionException {
+        return getInMemoryTimelineChunks(sourceId, ImmutableList.<Integer>of(metricId), filterStartTime, filterEndTime, context);
     }
 
     public synchronized Collection<? extends TimelineChunk> getInMemoryTimelineChunks(final Integer sourceId, final List<Integer> metricIds,
-                                                                                      @Nullable final DateTime filterStartTime, @Nullable final DateTime filterEndTime) throws IOException, ExecutionException {
+                                                                                      @Nullable final DateTime filterStartTime, @Nullable final DateTime filterEndTime,
+                                                                                      final InternalTenantContext context) throws IOException, ExecutionException {
         getInMemoryChunksCallCount.incrementAndGet();
         // Check first if there is an in-memory accumulator for this host
         final SourceAccumulatorsAndUpdateDate sourceAccumulatorsAndDate = accumulators.get(sourceId);
@@ -335,7 +336,7 @@ public class TimelineEventHandler {
     }
 
     @VisibleForTesting
-    void convertSamplesToScalarSamples(final Integer sourceId, final String eventType, final Map<String, Object> inputSamples,
+    void convertSamplesToScalarSamples(final String eventType, final Map<String, Object> inputSamples,
                                        final Map<Integer, ScalarSample> outputSamples, final InternalCallContext context) {
         if (inputSamples == null) {
             return;
@@ -343,7 +344,7 @@ public class TimelineEventHandler {
         final Integer eventCategoryId = timelineDAO.getOrAddEventCategory(eventType, context);
 
         for (final String attributeName : inputSamples.keySet()) {
-            final Integer metricId = timelineDAO.getOrAddMetric(sourceId, eventCategoryId, attributeName, context);
+            final Integer metricId = timelineDAO.getOrAddMetric(eventCategoryId, attributeName, context);
             final Object sample = inputSamples.get(attributeName);
 
             outputSamples.put(metricId, ScalarSample.fromObject(sample));

@@ -4,64 +4,64 @@ CHECK_TENANT() ::= "tenant_record_id = :tenantRecordId"
 AND_CHECK_TENANT() ::= "AND <CHECK_TENANT()>"
 
 getStreamingAggregationCandidates() ::= <<
-  select
-    chunk_id
-  , source_id
-  , metric_id
-  , start_time
-  , end_time
-  , in_row_samples
-  , blob_samples
-  , sample_count
-  , aggregation_level
-  , not_valid
-  , dont_aggregate
-  from timeline_chunks
-  where source_id != 0 and aggregation_level = :aggregationLevel and not_valid = 0
-  <AND_CHECK_TENANT()>
-  order by source_id, metric_id, start_time
- >>
+select
+  record_id
+, source_record_id
+, metric_record_id
+, start_time
+, end_time
+, in_row_samples
+, blob_samples
+, sample_count
+, aggregation_level
+, not_valid
+, dont_aggregate
+from timeline_chunks
+where source_record_id != 0 and aggregation_level = :aggregationLevel and not_valid = 0
+<AND_CHECK_TENANT()>
+order by source_record_id, metric_record_id, start_time
+>>
 
- getAggregationCandidatesForSourceIdAndMetricIds(metricIds) ::= <<
-  select
-    chunk_id
-  , source_id
-  , metric_id
-  , start_time
-  , end_time
-  , in_row_samples
-  , blob_samples
-  , sample_count
-  , aggregation_level
-  , not_valid
-  , dont_aggregate
-  from timeline_chunks
-  where source_id = :source_id
-  and metric_id in (<metricIds>)
-  <AND_CHECK_TENANT()>
-  ;
+getAggregationCandidatesForSourceIdAndMetricIds(metricIds) ::= <<
+select
+  record_id
+, source_record_id
+, metric_record_id
+, start_time
+, end_time
+, in_row_samples
+, blob_samples
+, sample_count
+, aggregation_level
+, not_valid
+, dont_aggregate
+from timeline_chunks
+where source_record_id = :source_id
+and metric_record_id in (<metricIds>)
+<AND_CHECK_TENANT()>
+;
 >>
 
 getLastInsertedId() ::= <<
-  select last_insert_id();
+select last_insert_id();
 >>
 
 makeTimelineChunkValid() ::= <<
-  update timeline_chunks
-  set not_valid = 0
-  where chunk_id = :chunkId
-  <AND_CHECK_TENANT()>
-  ;
+update timeline_chunks
+set not_valid = 0
+where record_id = :chunkId
+<AND_CHECK_TENANT()>
+;
 >>
 
 makeTimelineChunksInvalid(chunkIds) ::=<<
-  update timeline_chunks
-  set not_valid = 1
-  where chunk_id in (<chunkIds>)
-  <AND_CHECK_TENANT()>
-  ;
+update timeline_chunks
+set not_valid = 1
+where record_id in (<chunkIds>)
+<AND_CHECK_TENANT()>
+;
 >>
 
 deleteTimelineChunks(chunkIds) ::=<<
-  delete from timeline_chunks where chunk_id in (<chunkIds>) <AND_CHECK_TENANT()>;
+delete from timeline_chunks where record_id in (<chunkIds>) <AND_CHECK_TENANT()>;
 >>

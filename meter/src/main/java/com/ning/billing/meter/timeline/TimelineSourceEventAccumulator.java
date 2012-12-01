@@ -140,8 +140,9 @@ public class TimelineSourceEventAccumulator {
         }
         if (endTime == null) {
             endTime = timestamp;
-        } else if (!timestamp.isAfter(endTime)) {
-            log.warn("Adding samples for host {}, timestamp {} is not after the end time {}; ignored",
+        } else if (timestamp.isBefore(endTime)) {
+            // Note: we allow multiple events at the same time
+            log.warn("Adding samples for host {}, timestamp {} is before the end time {}; ignored",
                      new Object[]{sourceId, dateFormatter.print(timestamp), dateFormatter.print(endTime)});
             return;
         }

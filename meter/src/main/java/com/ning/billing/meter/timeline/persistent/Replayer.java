@@ -35,8 +35,10 @@ import com.ning.billing.meter.timeline.sources.SourceSamplesForTimestamp;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.smile.SmileFactory;
 import com.fasterxml.jackson.dataformat.smile.SmileParser;
+import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
@@ -50,7 +52,8 @@ public class Replayer {
 
     static {
         smileFactory.configure(SmileParser.Feature.REQUIRE_HEADER, false);
-        smileFactory.setCodec(smileMapper);
+        smileMapper.registerModule(new JodaModule());
+        smileMapper.enable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     }
 
     @VisibleForTesting

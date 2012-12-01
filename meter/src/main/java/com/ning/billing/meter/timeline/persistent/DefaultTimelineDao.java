@@ -143,23 +143,13 @@ public class DefaultTimelineDao implements TimelineDao {
     }
 
     @Override
-    public synchronized int getOrAddMetric(final Integer sourceId, final Integer eventCategoryId, final String metric, final InternalCallContext context) throws UnableToObtainConnectionException, CallbackFailedException {
+    public synchronized int getOrAddMetric(final Integer eventCategoryId, final String metric, final InternalCallContext context) throws UnableToObtainConnectionException, CallbackFailedException {
         delegate.begin();
         delegate.addMetric(eventCategoryId, metric, context);
         final Integer metricId = delegate.getMetricRecordId(eventCategoryId, metric, context);
         delegate.commit();
 
         return metricId;
-    }
-
-    @Override
-    public Iterable<Integer> getMetricIdsBySourceId(final Integer sourceId, final InternalTenantContext context) throws UnableToObtainConnectionException, CallbackFailedException {
-        return delegate.getMetricRecordIdsBySourceRecordId(sourceId, context);
-    }
-
-    @Override
-    public Iterable<SourceRecordIdAndMetricRecordId> getMetricIdsForAllSources(final InternalTenantContext context) throws UnableToObtainConnectionException, CallbackFailedException {
-        return delegate.getMetricRecordIdsForAllSources(context);
     }
 
     @Override

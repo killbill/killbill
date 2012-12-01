@@ -107,24 +107,6 @@ and category_record_id = :categoryRecordId
 ;
 >>
 
-getMetricRecordIdsBySourceRecordId() ::= <<
-select distinct
-  metric_record_id
-from timeline_chunks c
-where source_record_id = :sourceRecordId
-<AND_CHECK_TENANT()>
-;
->>
-
-getMetricRecordIdsForAllSources() ::= <<
-select distinct
-  metric_record_id
-, source_record_id
-from timeline_chunks c
-where <CHECK_TENANT()>
-;
->>
-
 getCategoryRecordIdAndMetric() ::= <<
 select
   category_record_id

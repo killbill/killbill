@@ -57,10 +57,10 @@ public class TestDefaultTimelineDao extends MeterTestSuiteWithEmbeddedDB {
 
         // Create the samples
         final String sampleOne = UUID.randomUUID().toString();
-        final Integer sampleOneId = dao.getOrAddMetric(hostId, eventCategoryId, sampleOne, internalCallContext);
+        final Integer sampleOneId = dao.getOrAddMetric(eventCategoryId, sampleOne, internalCallContext);
         Assert.assertNotNull(sampleOneId);
         final String sampleTwo = UUID.randomUUID().toString();
-        final Integer sampleTwoId = dao.getOrAddMetric(hostId, eventCategoryId, sampleTwo, internalCallContext);
+        final Integer sampleTwoId = dao.getOrAddMetric(eventCategoryId, sampleTwo, internalCallContext);
         Assert.assertNotNull(sampleTwoId);
 
         // Basic retrieval tests
@@ -75,26 +75,11 @@ public class TestDefaultTimelineDao extends MeterTestSuiteWithEmbeddedDB {
         Assert.assertEquals(dao.getCategoryIdAndMetric(sampleTwoId, internalCallContext).getEventCategoryId(), (int) eventCategoryId);
         Assert.assertEquals(dao.getCategoryIdAndMetric(sampleTwoId, internalCallContext).getMetric(), sampleTwo);
 
-        // No samples yet
-        Assert.assertEquals(ImmutableList.<Integer>copyOf(dao.getMetricIdsBySourceId(hostId, internalCallContext)).size(), 0);
-
         dao.insertTimelineChunk(new TimelineChunk(0, hostId, sampleOneId, startTime, endTime, new byte[0], new byte[0], 0), internalCallContext);
-        final ImmutableList<Integer> firstFetch = ImmutableList.<Integer>copyOf(dao.getMetricIdsBySourceId(hostId, internalCallContext));
-        Assert.assertEquals(firstFetch.size(), 1);
-        Assert.assertEquals(firstFetch.get(0), sampleOneId);
-
         dao.insertTimelineChunk(new TimelineChunk(0, hostId, sampleTwoId, startTime, endTime, new byte[0], new byte[0], 0), internalCallContext);
-        final ImmutableList<Integer> secondFetch = ImmutableList.<Integer>copyOf(dao.getMetricIdsBySourceId(hostId, internalCallContext));
-        Assert.assertEquals(secondFetch.size(), 2);
-        Assert.assertTrue(secondFetch.contains(sampleOneId));
-        Assert.assertTrue(secondFetch.contains(sampleTwoId));
 
         // Random sampleKind for random host
         dao.insertTimelineChunk(new TimelineChunk(0, Integer.MAX_VALUE - 100, Integer.MAX_VALUE, startTime, endTime, new byte[0], new byte[0], 0), internalCallContext);
-        final ImmutableList<Integer> thirdFetch = ImmutableList.<Integer>copyOf(dao.getMetricIdsBySourceId(hostId, internalCallContext));
-        Assert.assertEquals(secondFetch.size(), 2);
-        Assert.assertTrue(thirdFetch.contains(sampleOneId));
-        Assert.assertTrue(thirdFetch.contains(sampleTwoId));
 
         // Test dashboard query
         final AtomicInteger chunksSeen = new AtomicInteger(0);
