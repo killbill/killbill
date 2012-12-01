@@ -63,6 +63,8 @@ public class PersistentExternalBus extends PersistentQueueBase implements Extern
     private final InternalCallContextFactory internalCallContextFactory;
     private final AccountInternalApi accountApi;
 
+    private volatile boolean isStarted;
+
     private static final class EventBusDelegate extends EventBus {
 
         public EventBusDelegate(final String busName) {
@@ -90,10 +92,12 @@ public class PersistentExternalBus extends PersistentQueueBase implements Extern
 
     public void start() {
         startQueue();
+        isStarted = true;
     }
 
     public void stop() {
         stopQueue();
+        isStarted = false;
     }
 
     @Override
@@ -117,6 +121,11 @@ public class PersistentExternalBus extends PersistentQueueBase implements Extern
             dao.clearBusExtEvent(cur.getId(), hostname, rehydratedContext);
         }
         return result;
+    }
+
+    @Override
+    public boolean isStarted() {
+        return isStarted;
     }
 
     private final UUID getAccountIdFromRecordId(final Long recordId, final InternalCallContext context) {

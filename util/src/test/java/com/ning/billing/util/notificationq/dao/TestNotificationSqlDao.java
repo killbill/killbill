@@ -73,7 +73,7 @@ public class TestNotificationSqlDao extends UtilTestSuiteWithEmbeddedDB {
 
         Thread.sleep(1000);
         final DateTime now = new DateTime();
-        final List<Notification> notifications = dao.getReadyNotifications(now.toDate(), hostname, 3, "testBasic", internalCallContext);
+        final List<Notification> notifications = dao.getReadyNotifications(now.toDate(), hostname, 3, internalCallContext);
         assertNotNull(notifications);
         assertEquals(notifications.size(), 1);
 

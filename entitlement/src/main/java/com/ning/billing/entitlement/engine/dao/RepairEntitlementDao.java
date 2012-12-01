@@ -27,7 +27,6 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
 
-import com.ning.billing.entitlement.api.SubscriptionFactory;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData.BundleMigrationData;
 import com.ning.billing.entitlement.api.timeline.RepairEntitlementLifecycleDao;
@@ -176,6 +175,10 @@ public class RepairEntitlementDao implements EntitlementDao, RepairEntitlementLi
     }
 
     @Override
+    public void cancelSubscriptions(final List<SubscriptionData> subscriptions, final List<EntitlementEvent> cancelEvents, final InternalCallContext context) {
+    }
+
+    @Override
     public void changePlan(final SubscriptionData subscription, final List<EntitlementEvent> changeEvents, final InternalCallContext context) {
         addEvents(subscription.getId(), changeEvents);
     }
@@ -228,7 +231,7 @@ public class RepairEntitlementDao implements EntitlementDao, RepairEntitlementLi
     }
 
     @Override
-    public Subscription getSubscriptionFromId(final SubscriptionFactory factory, final UUID subscriptionId, final InternalTenantContext context) {
+    public Subscription getSubscriptionFromId(final UUID subscriptionId, final InternalTenantContext context) {
         throw new EntitlementError(NOT_IMPLEMENTED);
     }
 
@@ -238,17 +241,17 @@ public class RepairEntitlementDao implements EntitlementDao, RepairEntitlementLi
     }
 
     @Override
-    public Subscription getBaseSubscription(final SubscriptionFactory factory, final UUID bundleId, final InternalTenantContext context) {
+    public Subscription getBaseSubscription(final UUID bundleId, final InternalTenantContext context) {
         throw new EntitlementError(NOT_IMPLEMENTED);
     }
 
     @Override
-    public List<Subscription> getSubscriptions(final SubscriptionFactory factory, final UUID bundleId, final InternalTenantContext context) {
+    public List<Subscription> getSubscriptions(final UUID bundleId, final InternalTenantContext context) {
         throw new EntitlementError(NOT_IMPLEMENTED);
     }
 
     @Override
-    public List<Subscription> getSubscriptionsForAccountAndKey(final SubscriptionFactory factory, final UUID accountId,
+    public List<Subscription> getSubscriptionsForAccountAndKey(final UUID accountId,
                                                                final String bundleKey, final InternalTenantContext context) {
         throw new EntitlementError(NOT_IMPLEMENTED);
     }

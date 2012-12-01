@@ -631,14 +631,16 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         final boolean partialRefund = refundAmount.compareTo(amount) < 0;
         final BigDecimal cba = invoiceDao.getAccountCBA(accountId, internalCallContext);
         final InvoiceModelDao savedInvoice = invoiceDao.getById(invoice.getId(), internalCallContext);
-        assertEquals(cba.compareTo(new BigDecimal("20.0")), 0);
+
+        final BigDecimal expectedCba = balance.compareTo(BigDecimal.ZERO) < 0 ? balance.negate() : BigDecimal.ZERO;
+        assertEquals(cba.compareTo(expectedCba), 0);
         if (partialRefund) {
             // IB = 20 (rec) - 20 (repair) + 20 (cba) - (20 -7) = 7;  AB = IB - CBA = 7 - 20 = -13
             assertEquals(balance.compareTo(new BigDecimal("-13.0")), 0);
-            assertEquals(savedInvoice.getInvoiceItems().size(), 3);
+            assertEquals(savedInvoice.getInvoiceItems().size(), 4);
         } else {
             assertEquals(balance.compareTo(new BigDecimal("0.0")), 0);
-            assertEquals(savedInvoice.getInvoiceItems().size(), 3);
+            assertEquals(savedInvoice.getInvoiceItems().size(), 4);
         }
     }
 
@@ -730,7 +732,8 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         balance = invoiceDao.getAccountBalance(accountId, internalCallContext);
         assertEquals(balance.compareTo(expectedFinalBalance), 0);
         cba = invoiceDao.getAccountCBA(accountId, internalCallContext);
-        assertEquals(cba.compareTo(new BigDecimal("10.00")), 0);
+        final BigDecimal expectedCba = balance.compareTo(BigDecimal.ZERO) < 0 ? balance.negate() : BigDecimal.ZERO;
+        assertEquals(cba.compareTo(expectedCba), 0);
     }
 
     @Test(groups = "slow")
@@ -738,13 +741,8 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
 
         final UUID accountId = UUID.randomUUID();
         final UUID bundleId = UUID.randomUUID();
-        final LocalDate targetDate1 = new LocalDate(2011, 10, 6);
-        final Invoice invoice1 = new DefaultInvoice(accountId, clock.getUTCToday(), targetDate1, Currency.USD);
-        createInvoice(invoice1, true, internalCallContext);
 
-        // CREATE INVOICE WITH A (just) CBA. Should not happen, but that does not matter for that test
-        final CreditBalanceAdjInvoiceItem cbaItem = new CreditBalanceAdjInvoiceItem(invoice1.getId(), accountId, new LocalDate(), new BigDecimal("20.0"), Currency.USD);
-        createInvoiceItem(cbaItem, internalCallContext);
+        invoiceDao.insertCredit(accountId, null,  new BigDecimal("20.0"), new LocalDate(), Currency.USD, internalCallContext);
 
         final InvoiceItemModelDao charge = invoiceDao.insertExternalCharge(accountId, null, bundleId, "bla", new BigDecimal("15.0"), clock.getUTCNow().toLocalDate(), Currency.USD, internalCallContext);
 
@@ -1358,7 +1356,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
     }
 
     @Test(groups = "slow")
-    public void testDeleteCBAPartiallyConsumed() throws Exception {
+    public void testRefundWithCBAPartiallyConsumed() throws Exception {
         final UUID accountId = UUID.randomUUID();
 
         // Create invoice 1
@@ -1377,6 +1375,12 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         final CreditBalanceAdjInvoiceItem creditBalanceAdjInvoiceItem1 = new CreditBalanceAdjInvoiceItem(fixedItem1.getInvoiceId(), fixedItem1.getAccountId(),
                                                                                                          fixedItem1.getStartDate(), fixedItem1.getAmount(),
                                                                                                          fixedItem1.getCurrency());
+
+        final UUID paymentId = UUID.randomUUID();
+        final DefaultInvoicePayment defaultInvoicePayment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentId, invoice1.getId(), clock.getUTCNow().plusDays(12), new BigDecimal("10.0"), Currency.USD);
+
+        invoiceDao.notifyOfPayment(new InvoicePaymentModelDao(defaultInvoicePayment), internalCallContext);
+
         createInvoice(invoice1, true, internalCallContext);
         createInvoiceItem(fixedItem1, internalCallContext);
         createInvoiceItem(repairAdjInvoiceItem, internalCallContext);
@@ -1398,20 +1402,20 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
 
         // Verify scenario - half of the CBA should have been used
         Assert.assertEquals(invoiceDao.getAccountCBA(accountId, internalCallContext).doubleValue(), 5.00);
-        verifyInvoice(invoice1.getId(), 10.00, 10.00);
+        verifyInvoice(invoice1.getId(), 0.00, 10.00);
         verifyInvoice(invoice2.getId(), 0.00, -5.00);
 
-        // Delete the CBA on invoice 1
-        invoiceDao.deleteCBA(accountId, invoice1.getId(), creditBalanceAdjInvoiceItem1.getId(), internalCallContext);
+        // Refund Payment before we can deleted CBA
+        invoiceDao.createRefund(paymentId, new BigDecimal("10.0"), false, ImmutableMap.<UUID,BigDecimal>of(), UUID.randomUUID(), internalCallContext);
 
         // Verify all three invoices were affected
         Assert.assertEquals(invoiceDao.getAccountCBA(accountId, internalCallContext).doubleValue(), 0.00);
-        verifyInvoice(invoice1.getId(), 0.00, 0.00);
-        verifyInvoice(invoice2.getId(), 5.00, 0.00);
+        verifyInvoice(invoice1.getId(), 5.00, 5.00);
+        verifyInvoice(invoice2.getId(), 0.00, -5.00);
     }
 
     @Test(groups = "slow")
-    public void testDeleteCBAFullyConsumedTwice() throws Exception {
+    public void testRefundCBAFullyConsumedTwice() throws Exception {
         final UUID accountId = UUID.randomUUID();
 
         // Create invoice 1
@@ -1434,6 +1438,13 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         createInvoiceItem(fixedItem1, internalCallContext);
         createInvoiceItem(repairAdjInvoiceItem, internalCallContext);
         createInvoiceItem(creditBalanceAdjInvoiceItem1, internalCallContext);
+
+
+        final BigDecimal paymentAmount = new BigDecimal("10.00");
+        final UUID paymentId = UUID.randomUUID();
+
+        final DefaultInvoicePayment defaultInvoicePayment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentId, invoice1.getId(), clock.getUTCNow().plusDays(12), paymentAmount, Currency.USD);
+        invoiceDao.notifyOfPayment(new InvoicePaymentModelDao(defaultInvoicePayment), internalCallContext);
 
         // Create invoice 2
         // Scenario: single item
@@ -1465,18 +1476,17 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
 
         // Verify scenario - all CBA should have been used
         Assert.assertEquals(invoiceDao.getAccountCBA(accountId, internalCallContext).doubleValue(), 0.00);
-        verifyInvoice(invoice1.getId(), 10.00, 10.00);
+        verifyInvoice(invoice1.getId(), 0.00, 10.00);
         verifyInvoice(invoice2.getId(), 0.00, -5.00);
         verifyInvoice(invoice3.getId(), 0.00, -5.00);
 
-        // Delete the CBA on invoice 1
-        invoiceDao.deleteCBA(accountId, invoice1.getId(), creditBalanceAdjInvoiceItem1.getId(), internalCallContext);
+        invoiceDao.createRefund(paymentId, paymentAmount, false, ImmutableMap.<UUID, BigDecimal>of(), UUID.randomUUID(), internalCallContext);
 
         // Verify all three invoices were affected
         Assert.assertEquals(invoiceDao.getAccountCBA(accountId, internalCallContext).doubleValue(), 0.00);
-        verifyInvoice(invoice1.getId(), 0.00, 0.00);
-        verifyInvoice(invoice2.getId(), 5.00, 0.00);
-        verifyInvoice(invoice3.getId(), 5.00, 0.00);
+        verifyInvoice(invoice1.getId(), 10.00, 10.00);
+        verifyInvoice(invoice2.getId(), 0.00, -5.00);
+        verifyInvoice(invoice3.getId(), 0.00, -5.00);
     }
 
     @Test(groups = "slow")

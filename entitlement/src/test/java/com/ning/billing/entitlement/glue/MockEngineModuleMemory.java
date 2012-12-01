@@ -17,6 +17,7 @@
 package com.ning.billing.entitlement.glue;
 
 import org.mockito.Mockito;
+import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.IDBI;
 
 import com.ning.billing.entitlement.api.timeline.RepairEntitlementLifecycleDao;
@@ -28,6 +29,7 @@ import com.ning.billing.util.callcontext.MockCallContextSqlDao;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.BusModule.BusType;
 import com.ning.billing.util.notificationq.MockNotificationQueueService;
+import com.ning.billing.util.notificationq.NotificationQueueConfig;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 
 import com.google.inject.name.Names;
@@ -44,6 +46,12 @@ public class MockEngineModuleMemory extends MockEngineModule {
 
     private void installNotificationQueue() {
         bind(NotificationQueueService.class).to(MockNotificationQueueService.class).asEagerSingleton();
+        configureNotificationQueueConfig();
+    }
+
+    protected void configureNotificationQueueConfig() {
+        final NotificationQueueConfig config = new ConfigurationObjectFactory(System.getProperties()).build(NotificationQueueConfig.class);
+        bind(NotificationQueueConfig.class).toInstance(config);
     }
 
     protected void installDBI() {

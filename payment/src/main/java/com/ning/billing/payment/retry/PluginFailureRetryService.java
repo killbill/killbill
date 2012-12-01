@@ -43,10 +43,9 @@ public class PluginFailureRetryService extends BaseRetryService implements Retry
 
     @Inject
     public PluginFailureRetryService(final NotificationQueueService notificationQueueService,
-                                     final PaymentConfig config,
                                      final PaymentProcessor paymentProcessor,
                                      final InternalCallContextFactory internalCallContextFactory) {
-        super(notificationQueueService, config, internalCallContextFactory);
+        super(notificationQueueService, internalCallContextFactory);
         this.paymentProcessor = paymentProcessor;
     }
 

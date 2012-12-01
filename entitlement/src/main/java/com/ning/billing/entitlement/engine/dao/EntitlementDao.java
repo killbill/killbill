@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import com.ning.billing.entitlement.api.SubscriptionFactory;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData.BundleMigrationData;
 import com.ning.billing.entitlement.api.timeline.SubscriptionDataRepair;
@@ -46,17 +45,17 @@ public interface EntitlementDao {
 
     public SubscriptionBundle createSubscriptionBundle(SubscriptionBundleData bundle, InternalCallContext context);
 
-    public Subscription getSubscriptionFromId(SubscriptionFactory factory, UUID subscriptionId, InternalTenantContext context);
+    public Subscription getSubscriptionFromId(UUID subscriptionId, InternalTenantContext context);
 
     // ACCOUNT retrieval
     public UUID getAccountIdFromSubscriptionId(UUID subscriptionId, InternalTenantContext context);
 
     // Subscription retrieval
-    public Subscription getBaseSubscription(SubscriptionFactory factory, UUID bundleId, InternalTenantContext context);
+    public Subscription getBaseSubscription(UUID bundleId, InternalTenantContext context);
 
-    public List<Subscription> getSubscriptions(SubscriptionFactory factory, UUID bundleId, InternalTenantContext context);
+    public List<Subscription> getSubscriptions(UUID bundleId, InternalTenantContext context);
 
-    public List<Subscription> getSubscriptionsForAccountAndKey(SubscriptionFactory factory, UUID accountId, String bundleKey, InternalTenantContext context);
+    public List<Subscription> getSubscriptionsForAccountAndKey(UUID accountId, String bundleKey, InternalTenantContext context);
 
     // Update
     public void updateChargedThroughDate(SubscriptionData subscription, InternalCallContext context);
@@ -78,6 +77,8 @@ public interface EntitlementDao {
     public void recreateSubscription(SubscriptionData subscription, List<EntitlementEvent> recreateEvents, InternalCallContext context);
 
     public void cancelSubscription(SubscriptionData subscription, EntitlementEvent cancelEvent, InternalCallContext context, int cancelSeq);
+
+    public void cancelSubscriptions(final List<SubscriptionData> subscriptions, final List<EntitlementEvent> cancelEvents, final InternalCallContext context);
 
     public void uncancelSubscription(SubscriptionData subscription, List<EntitlementEvent> uncancelEvents, InternalCallContext context);
 

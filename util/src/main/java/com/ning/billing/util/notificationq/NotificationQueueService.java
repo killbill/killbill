@@ -21,8 +21,9 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import com.ning.billing.util.config.NotificationConfig;
+import com.ning.billing.util.queue.QueueLifecycle;
 
-public interface NotificationQueueService {
+public interface NotificationQueueService extends QueueLifecycle {
 
     public interface NotificationQueueHandler {
 
@@ -61,12 +62,11 @@ public interface NotificationQueueService {
      * @param svcName   the name of the service using that queue
      * @param queueName a name for that queue (unique per service)
      * @param handler   the handler required for notifying the caller of state change
-     * @param config    the notification queue configuration
      * @return a new NotificationQueue
      * @throws com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists
      *          is the queue associated with that service and name already exits
      */
-    public NotificationQueue createNotificationQueue(final String svcName, final String queueName, final NotificationQueueHandler handler, final NotificationConfig config)
+    public NotificationQueue createNotificationQueue(final String svcName, final String queueName, final NotificationQueueHandler handler)
             throws NotificationQueueAlreadyExists;
 
     /**
@@ -92,8 +92,7 @@ public interface NotificationQueueService {
             throws NoSuchNotificationQueue;
 
     /**
-     * @param services
      * @return the number of processed notifications
      */
-    public int triggerManualQueueProcessing(final String[] services, final Boolean keepRunning);
+    public int triggerManualQueueProcessing(final Boolean keepRunning);
 }

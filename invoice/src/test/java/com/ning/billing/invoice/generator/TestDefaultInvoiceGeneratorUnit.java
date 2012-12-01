@@ -67,18 +67,8 @@ public class TestDefaultInvoiceGeneratorUnit extends InvoicingTestBase {
         clock = new ClockMock();
         gen = new TestDefaultInvoiceGeneratorMock(clock, new InvoiceConfig() {
             @Override
-            public boolean isNotificationProcessingOff() {
-                return false;
-            }
-
-            @Override
             public boolean isEmailNotificationsEnabled() {
                 return false;
-            }
-
-            @Override
-            public long getSleepTimeMs() {
-                return 100;
             }
 
             @Override

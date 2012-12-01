@@ -292,4 +292,12 @@ public interface InvoiceUserApi {
      * @throws InvoiceApiException
      */
     public String getInvoiceAsHTML(UUID invoiceId, TenantContext context) throws AccountApiException, IOException, InvoiceApiException;
+
+    /**
+     * Rebalance CBA for account which have credit and unpaid invoices-- only needed if system is configured to not rebalance automatically.
+     *
+     * @param accountId account id
+     * @param context the callcontext
+     */
+    public void consumeExstingCBAOnAccountWithUnpaidInvoices(final UUID accountId, final CallContext context);
 }

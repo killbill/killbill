@@ -82,11 +82,6 @@ public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
         final Clock clock = new DefaultClock();
         final InvoiceConfig invoiceConfig = new InvoiceConfig() {
             @Override
-            public long getSleepTimeMs() {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
             public int getNumberOfMonthsInFuture() {
                 return 36;
             }
@@ -94,11 +89,6 @@ public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
             @Override
             public boolean isEmailNotificationsEnabled() {
                 return false;
-            }
-
-            @Override
-            public boolean isNotificationProcessingOff() {
-                throw new UnsupportedOperationException();
             }
         };
         this.generator = new DefaultInvoiceGenerator(clock, invoiceConfig);
