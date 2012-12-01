@@ -332,6 +332,27 @@ public class AccountResource extends JaxRsResourceBase {
         return Response.status(Status.OK).build();
     }
 
+
+    /*
+     * ************************** INVOICE CBA REBALANCING ********************************
+     */
+    @POST
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + CBA_REBALANCING)
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    public Response rebalanceExistingCBAOnAccount(@PathParam("accountId") final String accountIdString,
+                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                  @HeaderParam(HDR_REASON) final String reason,
+                                  @HeaderParam(HDR_COMMENT) final String comment,
+                                  @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
+
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final UUID accountId = UUID.fromString(accountIdString);
+
+        invoiceApi.consumeExstingCBAOnAccountWithUnpaidInvoices(accountId, callContext);
+        return Response.status(Status.OK).build();
+    }
+
     /*
      * ************************** PAYMENTS ********************************
      */

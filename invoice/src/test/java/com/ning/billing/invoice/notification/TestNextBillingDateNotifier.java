@@ -92,8 +92,7 @@ public class TestNextBillingDateNotifier extends InvoiceTestSuiteWithEmbeddedDB 
         }
 
         @Override
-        public void handleNextBillingDateEvent(final UUID subscriptionId,
-                                               final DateTime eventDateTime, final Long accountRecordId, final Long tenantRecordId) {
+        public void handleNextBillingDateEvent(final UUID subscriptionId, final DateTime eventDateTime, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
             eventCount++;
             latestSubscriptionId = subscriptionId;
         }
@@ -182,7 +181,7 @@ public class TestNextBillingDateNotifier extends InvoiceTestSuiteWithEmbeddedDB 
         entitySqlDaoTransactionalJdbiWrapper.execute(new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                poster.insertNextBillingNotification(entitySqlDaoWrapperFactory, accountId, subscriptionId, readyTime);
+                poster.insertNextBillingNotification(entitySqlDaoWrapperFactory, accountId, subscriptionId, readyTime, UUID.randomUUID());
                 return null;
             }
         });

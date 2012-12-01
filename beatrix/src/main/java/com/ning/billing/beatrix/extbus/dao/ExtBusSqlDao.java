@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.beatrix.extbus.dao;
 
 import java.sql.ResultSet;
@@ -42,43 +43,41 @@ import com.ning.billing.util.dao.BinderBase;
 import com.ning.billing.util.dao.MapperBase;
 import com.ning.billing.util.queue.PersistentQueueEntryLifecycle.PersistentQueueEntryLifecycleState;
 
-
 @ExternalizedSqlViaStringTemplate3()
 public interface ExtBusSqlDao extends Transactional<ExtBusSqlDao>, CloseMe {
-
 
     @SqlQuery
     @Mapper(ExtBusSqlMapper.class)
     public ExtBusEventEntry getNextBusExtEventEntry(@Bind("max") int max,
-                                              @Bind("owner") String owner,
-                                              @Bind("now") Date now,
-                                              @InternalTenantContextBinder final InternalTenantContext context);
+                                                    @Bind("owner") String owner,
+                                                    @Bind("now") Date now,
+                                                    @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlUpdate
     public int claimBusExtEvent(@Bind("owner") String owner,
-                             @Bind("nextAvailable") Date nextAvailable,
-                             @Bind("recordId") Long id,
-                             @Bind("now") Date now,
-                             @InternalTenantContextBinder final InternalCallContext context);
+                                @Bind("nextAvailable") Date nextAvailable,
+                                @Bind("recordId") Long id,
+                                @Bind("now") Date now,
+                                @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
     public void clearBusExtEvent(@Bind("recordId") Long id,
-                              @Bind("owner") String owner,
-                              @InternalTenantContextBinder final InternalCallContext context);
+                                 @Bind("owner") String owner,
+                                 @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
     public void removeBusExtEventsById(@Bind("recordId") Long id,
-                                    @InternalTenantContextBinder final InternalCallContext context);
+                                       @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
     public void insertBusExtEvent(@Bind(binder = ExtBusSqlBinder.class) ExtBusEventEntry evt,
-                               @InternalTenantContextBinder final InternalCallContext context);
+                                  @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
     public void insertClaimedExtHistory(@Bind("ownerId") String owner,
-                                     @Bind("claimedDate") Date claimedDate,
-                                     @Bind("busEventId") long id,
-                                     @InternalTenantContextBinder final InternalCallContext context);
+                                        @Bind("claimedDate") Date claimedDate,
+                                        @Bind("busEventId") long id,
+                                        @InternalTenantContextBinder final InternalCallContext context);
 
     public static class ExtBusSqlBinder extends BinderBase implements Binder<Bind, ExtBusEventEntry> {
 
@@ -87,6 +86,7 @@ public interface ExtBusSqlDao extends Transactional<ExtBusSqlDao>, CloseMe {
             stmt.bind("eventType", evt.getExtBusType().toString());
             stmt.bind("objectId", evt.getObjectId().toString());
             stmt.bind("objectType", evt.getObjectType().toString());
+            stmt.bind("userToken", getUUIDString(evt.getUserToken()));
             stmt.bind("createdDate", getDate(new DateTime()));
             stmt.bind("creatingOwner", evt.getCreatedOwner());
             stmt.bind("processingAvailableDate", getDate(evt.getNextAvailableDate()));
@@ -104,6 +104,7 @@ public interface ExtBusSqlDao extends Transactional<ExtBusSqlDao>, CloseMe {
             final ExtBusEventType eventType = ExtBusEventType.valueOf(r.getString("event_type"));
             final UUID objectId = getUUID(r, "object_id");
             final ObjectType objectType = ObjectType.valueOf(r.getString("object_type"));
+            final UUID userToken = getUUID(r, "user_token");
             final String createdOwner = r.getString("creating_owner");
             final DateTime nextAvailableDate = getDateTime(r, "processing_available_date");
             final String processingOwner = r.getString("processing_owner");
@@ -111,7 +112,7 @@ public interface ExtBusSqlDao extends Transactional<ExtBusSqlDao>, CloseMe {
             final Long accountRecordId = r.getLong("account_record_id");
             final Long tenantRecordId = r.getLong("tenant_record_id");
             return new ExtBusEventEntry(recordId, createdOwner, processingOwner, nextAvailableDate, processingState,
-                    objectType, objectId, eventType, accountRecordId, tenantRecordId);
+                                        objectType, objectId, userToken, eventType, accountRecordId, tenantRecordId);
         }
     }
 }

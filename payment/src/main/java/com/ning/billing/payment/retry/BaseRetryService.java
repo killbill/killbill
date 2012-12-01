@@ -47,16 +47,13 @@ public abstract class BaseRetryService implements RetryService {
     private static final String PAYMENT_RETRY_SERVICE = "PaymentRetryService";
 
     private final NotificationQueueService notificationQueueService;
-    private final PaymentConfig config;
     private final InternalCallContextFactory internalCallContextFactory;
 
     private NotificationQueue retryQueue;
 
     public BaseRetryService(final NotificationQueueService notificationQueueService,
-                            final PaymentConfig config,
                             final InternalCallContextFactory internalCallContextFactory) {
         this.notificationQueueService = notificationQueueService;
-        this.config = config;
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
@@ -66,17 +63,16 @@ public abstract class BaseRetryService implements RetryService {
                                                                       getQueueName(),
                                                                       new NotificationQueueHandler() {
                                                                           @Override
-                                                                          public void handleReadyNotification(final NotificationKey notificationKey, final DateTime eventDateTime, final Long accountRecordId, final Long tenantRecordId) {
+                                                                          public void handleReadyNotification(final NotificationKey notificationKey, final DateTime eventDateTime, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
                                                                               if (!(notificationKey instanceof PaymentRetryNotificationKey)) {
                                                                                   log.error("Payment service got an unexpected notification type {}", notificationKey.getClass().getName());
                                                                                   return;
                                                                               }
                                                                               final PaymentRetryNotificationKey key = (PaymentRetryNotificationKey) notificationKey;
-                                                                              final InternalCallContext callContext = internalCallContextFactory.createInternalCallContext(tenantRecordId, accountRecordId, PAYMENT_RETRY_SERVICE, CallOrigin.INTERNAL, UserType.SYSTEM, null);
+                                                                              final InternalCallContext callContext = internalCallContextFactory.createInternalCallContext(tenantRecordId, accountRecordId, PAYMENT_RETRY_SERVICE, CallOrigin.INTERNAL, UserType.SYSTEM, userToken);
                                                                               retry(key.getUuidKey(), callContext);
                                                                           }
-                                                                      },
-                                                                      config);
+                                                                      });
     }
 
     @Override
@@ -141,9 +137,9 @@ public abstract class BaseRetryService implements RetryService {
                 final NotificationKey key = new PaymentRetryNotificationKey(paymentId);
                 if (retryQueue != null) {
                     if (transactionalDao == null) {
-                        retryQueue.recordFutureNotification(timeOfRetry, null, key, context);
+                        retryQueue.recordFutureNotification(timeOfRetry, key, context);
                     } else {
-                        retryQueue.recordFutureNotificationFromTransaction(transactionalDao, timeOfRetry, null, key, context);
+                        retryQueue.recordFutureNotificationFromTransaction(transactionalDao, timeOfRetry, key, context);
                     }
                 }
             } catch (NoSuchNotificationQueue e) {

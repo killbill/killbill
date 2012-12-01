@@ -22,7 +22,7 @@ import org.skife.config.Config;
 import org.skife.config.Default;
 
 
-public interface PaymentConfig extends NotificationConfig, KillbillConfig {
+public interface PaymentConfig extends KillbillConfig {
     @Config("killbill.payment.provider.default")
     @Default("noop")
     public String getDefaultPaymentProvider();
@@ -42,16 +42,6 @@ public interface PaymentConfig extends NotificationConfig, KillbillConfig {
     @Config("killbill.payment.failure.retry.max.attempts")
     @Default("8")
     public int getPluginFailureRetryMaxAttempts();
-
-    @Override
-    @Config("killbill.payment.engine.notifications.sleep")
-    @Default("500")
-    public long getSleepTimeMs();
-
-    @Override
-    @Config("killbill.payment.engine.notifications.off")
-    @Default("false")
-    public boolean isNotificationProcessingOff();
 
     @Config("killbill.payment.off")
     @Default("false")

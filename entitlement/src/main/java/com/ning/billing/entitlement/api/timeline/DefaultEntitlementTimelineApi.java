@@ -16,6 +16,7 @@
 
 package com.ning.billing.entitlement.api.timeline;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -25,21 +26,25 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.entitlement.api.SubscriptionFactory;
+import com.ning.billing.entitlement.api.EntitlementApiBase;
+import com.ning.billing.entitlement.api.SubscriptionApiService;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline.NewEvent;
-import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.entitlement.api.user.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
+import com.ning.billing.entitlement.engine.addon.AddonUtils;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
@@ -47,17 +52,21 @@ import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.TenantContext;
+import com.ning.billing.util.clock.Clock;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
-public class DefaultEntitlementTimelineApi implements EntitlementTimelineApi {
+public class DefaultEntitlementTimelineApi extends EntitlementApiBase implements EntitlementTimelineApi {
 
-    private final EntitlementDao dao;
-    private final SubscriptionFactory factory;
     private final RepairEntitlementLifecycleDao repairDao;
     private final CatalogService catalogService;
     private final InternalCallContextFactory internalCallContextFactory;
+    private final AddonUtils addonUtils;
+
+    private final SubscriptionApiService repairApiService;
 
     private enum RepairType {
         BASE_REPAIR,
@@ -66,14 +75,17 @@ public class DefaultEntitlementTimelineApi implements EntitlementTimelineApi {
     }
 
     @Inject
-    public DefaultEntitlementTimelineApi(@Named(DefaultEntitlementModule.REPAIR_NAMED) final SubscriptionFactory factory, final CatalogService catalogService,
+    public DefaultEntitlementTimelineApi(final CatalogService catalogService,
+                                         final SubscriptionApiService apiService,
                                          @Named(DefaultEntitlementModule.REPAIR_NAMED) final RepairEntitlementLifecycleDao repairDao, final EntitlementDao dao,
-                                         final InternalCallContextFactory internalCallContextFactory) {
+                                         @Named(DefaultEntitlementModule.REPAIR_NAMED) final SubscriptionApiService repairApiService,
+                                         final InternalCallContextFactory internalCallContextFactory, final Clock clock, final AddonUtils addonUtils) {
+        super(dao, apiService, clock, catalogService);
         this.catalogService = catalogService;
-        this.dao = dao;
         this.repairDao = repairDao;
-        this.factory = factory;
         this.internalCallContextFactory = internalCallContextFactory;
+        this.repairApiService = repairApiService;
+        this.addonUtils = addonUtils;
     }
 
     @Override
@@ -101,7 +113,7 @@ public class DefaultEntitlementTimelineApi implements EntitlementTimelineApi {
             if (bundle == null) {
                 throw new EntitlementRepairException(ErrorCode.ENT_REPAIR_UNKNOWN_BUNDLE, descBundle);
             }
-            final List<Subscription> subscriptions = dao.getSubscriptions(factory, bundle.getId(), internalCallContextFactory.createInternalTenantContext(context));
+            final List<SubscriptionDataRepair> subscriptions = convertToSubscriptionsDataRepair(dao.getSubscriptions(bundle.getId(), internalCallContextFactory.createInternalTenantContext(context)));
             if (subscriptions.size() == 0) {
                 throw new EntitlementRepairException(ErrorCode.ENT_REPAIR_NO_ACTIVE_SUBSCRIPTIONS, bundle.getId());
             }
@@ -111,6 +123,18 @@ public class DefaultEntitlementTimelineApi implements EntitlementTimelineApi {
         } catch (CatalogApiException e) {
             throw new EntitlementRepairException(e);
         }
+    }
+
+    private List<SubscriptionDataRepair> convertToSubscriptionsDataRepair(List<Subscription> input) {
+        return new ArrayList<SubscriptionDataRepair>(Collections2.transform(input, new Function<Subscription, SubscriptionDataRepair>() {
+            @Override
+            public SubscriptionDataRepair apply(@Nullable final Subscription subscription) {
+                return convertToSubscriptionDataRepair((SubscriptionData) subscription);
+            }
+        }));
+    }
+    private SubscriptionDataRepair convertToSubscriptionDataRepair(SubscriptionData input) {
+        return new SubscriptionDataRepair(input, repairApiService, (EntitlementDao) repairDao, clock, addonUtils, catalogService, internalCallContextFactory);
     }
 
     @Override
@@ -123,7 +147,7 @@ public class DefaultEntitlementTimelineApi implements EntitlementTimelineApi {
             }
 
             // Subscriptions are ordered with BASE subscription first-- if exists
-            final List<Subscription> subscriptions = dao.getSubscriptions(factory, input.getId(), tenantContext);
+            final List<SubscriptionDataRepair> subscriptions = convertToSubscriptionsDataRepair(dao.getSubscriptions(input.getId(), tenantContext));
             if (subscriptions.size() == 0) {
                 throw new EntitlementRepairException(ErrorCode.ENT_REPAIR_NO_ACTIVE_SUBSCRIPTIONS, input.getId());
             }
@@ -252,7 +276,7 @@ public class DefaultEntitlementTimelineApi implements EntitlementTimelineApi {
         }
     }
 
-    private void validateBasePlanRecreate(final boolean isBasePlanRecreate, final List<Subscription> subscriptions, final List<SubscriptionTimeline> input)
+    private void validateBasePlanRecreate(final boolean isBasePlanRecreate, final List<SubscriptionDataRepair> subscriptions, final List<SubscriptionTimeline> input)
             throws EntitlementRepairException {
         if (!isBasePlanRecreate) {
             return;
@@ -269,7 +293,7 @@ public class DefaultEntitlementTimelineApi implements EntitlementTimelineApi {
         }
     }
 
-    private void validateInputSubscriptionsKnown(final List<Subscription> subscriptions, final List<SubscriptionTimeline> input)
+    private void validateInputSubscriptionsKnown(final List<SubscriptionDataRepair> subscriptions, final List<SubscriptionTimeline> input)
             throws EntitlementRepairException {
         for (final SubscriptionTimeline cur : input) {
             boolean found = false;
@@ -365,7 +389,7 @@ public class DefaultEntitlementTimelineApi implements EntitlementTimelineApi {
         return result;
     }
 
-    private String getViewId(final DateTime lastUpdateBundleDate, final List<Subscription> subscriptions) {
+    private String getViewId(final DateTime lastUpdateBundleDate, final List<SubscriptionDataRepair> subscriptions) {
         final StringBuilder tmp = new StringBuilder();
         long lastOrderedId = -1;
         for (final Subscription cur : subscriptions) {
@@ -412,7 +436,7 @@ public class DefaultEntitlementTimelineApi implements EntitlementTimelineApi {
         };
     }
 
-    private List<SubscriptionTimeline> createGetSubscriptionRepairList(final List<Subscription> subscriptions, final List<SubscriptionTimeline> inRepair) throws CatalogApiException {
+    private List<SubscriptionTimeline> createGetSubscriptionRepairList(final List<SubscriptionDataRepair> subscriptions, final List<SubscriptionTimeline> inRepair) throws CatalogApiException {
 
         final List<SubscriptionTimeline> result = new LinkedList<SubscriptionTimeline>();
         final Set<UUID> repairIds = new TreeSet<UUID>();
@@ -464,7 +488,9 @@ public class DefaultEntitlementTimelineApi implements EntitlementTimelineApi {
             }
         }
 
-        return (SubscriptionDataRepair) factory.createSubscription(builder, initialEvents);
+        final SubscriptionDataRepair subscriptiondataRepair = new SubscriptionDataRepair(builder, curData.getEvents(), repairApiService, (EntitlementDao) repairDao, clock, addonUtils, catalogService, internalCallContextFactory);
+        subscriptiondataRepair.rebuildTransitions(curData.getEvents(), catalogService.getFullCatalog());
+        return subscriptiondataRepair;
     }
 
     private SubscriptionTimeline findAndCreateSubscriptionRepair(final UUID target, final List<SubscriptionTimeline> input) {

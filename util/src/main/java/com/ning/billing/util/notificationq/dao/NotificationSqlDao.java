@@ -55,12 +55,11 @@ public interface NotificationSqlDao extends Transactional<NotificationSqlDao>, C
     public List<Notification> getReadyNotifications(@Bind("now") Date now,
                                                     @Bind("owner") String owner,
                                                     @Bind("max") int max,
-                                                    @Bind("queueName") String queueName,
                                                     @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
     @Mapper(NotificationSqlMapper.class)
-    public List<Notification> getNotificationForAccountAndDate(@Bind("accountId") final String accountId,
+    public List<Notification> getNotificationForAccountAndDate(@Bind("accountRecordId") final long accountRecordId,
                                                                @Bind("effectiveDate") final Date effectiveDate,
                                                                @InternalTenantContextBinder final InternalTenantContext context);
 
@@ -102,7 +101,8 @@ public interface NotificationSqlDao extends Transactional<NotificationSqlDao>, C
             stmt.bind("createdDate", getDate(new DateTime()));
             stmt.bind("creatingOwner", evt.getCreatedOwner());
             stmt.bind("className", evt.getNotificationKeyClass());
-            stmt.bind("accountId", evt.getAccountId() != null ? evt.getAccountId().toString() : null);
+            // The current user token will be bound with the InternalTenantContextBinder
+            stmt.bind("futureUserToken", getUUIDString(evt.getFutureUserToken()));
             stmt.bind("notificationKey", evt.getNotificationKey());
             stmt.bind("effectiveDate", getDate(evt.getEffectiveDate()));
             stmt.bind("queueName", evt.getQueueName());
@@ -123,7 +123,8 @@ public interface NotificationSqlDao extends Transactional<NotificationSqlDao>, C
             final String createdOwner = r.getString("creating_owner");
             final String className = r.getString("class_name");
             final String notificationKey = r.getString("notification_key");
-            final UUID accountId = getUUID(r, "account_id");
+            final UUID userToken = getUUID(r, "user_token");
+            final UUID futureUserToken = getUUID(r, "future_user_token");
             final String queueName = r.getString("queue_name");
             final DateTime effectiveDate = getDateTime(r, "effective_date");
             final DateTime nextAvailableDate = getDateTime(r, "processing_available_date");
@@ -133,7 +134,7 @@ public interface NotificationSqlDao extends Transactional<NotificationSqlDao>, C
             final Long tenantRecordId = r.getLong("tenant_record_id");
 
             return new DefaultNotification(ordering, id, createdOwner, processingOwner, queueName, nextAvailableDate,
-                                           processingState, className, notificationKey, accountId, effectiveDate,
+                                           processingState, className, notificationKey, userToken, futureUserToken, effectiveDate,
                                            accountRecordId, tenantRecordId);
         }
     }

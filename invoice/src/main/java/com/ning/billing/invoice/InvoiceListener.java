@@ -73,9 +73,9 @@ public class InvoiceListener {
         }
     }
 
-    public void handleNextBillingDateEvent(final UUID subscriptionId, final DateTime eventDateTime, final Long accountRecordId, final Long tenantRecordId) {
+    public void handleNextBillingDateEvent(final UUID subscriptionId, final DateTime eventDateTime, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
         try {
-            final InternalCallContext context = internalCallContextFactory.createInternalCallContext(tenantRecordId, accountRecordId, "Next Billing Date", CallOrigin.INTERNAL, UserType.SYSTEM, null);
+            final InternalCallContext context = internalCallContextFactory.createInternalCallContext(tenantRecordId, accountRecordId, "Next Billing Date", CallOrigin.INTERNAL, UserType.SYSTEM, userToken);
             dispatcher.processSubscription(subscriptionId, eventDateTime, context);
         } catch (InvoiceApiException e) {
             log.error(e.getMessage());

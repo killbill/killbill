@@ -67,10 +67,10 @@ public class OverdueListener {
         dispatcher.processOverdueForAccount(accountId, createCallContext(event.getUserToken(), event.getAccountRecordId(), event.getTenantRecordId()));
     }
 
-    public void handleNextOverdueCheck(final OverdueCheckNotificationKey notificationKey, final Long accountRecordId, final Long tenantRecordId) {
+    public void handleNextOverdueCheck(final OverdueCheckNotificationKey notificationKey, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
         log.info(String.format("Received OD checkup notification for type = %s, id = %s",
                 notificationKey.getType(), notificationKey.getUuidKey()));
-        dispatcher.processOverdue(notificationKey.getType(), notificationKey.getUuidKey(), createCallContext(null, accountRecordId, tenantRecordId));
+        dispatcher.processOverdue(notificationKey.getType(), notificationKey.getUuidKey(), createCallContext(userToken, accountRecordId, tenantRecordId));
     }
 
     private InternalCallContext createCallContext(final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {

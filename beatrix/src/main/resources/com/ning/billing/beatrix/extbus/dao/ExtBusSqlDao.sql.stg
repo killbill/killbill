@@ -9,6 +9,7 @@ getNextBusExtEventEntry() ::= <<
       , event_type
       , object_id
       , object_type
+      , user_token
       , created_date
       , creating_owner
       , processing_owner
@@ -66,6 +67,7 @@ insertBusExtEvent() ::= <<
      event_type
     , object_id
     , object_type
+    , user_token
     , created_date
     , creating_owner
     , processing_owner
@@ -76,7 +78,8 @@ insertBusExtEvent() ::= <<
     ) values (
       :eventType
     , :objectId
-    , :objectType    
+    , :objectType
+    , :userToken
     , :createdDate
     , :creatingOwner
     , :processingOwner

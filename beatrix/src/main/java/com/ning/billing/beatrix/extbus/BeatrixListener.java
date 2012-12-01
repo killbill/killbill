@@ -140,7 +140,7 @@ public class BeatrixListener {
         default:
         }
         return eventBusType != null ?
-                new ExtBusEventEntry(hostname, objectType, objectId, eventBusType, event.getAccountRecordId(), event.getAccountRecordId()) : null;
+                new ExtBusEventEntry(hostname, objectType, objectId, event.getUserToken(), eventBusType, event.getAccountRecordId(), event.getAccountRecordId()) : null;
     }
 
 }

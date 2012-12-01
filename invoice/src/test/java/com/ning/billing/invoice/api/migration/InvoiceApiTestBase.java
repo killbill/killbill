@@ -23,6 +23,8 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.mockito.Mockito;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeSuite;
@@ -68,6 +70,8 @@ import com.google.inject.Inject;
 
 @Guice(modules = {MockModuleNoEntitlement.class})
 public abstract class InvoiceApiTestBase extends InvoicingTestBase {
+
+    private static final Logger log = LoggerFactory.getLogger(InvoiceApiTestBase.class);
 
     protected static final Currency accountCurrency = Currency.USD;
 

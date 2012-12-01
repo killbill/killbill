@@ -66,16 +66,6 @@ public class InvoiceDaoTestBase extends InvoicingTestBase {
 
     private final InvoiceConfig invoiceConfig = new InvoiceConfig() {
         @Override
-        public long getSleepTimeMs() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public boolean isNotificationProcessingOff() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
         public int getNumberOfMonthsInFuture() {
             return 36;
         }

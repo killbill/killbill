@@ -17,39 +17,29 @@
 package com.ning.billing.util.notificationq;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.skife.jdbi.v2.IDBI;
 
-import com.ning.billing.util.config.NotificationConfig;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 
-import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 
-public abstract class NotificationQueueServiceBase implements NotificationQueueService {
-    protected final Logger log = LoggerFactory.getLogger(DefaultNotificationQueueService.class);
+public abstract class NotificationQueueServiceBase extends NotificationQueueDispatcher implements NotificationQueueService {
 
-    protected final Clock clock;
-
-    private final Map<String, NotificationQueue> queues;
 
     @Inject
-    public NotificationQueueServiceBase(final Clock clock) {
-        this.clock = clock;
-        this.queues = new TreeMap<String, NotificationQueue>();
+    public NotificationQueueServiceBase(final Clock clock, final NotificationQueueConfig config, final IDBI dbi,
+                                        final InternalCallContextFactory internalCallContextFactory) {
+        super(clock, config, dbi, internalCallContextFactory);
     }
 
     @Override
     public NotificationQueue createNotificationQueue(final String svcName,
                                                      final String queueName,
-                                                     final NotificationQueueHandler handler,
-                                                     final NotificationConfig config) throws NotificationQueueAlreadyExists {
-        if (svcName == null || queueName == null || handler == null || config == null) {
+                                                     final NotificationQueueHandler handler) throws NotificationQueueAlreadyExists {
+        if (svcName == null || queueName == null || handler == null) {
             throw new RuntimeException("Need to specify all parameters");
         }
 
@@ -61,7 +51,7 @@ public abstract class NotificationQueueServiceBase implements NotificationQueueS
                 throw new NotificationQueueAlreadyExists(String.format("Queue for svc %s and name %s already exist",
                                                                        svcName, queueName));
             }
-            result = createNotificationQueueInternal(svcName, queueName, handler, config);
+            result = createNotificationQueueInternal(svcName, queueName, handler);
             queues.put(compositeName, result);
         }
         return result;
@@ -96,56 +86,6 @@ public abstract class NotificationQueueServiceBase implements NotificationQueueS
         }
     }
 
-    //
-    // Test ONLY
-    //
-    @Override
-    public int triggerManualQueueProcessing(final String[] services, final Boolean keepRunning) {
-
-        int result = 0;
-
-        List<NotificationQueue> manualQueues = null;
-        if (services == null) {
-            manualQueues = new ArrayList<NotificationQueue>(queues.values());
-        } else {
-            final Joiner join = Joiner.on(",");
-            join.join(services);
-
-            log.info("Trigger manual processing for services {} ", join.toString());
-            manualQueues = new LinkedList<NotificationQueue>();
-            synchronized (queues) {
-                for (final String svc : services) {
-                    addQueuesForService(manualQueues, svc);
-                }
-            }
-        }
-        for (final NotificationQueue cur : manualQueues) {
-            int processedNotifications = 0;
-            do {
-                processedNotifications = cur.processReadyNotification();
-                log.info("Got {} results from queue {}", processedNotifications, cur.getFullQName());
-                result += processedNotifications;
-            } while (keepRunning && processedNotifications > 0);
-        }
-        return result;
-    }
-
-    private void addQueuesForService(final List<NotificationQueue> result, final String svcName) {
-        for (final String cur : queues.keySet()) {
-            if (cur.startsWith(svcName)) {
-                result.add(queues.get(cur));
-            }
-        }
-    }
-
-    protected abstract NotificationQueue createNotificationQueueInternal(String svcName,
-                                                                         String queueName, NotificationQueueHandler handler,
-                                                                         NotificationConfig config);
-
-    public static String getCompositeName(final String svcName, final String queueName) {
-        return svcName + ":" + queueName;
-    }
-
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
@@ -154,4 +94,28 @@ public abstract class NotificationQueueServiceBase implements NotificationQueueS
         sb.append('}');
         return sb.toString();
     }
+
+
+    //
+    // Test ONLY
+    //
+    @Override
+    public int triggerManualQueueProcessing(final Boolean keepRunning) {
+
+        int result = 0;
+
+        List<NotificationQueue> manualQueues = new ArrayList<NotificationQueue>(queues.values());
+        for (final NotificationQueue cur : manualQueues) {
+            int processedNotifications = 0;
+            do {
+                doProcessEventsWithLimit(1);
+                log.info("Got {} results from queue {}", processedNotifications, cur.getFullQName());
+                result += processedNotifications;
+            } while (keepRunning && processedNotifications > 0);
+        }
+        return result;
+    }
+
+    protected abstract NotificationQueue createNotificationQueueInternal(String svcName,
+                                                                         String queueName, NotificationQueueHandler handler);
 }

@@ -33,14 +33,13 @@ import org.slf4j.LoggerFactory;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.catalog.api.TimeUnit;
-import com.ning.billing.entitlement.api.SubscriptionFactory;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData.BundleMigrationData;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData.SubscriptionMigrationData;
 import com.ning.billing.entitlement.api.timeline.SubscriptionDataRepair;
 import com.ning.billing.entitlement.api.transfer.TransferCancelData;
-import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.entitlement.api.user.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
@@ -141,10 +140,10 @@ public class MockEntitlementDaoMemory implements EntitlementDao {
     }
 
     @Override
-    public Subscription getSubscriptionFromId(final SubscriptionFactory factory, final UUID subscriptionId, final InternalTenantContext context) {
+    public Subscription getSubscriptionFromId(final UUID subscriptionId, final InternalTenantContext context) {
         for (final Subscription cur : subscriptions) {
             if (cur.getId().equals(subscriptionId)) {
-                return buildSubscription(factory, (SubscriptionData) cur, context);
+                return buildSubscription((SubscriptionData) cur, context);
             }
         }
         return null;
@@ -156,11 +155,11 @@ public class MockEntitlementDaoMemory implements EntitlementDao {
     }
 
     @Override
-    public List<Subscription> getSubscriptionsForAccountAndKey(final SubscriptionFactory factory, final UUID accountId, final String bundleKey, final InternalTenantContext context) {
+    public List<Subscription> getSubscriptionsForAccountAndKey(final UUID accountId, final String bundleKey, final InternalTenantContext context) {
 
         for (final SubscriptionBundle cur : bundles) {
             if (cur.getExternalKey().equals(bundleKey) && cur.getAccountId().equals(bundleKey)) {
-                return getSubscriptions(factory, cur.getId(), context);
+                return getSubscriptions(cur.getId(), context);
             }
         }
         return Collections.emptyList();
@@ -175,7 +174,7 @@ public class MockEntitlementDaoMemory implements EntitlementDao {
                 recordFutureNotificationFromTransaction(null, cur.getEffectiveDate(), new EntitlementNotificationKey(cur.getId()), context);
             }
         }
-        final Subscription updatedSubscription = buildSubscription(null, subscription, context);
+        final Subscription updatedSubscription = buildSubscription(subscription, context);
         subscriptions.add(updatedSubscription);
     }
 
@@ -190,11 +189,11 @@ public class MockEntitlementDaoMemory implements EntitlementDao {
     }
 
     @Override
-    public List<Subscription> getSubscriptions(final SubscriptionFactory factory, final UUID bundleId, final InternalTenantContext context) {
+    public List<Subscription> getSubscriptions(final UUID bundleId, final InternalTenantContext context) {
         final List<Subscription> results = new ArrayList<Subscription>();
         for (final Subscription cur : subscriptions) {
             if (cur.getBundleId().equals(bundleId)) {
-                results.add(buildSubscription(factory, (SubscriptionData) cur, context));
+                results.add(buildSubscription((SubscriptionData) cur, context));
             }
         }
         return results;
@@ -229,11 +228,11 @@ public class MockEntitlementDaoMemory implements EntitlementDao {
     }
 
     @Override
-    public Subscription getBaseSubscription(final SubscriptionFactory factory, final UUID bundleId, final InternalTenantContext context) {
+    public Subscription getBaseSubscription(final UUID bundleId, final InternalTenantContext context) {
         for (final Subscription cur : subscriptions) {
             if (cur.getBundleId().equals(bundleId) &&
                 cur.getCurrentPlan().getProduct().getCategory() == ProductCategory.BASE) {
-                return buildSubscription(factory, (SubscriptionData) cur, context);
+                return buildSubscription((SubscriptionData) cur, context);
             }
         }
         return null;
@@ -245,16 +244,13 @@ public class MockEntitlementDaoMemory implements EntitlementDao {
         insertEvent(nextPhase, context);
     }
 
-    private Subscription buildSubscription(final SubscriptionFactory factory, final SubscriptionData in, final InternalTenantContext context) {
-        if (factory != null) {
-            return factory.createSubscription(new SubscriptionBuilder(in), getEventsForSubscription(in.getId(), context));
-        } else {
+    private Subscription buildSubscription(final SubscriptionData in, final InternalTenantContext context) {
             final SubscriptionData subscription = new SubscriptionData(new SubscriptionBuilder(in), null, clock);
             if (events.size() > 0) {
                 subscription.rebuildTransitions(getEventsForSubscription(in.getId(), context), catalogService.getFullCatalog());
             }
             return subscription;
-        }
+
     }
 
     @Override
@@ -284,6 +280,15 @@ public class MockEntitlementDaoMemory implements EntitlementDao {
     }
 
     @Override
+    public void cancelSubscriptions(final List<SubscriptionData> subscriptions, final List<EntitlementEvent> cancelEvents, final InternalCallContext context) {
+        synchronized (events) {
+            for (int i = 0; i < subscriptions.size(); i++) {
+                cancelSubscription(subscriptions.get(i), cancelEvents.get(i), context, 0);
+            }
+        }
+    }
+
+    @Override
     public void changePlan(final SubscriptionData subscription, final List<EntitlementEvent> changeEvents, final InternalCallContext context) {
         synchronized (events) {
             cancelNextChangeEvent(subscription.getId());
@@ -303,7 +308,7 @@ public class MockEntitlementDaoMemory implements EntitlementDao {
     }
 
     private void cancelNextPhaseEvent(final UUID subscriptionId, final InternalTenantContext context) {
-        final Subscription curSubscription = getSubscriptionFromId(null, subscriptionId, context);
+        final Subscription curSubscription = getSubscriptionFromId(subscriptionId, context);
         if (curSubscription.getCurrentPhase() == null ||
             curSubscription.getCurrentPhase().getDuration().getUnit() == TimeUnit.UNLIMITED) {
             return;
@@ -412,7 +417,7 @@ public class MockEntitlementDaoMemory implements EntitlementDao {
         try {
             final NotificationQueue subscriptionEventQueue = notificationQueueService.getNotificationQueue(Engine.ENTITLEMENT_SERVICE_NAME,
                                                                                                            Engine.NOTIFICATION_QUEUE_NAME);
-            subscriptionEventQueue.recordFutureNotificationFromTransaction(transactionalDao, effectiveDate, null, notificationKey, context);
+            subscriptionEventQueue.recordFutureNotificationFromTransaction(transactionalDao, effectiveDate, notificationKey, context);
         } catch (NoSuchNotificationQueue e) {
             throw new RuntimeException(e);
         } catch (IOException e) {

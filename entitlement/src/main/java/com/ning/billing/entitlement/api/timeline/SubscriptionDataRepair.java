@@ -24,7 +24,6 @@ import org.joda.time.DateTime;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.ObjectType;
-import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Plan;
@@ -33,8 +32,8 @@ import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.SubscriptionApiService;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
-import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
+import com.ning.billing.entitlement.api.user.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 import com.ning.billing.entitlement.engine.addon.AddonUtils;
@@ -59,8 +58,6 @@ public class SubscriptionDataRepair extends SubscriptionData {
     private final List<EntitlementEvent> initialEvents;
     private final InternalCallContextFactory internalCallContextFactory;
 
-    // Low level events are ONLY used for Repair APIs
-    private List<EntitlementEvent> events;
 
     public SubscriptionDataRepair(final SubscriptionBuilder builder, final List<EntitlementEvent> initialEvents, final SubscriptionApiService apiService,
                                   final EntitlementDao dao, final Clock clock, final AddonUtils addonUtils, final CatalogService catalogService,
@@ -71,6 +68,20 @@ public class SubscriptionDataRepair extends SubscriptionData {
         this.clock = clock;
         this.catalogService = catalogService;
         this.initialEvents = initialEvents;
+        this.internalCallContextFactory = internalCallContextFactory;
+    }
+
+
+
+    public SubscriptionDataRepair(final SubscriptionData subscriptionData, final SubscriptionApiService apiService,
+                                  final EntitlementDao dao, final Clock clock, final AddonUtils addonUtils, final CatalogService catalogService,
+                                  final InternalCallContextFactory internalCallContextFactory) {
+        super(subscriptionData, apiService , clock);
+        this.repairDao = dao;
+        this.addonUtils = addonUtils;
+        this.clock = clock;
+        this.catalogService = catalogService;
+        this.initialEvents = subscriptionData.getEvents();
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
@@ -183,12 +194,6 @@ public class SubscriptionDataRepair extends SubscriptionData {
         if (getCategory() == ProductCategory.ADD_ON) {
             addonUtils.checkAddonCreationRights(baseSubscription, getCurrentPlan());
         }
-    }
-
-    @Override
-    public void rebuildTransitions(final List<EntitlementEvent> inputEvents, final Catalog catalog) {
-        this.events = inputEvents;
-        super.rebuildTransitions(inputEvents, catalog);
     }
 
     public List<EntitlementEvent> getEvents() {

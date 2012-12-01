@@ -1,5 +1,5 @@
-/* 
- * Copyright 2010-2011 Ning, Inc.
+/*
+ * Copyright 2010-2012 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -13,15 +13,24 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.ning.billing.entitlement.api;
 
-import java.util.List;
+package com.ning.billing.util.notificationq;
 
-import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
-import com.ning.billing.entitlement.api.user.SubscriptionData;
-import com.ning.billing.entitlement.events.EntitlementEvent;
+import org.skife.config.Config;
+import org.skife.config.Default;
 
-public interface SubscriptionFactory {
+import com.ning.billing.util.config.NotificationConfig;
 
-    public SubscriptionData createSubscription(SubscriptionBuilder builder, List<EntitlementEvent> events);
+public interface NotificationQueueConfig extends NotificationConfig {
+
+    @Override
+    @Config("killbill.billing.util.notificationq.sleep")
+    @Default("500")
+    public long getSleepTimeMs();
+
+    @Config("killbill.billing.util.notificationq.notification.off")
+    @Default("false")
+    @Override
+    public boolean isNotificationProcessingOff();
+
 }

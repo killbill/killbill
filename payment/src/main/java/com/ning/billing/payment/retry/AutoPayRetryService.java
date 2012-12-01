@@ -39,7 +39,7 @@ public class AutoPayRetryService extends BaseRetryService implements RetryServic
                                final PaymentConfig config,
                                final PaymentProcessor paymentProcessor,
                                final InternalCallContextFactory internalCallContextFactory) {
-        super(notificationQueueService, config, internalCallContextFactory);
+        super(notificationQueueService, internalCallContextFactory);
         this.paymentProcessor = paymentProcessor;
     }
 

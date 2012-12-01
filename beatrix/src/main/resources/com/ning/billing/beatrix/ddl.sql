@@ -6,6 +6,7 @@ CREATE TABLE bus_ext_events (
     event_type varchar(32) NOT NULL,
     object_id varchar(64) NOT NULL,
     object_type varchar(32) NOT NULL,
+    user_token char(36),
     created_date datetime NOT NULL,
     creating_owner char(50) NOT NULL,
     processing_owner char(50) DEFAULT NULL,

@@ -342,7 +342,7 @@ public class TestRepairBP extends TestApiBaseRepair {
 
         assertEquals(dryRunBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
         assertEquals(dryRunBaseSubscription.getBundleId(), bundle.getId());
-        assertEquals(dryRunBaseSubscription.getStartDate(), baseSubscription.getStartDate());
+        assertTrue(dryRunBaseSubscription.getStartDate().compareTo(baseSubscription.getStartDate()) == 0);
 
         Plan currentPlan = dryRunBaseSubscription.getCurrentPlan();
         assertNotNull(currentPlan);

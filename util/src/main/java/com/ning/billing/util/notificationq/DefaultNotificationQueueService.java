@@ -21,25 +21,26 @@ import org.skife.jdbi.v2.IDBI;
 import com.ning.billing.util.config.NotificationConfig;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.notificationq.dao.NotificationSqlDao;
 
 import com.google.inject.Inject;
 
 public class DefaultNotificationQueueService extends NotificationQueueServiceBase {
+
     private final IDBI dbi;
-    private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
-    public DefaultNotificationQueueService(final IDBI dbi, final Clock clock, final InternalCallContextFactory internalCallContextFactory) {
-        super(clock);
+    public DefaultNotificationQueueService(final IDBI dbi, final Clock clock, final NotificationQueueConfig config,
+                                           final InternalCallContextFactory internalCallContextFactory) {
+        super(clock, config, dbi, internalCallContextFactory);
         this.dbi = dbi;
-        this.internalCallContextFactory = internalCallContextFactory;
     }
+
 
     @Override
     protected NotificationQueue createNotificationQueueInternal(final String svcName,
                                                                 final String queueName,
-                                                                final NotificationQueueHandler handler,
-                                                                final NotificationConfig config) {
-        return new DefaultNotificationQueue(dbi, clock, svcName, queueName, handler, config, internalCallContextFactory);
+                                                                final NotificationQueueHandler handler) {
+        return new DefaultNotificationQueue(svcName, queueName, handler, dbi, this);
     }
 }

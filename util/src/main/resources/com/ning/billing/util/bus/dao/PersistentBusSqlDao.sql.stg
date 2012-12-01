@@ -8,6 +8,7 @@ getNextBusEventEntry() ::= <<
       record_id
       , class_name
       , event_json
+      , user_token
       , created_date
       , creating_owner
       , processing_owner
@@ -64,6 +65,7 @@ insertBusEvent() ::= <<
     insert into bus_events (
       class_name
     , event_json
+    , user_token
     , created_date
     , creating_owner
     , processing_owner
@@ -74,6 +76,7 @@ insertBusEvent() ::= <<
     ) values (
       :className
     , :eventJson
+    , :userToken
     , :createdDate
     , :creatingOwner
     , :processingOwner

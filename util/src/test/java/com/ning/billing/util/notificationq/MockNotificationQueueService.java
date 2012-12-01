@@ -16,22 +16,65 @@
 
 package com.ning.billing.util.notificationq;
 
-import com.ning.billing.util.config.NotificationConfig;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.config.NotificationConfig;
+import com.ning.billing.util.queue.PersistentQueueEntryLifecycle.PersistentQueueEntryLifecycleState;
 
 import com.google.inject.Inject;
 
 public class MockNotificationQueueService extends NotificationQueueServiceBase {
 
     @Inject
-    public MockNotificationQueueService(final Clock clock) {
-        super(clock);
+    public MockNotificationQueueService(final Clock clock, final NotificationQueueConfig config) {
+        super(clock, config, null, null);
     }
 
+
     @Override
-    protected NotificationQueue createNotificationQueueInternal(final String svcName,
-                                                                final String queueName, final NotificationQueueHandler handler,
-                                                                final NotificationConfig config) {
-        return new MockNotificationQueue(clock, svcName, queueName, handler, config);
+    protected NotificationQueue createNotificationQueueInternal(final String svcName, final String queueName,
+                                                                final NotificationQueueHandler handler) {
+        return new MockNotificationQueue(clock, svcName, queueName, handler, this);
+    }
+
+
+    @Override
+    public int doProcessEvents() {
+
+        int result = 0;
+
+        for (NotificationQueue cur : queues.values()) {
+            result += doProcessEventsForQueue((MockNotificationQueue) cur);
+        }
+        return result;
+    }
+
+    private int doProcessEventsForQueue(final MockNotificationQueue queue) {
+
+
+        int result = 0;
+        final List<Notification> processedNotifications = new ArrayList<Notification>();
+        final List<Notification> oldNotifications = new ArrayList<Notification>();
+
+        List<Notification> readyNotifications = queue.getReadyNotifications();
+        for (final Notification cur : readyNotifications) {
+            final NotificationKey key = deserializeEvent(cur.getNotificationKeyClass(), cur.getNotificationKey());
+            queue.getHandler().handleReadyNotification(key, cur.getEffectiveDate(), cur.getFutureUserToken(), cur.getAccountRecordId(), cur.getTenantRecordId());
+            final DefaultNotification processedNotification = new DefaultNotification(-1L, cur.getId(), getHostname(), getHostname(),
+                                                                                      "MockQueue", getClock().getUTCNow().plus(CLAIM_TIME_MS),
+                                                                                      PersistentQueueEntryLifecycleState.PROCESSED, cur.getNotificationKeyClass(),
+                                                                                      cur.getNotificationKey(), cur.getUserToken(), cur.getFutureUserToken(), cur.getEffectiveDate(),
+                                                                                      cur.getAccountRecordId(), cur.getTenantRecordId());
+            oldNotifications.add(cur);
+            processedNotifications.add(processedNotification);
+            result++;
+        }
+
+        queue.markProcessedNotifications(oldNotifications, processedNotifications);
+        return result;
     }
 }

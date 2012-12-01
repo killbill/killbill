@@ -16,6 +16,8 @@
 
 package com.ning.billing.util.queue;
 
+import java.util.UUID;
+
 import org.joda.time.DateTime;
 
 public interface PersistentQueueEntryLifecycle {
@@ -40,4 +42,8 @@ public interface PersistentQueueEntryLifecycle {
     public PersistentQueueEntryLifecycleState getProcessingState();
 
     public boolean isAvailableForProcessing(DateTime now);
+
+    // User token associated with this bus event or notification (i.e. user token from the context that
+    // was used to generate this PersistentQueueEntryLifecycle)
+    public UUID getUserToken();
 }

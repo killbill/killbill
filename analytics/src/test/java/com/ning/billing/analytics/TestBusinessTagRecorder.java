@@ -44,7 +44,6 @@ import com.ning.billing.entitlement.alignment.PlanAligner;
 import com.ning.billing.entitlement.api.svcs.DefaultEntitlementInternalApi;
 import com.ning.billing.entitlement.api.user.DefaultEntitlementUserApi;
 import com.ning.billing.entitlement.api.user.DefaultSubscriptionApiService;
-import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.engine.addon.AddonUtils;
@@ -58,8 +57,10 @@ import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.config.CatalogConfig;
 import com.ning.billing.util.notificationq.DefaultNotificationQueueService;
+import com.ning.billing.util.notificationq.NotificationQueueConfig;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
+
 
 public class TestBusinessTagRecorder extends AnalyticsTestSuiteWithEmbeddedDB {
 
@@ -72,6 +73,19 @@ public class TestBusinessTagRecorder extends AnalyticsTestSuiteWithEmbeddedDB {
     private EntitlementInternalApi entitlementApi;
     private EntitlementUserApi entitlementUserApi;
     private BusinessTagDao tagDao;
+
+
+    private NotificationQueueConfig config = new NotificationQueueConfig() {
+        @Override
+        public boolean isNotificationProcessingOff() {
+            return false;
+        }
+
+        @Override
+        public long getSleepTimeMs() {
+            return 3000;
+        }
+    };
 
     @BeforeMethod(groups = "slow")
     public void setUp() throws Exception {
@@ -89,13 +103,12 @@ public class TestBusinessTagRecorder extends AnalyticsTestSuiteWithEmbeddedDB {
         accountUserApi = new DefaultAccountUserApi(callContextFactory, internalCallContextFactory, accountDao);
         final CatalogService catalogService = new DefaultCatalogService(Mockito.mock(CatalogConfig.class), Mockito.mock(VersionedCatalogLoader.class));
         final AddonUtils addonUtils = new AddonUtils(catalogService);
-        final DefaultNotificationQueueService notificationQueueService = new DefaultNotificationQueueService(dbi, clock, internalCallContextFactory);
+        final DefaultNotificationQueueService notificationQueueService = new DefaultNotificationQueueService(dbi, clock, config, internalCallContextFactory);
         final EntitlementDao entitlementDao = new DefaultEntitlementDao(dbi, clock, addonUtils, notificationQueueService, eventBus, catalogService);
         final PlanAligner planAligner = new PlanAligner(catalogService);
-        final DefaultSubscriptionApiService apiService = new DefaultSubscriptionApiService(clock, entitlementDao, catalogService, planAligner, internalCallContextFactory);
-        final DefaultSubscriptionFactory subscriptionFactory = new DefaultSubscriptionFactory(apiService, clock, catalogService);
-        entitlementApi = new DefaultEntitlementInternalApi(entitlementDao, subscriptionFactory);
-        entitlementUserApi = new DefaultEntitlementUserApi(clock, entitlementDao, catalogService, apiService, subscriptionFactory, addonUtils, internalCallContextFactory);
+        final DefaultSubscriptionApiService apiService = new DefaultSubscriptionApiService(clock, entitlementDao, catalogService, planAligner, addonUtils, internalCallContextFactory);
+        entitlementApi = new DefaultEntitlementInternalApi(entitlementDao, apiService, clock, catalogService);
+        entitlementUserApi = new DefaultEntitlementUserApi(clock, entitlementDao, catalogService, apiService, addonUtils, internalCallContextFactory);
         tagDao = new BusinessTagDao(accountTagSqlDao, invoicePaymentTagSqlDao, invoiceTagSqlDao, subscriptionTransitionTagSqlDao,
                                     accountApi, entitlementApi);
 

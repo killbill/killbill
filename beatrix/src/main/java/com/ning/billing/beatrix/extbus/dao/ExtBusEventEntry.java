@@ -37,12 +37,12 @@ public class ExtBusEventEntry implements PersistentQueueEntryLifecycle {
     private final ObjectType objectType;
     private final UUID objectId;
     private final ExtBusEventType extBusType;
-
+    private final UUID userToken;
 
     public ExtBusEventEntry(final long id, final String createdOwner, final String owner, final DateTime nextAvailable,
-                         final PersistentQueueEntryLifecycleState processingState,
-                         final ObjectType objectType, final UUID objectId, final  ExtBusEventType extBusType,
-                         final Long accountRecordId, final Long tenantRecordId) {
+                            final PersistentQueueEntryLifecycleState processingState,
+                            final ObjectType objectType, final UUID objectId, final UUID userToken, final ExtBusEventType extBusType,
+                            final Long accountRecordId, final Long tenantRecordId) {
         this.id = id;
         this.createdOwner = createdOwner;
         this.owner = owner;
@@ -51,14 +51,14 @@ public class ExtBusEventEntry implements PersistentQueueEntryLifecycle {
         this.objectType = objectType;
         this.objectId = objectId;
         this.extBusType = extBusType;
+        this.userToken = userToken;
         this.accountRecordId = accountRecordId;
         this.tenantRecordId = tenantRecordId;
     }
 
-    public ExtBusEventEntry(final String createdOwner,
-            final ObjectType objectType, final UUID objectId, final  ExtBusEventType extBusType,
-                         final Long accountRecordId, final Long tenantRecordId) {
-        this(0, createdOwner, null, null, null, objectType, objectId, extBusType, accountRecordId, tenantRecordId);
+    public ExtBusEventEntry(final String createdOwner, final ObjectType objectType, final UUID objectId, final UUID userToken, final ExtBusEventType extBusType,
+                            final Long accountRecordId, final Long tenantRecordId) {
+        this(0, createdOwner, null, null, null, objectType, objectId, userToken, extBusType, accountRecordId, tenantRecordId);
     }
 
     public long getId() {
@@ -75,6 +75,11 @@ public class ExtBusEventEntry implements PersistentQueueEntryLifecycle {
 
     public ExtBusEventType getExtBusType() {
         return extBusType;
+    }
+
+    @Override
+    public UUID getUserToken() {
+        return userToken;
     }
 
     @Override

@@ -26,8 +26,5 @@ public interface QueueLifecycle {
      */
     public void stopQueue();
 
-    /**
-     * Processes event from queue
-     */
-    public int doProcessEvents();
+    public boolean isStarted();
 }

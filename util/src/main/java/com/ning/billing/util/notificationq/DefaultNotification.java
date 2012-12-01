@@ -32,15 +32,16 @@ public class DefaultNotification extends EntityBase implements Notification {
     private final PersistentQueueEntryLifecycleState lifecycleState;
     private final String notificationKeyClass;
     private final String notificationKey;
+    private final UUID userToken;
+    private final UUID futureUserToken;
     private final DateTime effectiveDate;
-    private final UUID accountId;
     private final Long accountRecordId;
     private final Long tenantRecordId;
 
     public DefaultNotification(final long ordering, final UUID id, final String createdOwner, final String owner, final String queueName,
                                final DateTime nextAvailableDate, final PersistentQueueEntryLifecycleState lifecycleState,
-                               final String notificationKeyClass, final String notificationKey, final UUID accountId, final DateTime effectiveDate,
-                               final Long accountRecordId, final Long tenantRecordId) {
+                               final String notificationKeyClass, final String notificationKey, final UUID userToken, final UUID futureUserToken,
+                               final DateTime effectiveDate, final Long accountRecordId, final Long tenantRecordId) {
         super(id);
         this.ordering = ordering;
         this.owner = owner;
@@ -50,17 +51,18 @@ public class DefaultNotification extends EntityBase implements Notification {
         this.lifecycleState = lifecycleState;
         this.notificationKeyClass = notificationKeyClass;
         this.notificationKey = notificationKey;
-        this.accountId = accountId;
+        this.userToken = userToken;
+        this.futureUserToken = futureUserToken;
         this.effectiveDate = effectiveDate;
         this.accountRecordId = accountRecordId;
         this.tenantRecordId = tenantRecordId;
     }
 
     public DefaultNotification(final String queueName, final String createdOwner, final String notificationKeyClass,
-                               final String notificationKey, final UUID accountId, final DateTime effectiveDate,
+                               final String notificationKey, final UUID userToken, final UUID futureUserToken, final DateTime effectiveDate,
                                final Long accountRecordId, final Long tenantRecordId) {
         this(-1L, UUID.randomUUID(), createdOwner, null, queueName, null, PersistentQueueEntryLifecycleState.AVAILABLE,
-             notificationKeyClass, notificationKey, accountId, effectiveDate, accountRecordId, tenantRecordId);
+             notificationKeyClass, notificationKey, userToken, futureUserToken, effectiveDate, accountRecordId, tenantRecordId);
     }
 
     @Override
@@ -128,8 +130,13 @@ public class DefaultNotification extends EntityBase implements Notification {
     }
 
     @Override
-    public UUID getAccountId() {
-        return accountId;
+    public UUID getUserToken() {
+        return userToken;
+    }
+
+    @Override
+    public UUID getFutureUserToken() {
+        return futureUserToken;
     }
 
     @Override

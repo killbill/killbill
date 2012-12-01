@@ -182,6 +182,10 @@ public class MockInvoiceDao implements InvoiceDao {
     }
 
     @Override
+    public void consumeExstingCBAOnAccountWithUnpaidInvoices(final UUID accountId, final InternalCallContext context) {
+    }
+
+    @Override
     public BigDecimal getAccountBalance(final UUID accountId, final InternalTenantContext context) {
         BigDecimal balance = BigDecimal.ZERO;
 

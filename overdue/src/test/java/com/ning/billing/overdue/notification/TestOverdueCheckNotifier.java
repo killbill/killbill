@@ -64,7 +64,7 @@ import com.ning.billing.util.email.templates.TemplateModule;
 import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.globallocker.MySqlGlobalLocker;
 import com.ning.billing.util.glue.BusModule;
-import com.ning.billing.util.notificationq.DefaultNotificationQueueService;
+import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
@@ -80,6 +80,7 @@ import static com.jayway.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
 public class TestOverdueCheckNotifier extends OverdueTestSuiteWithEmbeddedDB {
+
     private Clock clock;
     private DefaultOverdueCheckNotifier notifier;
 
@@ -88,6 +89,7 @@ public class TestOverdueCheckNotifier extends OverdueTestSuiteWithEmbeddedDB {
     private NotificationQueueService notificationQueueService;
 
     private static final class OverdueListenerMock extends OverdueListener {
+
         int eventCount = 0;
         UUID latestSubscriptionId = null;
 
@@ -96,7 +98,7 @@ public class TestOverdueCheckNotifier extends OverdueTestSuiteWithEmbeddedDB {
         }
 
         @Override
-        public void handleNextOverdueCheck(final OverdueCheckNotificationKey key, final Long accountRecordId, final Long tenantRecordId) {
+        public void handleNextOverdueCheck(final OverdueCheckNotificationKey key, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
             eventCount++;
             latestSubscriptionId = key.getUuidKey();
         }
@@ -118,7 +120,6 @@ public class TestOverdueCheckNotifier extends OverdueTestSuiteWithEmbeddedDB {
                 super.configure();
                 bind(Clock.class).to(ClockMock.class).asEagerSingleton();
                 bind(CallContextFactory.class).to(DefaultCallContextFactory.class).asEagerSingleton();
-                bind(NotificationQueueService.class).to(DefaultNotificationQueueService.class).asEagerSingleton();
                 final InvoiceConfig invoiceConfig = new ConfigurationObjectFactory(System.getProperties()).build(InvoiceConfig.class);
                 bind(InvoiceConfig.class).toInstance(invoiceConfig);
                 final CatalogConfig catalogConfig = new ConfigurationObjectFactory(System.getProperties()).build(CatalogConfig.class);
@@ -132,7 +133,7 @@ public class TestOverdueCheckNotifier extends OverdueTestSuiteWithEmbeddedDB {
                 install(new MockJunctionModule());
                 install(new EmailModule());
                 install(new TemplateModule());
-
+                install(new NotificationQueueModule());
                 final AccountInternalApi accountApi = Mockito.mock(AccountInternalApi.class);
                 bind(AccountInternalApi.class).toInstance(accountApi);
 

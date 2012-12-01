@@ -35,6 +35,8 @@ public interface Notification extends PersistentQueueEntryLifecycle, Entity {
 
     public String getQueueName();
 
-    // TODO - do we still need it now we have account_record_id?
-    public UUID getAccountId();
+    // Future user token, i.e. user token of the context when this notification will be claimed.
+    // The user token can be used as a trace to follow events (e.g. all bus events triggered as a result of a
+    // claimed notification will share the same user token)
+    public UUID getFutureUserToken();
 }

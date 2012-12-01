@@ -25,7 +25,6 @@ import java.util.concurrent.ThreadFactory;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
-import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,6 +58,8 @@ public class PersistentInternalBus extends PersistentQueueBase implements Intern
     private final Clock clock;
     private final String hostname;
     private final InternalCallContextFactory internalCallContextFactory;
+
+    private volatile boolean isStarted;
 
     private static final class EventBusDelegate extends EventBus {
 
@@ -96,16 +97,19 @@ public class PersistentInternalBus extends PersistentQueueBase implements Intern
         this.eventBusDelegate = new EventBusDelegate("Killbill EventBus");
         this.hostname = Hostname.get();
         this.internalCallContextFactory = internalCallContextFactory;
+        this.isStarted = false;
     }
 
     @Override
     public void start() {
         startQueue();
+        isStarted = true;
     }
 
     @Override
     public void stop() {
         stopQueue();
+        isStarted = false;
     }
 
     @Override
@@ -129,6 +133,11 @@ public class PersistentInternalBus extends PersistentQueueBase implements Intern
             dao.clearBusEvent(cur.getId(), hostname, rehydratedContext);
         }
         return result;
+    }
+
+    @Override
+    public boolean isStarted() {
+        return isStarted;
     }
 
     private List<BusEventEntry> getNextBusEvent(final InternalCallContext context) {
@@ -182,16 +191,15 @@ public class PersistentInternalBus extends PersistentQueueBase implements Intern
     private void postFromTransaction(final BusInternalEvent event, final InternalCallContext context, final PersistentBusSqlDao transactional) {
         try {
             final String json = objectMapper.writeValueAsString(event);
-            final BusEventEntry entry = new BusEventEntry(hostname, event.getClass().getName(), json, context.getAccountRecordId(), context.getTenantRecordId());
+            final BusEventEntry entry = new BusEventEntry(hostname, event.getClass().getName(), json, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
             transactional.insertBusEvent(entry, context);
         } catch (Exception e) {
             log.error("Failed to post BusEvent " + event, e);
         }
     }
 
-
     private String tweakJsonToIncludeAccountAndTenantRecordId(final String input, final Long accountRecordId, final Long tenantRecordId) {
-        int lastIndexPriorFinalBracket = input.lastIndexOf("}");
+        final int lastIndexPriorFinalBracket = input.lastIndexOf("}");
         final StringBuilder tmp = new StringBuilder(input.substring(0, lastIndexPriorFinalBracket));
         tmp.append(",\"accountRecordId\":");
         tmp.append(accountRecordId);
@@ -200,5 +208,4 @@ public class PersistentInternalBus extends PersistentQueueBase implements Intern
         tmp.append("}");
         return tmp.toString();
     }
-
 }

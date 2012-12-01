@@ -16,6 +16,8 @@
 
 package com.ning.billing.util.bus.dao;
 
+import java.util.UUID;
+
 import org.joda.time.DateTime;
 
 import com.ning.billing.util.queue.PersistentQueueEntryLifecycle;
@@ -29,12 +31,13 @@ public class BusEventEntry implements PersistentQueueEntryLifecycle {
     private final PersistentQueueEntryLifecycleState processingState;
     private final String busEventClass;
     private final String busEventJson;
+    private final UUID userToken;
     private final Long accountRecordId;
     private final Long tenantRecordId;
 
     public BusEventEntry(final long id, final String createdOwner, final String owner, final DateTime nextAvailable,
                          final PersistentQueueEntryLifecycleState processingState, final String busEventClass, final String busEventJson,
-                         final Long accountRecordId, final Long tenantRecordId) {
+                         final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
         this.id = id;
         this.createdOwner = createdOwner;
         this.owner = owner;
@@ -42,13 +45,14 @@ public class BusEventEntry implements PersistentQueueEntryLifecycle {
         this.processingState = processingState;
         this.busEventClass = busEventClass;
         this.busEventJson = busEventJson;
+        this.userToken = userToken;
         this.accountRecordId = accountRecordId;
         this.tenantRecordId = tenantRecordId;
     }
 
     public BusEventEntry(final String createdOwner, final String busEventClass, final String busEventJson,
-                         final Long accountRecordId, final Long tenantRecordId) {
-        this(0, createdOwner, null, null, null, busEventClass, busEventJson, accountRecordId, tenantRecordId);
+                         final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
+        this(0, createdOwner, null, null, null, busEventClass, busEventJson, userToken, accountRecordId, tenantRecordId);
     }
 
     public long getId() {
@@ -61,6 +65,11 @@ public class BusEventEntry implements PersistentQueueEntryLifecycle {
 
     public String getBusEventJson() {
         return busEventJson;
+    }
+
+    @Override
+    public UUID getUserToken() {
+        return userToken;
     }
 
     @Override
