@@ -185,15 +185,17 @@ public class TimelineAggregator {
     }
 
     private void performWrites() {
+        final InternalCallContext context = createCallContext();
+
         // This is the atomic operation: bulk insert the new aggregated TimelineChunk objects, and delete
         // or invalidate the ones that were aggregated.  This should be very fast.
         final long startWriteTime = System.currentTimeMillis();
         aggregatorSqlDao.begin();
-        timelineDao.bulkInsertTimelineChunks(chunksToWrite, createCallContext());
+        timelineDao.bulkInsertTimelineChunks(chunksToWrite, context);
         if (config.getDeleteAggregatedChunks()) {
-            aggregatorSqlDao.deleteTimelineChunks(chunkIdsToInvalidateOrDelete);
+            aggregatorSqlDao.deleteTimelineChunks(chunkIdsToInvalidateOrDelete, context);
         } else {
-            aggregatorSqlDao.makeTimelineChunksInvalid(chunkIdsToInvalidateOrDelete);
+            aggregatorSqlDao.makeTimelineChunksInvalid(chunkIdsToInvalidateOrDelete, context);
         }
         aggregatorSqlDao.commit();
         msWritingDb.addAndGet(System.currentTimeMillis() - startWriteTime);

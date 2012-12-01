@@ -18,6 +18,7 @@ package com.ning.billing.meter.timeline.aggregator;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.Properties;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -72,7 +73,9 @@ public class TestTimelineAggregator extends MeterTestSuiteWithEmbeddedDB {
     @BeforeMethod(groups = "slow")
     public void setUp() throws Exception {
         timelineDao = new DefaultTimelineDao(getDBI());
-        final MeterConfig config = new ConfigurationObjectFactory(System.getProperties()).build(MeterConfig.class);
+        final Properties properties = System.getProperties();
+        properties.put("killbill.usage.timelines.chunksToAggregate", "2,2");
+        final MeterConfig config = new ConfigurationObjectFactory(properties).build(MeterConfig.class);
         aggregator = new TimelineAggregator(getDBI(), timelineDao, timelineCoder, sampleCoder, config, internalCallContextFactory);
     }
 

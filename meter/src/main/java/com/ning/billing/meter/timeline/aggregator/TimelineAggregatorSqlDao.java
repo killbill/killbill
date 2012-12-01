@@ -22,21 +22,27 @@ import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
-import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
+import org.skife.jdbi.v2.sqlobject.stringtemplate.UseStringTemplate3StatementLocator;
 import org.skife.jdbi.v2.unstable.BindIn;
 
-@ExternalizedSqlViaStringTemplate3()
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContextBinder;
+
+@UseStringTemplate3StatementLocator()
 public interface TimelineAggregatorSqlDao extends Transactional<TimelineAggregatorSqlDao> {
 
     @SqlQuery
     int getLastInsertedId();
 
     @SqlUpdate
-    void makeTimelineChunkValid(@Bind("chunkId") final long chunkId);
+    void makeTimelineChunkValid(@Bind("chunkId") final long chunkId,
+                                @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
-    void makeTimelineChunksInvalid(@BindIn("chunkIds") final List<Long> chunkIds);
+    void makeTimelineChunksInvalid(@BindIn("chunkIds") final List<Long> chunkIds,
+                                   @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
-    void deleteTimelineChunks(@BindIn("chunkIds") final List<Long> chunkIds);
+    void deleteTimelineChunks(@BindIn("chunkIds") final List<Long> chunkIds,
+                              @InternalTenantContextBinder final InternalCallContext context);
 }
