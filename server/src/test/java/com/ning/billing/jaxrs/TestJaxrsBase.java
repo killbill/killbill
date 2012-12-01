@@ -47,6 +47,7 @@ import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.invoice.glue.DefaultInvoiceModule;
 import com.ning.billing.invoice.notification.NullInvoiceNotifier;
 import com.ning.billing.junction.glue.DefaultJunctionModule;
+import com.ning.billing.meter.glue.MeterModule;
 import com.ning.billing.overdue.glue.DefaultOverdueModule;
 import com.ning.billing.payment.glue.PaymentModule;
 import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
@@ -184,6 +185,7 @@ public class TestJaxrsBase extends KillbillClient {
             install(new DefaultOverdueModule());
             install(new TenantModule());
             install(new ExportModule());
+            install(new MeterModule());
             installClock();
         }
 

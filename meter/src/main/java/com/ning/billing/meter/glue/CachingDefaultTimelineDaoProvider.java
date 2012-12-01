@@ -18,7 +18,7 @@ package com.ning.billing.meter.glue;
 
 import javax.inject.Provider;
 
-import org.skife.jdbi.v2.DBI;
+import org.skife.jdbi.v2.IDBI;
 
 import com.ning.billing.meter.timeline.persistent.CachingTimelineDao;
 import com.ning.billing.meter.timeline.persistent.DefaultTimelineDao;
@@ -29,11 +29,11 @@ import com.google.inject.Inject;
 
 public class CachingDefaultTimelineDaoProvider implements Provider<TimelineDao> {
 
-    private final DBI dbi;
+    private final IDBI dbi;
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
-    public CachingDefaultTimelineDaoProvider(final DBI dbi, final InternalCallContextFactory internalCallContextFactory) {
+    public CachingDefaultTimelineDaoProvider(final IDBI dbi, final InternalCallContextFactory internalCallContextFactory) {
         this.dbi = dbi;
         this.internalCallContextFactory = internalCallContextFactory;
     }

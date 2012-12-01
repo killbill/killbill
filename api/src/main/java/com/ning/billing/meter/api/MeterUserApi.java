@@ -16,14 +16,24 @@
 
 package com.ning.billing.meter.api;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
 
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.TenantContext;
 
 public interface MeterUserApi {
+
+    public void getAggregateUsage(OutputStream outputStream, UUID bundleId, Collection<String> categories,
+                                  DateTime fromTimestamp, DateTime toTimestamp, TenantContext context) throws IOException;
+
+    public void getUsage(OutputStream outputStream, UUID bundleId, Map<String, Collection<String>> metricsPerCategory,
+                         DateTime fromTimestamp, DateTime toTimestamp, TenantContext context) throws IOException;
 
     /**
      * Shortcut API to record a usage value of "1" for a given category and metric.

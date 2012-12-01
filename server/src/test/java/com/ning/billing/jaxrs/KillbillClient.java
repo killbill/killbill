@@ -16,13 +16,6 @@
 
 package com.ning.billing.jaxrs;
 
-import static com.ning.billing.jaxrs.resources.JaxrsResource.ACCOUNTS;
-import static com.ning.billing.jaxrs.resources.JaxrsResource.BUNDLES;
-import static com.ning.billing.jaxrs.resources.JaxrsResource.QUERY_PAYMENT_METHOD_PLUGIN_INFO;
-import static com.ning.billing.jaxrs.resources.JaxrsResource.SUBSCRIPTIONS;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -82,6 +75,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableMap;
+
+import static com.ning.billing.jaxrs.resources.JaxrsResource.ACCOUNTS;
+import static com.ning.billing.jaxrs.resources.JaxrsResource.BUNDLES;
+import static com.ning.billing.jaxrs.resources.JaxrsResource.QUERY_PAYMENT_METHOD_PLUGIN_INFO;
+import static com.ning.billing.jaxrs.resources.JaxrsResource.SUBSCRIPTIONS;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 
 public abstract class KillbillClient extends ServerTestSuiteWithEmbeddedDB {
 
@@ -149,11 +149,10 @@ public abstract class KillbillClient extends ServerTestSuiteWithEmbeddedDB {
         return response.getHeader("Location");
     }
 
-
-    protected String registerCallbackNotificationForTenant(final String callback)  throws Exception {
+    protected String registerCallbackNotificationForTenant(final String callback) throws Exception {
         final Map<String, String> queryParams = new HashMap<String, String>();
         queryParams.put(JaxrsResource.QUERY_NOTIFICATION_CALLBACK, callback);
-        final String uri = JaxrsResource.TENANTS_PATH + "/" + JaxrsResource.REGISTER_NOTIFICATION_CALLBACK ;
+        final String uri = JaxrsResource.TENANTS_PATH + "/" + JaxrsResource.REGISTER_NOTIFICATION_CALLBACK;
         final Response response = doPost(uri, null, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
         return response.getHeader("Location");
@@ -804,6 +803,28 @@ public abstract class KillbillClient extends ServerTestSuiteWithEmbeddedDB {
         assertNotNull(overdueStateJson);
 
         return overdueStateJson;
+    }
+
+    //
+    // METERING
+    //
+
+    protected void recordMeteringUsage(final UUID bundleId, final String category, final String metric, final DateTime timestamp) throws IOException {
+        final String meterURI = JaxrsResource.METER_PATH + "/" + bundleId.toString() + "/" + category + "/" + metric;
+        final Response meterResponse = doPost(meterURI, null, ImmutableMap.<String, String>of(JaxrsResource.QUERY_METER_WITH_AGGREGATE, "true",
+                                                                                              JaxrsResource.QUERY_METER_TIMESTAMP, timestamp.toString()), DEFAULT_HTTP_TIMEOUT_SEC);
+        assertEquals(meterResponse.getStatusCode(), Status.OK.getStatusCode());
+    }
+
+    protected List<Map<String, Object>> getMeteringAggregateUsage(final UUID bundleId, final String category, final DateTime from, final DateTime to) throws IOException {
+        final String meterURI = JaxrsResource.METER_PATH + "/" + bundleId.toString();
+        final Response meterResponse = doGet(meterURI, ImmutableMap.<String, String>of(JaxrsResource.QUERY_METER_CATEGORY, category,
+                                                                                       JaxrsResource.QUERY_METER_FROM, from.toString(),
+                                                                                       JaxrsResource.QUERY_METER_TO, to.toString(),
+                                                                                       JaxrsResource.QUERY_METER_WITH_AGGREGATE, "true"), DEFAULT_HTTP_TIMEOUT_SEC);
+        assertEquals(meterResponse.getStatusCode(), Status.OK.getStatusCode());
+
+        return mapper.readValue(meterResponse.getResponseBody(), new TypeReference<List<Map<String, Object>>>() {});
     }
 
     //

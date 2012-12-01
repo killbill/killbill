@@ -53,7 +53,7 @@ insert into sources (
 
 getCategoryRecordId() ::= <<
 select
-  category_id
+  record_id
 from categories
 where category = :category
 <AND_CHECK_TENANT()>
