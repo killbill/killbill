@@ -142,7 +142,7 @@ public class DefaultEntitlementInternalApi extends EntitlementApiBase implements
             @Override
             @Nullable
             public EffectiveSubscriptionInternalEvent apply(@Nullable SubscriptionTransitionData input) {
-                return new DefaultEffectiveSubscriptionEvent(input, ((SubscriptionData) subscription).getAlignStartDate(), context.getAccountRecordId(), context.getTenantRecordId());
+                return new DefaultEffectiveSubscriptionEvent(input, ((SubscriptionData) subscription).getAlignStartDate(), null, context.getAccountRecordId(), context.getTenantRecordId());
             }
         }));
     }

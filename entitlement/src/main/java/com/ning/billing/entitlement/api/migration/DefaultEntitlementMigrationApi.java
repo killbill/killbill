@@ -189,7 +189,6 @@ public class DefaultEntitlementMigrationApi extends EntitlementApiBase implement
                         .setEffectiveDate(cur.getEventTime())
                         .setProcessedDate(now)
                         .setRequestedDate(now)
-                        .setUserToken(context.getUserToken())
                         .setFromDisk(true);
 
                 switch (cur.getApiEventType()) {

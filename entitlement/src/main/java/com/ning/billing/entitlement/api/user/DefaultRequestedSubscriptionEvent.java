@@ -28,8 +28,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class DefaultRequestedSubscriptionEvent extends DefaultSubscriptionEvent implements RequestedSubscriptionInternalEvent {
-    public DefaultRequestedSubscriptionEvent(final SubscriptionTransitionData in, final DateTime startDate, final Long accountRecordId, final Long tenantRecordId) {
-        super(in, startDate, accountRecordId, tenantRecordId);
+    public DefaultRequestedSubscriptionEvent(final SubscriptionTransitionData in, final DateTime startDate, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
+        super(in, startDate, userToken, accountRecordId, tenantRecordId);
     }
 
     @JsonCreator

@@ -100,7 +100,6 @@ public class DefaultEntitlementTransferApi extends EntitlementApiBase implements
                 .setProcessedDate(clock.getUTCNow())
                 .setEffectiveDate(effectiveDate)
                 .setRequestedDate(effectiveDate)
-                .setUserToken(context.getUserToken())
                 .setFromDisk(true);
 
         switch (existingEvent.getSubscriptionTransitionType()) {
@@ -237,7 +236,6 @@ public class DefaultEntitlementTransferApi extends EntitlementApiBase implements
                                                                                     .setProcessedDate(clock.getUTCNow())
                                                                                     .setEffectiveDate(effectiveCancelDate)
                                                                                     .setRequestedDate(effectiveTransferDate)
-                                                                                    .setUserToken(context.getUserToken())
                                                                                     .setFromDisk(true));
 
                     TransferCancelData cancelData = new TransferCancelData(oldSubscription, cancelEvent);

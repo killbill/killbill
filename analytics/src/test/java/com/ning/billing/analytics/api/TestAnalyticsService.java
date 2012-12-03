@@ -213,7 +213,7 @@ public class TestAnalyticsService extends AnalyticsTestSuiteWithEmbeddedDB {
                 priceList,
                 TOTAL_ORDERING,
                 null,
-                true), null, 1L, 1L);
+                true), null, null, 1L, 1L);
         expectedTransition = new BusinessSubscriptionTransitionModelDao(
                 TOTAL_ORDERING,
                 transition.getBundleId(),

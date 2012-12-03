@@ -47,7 +47,7 @@ public abstract class DefaultSubscriptionEvent extends DefaultBusInternalEvent i
     private final SubscriptionTransitionType transitionType;
     private final DateTime startDate;
 
-    public DefaultSubscriptionEvent(final SubscriptionTransitionData in, final DateTime startDate, final Long accountRecordId, final Long tenantRecordId) {
+    public DefaultSubscriptionEvent(final SubscriptionTransitionData in, final DateTime startDate, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
         this(in.getId(),
              in.getSubscriptionId(),
              in.getBundleId(),
@@ -62,7 +62,7 @@ public abstract class DefaultSubscriptionEvent extends DefaultBusInternalEvent i
              (in.getNextPhase() != null) ? in.getNextPhase().getName() : null,
              (in.getNextPriceList() != null) ? in.getNextPriceList().getName() : null,
              in.getTotalOrdering(),
-             in.getUserToken(),
+             userToken,
              in.getTransitionType(),
              in.getRemainingEventsForUserOperation(),
              startDate,

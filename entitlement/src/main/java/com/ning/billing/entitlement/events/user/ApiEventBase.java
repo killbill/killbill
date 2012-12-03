@@ -27,7 +27,6 @@ public class ApiEventBase extends EventBase implements ApiEvent {
     private final String eventPlan;
     private final String eventPlanPhase;
     private final String eventPriceList;
-    private final UUID userToken;
     private final boolean fromDisk;
 
     public ApiEventBase(final ApiEventBuilder builder) {
@@ -37,7 +36,6 @@ public class ApiEventBase extends EventBase implements ApiEvent {
         this.eventPlan = builder.getEventPlan();
         this.eventPlanPhase = builder.getEventPlanPhase();
         this.fromDisk = builder.isFromDisk();
-        this.userToken = builder.getUserToken();
     }
 
     @Override
@@ -66,12 +64,6 @@ public class ApiEventBase extends EventBase implements ApiEvent {
     }
 
     @Override
-    public UUID getUserToken() {
-        return userToken;
-    }
-
-
-    @Override
     public boolean isFromDisk() {
         return fromDisk;
     }
@@ -92,7 +84,6 @@ public class ApiEventBase extends EventBase implements ApiEvent {
                 + ", getActiveVersion()=" + getActiveVersion()
                 + ", getProcessedDate()=" + getProcessedDate()
                 + ", getSubscriptionId()=" + getSubscriptionId()
-                + ", evetnToken()=" + getUserToken()
                 + ", isActive()=" + isActive() + "]";
     }
 }

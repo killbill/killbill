@@ -33,6 +33,4 @@ public interface ApiEvent extends EntitlementEvent {
 
     public boolean isFromDisk();
 
-    public UUID getUserToken();
-
 }

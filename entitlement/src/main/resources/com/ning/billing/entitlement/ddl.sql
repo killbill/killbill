@@ -14,7 +14,6 @@ CREATE TABLE subscription_events (
     plan_name varchar(64) DEFAULT NULL,
     phase_name varchar(128) DEFAULT NULL,
     price_list_name varchar(64) DEFAULT NULL,
-    user_token char(36),
     current_version int(11) DEFAULT 1,
     is_active bool DEFAULT 1,
     created_by varchar(50) NOT NULL,
