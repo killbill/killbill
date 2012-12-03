@@ -165,8 +165,9 @@ public class DefaultEntitlementUserApi extends EntitlementApiBase implements Ent
                             throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_BP_EXISTS, bundleId);
                         } else {
                             // If we do create on an existing CANCELLED BP, this is equivalent to call recreate on that Subscription.
-                            baseSubscription.recreate(spec, requestedDate, context);
-                            return baseSubscription;
+                            final Subscription recreatedSubscriptionForApiUse = createSubscriptionForApiUse(baseSubscription);
+                            recreatedSubscriptionForApiUse.recreate(spec, requestedDate, context);
+                            return recreatedSubscriptionForApiUse;
                         }
                     }
                     bundleStartDate = requestedDate;
