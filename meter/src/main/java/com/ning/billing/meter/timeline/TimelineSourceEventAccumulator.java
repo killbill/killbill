@@ -142,7 +142,8 @@ public class TimelineSourceEventAccumulator {
             endTime = timestamp;
         } else if (timestamp.isBefore(endTime)) {
             // Note: we allow multiple events at the same time
-            log.warn("Adding samples for host {}, timestamp {} is before the end time {}; ignored",
+            // TODO Do we really want that?
+            log.warn("Adding samples for source {}, timestamp {} is before the end time {}; ignored",
                      new Object[]{sourceId, dateFormatter.print(timestamp), dateFormatter.print(endTime)});
             return;
         }

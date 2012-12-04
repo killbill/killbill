@@ -34,7 +34,6 @@ import com.google.common.collect.Ordering;
 
 public class TestMeter extends TestJaxrsBase {
 
-    private final Random rand = new Random();
     private final UUID bundleId = UUID.randomUUID();
     private final String category = "PageView";
     private final String visitor1 = "pierre";

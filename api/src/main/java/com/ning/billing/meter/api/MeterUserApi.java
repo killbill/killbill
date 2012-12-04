@@ -67,5 +67,5 @@ public interface MeterUserApi {
      * @param timestamp                      timestamp of this usage
      * @param context                        tenant context
      */
-    public void incrementUsage(UUID bundleId, Map<String, Map<String, Object>> samplesForCategoriesAndMetrics, DateTime timestamp, CallContext context);
+    public void recordUsage(UUID bundleId, Map<String, Map<String, Object>> samplesForCategoriesAndMetrics, DateTime timestamp, CallContext context);
 }

@@ -65,6 +65,7 @@ public class StreamyBytesPersistentOutputStream extends OutputStream {
     public void write(final byte[] data, final int off, final int len) throws IOException {
         if (!inputBuffer.tryAppend(data, off, len)) {
             // Buffer full - need to flush
+            // TODO sync with HTTP call, performance hit?
             flushUnderlyingBufferAndReset();
 
             if (!inputBuffer.tryAppend(data, off, len)) {

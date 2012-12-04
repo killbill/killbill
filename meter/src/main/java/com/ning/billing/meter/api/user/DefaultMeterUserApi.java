@@ -79,24 +79,24 @@ public class DefaultMeterUserApi implements MeterUserApi {
     @Override
     public void incrementUsage(final UUID bundleId, final String categoryName, final String metricName,
                                final DateTime timestamp, final CallContext context) {
-        incrementUsage(bundleId,
-                       ImmutableMap.<String, Map<String, Object>>of(categoryName, ImmutableMap.<String, Object>of(metricName, (short) 1)),
-                       timestamp,
-                       context);
+        recordUsage(bundleId,
+                    ImmutableMap.<String, Map<String, Object>>of(categoryName, ImmutableMap.<String, Object>of(metricName, (short) 1)),
+                    timestamp,
+                    context);
     }
 
     @Override
     public void incrementUsageAndAggregate(final UUID bundleId, final String categoryName, final String metricName,
                                            final DateTime timestamp, final CallContext context) {
-        incrementUsage(bundleId,
-                       ImmutableMap.<String, Map<String, Object>>of(categoryName, ImmutableMap.<String, Object>of(metricName, (short) 1, AGGREGATE_METRIC_NAME, (short) 1)),
-                       timestamp,
-                       context);
+        recordUsage(bundleId,
+                    ImmutableMap.<String, Map<String, Object>>of(categoryName, ImmutableMap.<String, Object>of(metricName, (short) 1, AGGREGATE_METRIC_NAME, (short) 1)),
+                    timestamp,
+                    context);
     }
 
     @Override
-    public void incrementUsage(final UUID bundleId, final Map<String, Map<String, Object>> samplesForCategoriesAndMetrics,
-                               final DateTime timestamp, final CallContext context) {
+    public void recordUsage(final UUID bundleId, final Map<String, Map<String, Object>> samplesForCategoriesAndMetrics,
+                            final DateTime timestamp, final CallContext context) {
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(bundleId, ObjectType.BUNDLE, context);
 
         for (final String category : samplesForCategoriesAndMetrics.keySet()) {

@@ -55,7 +55,7 @@ public interface TimelineDao {
 
     int getOrAddEventCategory(String eventCategory, InternalCallContext context) throws UnableToObtainConnectionException, CallbackFailedException;
 
-    // Sample kinds table
+    // Metrics table
 
     Integer getMetricId(int eventCategory, String metric, InternalTenantContext context) throws UnableToObtainConnectionException, CallbackFailedException;
 
