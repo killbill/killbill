@@ -22,7 +22,6 @@ import java.util.Map;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
-import com.ning.billing.meter.timeline.codec.TimeRangeSampleProcessor;
 import com.ning.billing.meter.timeline.samples.SampleOpcode;
 import com.ning.billing.meter.timeline.samples.ScalarSample;
 
@@ -42,7 +41,7 @@ public class AccumulatorSampleConsumer extends TimeRangeSampleProcessor {
     private final Map<SampleOpcode, Double> accumulators = new LinkedHashMap<SampleOpcode, Double>();
 
     private final TimeAggregationMode timeAggregationMode;
-    private final SampleConsumer sampleConsumer;
+    private final TimeRangeSampleProcessor sampleProcessor;
 
     private DateTime lastRoundedTime = null;
     private int aggregatedSampleNumber = 0;
@@ -51,7 +50,7 @@ public class AccumulatorSampleConsumer extends TimeRangeSampleProcessor {
         super(null, null);
         this.timeAggregationMode = timeAggregationMode;
         // TODO should be configurable
-        this.sampleConsumer = new CSVSampleConsumer();
+        this.sampleProcessor = new CSVSampleProcessor();
     }
 
     @Override
@@ -109,10 +108,10 @@ public class AccumulatorSampleConsumer extends TimeRangeSampleProcessor {
         // Output one opcode at a time
         for (final SampleOpcode opcode : accumulators.keySet()) {
             aggregatedSampleNumber++;
-            sampleConsumer.consumeSample(aggregatedSampleNumber, opcode, accumulators.get(opcode), lastRoundedTime);
+            sampleProcessor.processOneSample(lastRoundedTime, opcode, accumulators.get(opcode));
         }
         // This will flush (clear) the sample consumer
-        builder.append(sampleConsumer.toString());
+        builder.append(sampleProcessor.toString());
 
         accumulators.clear();
     }

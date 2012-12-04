@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.meter.timeline.codec;
+package com.ning.billing.meter.timeline.consumer;
 
 import org.joda.time.DateTime;
 
@@ -25,6 +25,10 @@ public abstract class TimeRangeSampleProcessor implements SampleProcessor {
 
     private final DateTime startTime;  // Inclusive
     private final DateTime endTime;    // Inclusive
+
+    protected TimeRangeSampleProcessor() {
+        this(null, null);
+    }
 
     public TimeRangeSampleProcessor(final DateTime startTime, final DateTime endTime) {
         this.startTime = startTime;

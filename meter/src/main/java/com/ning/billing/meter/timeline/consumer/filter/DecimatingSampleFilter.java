@@ -14,13 +14,12 @@
  * under the License.
  */
 
-package com.ning.billing.meter.timeline.filter;
+package com.ning.billing.meter.timeline.consumer.filter;
 
 import org.joda.time.DateTime;
 import org.skife.config.TimeSpan;
 
-import com.ning.billing.meter.timeline.codec.TimeRangeSampleProcessor;
-import com.ning.billing.meter.timeline.consumer.SampleConsumer;
+import com.ning.billing.meter.timeline.consumer.TimeRangeSampleProcessor;
 import com.ning.billing.meter.timeline.samples.SampleOpcode;
 import com.ning.billing.meter.timeline.samples.ScalarSample;
 
@@ -62,7 +61,7 @@ import com.ning.billing.meter.timeline.samples.ScalarSample;
 public class DecimatingSampleFilter extends TimeRangeSampleProcessor {
 
     private final int outputCount;
-    private final SampleConsumer sampleConsumer;
+    private final TimeRangeSampleProcessor sampleProcessor;
     private final TimeSpan pollingInterval;
     private final DecimationMode decimationMode;
     private double samplesPerOutput;
@@ -83,10 +82,10 @@ public class DecimatingSampleFilter extends TimeRangeSampleProcessor {
      * @param sampleCount     The number of samples to be scanned.  sampleCount must be >= outputCount
      * @param pollingInterval The polling interval, used to compute sample counts assuming no gaps
      * @param decimationMode  The decimation mode determines how samples will be combined to crate an output point.
-     * @param sampleConsumer  The implementor of the SampleConsumer interface
+     * @param sampleProcessor The implementor of the TimeRangeSampleProcessor abstract class
      */
     public DecimatingSampleFilter(final DateTime startTime, final DateTime endTime, final int outputCount, final int sampleCount,
-                                  final TimeSpan pollingInterval, final DecimationMode decimationMode, final SampleConsumer sampleConsumer) {
+                                  final TimeSpan pollingInterval, final DecimationMode decimationMode, final TimeRangeSampleProcessor sampleProcessor) {
         super(startTime, endTime);
         if (outputCount <= 0 || sampleCount <= 0 || outputCount > sampleCount) {
             throw new IllegalArgumentException(String.format("In DecimatingSampleFilter, outputCount is %d but sampleCount is %d", outputCount, sampleCount));
@@ -94,7 +93,7 @@ public class DecimatingSampleFilter extends TimeRangeSampleProcessor {
         this.outputCount = outputCount;
         this.pollingInterval = pollingInterval;
         this.decimationMode = decimationMode;
-        this.sampleConsumer = sampleConsumer;
+        this.sampleProcessor = sampleProcessor;
         initializeFilterHistory(sampleCount);
     }
 
@@ -106,15 +105,15 @@ public class DecimatingSampleFilter extends TimeRangeSampleProcessor {
      * @param outputCount     The number of samples to generate
      * @param pollingInterval The polling interval, used to compute sample counts assuming no gaps
      * @param decimationMode  The decimation mode determines how samples will be combined to crate an output point.
-     * @param sampleConsumer  The implementor of the SampleConsumer interface
+     * @param sampleProcessor The implementor of the TimeRangeSampleProcessor abstract class
      */
     public DecimatingSampleFilter(final DateTime startTime, final DateTime endTime, final int outputCount, final TimeSpan pollingInterval,
-                                  final DecimationMode decimationMode, final SampleConsumer sampleConsumer) {
+                                  final DecimationMode decimationMode, final TimeRangeSampleProcessor sampleProcessor) {
         super(startTime, endTime);
         this.outputCount = outputCount;
         this.pollingInterval = pollingInterval;
         this.decimationMode = decimationMode;
-        this.sampleConsumer = sampleConsumer;
+        this.sampleProcessor = sampleProcessor;
     }
 
     private void initializeFilterHistory(final int sampleCount) {
@@ -147,7 +146,7 @@ public class DecimatingSampleFilter extends TimeRangeSampleProcessor {
             if (opcode == SampleOpcode.STRING) {
                 // We don't have interpolation, so just output
                 // this one
-                sampleConsumer.consumeSample(sampleNumber, opcode, value, time);
+                sampleProcessor.processOneSample(time, opcode, value);
             } else {
                 // Time to output a sample - compare the sum of the first samples with the
                 // sum of the last samples making up the output, choosing the lowest value if
@@ -192,16 +191,16 @@ public class DecimatingSampleFilter extends TimeRangeSampleProcessor {
                         if (firstSum > lastSum) {
                             // The sample window is generally down with time - - pick the minimum
                             final SampleState minSample = filterHistory[minIndex];
-                            sampleConsumer.consumeSample(sampleNumber, minSample.getSampleOpcode(), minSample.getValue(), centerTime);
+                            sampleProcessor.processOneSample(centerTime, minSample.getSampleOpcode(), minSample.getValue());
                         } else {
                             // The sample window is generally up with time - - pick the maximum
                             final SampleState maxSample = filterHistory[maxIndex];
-                            sampleConsumer.consumeSample(sampleNumber, maxSample.getSampleOpcode(), maxSample.getValue(), centerTime);
+                            sampleProcessor.processOneSample(centerTime, maxSample.getSampleOpcode(), maxSample.getValue());
                         }
                         break;
                     case AVERAGE:
                         final double average = sum / ceilSamplesPerOutput;
-                        sampleConsumer.consumeSample(minIndex, SampleOpcode.DOUBLE, average, centerTime);
+                        sampleProcessor.processOneSample(centerTime, SampleOpcode.DOUBLE, average);
                         break;
                     default:
                         throw new IllegalStateException(String.format("The decimation filter mode %s is not recognized", decimationMode));
@@ -210,8 +209,9 @@ public class DecimatingSampleFilter extends TimeRangeSampleProcessor {
         }
     }
 
-    public SampleConsumer getSampleConsumer() {
-        return sampleConsumer;
+    @Override
+    public String toString() {
+        return sampleProcessor.toString();
     }
 
     private static class SampleState {

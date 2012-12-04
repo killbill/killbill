@@ -14,14 +14,18 @@
  * under the License.
  */
 
-package com.ning.billing.meter.timeline.consumer;
+package com.ning.billing.meter.timeline.consumer.filter;
 
-import org.joda.time.DateTime;
+public enum DecimationMode {
+    PEAK_PICK,
+    AVERAGE;
 
-import com.ning.billing.meter.timeline.samples.SampleOpcode;
-
-public interface SampleConsumer {
-
-    public void consumeSample(int sampleNumber, SampleOpcode opcode, Object value, DateTime time);
+    public static DecimationMode fromString(final String modeString) {
+        for (final DecimationMode decimationMode : DecimationMode.values()) {
+            if (decimationMode.name().equalsIgnoreCase(modeString)) {
+                return decimationMode;
+            }
+        }
+        return null;
+    }
 }
-

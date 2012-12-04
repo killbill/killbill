@@ -38,12 +38,12 @@ import com.ning.billing.meter.timeline.chunks.TimelineChunk;
 import com.ning.billing.meter.timeline.chunks.TimelineChunksViews;
 import com.ning.billing.meter.timeline.codec.DefaultSampleCoder;
 import com.ning.billing.meter.timeline.codec.SampleCoder;
-import com.ning.billing.meter.timeline.codec.TimelineChunkDecoded;
 import com.ning.billing.meter.timeline.consumer.CSVConsumer;
-import com.ning.billing.meter.timeline.consumer.CSVSampleConsumer;
+import com.ning.billing.meter.timeline.consumer.CSVSampleProcessor;
 import com.ning.billing.meter.timeline.consumer.TimelineChunkConsumer;
-import com.ning.billing.meter.timeline.filter.DecimatingSampleFilter;
-import com.ning.billing.meter.timeline.filter.DecimationMode;
+import com.ning.billing.meter.timeline.consumer.TimelineChunkDecoded;
+import com.ning.billing.meter.timeline.consumer.filter.DecimatingSampleFilter;
+import com.ning.billing.meter.timeline.consumer.filter.DecimationMode;
 import com.ning.billing.meter.timeline.metrics.SamplesForMetricAndSource;
 import com.ning.billing.meter.timeline.persistent.TimelineDao;
 import com.ning.billing.util.callcontext.InternalTenantContext;
@@ -158,7 +158,7 @@ public class JsonSamplesOutputer {
             rangeSampleProcessor = null;
         } else {
             // TODO Fix the polling interval
-            rangeSampleProcessor = new DecimatingSampleFilter(startTime, endTime, outputCount, new TimeSpan("1s"), decimationMode, new CSVSampleConsumer());
+            rangeSampleProcessor = new DecimatingSampleFilter(startTime, endTime, outputCount, new TimeSpan("1s"), decimationMode, new CSVSampleProcessor());
         }
 
         return rangeSampleProcessor;

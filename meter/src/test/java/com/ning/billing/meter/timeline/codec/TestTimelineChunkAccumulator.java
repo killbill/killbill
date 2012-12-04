@@ -25,6 +25,8 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.meter.MeterTestSuite;
 import com.ning.billing.meter.timeline.chunks.TimelineChunk;
+import com.ning.billing.meter.timeline.consumer.SampleProcessor;
+import com.ning.billing.meter.timeline.consumer.TimelineChunkDecoded;
 import com.ning.billing.meter.timeline.samples.SampleOpcode;
 import com.ning.billing.meter.timeline.samples.ScalarSample;
 import com.ning.billing.meter.timeline.times.DefaultTimelineCoder;

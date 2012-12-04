@@ -29,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ning.billing.meter.timeline.chunks.TimelineChunk;
+import com.ning.billing.meter.timeline.consumer.SampleProcessor;
 import com.ning.billing.meter.timeline.samples.HalfFloat;
 import com.ning.billing.meter.timeline.samples.RepeatSample;
 import com.ning.billing.meter.timeline.samples.SampleBase;

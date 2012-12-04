@@ -24,7 +24,7 @@ import org.joda.time.DateTime;
 
 import com.ning.billing.meter.timeline.chunks.TimelineChunk;
 import com.ning.billing.meter.timeline.codec.SampleCoder;
-import com.ning.billing.meter.timeline.filter.DecimatingSampleFilter;
+import com.ning.billing.meter.timeline.consumer.filter.DecimatingSampleFilter;
 
 public class CSVConsumer {
 
@@ -33,7 +33,7 @@ public class CSVConsumer {
 
     public static String getSamplesAsCSV(final SampleCoder sampleCoder, final TimelineChunk chunk, final DecimatingSampleFilter rangeSampleProcessor) throws IOException {
         sampleCoder.scan(chunk, rangeSampleProcessor);
-        return rangeSampleProcessor.getSampleConsumer().toString();
+        return rangeSampleProcessor.toString();
     }
 
     public static String getSamplesAsCSV(final SampleCoder sampleCoder, final TimelineChunk chunk) throws IOException {
@@ -41,7 +41,7 @@ public class CSVConsumer {
     }
 
     public static String getSamplesAsCSV(final SampleCoder sampleCoder, final TimelineChunk chunk, @Nullable final DateTime startTime, @Nullable final DateTime endTime) throws IOException {
-        final CSVOutputProcessor processor = new CSVOutputProcessor(startTime, endTime);
+        final CSVSampleProcessor processor = new CSVSampleProcessor(startTime, endTime);
         sampleCoder.scan(chunk, processor);
         return processor.toString();
     }
