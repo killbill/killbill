@@ -22,6 +22,8 @@ import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.config.SimplePropertyConfigSource;
 
+import com.ning.billing.meter.DefaultMeterService;
+import com.ning.billing.meter.MeterService;
 import com.ning.billing.meter.api.MeterUserApi;
 import com.ning.billing.meter.api.user.DefaultMeterUserApi;
 import com.ning.billing.meter.timeline.codec.DefaultSampleCoder;
@@ -77,18 +79,19 @@ public class MeterModule extends AbstractModule {
         bind(MeterUserApi.class).to(DefaultMeterUserApi.class).asEagerSingleton();
     }
 
+
+    protected void installMeterService() {
+        bind(MeterService.class).to(DefaultMeterService.class).asEagerSingleton();
+    }
+
     @Override
     protected void configure() {
         final MeterConfig config = installConfig();
 
+        installMeterService();
         configureFileBackedBuffer(config);
         configureDao();
         configureTimelineObjects();
-
-        // TODO
-        //configureTimelineAggregator();
-        //configureBackgroundDBChunkWriter();
-        //configureReplayer();
 
         installMeterUserApi();
     }

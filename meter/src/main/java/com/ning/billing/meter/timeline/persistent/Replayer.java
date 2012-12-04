@@ -98,7 +98,7 @@ public class Replayer {
     }
 
     public int readAll(final boolean deleteFiles, @Nullable final DateTime minStartTime, final Function<SourceSamplesForTimestamp, Void> fn) {
-        final Collection<File> files = ImmutableList.<File>copyOf(findCandidates());
+        final List<File> files = findCandidates();
         int filesSkipped = 0;
         for (final File file : FILE_ORDERING.sortedCopy(files)) {
             try {
@@ -141,7 +141,7 @@ public class Replayer {
 
 
     public void purgeOldFiles(final DateTime purgeIfOlderDate) {
-        final File[] candidates = findCandidates();
+        final List<File> candidates = findCandidates();
         for (final File file : candidates) {
             if (file.lastModified() <= purgeIfOlderDate.getMillis()) {
                 if (!file.delete()) {
@@ -151,7 +151,7 @@ public class Replayer {
         }
     }
 
-    private File[] findCandidates() {
+    private List<File> findCandidates() {
         final File root = new File(path);
         final FilenameFilter filter = new FilenameFilter() {
             @Override
@@ -160,6 +160,7 @@ public class Replayer {
             }
         };
 
-        return root.listFiles(filter);
+        final File [] foundFiles = root.listFiles(filter);
+        return foundFiles == null ? ImmutableList.<File>of() : ImmutableList.<File>copyOf(foundFiles);
     }
 }

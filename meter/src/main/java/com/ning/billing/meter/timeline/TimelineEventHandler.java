@@ -469,14 +469,13 @@ public class TimelineEventHandler {
         replayer.purgeOldFiles(purgeFilesIfBefore);
     }
 
-    public void startHandlerThreads() {
+    public void startPurgeThread() {
         purgeThread.scheduleWithFixedDelay(new Runnable() {
             @Override
             public void run() {
                 purgeFilesAndAccumulators();
             }
-        },
-                                           config.getTimelineLength().getMillis(),
+        }, config.getTimelineLength().getMillis(),
                                            config.getTimelineLength().getMillis(),
                                            TimeUnit.MILLISECONDS);
     }
