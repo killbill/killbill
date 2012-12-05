@@ -95,7 +95,13 @@ public abstract class JsonSamplesOutputer {
     private List<Integer> translateSourcesToSourceIds(final List<String> sources) {
         final List<Integer> hostIds = new ArrayList<Integer>(sources.size());
         for (final String source : sources) {
-            hostIds.add(timelineDao.getSourceId(source, context));
+            final Integer sourceId = timelineDao.getSourceId(source, context);
+            if (sourceId == null) {
+                // Ignore
+                continue;
+            }
+
+            hostIds.add(sourceId);
         }
 
         return hostIds;
