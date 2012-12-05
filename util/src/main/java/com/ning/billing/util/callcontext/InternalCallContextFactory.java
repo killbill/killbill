@@ -39,13 +39,11 @@ public class InternalCallContextFactory {
     public static final long INTERNAL_TENANT_RECORD_ID = 0L;
 
     private final IDBI dbi;
-    private final CallContextSqlDao callContextSqlDao;
     private final Clock clock;
 
     @Inject
     public InternalCallContextFactory(final IDBI dbi, final Clock clock) {
         this.dbi = dbi;
-        this.callContextSqlDao = dbi.onDemand(CallContextSqlDao.class);
         this.clock = clock;
     }
 
@@ -215,7 +213,9 @@ public class InternalCallContextFactory {
         if (context.getTenantId() == null) {
             return INTERNAL_TENANT_RECORD_ID;
         } else {
-            return callContextSqlDao.getTenantRecordId(context.getTenantId().toString());
+            // We call onDemand here to avoid JDBI opening connections in the constructor.
+            // TODO should we cache it?
+            return dbi.onDemand(CallContextSqlDao.class).getTenantRecordId(context.getTenantId().toString());
         }
     }
 
