@@ -114,7 +114,7 @@ public class StreamyBytesPersistentOutputStream extends OutputStream {
 
     @VisibleForTesting
     String getFileName() {
-        return basePath + "arecibo." + prefix + "." + System.nanoTime() + ".bin";
+        return basePath + "killbill." + prefix + "." + System.nanoTime() + ".bin";
     }
 
     private void flushToFile(final File out) throws IOException {

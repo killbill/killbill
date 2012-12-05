@@ -18,6 +18,7 @@ package com.ning.billing.meter.timeline.persistent;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 import javax.annotation.Nullable;
 
@@ -26,6 +27,8 @@ import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Query;
 import org.skife.jdbi.v2.ResultIterator;
+import org.skife.jdbi.v2.Transaction;
+import org.skife.jdbi.v2.TransactionStatus;
 import org.skife.jdbi.v2.exceptions.CallbackFailedException;
 import org.skife.jdbi.v2.exceptions.UnableToObtainConnectionException;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.StringTemplate3StatementLocator;
@@ -38,6 +41,7 @@ import com.ning.billing.meter.timeline.chunks.TimelineChunk;
 import com.ning.billing.meter.timeline.chunks.TimelineChunkMapper;
 import com.ning.billing.meter.timeline.consumer.TimelineChunkConsumer;
 import com.ning.billing.meter.timeline.shutdown.StartTimes;
+import com.ning.billing.meter.timeline.sources.SourceRecordIdAndMetricRecordId;
 import com.ning.billing.meter.timeline.util.DateTimeUtils;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
@@ -83,13 +87,26 @@ public class DefaultTimelineDao implements TimelineDao {
     }
 
     @Override
-    public synchronized int getOrAddSource(final String source, final InternalCallContext context) throws UnableToObtainConnectionException, CallbackFailedException {
-        delegate.begin();
-        delegate.addSource(source, context);
-        final Integer sourceId = delegate.getSourceRecordId(source, context);
-        delegate.commit();
+    public int getOrAddSource(final String source, final InternalCallContext context) throws UnableToObtainConnectionException, CallbackFailedException {
 
-        return sourceId;
+        final Integer result = delegate.inTransaction(new Transaction<Integer, TimelineSqlDao>() {
+
+            @Override
+            public Integer inTransaction(final TimelineSqlDao transactional, final TransactionStatus status) throws Exception {
+                return getOrAddWithRetry(new Callable<Integer>() {
+                    @Override
+                    public Integer call() throws Exception {
+                        Integer sourceId = transactional.getSourceRecordId(source, context);
+                        if (sourceId == null) {
+                            transactional.addSource(source, context);
+                            sourceId = transactional.getSourceRecordId(source, context);
+                        }
+                        return sourceId;
+                    }
+                });
+            }
+        });
+        return result;
     }
 
     @Override
@@ -112,14 +129,28 @@ public class DefaultTimelineDao implements TimelineDao {
     }
 
     @Override
-    public synchronized int getOrAddEventCategory(final String eventCategory, final InternalCallContext context) throws UnableToObtainConnectionException, CallbackFailedException {
-        delegate.begin();
-        delegate.addCategory(eventCategory, context);
-        final Integer eventCategoryId = delegate.getCategoryRecordId(eventCategory, context);
-        delegate.commit();
+    public int getOrAddEventCategory(final String eventCategory, final InternalCallContext context) throws UnableToObtainConnectionException, CallbackFailedException {
 
-        return eventCategoryId;
+        final Integer result = delegate.inTransaction(new Transaction<Integer, TimelineSqlDao>() {
+
+            @Override
+            public Integer inTransaction(final TimelineSqlDao transactional, final TransactionStatus status) throws Exception {
+                return getOrAddWithRetry(new Callable<Integer>() {
+                    @Override
+                    public Integer call() throws Exception {
+                        Integer eventCategoryId = transactional.getCategoryRecordId(eventCategory, context);
+                        if (eventCategoryId == null) {
+                            transactional.addCategory(eventCategory, context);
+                            eventCategoryId = transactional.getCategoryRecordId(eventCategory, context);
+                        }
+                        return eventCategoryId;
+                    }
+                });
+            }
+        });
+        return result;
     }
+
 
     @Override
     public Integer getMetricId(final int eventCategoryId, final String metric, final InternalTenantContext context) throws UnableToObtainConnectionException, CallbackFailedException {
@@ -143,21 +174,39 @@ public class DefaultTimelineDao implements TimelineDao {
 
     @Override
     public synchronized int getOrAddMetric(final Integer eventCategoryId, final String metric, final InternalCallContext context) throws UnableToObtainConnectionException, CallbackFailedException {
-        delegate.begin();
-        delegate.addMetric(eventCategoryId, metric, context);
-        final Integer metricId = delegate.getMetricRecordId(eventCategoryId, metric, context);
-        delegate.commit();
 
-        return metricId;
+        final Integer result = delegate.inTransaction(new Transaction<Integer, TimelineSqlDao>() {
+
+            @Override
+            public Integer inTransaction(final TimelineSqlDao transactional, final TransactionStatus status) throws Exception {
+                return getOrAddWithRetry(new Callable<Integer>() {
+                    @Override
+                    public Integer call() throws Exception {
+                        Integer metricId = transactional.getMetricRecordId(eventCategoryId, metric, context);
+                        if (metricId == null) {
+                            transactional.addMetric(eventCategoryId, metric, context);
+                            metricId = transactional.getMetricRecordId(eventCategoryId, metric, context);
+                        }
+                        return metricId;
+                    }
+                });
+            }
+        });
+        return result;
     }
 
     @Override
     public Long insertTimelineChunk(final TimelineChunk timelineChunk, final InternalCallContext context) throws UnableToObtainConnectionException, CallbackFailedException {
-        delegate.begin();
-        delegate.insertTimelineChunk(timelineChunk, context);
-        final long timelineChunkId = delegate.getLastInsertedRecordId(context);
-        delegate.commit();
-        return timelineChunkId;
+
+        final Long result = delegate.inTransaction(new Transaction<Long, TimelineSqlDao>() {
+            @Override
+            public Long inTransaction(final TimelineSqlDao transactional, final TransactionStatus status) throws Exception {
+                transactional.insertTimelineChunk(timelineChunk, context);
+                final long timelineChunkId = transactional.getLastInsertedRecordId(context);
+                return timelineChunkId;
+            }
+        });
+        return result;
     }
 
     @Override
@@ -234,4 +283,23 @@ public class DefaultTimelineDao implements TimelineDao {
     public void bulkInsertTimelineChunks(final List<TimelineChunk> timelineChunkList, final InternalCallContext context) {
         delegate.bulkInsertTimelineChunks(timelineChunkList.iterator(), context);
     }
+
+    private <T> T getOrAddWithRetry(final Callable<T> task) throws Exception {
+        int retry = 1;
+        Exception lastException = null;
+        do {
+            try {
+                return task.call();
+            } catch (Exception e) {
+                //
+                // If we have two transaction that occurs at the time and try to insert
+                // both the same key, one of the transaction will rollbacl and that code will retry
+                // and (should) succeed because this time key exists and caller will first do a get.
+                //
+                lastException = e;
+            }
+        } while (retry-- > 0);
+        throw lastException;
+    }
+
 }
