@@ -48,21 +48,38 @@ public class CachingTimelineDao implements TimelineDao {
 
     public CachingTimelineDao(final TimelineDao delegate) {
         this.delegate = delegate;
-        // TODO - rethink priming with tenants. Also, we shouldn't prime here, plug into the lifecycle instead
-        //final InternalTenantContext context = new InternalTenantContext(null, null);
-        //sourcesCache = delegate.getSources(context);
-        //metricsCache = delegate.getMetrics(context);
-        //eventCategoriesCache = delegate.getEventCategories(context);
     }
 
     @Override
     public Integer getSourceId(final String source, final InternalTenantContext context) throws UnableToObtainConnectionException, CallbackFailedException {
-        return sourcesCache.inverse().get(source);
+        Integer result =  sourcesCache.inverse().get(source);
+        if (result == null) {
+            result = delegate.getSourceId(source, context);
+            if (result != null) {
+                synchronized(sourcesCache) {
+                    if (sourcesCache.get(result) == null) {
+                        sourcesCache.put(result, source);
+                    }
+                }
+            }
+        }
+        return result;
     }
 
     @Override
     public String getSource(final Integer sourceId, final InternalTenantContext context) throws UnableToObtainConnectionException, CallbackFailedException {
-        return sourcesCache.get(sourceId);
+        String result = sourcesCache.get(sourceId);
+        if (result == null) {
+            result = delegate.getSource(sourceId, context);
+            if (result != null) {
+                synchronized (sourcesCache) {
+                    if (sourcesCache.get(sourceId) == null) {
+                        sourcesCache.put(sourceId, result);
+                    }
+                }
+            }
+        }
+        return result;
     }
 
     @Override
@@ -71,24 +88,49 @@ public class CachingTimelineDao implements TimelineDao {
     }
 
     @Override
-    public synchronized int getOrAddSource(final String source, final InternalCallContext context) throws UnableToObtainConnectionException, CallbackFailedException {
+    public int getOrAddSource(final String source, final InternalCallContext context) throws UnableToObtainConnectionException, CallbackFailedException {
         Integer sourceId = sourcesCache.inverse().get(source);
         if (sourceId == null) {
             sourceId = delegate.getOrAddSource(source, context);
-            sourcesCache.put(sourceId, source);
+            synchronized (sourcesCache) {
+                if (sourcesCache.get(sourceId) == null) {
+                    sourcesCache.put(sourceId, source);
+                }
+            }
         }
-
         return sourceId;
     }
 
     @Override
     public Integer getEventCategoryId(final String eventCategory, final InternalTenantContext context) throws UnableToObtainConnectionException, CallbackFailedException {
-        return eventCategoriesCache.inverse().get(eventCategory);
+        Integer result = eventCategoriesCache.inverse().get(eventCategory);
+        if (result == null) {
+            result = delegate.getEventCategoryId(eventCategory, context);
+            if (result != null) {
+                synchronized (eventCategoriesCache) {
+                    if (eventCategoriesCache.get(result) == null) {
+                        eventCategoriesCache.put(result, eventCategory);
+                    }
+                }
+            }
+        }
+        return result;
     }
 
     @Override
     public String getEventCategory(final Integer eventCategoryId, final InternalTenantContext context) throws UnableToObtainConnectionException {
-        return eventCategoriesCache.get(eventCategoryId);
+        String result =  eventCategoriesCache.get(eventCategoryId);
+        if (result == null) {
+            result = delegate.getEventCategory(eventCategoryId, context);
+            if (result != null) {
+                synchronized (eventCategoriesCache) {
+                    if (eventCategoriesCache.get(eventCategoryId) == null) {
+                        eventCategoriesCache.put(eventCategoryId, result);
+                    }
+                }
+            }
+        }
+        return result;
     }
 
     @Override
@@ -101,19 +143,45 @@ public class CachingTimelineDao implements TimelineDao {
         Integer eventCategoryId = eventCategoriesCache.inverse().get(eventCategory);
         if (eventCategoryId == null) {
             eventCategoryId = delegate.getOrAddEventCategory(eventCategory, context);
-            eventCategoriesCache.put(eventCategoryId, eventCategory);
+            synchronized (eventCategoriesCache) {
+                if (eventCategoriesCache.get(eventCategoryId) == null) {
+                    eventCategoriesCache.put(eventCategoryId, eventCategory);
+                }
+            }
         }
         return eventCategoryId;
     }
 
     @Override
     public Integer getMetricId(final int eventCategoryId, final String metric, final InternalTenantContext context) throws UnableToObtainConnectionException {
-        return metricsCache.inverse().get(new CategoryRecordIdAndMetric(eventCategoryId, metric));
+        Integer result =  metricsCache.inverse().get(new CategoryRecordIdAndMetric(eventCategoryId, metric));
+        if (result == null) {
+            result = delegate.getMetricId(eventCategoryId, metric, context);
+            if (result != null) {
+                synchronized (metricsCache) {
+                    if (metricsCache.get(result) == null) {
+                        metricsCache.put(result, new CategoryRecordIdAndMetric(eventCategoryId, metric));
+                    }
+                }
+            }
+        }
+        return result;
     }
 
     @Override
     public CategoryRecordIdAndMetric getCategoryIdAndMetric(final Integer metricId, final InternalTenantContext context) throws UnableToObtainConnectionException {
-        return metricsCache.get(metricId);
+        CategoryRecordIdAndMetric result =  metricsCache.get(metricId);
+        if (result == null) {
+            result = delegate.getCategoryIdAndMetric(metricId, context);
+            if (result != null) {
+                synchronized (metricsCache) {
+                    if (metricsCache.get(metricId) == null) {
+                        metricsCache.put(metricId, result);
+                    }
+                }
+            }
+        }
+        return result;
     }
 
     @Override
@@ -122,14 +190,17 @@ public class CachingTimelineDao implements TimelineDao {
     }
 
     @Override
-    public synchronized int getOrAddMetric(final Integer eventCategoryId, final String metric, final InternalCallContext context) throws UnableToObtainConnectionException, CallbackFailedException {
+    public int getOrAddMetric(final Integer eventCategoryId, final String metric, final InternalCallContext context) throws UnableToObtainConnectionException, CallbackFailedException {
         final CategoryRecordIdAndMetric categoryRecordIdAndMetric = new CategoryRecordIdAndMetric(eventCategoryId, metric);
         Integer metricId = metricsCache.inverse().get(categoryRecordIdAndMetric);
         if (metricId == null) {
             metricId = delegate.getOrAddMetric(eventCategoryId, metric, context);
-            metricsCache.put(metricId, categoryRecordIdAndMetric);
+            synchronized (metricsCache) {
+                if (metricsCache.get(metricId) == null) {
+                    metricsCache.put(metricId, categoryRecordIdAndMetric);
+                }
+            }
         }
-
         return metricId;
     }
 
