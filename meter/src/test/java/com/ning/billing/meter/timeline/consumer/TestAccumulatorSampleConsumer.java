@@ -22,7 +22,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.meter.MeterTestSuite;
-import com.ning.billing.meter.timeline.consumer.AccumulatorSampleConsumer.TimeAggregationMode;
+import com.ning.billing.meter.api.TimeAggregationMode;
 import com.ning.billing.meter.timeline.samples.SampleOpcode;
 import com.ning.billing.util.clock.ClockMock;
 
@@ -35,7 +35,7 @@ public class TestAccumulatorSampleConsumer extends MeterTestSuite {
         clock.setTime(new DateTime(2012, 12, 1, 12, 40, DateTimeZone.UTC));
         final DateTime start = clock.getUTCNow();
 
-        final AccumulatorSampleConsumer sampleConsumer = new AccumulatorSampleConsumer(TimeAggregationMode.DAYS);
+        final AccumulatorSampleConsumer sampleConsumer = new AccumulatorSampleConsumer(TimeAggregationMode.DAYS, new CSVSampleProcessor());
 
         // 5 for day 1
         sampleConsumer.processOneSample(start, SampleOpcode.DOUBLE, (double) 1);

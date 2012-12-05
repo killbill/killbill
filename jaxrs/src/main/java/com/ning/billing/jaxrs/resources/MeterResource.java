@@ -43,6 +43,7 @@ import org.joda.time.DateTime;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
 import com.ning.billing.meter.api.MeterUserApi;
+import com.ning.billing.meter.api.TimeAggregationMode;
 import com.ning.billing.util.api.AuditUserApi;
 import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.api.TagUserApi;
@@ -50,6 +51,7 @@ import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.clock.Clock;
 
+import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -79,12 +81,13 @@ public class MeterResource extends JaxRsResourceBase {
     @Path("/{source:" + STRING_PATTERN + "}")
     @Produces(APPLICATION_JSON)
     public StreamingOutput getUsage(@PathParam("source") final String source,
+                                    // Aggregates per category
                                     @QueryParam(QUERY_METER_CATEGORY) final List<String> categories,
                                     // Format: category,metric
                                     @QueryParam(QUERY_METER_CATEGORY_AND_METRIC) final List<String> categoriesAndMetrics,
                                     @QueryParam(QUERY_METER_FROM) final String fromTimestampString,
                                     @QueryParam(QUERY_METER_TO) final String toTimestampString,
-                                    @QueryParam(QUERY_METER_WITH_AGGREGATE) @DefaultValue("false") final Boolean withAggregate,
+                                    @QueryParam(QUERY_METER_TIME_AGGREGATION_MODE) @DefaultValue("") final String timeAggregationModeString,
                                     @javax.ws.rs.core.Context final HttpServletRequest request) {
         final DateTime fromTimestamp = DATE_TIME_FORMATTER.parseDateTime(fromTimestampString);
         final DateTime toTimestamp = DATE_TIME_FORMATTER.parseDateTime(toTimestampString);
@@ -93,11 +96,22 @@ public class MeterResource extends JaxRsResourceBase {
         return new StreamingOutput() {
             @Override
             public void write(final OutputStream output) throws IOException, WebApplicationException {
-                if (withAggregate) {
-                    meterApi.getAggregateUsage(output, source, categories, fromTimestamp, toTimestamp, tenantContext);
+                // Look at aggregates per category?
+                if (categories != null) {
+                    if (Strings.isNullOrEmpty(timeAggregationModeString)) {
+                        meterApi.getUsage(output, source, categories, fromTimestamp, toTimestamp, tenantContext);
+                    } else {
+                        final TimeAggregationMode timeAggregationMode = TimeAggregationMode.valueOf(timeAggregationModeString);
+                        meterApi.getUsage(output, timeAggregationMode, source, categories, fromTimestamp, toTimestamp, tenantContext);
+                    }
                 } else {
                     final Map<String, Collection<String>> metricsPerCategory = retrieveMetricsPerCategory(categoriesAndMetrics);
-                    meterApi.getUsage(output, source, metricsPerCategory, fromTimestamp, toTimestamp, tenantContext);
+                    if (Strings.isNullOrEmpty(timeAggregationModeString)) {
+                        meterApi.getUsage(output, source, metricsPerCategory, fromTimestamp, toTimestamp, tenantContext);
+                    } else {
+                        final TimeAggregationMode timeAggregationMode = TimeAggregationMode.valueOf(timeAggregationModeString);
+                        meterApi.getUsage(output, timeAggregationMode, source, metricsPerCategory, fromTimestamp, toTimestamp, tenantContext);
+                    }
                 }
             }
         };
@@ -132,7 +146,7 @@ public class MeterResource extends JaxRsResourceBase {
     public Response recordUsage(@PathParam("source") final String source,
                                 @PathParam("categoryName") final String categoryName,
                                 @PathParam("metricName") final String metricName,
-                                @QueryParam(QUERY_METER_WITH_AGGREGATE) @DefaultValue("false") final Boolean withAggregate,
+                                @QueryParam(QUERY_METER_WITH_CATEGORY_AGGREGATE) @DefaultValue("false") final Boolean withAggregate,
                                 @QueryParam(QUERY_METER_TIMESTAMP) final String timestampString,
                                 @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                 @HeaderParam(HDR_REASON) final String reason,

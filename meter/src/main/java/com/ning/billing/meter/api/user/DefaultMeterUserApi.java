@@ -21,11 +21,14 @@ import java.io.OutputStream;
 import java.util.Collection;
 import java.util.Map;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.meter.api.DecimationMode;
 import com.ning.billing.meter.api.MeterUserApi;
+import com.ning.billing.meter.api.TimeAggregationMode;
 import com.ning.billing.meter.timeline.TimelineEventHandler;
 import com.ning.billing.meter.timeline.persistent.TimelineDao;
 import com.ning.billing.util.callcontext.CallContext;
@@ -56,12 +59,43 @@ public class DefaultMeterUserApi implements MeterUserApi {
     }
 
     @Override
-    public void getAggregateUsage(final OutputStream outputStream, final String source, final Collection<String> categories,
-                                  final DateTime fromTimestamp, final DateTime toTimestamp, final TenantContext context) throws IOException {
+    public void getUsage(final OutputStream outputStream, final TimeAggregationMode timeAggregationMode,
+                         final String source, final Collection<String> categories,
+                         final DateTime fromTimestamp, final DateTime toTimestamp, final TenantContext context) throws IOException {
         final ImmutableMap.Builder<String, Collection<String>> metricsPerCategory = new Builder<String, Collection<String>>();
         for (final String category : categories) {
             metricsPerCategory.put(category, ImmutableList.<String>of(AGGREGATE_METRIC_NAME));
         }
+
+        getUsage(outputStream, timeAggregationMode, source, metricsPerCategory.build(), fromTimestamp, toTimestamp, context);
+    }
+
+    @Override
+    public void getUsage(final OutputStream outputStream, final TimeAggregationMode timeAggregationMode,
+                         final String source, final Map<String, Collection<String>> metricsPerCategory,
+                         final DateTime fromTimestamp, final DateTime toTimestamp, final TenantContext context) throws IOException {
+        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(context);
+        final JsonSamplesOutputer outputerJson = new AccumulatingJsonSamplesOutputer(timeAggregationMode, timelineEventHandler, timelineDao, internalTenantContext);
+        outputerJson.output(outputStream, ImmutableList.<String>of(source), metricsPerCategory, fromTimestamp, toTimestamp);
+    }
+
+    @Override
+    public void getUsage(final OutputStream outputStream, final DecimationMode decimationMode, @Nullable final Integer outputCount,
+                         final String source, final Map<String, Collection<String>> metricsPerCategory,
+                         final DateTime fromTimestamp, final DateTime toTimestamp, final TenantContext context) throws IOException {
+        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(context);
+        final JsonSamplesOutputer outputerJson = new DecimatingJsonSamplesOutputer(decimationMode, outputCount, timelineEventHandler, timelineDao, internalTenantContext);
+        outputerJson.output(outputStream, ImmutableList.<String>of(source), metricsPerCategory, fromTimestamp, toTimestamp);
+    }
+
+    @Override
+    public void getUsage(final OutputStream outputStream, final String source, final Collection<String> categories,
+                         final DateTime fromTimestamp, final DateTime toTimestamp, final TenantContext context) throws IOException {
+        final ImmutableMap.Builder<String, Collection<String>> metricsPerCategory = new Builder<String, Collection<String>>();
+        for (final String category : categories) {
+            metricsPerCategory.put(category, ImmutableList.<String>of(AGGREGATE_METRIC_NAME));
+        }
+
         getUsage(outputStream, source, metricsPerCategory.build(), fromTimestamp, toTimestamp, context);
     }
 
@@ -69,8 +103,7 @@ public class DefaultMeterUserApi implements MeterUserApi {
     public void getUsage(final OutputStream outputStream, final String source, final Map<String, Collection<String>> metricsPerCategory,
                          final DateTime fromTimestamp, final DateTime toTimestamp, final TenantContext context) throws IOException {
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(context);
-
-        final JsonSamplesOutputer outputerJson = new JsonSamplesOutputer(timelineEventHandler, timelineDao, internalTenantContext);
+        final JsonSamplesOutputer outputerJson = new DefaultJsonSamplesOutputer(timelineEventHandler, timelineDao, internalTenantContext);
         outputerJson.output(outputStream, ImmutableList.<String>of(source), metricsPerCategory, fromTimestamp, toTimestamp);
     }
 

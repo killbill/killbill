@@ -14,18 +14,9 @@
  * under the License.
  */
 
-package com.ning.billing.meter.timeline.consumer.filter;
+package com.ning.billing.meter.api;
 
 public enum DecimationMode {
     PEAK_PICK,
-    AVERAGE;
-
-    public static DecimationMode fromString(final String modeString) {
-        for (final DecimationMode decimationMode : DecimationMode.values()) {
-            if (decimationMode.name().equalsIgnoreCase(modeString)) {
-                return decimationMode;
-            }
-        }
-        return null;
-    }
+    AVERAGE
 }

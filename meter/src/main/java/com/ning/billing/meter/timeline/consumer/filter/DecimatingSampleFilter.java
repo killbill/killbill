@@ -19,6 +19,7 @@ package com.ning.billing.meter.timeline.consumer.filter;
 import org.joda.time.DateTime;
 import org.skife.config.TimeSpan;
 
+import com.ning.billing.meter.api.DecimationMode;
 import com.ning.billing.meter.timeline.consumer.TimeRangeSampleProcessor;
 import com.ning.billing.meter.timeline.samples.SampleOpcode;
 import com.ning.billing.meter.timeline.samples.ScalarSample;

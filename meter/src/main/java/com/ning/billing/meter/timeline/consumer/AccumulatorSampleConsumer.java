@@ -22,19 +22,11 @@ import java.util.Map;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
+import com.ning.billing.meter.api.TimeAggregationMode;
 import com.ning.billing.meter.timeline.samples.SampleOpcode;
 import com.ning.billing.meter.timeline.samples.ScalarSample;
 
 public class AccumulatorSampleConsumer extends TimeRangeSampleProcessor {
-
-    public enum TimeAggregationMode {
-        SECONDS,
-        MINUTES,
-        HOURS,
-        DAYS,
-        MONTHS,
-        YEARS
-    }
 
     private final StringBuilder builder = new StringBuilder();
     // Linked HashMap to keep ordering of opcodes as they came
@@ -46,11 +38,10 @@ public class AccumulatorSampleConsumer extends TimeRangeSampleProcessor {
     private DateTime lastRoundedTime = null;
     private int aggregatedSampleNumber = 0;
 
-    public AccumulatorSampleConsumer(final TimeAggregationMode timeAggregationMode) {
+    public AccumulatorSampleConsumer(final TimeAggregationMode timeAggregationMode, final TimeRangeSampleProcessor sampleProcessor) {
         super(null, null);
         this.timeAggregationMode = timeAggregationMode;
-        // TODO should be configurable
-        this.sampleProcessor = new CSVSampleProcessor();
+        this.sampleProcessor = sampleProcessor;
     }
 
     @Override

@@ -21,6 +21,8 @@ import java.io.OutputStream;
 import java.util.Collection;
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
 
 import com.ning.billing.util.callcontext.CallContext;
@@ -28,11 +30,86 @@ import com.ning.billing.util.callcontext.TenantContext;
 
 public interface MeterUserApi {
 
-    public void getAggregateUsage(OutputStream outputStream, String source, Collection<String> categories,
-                                  DateTime fromTimestamp, DateTime toTimestamp, TenantContext context) throws IOException;
+    /**
+     * Get usage data for all metrics (given a set of categories) as Json using an accumulating filter.
+     * <p/>
+     * Emulate: select sum(value) from chunks group by source, category, date_trunc('timeAggregationMode', timestamp);
+     *
+     * @param outputStream        stream to write the data to
+     * @param timeAggregationMode granularity of the accumulator
+     * @param source              source
+     * @param categories          categories
+     * @param fromTimestamp       earliest timestamp to consider (inclusive)
+     * @param toTimestamp         latest timestamp to consider (inclusive)
+     * @param context             call context
+     * @throws IOException
+     */
+    void getUsage(OutputStream outputStream, TimeAggregationMode timeAggregationMode,
+                  String source, Collection<String> categories,
+                  DateTime fromTimestamp, DateTime toTimestamp, TenantContext context) throws IOException;
 
-    public void getUsage(OutputStream outputStream, String source, Map<String, Collection<String>> metricsPerCategory,
-                         DateTime fromTimestamp, DateTime toTimestamp, TenantContext context) throws IOException;
+    /**
+     * Get usage data as Json using an accumulating filter.
+     * <p/>
+     * Emulate: select sum(value) from chunks group by source, category, metric, date_trunc('timeAggregationMode', timestamp);
+     *
+     * @param outputStream        stream to write the data to
+     * @param timeAggregationMode granularity of the accumulator
+     * @param source              source
+     * @param metricsPerCategory  mapping of metrics per category
+     * @param fromTimestamp       earliest timestamp to consider (inclusive)
+     * @param toTimestamp         latest timestamp to consider (inclusive)
+     * @param context             call context
+     * @throws IOException generic I/O exception
+     */
+    void getUsage(OutputStream outputStream, TimeAggregationMode timeAggregationMode,
+                  String source, Map<String, Collection<String>> metricsPerCategory,
+                  DateTime fromTimestamp, DateTime toTimestamp, TenantContext context) throws IOException;
+
+    /**
+     * Get usage data as Json using a decimating filter to reduce the number of points
+     *
+     * @param outputStream       stream to write the data to
+     * @param decimationMode     decimation mode for the decimating filter
+     * @param outputCount        number of data point the decimating filter should output, can be null
+     * @param source             source
+     * @param metricsPerCategory mapping of metrics per category
+     * @param fromTimestamp      earliest timestamp to consider (inclusive)
+     * @param toTimestamp        latest timestamp to consider (inclusive)
+     * @param context            call context
+     * @throws IOException generic I/O exception
+     */
+    void getUsage(OutputStream outputStream, DecimationMode decimationMode, @Nullable Integer outputCount,
+                  String source, Map<String, Collection<String>> metricsPerCategory,
+                  DateTime fromTimestamp, DateTime toTimestamp, TenantContext context) throws IOException;
+
+    /**
+     * Get usage data for all metrics (given a set of categories) as Json.
+     *
+     * @param outputStream  stream to write the data to
+     * @param source        source
+     * @param categories    categories
+     * @param fromTimestamp earliest timestamp to consider (inclusive)
+     * @param toTimestamp   latest timestamp to consider (inclusive)
+     * @param context       call context
+     * @throws IOException generic I/O exception
+     */
+    void getUsage(OutputStream outputStream, String source, Collection<String> categories,
+                  DateTime fromTimestamp, DateTime toTimestamp, TenantContext context) throws IOException;
+
+    /**
+     * Get usage data as Json.
+     *
+     * @param outputStream       stream to write the data to
+     * @param source             source
+     * @param metricsPerCategory mapping of metrics per category
+     * @param fromTimestamp      earliest timestamp to consider (inclusive)
+     * @param toTimestamp        latest timestamp to consider (inclusive)
+     * @param context            call context
+     * @throws IOException generic I/O exception
+     */
+    void getUsage(OutputStream outputStream, String source, Map<String, Collection<String>> metricsPerCategory,
+                  DateTime fromTimestamp, DateTime toTimestamp, TenantContext context) throws IOException;
 
     /**
      * Shortcut API to record a usage value of "1" for a given category and metric.

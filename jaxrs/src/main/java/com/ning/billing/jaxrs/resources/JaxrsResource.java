@@ -79,7 +79,8 @@ public interface JaxrsResource {
 
     public static final String QUERY_NOTIFICATION_CALLBACK = "cb";
 
-    public static final String QUERY_METER_WITH_AGGREGATE = "aggregate";
+    public static final String QUERY_METER_WITH_CATEGORY_AGGREGATE = "withCategoryAggregate";
+    public static final String QUERY_METER_TIME_AGGREGATION_MODE = "timeAggregationMode";
     public static final String QUERY_METER_TIMESTAMP = "timestamp";
     public static final String QUERY_METER_FROM = "from";
     public static final String QUERY_METER_TO = "to";
