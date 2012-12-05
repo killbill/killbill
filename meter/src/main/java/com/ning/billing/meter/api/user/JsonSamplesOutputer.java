@@ -23,7 +23,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -69,17 +68,17 @@ public class JsonSamplesOutputer {
         this.context = context;
     }
 
-    public void output(final OutputStream output, final List<UUID> bundleIds, final Map<String, Collection<String>> metricsPerCategory,
+    public void output(final OutputStream output, final List<String> sources, final Map<String, Collection<String>> metricsPerCategory,
                        final DateTime startTime, final DateTime endTime) throws IOException {
         // Default - output all data points as CSV
-        output(output, bundleIds, metricsPerCategory, DecimationMode.PEAK_PICK, null, false, false, startTime, endTime);
+        output(output, sources, metricsPerCategory, DecimationMode.PEAK_PICK, null, false, false, startTime, endTime);
     }
 
-    public void output(final OutputStream output, final List<UUID> bundleIds, final Map<String, Collection<String>> metricsPerCategory,
+    public void output(final OutputStream output, final List<String> sources, final Map<String, Collection<String>> metricsPerCategory,
                        final DecimationMode decimationMode, @Nullable final Integer outputCount, final boolean decodeSamples, final boolean compact,
                        final DateTime startTime, final DateTime endTime) throws IOException {
         // Retrieve the source and metric ids
-        final List<Integer> sourceIds = translateBundleIdsToSourceIds(bundleIds);
+        final List<Integer> sourceIds = translateSourcesToSourceIds(sources);
         final List<Integer> metricIds = translateCategoriesAndMetricNamesToMetricIds(metricsPerCategory);
 
         // Create the decimating filters, if needed
@@ -108,10 +107,10 @@ public class JsonSamplesOutputer {
         generator.close();
     }
 
-    private List<Integer> translateBundleIdsToSourceIds(final List<UUID> bundleIds) {
-        final List<Integer> hostIds = new ArrayList<Integer>(bundleIds.size());
-        for (final UUID bundleId : bundleIds) {
-            hostIds.add(timelineDao.getSourceId(bundleId.toString(), context));
+    private List<Integer> translateSourcesToSourceIds(final List<String> sources) {
+        final List<Integer> hostIds = new ArrayList<Integer>(sources.size());
+        for (final String source : sources) {
+            hostIds.add(timelineDao.getSourceId(source, context));
         }
 
         return hostIds;

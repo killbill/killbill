@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -34,7 +33,7 @@ import com.google.common.collect.Ordering;
 
 public class TestMeter extends TestJaxrsBase {
 
-    private final UUID bundleId = UUID.randomUUID();
+    private final String source = UUID.randomUUID().toString();
     private final String category = "PageView";
     private final String visitor1 = "pierre";
     private final String visitor2 = "stephane";
@@ -56,10 +55,10 @@ public class TestMeter extends TestJaxrsBase {
         final DateTime end = dateTimeOrdering.max(visits);
 
         // Verify the visits recorded
-        final List<Map<String, Object>> meteringAggregateUsage = getMeteringAggregateUsage(bundleId, category, start, end);
+        final List<Map<String, Object>> meteringAggregateUsage = getMeteringAggregateUsage(source, category, start, end);
         final List<DateTime> visitsFound = new ArrayList<DateTime>();
         for (final Map<String, Object> oneUsage : meteringAggregateUsage) {
-            Assert.assertEquals(oneUsage.get("sourceName"), bundleId.toString());
+            Assert.assertEquals(oneUsage.get("sourceName"), source);
             Assert.assertEquals(oneUsage.get("eventCategory"), category);
             Assert.assertEquals(oneUsage.get("metric"), "__AGGREGATE__");
 
@@ -79,11 +78,11 @@ public class TestMeter extends TestJaxrsBase {
         final List<DateTime> visits = new ArrayList<DateTime>();
         for (int i = 0; i < nbVisits; i++) {
             DateTime visitDate = lastVisit.plusSeconds(i);
-            recordMeteringUsage(bundleId, category, visitor1, visitDate);
+            recordMeteringUsage(source, category, visitor1, visitDate);
             visits.add(visitDate);
 
             visitDate = visitDate.plusSeconds(1);
-            recordMeteringUsage(bundleId, category, visitor2, visitDate);
+            recordMeteringUsage(source, category, visitor2, visitDate);
             visits.add(visitDate);
 
             lastVisit = visitDate;

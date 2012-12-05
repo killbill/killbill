@@ -37,7 +37,7 @@ public interface JaxrsResource {
     /*
      * Patterns
      */
-    public static String STRING_PATTERN = "\\w+";
+    public static String STRING_PATTERN = "[\\w-]+";
     public static String UUID_PATTERN = "\\w+-\\w+-\\w+-\\w+-\\w+";
 
     /*

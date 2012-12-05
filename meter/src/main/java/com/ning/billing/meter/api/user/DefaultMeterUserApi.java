@@ -20,13 +20,11 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Collection;
 import java.util.Map;
-import java.util.UUID;
 
 import javax.inject.Inject;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.ObjectType;
 import com.ning.billing.meter.api.MeterUserApi;
 import com.ning.billing.meter.timeline.TimelineEventHandler;
 import com.ning.billing.meter.timeline.persistent.TimelineDao;
@@ -58,50 +56,48 @@ public class DefaultMeterUserApi implements MeterUserApi {
     }
 
     @Override
-    public void getAggregateUsage(final OutputStream outputStream, final UUID bundleId, final Collection<String> categories,
+    public void getAggregateUsage(final OutputStream outputStream, final String source, final Collection<String> categories,
                                   final DateTime fromTimestamp, final DateTime toTimestamp, final TenantContext context) throws IOException {
         final ImmutableMap.Builder<String, Collection<String>> metricsPerCategory = new Builder<String, Collection<String>>();
         for (final String category : categories) {
             metricsPerCategory.put(category, ImmutableList.<String>of(AGGREGATE_METRIC_NAME));
         }
-        getUsage(outputStream, bundleId, metricsPerCategory.build(), fromTimestamp, toTimestamp, context);
+        getUsage(outputStream, source, metricsPerCategory.build(), fromTimestamp, toTimestamp, context);
     }
 
     @Override
-    public void getUsage(final OutputStream outputStream, final UUID bundleId, final Map<String, Collection<String>> metricsPerCategory,
+    public void getUsage(final OutputStream outputStream, final String source, final Map<String, Collection<String>> metricsPerCategory,
                          final DateTime fromTimestamp, final DateTime toTimestamp, final TenantContext context) throws IOException {
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(context);
 
         final JsonSamplesOutputer outputerJson = new JsonSamplesOutputer(timelineEventHandler, timelineDao, internalTenantContext);
-        outputerJson.output(outputStream, ImmutableList.<UUID>of(bundleId), metricsPerCategory, fromTimestamp, toTimestamp);
+        outputerJson.output(outputStream, ImmutableList.<String>of(source), metricsPerCategory, fromTimestamp, toTimestamp);
     }
 
     @Override
-    public void incrementUsage(final UUID bundleId, final String categoryName, final String metricName,
+    public void incrementUsage(final String source, final String categoryName, final String metricName,
                                final DateTime timestamp, final CallContext context) {
-        recordUsage(bundleId,
+        recordUsage(source,
                     ImmutableMap.<String, Map<String, Object>>of(categoryName, ImmutableMap.<String, Object>of(metricName, (short) 1)),
                     timestamp,
                     context);
     }
 
     @Override
-    public void incrementUsageAndAggregate(final UUID bundleId, final String categoryName, final String metricName,
+    public void incrementUsageAndAggregate(final String source, final String categoryName, final String metricName,
                                            final DateTime timestamp, final CallContext context) {
-        recordUsage(bundleId,
+        recordUsage(source,
                     ImmutableMap.<String, Map<String, Object>>of(categoryName, ImmutableMap.<String, Object>of(metricName, (short) 1, AGGREGATE_METRIC_NAME, (short) 1)),
                     timestamp,
                     context);
     }
 
     @Override
-    public void recordUsage(final UUID bundleId, final Map<String, Map<String, Object>> samplesForCategoriesAndMetrics,
+    public void recordUsage(final String source, final Map<String, Map<String, Object>> samplesForCategoriesAndMetrics,
                             final DateTime timestamp, final CallContext context) {
-        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(bundleId, ObjectType.BUNDLE, context);
-
+        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(context);
         for (final String category : samplesForCategoriesAndMetrics.keySet()) {
-            final String sourceName = bundleId.toString();
-            timelineEventHandler.record(sourceName, category, timestamp, samplesForCategoriesAndMetrics.get(category),
+            timelineEventHandler.record(source, category, timestamp, samplesForCategoriesAndMetrics.get(category),
                                         internalCallContext);
         }
     }
