@@ -23,7 +23,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -44,6 +43,7 @@ import org.joda.time.DateTime;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
 import com.ning.billing.meter.api.MeterUserApi;
+import com.ning.billing.meter.api.TimeAggregationMode;
 import com.ning.billing.util.api.AuditUserApi;
 import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.api.TagUserApi;
@@ -51,7 +51,7 @@ import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.clock.Clock;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -60,8 +60,6 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 @Singleton
 @Path(JaxrsResource.METER_PATH)
 public class MeterResource extends JaxRsResourceBase {
-
-    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     private final MeterUserApi meterApi;
     private final Clock clock;
@@ -80,17 +78,17 @@ public class MeterResource extends JaxRsResourceBase {
     }
 
     @GET
-    @Path("/{bundleId:" + UUID_PATTERN + "}")
+    @Path("/{source:" + STRING_PATTERN + "}")
     @Produces(APPLICATION_JSON)
-    public StreamingOutput getUsage(@PathParam("bundleId") final String bundleIdString,
+    public StreamingOutput getUsage(@PathParam("source") final String source,
+                                    // Aggregates per category
                                     @QueryParam(QUERY_METER_CATEGORY) final List<String> categories,
                                     // Format: category,metric
                                     @QueryParam(QUERY_METER_CATEGORY_AND_METRIC) final List<String> categoriesAndMetrics,
                                     @QueryParam(QUERY_METER_FROM) final String fromTimestampString,
                                     @QueryParam(QUERY_METER_TO) final String toTimestampString,
-                                    @QueryParam(QUERY_METER_WITH_AGGREGATE) @DefaultValue("false") final Boolean withAggregate,
+                                    @QueryParam(QUERY_METER_TIME_AGGREGATION_MODE) @DefaultValue("") final String timeAggregationModeString,
                                     @javax.ws.rs.core.Context final HttpServletRequest request) {
-        final UUID bundleId = UUID.fromString(bundleIdString);
         final DateTime fromTimestamp = DATE_TIME_FORMATTER.parseDateTime(fromTimestampString);
         final DateTime toTimestamp = DATE_TIME_FORMATTER.parseDateTime(toTimestampString);
         final TenantContext tenantContext = context.createContext(request);
@@ -98,11 +96,22 @@ public class MeterResource extends JaxRsResourceBase {
         return new StreamingOutput() {
             @Override
             public void write(final OutputStream output) throws IOException, WebApplicationException {
-                if (withAggregate) {
-                    meterApi.getAggregateUsage(output, bundleId, categories, fromTimestamp, toTimestamp, tenantContext);
+                // Look at aggregates per category?
+                if (categories != null) {
+                    if (Strings.isNullOrEmpty(timeAggregationModeString)) {
+                        meterApi.getUsage(output, source, categories, fromTimestamp, toTimestamp, tenantContext);
+                    } else {
+                        final TimeAggregationMode timeAggregationMode = TimeAggregationMode.valueOf(timeAggregationModeString);
+                        meterApi.getUsage(output, timeAggregationMode, source, categories, fromTimestamp, toTimestamp, tenantContext);
+                    }
                 } else {
                     final Map<String, Collection<String>> metricsPerCategory = retrieveMetricsPerCategory(categoriesAndMetrics);
-                    meterApi.getUsage(output, bundleId, metricsPerCategory, fromTimestamp, toTimestamp, tenantContext);
+                    if (Strings.isNullOrEmpty(timeAggregationModeString)) {
+                        meterApi.getUsage(output, source, metricsPerCategory, fromTimestamp, toTimestamp, tenantContext);
+                    } else {
+                        final TimeAggregationMode timeAggregationMode = TimeAggregationMode.valueOf(timeAggregationModeString);
+                        meterApi.getUsage(output, timeAggregationMode, source, metricsPerCategory, fromTimestamp, toTimestamp, tenantContext);
+                    }
                 }
             }
         };
@@ -131,19 +140,18 @@ public class MeterResource extends JaxRsResourceBase {
     }
 
     @POST
-    @Path("/{bundleId:" + UUID_PATTERN + "}/{categoryName:" + STRING_PATTERN + "}/{metricName:" + STRING_PATTERN + "}")
+    @Path("/{source:" + STRING_PATTERN + "}/{categoryName:" + STRING_PATTERN + "}/{metricName:" + STRING_PATTERN + "}")
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    public Response recordUsage(@PathParam("bundleId") final String bundleIdString,
+    public Response recordUsage(@PathParam("source") final String source,
                                 @PathParam("categoryName") final String categoryName,
                                 @PathParam("metricName") final String metricName,
-                                @QueryParam(QUERY_METER_WITH_AGGREGATE) @DefaultValue("false") final Boolean withAggregate,
+                                @QueryParam(QUERY_METER_WITH_CATEGORY_AGGREGATE) @DefaultValue("false") final Boolean withAggregate,
                                 @QueryParam(QUERY_METER_TIMESTAMP) final String timestampString,
                                 @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                 @HeaderParam(HDR_REASON) final String reason,
                                 @HeaderParam(HDR_COMMENT) final String comment,
                                 @javax.ws.rs.core.Context final HttpServletRequest request) {
-        final UUID bundleId = UUID.fromString(bundleIdString);
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
         final DateTime timestamp;
@@ -154,9 +162,9 @@ public class MeterResource extends JaxRsResourceBase {
         }
 
         if (withAggregate) {
-            meterApi.incrementUsageAndAggregate(bundleId, categoryName, metricName, timestamp, callContext);
+            meterApi.incrementUsageAndAggregate(source, categoryName, metricName, timestamp, callContext);
         } else {
-            meterApi.incrementUsage(bundleId, categoryName, metricName, timestamp, callContext);
+            meterApi.incrementUsage(source, categoryName, metricName, timestamp, callContext);
         }
 
         return Response.ok().build();

@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.List;
 
 import com.ning.billing.meter.timeline.chunks.TimelineChunk;
+import com.ning.billing.meter.timeline.consumer.SampleProcessor;
 import com.ning.billing.meter.timeline.samples.SampleBase;
 import com.ning.billing.meter.timeline.samples.SampleOpcode;
 import com.ning.billing.meter.timeline.samples.ScalarSample;

@@ -31,6 +31,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.meter.MeterTestSuite;
+import com.ning.billing.meter.timeline.consumer.TimeRangeSampleProcessor;
 import com.ning.billing.meter.timeline.samples.RepeatSample;
 import com.ning.billing.meter.timeline.samples.SampleOpcode;
 import com.ning.billing.meter.timeline.samples.ScalarSample;

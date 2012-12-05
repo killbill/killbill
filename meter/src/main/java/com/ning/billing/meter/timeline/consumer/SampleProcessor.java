@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.meter.timeline.codec;
+package com.ning.billing.meter.timeline.consumer;
 
 import com.ning.billing.meter.timeline.samples.SampleOpcode;
 import com.ning.billing.meter.timeline.times.TimelineCursor;

@@ -21,25 +21,29 @@ import org.joda.time.DateTime;
 import com.ning.billing.meter.timeline.samples.SampleOpcode;
 import com.ning.billing.meter.timeline.util.DateTimeUtils;
 
-public class CSVSampleConsumer implements SampleConsumer {
+public class CSVSampleProcessor extends TimeRangeSampleProcessor {
 
     private final StringBuilder builder = new StringBuilder();
     // Use our private counter because of the decimating filter
     private int builderSampleNumber = 0;
 
-    @Override
-    public void consumeSample(final int sampleNumber, final SampleOpcode opcode, final Object value, final DateTime time) {
-        if (time != null) {
-            final String valueString = value == null ? "0" : value.toString();
-            if (builderSampleNumber > 0) {
-                builder.append(",");
-            }
+    public CSVSampleProcessor() { }
 
-            builder.append(DateTimeUtils.unixSeconds(time))
-                   .append(",")
-                   .append(valueString);
-            builderSampleNumber++;
+    public CSVSampleProcessor(final DateTime startTime, final DateTime endTime) {
+        super(startTime, endTime);
+    }
+
+    @Override
+    public void processOneSample(final DateTime time, final SampleOpcode opcode, final Object value) {
+        final String valueString = value == null ? "0" : value.toString();
+        if (builderSampleNumber > 0) {
+            builder.append(",");
         }
+
+        builder.append(DateTimeUtils.unixSeconds(time))
+               .append(",")
+               .append(valueString);
+        builderSampleNumber++;
     }
 
     @Override

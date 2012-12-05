@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.meter.timeline.filter;
+package com.ning.billing.meter.timeline.consumer.filter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +25,8 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.meter.MeterTestSuite;
-import com.ning.billing.meter.timeline.consumer.SampleConsumer;
+import com.ning.billing.meter.api.DecimationMode;
+import com.ning.billing.meter.timeline.consumer.TimeRangeSampleProcessor;
 import com.ning.billing.meter.timeline.samples.SampleOpcode;
 
 public class TestDecimatingFilter extends MeterTestSuite {
@@ -36,11 +37,11 @@ public class TestDecimatingFilter extends MeterTestSuite {
         final long millisStart = System.currentTimeMillis() - 2000 * 100;
 
         final DecimatingSampleFilter filter = new DecimatingSampleFilter(new DateTime(millisStart), new DateTime(millisStart + 2000 * 100), 25, 100, new TimeSpan("2s"), DecimationMode.PEAK_PICK,
-                                                                         new SampleConsumer() {
+                                                                         new TimeRangeSampleProcessor() {
 
                                                                              @Override
-                                                                             public void consumeSample(final int sampleNumber, final SampleOpcode opcode, final Object value, final DateTime time) {
-                                                                                 outputs.add((double) ((Double) value));
+                                                                             public void processOneSample(final DateTime time, final SampleOpcode opcode, final Object value) {
+                                                                                 outputs.add((Double) value);
                                                                              }
                                                                          });
         for (int i = 0; i < 100; i++) {
@@ -78,10 +79,10 @@ public class TestDecimatingFilter extends MeterTestSuite {
         final long millisStart = System.currentTimeMillis() - 2000 * 21;
 
         final DecimatingSampleFilter filter = new DecimatingSampleFilter(new DateTime(millisStart), new DateTime(millisStart + 2000 * 21), 6, 21, new TimeSpan("2s"), DecimationMode.PEAK_PICK,
-                                                                         new SampleConsumer() {
+                                                                         new TimeRangeSampleProcessor() {
 
                                                                              @Override
-                                                                             public void consumeSample(final int sampleNumber, final SampleOpcode opcode, final Object value, final DateTime time) {
+                                                                             public void processOneSample(final DateTime time, final SampleOpcode opcode, final Object value) {
                                                                                  outputs.add((double) ((Double) value));
                                                                              }
                                                                          });

@@ -24,25 +24,22 @@ import org.joda.time.DateTime;
 
 import com.ning.billing.meter.timeline.chunks.TimelineChunk;
 import com.ning.billing.meter.timeline.codec.SampleCoder;
-import com.ning.billing.meter.timeline.filter.DecimatingSampleFilter;
 
 public class CSVConsumer {
 
-    private CSVConsumer() {
-    }
-
-    public static String getSamplesAsCSV(final SampleCoder sampleCoder, final TimelineChunk chunk, final DecimatingSampleFilter rangeSampleProcessor) throws IOException {
-        sampleCoder.scan(chunk, rangeSampleProcessor);
-        return rangeSampleProcessor.getSampleConsumer().toString();
-    }
+    private CSVConsumer() {}
 
     public static String getSamplesAsCSV(final SampleCoder sampleCoder, final TimelineChunk chunk) throws IOException {
         return getSamplesAsCSV(sampleCoder, chunk, null, null);
     }
 
     public static String getSamplesAsCSV(final SampleCoder sampleCoder, final TimelineChunk chunk, @Nullable final DateTime startTime, @Nullable final DateTime endTime) throws IOException {
-        final CSVOutputProcessor processor = new CSVOutputProcessor(startTime, endTime);
-        sampleCoder.scan(chunk, processor);
-        return processor.toString();
+        final CSVSampleProcessor processor = new CSVSampleProcessor(startTime, endTime);
+        return getSamplesAsCSV(sampleCoder, chunk, processor);
+    }
+
+    public static String getSamplesAsCSV(final SampleCoder sampleCoder, final TimelineChunk chunk, final TimeRangeSampleProcessor rangeSampleProcessor) throws IOException {
+        sampleCoder.scan(chunk, rangeSampleProcessor);
+        return rangeSampleProcessor.toString();
     }
 }

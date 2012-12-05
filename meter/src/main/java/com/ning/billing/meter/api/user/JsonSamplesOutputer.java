@@ -20,47 +20,34 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
-import org.skife.config.TimeSpan;
 
 import com.ning.billing.meter.timeline.TimelineEventHandler;
-import com.ning.billing.meter.timeline.categories.CategoryRecordIdAndMetric;
 import com.ning.billing.meter.timeline.chunks.TimelineChunk;
-import com.ning.billing.meter.timeline.chunks.TimelineChunksViews;
 import com.ning.billing.meter.timeline.codec.DefaultSampleCoder;
 import com.ning.billing.meter.timeline.codec.SampleCoder;
-import com.ning.billing.meter.timeline.codec.TimelineChunkDecoded;
-import com.ning.billing.meter.timeline.consumer.CSVConsumer;
-import com.ning.billing.meter.timeline.consumer.CSVSampleConsumer;
 import com.ning.billing.meter.timeline.consumer.TimelineChunkConsumer;
-import com.ning.billing.meter.timeline.filter.DecimatingSampleFilter;
-import com.ning.billing.meter.timeline.filter.DecimationMode;
-import com.ning.billing.meter.timeline.metrics.SamplesForMetricAndSource;
 import com.ning.billing.meter.timeline.persistent.TimelineDao;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
-import com.google.common.base.Strings;
 
-public class JsonSamplesOutputer {
+public abstract class JsonSamplesOutputer {
 
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    protected static final ObjectMapper objectMapper = new ObjectMapper();
 
-    private final TimelineEventHandler timelineEventHandler;
-    private final TimelineDao timelineDao;
-    private final SampleCoder sampleCoder;
-    private final InternalTenantContext context;
+    protected final TimelineEventHandler timelineEventHandler;
+    protected final TimelineDao timelineDao;
+    protected final SampleCoder sampleCoder;
+    protected final InternalTenantContext context;
 
     public JsonSamplesOutputer(final TimelineEventHandler timelineEventHandler, final TimelineDao timelineDao, final InternalTenantContext context) {
         this.timelineEventHandler = timelineEventHandler;
@@ -69,38 +56,31 @@ public class JsonSamplesOutputer {
         this.context = context;
     }
 
-    public void output(final OutputStream output, final List<UUID> bundleIds, final Map<String, Collection<String>> metricsPerCategory,
-                       final DateTime startTime, final DateTime endTime) throws IOException {
-        // Default - output all data points as CSV
-        output(output, bundleIds, metricsPerCategory, DecimationMode.PEAK_PICK, null, false, false, startTime, endTime);
-    }
+    protected abstract void writeJsonForChunks(final JsonGenerator generator, final Collection<? extends TimelineChunk> chunksForSourceAndMetric) throws IOException;
 
-    public void output(final OutputStream output, final List<UUID> bundleIds, final Map<String, Collection<String>> metricsPerCategory,
-                       final DecimationMode decimationMode, @Nullable final Integer outputCount, final boolean decodeSamples, final boolean compact,
+    public void output(final OutputStream output, final List<String> sources, final Map<String, Collection<String>> metricsPerCategory,
                        final DateTime startTime, final DateTime endTime) throws IOException {
         // Retrieve the source and metric ids
-        final List<Integer> sourceIds = translateBundleIdsToSourceIds(bundleIds);
+        final List<Integer> sourceIds = translateSourcesToSourceIds(sources);
         final List<Integer> metricIds = translateCategoriesAndMetricNamesToMetricIds(metricsPerCategory);
+        output(output, sourceIds, metricIds, startTime, endTime);
+    }
 
-        // Create the decimating filters, if needed
-        final Map<Integer, Map<Integer, DecimatingSampleFilter>> filters = createDecimatingSampleFilters(sourceIds, metricIds, decimationMode, startTime, endTime, outputCount);
-
+    protected void output(final OutputStream output, final List<Integer> sourceIds, final List<Integer> metricIds,
+                          final DateTime startTime, final DateTime endTime) throws IOException {
         // Setup Jackson
-        final ObjectWriter writer;
-        if (compact) {
-            writer = objectMapper.writerWithView(TimelineChunksViews.Compact.class);
-        } else {
-            writer = objectMapper.writerWithView(TimelineChunksViews.Loose.class);
-        }
         final JsonGenerator generator = objectMapper.getJsonFactory().createJsonGenerator(output);
 
         generator.writeStartArray();
 
         // First, return all data stored in the database
-        writeJsonForStoredChunks(generator, writer, filters, sourceIds, metricIds, startTime, endTime, decodeSamples);
+        writeJsonForStoredChunks(generator, sourceIds, metricIds, startTime, endTime);
 
         // Now return all data in memory
-        writeJsonForInMemoryChunks(generator, writer, filters, sourceIds, metricIds, startTime, endTime, decodeSamples);
+        writeJsonForInMemoryChunks(generator, sourceIds, metricIds, startTime, endTime);
+
+        // Allow implementers to flush their buffers
+        writeRemainingData(generator);
 
         generator.writeEndArray();
 
@@ -108,10 +88,14 @@ public class JsonSamplesOutputer {
         generator.close();
     }
 
-    private List<Integer> translateBundleIdsToSourceIds(final List<UUID> bundleIds) {
-        final List<Integer> hostIds = new ArrayList<Integer>(bundleIds.size());
-        for (final UUID bundleId : bundleIds) {
-            hostIds.add(timelineDao.getSourceId(bundleId.toString(), context));
+    protected void writeRemainingData(final JsonGenerator generator) throws IOException {
+        // No-op
+    }
+
+    private List<Integer> translateSourcesToSourceIds(final List<String> sources) {
+        final List<Integer> hostIds = new ArrayList<Integer>(sources.size());
+        for (final String source : sources) {
+            hostIds.add(timelineDao.getSourceId(source, context));
         }
 
         return hostIds;
@@ -140,32 +124,8 @@ public class JsonSamplesOutputer {
         return metricIds;
     }
 
-    private Map<Integer, Map<Integer, DecimatingSampleFilter>> createDecimatingSampleFilters(final List<Integer> hostIds, final List<Integer> sampleKindIds, final DecimationMode decimationMode,
-                                                                                             final DateTime startTime, final DateTime endTime, final Integer outputCount) {
-        final Map<Integer, Map<Integer, DecimatingSampleFilter>> filters = new HashMap<Integer, Map<Integer, DecimatingSampleFilter>>();
-        for (final Integer hostId : hostIds) {
-            filters.put(hostId, new HashMap<Integer, DecimatingSampleFilter>());
-            for (final Integer sampleKindId : sampleKindIds) {
-                filters.get(hostId).put(sampleKindId, createDecimatingSampleFilter(outputCount, decimationMode, startTime, endTime));
-            }
-        }
-        return filters;
-    }
-
-    private DecimatingSampleFilter createDecimatingSampleFilter(final Integer outputCount, final DecimationMode decimationMode, final DateTime startTime, final DateTime endTime) {
-        final DecimatingSampleFilter rangeSampleProcessor;
-        if (outputCount == null) {
-            rangeSampleProcessor = null;
-        } else {
-            // TODO Fix the polling interval
-            rangeSampleProcessor = new DecimatingSampleFilter(startTime, endTime, outputCount, new TimeSpan("1s"), decimationMode, new CSVSampleConsumer());
-        }
-
-        return rangeSampleProcessor;
-    }
-
-    private void writeJsonForStoredChunks(final JsonGenerator generator, final ObjectWriter writer, final Map<Integer, Map<Integer, DecimatingSampleFilter>> filters, final List<Integer> hostIdsList,
-                                          final List<Integer> sampleKindIdsList, final DateTime startTime, final DateTime endTime, final boolean decodeSamples) throws IOException {
+    private void writeJsonForStoredChunks(final JsonGenerator generator, final List<Integer> hostIdsList, final List<Integer> sampleKindIdsList,
+                                          final DateTime startTime, final DateTime endTime) throws IOException {
         final AtomicReference<Integer> lastHostId = new AtomicReference<Integer>(null);
         final AtomicReference<Integer> lastSampleKindId = new AtomicReference<Integer>(null);
         final List<TimelineChunk> chunksForHostAndSampleKind = new ArrayList<TimelineChunk>();
@@ -181,7 +141,7 @@ public class JsonSamplesOutputer {
                 chunksForHostAndSampleKind.add(chunks);
                 if (previousHostId != null && (!previousHostId.equals(currentHostId) || !previousSampleKindId.equals(currentSampleKindId))) {
                     try {
-                        writeJsonForChunks(generator, writer, filters, chunksForHostAndSampleKind, decodeSamples);
+                        writeJsonForChunks(generator, chunksForHostAndSampleKind);
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
@@ -194,13 +154,13 @@ public class JsonSamplesOutputer {
         }, context);
 
         if (chunksForHostAndSampleKind.size() > 0) {
-            writeJsonForChunks(generator, writer, filters, chunksForHostAndSampleKind, decodeSamples);
+            writeJsonForChunks(generator, chunksForHostAndSampleKind);
             chunksForHostAndSampleKind.clear();
         }
     }
 
-    private void writeJsonForInMemoryChunks(final JsonGenerator generator, final ObjectWriter writer, final Map<Integer, Map<Integer, DecimatingSampleFilter>> filters, final List<Integer> hostIdsList,
-                                            final List<Integer> sampleKindIdsList, @Nullable final DateTime startTime, @Nullable final DateTime endTime, final boolean decodeSamples) throws IOException {
+    private void writeJsonForInMemoryChunks(final JsonGenerator generator, final List<Integer> hostIdsList, final List<Integer> sampleKindIdsList,
+                                            @Nullable final DateTime startTime, @Nullable final DateTime endTime) throws IOException {
 
         for (final Integer hostId : hostIdsList) {
             final Collection<? extends TimelineChunk> inMemorySamples;
@@ -209,30 +169,7 @@ public class JsonSamplesOutputer {
             } catch (ExecutionException e) {
                 throw new IOException(e);
             }
-            writeJsonForChunks(generator, writer, filters, inMemorySamples, decodeSamples);
-        }
-    }
-
-    private void writeJsonForChunks(final JsonGenerator generator, final ObjectWriter writer, final Map<Integer, Map<Integer, DecimatingSampleFilter>> filters,
-                                    final Iterable<? extends TimelineChunk> chunksForHostAndSampleKind, final boolean decodeSamples) throws IOException {
-        for (final TimelineChunk chunk : chunksForHostAndSampleKind) {
-            if (decodeSamples) {
-                writer.writeValue(generator, new TimelineChunkDecoded(chunk, sampleCoder));
-            } else {
-                final String hostName = timelineDao.getSource(chunk.getSourceId(), context);
-                final CategoryRecordIdAndMetric categoryIdAndSampleKind = timelineDao.getCategoryIdAndMetric(chunk.getMetricId(), context);
-                final String eventCategory = timelineDao.getEventCategory(categoryIdAndSampleKind.getEventCategoryId(), context);
-                final String sampleKind = categoryIdAndSampleKind.getMetric();
-                // TODO pass compact form
-                final DecimatingSampleFilter filter = filters.get(chunk.getSourceId()).get(chunk.getMetricId());
-                // TODO CSV only for now
-                final String samples = filter == null ? CSVConsumer.getSamplesAsCSV(sampleCoder, chunk) : CSVConsumer.getSamplesAsCSV(sampleCoder, chunk, filter);
-
-                // Don't write out empty samples
-                if (!Strings.isNullOrEmpty(samples)) {
-                    generator.writeObject(new SamplesForMetricAndSource(hostName, eventCategory, sampleKind, samples));
-                }
-            }
+            writeJsonForChunks(generator, inMemorySamples);
         }
     }
 }

@@ -14,14 +14,9 @@
  * under the License.
  */
 
-package com.ning.billing.meter.timeline.consumer;
+package com.ning.billing.meter.api;
 
-import org.joda.time.DateTime;
-
-import com.ning.billing.meter.timeline.samples.SampleOpcode;
-
-public interface SampleConsumer {
-
-    public void consumeSample(int sampleNumber, SampleOpcode opcode, Object value, DateTime time);
+public enum DecimationMode {
+    PEAK_PICK,
+    AVERAGE
 }
-

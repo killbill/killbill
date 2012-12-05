@@ -38,7 +38,6 @@ import com.ning.billing.meter.timeline.shutdown.StartTimes;
 import com.ning.billing.meter.timeline.shutdown.StartTimesBinder;
 import com.ning.billing.meter.timeline.shutdown.StartTimesMapper;
 import com.ning.billing.meter.timeline.sources.SourceIdAndMetricIdMapper;
-import com.ning.billing.meter.timeline.sources.SourceRecordIdAndMetricRecordId;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.InternalTenantContextBinder;

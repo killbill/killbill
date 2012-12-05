@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.meter.timeline.codec;
+package com.ning.billing.meter.timeline.consumer;
 
 
 import java.io.ByteArrayOutputStream;
@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ning.billing.meter.timeline.chunks.TimelineChunk;
+import com.ning.billing.meter.timeline.codec.SampleCoder;
 import com.ning.billing.meter.timeline.samples.SampleOpcode;
 import com.ning.billing.meter.timeline.times.TimelineCursor;
 
