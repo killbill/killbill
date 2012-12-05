@@ -34,24 +34,25 @@ import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 
 import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 
 public class CachingTimelineDao implements TimelineDao {
 
     private static final Logger log = LoggerFactory.getLogger(CachingTimelineDao.class);
 
-    private final BiMap<Integer, String> sourcesCache;
-    private final BiMap<Integer, CategoryRecordIdAndMetric> metricsCache;
-    private final BiMap<Integer, String> eventCategoriesCache;
+    private final BiMap<Integer, String> sourcesCache = HashBiMap.<Integer, String>create();
+    private final BiMap<Integer, CategoryRecordIdAndMetric> metricsCache = HashBiMap.<Integer, CategoryRecordIdAndMetric>create();
+    private final BiMap<Integer, String> eventCategoriesCache = HashBiMap.<Integer, String>create();
 
     private final TimelineDao delegate;
 
     public CachingTimelineDao(final TimelineDao delegate) {
         this.delegate = delegate;
-        // TODO - rethink priming with tenants
-        final InternalTenantContext context = new InternalTenantContext(null, null);
-        sourcesCache = delegate.getSources(context);
-        metricsCache = delegate.getMetrics(context);
-        eventCategoriesCache = delegate.getEventCategories(context);
+        // TODO - rethink priming with tenants. Also, we shouldn't prime here, plug into the lifecycle instead
+        //final InternalTenantContext context = new InternalTenantContext(null, null);
+        //sourcesCache = delegate.getSources(context);
+        //metricsCache = delegate.getMetrics(context);
+        //eventCategoriesCache = delegate.getEventCategories(context);
     }
 
     @Override
