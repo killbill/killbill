@@ -167,6 +167,10 @@ public class DefaultTimelineDao implements TimelineDao {
                                                   final DateTime endTime,
                                                   final TimelineChunkConsumer chunkConsumer,
                                                   final InternalTenantContext context) {
+        if (sourceIdList.size() == 0) {
+            return;
+        }
+
         dbi.withHandle(new HandleCallback<Void>() {
             @Override
             public Void withHandle(final Handle handle) throws Exception {
