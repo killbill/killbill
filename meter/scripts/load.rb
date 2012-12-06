@@ -1,6 +1,6 @@
 #
 #
-#                                                     LOAD TESTS FOR METER MODULE
+#                       LOAD TESTS FOR METER MODULE
 #
 #
 #
@@ -13,10 +13,12 @@
 #    - one *.csv, for all the points created for each seconds
 #    - a second one *.stat to reflect min/max/avg/std for the usage post call
 #
+# 4. One can check using a GET that server recorded all the usage points 
+#   > curl -ubob:lazar -v 'http://127.0.0.1:8080/1.0/kb/meter/f36d5557-e1d9-427a-8133-9ea49aa7e0f8?category=visit&from=2012-07-26T18:12:41&to=2013-07-26T18:12:41'
 #
 #
 #
-# 
+
 require 'rubygems'
 require 'logger'
 require 'json'
@@ -415,12 +417,6 @@ end
 parser = CommandParser.new
 parser.parse(ARGV)
 parser.run
-
-
-
-# curl -v -ubob:lazar  -H "X-Killbill-CreatedBy: xxx@glam.com" -X POST "http://127.0.0.1:8080/1.0/kb/meter/f36d5557-e1d9-427a-8133-9ea49aa7e0f8/visit/sn1?withCategoryAggregate=true"
-# Authorization: Basic Ym9iOmxhemFy
-# X-Killbill-CreatedBy: meter_load_test
 
 
 
