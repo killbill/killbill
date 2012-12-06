@@ -26,6 +26,7 @@ import com.ning.billing.meter.DefaultMeterService;
 import com.ning.billing.meter.MeterService;
 import com.ning.billing.meter.api.MeterUserApi;
 import com.ning.billing.meter.api.user.DefaultMeterUserApi;
+import com.ning.billing.meter.timeline.TimelineEventHandler;
 import com.ning.billing.meter.timeline.codec.DefaultSampleCoder;
 import com.ning.billing.meter.timeline.codec.SampleCoder;
 import com.ning.billing.meter.timeline.persistent.FileBackedBuffer;
@@ -84,11 +85,16 @@ public class MeterModule extends AbstractModule {
         bind(MeterService.class).to(DefaultMeterService.class).asEagerSingleton();
     }
 
+    protected void installTimelineEventHandler() {
+        bind(TimelineEventHandler.class).asEagerSingleton();
+    }
+
     @Override
     protected void configure() {
         final MeterConfig config = installConfig();
 
         installMeterService();
+        installTimelineEventHandler();
         configureFileBackedBuffer(config);
         configureDao();
         configureTimelineObjects();

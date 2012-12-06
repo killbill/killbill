@@ -97,7 +97,7 @@ public class MeterResource extends JaxRsResourceBase {
             @Override
             public void write(final OutputStream output) throws IOException, WebApplicationException {
                 // Look at aggregates per category?
-                if (categories != null) {
+                if (categories != null && categories.size() > 0) {
                     if (Strings.isNullOrEmpty(timeAggregationModeString)) {
                         meterApi.getUsage(output, source, categories, fromTimestamp, toTimestamp, tenantContext);
                     } else {
