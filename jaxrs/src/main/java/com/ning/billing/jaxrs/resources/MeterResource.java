@@ -89,9 +89,20 @@ public class MeterResource extends JaxRsResourceBase {
                                     @QueryParam(QUERY_METER_TO) final String toTimestampString,
                                     @QueryParam(QUERY_METER_TIME_AGGREGATION_MODE) @DefaultValue("") final String timeAggregationModeString,
                                     @javax.ws.rs.core.Context final HttpServletRequest request) {
-        final DateTime fromTimestamp = DATE_TIME_FORMATTER.parseDateTime(fromTimestampString);
-        final DateTime toTimestamp = DATE_TIME_FORMATTER.parseDateTime(toTimestampString);
         final TenantContext tenantContext = context.createContext(request);
+
+        final DateTime fromTimestamp;
+        if (fromTimestampString != null) {
+            fromTimestamp = DATE_TIME_FORMATTER.parseDateTime(fromTimestampString);
+        } else {
+            fromTimestamp = clock.getUTCNow().minusMonths(3);
+        }
+        final DateTime toTimestamp;
+        if (toTimestampString != null) {
+            toTimestamp = DATE_TIME_FORMATTER.parseDateTime(toTimestampString);
+        } else {
+            toTimestamp = clock.getUTCNow();
+        }
 
         return new StreamingOutput() {
             @Override
