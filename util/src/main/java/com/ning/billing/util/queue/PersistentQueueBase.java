@@ -18,6 +18,7 @@ package com.ning.billing.util.queue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,18 +36,19 @@ public abstract class PersistentQueueBase implements QueueLifecycle {
     private final int nbThreads;
     private final Executor executor;
     private final String svcQName;
-    private final long sleepTimeMs;
+    private final PersistentQueueConfig config;
     private boolean isProcessingEvents;
     private int curActiveThreads;
 
     protected final ObjectMapper objectMapper;
 
+    private final AtomicBoolean isStarted = new AtomicBoolean(false);
 
     public PersistentQueueBase(final String svcQName, final Executor executor, final int nbThreads, final PersistentQueueConfig config) {
         this.executor = executor;
         this.nbThreads = nbThreads;
         this.svcQName = svcQName;
-        this.sleepTimeMs = config.getSleepTimeMs();
+        this.config = config;
         this.objectMapper = new ObjectMapper();        
         this.isProcessingEvents = false;
         this.curActiveThreads = 0;
@@ -55,6 +57,9 @@ public abstract class PersistentQueueBase implements QueueLifecycle {
 
     @Override
     public void startQueue() {
+        if (config.isProcessingOff() || !isStarted.compareAndSet(false, true)) {
+            return;
+        }
 
         isProcessingEvents = true;
         curActiveThreads = 0;
@@ -115,7 +120,7 @@ public abstract class PersistentQueueBase implements QueueLifecycle {
                 }
 
                 private void sleepALittle() throws InterruptedException {
-                    Thread.sleep(sleepTimeMs);
+                    Thread.sleep(config.getSleepTimeMs());
                 }
             });
         }
@@ -135,6 +140,10 @@ public abstract class PersistentQueueBase implements QueueLifecycle {
 
     @Override
     public void stopQueue() {
+        if (config.isProcessingOff() || !isStarted.compareAndSet(true, false)) {
+            return;
+        }
+
         int remaining = 0;
         try {
             synchronized (this) {
@@ -172,6 +181,7 @@ public abstract class PersistentQueueBase implements QueueLifecycle {
 
     public abstract int doProcessEvents();
 
-    public abstract boolean isStarted();
-
+    public boolean isStarted() {
+        return isStarted.get();
+    }
 }

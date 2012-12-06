@@ -415,7 +415,7 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
     static NotificationQueueConfig getNotificationConfig(final boolean off, final long sleepTime) {
         return new NotificationQueueConfig() {
             @Override
-            public boolean isNotificationProcessingOff() {
+            public boolean isProcessingOff() {
                 return off;
             }
 

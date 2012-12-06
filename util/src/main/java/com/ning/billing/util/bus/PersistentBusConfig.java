@@ -27,6 +27,11 @@ public interface PersistentBusConfig extends PersistentQueueConfig {
     @Default("500")
     public long getSleepTimeMs();
 
+    @Config("killbill.billing.util.persistent.bus.off")
+    @Default("false")
+    @Override
+    public boolean isProcessingOff();
+
     @Config("killbill.billing.util.persistent.bus.nbThreads")
     @Default("3")
     public int getNbThreads();

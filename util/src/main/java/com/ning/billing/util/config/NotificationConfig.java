@@ -16,7 +16,5 @@
 
 package com.ning.billing.util.config;
 
-
 public interface NotificationConfig extends PersistentQueueConfig {
-    public boolean isNotificationProcessingOff();
 }

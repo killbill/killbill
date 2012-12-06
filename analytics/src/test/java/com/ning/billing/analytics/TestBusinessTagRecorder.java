@@ -77,7 +77,7 @@ public class TestBusinessTagRecorder extends AnalyticsTestSuiteWithEmbeddedDB {
 
     private NotificationQueueConfig config = new NotificationQueueConfig() {
         @Override
-        public boolean isNotificationProcessingOff() {
+        public boolean isProcessingOff() {
             return false;
         }
 

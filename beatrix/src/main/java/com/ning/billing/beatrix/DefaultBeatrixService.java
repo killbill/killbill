@@ -67,12 +67,12 @@ public class DefaultBeatrixService implements BeatrixService {
 
     @LifecycleHandlerType(LifecycleLevel.INIT_BUS)
     public void startBus() {
-        ((PersistentExternalBus) externalBus).start();
+        ((PersistentExternalBus) externalBus).startQueue();
     }
 
     @LifecycleHandlerType(LifecycleLevel.STOP_BUS)
     public void stopBus() {
-        ((PersistentExternalBus) externalBus).stop();
+        ((PersistentExternalBus) externalBus).stopQueue();
     }
 
 }

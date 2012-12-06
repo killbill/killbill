@@ -24,7 +24,6 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.annotation.Nullable;
@@ -62,8 +61,6 @@ public class NotificationQueueDispatcher extends PersistentQueueBase {
     protected final Clock clock;
     protected final Map<String, NotificationQueue> queues;
 
-    private AtomicBoolean isStarted;
-
     // Package visibility on purpose
     NotificationQueueDispatcher(final Clock clock, final NotificationQueueConfig config, final IDBI dbi, final InternalCallContextFactory internalCallContextFactory) {
         super("NotificationQ", Executors.newFixedThreadPool(1, new ThreadFactory() {
@@ -89,25 +86,11 @@ public class NotificationQueueDispatcher extends PersistentQueueBase {
         this.nbProcessedEvents = new AtomicLong();
 
         this.queues = new TreeMap<String, NotificationQueue>();
-
-        this.isStarted = new AtomicBoolean(false);
-
-    }
-
-    @Override
-    public void startQueue() {
-        if (config.isNotificationProcessingOff()) {
-            return;
-        }
-        // The first startQueue from any queue will trigger starting the processing for all queues
-        if (isStarted.compareAndSet(false, true)) {
-            super.startQueue();
-        }
     }
 
     @Override
     public void stopQueue() {
-        if (config.isNotificationProcessingOff()) {
+        if (config.isProcessingOff() || !isStarted()) {
             return;
         }
 
@@ -115,24 +98,17 @@ public class NotificationQueueDispatcher extends PersistentQueueBase {
         // (This is not intended to be robust against a system that would stop and start queues at the same time,
         // for a a normal shutdown sequence)
         //
-        if (isStarted.get()) {
-            int nbQueueStarted = 0;
-            synchronized (queues) {
-                for (NotificationQueue cur : queues.values()) {
-                    if (cur.isStarted()) {
-                        nbQueueStarted++;
-                    }
+        int nbQueueStarted = 0;
+        synchronized (queues) {
+            for (final NotificationQueue cur : queues.values()) {
+                if (cur.isStarted()) {
+                    nbQueueStarted++;
                 }
             }
-            if (nbQueueStarted == 0 && (isStarted.compareAndSet(true, false))) {
-                super.stopQueue();
-            }
         }
-    }
-
-    @Override
-    public boolean isStarted() {
-        return isStarted.get();
+        if (nbQueueStarted == 0) {
+            super.stopQueue();
+        }
     }
 
     public AtomicLong getNbProcessedEvents() {

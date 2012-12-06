@@ -32,7 +32,7 @@ public interface OverdueProperties extends NotificationConfig, KillbillConfig {
     @Override
     @Config("killbill.overdue.engine.notifications.off")
     @Default("false")
-    public boolean isNotificationProcessingOff();
+    public boolean isProcessingOff();
 
     @Config("killbill.overdue.maxNumberOfMonthsInFuture")
     @Default("36")

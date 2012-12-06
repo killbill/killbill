@@ -31,6 +31,6 @@ public interface NotificationQueueConfig extends NotificationConfig {
     @Config("killbill.billing.util.notificationq.notification.off")
     @Default("false")
     @Override
-    public boolean isNotificationProcessingOff();
+    public boolean isProcessingOff();
 
 }
