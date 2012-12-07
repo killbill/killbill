@@ -303,7 +303,7 @@ class Child
     @server = HttpClient.new(server_ip, server_port)
     @nb_iterations = nb_iterations.to_i
     @child_id = child_id
-    @uri = URI_BASE + "load_" + child_id.to_s
+    @uri = URI_BASE + "load_" + child_id.to_s + "&withCategoryAggregate=true"
   end
   
   def do_work

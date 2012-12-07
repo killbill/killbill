@@ -12,6 +12,7 @@ CREATE TABLE sources (
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
 );
+CREATE UNIQUE INDEX source_unq on sources(source);
 CREATE INDEX created_date_record_id_dx on sources(created_date, record_id);
 CREATE INDEX sources_tenant_account_record_id on sources(tenant_record_id, account_record_id);
 
