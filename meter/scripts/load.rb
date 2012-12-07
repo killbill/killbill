@@ -44,6 +44,12 @@ require 'optparse'
 require 'net/http'
 
 
+module HTTP_CONNECTION_MODE
+  CONNECTION_REUSE = 1;
+  CONNECTION_NO_REUSE = 2;
+end
+
+
 #
 # Minimum stats missing methods (used as a mixin)
 #
@@ -140,57 +146,23 @@ class CounterResults
 end
 
 
-#
-# Simple HTTP client class that allows to do post and get
-#
-class HttpClient
-  
-  attr_reader :host, :port
-  
-  def initialize(host, port)
-    @host = host
-    @port = port
-  end
-  
-  
-  def request(req)
-     res = Net::HTTP.start(@host, @port) { |http| http.read_timeout = @default_timeout; http.request(req) }
-     unless res.kind_of?(Net::HTTPSuccess) || res.kind_of?(Net::HTTPRedirection)
-       handle_error(req, res)
-     end
-     res
-  end
 
-  def request_with_headers(req, body, headers)
-     req.body = body unless body.nil?
-     headers.each { |k, v| req[k.downcase] = [v] }
-     request(req)
-   end
-
-  def post(uri, body=nil, headers = {})
-      req = Net::HTTP::Post.new(uri)
-      request_with_headers(req, body, headers)
-  end
-  
-  def handle_error(req, res)
-     raise "#{res.code}:#{res.message}\nMETHOD:#{req.method}\nURI:#{req.path}\n#{res.body}"
-   end
-end
 
 #
 # Parent process that forks children and wait for results to aggregate them and create outputs
 #
 class Parent 
 
-  attr_reader :logger, :server_ip, :server_port, :nb_children, :output_directory, :nb_iterations, :pids, :pipes, :results, :counters
+  attr_reader :logger, :server_ip, :server_port, :nb_children, :output_directory, :nb_iterations, :pids, :pipes, :results, :counters, :connection_mode
   
-  def initialize(logger, server_ip, server_port, nb_children, output_directory, nb_iterations)
+  def initialize(logger, server_ip, server_port, nb_children, output_directory, nb_iterations, connection_mode)
     @logger = logger
     @server_ip = server_ip
     @server_port = server_port
     @nb_children = nb_children.to_i 
     @output_directory = output_directory
     @nb_iterations = nb_iterations
+    @connection_mode = connection_mode
     @pids = []
     @pipes = []
     @results= []
@@ -274,7 +246,7 @@ class Parent
       
       @logger.debug("Child started...")
       
-      child = Child.new(@logger, @server_ip, @server_port, child_id, @nb_iterations)
+      child = Child.new(@logger, @server_ip, @server_port, child_id, @nb_iterations, @connection_mode)
       results = child.do_work
       
       Marshal.dump(results, pipe_write)
@@ -288,6 +260,78 @@ class Parent
   end
 end
 
+
+#
+# Simple HTTP client class that allows to do post and get
+#
+class HttpClient
+  
+  attr_reader :logger, :host, :port, :default_timeout, :http
+  
+  def initialize(logger, host, port)
+    @logger = logger
+    @host = host
+    @port = port
+    @default_timeout = 60
+    @http = Net::HTTP.new(@host, @port)
+  end
+  
+ 
+  def post(uri, body=nil, headers = {}, new_session=false)
+    req = Net::HTTP::Post.new(uri)
+    request_with_headers(req, body, headers, new_session)
+  end
+
+  def close
+    #@http.finish
+  end
+  
+  private
+  
+  def request_with_headers(req, body, headers, new_session)
+     req.body = body unless body.nil?
+     headers.each { |k, v| req[k.downcase] = [v] }
+     if new_session
+       request_with_new_session(req)
+     else
+       request_with_exisiting_session(req)
+     end
+   end
+
+   #
+   # Will create a new http connection for each request
+   #
+  def request_with_new_session(req)
+    begin
+      res = Net::HTTP.start(@host, @port) { |http| http.read_timeout = @default_timeout; http.request(req) }
+         unless res.kind_of?(Net::HTTPSuccess) || res.kind_of?(Net::HTTPRedirection)
+           handle_error(req, res)
+         end
+       res
+    rescue Exception => e
+       @logger.error("Failed to post message #{e.to_s}")
+    end
+  end
+
+  #
+  # Will automatically open a connection to the server if one is not currently open
+  #    
+  def request_with_exisiting_session(req)
+    begin
+        res = @http.request(req) 
+        unless res.kind_of?(Net::HTTPSuccess) || res.kind_of?(Net::HTTPRedirection)
+          handle_error(req, res)
+        end
+        res
+    rescue Exception => e
+      @logger.error("Failed to post message #{e.to_s}")
+    end
+  end
+  
+  def handle_error(req, res)
+     raise "#{res.code}:#{res.message}\nMETHOD:#{req.method}\nURI:#{req.path}\n#{res.body}"
+   end
+end
 #
 # Child class that does the usage call
 #  
@@ -295,35 +339,36 @@ class Child
   
   URI_BASE = "/1.0/kb/meter/f36d5557-e1d9-427a-8133-9ea49aa7e0f8/visit/"
   
-  attr_reader :logger, :child_id, :nb_iterations, :server, :uri
+  attr_reader :logger, :child_id, :nb_iterations, :server, :uri, :mode
   
-  def initialize(logger, server_ip, server_port, child_id, nb_iterations)
+  def initialize(logger, server_ip, server_port, child_id, nb_iterations, mode)
     @logger = logger
     @logger.debug("Starting child #{child_id} with nb_iterations = #{nb_iterations}")
-    @server = HttpClient.new(server_ip, server_port)
+    @server = HttpClient.new(logger, server_ip, server_port)
     @nb_iterations = nb_iterations.to_i
     @child_id = child_id
+    @mode = mode
     @uri = URI_BASE + "load_" + child_id.to_s + "?withCategoryAggregate=true"
   end
   
   def do_work
-    results = []
-    @nb_iterations.times do |i|
+     results = []
+      @nb_iterations.times do |i|
         child_dot = do_one_iteration
         results << child_dot
-    end
-    results
+      end
+      @server.close
+      results
   end
 
   private
-
-  def post_usage
-    @server.post(@uri, nil, {'content-type' => 'application/json', 'Authorization' => 'Basic Ym9iOmxhemFy', 'X-Killbill-CreatedBy' => 'meter_load_test' }) 
-  end
-
+ 
   def do_one_iteration
+
     before = Time.now.to_f
-    post_usage
+    @server.post(@uri, nil,
+    {'content-type' => 'application/json', 'Authorization' => 'Basic Ym9iOmxhemFy', 'X-Killbill-CreatedBy' => 'meter_load_test' },
+    @mode == HTTP_CONNECTION_MODE::CONNECTION_NO_REUSE) 
     after = Time.now.to_f
     call_time = after - before
     @logger.debug("child #{child_id} : do_one_iteration now = #{before} , sleep_time = #{call_time}")
@@ -363,7 +408,7 @@ class CommandParser
    end
    
    def set_log_level(log_level)
-    if ! log_level.nil?
+    if !log_level.nil?
        case log_level
        when "DEBUG"
          @options[:log_level] = Logger::DEBUG
@@ -378,9 +423,23 @@ class CommandParser
        @options[:log_level] = Logger::INFO
      end
    end
+   
+   def set_connection_mode(connection_mode)
+     if !connection_mode.nil?
+       if connection_mode == 'REUSE_SESSION'
+         @options[:connection_mode] = HTTP_CONNECTION_MODE::CONNECTION_REUSE
+      else
+        @options[:connection_mode] = HTTP_CONNECTION_MODE::CONNECTION_NO_REUSE
+      end
+     else
+       @options[:connection_mode] = HTTP_CONNECTION_MODE::CONNECTION_NO_REUSE
+     end
+   end
 
    def parse(args)
+     
      @options[:log_level] = Logger::INFO
+     @options[:connection_mode] = HTTP_CONNECTION_MODE::CONNECTION_NO_REUSE
      optparse = OptionParser.new do |opts|
        opts.banner = "Usage: load.rb [options]"
 
@@ -394,6 +453,11 @@ class CommandParser
        opts.on("-D", "--output-directory ",
        "Output directory") do |arg|
          @options[:output_directory] = arg
+       end
+       
+       opts.on("-C", "--connection-mode ",
+       "REUSE_SESSION|NO_REUSE_SESSION") do |arg|
+         set_connection_mode(arg)
        end
 
        opts.on("-M", "--nb-iterations ",
@@ -411,8 +475,8 @@ class CommandParser
            @options[:server_port] = arg
        end
        
-       opts.on("-L", "--log-level LOG_LEVEL", "Specifies log level") do |l| 
-         set_log_level(l) 
+       opts.on("-L", "--log-level LOG_LEVEL", "Specifies log level") do |arg| 
+         set_log_level(arg) 
        end
      end
 
@@ -422,8 +486,8 @@ class CommandParser
    def run
      logger = Logger.new(STDOUT)
      logger.level = @options[:log_level]
-     logger.info("Start with  server_ip = #{@options[:server_ip]}, server_port = #{@options[:server_port]}, nb_children=#{@options[:nb_children]}, log_level = #{@options[:log_level]}, output_directory = #{@options[:output_directory]}, nb_iterations = #{@options[:nb_iterations]}")
-     parent = Parent.new(logger, @options[:server_ip], @options[:server_port], @options[:nb_children], @options[:output_directory], @options[:nb_iterations])
+     logger.info("Start with  server_ip = #{@options[:server_ip]}, server_port = #{@options[:server_port]}, nb_children=#{@options[:nb_children]}, log_level = #{@options[:log_level]}, output_directory = #{@options[:output_directory]}, nb_iterations = #{@options[:nb_iterations]}, connection_mode = #{@options[:connection_mode]}")
+     parent = Parent.new(logger, @options[:server_ip], @options[:server_port], @options[:nb_children], @options[:output_directory], @options[:nb_iterations], @options[:connection_mode])
      parent.run
    end
 end
