@@ -41,7 +41,6 @@ import org.slf4j.LoggerFactory;
 
 import com.ning.billing.meter.timeline.chunks.TimelineChunk;
 import com.ning.billing.meter.timeline.codec.SampleCoder;
-import com.ning.billing.meter.timeline.codec.TimelineChunkAccumulator;
 import com.ning.billing.meter.timeline.persistent.FileBackedBuffer;
 import com.ning.billing.meter.timeline.persistent.Replayer;
 import com.ning.billing.meter.timeline.persistent.TimelineDao;
@@ -296,39 +295,13 @@ public class TimelineEventHandler {
         // Now, filter each accumulator for this host
         final List<TimelineChunk> samplesBySourceName = new ArrayList<TimelineChunk>();
         for (final TimelineSourceEventAccumulator accumulator : sourceAccumulatorsAndDate.getCategoryAccumulators().values()) {
-            for (final TimelineChunk chunk : accumulator.getPendingTimelineChunks()) {
-                if ((filterStartTime != null && chunk.getEndTime().isBefore(filterStartTime)) ||
-                    (filterEndTime != null && chunk.getStartTime().isAfter(filterEndTime)) ||
-                    !metricIds.contains(chunk.getMetricId())) {
-                    continue;
-                } else {
-                    samplesBySourceName.add(chunk);
-                }
-            }
-            final List<DateTime> accumulatorTimes = accumulator.getTimes();
-            if (accumulatorTimes.size() == 0) {
-                continue;
-            }
-            final DateTime accumulatorStartTime = accumulator.getStartTime();
-            final DateTime accumulatorEndTime = accumulator.getEndTime();
-
             // Check if the time filters apply
-            if ((filterStartTime != null && accumulatorEndTime.isBefore(filterStartTime)) || (filterEndTime != null && accumulatorStartTime.isAfter(filterEndTime))) {
-                // Ignore this accumulator
+            if ((filterStartTime != null && accumulator.getEndTime().isBefore(filterStartTime)) || (filterEndTime != null && accumulator.getStartTime().isAfter(filterEndTime))) {
+                // Nope - ignore this accumulator
                 continue;
             }
 
-            // This accumulator is in the right time range, now return only the sample kinds specified
-            final byte[] timeBytes = timelineCoder.compressDateTimes(accumulatorTimes);
-            for (final TimelineChunkAccumulator chunkAccumulator : accumulator.getTimelines().values()) {
-                if (metricIds.contains(chunkAccumulator.getMetricId())) {
-                    // Extract the timeline for this chunk by copying it and reading encoded bytes
-                    accumulatorDeepCopyCount.incrementAndGet();
-                    final TimelineChunkAccumulator chunkAccumulatorCopy = chunkAccumulator.deepCopy();
-                    final TimelineChunk timelineChunk = chunkAccumulatorCopy.extractTimelineChunkAndReset(accumulatorStartTime, accumulatorEndTime, timeBytes);
-                    samplesBySourceName.add(timelineChunk);
-                }
-            }
+            samplesBySourceName.addAll(accumulator.getInMemoryTimelineChunks(metricIds));
         }
         inMemoryChunksReturnedCount.addAndGet(samplesBySourceName.size());
         Collections.sort(samplesBySourceName, CHUNK_COMPARATOR);

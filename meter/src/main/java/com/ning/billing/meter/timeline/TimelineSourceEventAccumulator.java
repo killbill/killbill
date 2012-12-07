@@ -16,7 +16,9 @@
 
 package com.ning.billing.meter.timeline;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -235,11 +237,32 @@ public class TimelineSourceEventAccumulator {
         }
     }
 
-    public synchronized List<TimelineChunk> getPendingTimelineChunks() {
+    public synchronized Collection<TimelineChunk> getInMemoryTimelineChunks(final List<Integer> metricIds) throws IOException {
         final List<TimelineChunk> timelineChunks = new ArrayList<TimelineChunk>();
+
+        // Get all the older chunks from the staging area of the BackgroundDBChunkWriter
         for (final PendingChunkMap pendingChunkMap : pendingChunkMaps) {
-            timelineChunks.addAll(pendingChunkMap.getChunkMap().values());
+            for (final Integer metricId : metricIds) {
+                final TimelineChunk timelineChunkForMetricId = pendingChunkMap.getChunkMap().get(metricId);
+                if (timelineChunkForMetricId != null) {
+                    timelineChunks.add(timelineChunkForMetricId);
+                }
+            }
         }
+
+        // Get the data in this accumulator, not yet in the staging area
+        // This is very similar to extractAndQueueTimelineChunks() above, but without changing the global state
+        final byte[] timeBytes = timelineCoder.compressDateTimes(times);
+        for (final Integer metricId : metricIds) {
+            final TimelineChunkAccumulator chunkAccumulator = timelines.get(metricId);
+            if (chunkAccumulator != null) {
+                // Extract the timeline for this chunk by copying it and reading encoded bytes
+                final TimelineChunkAccumulator chunkAccumulatorCopy = chunkAccumulator.deepCopy();
+                final TimelineChunk timelineChunk = chunkAccumulatorCopy.extractTimelineChunkAndReset(startTime, endTime, timeBytes);
+                timelineChunks.add(timelineChunk);
+            }
+        }
+
         return timelineChunks;
     }
 
