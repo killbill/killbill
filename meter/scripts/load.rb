@@ -337,7 +337,7 @@ end
 #  
 class Child
   
-  URI_BASE = "/1.0/kb/meter/f36d5557-e1d9-427a-8133-9ea49aa7e0f8/visit/"
+  MODULO_SOURCE = 200
   
   attr_reader :logger, :child_id, :nb_iterations, :server, :uri, :mode
   
@@ -348,7 +348,7 @@ class Child
     @nb_iterations = nb_iterations.to_i
     @child_id = child_id
     @mode = mode
-    @uri = URI_BASE + "load_" + child_id.to_s + "?withCategoryAggregate=true"
+    @uri = get_uri_with_random_source + "load_" + child_id.to_s + "?withCategoryAggregate=true"
   end
   
   def do_work
@@ -362,6 +362,12 @@ class Child
   end
 
   private
+ 
+ 
+  def get_uri_with_random_source
+    modulo = child_id % MODULO_SOURCE
+    "/1.0/kb/meter/#{child_id }_#{modulo}/visit/"
+  end
  
   def do_one_iteration
 
