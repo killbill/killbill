@@ -493,7 +493,7 @@ public class TestAnalytics extends TestIntegrationBase {
     private void verifyBSTWithTrialAndEvergreenPhasesAndCancellation(final Account account, final SubscriptionBundle bundle, final Subscription subscription) throws CatalogApiException {
         // BST should have three transitions
         final List<BusinessSubscriptionTransition> transitions = analyticsUserApi.getTransitionsForBundle(bundle.getExternalKey(), callContext);
-        Assert.assertEquals(transitions.size(), 3);
+        Assert.assertEquals(transitions.size(), 4);
 
         verifyTrialAndEvergreenPhases(account, bundle, subscription);
         verifyCancellationTransition(account, bundle);
