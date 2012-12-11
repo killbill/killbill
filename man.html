@@ -322,6 +322,16 @@ layout: default
                 <p>The table <strong>bst</strong> (stands for Business Subscription Transitions) maintains information about Killbill
                     subscriptions. It describe the history of changes (both past and future, i.e. requested changes) for bundles associated
                     to accounts.</p>
+                <p>bst will contain all phase transitions for all subscriptions and can be used to build entitlement timelines. A few remarks:
+                    <ul>
+                        <li>MIGRATE_BILLING and UNCANCEL entitlement events are currently not stored in bst</li>
+                        <li>The total_ordering column helps break ties for events with the same effective date: one can order chronologically the timeline by sorting records by nvl(next_start_date, requested_timestamp), total_ordering</li>
+                        <li>prev_ fields will always be null for MIGRATE, ADD, RE_ADD, TRANSFER events</li>
+                        <li>next_ fields will always be null for CANCEL and SYSTEM_CANCEL events</li>
+                        <li>The requested_timestamp field reflects when the transition was requested, the next_start_date field reflects the effective transition time</li>
+                        <li>The SYSTEM_CANCEL event is a special kind of event associated with a CANCEL event, used to get the time when a subscription is effectively cancelled. The SYSTEM_CANCEL requested_timestamp is the effective time when the subscription is cancelled, which is the effective time of the entitlement cancel event</li>
+                    </ul>
+                </p>
                 <table class="table table-striped table-bordered table-condensed">
                     <thead>
                         <tr>
