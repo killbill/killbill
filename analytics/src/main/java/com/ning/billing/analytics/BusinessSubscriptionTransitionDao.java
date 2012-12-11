@@ -125,8 +125,7 @@ public class BusinessSubscriptionTransitionDao {
                         log.info("Adding transition {}", transition);
 
                         // We need to manually add the system cancel event
-                        if (SubscriptionTransitionType.CANCEL.equals(event.getTransitionType()) &&
-                            clock.getUTCNow().isAfter(event.getEffectiveTransitionTime())) {
+                        if (SubscriptionTransitionType.CANCEL.equals(event.getTransitionType())) {
                             final BusinessSubscriptionTransitionModelDao systemCancelTransition = new BusinessSubscriptionTransitionModelDao(
                                     event.getTotalOrdering(),
                                     bundleId,
