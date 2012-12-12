@@ -420,6 +420,11 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
             }
 
             @Override
+            public int getPrefetchAmount() {
+                return 10;
+            }
+
+            @Override
             public long getSleepTimeMs() {
                 return sleepTime;
             }
