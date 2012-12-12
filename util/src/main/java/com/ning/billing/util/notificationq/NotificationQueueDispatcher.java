@@ -38,7 +38,6 @@ import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.config.NotificationConfig;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
 import com.ning.billing.util.notificationq.dao.NotificationSqlDao;
 import com.ning.billing.util.queue.PersistentQueueBase;
@@ -52,7 +51,7 @@ public class NotificationQueueDispatcher extends PersistentQueueBase {
     private static final String NOTIFICATION_THREAD_NAME = "Notification-queue-dispatch";
     private static final int NB_THREADS = 1;
 
-    private final NotificationConfig config;
+    private final NotificationQueueConfig config;
     private final String hostname;
     private final AtomicLong nbProcessedEvents;
     private final NotificationSqlDao dao;
@@ -183,7 +182,7 @@ public class NotificationQueueDispatcher extends PersistentQueueBase {
         final Date now = getClock().getUTCNow().toDate();
         final Date nextAvailable = getClock().getUTCNow().plus(CLAIM_TIME_MS).toDate();
 
-        final List<Notification> input = dao.getReadyNotifications(now, getHostname(), getMaxNotifications() , context);
+        final List<Notification> input = dao.getReadyNotifications(now, getHostname(), config.getPrefetchAmount() , context);
 
         final List<Notification> claimedNotifications = new ArrayList<Notification>();
         for (final Notification cur : input) {
@@ -231,10 +230,4 @@ public class NotificationQueueDispatcher extends PersistentQueueBase {
     public static String getCompositeName(final String svcName, final String queueName) {
         return svcName + ":" + queueName;
     }
-
-
-    private int getMaxNotifications() {
-        return queues.size() * 3;
-    }
-
 }

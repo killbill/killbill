@@ -17,12 +17,9 @@
 package com.ning.billing.util.notificationq;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
-import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.config.NotificationConfig;
 import com.ning.billing.util.queue.PersistentQueueEntryLifecycle.PersistentQueueEntryLifecycleState;
 
 import com.google.inject.Inject;

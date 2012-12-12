@@ -20,7 +20,6 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.util.config.NotificationConfig;
 import com.ning.billing.util.queue.QueueLifecycle;
 
 public interface NotificationQueueService extends QueueLifecycle {

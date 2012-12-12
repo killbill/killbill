@@ -18,7 +18,6 @@ package com.ning.billing.util.glue;
 
 import org.skife.config.ConfigurationObjectFactory;
 
-import com.ning.billing.util.config.NotificationConfig;
 import com.ning.billing.util.notificationq.DefaultNotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueConfig;
 import com.ning.billing.util.notificationq.NotificationQueueService;

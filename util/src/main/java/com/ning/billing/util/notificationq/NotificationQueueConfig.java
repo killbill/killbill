@@ -19,9 +19,13 @@ package com.ning.billing.util.notificationq;
 import org.skife.config.Config;
 import org.skife.config.Default;
 
-import com.ning.billing.util.config.NotificationConfig;
+import com.ning.billing.util.config.PersistentQueueConfig;
 
-public interface NotificationQueueConfig extends NotificationConfig {
+public interface NotificationQueueConfig extends PersistentQueueConfig {
+
+    @Config("killbill.billing.util.notificationq.prefetch")
+    @Default("7")
+    public int getPrefetchAmount();
 
     @Override
     @Config("killbill.billing.util.notificationq.sleep")

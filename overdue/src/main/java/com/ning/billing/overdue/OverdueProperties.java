@@ -20,23 +20,9 @@ import org.skife.config.Config;
 import org.skife.config.Default;
 
 import com.ning.billing.util.config.KillbillConfig;
-import com.ning.billing.util.config.NotificationConfig;
 
 
-public interface OverdueProperties extends NotificationConfig, KillbillConfig {
-    @Override
-    @Config("killbill.overdue.engine.notifications.sleep")
-    @Default("500")
-    public long getSleepTimeMs();
-
-    @Override
-    @Config("killbill.overdue.engine.notifications.off")
-    @Default("false")
-    public boolean isProcessingOff();
-
-    @Config("killbill.overdue.maxNumberOfMonthsInFuture")
-    @Default("36")
-    public int getNumberOfMonthsInFuture();
+public interface OverdueProperties extends KillbillConfig {
 
     @Config("killbill.overdue.uri")
     @Default("jar:///com/ning/billing/irs/overdue/Config.xml")
