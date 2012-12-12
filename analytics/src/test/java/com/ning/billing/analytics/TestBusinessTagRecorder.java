@@ -82,6 +82,11 @@ public class TestBusinessTagRecorder extends AnalyticsTestSuiteWithEmbeddedDB {
         }
 
         @Override
+        public int getPrefetchAmount() {
+            return 10;
+        }
+
+        @Override
         public long getSleepTimeMs() {
             return 3000;
         }
