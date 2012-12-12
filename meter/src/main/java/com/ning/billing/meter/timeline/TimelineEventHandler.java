@@ -228,7 +228,7 @@ public class TimelineEventHandler {
             }
 
             final SourceSamplesForTimestamp sourceSamples = new SourceSamplesForTimestamp(sourceId, eventType, eventTimestamp, scalarSamples);
-            if (!replaying.get()) {
+            if (!replaying.get() && config.storeSamplesLocallyTemporary()) {
                 // Start by saving locally the samples
                 backingBuffer.append(sourceSamples);
             }
@@ -398,7 +398,7 @@ public class TimelineEventHandler {
     public void forceCommit() {
         forceCommitCallCount.incrementAndGet();
         saveAccumulators();
-        backingBuffer.discard();
+        discardBackingBuffer();
         log.info("Timelines committed");
     }
 
@@ -415,7 +415,13 @@ public class TimelineEventHandler {
             log.info("During shutdown, saved timeline accumulators");
         }
         performShutdown();
-        backingBuffer.discard();
+        discardBackingBuffer();
+    }
+
+    private void discardBackingBuffer() {
+        if (config.storeSamplesLocallyTemporary()) {
+            backingBuffer.discard();
+        }
     }
 
     private void performShutdown() {

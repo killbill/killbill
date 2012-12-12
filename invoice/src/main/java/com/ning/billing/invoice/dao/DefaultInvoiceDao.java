@@ -631,6 +631,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 useExistingCBAFromTransaction(accountId, entitySqlDaoWrapperFactory, context);
 
                 // Notify the bus since the balance of the invoice changed
+                // TODO should we post an InvoiceCreationInternalEvent event instead? Note! This will trigger a payment (see InvoiceHandler)
                 notifyBusOfInvoiceAdjustment(entitySqlDaoWrapperFactory, invoiceId, accountId, context.getUserToken(), context);
 
                 return externalCharge;
