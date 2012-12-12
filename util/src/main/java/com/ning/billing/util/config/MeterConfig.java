@@ -115,4 +115,9 @@ public interface MeterConfig extends KillbillConfig {
     @Description("Spool directory for in-memory data")
     @Default("/var/tmp/killbill")
     String getSpoolDir();
+
+    @Config("killbill.usage.timelines.spoolEnabled")
+    @Description("Should data be spooled on disk before it is written in the database in case we crash?")
+    @Default("true")
+    boolean storeSamplesLocallyTemporary();
 }
