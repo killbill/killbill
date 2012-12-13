@@ -17,10 +17,14 @@
 package com.ning.billing.dbi;
 
 import java.io.IOException;
+import java.sql.SQLException;
 
+import org.h2.tools.Server;
 import org.testng.Assert;
 
 public class H2TestingHelper extends DBTestingHelper {
+
+    private Server server;
 
     static {
         try {
@@ -42,19 +46,26 @@ public class H2TestingHelper extends DBTestingHelper {
 
     @Override
     public String getJdbcConnectionString() {
-        return "jdbc:h2:mem:" + DB_NAME + ";MODE=MYSQL";
+        return "jdbc:h2:mem:" + DB_NAME + ";MODE=MYSQL;DB_CLOSE_DELAY=-1";
     }
 
     @Override
     public String getInformationSchemaJdbcConnectionString() {
-        return "jdbc:h2:mem:foo;MODE=MYSQL;SCHEMA_SEARCH_PATH=INFORMATION_SCHEMA";
+        return "jdbc:h2:mem:foo;MODE=MYSQL;SCHEMA_SEARCH_PATH=INFORMATION_SCHEMA;DB_CLOSE_DELAY=-1";
     }
 
     @Override
     public void start() throws IOException {
+        // Start a web server for debugging (http://127.0.0.1:8082/)
+        try {
+            server = Server.createWebServer(new String[]{}).start();
+        } catch (SQLException e) {
+            Assert.fail(e.toString());
+        }
     }
 
     @Override
     public void stop() {
+        server.stop();
     }
 }
