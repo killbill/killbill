@@ -89,11 +89,11 @@ public class TestDefaultTagDao extends UtilTestSuiteWithEmbeddedDB {
         List<TagDefinitionModelDao> result = tagDefinitionDao.getByIds(uuids, internalCallContext);
         assertEquals(result.size(), 0);
 
-        final TagDefinitionModelDao defYo = tagDefinitionDao.create("yo", "defintion yo", internalCallContext);
+        final TagDefinitionModelDao defYo = tagDefinitionDao.create(UUID.randomUUID().toString().substring(0, 5), "defintion yo", internalCallContext);
         uuids.add(defYo.getId());
-        final TagDefinitionModelDao defBah = tagDefinitionDao.create("bah", "defintion bah", internalCallContext);
+        final TagDefinitionModelDao defBah = tagDefinitionDao.create(UUID.randomUUID().toString().substring(0, 5), "defintion bah", internalCallContext);
         uuids.add(defBah.getId());
-        final TagDefinitionModelDao defZoo = tagDefinitionDao.create("zoo", "defintion zoo", internalCallContext);
+        final TagDefinitionModelDao defZoo = tagDefinitionDao.create(UUID.randomUUID().toString().substring(0, 5), "defintion zoo", internalCallContext);
         uuids.add(defZoo.getId());
 
         result = tagDefinitionDao.getByIds(uuids, internalCallContext);
@@ -111,7 +111,7 @@ public class TestDefaultTagDao extends UtilTestSuiteWithEmbeddedDB {
     @Test(groups = "slow")
     public void testGetById() throws TagDefinitionApiException {
         // User Tag
-        final TagDefinitionModelDao defYo = tagDefinitionDao.create("yo", "defintion yo", internalCallContext);
+        final TagDefinitionModelDao defYo = tagDefinitionDao.create(UUID.randomUUID().toString().substring(0, 5), "defintion yo", internalCallContext);
         final TagDefinitionModelDao resDefYo = tagDefinitionDao.getById(defYo.getId(), internalCallContext);
         assertEquals(defYo, resDefYo);
 
@@ -130,7 +130,7 @@ public class TestDefaultTagDao extends UtilTestSuiteWithEmbeddedDB {
     @Test(groups = "slow")
     public void testGetByName() throws TagDefinitionApiException {
         // User Tag
-        final TagDefinitionModelDao defYo = tagDefinitionDao.create("yo", "defintion yo", internalCallContext);
+        final TagDefinitionModelDao defYo = tagDefinitionDao.create(UUID.randomUUID().toString().substring(0, 5), "defintion yo", internalCallContext);
         final TagDefinitionModelDao resDefYo = tagDefinitionDao.getByName(defYo.getName(), internalCallContext);
         assertEquals(defYo, resDefYo);
 
