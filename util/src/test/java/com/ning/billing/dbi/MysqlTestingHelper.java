@@ -87,7 +87,7 @@ public class MysqlTestingHelper extends DBTestingHelper {
 
                 @Override
                 public List<String> withHandle(final Handle h) throws Exception {
-                    return h.createQuery("select table_name from tables where table_schema = :table_schema and table_type = 'BASE TABLE';")
+                    return h.createQuery("select table_name from information_schema.tables where table_schema = :table_schema and table_type = 'BASE TABLE';")
                             .bind("table_schema", DB_NAME)
                             .map(new StringMapper())
                             .list();
