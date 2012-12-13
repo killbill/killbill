@@ -243,7 +243,7 @@ public class InternalCallContextFactory {
                     if (values.size() == 0) {
                         return null;
                     } else {
-                        return (Long) values.get(0).get(columnName);
+                        return Long.valueOf(values.get(0).get(columnName).toString());
                     }
                 }
             });
