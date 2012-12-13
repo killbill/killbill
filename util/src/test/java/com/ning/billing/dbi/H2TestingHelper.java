@@ -18,8 +18,12 @@ package com.ning.billing.dbi;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.List;
 
 import org.h2.tools.Server;
+import org.skife.jdbi.v2.Handle;
+import org.skife.jdbi.v2.tweak.HandleCallback;
+import org.skife.jdbi.v2.util.StringMapper;
 import org.testng.Assert;
 
 public class H2TestingHelper extends DBTestingHelper {
@@ -50,8 +54,20 @@ public class H2TestingHelper extends DBTestingHelper {
     }
 
     @Override
-    public String getInformationSchemaJdbcConnectionString() {
-        return "jdbc:h2:mem:foo;MODE=MYSQL;SCHEMA_SEARCH_PATH=INFORMATION_SCHEMA;DB_CLOSE_DELAY=-1";
+    public synchronized List<String> fetchAllTables() {
+        if (allTables == null) {
+            allTables = dbiInstance.withHandle(new HandleCallback<List<String>>() {
+
+                @Override
+                public List<String> withHandle(final Handle h) throws Exception {
+                    return h.createQuery("select table_name from information_schema.tables where table_catalog = :table_catalog and table_type = 'TABLE';")
+                            .bind("table_catalog", DB_NAME)
+                            .map(new StringMapper())
+                            .list();
+                }
+            });
+        }
+        return allTables;
     }
 
     @Override

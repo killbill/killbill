@@ -22,8 +22,12 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.net.ServerSocket;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import org.skife.jdbi.v2.Handle;
+import org.skife.jdbi.v2.tweak.HandleCallback;
+import org.skife.jdbi.v2.util.StringMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -77,8 +81,20 @@ public class MysqlTestingHelper extends DBTestingHelper {
     }
 
     @Override
-    public String getInformationSchemaJdbcConnectionString() {
-        return "jdbc:mysql://localhost:" + port + "/information_schema";
+    public synchronized List<String> fetchAllTables() {
+        if (allTables == null) {
+            allTables = dbiInstance.withHandle(new HandleCallback<List<String>>() {
+
+                @Override
+                public List<String> withHandle(final Handle h) throws Exception {
+                    return h.createQuery("select table_name from tables where table_schema = :table_schema and table_type = 'BASE TABLE';")
+                            .bind("table_schema", DB_NAME)
+                            .map(new StringMapper())
+                            .list();
+                }
+            });
+        }
+        return allTables;
     }
 
     public void start() throws IOException {
