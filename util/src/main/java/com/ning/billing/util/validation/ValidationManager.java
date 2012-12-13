@@ -18,6 +18,7 @@ package com.ning.billing.util.validation;
 
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
+import java.sql.Types;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -28,6 +29,7 @@ import com.ning.billing.util.validation.dao.DatabaseSchemaDao;
 import com.google.inject.Inject;
 
 public class ValidationManager {
+
     private final DatabaseSchemaDao dao;
 
     // table name, string name, column info
@@ -126,7 +128,8 @@ public class ValidationManager {
 
     private boolean isValidLengthString(final DefaultColumnInfo columnInfo, final Object value) {
         if (columnInfo.getMaximumLength() != 0) {
-            if (value != null) {
+            // H2 will report a character_maximum_length for decimal
+            if (value != null && value instanceof String) {
                 if (value.toString().length() > columnInfo.getMaximumLength()) {
                     return false;
                 }
@@ -137,7 +140,8 @@ public class ValidationManager {
     }
 
     private boolean isValidLengthChar(final DefaultColumnInfo columnInfo, final Object value) {
-        if (columnInfo.getDataType().equals("char")) {
+        // MySQL reports data_type as Strings, H2 as SQLTypes
+        if (columnInfo.getDataType().equals("char") || columnInfo.getDataType().equals(String.valueOf(Types.CHAR))) {
             if (value == null) {
                 return false;
             } else {
@@ -152,7 +156,8 @@ public class ValidationManager {
 
     private boolean hasValidPrecision(final DefaultColumnInfo columnInfo, final Object value) {
         if (columnInfo.getPrecision() != 0) {
-            if (value != null) {
+            // H2 will report a numeric precision for varchar columns
+            if (value != null && !(value instanceof String)) {
                 final BigDecimal bigDecimalValue = new BigDecimal(value.toString());
                 if (bigDecimalValue.precision() > columnInfo.getPrecision()) {
                     return false;

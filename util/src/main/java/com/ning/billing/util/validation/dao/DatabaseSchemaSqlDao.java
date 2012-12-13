@@ -26,12 +26,12 @@ import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
-import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
+import org.skife.jdbi.v2.sqlobject.stringtemplate.UseStringTemplate3StatementLocator;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import com.ning.billing.util.validation.DefaultColumnInfo;
 
-@ExternalizedSqlViaStringTemplate3
+@UseStringTemplate3StatementLocator
 @RegisterMapper(DatabaseSchemaSqlDao.ColumnInfoMapper.class)
 public interface DatabaseSchemaSqlDao {
 
