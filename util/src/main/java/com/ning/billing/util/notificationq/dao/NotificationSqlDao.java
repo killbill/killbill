@@ -58,6 +58,10 @@ public interface NotificationSqlDao extends Transactional<NotificationSqlDao>, C
                                                     @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
+    public int getPendingCountNotifications(@Bind("now") Date now,
+                                            @InternalTenantContextBinder final InternalTenantContext context);
+
+    @SqlQuery
     @Mapper(NotificationSqlMapper.class)
     public List<Notification> getNotificationForAccountAndDate(@Bind("accountRecordId") final long accountRecordId,
                                                                @Bind("effectiveDate") final Date effectiveDate,

@@ -22,6 +22,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.weakref.jmx.Managed;
 
 import com.ning.billing.util.config.PersistentQueueConfig;
 import com.ning.billing.util.jackson.ObjectMapper;
@@ -44,6 +45,10 @@ public abstract class PersistentQueueBase implements QueueLifecycle {
 
     private final AtomicBoolean isStarted = new AtomicBoolean(false);
 
+    // Allow to disable/re-enable notitifcation processing through JMX
+    private final AtomicBoolean isProcessingSuspended;
+
+
     public PersistentQueueBase(final String svcQName, final Executor executor, final int nbThreads, final PersistentQueueConfig config) {
         this.executor = executor;
         this.nbThreads = nbThreads;
@@ -52,6 +57,7 @@ public abstract class PersistentQueueBase implements QueueLifecycle {
         this.objectMapper = new ObjectMapper();        
         this.isProcessingEvents = false;
         this.curActiveThreads = 0;
+        this.isProcessingSuspended = new AtomicBoolean(false);
     }
 
 
@@ -97,7 +103,9 @@ public abstract class PersistentQueueBase implements QueueLifecycle {
                             }
 
                             try {
-                                doProcessEvents();
+                                if (!isProcessingSuspended.get()) {
+                                    doProcessEvents();
+                                }
                             } catch (Exception e) {
                                 log.warn(String.format("%s: Thread  %s  [%d] got an exception, catching and moving on...",
                                                        svcQName,
@@ -168,6 +176,22 @@ public abstract class PersistentQueueBase implements QueueLifecycle {
             curActiveThreads = 0;
         }
     }
+
+    @Managed(description="suspend processing for all notifications")
+    public void suspendNotificationProcessing() {
+        isProcessingSuspended.set(true);
+    }
+
+    @Managed(description="resume processing for all notifications")
+    public void resumeNotificationProcessing() {
+        isProcessingSuspended.set(false);
+    }
+
+    @Managed(description="check whether notification processing is suspended")
+    public boolean isNotificationProcessingSuspended() {
+        return isProcessingSuspended.get();
+    }
+
 
     protected <T> T deserializeEvent(final String className, final String json) {
         try {

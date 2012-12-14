@@ -21,14 +21,16 @@ import javax.servlet.ServletContextEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ning.billing.beatrix.bus.api.ExternalBus;
 import com.ning.billing.beatrix.lifecycle.DefaultLifecycle;
 import com.ning.billing.jaxrs.util.KillbillEventHandler;
 import com.ning.billing.server.config.KillbillServerConfig;
 import com.ning.billing.server.healthchecks.KillbillHealthcheck;
 import com.ning.billing.server.modules.KillbillServerModule;
 import com.ning.billing.server.security.TenantFilter;
-import com.ning.billing.util.svcsapi.bus.InternalBus;
+import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.svcsapi.bus.BusService;
+import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.jetty.base.modules.ServerModuleBuilder;
 import com.ning.jetty.core.listeners.SetupServer;
 
@@ -56,6 +58,9 @@ public class KillbillGuiceListener extends SetupServer {
                 .addConfig(KillbillServerConfig.class)
                 .addHealthCheck(KillbillHealthcheck.class)
                 .addJMXExport(KillbillHealthcheck.class)
+                .addJMXExport(NotificationQueueService.class)
+                .addJMXExport(InternalBus.class)
+                .addJMXExport(ExternalBus.class)
                 .addModule(getModule())
                 .addJerseyResource("com.ning.billing.jaxrs.mappers")
                 .addJerseyResource("com.ning.billing.jaxrs.resources");

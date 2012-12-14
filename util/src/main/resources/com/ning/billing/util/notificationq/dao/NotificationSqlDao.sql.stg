@@ -34,6 +34,16 @@ getReadyNotifications() ::= <<
     ;
 >>
 
+getPendingCountNotifications() ::= <<
+    select
+      count(*)
+    from notifications
+    where
+      effective_date \<= :now
+      and processing_state = 'AVAILABLE'
+    ;
+>>
+
 getNotificationForAccountAndDate() ::= <<
    select
        record_id

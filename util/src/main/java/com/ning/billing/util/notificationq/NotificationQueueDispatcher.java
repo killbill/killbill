@@ -19,18 +19,22 @@ package com.ning.billing.util.notificationq;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.annotation.Nullable;
 
+import org.joda.time.DateTime;
 import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.weakref.jmx.Managed;
 
 import com.ning.billing.util.Hostname;
 import com.ning.billing.util.callcontext.CallOrigin;
@@ -41,6 +45,11 @@ import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
 import com.ning.billing.util.notificationq.dao.NotificationSqlDao;
 import com.ning.billing.util.queue.PersistentQueueBase;
+
+import com.yammer.metrics.Metrics;
+import com.yammer.metrics.core.Counter;
+import com.yammer.metrics.core.Gauge;
+import com.yammer.metrics.core.Histogram;
 
 public class NotificationQueueDispatcher extends PersistentQueueBase {
 
@@ -59,6 +68,14 @@ public class NotificationQueueDispatcher extends PersistentQueueBase {
     protected final InternalCallContextFactory internalCallContextFactory;
     protected final Clock clock;
     protected final Map<String, NotificationQueue> queues;
+
+
+    //
+    // Metrics
+    //
+    private final Gauge pendingNotifications;
+    private final Counter processedNotificationsSinceStart;
+    private final Map<String, Histogram> perQueueProcessingTime;
 
     // Package visibility on purpose
     NotificationQueueDispatcher(final Clock clock, final NotificationQueueConfig config, final IDBI dbi, final InternalCallContextFactory internalCallContextFactory) {
@@ -85,8 +102,17 @@ public class NotificationQueueDispatcher extends PersistentQueueBase {
         this.nbProcessedEvents = new AtomicLong();
 
         this.queues = new TreeMap<String, NotificationQueue>();
-    }
 
+        this.pendingNotifications = Metrics.newGauge(NotificationQueueDispatcher.class, "pending-notifications", new Gauge<Integer>() {
+            @Override
+            public Integer value() {
+                return dao != null ? dao.getPendingCountNotifications(clock.getUTCNow().toDate(), createCallContext(null, null)) : 0;
+            }
+        });
+
+        this.processedNotificationsSinceStart = Metrics.newCounter(NotificationQueueDispatcher.class, "processed-notifications-since-start");
+        this.perQueueProcessingTime = new HashMap<String, Histogram>();
+    }
     @Override
     public void stopQueue() {
         if (config.isProcessingOff() || !isStarted()) {
@@ -122,6 +148,7 @@ public class NotificationQueueDispatcher extends PersistentQueueBase {
         return clock;
     }
 
+
     protected NotificationQueueHandler getHandlerForActiveQueue(final String compositeName) {
         synchronized (queues) {
             final NotificationQueue queue = queues.get(compositeName);
@@ -138,6 +165,7 @@ public class NotificationQueueDispatcher extends PersistentQueueBase {
     }
 
     protected int doProcessEventsWithLimit(int limit) {
+
         logDebug("ENTER doProcessEvents");
         // Finding and claiming notifications is not done per tenant (yet?)
         final List<Notification> notifications = getReadyNotifications(createCallContext(null, null));
@@ -164,14 +192,39 @@ public class NotificationQueueDispatcher extends PersistentQueueBase {
             if (handler == null) {
                 continue;
             }
-            handler.handleReadyNotification(key, cur.getEffectiveDate(), cur.getFutureUserToken(), cur.getAccountRecordId(), cur.getTenantRecordId());
 
+            handleNotificationWithMetrics(handler, cur, key);
             result++;
             clearNotification(cur, createCallContext(cur.getTenantRecordId(), cur.getAccountRecordId()));
             logDebug("done handling notification %s, key = %s for time %s", cur.getId(), cur.getNotificationKey(), cur.getEffectiveDate());
         }
-
         return result;
+    }
+
+    private void handleNotificationWithMetrics(final NotificationQueueHandler handler, final Notification notification, final NotificationKey key) {
+
+        // Create specific metric name because:
+        // - ':' is not allowed for metric name
+        // - name would be too long (e.g entitlement-service:subscription-events-process-time -> ent-subscription-events-process-time)
+        //
+        final String [] parts = notification.getQueueName().split(":");
+        final String metricName = new StringBuilder(parts[0].substring(0, 3))
+                .append("-")
+                .append(parts[1])
+                .append("-process-time").toString();
+
+        final Histogram perQueueHistogramProcessingTime;
+        synchronized(perQueueProcessingTime) {
+            if (!perQueueProcessingTime.containsKey(notification.getQueueName())) {
+                perQueueProcessingTime.put(notification.getQueueName(), Metrics.newHistogram(NotificationQueueDispatcher.class, metricName));
+            }
+            perQueueHistogramProcessingTime = perQueueProcessingTime.get(notification.getQueueName());
+        }
+        final DateTime beforeProcessing =  clock.getUTCNow();
+        handler.handleReadyNotification(key, notification.getEffectiveDate(), notification.getFutureUserToken(), notification.getAccountRecordId(), notification.getTenantRecordId());
+        final DateTime afterProcessing =  clock.getUTCNow();
+        perQueueHistogramProcessingTime.update(afterProcessing.getMillis() - beforeProcessing.getMillis());
+        processedNotificationsSinceStart.inc();
     }
 
     private void clearNotification(final Notification cleared, final InternalCallContext context) {
