@@ -70,7 +70,7 @@ public class TestTimelineAggregator extends MeterTestSuiteWithEmbeddedDB {
     private Integer minHeapUsedKindId = null;
     private Integer maxHeapUsedKindId = null;
 
-    @BeforeMethod(groups = "slow")
+    @BeforeMethod(groups = "mysql")
     public void setUp() throws Exception {
         timelineDao = new DefaultTimelineDao(getDBI());
         final Properties properties = System.getProperties();
@@ -79,7 +79,7 @@ public class TestTimelineAggregator extends MeterTestSuiteWithEmbeddedDB {
         aggregator = new TimelineAggregator(getDBI(), timelineDao, timelineCoder, sampleCoder, config, internalCallContextFactory);
     }
 
-    @Test(groups = "slow")
+    @Test(groups = "mysql")
     public void testAggregation() throws Exception {
         // Create the host
         hostId = timelineDao.getOrAddSource(HOST_NAME, internalCallContext);

@@ -42,10 +42,6 @@ and metric_record_id in (<metricIds>)
 ;
 >>
 
-getLastInsertedId() ::= <<
-select last_insert_id();
->>
-
 makeTimelineChunkValid() ::= <<
 update timeline_chunks
 set not_valid = 0

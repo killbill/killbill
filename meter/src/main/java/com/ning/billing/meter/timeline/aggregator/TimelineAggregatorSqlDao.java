@@ -19,7 +19,6 @@ package com.ning.billing.meter.timeline.aggregator;
 import java.util.List;
 
 import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.UseStringTemplate3StatementLocator;
@@ -30,9 +29,6 @@ import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 
 @UseStringTemplate3StatementLocator()
 public interface TimelineAggregatorSqlDao extends Transactional<TimelineAggregatorSqlDao> {
-
-    @SqlQuery
-    int getLastInsertedId();
 
     @SqlUpdate
     void makeTimelineChunkValid(@Bind("chunkId") final long chunkId,
