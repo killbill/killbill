@@ -59,11 +59,11 @@ import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.config.PaymentConfig;
 import com.ning.billing.util.email.EmailModule;
 import com.ning.billing.util.email.templates.TemplateModule;
+import com.ning.billing.util.globallocker.TestGlobalLockerModule;
 import com.ning.billing.util.glue.AuditModule;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.CallContextModule;
 import com.ning.billing.util.glue.CustomFieldModule;
-import com.ning.billing.util.glue.GlobalLockerModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.TagStoreModule;
 import com.ning.billing.util.svcsapi.bus.BusService;
@@ -101,7 +101,7 @@ public class BeatrixIntegrationModule extends AbstractModule {
 
         install(new EmailModule());
         install(new CallContextModule());
-        install(new GlobalLockerModule());
+        install(new TestGlobalLockerModule(helper));
         install(new BusModule());
         install(new NotificationQueueModule());
         install(new TagStoreModule());

@@ -79,7 +79,7 @@ public class TestDefaultCustomFieldUserApi extends UtilTestSuiteWithEmbeddedDB {
                 final List<Map<String, Object>> values = handle.select("select account_record_id from custom_fields where object_id = ?", accountId.toString());
                 Assert.assertEquals(values.size(), 1);
                 Assert.assertEquals(values.get(0).keySet().size(), 1);
-                Assert.assertEquals(values.get(0).get("account_record_id"), accountRecordId);
+                Assert.assertEquals(Long.valueOf(values.get(0).get("account_record_id").toString()), accountRecordId);
                 return null;
             }
         });

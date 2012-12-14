@@ -17,10 +17,18 @@
 package com.ning.billing.dbi;
 
 import java.io.IOException;
+import java.sql.SQLException;
+import java.util.List;
 
+import org.h2.tools.Server;
+import org.skife.jdbi.v2.Handle;
+import org.skife.jdbi.v2.tweak.HandleCallback;
+import org.skife.jdbi.v2.util.StringMapper;
 import org.testng.Assert;
 
 public class H2TestingHelper extends DBTestingHelper {
+
+    private Server server;
 
     static {
         try {
@@ -28,6 +36,11 @@ public class H2TestingHelper extends DBTestingHelper {
         } catch (ClassNotFoundException e) {
             Assert.fail(e.toString());
         }
+    }
+
+    @Override
+    public DBEngine getDBEngine() {
+        return DBEngine.H2;
     }
 
     @Override
@@ -42,19 +55,38 @@ public class H2TestingHelper extends DBTestingHelper {
 
     @Override
     public String getJdbcConnectionString() {
-        return "jdbc:h2:mem:" + DB_NAME + ";MODE=MYSQL";
+        return "jdbc:h2:mem:" + DB_NAME + ";MODE=MYSQL;DB_CLOSE_DELAY=-1";
     }
 
     @Override
-    public String getInformationSchemaJdbcConnectionString() {
-        return "jdbc:h2:mem:foo;MODE=MYSQL;SCHEMA_SEARCH_PATH=INFORMATION_SCHEMA";
+    public synchronized List<String> fetchAllTables() {
+        if (allTables == null) {
+            allTables = dbiInstance.withHandle(new HandleCallback<List<String>>() {
+
+                @Override
+                public List<String> withHandle(final Handle h) throws Exception {
+                    return h.createQuery("select table_name from information_schema.tables where table_catalog = :table_catalog and table_type = 'TABLE';")
+                            .bind("table_catalog", DB_NAME)
+                            .map(new StringMapper())
+                            .list();
+                }
+            });
+        }
+        return allTables;
     }
 
     @Override
     public void start() throws IOException {
+        // Start a web server for debugging (http://127.0.0.1:8082/)
+        try {
+            server = Server.createWebServer(new String[]{}).start();
+        } catch (SQLException e) {
+            Assert.fail(e.toString());
+        }
     }
 
     @Override
     public void stop() {
+        server.stop();
     }
 }

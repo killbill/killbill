@@ -839,6 +839,8 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 break;
             }
         }
+
+        // TODO Should we send an event on the bus for Analytics?
     }
 
 

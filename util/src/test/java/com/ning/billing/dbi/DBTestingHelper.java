@@ -19,11 +19,9 @@ package com.ning.billing.dbi;
 import java.io.IOException;
 import java.util.List;
 
-import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.tweak.HandleCallback;
-import org.skife.jdbi.v2.util.StringMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +37,12 @@ public abstract class DBTestingHelper {
     public static final String USERNAME = "root";
     public static final String PASSWORD = "root";
 
-    // Discover dynamically list of all tables in that database;
+    public enum DBEngine {
+        MYSQL,
+        H2
+    }
+
+    // Discover dynamically list of all tables in that database
     protected List<String> allTables;
     protected IDBI dbiInstance = null;
 
@@ -121,26 +124,6 @@ public abstract class DBTestingHelper {
         });
     }
 
-    public synchronized List<String> fetchAllTables() {
-        if (allTables == null) {
-            final String dbiString = getInformationSchemaJdbcConnectionString();
-            final IDBI cleanupDbi = new DBI(dbiString, USERNAME, PASSWORD);
-
-            final List<String> tables = cleanupDbi.withHandle(new HandleCallback<List<String>>() {
-
-                @Override
-                public List<String> withHandle(final Handle h) throws Exception {
-                    return h.createQuery("select table_name from tables where table_schema = :table_schema and table_type = 'BASE TABLE';")
-                            .bind("table_schema", DB_NAME)
-                            .map(new StringMapper())
-                            .list();
-                }
-            });
-            allTables = tables;
-        }
-        return allTables;
-    }
-
     public void cleanupAllTables() {
         final List<String> tablesToCleanup = fetchAllTables();
         for (final String tableName : tablesToCleanup) {
@@ -164,6 +147,8 @@ public abstract class DBTestingHelper {
         return DB_NAME;
     }
 
+    public abstract DBEngine getDBEngine();
+
     public abstract boolean isUsingLocalInstance();
 
     // For debugging
@@ -172,7 +157,7 @@ public abstract class DBTestingHelper {
     // To create the DBI
     public abstract String getJdbcConnectionString();
 
-    public abstract String getInformationSchemaJdbcConnectionString();
+    public abstract List<String> fetchAllTables();
 
     public abstract void start() throws IOException;
 

@@ -38,7 +38,7 @@ create table bst (
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
-) comment 'Business Subscription Transitions, track bundles lifecycle';
+);
 create index bst_key_index on bst (external_key, requested_timestamp asc);
 create index bst_tenant_account_record_id on bst(tenant_record_id, account_record_id);
 
@@ -61,7 +61,7 @@ create table bac (
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
-) comment 'Business ACcounts, keep a record of all accounts';
+);
 create unique index bac_key_index on bac (account_key);
 create index bac_tenant_account_record_id on bac(tenant_record_id, account_record_id);
 
@@ -84,7 +84,7 @@ create table bin (
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
-) comment 'Business INvoices, keep a record of generated invoices';
+);
 create unique index bin_key_index on bin (invoice_id);
 create index bin_tenant_account_record_id on bin(tenant_record_id, account_record_id);
 
@@ -111,7 +111,7 @@ create table bii (
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
-) comment 'Business Invoice Items, keep a record of all invoice items';
+);
 create unique index bii_key_index on bii (item_id);
 create index bii_tenant_account_record_id on bii(tenant_record_id, account_record_id);
 
@@ -141,7 +141,7 @@ create table bip (
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
-) comment 'Business Invoice Payments, track all payments';
+);
 create unique index bip_key_index on bip (payment_id);
 create index bip_tenant_account_record_id on bip(tenant_record_id, account_record_id);
 
@@ -157,7 +157,7 @@ create table bos (
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
-) comment 'Business Overdue Status, historical bundles overdue status';
+);
 create index bos_tenant_account_record_id on bos(tenant_record_id, account_record_id);
 
 drop table if exists bac_tags;
@@ -169,7 +169,7 @@ create table bac_tags (
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
-) comment 'Tags associated to accounts';
+);
 create index bac_tags_tenant_account_record_id on bac_tags(tenant_record_id, account_record_id);
 
 drop table if exists bac_fields;
@@ -182,7 +182,7 @@ create table bac_fields (
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
-) comment 'Custom fields associated to accounts';
+);
 create index bac_fields_tenant_account_record_id on bac_fields(tenant_record_id, account_record_id);
 
 drop table if exists bst_tags;
@@ -195,7 +195,7 @@ create table bst_tags (
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
-) comment 'Tags associated to bundles';
+);
 create index bst_tags_tenant_account_record_id on bst_tags(tenant_record_id, account_record_id);
 
 drop table if exists bst_fields;
@@ -209,7 +209,7 @@ create table bst_fields (
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
-) comment 'Custom fields associated to bundles';
+);
 create index bst_fields_tenant_account_record_id on bst_fields(tenant_record_id, account_record_id);
 
 drop table if exists bin_tags;
@@ -220,7 +220,7 @@ create table bin_tags (
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
-) comment 'Tags associated to invoices';
+);
 create index bin_tags_tenant_account_record_id on bin_tags(tenant_record_id, account_record_id);
 
 drop table if exists bin_fields;
@@ -232,7 +232,7 @@ create table bin_fields (
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
-) comment 'Custom fields associated to invoices';
+);
 create index bin_fields_tenant_account_record_id on bin_fields(tenant_record_id, account_record_id);
 
 drop table if exists bip_tags;
@@ -243,7 +243,7 @@ create table bip_tags (
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
-) comment 'Tags associated to payments';
+);
 create index bip_tags_tenant_account_record_id on bip_tags(tenant_record_id, account_record_id);
 
 drop table if exists bip_fields;
@@ -255,5 +255,5 @@ create table bip_fields (
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
-) comment 'Custom fields associated to payments';
+);
 create index bip_fields_tenant_account_record_id on bip_fields(tenant_record_id, account_record_id);

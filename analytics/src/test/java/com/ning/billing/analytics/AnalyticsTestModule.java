@@ -30,11 +30,11 @@ import com.ning.billing.junction.glue.DefaultJunctionModule;
 import com.ning.billing.payment.glue.PaymentModule;
 import com.ning.billing.util.email.EmailModule;
 import com.ning.billing.util.email.templates.TemplateModule;
+import com.ning.billing.util.globallocker.TestGlobalLockerModule;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.CallContextModule;
 import com.ning.billing.util.glue.ClockModule;
 import com.ning.billing.util.glue.CustomFieldModule;
-import com.ning.billing.util.glue.GlobalLockerModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.TagStoreModule;
 import com.ning.billing.util.tag.dao.TagDefinitionSqlDao;
@@ -47,7 +47,7 @@ public class AnalyticsTestModule extends AnalyticsModule {
 
         // Need to configure a few more things for the EventBus
         install(new EmailModule());
-        install(new GlobalLockerModule());
+        install(new TestGlobalLockerModule(KillbillTestSuiteWithEmbeddedDB.getDBTestingHelper()));
         install(new ClockModule());
         install(new CallContextModule());
         install(new CustomFieldModule());

@@ -290,7 +290,7 @@ select
   <auditTableFields("t.")>
 from <auditTableName()> t
 where t.target_record_id = :targetRecordId
-and t.table_name = :tableName
+and lower(t.table_name) = lower(:tableName)
 <AND_CHECK_TENANT("t.")>
 order by <recordIdField("t.")> ASC
 ;
