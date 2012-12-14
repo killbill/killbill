@@ -40,9 +40,9 @@ import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.email.EmailModule;
 import com.ning.billing.util.email.templates.TemplateModule;
+import com.ning.billing.util.globallocker.TestGlobalLockerModule;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.CustomFieldModule;
-import com.ning.billing.util.glue.GlobalLockerModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.TagStoreModule;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
@@ -84,7 +84,7 @@ public class MockModule extends AbstractModule {
         bind(EntitlementInternalApi.class).toInstance(Mockito.mock(EntitlementInternalApi.class));
 
         install(new EmailModule());
-        install(new GlobalLockerModule());
+        install(new TestGlobalLockerModule(helper));
         install(new NotificationQueueModule());
         install(new CatalogModule());
         install(new BusModule());

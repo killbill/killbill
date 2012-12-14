@@ -37,7 +37,12 @@ public abstract class DBTestingHelper {
     public static final String USERNAME = "root";
     public static final String PASSWORD = "root";
 
-    // Discover dynamically list of all tables in that database;
+    public enum DBEngine {
+        MYSQL,
+        H2
+    }
+
+    // Discover dynamically list of all tables in that database
     protected List<String> allTables;
     protected IDBI dbiInstance = null;
 
@@ -141,6 +146,8 @@ public abstract class DBTestingHelper {
     public String getDbName() {
         return DB_NAME;
     }
+
+    public abstract DBEngine getDBEngine();
 
     public abstract boolean isUsingLocalInstance();
 

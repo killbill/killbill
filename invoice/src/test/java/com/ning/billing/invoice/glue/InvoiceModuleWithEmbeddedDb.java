@@ -36,9 +36,9 @@ import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
 import com.ning.billing.util.email.templates.TemplateModule;
+import com.ning.billing.util.globallocker.TestGlobalLockerModule;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.CustomFieldModule;
-import com.ning.billing.util.glue.GlobalLockerModule;
 import com.ning.billing.util.glue.TagStoreModule;
 import com.ning.billing.util.notificationq.MockNotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService;
@@ -80,7 +80,7 @@ public class InvoiceModuleWithEmbeddedDb extends DefaultInvoiceModule {
 
         install(new CatalogModule());
         install(new MockEntitlementModule());
-        install(new GlobalLockerModule());
+        install(new TestGlobalLockerModule(KillbillTestSuiteWithEmbeddedDB.getDBTestingHelper()));
 
         super.configure();
 

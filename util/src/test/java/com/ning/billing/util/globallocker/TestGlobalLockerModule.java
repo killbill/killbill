@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2012 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -14,17 +14,29 @@
  * under the License.
  */
 
-package com.ning.billing.util.glue;
+package com.ning.billing.util.globallocker;
 
-import com.ning.billing.util.globallocker.GlobalLocker;
-import com.ning.billing.util.globallocker.MySqlGlobalLocker;
+import com.ning.billing.dbi.DBTestingHelper;
+import com.ning.billing.dbi.DBTestingHelper.DBEngine;
+import com.ning.billing.mock.glue.MockGlobalLockerModule;
+import com.ning.billing.util.glue.GlobalLockerModule;
 
 import com.google.inject.AbstractModule;
 
-public class GlobalLockerModule extends AbstractModule {
+public class TestGlobalLockerModule extends AbstractModule {
+
+    private final DBTestingHelper helper;
+
+    public TestGlobalLockerModule(final DBTestingHelper helper) {
+        this.helper = helper;
+    }
 
     @Override
     protected void configure() {
-        bind(GlobalLocker.class).to(MySqlGlobalLocker.class).asEagerSingleton();
+        if (DBEngine.MYSQL.equals(helper.getDBEngine())) {
+            install(new GlobalLockerModule());
+        } else {
+            install(new MockGlobalLockerModule());
+        }
     }
 }

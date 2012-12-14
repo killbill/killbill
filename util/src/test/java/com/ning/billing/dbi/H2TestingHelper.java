@@ -39,6 +39,11 @@ public class H2TestingHelper extends DBTestingHelper {
     }
 
     @Override
+    public DBEngine getDBEngine() {
+        return DBEngine.H2;
+    }
+
+    @Override
     public boolean isUsingLocalInstance() {
         return false;
     }

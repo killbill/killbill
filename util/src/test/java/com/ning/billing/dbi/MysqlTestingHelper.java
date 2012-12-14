@@ -66,6 +66,11 @@ public class MysqlTestingHelper extends DBTestingHelper {
     }
 
     @Override
+    public DBEngine getDBEngine() {
+        return DBEngine.MYSQL;
+    }
+
+    @Override
     public boolean isUsingLocalInstance() {
         return (System.getProperty(USE_LOCAL_DB_PROP) != null);
     }
