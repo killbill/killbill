@@ -366,11 +366,6 @@
                 <artifactId>jul-to-slf4j</artifactId>
                 <version>${slf4j.version}</version>
             </dependency>
-            <dependency><!-- Needed by jmxutils -->
-                <groupId>com.google.inject.extensions</groupId>
-                <artifactId>guice-multibindings</artifactId>
-                <version>3.0</version>
-            </dependency>
             <dependency>
                 <groupId>org.weakref</groupId>
                 <artifactId>jmxutils</artifactId>
