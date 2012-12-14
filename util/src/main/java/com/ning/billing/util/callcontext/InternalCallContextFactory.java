@@ -243,7 +243,8 @@ public class InternalCallContextFactory {
                     if (values.size() == 0) {
                         return null;
                     } else {
-                        return Long.valueOf(values.get(0).get(columnName).toString());
+                        final Object accountRecordId = values.get(0).get(columnName);
+                        return accountRecordId == null ? null : Long.valueOf(accountRecordId.toString());
                     }
                 }
             });
