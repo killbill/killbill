@@ -59,7 +59,6 @@ import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.mock.MockPlan;
-import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.clock.Clock;
@@ -82,7 +81,7 @@ public class TestDefaultAnalyticsUserApi extends AnalyticsTestSuiteWithEmbeddedD
     private BusinessOverdueStatusSqlDao overdueStatusSqlDao;
     private BusinessInvoicePaymentSqlDao invoicePaymentSqlDao;
 
-    @BeforeMethod(groups = "slow")
+    @BeforeMethod(groups = "mysql")
     public void setUp() throws Exception {
         final IDBI dbi = helper.getDBI();
         accountSqlDao = dbi.onDemand(BusinessAccountSqlDao.class);
@@ -108,7 +107,7 @@ public class TestDefaultAnalyticsUserApi extends AnalyticsTestSuiteWithEmbeddedD
                                                        new InternalCallContextFactory(dbi, clock));
     }
 
-    @Test(groups = "slow")
+    @Test(groups = "mysql")
     public void testAccountsCreatedOverTime() throws Exception {
         final BusinessAccountModelDao account = new BusinessAccountModelDao(UUID.randomUUID(), UUID.randomUUID().toString(), UUID.randomUUID().toString(), BigDecimal.ONE, clock.getUTCToday(),
                                                                             BigDecimal.TEN, "ERROR_NOT_ENOUGH_FUNDS", "CreditCard", "Visa", "FRANCE", "USD", clock.getUTCNow(), clock.getUTCNow());
@@ -121,7 +120,7 @@ public class TestDefaultAnalyticsUserApi extends AnalyticsTestSuiteWithEmbeddedD
         Assert.assertEquals(data.getValues().get(0), (double) 1);
     }
 
-    @Test(groups = "slow")
+    @Test(groups = "mysql")
     public void testSubscriptionsCreatedOverTime() throws Exception {
         final String productType = "subscription";
         final Product product = new MockProduct("platinum", productType, ProductCategory.BASE);
