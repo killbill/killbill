@@ -651,9 +651,8 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <version>2.11</version>
                         <configuration>
-                            <groups>fast,slow</groups>
+                            <groups>fast</groups>
                             <systemPropertyVariables>
-                                <com.ning.billing.dbi.test.h2>true</com.ning.billing.dbi.test.h2>
                                 <file.encoding>UTF-8</file.encoding>
                                 <user.timezone>GMT</user.timezone>
                             </systemPropertyVariables>
