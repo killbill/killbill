@@ -295,6 +295,9 @@ public class TimelineAggregator {
 
                 @Override
                 public Void withHandle(final Handle handle) throws Exception {
+                    // MySQL needs special setup to make it stream the results. See:
+                    // http://javaquirks.blogspot.com/2007/12/mysql-streaming-result-set.html
+                    // http://stackoverflow.com/questions/2447324/streaming-large-result-sets-with-mysql
                     final Query<Map<String, Object>> query = handle.createQuery("getStreamingAggregationCandidates")
                                                                    .setFetchSize(Integer.MIN_VALUE)
                                                                    .bind("aggregationLevel", aggregationLevel)

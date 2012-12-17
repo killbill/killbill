@@ -41,14 +41,14 @@ public class TestMysqlGlobalLocker extends UtilTestSuiteWithEmbeddedDB {
     @Inject
     private IDBI dbi;
 
-    @BeforeMethod(groups = "slow")
+    @BeforeMethod(groups = "mysql")
     public void setup() throws IOException {
         final String testDdl = IOUtils.toString(TestMysqlGlobalLocker.class.getResourceAsStream("/com/ning/billing/util/ddl_test.sql"));
         helper.initDb(testDdl);
     }
 
     // Used as a manual test to validate the simple DAO by stepping through that locking is done and release correctly
-    @Test(groups = "slow")
+    @Test(groups = "mysql")
     public void testSimpleLocking() {
         final String lockName = UUID.randomUUID().toString();
 

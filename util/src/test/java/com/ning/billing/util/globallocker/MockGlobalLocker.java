@@ -16,19 +16,60 @@
 
 package com.ning.billing.util.globallocker;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 public class MockGlobalLocker implements GlobalLocker {
+
+    private final Map<String, AtomicBoolean> locks = new ConcurrentHashMap<String, AtomicBoolean>();
+
     @Override
     public GlobalLock lockWithNumberOfTries(final LockerType service,
-                                            final String lockKey, final int retry) {
+                                            final String lockKey,
+                                            final int retry) {
+        final String lockName = getLockName(service, lockKey);
+        int tries_left = retry;
+        while (tries_left-- > 0) {
+            final GlobalLock lock = lock(lockName);
+            if (lock != null) {
+                return lock;
+            }
+        }
+        throw new LockFailedException();
+    }
+
+    private synchronized GlobalLock lock(final String lockName) throws LockFailedException {
+        if (!isFree(lockName)) {
+            return null;
+        }
+
+        if (locks.get(lockName) == null) {
+            locks.put(lockName, new AtomicBoolean(true));
+        } else {
+            locks.get(lockName).set(true);
+        }
+
         return new GlobalLock() {
             @Override
             public void release() {
+                locks.get(lockName).set(false);
             }
         };
     }
 
     @Override
-    public Boolean isFree(final LockerType service, final String lockKey) {
-        return Boolean.TRUE;
+    public synchronized Boolean isFree(final LockerType service, final String lockKey) {
+        final String lockName = getLockName(service, lockKey);
+        return isFree(lockName);
+    }
+
+    private synchronized Boolean isFree(final String lockName) {
+        final AtomicBoolean lock = locks.get(lockName);
+        return lock == null || !lock.get();
+    }
+
+    private String getLockName(final LockerType service, final String lockKey) {
+        return String.format("%s-%s", service.toString(), lockKey);
     }
 }

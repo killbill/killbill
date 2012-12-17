@@ -564,7 +564,7 @@
                 <version>2.11</version>
                 <configuration>
                     <useManifestOnlyJar>false</useManifestOnlyJar>
-                    <groups>fast,slow</groups>
+                    <groups>fast,slow,mysql</groups>
                     <systemPropertyVariables>
                         <log4j.configuration>file:${project.basedir}/src/test/resources/log4j.xml</log4j.configuration>
                     </systemPropertyVariables>
@@ -597,7 +597,7 @@
     </build>
     <profiles>
         <profile>
-            <id>localtest</id>
+            <id>h2</id>
             <build>
                 <plugins>
                     <plugin>
@@ -606,6 +606,27 @@
                         <version>2.11</version>
                         <configuration>
                             <groups>fast,slow</groups>
+                            <excludedGroups>mysql</excludedGroups>
+                            <systemPropertyVariables>
+                                <com.ning.billing.dbi.test.h2>true</com.ning.billing.dbi.test.h2>
+                                <file.encoding>UTF-8</file.encoding>
+                                <user.timezone>GMT</user.timezone>
+                            </systemPropertyVariables>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>localtest</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>2.11</version>
+                        <configuration>
+                            <groups>fast,slow,mysql</groups>
                             <useManifestOnlyJar>false</useManifestOnlyJar>
                             <systemPropertyVariables>
                                 <log4j.configuration>file:${project.basedir}/src/test/resources/log4j.xml
