@@ -33,10 +33,18 @@ create user killbill;
 grant all on killbill.*
           to killbill@localhost
           identified by 'killbill';" | mysql -uroot -p
-curl 'https://gist.github.com/3931646' | mysql -ukillbill -pkillbill killbill</pre></li>
+curl 'https://gist.github.com/raw/3931646/3b372c3a5dd262a20a5456e011802d62c8c6e833/killbill-ddl.sql' | mysql -ukillbill -pkillbill killbill</pre></li>
                         <li>Download the <strong>killbill-server-x.y.z-jetty-console.war</strong> artifact from <a href="http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.ning.billing%22%20AND%20a%3A%22killbill-server%22" target="_blank">Maven Central</a>.</li>
-                        <li>Double click on the downloaded binary and click <strong>start</strong>. You can also start it on the command line via <pre>java -jar killbill-server-x.y.z-jetty-console.war</pre></li>
-                        <li>You're all set!</li>
+                        <li>Start the downloaded binary on the command line via <pre>java -Dcom.ning.jetty.jdbi.url=jdbc:mysql://127.0.0.1:3306/killbill -Dcom.ning.jetty.jdbi.user=killbill -Dcom.ning.jetty.jdbi.password=killbill -jar killbill-server-x.y.z-jetty-console.war</pre></li>
+                        <li>You can verify killbill is running by checking its healthcheck: <pre>curl -v http://127.0.0.1:8080/1.0/healthcheck</pre> You should see: KillbillHealthcheck: OK.<li>
+                        <li>The next step is to create your own tenant. For example, to create the a tenant with the credentials bob/lazar: <pre>
+curl -v -XPOST \
+        -H'Content-Type: application/json' \
+        -H'X-Killbill-CreatedBy: admin' \
+        -d'{"apiKey": "bob", "apiSecret": "lazar"}' \
+        http://127.0.0.1:8080/1.0/kb/tenants
+</pre>You can now access the API using basic auth, e.g.: curl -v http://127.0.0.1:8080/1.0/kb/tagDefinitions -ubob:lazar</li>
+                        <li>You're all set! The next step is to setup your own catalog.</li>
                     </ol>
                 </p>
             </section>
