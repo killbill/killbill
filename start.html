@@ -166,7 +166,7 @@ curl -v -XPOST \
                 <p>The following guide will help you setup a brand new Rails app running Kaui. The first step is to generate a standard Rails application: <pre>rails new kbadmin --skip-bundle --skip-active-record</pre> Kaui doesn't have any database dependency, it interacts instead with Killbill over HTTP (Rest APIs) to fetch and update billing data.</p>
 
                 <p>The next step is to get the Kaui gem via Rubygems: <pre>gem install kaui</pre></p>
-                <p>Finally, install Killbill in your new Rails app: <pre>cd kbadmin ; kaui</pre> You're now ready to start Kaui: <pre>rails server</pre></p>
+                <p>Finally, install Killbill in your new Rails app: <pre>cd kbadmin ; bundle install ; rm -f public/index.html ; kaui</pre> By default, Kaui expects Killbill to run at 127.0.0.1:8080. You can override it by setting the following variable: <pre>export KILLBILL_URL="http://killbill.company.com:8080"</pre> You can also specify your tenant credentials, e.g.: <pre>export KILLBILL_URL="http://bob:lazar@127.0.0.1:8080"</pre> You're now ready to start Kaui: <pre>rails server</pre></p>
 
                 <p>The kaui install script has various options, see <pre>kaui --help</pre> Among useful switches:
 <pre>
