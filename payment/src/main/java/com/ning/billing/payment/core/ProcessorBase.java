@@ -22,6 +22,8 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 
+import javax.annotation.Nullable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,6 +50,9 @@ import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.svcsapi.bus.InternalBus.EventBusException;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.Tag;
+
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
 
 public abstract class ProcessorBase {
 
@@ -81,12 +86,14 @@ public abstract class ProcessorBase {
 
     protected boolean isAccountAutoPayOff(final UUID accountId, final InternalTenantContext context) {
         final List<Tag> accountTags = tagInternalApi.getTags(accountId, ObjectType.ACCOUNT, context);
-        for (final Tag cur : accountTags) {
-            if (ControlTagType.AUTO_PAY_OFF.getId().equals(cur.getTagDefinitionId())) {
-                return true;
+
+        return ControlTagType.isAutoPayOff(Collections2.transform(accountTags, new Function<Tag, UUID>() {
+            @Nullable
+            @Override
+            public UUID apply(@Nullable final Tag tag) {
+                return tag.getTagDefinitionId();
             }
-        }
-        return false;
+        }));
     }
 
     protected void setAccountAutoPayOff(final UUID accountId, final InternalCallContext context) throws PaymentApiException {

@@ -35,6 +35,7 @@ import com.ning.billing.util.notificationq.NotificationQueueService.Notification
 import com.google.inject.Inject;
 
 public class DefaultOverdueCheckNotifier implements OverdueCheckNotifier {
+
     private static final Logger log = LoggerFactory.getLogger(DefaultOverdueCheckNotifier.class);
 
     public static final String OVERDUE_CHECK_NOTIFIER_QUEUE = "overdue-check-queue";

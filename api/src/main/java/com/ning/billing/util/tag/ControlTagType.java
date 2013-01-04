@@ -16,6 +16,7 @@
 
 package com.ning.billing.util.tag;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -73,5 +74,41 @@ public enum ControlTagType {
             }
         }
         return null;
+    }
+
+    /**
+     * Convenience method to return whether an account is configured with auto_pay_off
+     * (information of which control tag is configured with which behavior stays here)
+     *
+     * @param input tagDefinitionIds for all the tags associated to a given account
+     * @return whether that account is set with auto_pay_off
+     */
+    public static boolean isAutoPayOff(final Collection<UUID> input) {
+        for (UUID cur : input) {
+           for (ControlTagType controlTag : values()) {
+               if (controlTag.getId().equals(cur) && controlTag.getAutoPaymentOff()) {
+                   return true;
+               }
+           }
+        }
+        return false;
+    }
+
+    /**
+     * Convenience method to return whether an account is configured with auto_invoicing_off
+     * (information of which control tag is configured with which behavior stays here)
+     *
+     * @param input tagDefinitionIds for all the tags associated to a given account
+     * @return whether that account is set with auto_invoicing_off
+     */
+    public static boolean isAutoInvoicingOff(final Collection<UUID> input) {
+        for (UUID cur : input) {
+            for (ControlTagType controlTag : values()) {
+                if (controlTag.getId().equals(cur) && controlTag.getAutoInvoicingOff()) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }

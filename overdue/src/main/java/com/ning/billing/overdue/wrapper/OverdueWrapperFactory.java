@@ -62,13 +62,13 @@ public class OverdueWrapperFactory {
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends Blockable> OverdueWrapper<T> createOverdueWrapperFor(final T bloackable) throws OverdueException {
+    public <T extends Blockable> OverdueWrapper<T> createOverdueWrapperFor(final T blockable) throws OverdueException {
 
-        if (bloackable instanceof SubscriptionBundle) {
-            return (OverdueWrapper<T>) new OverdueWrapper<SubscriptionBundle>((SubscriptionBundle) bloackable, api, getOverdueStateSetBundle(),
+        if (blockable instanceof SubscriptionBundle) {
+            return (OverdueWrapper<T>) new OverdueWrapper<SubscriptionBundle>((SubscriptionBundle) blockable, api, getOverdueStateSetBundle(),
                                                                               clock, billingStateCalcuatorBundle, overdueStateApplicatorBundle);
         } else {
-            throw new OverdueException(ErrorCode.OVERDUE_TYPE_NOT_SUPPORTED, bloackable.getId(), bloackable.getClass());
+            throw new OverdueException(ErrorCode.OVERDUE_TYPE_NOT_SUPPORTED, blockable.getId(), blockable.getClass());
         }
     }
 

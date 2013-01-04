@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.SortedSet;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,6 +45,8 @@ import com.ning.billing.util.svcapi.tag.TagInternalApi;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.Tag;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
 
 public class DefaultInternalBillingApi implements BillingInternalApi {
@@ -79,11 +83,10 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
 
             // Check to see if billing is off for the account
             final List<Tag> accountTags = tagApi.getTags(accountId, ObjectType.ACCOUNT, context);
-            for (final Tag cur : accountTags) {
-                if (ControlTagType.AUTO_INVOICING_OFF.getId().equals(cur.getTagDefinitionId())) {
-                    result.setAccountAutoInvoiceIsOff(true);
-                    return result; // billing is off, we are done
-                }
+            final boolean found_AUTO_INVOICING_OFF = is_AUTO_INVOICING_OFF(accountTags);
+            if (found_AUTO_INVOICING_OFF) {
+                result.setAccountAutoInvoiceIsOff(true);
+                return result; // billing is off, we are done
             }
 
             addBillingEventsForBundles(bundles, account, context, result);
@@ -115,14 +118,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
 
             //Check if billing is off for the bundle
             final List<Tag> bundleTags = tagApi.getTags(bundle.getId(), ObjectType.BUNDLE, context);
-
-            boolean found_AUTO_INVOICING_OFF = false;
-            for (final Tag cur : bundleTags) {
-                if (ControlTagType.AUTO_INVOICING_OFF.getId().equals(cur.getTagDefinitionId())) {
-                    found_AUTO_INVOICING_OFF = true;
-                    break;
-                }
-            }
+            boolean found_AUTO_INVOICING_OFF = is_AUTO_INVOICING_OFF(bundleTags);
             if (found_AUTO_INVOICING_OFF) {
                 for (final Subscription subscription : subscriptions) { // billing is off so list sub ids in set to be excluded
                     result.getSubscriptionIdsWithAutoInvoiceOff().add(subscription.getId());
@@ -155,5 +151,15 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
                 }
             }
         }
+    }
+
+    private final boolean is_AUTO_INVOICING_OFF(final List<Tag> tags) {
+        return ControlTagType.isAutoInvoicingOff(Collections2.transform(tags, new Function<Tag, UUID>() {
+            @Nullable
+            @Override
+            public UUID apply(@Nullable final Tag tag) {
+                return tag.getTagDefinitionId();
+            }
+        }));
     }
 }
