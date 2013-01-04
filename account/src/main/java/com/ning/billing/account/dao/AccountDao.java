@@ -47,4 +47,6 @@ public interface AccountDao extends EntityDao<AccountModelDao, Account, AccountA
     public void removeEmail(AccountEmailModelDao email, InternalCallContext context);
 
     public List<AccountEmailModelDao> getEmailsByAccountId(UUID accountId, InternalTenantContext context);
+
+    public AccountModelDao getByRecordId(Long recordId, InternalCallContext context);
 }

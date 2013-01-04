@@ -25,7 +25,7 @@ import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentService;
 import com.ning.billing.payment.bus.InvoiceHandler;
-import com.ning.billing.payment.bus.TagHandler;
+import com.ning.billing.payment.bus.PaymentTagHandler;
 import com.ning.billing.payment.retry.AutoPayRetryService;
 import com.ning.billing.payment.retry.FailedPaymentRetryService;
 import com.ning.billing.payment.retry.PluginFailureRetryService;
@@ -40,7 +40,7 @@ public class DefaultPaymentService implements PaymentService {
     public static final String SERVICE_NAME = "payment-service";
 
     private final InvoiceHandler invoiceHandler;
-    private final TagHandler tagHandler;
+    private final PaymentTagHandler tagHandler;
     private final InternalBus eventBus;
     private final PaymentApi api;
     private final FailedPaymentRetryService failedRetryService;
@@ -49,7 +49,7 @@ public class DefaultPaymentService implements PaymentService {
 
     @Inject
     public DefaultPaymentService(final InvoiceHandler invoiceHandler,
-            final TagHandler tagHandler,
+            final PaymentTagHandler tagHandler,
             final PaymentApi api, final InternalBus eventBus,
             final FailedPaymentRetryService failedRetryService,
             final PluginFailureRetryService timedoutRetryService,

@@ -40,9 +40,9 @@ import com.ning.billing.util.tag.ControlTagType;
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
 
-public class TagHandler {
+public class PaymentTagHandler {
 
-    private static final Logger log = LoggerFactory.getLogger(TagHandler.class);
+    private static final Logger log = LoggerFactory.getLogger(PaymentTagHandler.class);
 
     private final Clock clock;
     private final AccountInternalApi accountApi;
@@ -50,10 +50,10 @@ public class TagHandler {
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
-    public TagHandler(final Clock clock,
-                      final AccountInternalApi accountApi,
-                      final PaymentProcessor paymentProcessor,
-                      final InternalCallContextFactory internalCallContextFactory) {
+    public PaymentTagHandler(final Clock clock,
+                             final AccountInternalApi accountApi,
+                             final PaymentProcessor paymentProcessor,
+                             final InternalCallContextFactory internalCallContextFactory) {
         this.clock = clock;
         this.accountApi = accountApi;
         this.paymentProcessor = paymentProcessor;

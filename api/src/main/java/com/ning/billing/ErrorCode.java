@@ -155,6 +155,7 @@ public enum ErrorCode {
     ACCOUNT_CANNOT_CHANGE_EXTERNAL_KEY(3005, "External keys cannot be updated. Original key remains: %s"),
     ACCOUNT_CREATION_FAILED(3006, "Account creation failed."),
     ACCOUNT_UPDATE_FAILED(3007, "Account update failed."),
+    ACCOUNT_DOES_NOT_EXIST_FOR_RECORD_ID(3008, "Account does not exist for recordId %s"),
 
     ACCOUNT_EMAIL_ALREADY_EXISTS(3500, "Account email already exists %s"),
 

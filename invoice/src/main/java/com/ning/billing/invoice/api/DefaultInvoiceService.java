@@ -17,7 +17,7 @@
 package com.ning.billing.invoice.api;
 
 import com.ning.billing.invoice.InvoiceListener;
-import com.ning.billing.invoice.TagHandler;
+import com.ning.billing.invoice.InvoiceTagHandler;
 import com.ning.billing.invoice.notification.NextBillingDateNotifier;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
@@ -32,11 +32,11 @@ public class DefaultInvoiceService implements InvoiceService {
     public static final String INVOICE_SERVICE_NAME = "invoice-service";
     private final NextBillingDateNotifier dateNotifier;
     private final InvoiceListener invoiceListener;
-    private final TagHandler tagHandler;
+    private final InvoiceTagHandler tagHandler;
     private final InternalBus eventBus;
 
     @Inject
-    public DefaultInvoiceService(final InvoiceListener invoiceListener, final TagHandler tagHandler, final InternalBus eventBus, final NextBillingDateNotifier dateNotifier) {
+    public DefaultInvoiceService(final InvoiceListener invoiceListener, final InvoiceTagHandler tagHandler, final InternalBus eventBus, final NextBillingDateNotifier dateNotifier) {
         this.invoiceListener = invoiceListener;
         this.tagHandler = tagHandler;
         this.eventBus = eventBus;

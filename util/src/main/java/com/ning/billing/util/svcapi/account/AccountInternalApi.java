@@ -40,4 +40,6 @@ public interface AccountInternalApi {
     public void removePaymentMethod(UUID accountId, InternalCallContext context) throws AccountApiException;
 
     public void updatePaymentMethod(UUID accountId, UUID paymentMethodId, InternalCallContext context) throws AccountApiException;
+
+    public UUID getByRecordId(Long recordId, InternalCallContext context) throws AccountApiException;
 }

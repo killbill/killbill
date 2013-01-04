@@ -22,14 +22,15 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.joda.time.LocalDate;
 import org.joda.time.Period;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ning.billing.ErrorCode;
+import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.api.ActionPolicy;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
@@ -56,7 +57,10 @@ import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
 import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
+import com.ning.billing.util.svcapi.tag.TagInternalApi;
 import com.ning.billing.util.svcsapi.bus.InternalBus;
+import com.ning.billing.util.tag.ControlTagType;
+import com.ning.billing.util.tag.Tag;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -73,21 +77,24 @@ public class OverdueStateApplicator<T extends Blockable> {
     private final AccountInternalApi accountApi;
     private final EntitlementInternalApi entitlementUserApi;
     private final OverdueEmailGenerator overdueEmailGenerator;
+    final TagInternalApi tagApi;
     private final EmailSender emailSender;
 
     @Inject
     public OverdueStateApplicator(final BlockingInternalApi accessApi, final AccountInternalApi accountApi, final EntitlementInternalApi entitlementUserApi,
                                   final Clock clock, final OverdueCheckPoster poster, final OverdueEmailGenerator overdueEmailGenerator,
-                                  final EmailConfig config, final InternalBus bus) {
+                                  final EmailConfig config, final InternalBus bus, final TagInternalApi tagApi) {
         this.blockingApi = accessApi;
         this.accountApi = accountApi;
         this.entitlementUserApi = entitlementUserApi;
         this.clock = clock;
         this.poster = poster;
         this.overdueEmailGenerator = overdueEmailGenerator;
+        this.tagApi = tagApi;
         this.emailSender = new DefaultEmailSender(config);
         this.bus = bus;
     }
+
 
 
     public void apply(final OverdueState<T> firstOverdueState, final BillingState<T> billingState,
@@ -95,7 +102,12 @@ public class OverdueStateApplicator<T extends Blockable> {
                       final OverdueState<T> nextOverdueState, final InternalCallContext context) throws OverdueException {
         try {
 
-            log.debug("OverdueStateApplicator <enter> : time = " + clock.getUTCNow() + ", previousState = " + previousOverdueStateName + ", nextState = " + nextOverdueState);
+            if (isAccountTaggedWith_OVERDUE_ENFORCEMENT_OFF(context)) {
+                log.debug("OverdueStateApplicator:apply returns because account (recordId = " + context.getAccountRecordId() + ") is set with OVERDUE_ENFORCEMENT_OFF ");
+                return;
+            }
+
+            log.debug("OverdueStateApplicator:apply <enter> : time = " + clock.getUTCNow() + ", previousState = " + previousOverdueStateName + ", nextState = " + nextOverdueState);
 
             final boolean conditionForNextNotfication = !nextOverdueState.isClearState() ||
                                                         // We did not reach the first state yet but we have an unpaid invoice
@@ -125,11 +137,26 @@ public class OverdueStateApplicator<T extends Blockable> {
         }
 
         if (nextOverdueState.isClearState()) {
-            clear(overdueable, context);
+            clearFutureNotification(overdueable, context);
         }
 
         try {
             bus.post(createOverdueEvent(overdueable, previousOverdueStateName, nextOverdueState.getName(), context), context);
+        } catch (Exception e) {
+            log.error("Error posting overdue change event to bus", e);
+        }
+    }
+
+    public void clear(final T overdueable, final String previousOverdueStateName, final OverdueState<T> clearState, final InternalCallContext context) throws OverdueException {
+
+        log.debug("OverdueStateApplicator:clear : time = " + clock.getUTCNow() + ", previousState = " + previousOverdueStateName);
+
+        storeNewState(overdueable, clearState, context);
+
+        clearFutureNotification(overdueable, context);
+
+        try {
+            bus.post(createOverdueEvent(overdueable, previousOverdueStateName, clearState.getName(), context), context);
         } catch (Exception e) {
             log.error("Error posting overdue change event to bus", e);
         }
@@ -148,7 +175,7 @@ public class OverdueStateApplicator<T extends Blockable> {
                                                                   blockChanges(nextOverdueState),
                                                                   blockEntitlement(nextOverdueState),
                                                                   blockBilling(nextOverdueState)),
-                                                                  context);
+                                         context);
         } catch (Exception e) {
             throw new OverdueException(e, ErrorCode.OVERDUE_CAT_ERROR_ENCOUNTERED, blockable.getId(), blockable.getClass().getName());
         }
@@ -170,7 +197,7 @@ public class OverdueStateApplicator<T extends Blockable> {
         poster.insertOverdueCheckNotification(overdueable, timeOfNextCheck, context);
     }
 
-    protected void clear(final T blockable, final InternalCallContext context) {
+    protected void clearFutureNotification(final T blockable, final InternalCallContext context) {
         // Need to clear the override table here too (when we add it)
         poster.clearNotificationsFor(blockable, context);
     }
@@ -273,6 +300,26 @@ public class OverdueStateApplicator<T extends Blockable> {
             log.warn(String.format("Unable to send overdue notification email for account %s and overdueable %s", account.getId(), overdueable.getId()), e);
         } catch (MustacheException e) {
             log.warn(String.format("Unable to generate overdue notification email for account %s and overdueable %s", account.getId(), overdueable.getId()), e);
+        }
+    }
+
+    //
+    // Uses context information to retrieve account matching the Overduable object and check whether we should do any overdue processing
+    //
+    private boolean isAccountTaggedWith_OVERDUE_ENFORCEMENT_OFF(final InternalCallContext context) throws OverdueException {
+
+        try {
+            final UUID accountId = accountApi.getByRecordId(context.getAccountRecordId(), context);
+
+            final List<Tag> accountTags = tagApi.getTags(accountId, ObjectType.ACCOUNT, context);
+            for (Tag cur : accountTags) {
+                if (cur.getTagDefinitionId().equals(ControlTagType.OVERDUE_ENFORCEMENT_OFF.getId())) {
+                    return true;
+                }
+            }
+            return false;
+        } catch (AccountApiException e) {
+            throw new OverdueException(e);
         }
     }
 }

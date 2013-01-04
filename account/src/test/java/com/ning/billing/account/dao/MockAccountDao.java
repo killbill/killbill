@@ -140,4 +140,9 @@ public class MockAccountDao extends MockEntityDaoBase<AccountModelDao, Account, 
             }
         }));
     }
+
+    @Override
+    public AccountModelDao getByRecordId(final Long recordId, final InternalCallContext context) {
+        return null;
+    }
 }

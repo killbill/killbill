@@ -21,14 +21,18 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ning.billing.ObjectType;
 import com.ning.billing.ovedue.notification.OverdueCheckNotificationKey;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.events.ControlTagCreationInternalEvent;
+import com.ning.billing.util.events.ControlTagDeletionInternalEvent;
 import com.ning.billing.util.events.InvoiceAdjustmentInternalEvent;
 import com.ning.billing.util.events.PaymentErrorInternalEvent;
 import com.ning.billing.util.events.PaymentInfoInternalEvent;
+import com.ning.billing.util.tag.ControlTagType;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
@@ -46,6 +50,23 @@ public class OverdueListener {
         this.dispatcher = dispatcher;
         this.internalCallContextFactory = internalCallContextFactory;
     }
+
+    @Subscribe
+    public void handle_OVERDUE_ENFORCEMENT_OFF_Insert(final ControlTagCreationInternalEvent event) {
+        if (event.getTagDefinition().getName().equals(ControlTagType.OVERDUE_ENFORCEMENT_OFF.toString()) && event.getObjectType() == ObjectType.ACCOUNT) {
+            final UUID accountId = event.getObjectId();
+            dispatcher.clearOverdueForAccount(accountId, createCallContext(event.getUserToken(), event.getAccountRecordId(), event.getTenantRecordId()));
+        }
+    }
+
+    @Subscribe
+    public void handle_OVERDUE_ENFORCEMENT_OFF_Removal(final ControlTagDeletionInternalEvent event) {
+        if (event.getTagDefinition().getName().equals(ControlTagType.OVERDUE_ENFORCEMENT_OFF.toString()) && event.getObjectType() == ObjectType.ACCOUNT) {
+            final UUID accountId = event.getObjectId();
+            dispatcher.processOverdueForAccount(accountId, createCallContext(event.getUserToken(), event.getAccountRecordId(), event.getTenantRecordId()));
+        }
+    }
+
 
     @Subscribe
     public void handlePaymentInfoEvent(final PaymentInfoInternalEvent event) {

@@ -215,4 +215,14 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
             }
         });
     }
+
+    @Override
+    public AccountModelDao getByRecordId(final Long recordId, final InternalCallContext context) {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<AccountModelDao>() {
+            @Override
+            public AccountModelDao inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                return entitySqlDaoWrapperFactory.become(AccountSqlDao.class).getByRecordId(recordId, context);
+            }
+        });
+    }
 }

@@ -113,4 +113,13 @@ public class DefaultAccountInternalApi implements AccountInternalApi {
                                     final InternalCallContext context) throws AccountApiException {
         accountDao.updatePaymentMethod(accountId, paymentMethodId, context);
     }
+
+    @Override
+    public UUID getByRecordId(final Long recordId, final InternalCallContext context) throws AccountApiException {
+        final AccountModelDao accountModelDao = accountDao.getByRecordId(recordId, context);
+        if (accountModelDao == null) {
+            throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_RECORD_ID, recordId);
+        }
+        return accountModelDao.getId();
+    }
 }

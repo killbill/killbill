@@ -34,18 +34,18 @@ import com.ning.billing.util.tag.ControlTagType;
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
 
-public class TagHandler {
+public class InvoiceTagHandler {
 
-    private static final Logger log = LoggerFactory.getLogger(TagHandler.class);
+    private static final Logger log = LoggerFactory.getLogger(InvoiceTagHandler.class);
 
     private final Clock clock;
     private final InvoiceDispatcher dispatcher;
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
-    public TagHandler(final Clock clock,
-                      final InvoiceDispatcher dispatcher,
-                      final InternalCallContextFactory internalCallContextFactory) {
+    public InvoiceTagHandler(final Clock clock,
+                             final InvoiceDispatcher dispatcher,
+                             final InternalCallContextFactory internalCallContextFactory) {
         this.clock = clock;
         this.dispatcher = dispatcher;
         this.internalCallContextFactory = internalCallContextFactory;

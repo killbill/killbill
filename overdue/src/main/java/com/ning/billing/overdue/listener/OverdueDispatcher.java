@@ -54,9 +54,24 @@ public class OverdueDispatcher {
         }
     }
 
+    public void clearOverdueForAccount(final UUID accountId, final InternalCallContext context) {
+        final List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(accountId, context);
+        for (final SubscriptionBundle bundle : bundles) {
+            clearOverdue(Type.SUBSCRIPTION_BUNDLE, bundle.getId(), context);
+        }
+    }
+
     public void processOverdue(final Blockable.Type type, final UUID blockableId, final InternalCallContext context) {
         try {
             factory.createOverdueWrapperFor(type, blockableId, context).refresh(context);
+        } catch (BillingExceptionBase e) {
+            log.error(String.format("Error processing Overdue for blockable %s (type %s)", blockableId, type), e);
+        }
+    }
+
+    public void clearOverdue(final Blockable.Type type, final UUID blockableId, final InternalCallContext context) {
+        try {
+            factory.createOverdueWrapperFor(type, blockableId, context).clear(context);
         } catch (BillingExceptionBase e) {
             log.error(String.format("Error processing Overdue for blockable %s (type %s)", blockableId, type), e);
         }

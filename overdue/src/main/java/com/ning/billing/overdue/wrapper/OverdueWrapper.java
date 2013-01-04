@@ -64,6 +64,11 @@ public class OverdueWrapper<T extends Blockable> {
         return nextOverdueState;
     }
 
+    public void clear(final InternalCallContext context) throws OverdueException, OverdueApiException {
+        final String previousOverdueStateName = api.getBlockingStateFor(overdueable, context).getStateName();
+        overdueStateApplicator.clear(overdueable, previousOverdueStateName, overdueStateSet.getClearState(), context);
+    }
+
     public BillingState<T> billingState(final InternalTenantContext context) throws OverdueException {
         return billingStateCalcuator.calculateBillingState(overdueable, context);
     }

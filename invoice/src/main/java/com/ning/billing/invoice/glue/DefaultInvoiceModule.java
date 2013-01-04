@@ -20,7 +20,7 @@ import org.skife.config.ConfigurationObjectFactory;
 
 import com.ning.billing.glue.InvoiceModule;
 import com.ning.billing.invoice.InvoiceListener;
-import com.ning.billing.invoice.TagHandler;
+import com.ning.billing.invoice.InvoiceTagHandler;
 import com.ning.billing.invoice.api.DefaultInvoiceService;
 import com.ning.billing.invoice.api.InvoiceMigrationApi;
 import com.ning.billing.invoice.api.InvoiceNotifier;
@@ -106,7 +106,7 @@ public class DefaultInvoiceModule extends AbstractModule implements InvoiceModul
     }
 
     protected void installTagHandler() {
-        bind(TagHandler.class).asEagerSingleton();
+        bind(InvoiceTagHandler.class).asEagerSingleton();
     }
 
     protected void installInvoiceGenerator() {
