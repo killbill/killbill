@@ -167,14 +167,14 @@ DROP TABLE IF EXISTS audit_log;
 CREATE TABLE audit_log (
     record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
     id char(36) NOT NULL,
-    table_name varchar(50) NOT NULL,
     target_record_id int(11) NOT NULL,
+    table_name varchar(50) NOT NULL,
     change_type char(6) NOT NULL,
+    created_date datetime NOT NULL,
     created_by varchar(50) NOT NULL,
     reason_code varchar(255) DEFAULT NULL,
     comments varchar(255) DEFAULT NULL,
     user_token char(36),
-    created_date datetime NOT NULL,
     account_record_id int(11) unsigned default null,
     tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)
@@ -182,6 +182,7 @@ CREATE TABLE audit_log (
 CREATE INDEX audit_log_fetch_target_record_id ON audit_log(table_name, target_record_id);
 CREATE INDEX audit_log_user_name ON audit_log(created_by);
 CREATE INDEX audit_log_tenant_account_record_id ON audit_log(tenant_record_id, account_record_id);
+
 
 DROP TABLE IF EXISTS bus_events;
 CREATE TABLE bus_events (
