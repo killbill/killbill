@@ -18,30 +18,89 @@
 #                                                                                 #
 ###################################################################################
 
-set -e
+#set -x
+
 
 # Killbill server
-KILLBILL_URL=http://127.0.0.1:8080
+KILLBILL_HOST=${KILLBILL_HOST-127.0.0.1}
+KILLBILL_URL=http://${KILLBILL_HOST}:8080
+
 # Destination database
-DATABASE=killbill
-USERNAME=root
-PASSWORD=root
+DATABASE=${DATABASE-killbill}
+USERNAME=${USERNAME-root}
+PASSWORD=${PASSWORD-root}
+
 # Temporary directory
 TMP_DIR=/var/tmp
 
 WHO=`whoami`
+
+
+function fill_empty_columns() {
+
+    local filename=$1
+    local tmp=${filename}.tmp
+    grep ',,' $filename > /dev/null
+    while [[ $? = 0 ]]; do
+        cat $filename | sed s/,,/,\\\\N,/ > $tmp
+        mv $tmp $filename
+        grep ',,' $filename > /dev/null
+    done
+}
+
+function replace_boolean() {
+
+    local filename=$1
+    local tmp=${filename}.tmp
+
+    cat $filename | sed s/,true/,1/g > $tmp
+    mv $tmp $filename
+
+    cat $filename | sed s/true,/1,/g > $tmp
+    mv $tmp $filename
+
+    cat $filename | sed s/,false/,0/g > $tmp
+    mv $tmp $filename
+
+    cat $filename | sed s/false,/0,/g > $tmp
+    mv $tmp $filename
+}
+
+function export_data() {
+    local account_id=$1
+    curl $KILLBILL_URL/1.0/kb/export/$1 -H"X-Killbill-CreatedBy: $WHO" | split -p '--'  --
+}
+
+
+function import_data() {
+    local filename=$1
+     mysqlimport --ignore-lines=1 --fields-terminated-by=, --fields-enclosed-by=\" --verbose -u$USERNAME -p$PASSWORD $DATABASE $TMP_DIR/$filename
+}
+
+function main() {
+
+    local account_id=$1
+    export_data $account_id
+
+    for i in `ls x*`; do
+
+        # Extract table name and move temp file with that name
+        table_name=$(cat $i | head -1 | awk '{print $2}')
+        rm -f $table_name
+        mv $i $table_name
+
+        # Fill empty column with '\N'
+        fill_empty_columns $table_name
+
+        replace_boolean $table_name
+
+        import_data $table_name
+     done
+}
+
+# Setup
+
 cd $TMP_DIR
 rm -f xa*
-curl $KILLBILL_URL/1.0/kb/export/$1 -H"X-Killbill-CreatedBy: $WHO" | split -p '--'  --
-for i in `ls xa*`; do
-    table_name=$(cat $i | head -1 | awk '{print $2}')
-    # Put \N for empty columns to set values to NULL, not ''
-    tmp=${table_name}.tmp
-    grep ',,' $table_name > /dev/null
-    while [[ $? = 0 ]]; do
-        cat $table_name | sed s/,,/,\\\\N,/ > $tmp
-        mv $tmp $table_name
-        grep ',,' $table_name > /dev/null
-    done
-    mysqlimport --ignore-lines=1 --fields-terminated-by=, --fields-enclosed-by=\" --verbose -u$USERNAME -p$PASSWORD $DATABASE $TMP_DIR/$table_name
-done
+main $1
+
