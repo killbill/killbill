@@ -260,10 +260,14 @@ public class InvoiceDispatcher {
                      item.getAmount().compareTo(BigDecimal.ZERO) >= 0)) {
 
                     //
-                    // Since we create the targetDate for next invoice using that date (on the way back), we need to make sure
+                    // Since we create the targetDate for next invoice using the date from the notificationQ, we need to make sure
                     // that this datetime once transformed into a LocalDate points to the correct day.
+                    //
                     // e.g If accountTimeZone is -8 and we want to invoice on the 16, with a toDateTimeAtCurrentTime = 00:00:23,
                     // we will generate a datetime that is 16T08:00:23 => LocalDate in that timeZone stays on the 16.
+                    //
+                    // With that approach, the time (part) will vary between each call, but the day will stay correct:
+                    // e.g 00:00:23 -> 08:00:23 -> 16:00:23 -> 00:00:23 (3 different times generated)
                     //
                     final int deltaMs = accountTimeZone.getOffset(clock.getUTCNow());
                     final int negativeDeltaMs = -1 * deltaMs;
