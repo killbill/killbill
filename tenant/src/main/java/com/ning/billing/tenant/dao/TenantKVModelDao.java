@@ -104,4 +104,9 @@ public class TenantKVModelDao extends EntityBase implements EntityModelDao<Tenan
     public TableName getTableName() {
         return TableName.TENANT_KVS;
     }
+
+    @Override
+    public TableName getHistoryTableName() {
+        return null;
+    }
 }

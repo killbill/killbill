@@ -27,15 +27,22 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.ObjectType;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
+import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.dao.DefaultNonEntityDao;
+import com.ning.billing.util.dao.NonEntityDao;
 
 public class TestInternalCallContextFactory extends UtilTestSuiteWithEmbeddedDB {
 
     private InternalCallContextFactory internalCallContextFactory;
+    private CacheControllerDispatcher cacheControllerDispatcher;
+    private NonEntityDao nonEntityDao;
 
     @BeforeMethod(groups = "slow")
     public void setUp() throws Exception {
-        internalCallContextFactory = new InternalCallContextFactory(getDBI(), new ClockMock());
+        cacheControllerDispatcher =  new CacheControllerDispatcher();
+        nonEntityDao = new DefaultNonEntityDao(getDBI());
+        internalCallContextFactory = new InternalCallContextFactory(new ClockMock(), nonEntityDao, cacheControllerDispatcher);
     }
 
     @Test(groups = "slow")
@@ -83,7 +90,7 @@ public class TestInternalCallContextFactory extends UtilTestSuiteWithEmbeddedDB 
             public Void withHandle(final Handle handle) throws Exception {
                 // Note: we always create an accounts table, see MysqlTestingHelper
                 handle.execute("insert into accounts (record_id, id, email, name, first_name_length, is_notified_for_invoices, created_date, created_by, updated_date, updated_by) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                        accountRecordId, accountId.toString(), "yo@t.com", "toto", 4, false, new Date(), "i", new Date(), "j");
+                               accountRecordId, accountId.toString(), "yo@t.com", "toto", 4, false, new Date(), "i", new Date(), "j");
                 return null;
             }
         });

@@ -49,11 +49,13 @@ import com.ning.billing.util.email.EmailModule;
 import com.ning.billing.util.email.templates.TemplateModule;
 import com.ning.billing.util.glue.AuditModule;
 import com.ning.billing.util.glue.BusModule;
+import com.ning.billing.util.glue.CacheModule;
 import com.ning.billing.util.glue.CallContextModule;
 import com.ning.billing.util.glue.ClockModule;
 import com.ning.billing.util.glue.CustomFieldModule;
 import com.ning.billing.util.glue.ExportModule;
 import com.ning.billing.util.glue.GlobalLockerModule;
+import com.ning.billing.util.glue.NonEntityDaoModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.TagStoreModule;
 
@@ -105,6 +107,7 @@ public class KillbillServerModule extends AbstractModule {
 
     protected void installKillbillModules() {
         install(new EmailModule());
+        install(new CacheModule());
         install(new GlobalLockerModule());
         install(new CustomFieldModule());
         install(new AuditModule());
@@ -125,6 +128,7 @@ public class KillbillServerModule extends AbstractModule {
         install(new ExportModule());
         install(new MeterModule());
         install(new TagStoreModule());
+        install(new NonEntityDaoModule());
         installClock();
     }
 }

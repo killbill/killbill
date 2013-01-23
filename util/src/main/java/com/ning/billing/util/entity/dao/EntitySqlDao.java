@@ -27,6 +27,8 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
 import com.ning.billing.util.audit.ChangeType;
+import com.ning.billing.util.cache.Cachable;
+import com.ning.billing.util.cache.Cachable.CacheType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.dao.AuditSqlDao;
@@ -54,18 +56,9 @@ public interface EntitySqlDao<M extends EntityModelDao<E>, E extends Entity> ext
                            @BindBean final InternalTenantContext context);
 
     @SqlQuery
+    @Cachable(CacheType.RECORD_ID)
     public Long getRecordId(@Bind("id") final String id,
                             @BindBean final InternalTenantContext context);
-
-    // Given entity recordId find the history recordId (targetRecordId for history table = entity recordId)
-    @SqlQuery
-    public Long getHistoryRecordId(@Bind("targetRecordId") final Long targetRecordId,
-                                   @BindBean final InternalTenantContext context);
-
-    // Given history recordId find the entity recordId (targetRecordId for history table = entity recordId)
-    @SqlQuery
-    public Long getHistoryTargetRecordId(@Bind("recordId") final Long recordId,
-                                         @BindBean final InternalTenantContext context);
 
     @SqlQuery
     public List<M> get(@BindBean final InternalTenantContext context);

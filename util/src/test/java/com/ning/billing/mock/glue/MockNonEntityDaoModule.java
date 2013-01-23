@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -14,21 +14,24 @@
  * under the License.
  */
 
-package com.ning.billing.junction;
+package com.ning.billing.mock.glue;
 
-import org.mockito.Mockito;
+import java.util.UUID;
 
-import com.ning.billing.junction.dao.BlockingStateDao;
-import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
+import javax.annotation.Nullable;
+
+import com.ning.billing.ObjectType;
+import com.ning.billing.dao.MockNonEntityDao;
+import com.ning.billing.util.cache.CacheController;
+import com.ning.billing.util.dao.NonEntityDao;
+import com.ning.billing.util.dao.TableName;
 
 import com.google.inject.AbstractModule;
 
-public class MockBlockingModule extends AbstractModule {
+public class MockNonEntityDaoModule extends AbstractModule {
+
     @Override
     protected void configure() {
-        bind(BlockingStateDao.class).toInstance(Mockito.mock(BlockingStateDao.class));
-
-        final BlockingInternalApi blockingApi = Mockito.mock(BlockingInternalApi.class);
-        bind(BlockingInternalApi.class).toInstance(blockingApi);
+        bind(NonEntityDao.class).to(MockNonEntityDao.class);
     }
 }

@@ -27,8 +27,11 @@ import org.skife.jdbi.v2.IDBI;
 
 import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
+import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.entity.EntityPersistenceException;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
@@ -41,8 +44,8 @@ public class DefaultPaymentDao implements PaymentDao {
     private final EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao;
 
     @Inject
-    public DefaultPaymentDao(final IDBI dbi) {
-        this.transactionalSqlDao = new EntitySqlDaoTransactionalJdbiWrapper(dbi);
+    public DefaultPaymentDao(final IDBI dbi, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao) {
+        this.transactionalSqlDao = new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, cacheControllerDispatcher, nonEntityDao);
     }
 
     @Override

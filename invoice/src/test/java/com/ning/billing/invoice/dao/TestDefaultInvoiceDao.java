@@ -30,10 +30,12 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.ErrorCode;
+import com.ning.billing.dao.MockNonEntityDao;
 import com.ning.billing.invoice.InvoiceTestSuite;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
+import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.svcsapi.bus.InternalBus;
@@ -44,6 +46,8 @@ public class TestDefaultInvoiceDao extends InvoiceTestSuite {
 
     private InvoiceSqlDao invoiceSqlDao;
     private DefaultInvoiceDao dao;
+    private final CacheControllerDispatcher controllerDispatcher = new CacheControllerDispatcher();
+
 
     @BeforeMethod(groups = "fast")
     public void setUp() throws Exception {
@@ -65,7 +69,7 @@ public class TestDefaultInvoiceDao extends InvoiceTestSuite {
         });
 
         final NextBillingDatePoster poster = Mockito.mock(NextBillingDatePoster.class);
-        dao = new DefaultInvoiceDao(idbi, poster, Mockito.mock(InternalBus.class));
+        dao = new DefaultInvoiceDao(idbi, poster, Mockito.mock(InternalBus.class), clock, controllerDispatcher, new MockNonEntityDao());
     }
 
     @Test(groups = "fast")

@@ -32,6 +32,7 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.mock.glue.MockNonEntityDaoModule;
 import com.ning.billing.util.config.PaymentConfig;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.mock.glue.MockClockModule;
@@ -48,7 +49,9 @@ import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
 import com.ning.billing.payment.retry.FailedPaymentRetryService;
 import com.ning.billing.payment.retry.PluginFailureRetryService;
 import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.glue.CacheModule;
 import com.ning.billing.util.glue.CallContextModule;
+import com.ning.billing.util.glue.NonEntityDaoModule;
 import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
 import com.ning.billing.util.svcsapi.bus.InternalBus;
 
@@ -60,7 +63,7 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
-@Guice(modules = {PaymentTestModuleWithMocks.class, MockClockModule.class, MockJunctionModule.class, CallContextModule.class})
+@Guice(modules = {PaymentTestModuleWithMocks.class, MockClockModule.class, MockJunctionModule.class, CacheModule.class, CallContextModule.class, MockNonEntityDaoModule.class})
 public class TestRetryService extends PaymentTestSuite {
     @Inject
     private PaymentConfig paymentConfig;

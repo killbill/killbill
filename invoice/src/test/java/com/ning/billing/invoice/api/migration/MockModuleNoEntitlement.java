@@ -26,6 +26,7 @@ import com.ning.billing.invoice.notification.NextBillingDateNotifier;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.invoice.notification.NullInvoiceNotifier;
 import com.ning.billing.util.email.templates.TemplateModule;
+import com.ning.billing.util.glue.CacheModule;
 import com.ning.billing.util.template.translation.TranslatorConfig;
 
 public class MockModuleNoEntitlement extends MockModule {

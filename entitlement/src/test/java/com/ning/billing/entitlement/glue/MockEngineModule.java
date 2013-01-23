@@ -21,7 +21,9 @@ import org.mockito.Mockito;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.mock.glue.MockClockModule;
+import com.ning.billing.util.glue.CacheModule;
 import com.ning.billing.util.glue.CallContextModule;
+import com.ning.billing.util.glue.NonEntityDaoModule;
 
 public class MockEngineModule extends DefaultEntitlementModule {
     @Override
@@ -31,5 +33,6 @@ public class MockEngineModule extends DefaultEntitlementModule {
         bind(AccountUserApi.class).toInstance(Mockito.mock(AccountUserApi.class));
         install(new MockClockModule());
         install(new CallContextModule());
+        install(new CacheModule());
     }
 }

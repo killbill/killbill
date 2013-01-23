@@ -29,6 +29,8 @@ import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.BusModule.BusType;
+import com.ning.billing.util.glue.CacheModule;
+import com.ning.billing.util.glue.NonEntityDaoModule;
 
 import com.google.inject.AbstractModule;
 
@@ -54,6 +56,8 @@ public class TestPersistentEventBus extends TestEventBusBase {
                 bind(IDBI.class).toInstance(dbi);
             }
             install(new BusModule(BusType.PERSISTENT));
+            install(new NonEntityDaoModule());
+            install(new CacheModule());
         }
     }
 

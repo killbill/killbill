@@ -116,4 +116,10 @@ public class SubscriptionBundleModelDao extends EntityBase implements EntityMode
     public TableName getTableName() {
         return TableName.BUNDLES;
     }
+
+    @Override
+    public TableName getHistoryTableName() {
+        return null;
+    }
+
 }

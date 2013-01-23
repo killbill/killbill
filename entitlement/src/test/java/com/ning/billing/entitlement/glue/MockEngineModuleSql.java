@@ -30,6 +30,7 @@ import com.ning.billing.entitlement.engine.dao.RepairEntitlementDao;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.BusModule.BusType;
 import com.ning.billing.util.glue.CustomFieldModule;
+import com.ning.billing.util.glue.NonEntityDaoModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 
 import com.google.inject.name.Names;
@@ -57,6 +58,7 @@ public class MockEngineModuleSql extends MockEngineModule {
 
     @Override
     protected void configure() {
+        install(new NonEntityDaoModule());
         installDBI();
         install(new NotificationQueueModule());
         install(new CustomFieldModule());

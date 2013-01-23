@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.mockito.Mockito;
 import org.skife.config.ConfigurationObjectFactory;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
@@ -42,9 +43,11 @@ import com.ning.billing.meter.timeline.samples.ScalarSample;
 import com.ning.billing.meter.timeline.sources.SourceSamplesForTimestamp;
 import com.ning.billing.meter.timeline.times.DefaultTimelineCoder;
 import com.ning.billing.meter.timeline.times.TimelineCoder;
+import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.config.MeterConfig;
+import com.ning.billing.util.dao.NonEntityDao;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -61,7 +64,8 @@ public class TestTimelineAggregator extends MeterTestSuiteWithEmbeddedDB {
     private static final TimelineCoder timelineCoder = new DefaultTimelineCoder();
     private static final SampleCoder sampleCoder = new DefaultSampleCoder();
 
-    private final InternalCallContextFactory internalCallContextFactory = new InternalCallContextFactory(getDBI(), new ClockMock());
+    private final NonEntityDao nonEntityDao = Mockito.mock(NonEntityDao.class);
+    private final InternalCallContextFactory internalCallContextFactory = new InternalCallContextFactory(new ClockMock(), nonEntityDao, new CacheControllerDispatcher());
 
     private TimelineDao timelineDao;
     private TimelineAggregator aggregator;

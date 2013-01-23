@@ -59,10 +59,13 @@ import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.mock.MockPlan;
+import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.dao.DefaultNonEntityDao;
+import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 import com.ning.billing.util.svcapi.payment.PaymentInternalApi;
 import com.ning.billing.util.svcapi.tag.TagInternalApi;
@@ -84,6 +87,7 @@ public class TestDefaultAnalyticsUserApi extends AnalyticsTestSuiteWithEmbeddedD
     @BeforeMethod(groups = "mysql")
     public void setUp() throws Exception {
         final IDBI dbi = helper.getDBI();
+        final NonEntityDao nonEntityDao = new DefaultNonEntityDao(dbi);
         accountSqlDao = dbi.onDemand(BusinessAccountSqlDao.class);
         subscriptionTransitionSqlDao = dbi.onDemand(BusinessSubscriptionTransitionSqlDao.class);
         invoiceSqlDao = dbi.onDemand(BusinessInvoiceSqlDao.class);
@@ -104,7 +108,7 @@ public class TestDefaultAnalyticsUserApi extends AnalyticsTestSuiteWithEmbeddedD
                                                        Mockito.mock(EntitlementInternalApi.class),
                                                        Mockito.mock(PaymentInternalApi.class),
                                                        Mockito.mock(TagInternalApi.class),
-                                                       new InternalCallContextFactory(dbi, clock));
+                                                       new InternalCallContextFactory(clock, nonEntityDao, new CacheControllerDispatcher()));
     }
 
     @Test(groups = "mysql")

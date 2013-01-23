@@ -18,20 +18,27 @@ package com.ning.billing.util.notificationq;
 
 import org.skife.jdbi.v2.IDBI;
 
+import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.dao.NonEntityDao;
 
 import com.google.inject.Inject;
 
 public class DefaultNotificationQueueService extends NotificationQueueServiceBase {
 
     private final IDBI dbi;
+    private final NonEntityDao nonEntityDao;
+    private final CacheControllerDispatcher cacheControllerDispatcher;
+
 
     @Inject
     public DefaultNotificationQueueService(final IDBI dbi, final Clock clock, final NotificationQueueConfig config,
-                                           final InternalCallContextFactory internalCallContextFactory) {
+                                           final InternalCallContextFactory internalCallContextFactory, final NonEntityDao nonEntityDao, final CacheControllerDispatcher cacheControllerDispatcher) {
         super(clock, config, dbi, internalCallContextFactory);
         this.dbi = dbi;
+        this.nonEntityDao = nonEntityDao;
+        this.cacheControllerDispatcher = cacheControllerDispatcher;
     }
 
 
@@ -39,6 +46,6 @@ public class DefaultNotificationQueueService extends NotificationQueueServiceBas
     protected NotificationQueue createNotificationQueueInternal(final String svcName,
                                                                 final String queueName,
                                                                 final NotificationQueueHandler handler) {
-        return new DefaultNotificationQueue(svcName, queueName, handler, dbi, this);
+        return new DefaultNotificationQueue(svcName, queueName, handler, dbi, this, nonEntityDao, cacheControllerDispatcher);
     }
 }

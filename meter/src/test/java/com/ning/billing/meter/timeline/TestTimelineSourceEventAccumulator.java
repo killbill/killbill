@@ -35,8 +35,10 @@ import com.ning.billing.meter.timeline.samples.ScalarSample;
 import com.ning.billing.meter.timeline.sources.SourceSamplesForTimestamp;
 import com.ning.billing.meter.timeline.times.DefaultTimelineCoder;
 import com.ning.billing.meter.timeline.times.TimelineCoder;
+import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.dao.NonEntityDao;
 
 public class TestTimelineSourceEventAccumulator extends MeterTestSuite {
 
@@ -47,7 +49,8 @@ public class TestTimelineSourceEventAccumulator extends MeterTestSuite {
     private static final TimelineCoder timelineCoder = new DefaultTimelineCoder();
     private static final SampleCoder sampleCoder = new DefaultSampleCoder();
 
-    private final InternalCallContextFactory internalCallContextFactory = new InternalCallContextFactory(Mockito.mock(DBI.class), new ClockMock());
+    private final NonEntityDao nonEntityDao = Mockito.mock(NonEntityDao.class);
+    private final InternalCallContextFactory internalCallContextFactory = new InternalCallContextFactory(new ClockMock(), nonEntityDao, new CacheControllerDispatcher());
 
     @Test(groups = "fast")
     public void testSimpleAggregate() throws IOException {

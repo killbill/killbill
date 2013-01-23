@@ -49,6 +49,7 @@ import com.ning.billing.overdue.OverdueProperties;
 import com.ning.billing.overdue.OverdueTestSuiteWithEmbeddedDB;
 import com.ning.billing.overdue.glue.DefaultOverdueModule;
 import com.ning.billing.overdue.listener.OverdueListener;
+import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
@@ -59,11 +60,15 @@ import com.ning.billing.util.config.CatalogConfig;
 import com.ning.billing.util.config.InvoiceConfig;
 import com.ning.billing.util.customfield.dao.CustomFieldDao;
 import com.ning.billing.util.customfield.dao.DefaultCustomFieldDao;
+import com.ning.billing.util.dao.DefaultNonEntityDao;
+import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.email.EmailModule;
 import com.ning.billing.util.email.templates.TemplateModule;
 import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.globallocker.MySqlGlobalLocker;
 import com.ning.billing.util.glue.BusModule;
+import com.ning.billing.util.glue.CacheModule;
+import com.ning.billing.util.glue.NonEntityDaoModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.TagStoreModule;
 import com.ning.billing.util.notificationq.NotificationQueueService;
@@ -95,7 +100,7 @@ public class TestOverdueCheckNotifier extends OverdueTestSuiteWithEmbeddedDB {
         UUID latestSubscriptionId = null;
 
         public OverdueListenerMock() {
-            super(null, new InternalCallContextFactory(getDBI(), new ClockMock()));
+            super(null, new InternalCallContextFactory(new ClockMock(), new DefaultNonEntityDao(getDBI()), new CacheControllerDispatcher()));
         }
 
         @Override
@@ -136,6 +141,8 @@ public class TestOverdueCheckNotifier extends OverdueTestSuiteWithEmbeddedDB {
                 install(new EmailModule());
                 install(new TemplateModule());
                 install(new NotificationQueueModule());
+                install(new CacheModule());
+                install(new NonEntityDaoModule());
                 final AccountInternalApi accountApi = Mockito.mock(AccountInternalApi.class);
                 bind(AccountInternalApi.class).toInstance(accountApi);
 

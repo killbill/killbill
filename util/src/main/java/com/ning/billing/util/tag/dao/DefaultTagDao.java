@@ -28,8 +28,11 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.ObjectType;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.audit.ChangeType;
+import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.entity.dao.EntityDaoBase;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
@@ -51,8 +54,9 @@ public class DefaultTagDao extends EntityDaoBase<TagModelDao, Tag, TagApiExcepti
     private final InternalBus bus;
 
     @Inject
-    public DefaultTagDao(final IDBI dbi, final TagEventBuilder tagEventBuilder, final InternalBus bus) {
-        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi), TagSqlDao.class);
+    public DefaultTagDao(final IDBI dbi, final TagEventBuilder tagEventBuilder, final InternalBus bus, final Clock clock,
+                         final CacheControllerDispatcher controllerDispatcher, final NonEntityDao nonEntityDao) {
+        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, controllerDispatcher, nonEntityDao), TagSqlDao.class);
         this.tagEventBuilder = tagEventBuilder;
         this.bus = bus;
     }

@@ -125,4 +125,10 @@ public class TagModelDao extends EntityBase implements EntityModelDao<Tag> {
     public TableName getTableName() {
         return TableName.TAG;
     }
+
+    @Override
+    public TableName getHistoryTableName() {
+        return TableName.TAG_HISTORY;
+    }
+
 }

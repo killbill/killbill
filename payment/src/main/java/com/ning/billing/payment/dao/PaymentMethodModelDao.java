@@ -128,4 +128,10 @@ public class PaymentMethodModelDao extends EntityBase implements EntityModelDao<
     public TableName getTableName() {
         return TableName.PAYMENT_METHODS;
     }
+
+    @Override
+    public TableName getHistoryTableName() {
+        return TableName.PAYMENT_METHOD_HISTORY;
+    }
+
 }

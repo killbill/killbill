@@ -165,4 +165,10 @@ public class RefundModelDao extends EntityBase implements EntityModelDao<Refund>
     public TableName getTableName() {
         return TableName.REFUNDS;
     }
+
+    @Override
+    public TableName getHistoryTableName() {
+        return TableName.REFUND_HISTORY;
+    }
+
 }

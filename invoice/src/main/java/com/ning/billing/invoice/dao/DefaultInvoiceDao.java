@@ -41,8 +41,11 @@ import com.ning.billing.invoice.api.InvoicePayment.InvoicePaymentType;
 import com.ning.billing.invoice.api.user.DefaultInvoiceAdjustmentEvent;
 import com.ning.billing.invoice.model.InvoiceItemList;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
+import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.entity.EntityPersistenceException;
 import com.ning.billing.util.entity.dao.EntityDaoBase;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
@@ -70,8 +73,11 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     @Inject
     public DefaultInvoiceDao(final IDBI dbi,
                              final NextBillingDatePoster nextBillingDatePoster,
-                             final InternalBus eventBus) {
-        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi), InvoiceSqlDao.class);
+                             final InternalBus eventBus,
+                             final Clock clock,
+                             final CacheControllerDispatcher cacheControllerDispatcher,
+                             final NonEntityDao nonEntityDao) {
+        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, cacheControllerDispatcher, nonEntityDao), InvoiceSqlDao.class);
         this.nextBillingDatePoster = nextBillingDatePoster;
         this.eventBus = eventBus;
     }

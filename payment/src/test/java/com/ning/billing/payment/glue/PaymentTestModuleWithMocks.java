@@ -31,9 +31,7 @@ import com.ning.billing.mock.glue.MockNotificationQueueModule;
 import com.ning.billing.payment.dao.MockPaymentDao;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
-import com.ning.billing.util.callcontext.CallContextSqlDao;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.callcontext.MockCallContextSqlDao;
 import com.ning.billing.util.config.PaymentConfig;
 import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.globallocker.MockGlobalLocker;
@@ -71,7 +69,6 @@ public class PaymentTestModuleWithMocks extends PaymentModule {
     @Override
     protected void installPaymentDao() {
         final IDBI idbi = Mockito.mock(IDBI.class);
-        Mockito.when(idbi.onDemand(CallContextSqlDao.class)).thenReturn(new MockCallContextSqlDao());
         bind(IDBI.class).toInstance(idbi);
         bind(PaymentDao.class).to(MockPaymentDao.class).asEagerSingleton();
     }

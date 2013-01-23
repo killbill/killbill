@@ -318,4 +318,9 @@ public class AccountModelDao extends EntityBase implements EntityModelDao<Accoun
     public TableName getTableName() {
         return TableName.ACCOUNT;
     }
+
+    @Override
+    public TableName getHistoryTableName() {
+        return TableName.ACCOUNT_HISTORY;
+    }
 }

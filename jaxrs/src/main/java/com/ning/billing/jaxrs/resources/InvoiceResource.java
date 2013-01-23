@@ -178,7 +178,7 @@ public class InvoiceResource extends JaxRsResourceBase {
 
         final Account account = accountApi.getAccountById(UUID.fromString(accountId), callContext);
 
-        final DateTime inputDateTime = DATE_TIME_FORMATTER.parseDateTime(targetDateTime);
+        final DateTime inputDateTime =  targetDateTime != null ? DATE_TIME_FORMATTER.parseDateTime(targetDateTime) : clock.getUTCNow();
         final LocalDate inputDate = inputDateTime.toDateTime(account.getTimeZone()).toLocalDate();
 
         final Invoice generatedInvoice = invoiceApi.triggerInvoiceGeneration(UUID.fromString(accountId), inputDate, dryRun,

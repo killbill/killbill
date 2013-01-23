@@ -34,12 +34,16 @@ import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
+import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
+import com.ning.billing.util.glue.CacheModule;
+import com.ning.billing.util.glue.NonEntityDaoModule;
 import com.ning.billing.util.io.IOUtils;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
 import com.ning.billing.util.notificationq.dao.NotificationSqlDao;
@@ -56,7 +60,7 @@ import static com.jayway.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.testng.Assert.assertEquals;
 
-@Guice(modules = TestNotificationQueue.TestNotificationQueueModule.class)
+@Guice(modules = {TestNotificationQueue.TestNotificationQueueModule.class, CacheModule.class, NonEntityDaoModule.class})
 public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
 
     private final Logger log = LoggerFactory.getLogger(TestNotificationQueue.class);
@@ -70,7 +74,14 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
     private Clock clock;
 
     @Inject
-    NotificationQueueService queueService;
+    private NotificationQueueService queueService;
+
+    @Inject
+    private CacheControllerDispatcher controllerDispatcher;
+
+    @Inject
+    private NonEntityDao nonEntityDao;
+
 
     private int eventsReceived;
 
@@ -105,7 +116,7 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
     public void setup() throws Exception {
         final String testDdl = IOUtils.toString(NotificationSqlDao.class.getResourceAsStream("/com/ning/billing/util/ddl_test.sql"));
         helper.initDb(testDdl);
-        entitySqlDaoTransactionalJdbiWrapper = new EntitySqlDaoTransactionalJdbiWrapper(dbi);
+        entitySqlDaoTransactionalJdbiWrapper = new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, controllerDispatcher, nonEntityDao);
     }
 
     @BeforeTest(groups = "slow")

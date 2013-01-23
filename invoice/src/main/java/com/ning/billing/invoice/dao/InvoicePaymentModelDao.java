@@ -169,4 +169,9 @@ public class InvoicePaymentModelDao extends EntityBase implements EntityModelDao
     public TableName getTableName() {
         return TableName.INVOICE_PAYMENTS;
     }
+
+    @Override
+    public TableName getHistoryTableName() {
+        return null;
+    }
 }

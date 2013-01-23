@@ -105,4 +105,9 @@ public class AccountEmailModelDao extends EntityBase implements EntityModelDao<A
     public TableName getTableName() {
         return TableName.ACCOUNT_EMAIL;
     }
+
+    @Override
+    public TableName getHistoryTableName() {
+        return TableName.ACCOUNT_EMAIL_HISTORY;
+    }
 }

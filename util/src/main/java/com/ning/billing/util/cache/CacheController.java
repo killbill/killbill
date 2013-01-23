@@ -14,19 +14,20 @@
  * under the License.
  */
 
-package com.ning.billing.util.callcontext;
+package com.ning.billing.util.cache;
 
-import org.skife.jdbi.v2.sqlobject.Bind;
+import java.util.Collection;
 
-public class MockCallContextSqlDao implements CallContextSqlDao {
+import com.ning.billing.ObjectType;
+import com.ning.billing.util.cache.Cachable.CacheType;
 
-    @Override
-    public Long getTenantRecordId(@Bind("tenantId") final String tenantId) {
-        return InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID;
-    }
+public interface CacheController<K, V> {
 
-    @Override
-    public Long getAccountRecordId(@Bind("accountId") final String accountId) {
-        return InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID;
-    }
+    public CacheType getType();
+
+    public V get(K key, ObjectType objectType);
+
+    public boolean remove(K key);
+
+    public int size();
 }

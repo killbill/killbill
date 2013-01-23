@@ -62,8 +62,10 @@ import com.ning.billing.util.email.templates.TemplateModule;
 import com.ning.billing.util.globallocker.TestGlobalLockerModule;
 import com.ning.billing.util.glue.AuditModule;
 import com.ning.billing.util.glue.BusModule;
+import com.ning.billing.util.glue.CacheModule;
 import com.ning.billing.util.glue.CallContextModule;
 import com.ning.billing.util.glue.CustomFieldModule;
+import com.ning.billing.util.glue.NonEntityDaoModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.TagStoreModule;
 import com.ning.billing.util.svcsapi.bus.BusService;
@@ -99,6 +101,7 @@ public class BeatrixIntegrationModule extends AbstractModule {
         }
         bind(IDBI.class).toInstance(dbi);
 
+        install(new CacheModule());
         install(new EmailModule());
         install(new CallContextModule());
         install(new TestGlobalLockerModule(helper));
@@ -116,6 +119,7 @@ public class BeatrixIntegrationModule extends AbstractModule {
         install(new DefaultJunctionModule());
         install(new IntegrationTestOverdueModule());
         install(new AuditModule());
+        install(new NonEntityDaoModule());
 
         bind(AccountChecker.class).asEagerSingleton();
         bind(EntitlementChecker.class).asEagerSingleton();

@@ -36,6 +36,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <slf4j.version>1.6.5</slf4j.version>
+        <ehcache.version>2.6.2</ehcache.version>
     </properties>
     <modules>
         <module>account</module>
@@ -57,6 +58,12 @@
     </modules>
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>net.sf.ehcache</groupId>
+                <artifactId>ehcache-core</artifactId>
+                <version>${ehcache.version}</version>
+                <type>jar</type>
+            </dependency>
             <dependency>
                 <groupId>javax.ws.rs</groupId>
                 <artifactId>jsr311-api</artifactId>
@@ -494,6 +501,7 @@
                                 <!-- For some reason, useIdeaDefaultExcludes 
                                     doesn't pick up .idea directory -->
                                 <exclude>.idea/**</exclude>
+                                <exclude>**/*.iml</exclude>
                                 <exclude>**/.project</exclude>
                                 <exclude>.git/**</exclude>
                                 <exclude>.gitignore</exclude>

@@ -51,11 +51,14 @@ import com.ning.billing.entitlement.engine.dao.DefaultEntitlementDao;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.mock.MockAccountBuilder;
 import com.ning.billing.util.bus.InMemoryInternalBus;
+import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.config.CatalogConfig;
+import com.ning.billing.util.dao.DefaultNonEntityDao;
+import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.notificationq.DefaultNotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueConfig;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
@@ -73,7 +76,7 @@ public class TestBusinessTagRecorder extends AnalyticsTestSuiteWithEmbeddedDB {
     private EntitlementInternalApi entitlementApi;
     private EntitlementUserApi entitlementUserApi;
     private BusinessTagDao tagDao;
-
+    private CacheControllerDispatcher controllerDispatcher;
 
     private NotificationQueueConfig config = new NotificationQueueConfig() {
         @Override
@@ -96,20 +99,22 @@ public class TestBusinessTagRecorder extends AnalyticsTestSuiteWithEmbeddedDB {
     public void setUp() throws Exception {
         final Clock clock = new ClockMock();
         final IDBI dbi = helper.getDBI();
+        controllerDispatcher = new CacheControllerDispatcher();
+        final NonEntityDao nonEntityDao = new DefaultNonEntityDao(dbi);
         accountTagSqlDao = dbi.onDemand(BusinessAccountTagSqlDao.class);
         final BusinessInvoiceTagSqlDao invoiceTagSqlDao = dbi.onDemand(BusinessInvoiceTagSqlDao.class);
         final BusinessInvoicePaymentTagSqlDao invoicePaymentTagSqlDao = dbi.onDemand(BusinessInvoicePaymentTagSqlDao.class);
         subscriptionTransitionTagSqlDao = dbi.onDemand(BusinessSubscriptionTransitionTagSqlDao.class);
         eventBus = new InMemoryInternalBus();
-        final AccountDao accountDao = new DefaultAccountDao(dbi, eventBus, new InternalCallContextFactory(dbi, new ClockMock()));
+        final AccountDao accountDao = new DefaultAccountDao(dbi, eventBus, clock, controllerDispatcher, new InternalCallContextFactory(new ClockMock(), nonEntityDao, controllerDispatcher), nonEntityDao);
         callContextFactory = new DefaultCallContextFactory(clock);
-        final InternalCallContextFactory internalCallContextFactory = new InternalCallContextFactory(dbi, clock);
+        final InternalCallContextFactory internalCallContextFactory = new InternalCallContextFactory(clock, nonEntityDao, controllerDispatcher);
         accountApi = new DefaultAccountInternalApi(accountDao);
         accountUserApi = new DefaultAccountUserApi(callContextFactory, internalCallContextFactory, accountDao);
         final CatalogService catalogService = new DefaultCatalogService(Mockito.mock(CatalogConfig.class), Mockito.mock(VersionedCatalogLoader.class));
         final AddonUtils addonUtils = new AddonUtils(catalogService);
-        final DefaultNotificationQueueService notificationQueueService = new DefaultNotificationQueueService(dbi, clock, config, internalCallContextFactory);
-        final EntitlementDao entitlementDao = new DefaultEntitlementDao(dbi, clock, addonUtils, notificationQueueService, eventBus, catalogService);
+        final DefaultNotificationQueueService notificationQueueService = new DefaultNotificationQueueService(dbi, clock, config, internalCallContextFactory, nonEntityDao, controllerDispatcher);
+        final EntitlementDao entitlementDao = new DefaultEntitlementDao(dbi, clock, addonUtils, notificationQueueService, eventBus, catalogService, controllerDispatcher, nonEntityDao);
         final PlanAligner planAligner = new PlanAligner(catalogService);
         final DefaultSubscriptionApiService apiService = new DefaultSubscriptionApiService(clock, entitlementDao, catalogService, planAligner, addonUtils, internalCallContextFactory);
         entitlementApi = new DefaultEntitlementInternalApi(entitlementDao, apiService, clock, catalogService);

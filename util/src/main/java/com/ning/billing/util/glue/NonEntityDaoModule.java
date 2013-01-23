@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -14,16 +14,19 @@
  * under the License.
  */
 
-package com.ning.billing.util.callcontext;
+package com.ning.billing.util.glue;
 
-import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.SqlQuery;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
+import com.ning.billing.util.dao.DefaultNonEntityDao;
+import com.ning.billing.util.dao.NonEntityDao;
 
-public interface CallContextSqlDao {
+import com.google.inject.AbstractModule;
 
-    @SqlQuery("select record_id from tenants where id = :tenantId;")
-    public Long getTenantRecordId(@Bind("tenantId") final String tenantId);
+public class NonEntityDaoModule extends AbstractModule {
 
-    @SqlQuery("select record_id from accounts where id = :accountId;")
-    public Long getAccountRecordId(@Bind("accountId") final String accountId);
+
+    @Override
+    protected void configure() {
+        bind(NonEntityDao.class).to(DefaultNonEntityDao.class).asEagerSingleton();
+    }
 }

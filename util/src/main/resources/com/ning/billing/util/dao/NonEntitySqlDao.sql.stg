@@ -1,0 +1,67 @@
+group NonEntitySqlDao;
+
+getRecordIdFromObject(tableName) ::= <<
+select
+  record_id
+from <tableName>
+where id = :id
+;
+>>
+
+getAccountRecordIdFromAccountHistory() ::= <<
+select
+  target_record_id
+from account_history
+where id = :id
+;
+>>
+
+getAccountRecordIdFromAccount() ::= <<
+select
+  record_id
+from accounts
+where id = :id
+;
+>>
+
+getAccountRecordIdFromObjectOtherThanAccount(tableName) ::= <<
+select
+  account_record_id
+from <tableName>
+where id = :id
+;
+>>
+
+getTenantRecordIdFromTenant() ::= <<
+select
+  record_id
+from tenants
+where id = :id
+;
+>>
+
+getTenantRecordIdFromObjectOtherThanTenant(tableName) ::= <<
+select
+  tenant_record_id
+from <tableName>
+where id = :id
+;
+>>
+
+
+getLastHistoryRecordId(tableName) ::= <<
+select
+  max(record_id)
+from <tableName>
+where target_record_id = :targetRecordId
+;
+>>
+
+getHistoryTargetRecordId(tableName) ::= <<
+select
+  target_record_id
+from <tableName>
+where record_id = :recordId
+;
+>>
+

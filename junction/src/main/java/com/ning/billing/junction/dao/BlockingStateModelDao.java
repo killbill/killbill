@@ -98,6 +98,11 @@ public class BlockingStateModelDao extends EntityBase implements EntityModelDao<
     }
 
     @Override
+    public TableName getHistoryTableName() {
+        return null;
+    }
+
+    @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
         sb.append("BlockingStateModelDao");

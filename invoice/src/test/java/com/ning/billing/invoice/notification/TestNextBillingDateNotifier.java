@@ -45,11 +45,13 @@ import com.ning.billing.invoice.glue.InvoiceModuleWithMocks;
 import com.ning.billing.invoice.template.formatters.DefaultInvoiceFormatterFactory;
 import com.ning.billing.lifecycle.KillbillService;
 import com.ning.billing.mock.glue.MockJunctionModule;
+import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.config.InvoiceConfig;
+import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.email.templates.TemplateModule;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
@@ -57,6 +59,8 @@ import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.BusModule.BusType;
+import com.ning.billing.util.glue.CacheModule;
+import com.ning.billing.util.glue.NonEntityDaoModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.TagStoreModule;
 import com.ning.billing.util.notificationq.NotificationQueueService;
@@ -81,6 +85,8 @@ public class TestNextBillingDateNotifier extends InvoiceTestSuiteWithEmbeddedDB 
     private NotificationQueueService notificationQueueService;
     private InternalCallContextFactory internalCallContextFactory;
     private EntitySqlDaoTransactionalJdbiWrapper entitySqlDaoTransactionalJdbiWrapper;
+    private CacheControllerDispatcher controllerDispatcher;
+    private NonEntityDao nonEntityDao;
 
     private static final class InvoiceListenerMock extends InvoiceListener {
 
@@ -125,6 +131,8 @@ public class TestNextBillingDateNotifier extends InvoiceTestSuiteWithEmbeddedDB 
                 install(new NotificationQueueModule());
                 install(new TemplateModule());
                 install(new TagStoreModule());
+                install(new CacheModule());
+                install(new NonEntityDaoModule());
 
                 final DBTestingHelper helper = KillbillTestSuiteWithEmbeddedDB.getDBTestingHelper();
                 if (helper.isUsingLocalInstance()) {
@@ -136,9 +144,10 @@ public class TestNextBillingDateNotifier extends InvoiceTestSuiteWithEmbeddedDB 
                     bind(IDBI.class).toInstance(dbi);
                 }
 
-                final InternalCallContextFactory internalCallContextFactory = new InternalCallContextFactory(helper.getDBI(), clock);
+                /*
+                final InternalCallContextFactory internalCallContextFactory = new InternalCallContextFactory(helper.getDBI(), clock, nonEntityDao);
                 bind(InternalCallContextFactory.class).toInstance(internalCallContextFactory);
-
+*/
                 bind(InvoiceFormatterFactory.class).to(DefaultInvoiceFormatterFactory.class).asEagerSingleton();
 
                 bind(AccountInternalApi.class).toInstance(Mockito.mock(AccountInternalApi.class));
@@ -149,7 +158,10 @@ public class TestNextBillingDateNotifier extends InvoiceTestSuiteWithEmbeddedDB 
         clock = g.getInstance(Clock.class);
         final IDBI dbi = g.getInstance(IDBI.class);
 
-        entitySqlDaoTransactionalJdbiWrapper = new EntitySqlDaoTransactionalJdbiWrapper(dbi);
+        nonEntityDao = g.getInstance(NonEntityDao.class);
+        controllerDispatcher = g.getInstance(CacheControllerDispatcher.class);
+
+        entitySqlDaoTransactionalJdbiWrapper = new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, controllerDispatcher, nonEntityDao);
 
         eventBus = g.getInstance(InternalBus.class);
         notificationQueueService = g.getInstance(NotificationQueueService.class);

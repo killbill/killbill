@@ -35,4 +35,7 @@ public interface EntityModelDao<E extends Entity> extends Entity {
      * @return the TableName object associated with this ModelDao entity
      */
     public TableName getTableName();
+
+
+    public TableName getHistoryTableName();
 }

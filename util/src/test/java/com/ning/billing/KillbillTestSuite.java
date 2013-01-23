@@ -40,7 +40,7 @@ public class KillbillTestSuite {
 
     private boolean hasFailed = false;
 
-    private Clock clock = new ClockMock();
+    protected Clock clock = new ClockMock();
 
     protected final InternalCallContext internalCallContext = new InternalCallContext(InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID, 1687L, UUID.randomUUID(),
                                                                                       UUID.randomUUID().toString(), CallOrigin.TEST,
@@ -59,8 +59,8 @@ public class KillbillTestSuite {
     public void endTestSuite(final Method method, final ITestResult result) throws Exception {
         log.info("***************************************************************************************************");
         log.info("***   Ending test {}:{} {} ({} s.)", new Object[]{method.getDeclaringClass().getName(), method.getName(),
-                                                                    result.isSuccess() ? "SUCCESS" : "!!! FAILURE !!!",
-                                                                    (result.getEndMillis() - result.getStartMillis()) / 1000});
+                result.isSuccess() ? "SUCCESS" : "!!! FAILURE !!!",
+                (result.getEndMillis() - result.getStartMillis()) / 1000});
         log.info("***************************************************************************************************");
         if (!hasFailed && !result.isSuccess()) {
             hasFailed = true;

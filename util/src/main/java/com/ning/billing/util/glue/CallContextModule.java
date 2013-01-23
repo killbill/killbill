@@ -18,6 +18,7 @@ package com.ning.billing.util.glue;
 
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
 
 import com.google.inject.AbstractModule;
 
@@ -25,5 +26,6 @@ public class CallContextModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(CallContextFactory.class).to(DefaultCallContextFactory.class).asEagerSingleton();
+        bind(InternalCallContextFactory.class).asEagerSingleton();
     }
 }

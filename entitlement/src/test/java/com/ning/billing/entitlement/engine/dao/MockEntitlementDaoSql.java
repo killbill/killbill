@@ -20,6 +20,8 @@ import org.skife.jdbi.v2.IDBI;
 
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.entitlement.engine.addon.AddonUtils;
+import com.ning.billing.util.cache.CacheControllerDispatcher;
+import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.notificationq.NotificationQueueService;
@@ -29,7 +31,7 @@ import com.google.inject.Inject;
 public class MockEntitlementDaoSql extends DefaultEntitlementDao {
     @Inject
     public MockEntitlementDaoSql(final IDBI dbi, final Clock clock, final AddonUtils addonUtils, final NotificationQueueService notificationQueueService,
-                                 final InternalBus eventBus, final CatalogService catalogService) {
-        super(dbi, clock, addonUtils, notificationQueueService, eventBus, catalogService);
+                                 final InternalBus eventBus, final CatalogService catalogService, final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao) {
+        super(dbi, clock, addonUtils, notificationQueueService, eventBus, catalogService, cacheControllerDispatcher, nonEntityDao);
     }
 }

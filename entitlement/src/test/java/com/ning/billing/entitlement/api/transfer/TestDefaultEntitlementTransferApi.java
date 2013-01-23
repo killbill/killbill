@@ -46,9 +46,11 @@ import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
 import com.ning.billing.entitlement.events.user.ApiEventTransfer;
 import com.ning.billing.entitlement.events.user.ApiEventType;
+import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.dao.NonEntityDao;
 
 import com.google.common.collect.ImmutableList;
 
@@ -61,11 +63,12 @@ public class TestDefaultEntitlementTransferApi extends EntitlementTestSuite {
 
     @BeforeMethod(groups = "fast")
     public void setUp() throws Exception {
+        final NonEntityDao nonEntityDao = Mockito.mock(NonEntityDao.class);
         final EntitlementDao dao = Mockito.mock(EntitlementDao.class);
         final CatalogService catalogService = new MockCatalogService(new MockCatalog());
         final SubscriptionApiService apiService =  Mockito.mock(SubscriptionApiService.class);
         final EntitlementTimelineApi timelineApi = Mockito.mock(EntitlementTimelineApi.class);
-        final InternalCallContextFactory internalCallContextFactory = new InternalCallContextFactory(Mockito.mock(IDBI.class), clock);
+        final InternalCallContextFactory internalCallContextFactory = new InternalCallContextFactory(clock, nonEntityDao, new CacheControllerDispatcher());
         transferApi = new DefaultEntitlementTransferApi(clock, dao, timelineApi, catalogService, apiService, internalCallContextFactory);
     }
 

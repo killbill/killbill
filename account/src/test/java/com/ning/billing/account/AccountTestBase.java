@@ -39,12 +39,15 @@ import com.ning.billing.util.audit.dao.AuditDao;
 import com.ning.billing.util.audit.dao.DefaultAuditDao;
 import com.ning.billing.util.bus.DefaultBusService;
 import com.ning.billing.util.bus.InMemoryInternalBus;
+import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.customfield.dao.CustomFieldDao;
 import com.ning.billing.util.customfield.dao.DefaultCustomFieldDao;
+import com.ning.billing.util.dao.DefaultNonEntityDao;
+import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.svcsapi.bus.BusService;
 import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.tag.api.user.TagEventBuilder;
@@ -66,6 +69,8 @@ public abstract class AccountTestBase extends AccountTestSuiteWithEmbeddedDB {
     protected CustomFieldDao customFieldDao;
     protected TagDefinitionDao tagDefinitionDao;
     protected TagDao tagDao;
+    protected CacheControllerDispatcher controllerDispatcher;
+    protected NonEntityDao nonEntityDao;
 
     protected AccountUserApi accountUserApi;
 
@@ -74,12 +79,15 @@ public abstract class AccountTestBase extends AccountTestSuiteWithEmbeddedDB {
         try {
             final IDBI dbi = getDBI();
 
-            final InternalCallContextFactory internalCallContextFactory = new InternalCallContextFactory(dbi, clock);
-            accountDao = new DefaultAccountDao(dbi, bus, internalCallContextFactory);
+            controllerDispatcher = new CacheControllerDispatcher();
+            nonEntityDao = new DefaultNonEntityDao(dbi);
+            final InternalCallContextFactory internalCallContextFactory = new InternalCallContextFactory(clock, nonEntityDao, controllerDispatcher);
+            accountDao = new DefaultAccountDao(dbi, bus, clock, controllerDispatcher, internalCallContextFactory, nonEntityDao);
             auditDao = new DefaultAuditDao(dbi);
-            customFieldDao = new DefaultCustomFieldDao(dbi);
-            tagDefinitionDao = new DefaultTagDefinitionDao(dbi, tagEventBuilder, bus);
-            tagDao = new DefaultTagDao(dbi, tagEventBuilder, bus);
+            customFieldDao = new DefaultCustomFieldDao(dbi, clock, controllerDispatcher, nonEntityDao);
+            tagDefinitionDao = new DefaultTagDefinitionDao(dbi, tagEventBuilder, bus, clock, controllerDispatcher, nonEntityDao);
+
+            tagDao = new DefaultTagDao(dbi, tagEventBuilder, bus, clock, controllerDispatcher, nonEntityDao);
 
             // Health check test to make sure MySQL is setup properly
             accountDao.test(internalCallContext);
@@ -152,6 +160,7 @@ public abstract class AccountTestBase extends AccountTestSuiteWithEmbeddedDB {
     }
 
     private AccountData createAccountData(final int billCycleDayUTC, final int billCycleDayLocal, final String phone) {
+
         final String externalKey = UUID.randomUUID().toString();
         final String email = UUID.randomUUID().toString().substring(0, 4) + '@' + UUID.randomUUID().toString().substring(0, 4);
         final String name = UUID.randomUUID().toString();

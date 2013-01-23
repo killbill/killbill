@@ -287,4 +287,9 @@ public class EntitlementEventModelDao extends EntityBase implements EntityModelD
     public TableName getTableName() {
         return TableName.SUBSCRIPTION_EVENTS;
     }
+
+    @Override
+    public TableName getHistoryTableName() {
+        return null;
+    }
 }

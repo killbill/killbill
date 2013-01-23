@@ -28,9 +28,13 @@ import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ning.billing.ObjectType;
 import com.ning.billing.util.Hostname;
 
+import com.ning.billing.util.cache.Cachable.CacheType;
+import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
@@ -55,15 +59,21 @@ public class DefaultNotificationQueue implements NotificationQueue {
     private final NotificationQueueHandler handler;
 
     private final NotificationQueueService notificationQueueService;
+    private final NonEntityDao nonEntityDao;
+    private final CacheControllerDispatcher cacheControllerDispatcher;
+
 
     private volatile boolean isStarted;
 
     public DefaultNotificationQueue(final String svcName, final String queueName, final NotificationQueueHandler handler,
-                                    final IDBI dbi, final NotificationQueueService notificationQueueService) {
+                                    final IDBI dbi, final NotificationQueueService notificationQueueService,
+                                    final NonEntityDao nonEntityDao, final CacheControllerDispatcher cacheControllerDispatcher) {
         this.svcName = svcName;
         this.queueName = queueName;
         this.handler = handler;
         this.dbi = dbi;
+        this.nonEntityDao = nonEntityDao;
+        this.cacheControllerDispatcher = cacheControllerDispatcher;
         this.dao = dbi.onDemand(NotificationSqlDao.class);
         this.hostname = Hostname.get();
         this.notificationQueueService = notificationQueueService;
@@ -108,19 +118,7 @@ public class DefaultNotificationQueue implements NotificationQueue {
 
     @Override
     public List<Notification> getNotificationForAccountAndDate(final UUID accountId, final DateTime effectiveDate, final InternalCallContext context) {
-        // TODO we have the same use case in InternalCallContextFactory, do we need some sort of helper class?
-        final Long accountRecordId = dbi.withHandle(new HandleCallback<Long>() {
-            @Override
-            public Long withHandle(final Handle handle) throws Exception {
-                final List<Map<String, Object>> values = handle.select("select record_id from accounts where id = " + accountId.toString());
-                if (values.size() == 0) {
-                    return null;
-                } else {
-                    return (Long) values.get(0).get("record_id");
-                }
-            }
-        });
-
+        final Long accountRecordId = nonEntityDao.retrieveRecordIdFromObject(accountId, ObjectType.ACCOUNT, cacheControllerDispatcher.getCacheController(CacheType.RECORD_ID));
         if (accountId == null) {
             return ImmutableList.<Notification>of();
         } else {

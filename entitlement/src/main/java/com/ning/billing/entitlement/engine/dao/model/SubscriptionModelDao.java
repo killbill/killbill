@@ -175,4 +175,10 @@ public class SubscriptionModelDao extends EntityBase implements EntityModelDao<S
     public TableName getTableName() {
         return TableName.SUBSCRIPTIONS;
     }
+
+    @Override
+    public TableName getHistoryTableName() {
+        return null;
+    }
+
 }

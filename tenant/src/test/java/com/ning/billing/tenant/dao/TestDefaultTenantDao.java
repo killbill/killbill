@@ -28,12 +28,16 @@ import org.testng.annotations.Test;
 import com.ning.billing.tenant.TenantTestSuiteWithEmbeddedDb;
 import com.ning.billing.tenant.api.DefaultTenant;
 import com.ning.billing.tenant.security.KillbillCredentialsMatcher;
+import com.ning.billing.util.cache.CacheControllerDispatcher;
+import com.ning.billing.util.dao.DefaultNonEntityDao;
 
 public class TestDefaultTenantDao extends TenantTestSuiteWithEmbeddedDb {
 
+    private CacheControllerDispatcher controllerDispatcher = new CacheControllerDispatcher();
+
     @Test(groups = "slow")
     public void testWeCanStoreAndMatchCredentials() throws Exception {
-        final DefaultTenantDao tenantDao = new DefaultTenantDao(getDBI());
+        final DefaultTenantDao tenantDao = new DefaultTenantDao(getDBI(), clock, controllerDispatcher, new DefaultNonEntityDao(getDBI()));
 
         final DefaultTenant tenant = new DefaultTenant(UUID.randomUUID(), null, null, UUID.randomUUID().toString(),
                                                        UUID.randomUUID().toString(), UUID.randomUUID().toString());
@@ -56,7 +60,7 @@ public class TestDefaultTenantDao extends TenantTestSuiteWithEmbeddedDb {
 
     @Test(groups = "slow")
     public void testTenantKeyValue() throws Exception {
-        final DefaultTenantDao tenantDao = new DefaultTenantDao(getDBI());
+        final DefaultTenantDao tenantDao = new DefaultTenantDao(getDBI(), clock, controllerDispatcher, new DefaultNonEntityDao(getDBI()));
         final DefaultTenant tenant = new DefaultTenant(UUID.randomUUID(), null, null, UUID.randomUUID().toString(),
                                                        UUID.randomUUID().toString(), UUID.randomUUID().toString());
         tenantDao.create(new TenantModelDao(tenant), internalCallContext);

@@ -120,4 +120,9 @@ public class TenantModelDao extends EntityBase implements EntityModelDao<Tenant>
     public TableName getTableName() {
         return TableName.TENANT;
     }
+
+    @Override
+    public TableName getHistoryTableName() {
+        return null;
+    }
 }

@@ -178,4 +178,10 @@ public class PaymentAttemptModelDao extends EntityBase implements EntityModelDao
     public TableName getTableName() {
         return TableName.PAYMENT_ATTEMPTS;
     }
+
+    @Override
+    public TableName getHistoryTableName() {
+        return TableName.PAYMENT_ATTEMPT_HISTORY;
+    }
+
 }

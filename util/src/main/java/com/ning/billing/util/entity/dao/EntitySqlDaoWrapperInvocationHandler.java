@@ -18,13 +18,16 @@ package com.ning.billing.util.entity.dao;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.skife.jdbi.v2.Binding;
 import org.skife.jdbi.v2.StatementContext;
@@ -34,12 +37,21 @@ import org.skife.jdbi.v2.sqlobject.Bind;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ning.billing.ObjectType;
 import com.ning.billing.util.audit.ChangeType;
+import com.ning.billing.util.cache.Cachable;
+import com.ning.billing.util.cache.Cachable.CacheType;
+import com.ning.billing.util.cache.CacheController;
+import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.dao.EntityAudit;
 import com.ning.billing.util.dao.EntityHistoryModelDao;
+import com.ning.billing.util.dao.NonEntityDao;
+import com.ning.billing.util.dao.NonEntitySqlDao;
 import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.Entity;
+import com.ning.billing.util.tag.dao.TagSqlDao;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
@@ -59,9 +71,16 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
     private final Class<S> sqlDaoClass;
     private final S sqlDao;
 
-    public EntitySqlDaoWrapperInvocationHandler(final Class<S> sqlDaoClass, final S sqlDao) {
+    private final CacheControllerDispatcher cacheControllerDispatcher;
+    private final Clock clock;
+    private final NonEntityDao nonEntityDao;
+
+    public EntitySqlDaoWrapperInvocationHandler(final Class<S> sqlDaoClass, final S sqlDao, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao) {
         this.sqlDaoClass = sqlDaoClass;
         this.sqlDao = sqlDao;
+        this.clock = clock;
+        this.cacheControllerDispatcher = cacheControllerDispatcher;
+        this.nonEntityDao = nonEntityDao;
     }
 
     @Override
@@ -134,13 +153,87 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
     }
 
     private Object invokeSafely(final Object proxy, final Method method, final Object[] args) throws Throwable {
-        final Audited annotation = method.getAnnotation(Audited.class);
 
+        final Audited auditedAnnotation = method.getAnnotation(Audited.class);
+        final Cachable cachableAnnotation = method.getAnnotation(Cachable.class);
+
+        // This can't be AUDIT'ed and CACHABLE'd at the same time as we only cache 'get'
+        if (auditedAnnotation != null) {
+            return invokeWithAuditAndHistory(auditedAnnotation, method, args);
+        } else if (cachableAnnotation != null) {
+            return invokeWithCaching(cachableAnnotation, method, args);
+        } else {
+            return method.invoke(sqlDao, args);
+        }
+    }
+
+    private Object invokeWithCaching(final Cachable cachableAnnotation, final Method method, final Object[] args)
+            throws IllegalAccessException, InvocationTargetException, ClassNotFoundException, InstantiationException {
+
+        final ObjectType objectType = getObjectType();
+        final CacheType cacheType = cachableAnnotation.value();
+        final CacheController<Object, Object> cache = cacheControllerDispatcher.getCacheController(cacheType);
+        Object result = null;
+        if (cache != null) {
+            // STEPH : Assume first argument is the key for the cache, this is a bit fragile...
+            result = cache.get(args[0], objectType);
+        }
+        if (result == null) {
+            result = method.invoke(sqlDao, args);
+        }
+        return result;
+    }
+
+    /**
+     * Extract object from sqlDaoClass by looking at first parameter type (EntityModelDao) and
+     * constructing an empty object so we can call the getObjectType method on it.
+     *
+     * @return the objectType associated to that handler
+     * @throws InstantiationException
+     * @throws IllegalAccessException
+     * @throws ClassNotFoundException
+     */
+    private ObjectType getObjectType() throws InstantiationException, IllegalAccessException, ClassNotFoundException {
+
+        int foundIndexForEntitySqlDao = -1;
+        // If the sqlDaoClass implements multiple interfaces, first figure out which one is the EntitySqlDao
+        for (int i = 0; i < sqlDaoClass.getGenericInterfaces().length; i++) {
+            if (EntitySqlDao.class.getName().equals(((Class) ((java.lang.reflect.ParameterizedType) sqlDaoClass.getGenericInterfaces()[0]).getRawType()).getName())) {
+                foundIndexForEntitySqlDao = i;
+                break;
+            }
+        }
+        // Find out from the parameters of the EntitySqlDao which one is the EntityModelDao, and extract his (sub)type to finally return the ObjectType
+        if (foundIndexForEntitySqlDao >= 0) {
+            Type[] types = ((java.lang.reflect.ParameterizedType) sqlDaoClass.getGenericInterfaces()[foundIndexForEntitySqlDao]).getActualTypeArguments();
+            int foundIndexForEntityModelDao = -1;
+            for (int i = 0; i < types.length; i++) {
+                Class clz = ((Class) types[i]);
+                if (EntityModelDao.class.getName().equals(((Class) ((java.lang.reflect.ParameterizedType) clz.getGenericInterfaces()[0]).getRawType()).getName())) {
+                    foundIndexForEntityModelDao = i;
+                    break;
+                }
+            }
+
+            if (foundIndexForEntityModelDao >= 0) {
+                String modelClassName = ((Class) types[foundIndexForEntityModelDao]).getName();
+
+                Class<? extends EntityModelDao<?>> clz = (Class<? extends EntityModelDao<?>>) Class.forName(modelClassName);
+
+                EntityModelDao<?> modelDao = (EntityModelDao<?>) clz.newInstance();
+                return modelDao.getTableName().getObjectType();
+            }
+        }
+        return null;
+    }
+
+
+    private Object invokeWithAuditAndHistory(final Audited auditedAnnotation, final Method method, final Object[] args) throws IllegalAccessException, InvocationTargetException {
         InternalCallContext context = null;
         List<String> entityIds = null;
         final Map<String, M> entities = new HashMap<String, M>();
         final Map<String, Long> entityRecordIds = new HashMap<String, Long>();
-        if (annotation != null) {
+        if (auditedAnnotation != null) {
             // There will be some work required after the statement is executed,
             // get the id before in case the change is a delete
             context = retrieveContextFromArguments(args);
@@ -154,15 +247,11 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
         // Real jdbc call
         final Object obj = method.invoke(sqlDao, args);
 
-        // Update audit and history if needed
-        if (annotation != null) {
-            final ChangeType changeType = annotation.value();
+        final ChangeType changeType = auditedAnnotation.value();
 
-            for (final String entityId : entityIds) {
-                updateHistoryAndAudit(entityId, entities, entityRecordIds, changeType, context);
-            }
+        for (final String entityId : entityIds) {
+            updateHistoryAndAudit(entityId, entities, entityRecordIds, changeType, context);
         }
-
         return obj;
     }
 
@@ -250,16 +339,19 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
     }
 
     private Long insertHistory(final Long entityRecordId, final M entityModelDao, final ChangeType changeType, final InternalCallContext context) {
-        // TODO use clock
-        final EntityHistoryModelDao<M, E> history = new EntityHistoryModelDao<M, E>(entityModelDao, entityRecordId, changeType, context.getCreatedDate());
+        final EntityHistoryModelDao<M, E> history = new EntityHistoryModelDao<M, E>(entityModelDao, entityRecordId, changeType, clock.getUTCNow());
+
         sqlDao.addHistoryFromTransaction(history, context);
-        return sqlDao.getHistoryRecordId(entityRecordId, context);
+
+        final NonEntitySqlDao transactional = sqlDao.become(NonEntitySqlDao.class);
+
+        /* return transactional.getLastHistoryRecordId(entityRecordId, entityModelDao.getHistoryTableName().getTableName()); */
+        return nonEntityDao.retrieveLastHistoryRecordIdFromTransaction(entityRecordId, entityModelDao.getHistoryTableName(), transactional);
     }
 
     private void insertAudits(final TableName tableName, final Long historyRecordId, final ChangeType changeType, final InternalCallContext context) {
-        // TODO use clock
         final TableName destinationTableName = Objects.firstNonNull(tableName.getHistoryTableName(), tableName);
-        final EntityAudit audit = new EntityAudit(destinationTableName, historyRecordId, changeType, context.getCreatedDate());
+        final EntityAudit audit = new EntityAudit(destinationTableName, historyRecordId, changeType, clock.getUTCNow());
         sqlDao.insertAuditFromTransaction(audit, context);
     }
 }

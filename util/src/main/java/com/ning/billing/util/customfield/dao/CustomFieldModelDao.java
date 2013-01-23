@@ -121,4 +121,10 @@ public class CustomFieldModelDao extends EntityBase implements EntityModelDao<Cu
     public TableName getTableName() {
         return TableName.CUSTOM_FIELD;
     }
+
+    @Override
+    public TableName getHistoryTableName() {
+        return TableName.CUSTOM_FIELD_HISTORY;
+    }
+
 }

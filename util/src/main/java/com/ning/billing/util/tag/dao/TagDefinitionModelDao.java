@@ -117,4 +117,10 @@ public class TagDefinitionModelDao extends EntityBase implements EntityModelDao<
     public TableName getTableName() {
         return TableName.TAG_DEFINITIONS;
     }
+
+    @Override
+    public TableName getHistoryTableName() {
+        return TableName.TAG_DEFINITION_HISTORY;
+    }
+
 }

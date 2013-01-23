@@ -53,6 +53,8 @@ import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.dao.NonEntityDao;
+import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.Entity;
 import com.ning.billing.util.entity.dao.EntityModelDao;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
@@ -66,13 +68,15 @@ public class AuditChecker {
     private final AuditUserApi auditUserApi;
     private final IDBI dbi;
     private final InternalCallContextFactory callContextFactory;
+    private final NonEntityDao nonEntityDao;
 
 
     @Inject
-    public AuditChecker(final AuditUserApi auditUserApi, final IDBI dbi, final InternalCallContextFactory callContextFactory) {
+    public AuditChecker(final AuditUserApi auditUserApi, final IDBI dbi, final InternalCallContextFactory callContextFactory, final NonEntityDao nonEntityDao) {
         this.auditUserApi = auditUserApi;
         this.dbi = dbi;
         this.callContextFactory = callContextFactory;
+        this.nonEntityDao = nonEntityDao;
     }
 
 
@@ -205,24 +209,28 @@ public class AuditChecker {
             // We can't take userToken oustide of the 'if' because for instance NextBillingDate invoice will not have it.
             Assert.assertEquals(auditLog.getUserToken(), context.getUserToken().toString());
         }
-        final M entityModel = extractEntityModelFromEntityWithTargetRecordId(auditLog.getId(), sqlDao, context, useHistory);
+        final M entityModel = extractEntityModelFromEntityWithTargetRecordId(entityId, auditLog.getId(), sqlDao, context, useHistory);
         Assert.assertEquals(entityModel.getId(), entityId);
 
     }
 
 
-    private <T extends EntitySqlDao<M, E>, M extends EntityModelDao<E>, E extends Entity> M extractEntityModelFromEntityWithTargetRecordId(final UUID entityId, final Class<T> sqlDao, final CallContext context, final boolean useHistory) {
+    private <T extends EntitySqlDao<M, E>, M extends EntityModelDao<E>, E extends Entity> M extractEntityModelFromEntityWithTargetRecordId(final UUID entityId, final UUID auditLogId, final Class<T> sqlDao, final CallContext context, final boolean useHistory) {
+
+
+        final M modelDaoThatGivesMeTableName = dbi.onDemand(sqlDao).getById(entityId.toString(), callContextFactory.createInternalCallContext(context));
+
         Integer targetRecordId = dbi.withHandle(new HandleCallback<Integer>() {
             @Override
             public Integer withHandle(final Handle handle) throws Exception {
 
-                List<Map<String, Object>> res = handle.select("select target_record_id from audit_log where id = '" + entityId.toString() + "';");
+                List<Map<String, Object>> res = handle.select("select target_record_id from audit_log where id = '" + auditLogId.toString() + "';");
                 return (Integer) res.get(0).get("target_record_id");
             }
         });
 
         if (useHistory) {
-            Long entityRecordId =  dbi.onDemand(sqlDao).getHistoryTargetRecordId(Long.valueOf(targetRecordId), callContextFactory.createInternalCallContext(context));
+            Long entityRecordId = nonEntityDao.retrieveHistoryTargetRecordId(Long.valueOf(targetRecordId), modelDaoThatGivesMeTableName.getHistoryTableName());
             targetRecordId = new Integer(entityRecordId.intValue());
         }
         return dbi.onDemand(sqlDao).getByRecordId(Long.valueOf(targetRecordId), callContextFactory.createInternalCallContext(context));

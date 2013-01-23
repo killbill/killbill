@@ -47,14 +47,14 @@ public abstract class DBTestingHelper {
     protected IDBI dbiInstance = null;
 
     public synchronized IDBI getDBI() {
-        if (dbiInstance == null) {
-            final String dbiString = getJdbcConnectionString();
-            dbiInstance = new DBIProvider(dbiString, USERNAME, PASSWORD).get();
-        }
+        createInstanceIfNull();
         return dbiInstance;
     }
 
     public void initDb() throws IOException {
+
+        createInstanceIfNull();
+
         // We always want the accounts and tenants table
         initDb("drop table if exists accounts;" +
                "CREATE TABLE accounts (\n" +
@@ -87,7 +87,8 @@ public abstract class DBTestingHelper {
                "    tenant_record_id int(11) unsigned default null,\n" +
                "    PRIMARY KEY(record_id)\n" +
                ");");
-        initDb("drop table if exists tenants; create table tenants(record_id int(11) unsigned not null auto_increment, id char(36) not null, primary key(record_id));");
+        initDb("drop table if exists tenants; create table tenants(record_id int(11) unsigned not null auto_increment, id char(36) not null, external_key varchar(128) NULL, api_key varchar(128) NULL, " +
+               "api_secret varchar(128) NULL, api_salt varchar(128) NULL, created_date datetime NOT NULL, created_by varchar(50) NOT NULL, updated_date datetime DEFAULT NULL, updated_by varchar(50) DEFAULT NULL, primary key(record_id));");
 
         // We always want the basic tables when we do account_record_id lookups (e.g. for custom fields, tags or junction)
         initDb("drop table if exists bundles; create table bundles(record_id int(11) unsigned not null auto_increment, id char(36) not null, " +
@@ -162,4 +163,11 @@ public abstract class DBTestingHelper {
     public abstract void start() throws IOException;
 
     public abstract void stop();
+
+    private synchronized void createInstanceIfNull() {
+        if (dbiInstance == null) {
+            final String dbiString = getJdbcConnectionString();
+            dbiInstance = new DBIProvider(dbiString, USERNAME, PASSWORD).get();
+        }
+    }
 }

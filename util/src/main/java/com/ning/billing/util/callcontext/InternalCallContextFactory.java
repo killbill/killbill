@@ -16,21 +16,18 @@
 
 package com.ning.billing.util.callcontext;
 
-import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import org.joda.time.DateTime;
-import org.skife.jdbi.v2.Handle;
-import org.skife.jdbi.v2.IDBI;
-import org.skife.jdbi.v2.tweak.HandleCallback;
 
 import com.ning.billing.ObjectType;
+import com.ning.billing.util.cache.Cachable.CacheType;
+import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.dao.TableName;
+import com.ning.billing.util.dao.NonEntityDao;
 
 import com.google.common.base.Objects;
 
@@ -38,14 +35,17 @@ public class InternalCallContextFactory {
 
     public static final long INTERNAL_TENANT_RECORD_ID = 0L;
 
-    private final IDBI dbi;
     private final Clock clock;
+    private final NonEntityDao nonEntityDao;
+    private final CacheControllerDispatcher cacheControllerDispatcher;
 
     @Inject
-    public InternalCallContextFactory(final IDBI dbi, final Clock clock) {
-        this.dbi = dbi;
+    public InternalCallContextFactory(final Clock clock, final NonEntityDao nonEntityDao, final CacheControllerDispatcher cacheControllerDispatcher) {
         this.clock = clock;
+        this.nonEntityDao = nonEntityDao;
+        this.cacheControllerDispatcher = cacheControllerDispatcher;
     }
+
 
     /**
      * Create an internal tenant context from a tenant context
@@ -143,8 +143,8 @@ public class InternalCallContextFactory {
                                                          final CallOrigin callOrigin, final UserType userType, @Nullable final UUID userToken,
                                                          @Nullable final String reasonCode, @Nullable final String comment, final DateTime createdDate,
                                                          final DateTime updatedDate) {
-        final Long tenantRecordId = retrieveTenantRecordIdFromObject(objectId, objectType);
-        final Long accountRecordId = retrieveAccountRecordIdFromObject(objectId, objectType);
+        final Long tenantRecordId = nonEntityDao.retrieveTenantRecordIdFromObject(objectId, objectType, cacheControllerDispatcher.getCacheController(CacheType.TENANT_RECORD_ID));
+        final Long accountRecordId = nonEntityDao.retrieveAccountRecordIdFromObject(objectId, objectType, cacheControllerDispatcher.getCacheController(CacheType.ACCOUNT_RECORD_ID));
         return createInternalCallContext(tenantRecordId, accountRecordId, userName, callOrigin, userType, userToken,
                                          reasonCode, comment, createdDate, updatedDate);
     }
@@ -213,76 +213,7 @@ public class InternalCallContextFactory {
         if (context.getTenantId() == null) {
             return INTERNAL_TENANT_RECORD_ID;
         } else {
-            // We call onDemand here to avoid JDBI opening connections in the constructor.
-            // TODO should we cache it?
-            return dbi.onDemand(CallContextSqlDao.class).getTenantRecordId(context.getTenantId().toString());
+            return nonEntityDao.retrieveTenantRecordIdFromObject(context.getTenantId(), ObjectType.TENANT, cacheControllerDispatcher.getCacheController(CacheType.TENANT_RECORD_ID));
         }
-    }
-
-    private Long retrieveAccountRecordIdFromObject(final UUID objectId, final ObjectType objectType) {
-        final Long accountRecordId;
-
-        final TableName tableName = TableName.fromObjectType(objectType);
-        if (tableName != null) {
-            accountRecordId = dbi.withHandle(new HandleCallback<Long>() {
-                @Override
-                public Long withHandle(final Handle handle) throws Exception {
-                    final String columnName;
-                    if (TableName.TAG_DEFINITIONS.equals(tableName) || TableName.TAG_DEFINITION_HISTORY.equals(tableName)) {
-                        // Not tied to an account
-                        return null;
-                    } else if (TableName.ACCOUNT.equals(tableName) || TableName.ACCOUNT_HISTORY.equals(tableName)) {
-                        // Lookup the record_id directly
-                        columnName = "record_id";
-                    } else {
-                        // The table should have an account_record_id column
-                        columnName = "account_record_id";
-                    }
-
-                    final List<Map<String, Object>> values = handle.select(String.format("select %s from %s where id = ?;", columnName, tableName.getTableName()), objectId.toString());
-                    if (values.size() == 0) {
-                        return null;
-                    } else {
-                        final Object accountRecordId = values.get(0).get(columnName);
-                        return accountRecordId == null ? null : Long.valueOf(accountRecordId.toString());
-                    }
-                }
-            });
-        } else {
-            accountRecordId = null;
-        }
-        return accountRecordId;
-    }
-
-    private Long retrieveTenantRecordIdFromObject(final UUID objectId, final ObjectType objectType) {
-        final Long tenantRecordId;
-
-        final TableName tableName = TableName.fromObjectType(objectType);
-        if (tableName != null) {
-            tenantRecordId = dbi.withHandle(new HandleCallback<Long>() {
-                @Override
-                public Long withHandle(final Handle handle) throws Exception {
-                    final String columnName;
-                    if (TableName.TENANT.equals(tableName)) {
-                        // Lookup the record_id directly
-                        columnName = "record_id";
-                    } else {
-                        // The table should have an tenant_record_id column
-                        columnName = "tenant_record_id";
-                    }
-
-                    final List<Map<String, Object>> values = handle.select(String.format("select %s from %s where id = ?;", columnName, tableName.getTableName()), objectId.toString());
-                    if (values.size() == 0) {
-                        return null;
-                    } else {
-                        final Object tenantRecordId = values.get(0).get(columnName);
-                        return tenantRecordId == null ? null : Long.valueOf(tenantRecordId.toString());
-                    }
-                }
-            });
-        } else {
-            tenantRecordId = null;
-        }
-        return tenantRecordId;
     }
 }

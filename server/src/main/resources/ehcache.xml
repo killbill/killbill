@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ Copyright 2010-2012 Ning, Inc.
+  ~
+  ~ Ning licenses this file to you under the Apache License, version 2.0
+  ~ (the "License"); you may not use this file except in compliance with the
+  ~ License.  You may obtain a copy of the License at:
+  ~
+  ~    http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  ~ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+  ~ License for the specific language governing permissions and limitations
+  ~ under the License.
+  -->
+
+<ehcache xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="ehcache.xsd" >
+
+  <defaultCache
+      maxElementsInMemory="0"
+      maxElementsOnDisk="0"
+      eternal="false"
+      timeToIdleSeconds="0"
+      timeToLiveSeconds="0"
+      overflowToDisk="false"
+      />
+
+    <cache name="record-id"
+           maxElementsInMemory="100000"
+           maxElementsOnDisk="0"
+           eternal="true"
+           overflowToDisk="false"
+           diskPersistent="false"
+           memoryStoreEvictionPolicy="LFU">
+        <cacheEventListenerFactory
+                class="com.ning.billing.util.cache.ExpirationListenerFactory"
+                properties="" />
+    </cache>
+
+    <cache name="tenant-record-id"
+           maxElementsInMemory="100000"
+           maxElementsOnDisk="0"
+           eternal="true"
+           overflowToDisk="false"
+           diskPersistent="false"
+           memoryStoreEvictionPolicy="LFU">
+        <cacheEventListenerFactory
+                class="com.ning.billing.util.cache.ExpirationListenerFactory"
+                properties="" />
+    </cache>
+
+    <cache name="account-record-id"
+           maxElementsInMemory="100000"
+           maxElementsOnDisk="0"
+           eternal="true"
+           overflowToDisk="false"
+           diskPersistent="false"
+           memoryStoreEvictionPolicy="LFU">
+        <cacheEventListenerFactory
+                class="com.ning.billing.util.cache.ExpirationListenerFactory"
+                properties="" />
+    </cache>
+</ehcache>
+

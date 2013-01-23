@@ -16,6 +16,9 @@
 
 package com.ning.billing.server.listeners;
 
+import java.lang.management.ManagementFactory;
+
+import javax.management.MBeanServer;
 import javax.servlet.ServletContextEvent;
 
 import org.slf4j.Logger;
@@ -36,6 +39,8 @@ import com.ning.jetty.core.listeners.SetupServer;
 
 import com.google.inject.Injector;
 import com.google.inject.Module;
+import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.management.ManagementService;
 
 public class KillbillGuiceListener extends SetupServer {
 
@@ -48,6 +53,13 @@ public class KillbillGuiceListener extends SetupServer {
 
     protected Module getModule() {
         return new KillbillServerModule();
+    }
+
+    private void registerMBeansForCache(final CacheManager cacheManager) {
+        if (cacheManager != null) {
+            final MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
+            ManagementService.registerMBeans(cacheManager, mBeanServer, false, true, true, true);
+        }
     }
 
     @Override
@@ -78,6 +90,8 @@ public class KillbillGuiceListener extends SetupServer {
         killbillLifecycle = theInjector.getInstance(DefaultLifecycle.class);
         killbillBusService = theInjector.getInstance(BusService.class);
         killbilleventHandler = theInjector.getInstance(KillbillEventHandler.class);
+
+        registerMBeansForCache(theInjector.getInstance(CacheManager.class));
 
         /*
                 ObjectMapper mapper = theInjector.getInstance(ObjectMapper.class);
