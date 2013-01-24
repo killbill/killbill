@@ -166,34 +166,47 @@ public class DefaultEntitlementMigrationApi extends EntitlementApiBase implement
     }
 
     private List<EntitlementEvent> toEvents(final SubscriptionData subscriptionData, final DateTime now, final DateTime ctd, final TimedMigration[] migrationEvents, final CallContext context) {
-        ApiEventMigrateEntitlement creationEvent = null;
+
+
+        if (ctd == null) {
+            throw new EntitlementError(String.format("Could not create migration billing event ctd = %s", ctd));
+        }
+
         final List<EntitlementEvent> events = new ArrayList<EntitlementEvent>(migrationEvents.length);
+
+        ApiEventMigrateBilling apiEventMigrateBilling = null;
 
         // The first event date after the MIGRATE_ENTITLEMENT event
         DateTime nextEventDate = null;
+
+        boolean isCancelledSubscriptionPriorOrAtCTD = false;
+
         for (final TimedMigration cur : migrationEvents) {
+
+
+            final ApiEventBuilder builder = new ApiEventBuilder()
+                    .setSubscriptionId(subscriptionData.getId())
+                    .setEventPlan((cur.getPlan() != null) ? cur.getPlan().getName() : null)
+                    .setEventPlanPhase((cur.getPhase() != null) ? cur.getPhase().getName() : null)
+                    .setEventPriceList(cur.getPriceList())
+                    .setActiveVersion(subscriptionData.getActiveVersion())
+                    .setEffectiveDate(cur.getEventTime())
+                    .setProcessedDate(now)
+                    .setRequestedDate(now)
+                    .setFromDisk(true);
+
 
             if (cur.getEventType() == EventType.PHASE) {
                 nextEventDate = nextEventDate != null && nextEventDate.compareTo(cur.getEventTime()) < 0 ? nextEventDate : cur.getEventTime();
                 final PhaseEvent nextPhaseEvent = PhaseEventData.createNextPhaseEvent(cur.getPhase().getName(), subscriptionData, now, cur.getEventTime());
                 events.add(nextPhaseEvent);
 
-            } else if (cur.getEventType() == EventType.API_USER) {
 
-                final ApiEventBuilder builder = new ApiEventBuilder()
-                        .setSubscriptionId(subscriptionData.getId())
-                        .setEventPlan((cur.getPlan() != null) ? cur.getPlan().getName() : null)
-                        .setEventPlanPhase((cur.getPhase() != null) ? cur.getPhase().getName() : null)
-                        .setEventPriceList(cur.getPriceList())
-                        .setActiveVersion(subscriptionData.getActiveVersion())
-                        .setEffectiveDate(cur.getEventTime())
-                        .setProcessedDate(now)
-                        .setRequestedDate(now)
-                        .setFromDisk(true);
+            } else if (cur.getEventType() == EventType.API_USER) {
 
                 switch (cur.getApiEventType()) {
                     case MIGRATE_ENTITLEMENT:
-                        creationEvent = new ApiEventMigrateEntitlement(builder);
+                        ApiEventMigrateEntitlement creationEvent = new ApiEventMigrateEntitlement(builder);
                         events.add(creationEvent);
                         break;
 
@@ -202,6 +215,7 @@ public class DefaultEntitlementMigrationApi extends EntitlementApiBase implement
                         events.add(new ApiEventChange(builder));
                         break;
                     case CANCEL:
+                        isCancelledSubscriptionPriorOrAtCTD = !cur.getEventTime().isAfter(ctd);
                         nextEventDate = nextEventDate != null && nextEventDate.compareTo(cur.getEventTime()) < 0 ? nextEventDate : cur.getEventTime();
                         events.add(new ApiEventCancel(builder));
                         break;
@@ -211,14 +225,19 @@ public class DefaultEntitlementMigrationApi extends EntitlementApiBase implement
             } else {
                 throw new EntitlementError(String.format("Unexpected type of migration event %s", cur.getEventType()));
             }
+
+            // create the MIGRATE_BILLING based on the current state of the last event.
+            if (! cur.getEventTime().isAfter(ctd)) {
+                builder.setEffectiveDate(ctd);
+                builder.setUuid(UUID.randomUUID());
+                apiEventMigrateBilling = new ApiEventMigrateBilling(builder);
+            }
         }
-        if (creationEvent == null || ctd == null) {
-            throw new EntitlementError(String.format("Could not create migration billing event ctd = %s", ctd));
+        // Always ADD MIGRATE BILLING which is constructed from latest state seen in the stream prior to CTD
+        if (apiEventMigrateBilling != null && !isCancelledSubscriptionPriorOrAtCTD) {
+            events.add(apiEventMigrateBilling);
         }
-        // Only add the MIGRATE_BILLING event if there is no event prior to that that will trigger the first invoice.
-        if (nextEventDate == null || nextEventDate.isAfter(ctd)) {
-            events.add(new ApiEventMigrateBilling(creationEvent, ctd));
-        }
+
         Collections.sort(events, new Comparator<EntitlementEvent>() {
             int compForApiType(final EntitlementEvent o1, final EntitlementEvent o2, final ApiEventType type) {
                 ApiEventType apiO1 = null;

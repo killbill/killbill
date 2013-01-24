@@ -198,6 +198,7 @@ public abstract class TestMigration extends TestApiBase {
             assertEquals(subscription.getChargedThroughDate(), trialDate.plusDays(30));
 
             testListener.pushExpectedEvent(NextEvent.PHASE);
+            testListener.pushExpectedEvent(NextEvent.MIGRATE_BILLING);
 
             final Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(30));
             clock.addDeltaFromReality(it.toDurationMillis());
