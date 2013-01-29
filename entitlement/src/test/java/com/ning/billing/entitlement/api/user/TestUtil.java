@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -14,277 +14,110 @@
  * under the License.
  */
 
-package com.ning.billing.entitlement.api;
+package com.ning.billing.entitlement.api.user;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
-
-import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
+import javax.inject.Inject;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.Period;
-import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
 
-import com.ning.billing.account.api.AccountData;
-import com.ning.billing.account.api.BillCycleDay;
+import com.ning.billing.ErrorCode;
 import com.ning.billing.api.TestApiListener;
 import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.api.TestListenerStatus;
-import com.ning.billing.catalog.DefaultCatalogService;
 import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.Catalog;
-import com.ning.billing.catalog.api.CatalogService;
-import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.Duration;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.catalog.api.TimeUnit;
-import com.ning.billing.util.config.EntitlementConfig;
-import com.ning.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
-import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi;
+import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi.EntitlementAccountMigration;
 import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi.EntitlementBundleMigration;
 import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi.EntitlementSubscriptionMigration;
 import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi.EntitlementSubscriptionMigrationCase;
-import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
-import com.ning.billing.entitlement.api.transfer.EntitlementTransferApi;
-import com.ning.billing.entitlement.api.user.EntitlementUserApi;
-import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.entitlement.api.user.SubscriptionData;
-import com.ning.billing.entitlement.engine.core.Engine;
+import com.ning.billing.entitlement.api.timeline.BundleTimeline;
+import com.ning.billing.entitlement.api.timeline.EntitlementRepairException;
+import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline;
+import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline.DeletedEvent;
+import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline.ExistingEvent;
+import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline.NewEvent;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
-import com.ning.billing.entitlement.engine.dao.MockEntitlementDaoMemory;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
 import com.ning.billing.entitlement.events.user.ApiEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
-import com.ning.billing.mock.MockAccountBuilder;
-import com.ning.billing.util.svcsapi.bus.BusService;
-import com.ning.billing.util.bus.DefaultBusService;
+import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
-import com.ning.billing.util.glue.RealImplementation;
-import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 
-import com.google.inject.Injector;
-import com.google.inject.Key;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 
-public abstract class TestApiBase extends EntitlementTestSuiteWithEmbeddedDB implements TestListenerStatus {
+public class TestUtil {
 
-    protected static final Logger log = LoggerFactory.getLogger(TestApiBase.class);
+    private final Logger log = LoggerFactory.getLogger(TestUtil.class);
 
-    protected EntitlementService entitlementService;
-    protected EntitlementUserApi entitlementApi;
-    protected EntitlementInternalApi entitlementInternalApi;
-    protected EntitlementTransferApi transferApi;
+    private final EntitlementUserApi entitlementApi;
 
-    protected EntitlementMigrationApi migrationApi;
-    protected EntitlementTimelineApi repairApi;
+    private final Clock clock;
 
-    protected CatalogService catalogService;
-    protected EntitlementConfig config;
-    protected EntitlementDao dao;
-    protected ClockMock clock;
-    protected BusService busService;
+    private final InternalCallContext callContext;
 
-    protected AccountData accountData;
-    protected Catalog catalog;
-    protected TestApiListener testListener;
-    protected SubscriptionBundle bundle;
+    private final TestApiListener testListener;
 
-    private boolean isListenerFailed;
-    private String listenerFailedMsg;
+    private final EntitlementDao dao;
 
-    //
-    // The date on which we make our test start; just to ensure that running tests at different dates does not
-    // produce different results. nothing specific about that date; we could change it to anything.
-    //
-    protected DateTime testStartDate = new DateTime(2012, 5, 7, 0, 3, 42, 0);
 
-    public static void loadSystemPropertiesFromClasspath(final String resource) {
-        final URL url = TestApiBase.class.getResource(resource);
-        assertNotNull(url);
 
-        try {
-            System.getProperties().load(url.openStream());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    @Inject
+    public TestUtil(final EntitlementUserApi entitlementApi, final Clock clock, final InternalCallContext callContext, final TestApiListener testListener, final EntitlementDao dao) {
+        this.entitlementApi = entitlementApi;
+        this.clock = clock;
+        this.callContext = callContext;
+        this.testListener = testListener;
+        this.dao = dao;
     }
 
-    protected abstract Injector getInjector();
 
-    @AfterClass(alwaysRun = true)
-    public void tearDown() {
-        try {
-            ((DefaultBusService) busService).stopBus();
-        } catch (Exception e) {
-            log.warn("Failed to tearDown test properly ", e);
-        }
-    }
-
-    @Override
-    public void failed(final String msg) {
-        this.isListenerFailed = true;
-        this.listenerFailedMsg = msg;
-    }
-
-    @Override
-    public void resetTestListenerStatus() {
-        this.isListenerFailed = false;
-        this.listenerFailedMsg = null;
-    }
-
-    @BeforeClass(alwaysRun = true)
-    public void setup() throws Exception {
-        loadSystemPropertiesFromClasspath("/entitlement.properties");
-        final Injector g = getInjector();
-
-        entitlementService = g.getInstance(EntitlementService.class);
-        entitlementApi = g.getInstance(Key.get(EntitlementUserApi.class, RealImplementation.class));
-        entitlementInternalApi = g.getInstance(EntitlementInternalApi.class);
-        migrationApi = g.getInstance(EntitlementMigrationApi.class);
-        repairApi = g.getInstance(EntitlementTimelineApi.class);
-        transferApi = g.getInstance(EntitlementTransferApi.class);
-        catalogService = g.getInstance(CatalogService.class);
-        busService = g.getInstance(BusService.class);
-        config = g.getInstance(EntitlementConfig.class);
-        dao = g.getInstance(EntitlementDao.class);
-        clock = (ClockMock) g.getInstance(Clock.class);
-        init();
-    }
-
-    private void init() throws Exception {
-        ((DefaultCatalogService) catalogService).loadCatalog();
-
-        final BillCycleDay billCycleDay = Mockito.mock(BillCycleDay.class);
-        Mockito.when(billCycleDay.getDayOfMonthUTC()).thenReturn(1);
-        accountData = new MockAccountBuilder().name(UUID.randomUUID().toString())
-                                              .firstNameLength(6)
-                                              .email(UUID.randomUUID().toString())
-                                              .phone(UUID.randomUUID().toString())
-                                              .migrated(false)
-                                              .isNotifiedForInvoices(false)
-                                              .externalKey(UUID.randomUUID().toString())
-                                              .billingCycleDay(billCycleDay)
-                                              .currency(Currency.USD)
-                                              .paymentMethodId(UUID.randomUUID())
-                                              .timeZone(DateTimeZone.forID("Europe/Paris"))
-                                              .build();
-
-        assertNotNull(accountData);
-        catalog = catalogService.getFullCatalog();
-        assertNotNull(catalog);
-        testListener = new TestApiListener(this);
-    }
-
-    private static boolean isSqlTest(final EntitlementDao theDao) {
-        return (!(theDao instanceof MockEntitlementDaoMemory));
-    }
-
-    @BeforeMethod(alwaysRun = true)
-    public void setupTest() throws Exception {
-        log.warn("RESET TEST FRAMEWORK");
-
-        // CLEANUP ALL DB TABLES OR IN MEMORY STRUCTURES
-        if (!isSqlTest(dao)) {
-            // The MySQL testing helper will clean the tables between each test
-            ((MockEntitlementDaoMemory) dao).reset();
-        }
-
-        // RESET LIST OF EXPECTED EVENTS
-        if (testListener != null) {
-            testListener.reset();
-            resetTestListenerStatus();
-        }
-
-        // RESET CLOCK
-        clock.resetDeltaFromReality();
-
-        // START BUS AND REGISTER LISTENER
-        busService.getBus().start();
-        busService.getBus().register(testListener);
-
-        // START NOTIFICATION QUEUE FOR ENTITLEMENT
-        ((Engine) entitlementService).initialize();
-        ((Engine) entitlementService).start();
-
-        // SETUP START DATE
-        clock.setDeltaFromReality(testStartDate.getMillis() - clock.getUTCNow().getMillis());
-
-        // CREATE NEW BUNDLE FOR TEST
-        final UUID accountId = UUID.randomUUID();
-        bundle = entitlementApi.createBundleForAccount(accountId, "myDefaultBundle", callContext);
-        assertNotNull(bundle);
-    }
-
-    @AfterMethod(alwaysRun = true)
-    public void cleanupTest() throws Exception {
-        // UNREGISTER TEST LISTENER AND STOP BUS
-        busService.getBus().unregister(testListener);
-        busService.getBus().stop();
-
-        // STOP NOTIFICATION QUEUE
-        ((Engine) entitlementService).stop();
-
-        log.warn("DONE WITH TEST");
-    }
-
-    protected void assertListenerStatus() {
-        if (isListenerFailed) {
-            log.error(listenerFailedMsg);
-            Assert.fail(listenerFailedMsg);
-        }
-    }
-
-    protected SubscriptionData createSubscription(final String productName, final BillingPeriod term, final String planSet, final DateTime requestedDate)
+    public SubscriptionData createSubscription(final SubscriptionBundle bundle, final String productName, final BillingPeriod term, final String planSet, final DateTime requestedDate)
             throws EntitlementUserApiException {
         return createSubscriptionWithBundle(bundle.getId(), productName, term, planSet, requestedDate);
     }
 
-    protected SubscriptionData createSubscription(final String productName, final BillingPeriod term, final String planSet)
+    public SubscriptionData createSubscription(final SubscriptionBundle bundle, final String productName, final BillingPeriod term, final String planSet)
             throws EntitlementUserApiException {
         return createSubscriptionWithBundle(bundle.getId(), productName, term, planSet, null);
     }
 
-    protected SubscriptionData createSubscriptionWithBundle(final UUID bundleId, final String productName, final BillingPeriod term, final String planSet, final DateTime requestedDate)
+    public SubscriptionData createSubscriptionWithBundle(final UUID bundleId, final String productName, final BillingPeriod term, final String planSet, final DateTime requestedDate)
             throws EntitlementUserApiException {
         testListener.pushExpectedEvent(NextEvent.CREATE);
         final SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundleId,
                                                                                                    new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSet, null),
-                                                                                                   requestedDate == null ? clock.getUTCNow() : requestedDate, callContext);
+                                                                                                   requestedDate == null ? clock.getUTCNow() : requestedDate, callContext.toCallContext());
         assertNotNull(subscription);
-
-
-        //try {Thread.sleep(100000000); } catch (Exception e) {};
 
         assertTrue(testListener.isCompleted(5000));
         return subscription;
     }
 
-    protected void checkNextPhaseChange(final SubscriptionData subscription, final int expPendingEvents, final DateTime expPhaseChange) {
-        final List<EntitlementEvent> events = dao.getPendingEventsForSubscription(subscription.getId(), internalCallContext);
+    public void checkNextPhaseChange(final SubscriptionData subscription, final int expPendingEvents, final DateTime expPhaseChange) {
+        final List<EntitlementEvent> events = dao.getPendingEventsForSubscription(subscription.getId(), callContext);
         assertNotNull(events);
         printEvents(events);
         assertEquals(events.size(), expPendingEvents);
@@ -309,12 +142,12 @@ public abstract class TestApiBase extends EntitlementTestSuiteWithEmbeddedDB imp
         }
     }
 
-    protected void assertDateWithin(final DateTime in, final DateTime lower, final DateTime upper) {
+    public void assertDateWithin(final DateTime in, final DateTime lower, final DateTime upper) {
         assertTrue(in.isEqual(lower) || in.isAfter(lower));
         assertTrue(in.isEqual(upper) || in.isBefore(upper));
     }
 
-    protected Duration getDurationDay(final int days) {
+    public Duration getDurationDay(final int days) {
         final Duration result = new Duration() {
             @Override
             public TimeUnit getUnit() {
@@ -339,7 +172,7 @@ public abstract class TestApiBase extends EntitlementTestSuiteWithEmbeddedDB imp
         return result;
     }
 
-    protected Duration getDurationMonth(final int months) {
+    public Duration getDurationMonth(final int months) {
         final Duration result = new Duration() {
             @Override
             public TimeUnit getUnit() {
@@ -364,7 +197,7 @@ public abstract class TestApiBase extends EntitlementTestSuiteWithEmbeddedDB imp
         return result;
     }
 
-    protected Duration getDurationYear(final int years) {
+    public Duration getDurationYear(final int years) {
         final Duration result = new Duration() {
             @Override
             public TimeUnit getUnit() {
@@ -389,19 +222,19 @@ public abstract class TestApiBase extends EntitlementTestSuiteWithEmbeddedDB imp
         return result;
     }
 
-    protected PlanPhaseSpecifier getProductSpecifier(final String productName, final String priceList,
-                                                     final BillingPeriod term,
-                                                     @Nullable final PhaseType phaseType) {
+    public PlanPhaseSpecifier getProductSpecifier(final String productName, final String priceList,
+                                                  final BillingPeriod term,
+                                                  @Nullable final PhaseType phaseType) {
         return new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, priceList, phaseType);
     }
 
-    protected void printEvents(final List<EntitlementEvent> events) {
+    public void printEvents(final List<EntitlementEvent> events) {
         for (final EntitlementEvent cur : events) {
             log.debug("Inspect event " + cur);
         }
     }
 
-    protected void printSubscriptionTransitions(final List<EffectiveSubscriptionInternalEvent> transitions) {
+    public void printSubscriptionTransitions(final List<EffectiveSubscriptionInternalEvent> transitions) {
         for (final EffectiveSubscriptionInternalEvent cur : transitions) {
             log.debug("Transition " + cur);
         }
@@ -413,7 +246,7 @@ public abstract class TestApiBase extends EntitlementTestSuiteWithEmbeddedDB imp
      * *************************************************************
      */
 
-    protected EntitlementAccountMigration createAccountForMigrationTest(final List<List<EntitlementSubscriptionMigrationCaseWithCTD>> cases) {
+    public EntitlementAccountMigration createAccountForMigrationTest(final List<List<EntitlementSubscriptionMigrationCaseWithCTD>> cases) {
         return new EntitlementAccountMigration() {
             private final UUID accountId = UUID.randomUUID();
 
@@ -469,7 +302,7 @@ public abstract class TestApiBase extends EntitlementTestSuiteWithEmbeddedDB imp
         };
     }
 
-    protected EntitlementAccountMigration createAccountForMigrationWithRegularBasePlanAndAddons(final DateTime initialBPstart, final DateTime initalAddonStart) {
+    public EntitlementAccountMigration createAccountForMigrationWithRegularBasePlanAndAddons(final DateTime initialBPstart, final DateTime initalAddonStart) {
 
         final List<EntitlementSubscriptionMigrationCaseWithCTD> cases = new LinkedList<EntitlementSubscriptionMigrationCaseWithCTD>();
         cases.add(new EntitlementSubscriptionMigrationCaseWithCTD(
@@ -496,7 +329,7 @@ public abstract class TestApiBase extends EntitlementTestSuiteWithEmbeddedDB imp
         return createAccountForMigrationTest(input);
     }
 
-    protected EntitlementAccountMigration createAccountForMigrationWithRegularBasePlan(final DateTime startDate) {
+    public EntitlementAccountMigration createAccountForMigrationWithRegularBasePlan(final DateTime startDate) {
         final List<EntitlementSubscriptionMigrationCaseWithCTD> cases = new LinkedList<EntitlementSubscriptionMigrationCaseWithCTD>();
         cases.add(new EntitlementSubscriptionMigrationCaseWithCTD(
                 new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN),
@@ -508,7 +341,7 @@ public abstract class TestApiBase extends EntitlementTestSuiteWithEmbeddedDB imp
         return createAccountForMigrationTest(input);
     }
 
-    protected EntitlementAccountMigration createAccountForMigrationWithRegularBasePlanFutreCancelled(final DateTime startDate) {
+    public EntitlementAccountMigration createAccountForMigrationWithRegularBasePlanFutreCancelled(final DateTime startDate) {
         final List<EntitlementSubscriptionMigrationCaseWithCTD> cases = new LinkedList<EntitlementSubscriptionMigrationCaseWithCTD>();
         cases.add(new EntitlementSubscriptionMigrationCaseWithCTD(
                 new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN),
@@ -520,7 +353,7 @@ public abstract class TestApiBase extends EntitlementTestSuiteWithEmbeddedDB imp
         return createAccountForMigrationTest(input);
     }
 
-    protected EntitlementAccountMigration createAccountForMigrationFuturePendingPhase(final DateTime trialDate) {
+    public EntitlementAccountMigration createAccountForMigrationFuturePendingPhase(final DateTime trialDate) {
         final List<EntitlementSubscriptionMigrationCaseWithCTD> cases = new LinkedList<EntitlementSubscriptionMigrationCaseWithCTD>();
         cases.add(new EntitlementSubscriptionMigrationCaseWithCTD(
                 new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.TRIAL),
@@ -537,7 +370,7 @@ public abstract class TestApiBase extends EntitlementTestSuiteWithEmbeddedDB imp
         return createAccountForMigrationTest(input);
     }
 
-    protected EntitlementAccountMigration createAccountForMigrationFuturePendingChange() {
+    public EntitlementAccountMigration createAccountForMigrationFuturePendingChange() {
         final List<EntitlementSubscriptionMigrationCaseWithCTD> cases = new LinkedList<EntitlementSubscriptionMigrationCaseWithCTD>();
         final DateTime effectiveDate = clock.getUTCNow().minusDays(10);
         cases.add(new EntitlementSubscriptionMigrationCaseWithCTD(
@@ -554,6 +387,206 @@ public abstract class TestApiBase extends EntitlementTestSuiteWithEmbeddedDB imp
         input.add(cases);
         return createAccountForMigrationTest(input);
     }
+
+
+    public SubscriptionTimeline createSubscriptionRepair(final UUID id, final List<DeletedEvent> deletedEvents, final List<NewEvent> newEvents) {
+        return new SubscriptionTimeline() {
+            @Override
+            public UUID getId() {
+                return id;
+            }
+
+            @Override
+            public DateTime getCreatedDate() {
+                return null;
+            }
+
+            @Override
+            public DateTime getUpdatedDate() {
+                return null;
+            }
+
+            @Override
+            public List<NewEvent> getNewEvents() {
+                return newEvents;
+            }
+
+            @Override
+            public List<ExistingEvent> getExistingEvents() {
+                return null;
+            }
+
+            @Override
+            public List<DeletedEvent> getDeletedEvents() {
+                return deletedEvents;
+            }
+
+            @Override
+            public long getActiveVersion() {
+                return 1;
+            }
+        };
+    }
+
+    public BundleTimeline createBundleRepair(final UUID bundleId, final String viewId, final List<SubscriptionTimeline> subscriptionRepair) {
+        return new BundleTimeline() {
+            @Override
+            public String getViewId() {
+                return viewId;
+            }
+
+            @Override
+            public List<SubscriptionTimeline> getSubscriptions() {
+                return subscriptionRepair;
+            }
+
+            @Override
+            public UUID getId() {
+                return bundleId;
+            }
+
+            @Override
+            public DateTime getCreatedDate() {
+                return null;
+            }
+
+            @Override
+            public DateTime getUpdatedDate() {
+                return null;
+            }
+
+            @Override
+            public String getExternalKey() {
+                return null;
+            }
+        };
+    }
+
+    public ExistingEvent createExistingEventForAssertion(final SubscriptionTransitionType type,
+                                                            final String productName, final PhaseType phaseType, final ProductCategory category, final String priceListName, final BillingPeriod billingPeriod,
+                                                            final DateTime effectiveDateTime) {
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, category, billingPeriod, priceListName, phaseType);
+        return new ExistingEvent() {
+            @Override
+            public SubscriptionTransitionType getSubscriptionTransitionType() {
+                return type;
+            }
+
+            @Override
+            public DateTime getRequestedDate() {
+                return null;
+            }
+
+            @Override
+            public PlanPhaseSpecifier getPlanPhaseSpecifier() {
+                return spec;
+            }
+
+            @Override
+            public UUID getEventId() {
+                return null;
+            }
+
+            @Override
+            public DateTime getEffectiveDate() {
+                return effectiveDateTime;
+            }
+
+            @Override
+            public String getPlanPhaseName() {
+                return null;
+            }
+        };
+    }
+
+    public SubscriptionTimeline getSubscriptionRepair(final UUID id, final BundleTimeline bundleRepair) {
+        for (final SubscriptionTimeline cur : bundleRepair.getSubscriptions()) {
+            if (cur.getId().equals(id)) {
+                return cur;
+            }
+        }
+        Assert.fail("Failed to find SubscriptionRepair " + id);
+        return null;
+    }
+
+    public void validateExistingEventForAssertion(final ExistingEvent expected, final ExistingEvent input) {
+        log.info(String.format("Got %s -> Expected %s", input.getPlanPhaseSpecifier().getProductName(), expected.getPlanPhaseSpecifier().getProductName()));
+        assertEquals(input.getPlanPhaseSpecifier().getProductName(), expected.getPlanPhaseSpecifier().getProductName());
+        log.info(String.format("Got %s -> Expected %s", input.getPlanPhaseSpecifier().getPhaseType(), expected.getPlanPhaseSpecifier().getPhaseType()));
+        assertEquals(input.getPlanPhaseSpecifier().getPhaseType(), expected.getPlanPhaseSpecifier().getPhaseType());
+        log.info(String.format("Got %s -> Expected %s", input.getPlanPhaseSpecifier().getProductCategory(), expected.getPlanPhaseSpecifier().getProductCategory()));
+        assertEquals(input.getPlanPhaseSpecifier().getProductCategory(), expected.getPlanPhaseSpecifier().getProductCategory());
+        log.info(String.format("Got %s -> Expected %s", input.getPlanPhaseSpecifier().getPriceListName(), expected.getPlanPhaseSpecifier().getPriceListName()));
+        assertEquals(input.getPlanPhaseSpecifier().getPriceListName(), expected.getPlanPhaseSpecifier().getPriceListName());
+        log.info(String.format("Got %s -> Expected %s", input.getPlanPhaseSpecifier().getBillingPeriod(), expected.getPlanPhaseSpecifier().getBillingPeriod()));
+        assertEquals(input.getPlanPhaseSpecifier().getBillingPeriod(), expected.getPlanPhaseSpecifier().getBillingPeriod());
+        log.info(String.format("Got %s -> Expected %s", input.getEffectiveDate(), expected.getEffectiveDate()));
+        assertEquals(input.getEffectiveDate(), expected.getEffectiveDate());
+    }
+
+    public DeletedEvent createDeletedEvent(final UUID eventId) {
+        return new DeletedEvent() {
+            @Override
+            public UUID getEventId() {
+                return eventId;
+            }
+        };
+    }
+
+    public NewEvent createNewEvent(final SubscriptionTransitionType type, final DateTime requestedDate, final PlanPhaseSpecifier spec) {
+        return new NewEvent() {
+            @Override
+            public SubscriptionTransitionType getSubscriptionTransitionType() {
+                return type;
+            }
+
+            @Override
+            public DateTime getRequestedDate() {
+                return requestedDate;
+            }
+
+            @Override
+            public PlanPhaseSpecifier getPlanPhaseSpecifier() {
+                return spec;
+            }
+        };
+    }
+
+    public void sortEventsOnBundle(final BundleTimeline bundle) {
+        if (bundle.getSubscriptions() == null) {
+            return;
+        }
+        for (final SubscriptionTimeline cur : bundle.getSubscriptions()) {
+            if (cur.getExistingEvents() != null) {
+                sortExistingEvent(cur.getExistingEvents());
+            }
+            if (cur.getNewEvents() != null) {
+                sortNewEvent(cur.getNewEvents());
+            }
+        }
+    }
+
+    public void sortExistingEvent(final List<ExistingEvent> events) {
+        Collections.sort(events, new Comparator<ExistingEvent>() {
+            @Override
+            public int compare(final ExistingEvent arg0, final ExistingEvent arg1) {
+                return arg0.getEffectiveDate().compareTo(arg1.getEffectiveDate());
+            }
+        });
+    }
+
+    public void sortNewEvent(final List<NewEvent> events) {
+        Collections.sort(events, new Comparator<NewEvent>() {
+            @Override
+            public int compare(final NewEvent arg0, final NewEvent arg1) {
+                return arg0.getRequestedDate().compareTo(arg1.getRequestedDate());
+            }
+        });
+    }
+
+
+
+
 
     public static class EntitlementSubscriptionMigrationCaseWithCTD implements EntitlementSubscriptionMigrationCase {
 
@@ -586,6 +619,24 @@ public abstract class TestApiBase extends EntitlementTestSuiteWithEmbeddedDB imp
 
         public DateTime getChargedThroughDate() {
             return ctd;
+        }
+    }
+
+
+    public interface TestWithExceptionCallback {
+
+        public void doTest() throws EntitlementRepairException, EntitlementUserApiException;
+    }
+
+    public static class TestWithException {
+
+        public void withException(final TestWithExceptionCallback callback, final ErrorCode code) throws Exception {
+            try {
+                callback.doTest();
+                Assert.fail("Failed to catch exception " + code);
+            } catch (EntitlementRepairException e) {
+                assertEquals(e.getCode(), code.getCode());
+            }
         }
     }
 }

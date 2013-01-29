@@ -19,20 +19,41 @@ package com.ning.billing.entitlement.glue;
 import org.mockito.Mockito;
 
 import com.ning.billing.account.api.AccountUserApi;
+import com.ning.billing.api.TestApiListener;
+import com.ning.billing.api.TestListenerStatus;
 import com.ning.billing.catalog.glue.CatalogModule;
+import com.ning.billing.entitlement.DefaultEntitlementTestInitializer;
+import com.ning.billing.entitlement.EntitlementTestInitializer;
+import com.ning.billing.entitlement.EntitlementTestListenerStatus;
+import com.ning.billing.entitlement.api.user.DefaultEntitlementUserApi;
+import com.ning.billing.entitlement.api.user.EntitlementUserApi;
+import com.ning.billing.entitlement.api.user.TestUtil;
 import com.ning.billing.mock.glue.MockClockModule;
 import com.ning.billing.util.glue.CacheModule;
 import com.ning.billing.util.glue.CallContextModule;
 import com.ning.billing.util.glue.NonEntityDaoModule;
+import com.ning.billing.util.glue.RealImplementation;
 
 public class MockEngineModule extends DefaultEntitlementModule {
+
+
+    @Override
+    public void installEntitlementUserApi() {
+        bind(EntitlementUserApi.class).to(DefaultEntitlementUserApi.class).asEagerSingleton();
+    }
+
     @Override
     protected void configure() {
         super.configure();
         install(new CatalogModule());
-        bind(AccountUserApi.class).toInstance(Mockito.mock(AccountUserApi.class));
-        install(new MockClockModule());
         install(new CallContextModule());
         install(new CacheModule());
+
+        bind(AccountUserApi.class).toInstance(Mockito.mock(AccountUserApi.class));
+
+        bind(TestUtil.class).asEagerSingleton();
+        bind(TestListenerStatus.class).to(EntitlementTestListenerStatus.class).asEagerSingleton();
+        bind(TestApiListener.class).asEagerSingleton();
+        bind(EntitlementTestInitializer.class).to(DefaultEntitlementTestInitializer.class).asEagerSingleton();
     }
 }

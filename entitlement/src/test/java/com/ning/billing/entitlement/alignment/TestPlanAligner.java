@@ -33,6 +33,7 @@ import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.io.VersionedCatalogLoader;
+import com.ning.billing.entitlement.EntitlementTestSuiteNoDB;
 import com.ning.billing.entitlement.api.user.SubscriptionBuilder;
 import com.ning.billing.util.config.CatalogConfig;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
@@ -48,7 +49,7 @@ import com.ning.billing.util.clock.DefaultClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-public class TestPlanAligner extends KillbillTestSuite {
+public class TestPlanAligner extends EntitlementTestSuiteNoDB {
     private static final String priceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
     private final DefaultClock clock = new DefaultClock();

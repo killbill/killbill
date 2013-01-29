@@ -27,6 +27,7 @@ import java.util.List;
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
 import org.testng.Assert;
+import org.testng.annotations.Test;
 
 import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -36,13 +37,14 @@ import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.entitlement.api.TestApiBase;
+import com.ning.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.user.ApiEvent;
 import com.ning.billing.util.clock.DefaultClock;
 import com.ning.billing.util.svcapi.entitlement.EntitlementBillingApiException;
 
-public abstract class TestUserApiChangePlan extends TestApiBase {
+public class TestUserApiChangePlan extends EntitlementTestSuiteWithEmbeddedDB {
+
     private void checkChangePlan(final SubscriptionData subscription, final String expProduct, final ProductCategory expCategory,
                                  final BillingPeriod expBillingPeriod, final PhaseType expPhase) {
 
@@ -57,7 +59,8 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
         assertEquals(currentPhase.getPhaseType(), expPhase);
     }
 
-    protected void testChangePlanBundleAlignEOTWithNoChargeThroughDate() {
+    @Test(groups = "slow")
+    public void testChangePlanBundleAlignEOTWithNoChargeThroughDate() {
         tChangePlanBundleAlignEOTWithNoChargeThroughDate("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, "Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
     }
 
@@ -65,7 +68,7 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
                                                                   final String toProd, final BillingPeriod toTerm, final String toPlanSet) {
         try {
             // CREATE
-            final SubscriptionData subscription = createSubscription(fromProd, fromTerm, fromPlanSet);
+            final SubscriptionData subscription = testUtil.createSubscription(bundle, fromProd, fromTerm, fromPlanSet);
 
             // MOVE TO NEXT PHASE
             PlanPhase currentPhase = subscription.getCurrentPhase();
@@ -94,7 +97,8 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
         }
     }
 
-    protected void testChangePlanBundleAlignEOTWithChargeThroughDate() throws EntitlementBillingApiException {
+    @Test(groups = "slow")
+    public void testChangePlanBundleAlignEOTWithChargeThroughDate() throws EntitlementBillingApiException {
         testChangePlanBundleAlignEOTWithChargeThroughDate("Shotgun", BillingPeriod.ANNUAL, "gunclubDiscount", "Pistol", BillingPeriod.ANNUAL, "gunclubDiscount");
     }
 
@@ -102,7 +106,7 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
                                                                    final String toProd, final BillingPeriod toTerm, final String toPlanSet) throws EntitlementBillingApiException {
         try {
             // CREATE
-            SubscriptionData subscription = createSubscription(fromProd, fromTerm, fromPlanSet);
+            SubscriptionData subscription = testUtil.createSubscription(bundle, fromProd, fromTerm, fromPlanSet);
             final PlanPhase trialPhase = subscription.getCurrentPhase();
             final DateTime expectedPhaseTrialChange = DefaultClock.addDuration(subscription.getStartDate(), trialPhase.getDuration());
             assertEquals(trialPhase.getPhaseType(), PhaseType.TRIAL);
@@ -116,7 +120,7 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
             assertEquals(currentPhase.getPhaseType(), PhaseType.DISCOUNT);
 
             // SET CTD
-            final Duration ctd = getDurationMonth(1);
+            final Duration ctd = testUtil.getDurationMonth(1);
             final DateTime newChargedThroughDate = DefaultClock.addDuration(expectedPhaseTrialChange, ctd);
             entitlementInternalApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate.toLocalDate(), internalCallContext);
 
@@ -134,7 +138,7 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
 
             // NEXT PHASE
             final DateTime nextExpectedPhaseChange = DefaultClock.addDuration(expectedPhaseTrialChange, currentPhase.getDuration());
-            checkNextPhaseChange(subscription, 2, nextExpectedPhaseChange);
+            testUtil.checkNextPhaseChange(subscription, 2, nextExpectedPhaseChange);
 
             // ALSO VERIFY PENDING CHANGE EVENT
             final List<EntitlementEvent> events = dao.getPendingEventsForSubscription(subscription.getId(), internalCallContext);
@@ -156,7 +160,8 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
         }
     }
 
-    protected void testChangePlanBundleAlignIMM() {
+    @Test(groups = "slow")
+    public void testChangePlanBundleAlignIMM() {
         tChangePlanBundleAlignIMM("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, "Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
     }
 
@@ -164,7 +169,7 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
                                            final String toProd, final BillingPeriod toTerm, final String toPlanSet) {
 
         try {
-            final SubscriptionData subscription = createSubscription(fromProd, fromTerm, fromPlanSet);
+            final SubscriptionData subscription = testUtil.createSubscription(bundle, fromProd, fromTerm, fromPlanSet);
 
             testListener.pushExpectedEvent(NextEvent.CHANGE);
 
@@ -179,7 +184,7 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
 
             final PlanPhase currentPhase = subscription.getCurrentPhase();
             final DateTime nextExpectedPhaseChange = DefaultClock.addDuration(subscription.getStartDate(), currentPhase.getDuration());
-            checkNextPhaseChange(subscription, 1, nextExpectedPhaseChange);
+            testUtil.checkNextPhaseChange(subscription, 1, nextExpectedPhaseChange);
 
             // NEXT PHASE
             testListener.pushExpectedEvent(NextEvent.PHASE);
@@ -196,7 +201,8 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
         }
     }
 
-    protected void testChangePlanChangePlanAlignEOTWithChargeThroughDate() throws EntitlementBillingApiException {
+    @Test(groups = "slow")
+    public void testChangePlanChangePlanAlignEOTWithChargeThroughDate() throws EntitlementBillingApiException {
         tChangePlanChangePlanAlignEOTWithChargeThroughDate("Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, "Assault-Rifle", BillingPeriod.ANNUAL, "rescue");
     }
 
@@ -205,7 +211,7 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
         try {
             DateTime currentTime = clock.getUTCNow();
 
-            SubscriptionData subscription = createSubscription(fromProd, fromTerm, fromPlanSet);
+            SubscriptionData subscription = testUtil.createSubscription(bundle, fromProd, fromTerm, fromPlanSet);
             final PlanPhase trialPhase = subscription.getCurrentPhase();
             final DateTime expectedPhaseTrialChange = DefaultClock.addDuration(subscription.getStartDate(), trialPhase.getDuration());
             assertEquals(trialPhase.getPhaseType(), PhaseType.TRIAL);
@@ -219,7 +225,7 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
             assertTrue(testListener.isCompleted(5000));
 
             // SET CTD
-            final Duration ctd = getDurationMonth(1);
+            final Duration ctd = testUtil.getDurationMonth(1);
             final DateTime newChargedThroughDate = DefaultClock.addDuration(expectedPhaseTrialChange, ctd);
             entitlementInternalApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate.toLocalDate(), internalCallContext);
 
@@ -266,7 +272,7 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
             testListener.reset();
 
             final DateTime nextExpectedPhaseChange = DefaultClock.addDuration(newChargedThroughDate, currentPhase.getDuration());
-            checkNextPhaseChange(subscription, 1, nextExpectedPhaseChange);
+            testUtil.checkNextPhaseChange(subscription, 1, nextExpectedPhaseChange);
 
             // MOVE TIME RIGHT AFTER NEXT EXPECTED PHASE CHANGE
             testListener.pushExpectedEvent(NextEvent.PHASE);
@@ -282,9 +288,10 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
         }
     }
 
-    protected void testMultipleChangeLastIMM() throws EntitlementBillingApiException {
+    @Test(groups = "slow")
+    public void testMultipleChangeLastIMM() throws EntitlementBillingApiException {
         try {
-            SubscriptionData subscription = createSubscription("Assault-Rifle", BillingPeriod.MONTHLY, "gunclubDiscount");
+            SubscriptionData subscription = testUtil.createSubscription(bundle, "Assault-Rifle", BillingPeriod.MONTHLY, "gunclubDiscount");
             final PlanPhase trialPhase = subscription.getCurrentPhase();
             assertEquals(trialPhase.getPhaseType(), PhaseType.TRIAL);
 
@@ -300,7 +307,7 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
             durationList.add(trialPhase.getDuration());
             //durationList.add(subscription.getCurrentPhase().getDuration());
             final DateTime startDiscountPhase = DefaultClock.addDuration(subscription.getStartDate(), durationList);
-            final Duration ctd = getDurationMonth(1);
+            final Duration ctd = testUtil.getDurationMonth(1);
             final DateTime newChargedThroughDate = DefaultClock.addDuration(startDiscountPhase, ctd);
             entitlementInternalApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate.toLocalDate(), internalCallContext);
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId(), callContext);
@@ -333,9 +340,10 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
         }
     }
 
-    protected void testMultipleChangeLastEOT() throws EntitlementBillingApiException {
+    @Test(groups = "slow")
+    public void testMultipleChangeLastEOT() throws EntitlementBillingApiException {
         try {
-            SubscriptionData subscription = createSubscription("Assault-Rifle", BillingPeriod.ANNUAL, "gunclubDiscount");
+            SubscriptionData subscription = testUtil.createSubscription(bundle, "Assault-Rifle", BillingPeriod.ANNUAL, "gunclubDiscount");
             final PlanPhase trialPhase = subscription.getCurrentPhase();
             assertEquals(trialPhase.getPhaseType(), PhaseType.TRIAL);
 
@@ -348,7 +356,7 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
             final List<Duration> durationList = new ArrayList<Duration>();
             durationList.add(trialPhase.getDuration());
             final DateTime startDiscountPhase = DefaultClock.addDuration(subscription.getStartDate(), durationList);
-            final Duration ctd = getDurationMonth(1);
+            final Duration ctd = testUtil.getDurationMonth(1);
             final DateTime newChargedThroughDate = DefaultClock.addDuration(startDiscountPhase, ctd);
             entitlementInternalApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate.toLocalDate(), internalCallContext);
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId(), callContext);
@@ -418,9 +426,10 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
         }
     }
 
-    protected void testCorrectPhaseAlignmentOnChange() {
+    @Test(groups = "slow")
+    public void testCorrectPhaseAlignmentOnChange() {
         try {
-            SubscriptionData subscription = createSubscription("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
+            SubscriptionData subscription = testUtil.createSubscription(bundle, "Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
             PlanPhase trialPhase = subscription.getCurrentPhase();
             assertEquals(trialPhase.getPhaseType(), PhaseType.TRIAL);
 

@@ -39,6 +39,7 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline.DeletedEvent;
 import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline.ExistingEvent;
@@ -48,18 +49,15 @@ import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.api.user.SubscriptionEvents;
+import com.ning.billing.entitlement.api.user.TestUtil.TestWithException;
+import com.ning.billing.entitlement.api.user.TestUtil.TestWithExceptionCallback;
 import com.ning.billing.entitlement.glue.MockEngineModuleSql;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 
-public class TestRepairBP extends TestApiBaseRepair {
-
-    @Override
-    public Injector getInjector() {
-        return Guice.createInjector(Stage.DEVELOPMENT, new MockEngineModuleSql());
-    }
+public class TestRepairBP extends EntitlementTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testFetchBundleRepair() throws Exception {
@@ -68,13 +66,13 @@ public class TestRepairBP extends TestApiBaseRepair {
         final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
         // CREATE BP
-        final Subscription baseSubscription = createSubscription(baseProduct, baseTerm, basePriceList);
+        final Subscription baseSubscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList);
 
         final String aoProduct = "Telescopic-Scope";
         final BillingPeriod aoTerm = BillingPeriod.MONTHLY;
         final String aoPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-        final SubscriptionData aoSubscription = createSubscription(aoProduct, aoTerm, aoPriceList);
+        final SubscriptionData aoSubscription = testUtil.createSubscription(bundle, aoProduct, aoTerm, aoPriceList);
 
         final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId(), callContext);
         final List<SubscriptionTimeline> subscriptionRepair = bundleRepair.getSubscriptions();
@@ -86,7 +84,7 @@ public class TestRepairBP extends TestApiBaseRepair {
 
             final List<ExistingEvent> events = cur.getExistingEvents();
             assertEquals(events.size(), 2);
-            sortExistingEvent(events);
+            testUtil.sortExistingEvent(events);
 
             assertEquals(events.get(0).getSubscriptionTransitionType(), SubscriptionTransitionType.CREATE);
             assertEquals(events.get(1).getSubscriptionTransitionType(), SubscriptionTransitionType.PHASE);
@@ -130,27 +128,27 @@ public class TestRepairBP extends TestApiBaseRepair {
         final DateTime startDate = clock.getUTCNow();
 
         // CREATE BP
-        final Subscription baseSubscription = createSubscription(baseProduct, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, startDate);
+        final Subscription baseSubscription = testUtil.createSubscription(bundle, baseProduct, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, startDate);
 
         // Stays in trial-- for instance
         final Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(10));
         clock.addDeltaFromReality(it.toDurationMillis());
 
         final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId(), callContext);
-        sortEventsOnBundle(bundleRepair);
+        testUtil.sortEventsOnBundle(bundleRepair);
 
         final List<DeletedEvent> des = new LinkedList<SubscriptionTimeline.DeletedEvent>();
-        des.add(createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(1).getEventId()));
-        final NewEvent ne = createNewEvent(SubscriptionTransitionType.CANCEL, baseSubscription.getStartDate(), null);
+        des.add(testUtil.createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(1).getEventId()));
+        final NewEvent ne = testUtil.createNewEvent(SubscriptionTransitionType.CANCEL, baseSubscription.getStartDate(), null);
 
-        final SubscriptionTimeline sRepair = createSubscriptionRepair(baseSubscription.getId(), des, Collections.singletonList(ne));
+        final SubscriptionTimeline sRepair = testUtil.createSubscriptionRepair(baseSubscription.getId(), des, Collections.singletonList(ne));
 
         // FIRST ISSUE DRY RUN
-        final BundleTimeline bRepair = createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
+        final BundleTimeline bRepair = testUtil.createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
 
         boolean dryRun = true;
         final BundleTimeline dryRunBundleRepair = repairApi.repairBundle(bRepair, dryRun, callContext);
-        sortEventsOnBundle(dryRunBundleRepair);
+        testUtil.sortEventsOnBundle(dryRunBundleRepair);
         List<SubscriptionTimeline> subscriptionRepair = dryRunBundleRepair.getSubscriptions();
         assertEquals(subscriptionRepair.size(), 1);
         SubscriptionTimeline cur = subscriptionRepair.get(0);
@@ -158,13 +156,13 @@ public class TestRepairBP extends TestApiBaseRepair {
         final List<ExistingEvent> events = subscriptionRepair.get(0).getExistingEvents();
         assertEquals(events.size(), 2);
         final List<ExistingEvent> expected = new LinkedList<SubscriptionTimeline.ExistingEvent>();
-        expected.add(createExistingEventForAssertion(SubscriptionTransitionType.CREATE, baseProduct, PhaseType.TRIAL,
-                                                     ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.NO_BILLING_PERIOD, baseSubscription.getStartDate()));
-        expected.add(createExistingEventForAssertion(SubscriptionTransitionType.CANCEL, baseProduct, PhaseType.TRIAL,
-                                                     ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.NO_BILLING_PERIOD, baseSubscription.getStartDate()));
+        expected.add(testUtil.createExistingEventForAssertion(SubscriptionTransitionType.CREATE, baseProduct, PhaseType.TRIAL,
+                                                              ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.NO_BILLING_PERIOD, baseSubscription.getStartDate()));
+        expected.add(testUtil.createExistingEventForAssertion(SubscriptionTransitionType.CANCEL, baseProduct, PhaseType.TRIAL,
+                                                              ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.NO_BILLING_PERIOD, baseSubscription.getStartDate()));
 
         for (final ExistingEvent e : expected) {
-            validateExistingEventForAssertion(e, events.get(index++));
+            testUtil.validateExistingEventForAssertion(e, events.get(index++));
         }
 
         final SubscriptionData dryRunBaseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
@@ -195,7 +193,7 @@ public class TestRepairBP extends TestApiBaseRepair {
         assertEquals(cur.getId(), baseSubscription.getId());
         index = 0;
         for (final ExistingEvent e : expected) {
-            validateExistingEventForAssertion(e, events.get(index++));
+            testUtil.validateExistingEventForAssertion(e, events.get(index++));
         }
         final SubscriptionData realRunBaseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
         assertEquals(realRunBaseSubscription.getAllTransitions().size(), 2);
@@ -219,10 +217,10 @@ public class TestRepairBP extends TestApiBaseRepair {
         final DateTime restartDate = startDate.plusDays(clockShift).minusDays(1);
         final LinkedList<ExistingEvent> expected = new LinkedList<SubscriptionTimeline.ExistingEvent>();
 
-        expected.add(createExistingEventForAssertion(SubscriptionTransitionType.CREATE, newBaseProduct, PhaseType.TRIAL,
-                                                     ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.NO_BILLING_PERIOD, restartDate));
-        expected.add(createExistingEventForAssertion(SubscriptionTransitionType.PHASE, newBaseProduct, PhaseType.EVERGREEN,
-                                                     ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, restartDate.plusDays(30)));
+        expected.add(testUtil.createExistingEventForAssertion(SubscriptionTransitionType.CREATE, newBaseProduct, PhaseType.TRIAL,
+                                                              ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.NO_BILLING_PERIOD, restartDate));
+        expected.add(testUtil.createExistingEventForAssertion(SubscriptionTransitionType.PHASE, newBaseProduct, PhaseType.EVERGREEN,
+                                                              ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, restartDate.plusDays(30)));
 
         testBPRepairCreate(true, startDate, clockShift, baseProduct, newBaseProduct, expected);
         assertListenerStatus();
@@ -238,10 +236,10 @@ public class TestRepairBP extends TestApiBaseRepair {
         final DateTime restartDate = startDate.plusDays(clockShift).minusDays(1);
         final LinkedList<ExistingEvent> expected = new LinkedList<SubscriptionTimeline.ExistingEvent>();
 
-        expected.add(createExistingEventForAssertion(SubscriptionTransitionType.CREATE, newBaseProduct, PhaseType.TRIAL,
-                                                     ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.NO_BILLING_PERIOD, restartDate));
-        expected.add(createExistingEventForAssertion(SubscriptionTransitionType.PHASE, newBaseProduct, PhaseType.EVERGREEN,
-                                                     ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, restartDate.plusDays(30)));
+        expected.add(testUtil.createExistingEventForAssertion(SubscriptionTransitionType.CREATE, newBaseProduct, PhaseType.TRIAL,
+                                                              ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.NO_BILLING_PERIOD, restartDate));
+        expected.add(testUtil.createExistingEventForAssertion(SubscriptionTransitionType.PHASE, newBaseProduct, PhaseType.EVERGREEN,
+                                                              ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, restartDate.plusDays(30)));
 
         final UUID baseSubscriptionId = testBPRepairCreate(true, startDate, clockShift, baseProduct, newBaseProduct, expected);
 
@@ -281,10 +279,10 @@ public class TestRepairBP extends TestApiBaseRepair {
         final DateTime restartDate = startDate.plusDays(clockShift).minusDays(1);
         final LinkedList<ExistingEvent> expected = new LinkedList<SubscriptionTimeline.ExistingEvent>();
 
-        expected.add(createExistingEventForAssertion(SubscriptionTransitionType.CREATE, newBaseProduct, PhaseType.TRIAL,
-                                                     ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.NO_BILLING_PERIOD, restartDate));
-        expected.add(createExistingEventForAssertion(SubscriptionTransitionType.PHASE, newBaseProduct, PhaseType.EVERGREEN,
-                                                     ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, restartDate.plusDays(30)));
+        expected.add(testUtil.createExistingEventForAssertion(SubscriptionTransitionType.CREATE, newBaseProduct, PhaseType.TRIAL,
+                                                              ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.NO_BILLING_PERIOD, restartDate));
+        expected.add(testUtil.createExistingEventForAssertion(SubscriptionTransitionType.PHASE, newBaseProduct, PhaseType.EVERGREEN,
+                                                              ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, restartDate.plusDays(30)));
 
         testBPRepairCreate(false, startDate, clockShift, baseProduct, newBaseProduct, expected);
         assertListenerStatus();
@@ -293,7 +291,7 @@ public class TestRepairBP extends TestApiBaseRepair {
     private UUID testBPRepairCreate(final boolean inTrial, final DateTime startDate, final int clockShift,
                                     final String baseProduct, final String newBaseProduct, final List<ExistingEvent> expectedEvents) throws Exception {
         // CREATE BP
-        final Subscription baseSubscription = createSubscription(baseProduct, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, startDate);
+        final Subscription baseSubscription = testUtil.createSubscription(bundle, baseProduct, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, startDate);
 
         // MOVE CLOCK
         if (clockShift > 0) {
@@ -309,21 +307,21 @@ public class TestRepairBP extends TestApiBaseRepair {
         }
 
         final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId(), callContext);
-        sortEventsOnBundle(bundleRepair);
+        testUtil.sortEventsOnBundle(bundleRepair);
 
         final DateTime newCreateTime = baseSubscription.getStartDate().plusDays(clockShift - 1);
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(newBaseProduct, ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.TRIAL);
 
-        final NewEvent ne = createNewEvent(SubscriptionTransitionType.CREATE, newCreateTime, spec);
+        final NewEvent ne = testUtil.createNewEvent(SubscriptionTransitionType.CREATE, newCreateTime, spec);
         final List<DeletedEvent> des = new LinkedList<SubscriptionTimeline.DeletedEvent>();
-        des.add(createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(0).getEventId()));
-        des.add(createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(1).getEventId()));
+        des.add(testUtil.createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(0).getEventId()));
+        des.add(testUtil.createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(1).getEventId()));
 
-        final SubscriptionTimeline sRepair = createSubscriptionRepair(baseSubscription.getId(), des, Collections.singletonList(ne));
+        final SubscriptionTimeline sRepair = testUtil.createSubscriptionRepair(baseSubscription.getId(), des, Collections.singletonList(ne));
 
         // FIRST ISSUE DRY RUN
-        final BundleTimeline bRepair = createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
+        final BundleTimeline bRepair = testUtil.createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
 
         boolean dryRun = true;
         final BundleTimeline dryRunBundleRepair = repairApi.repairBundle(bRepair, dryRun, callContext);
@@ -336,7 +334,7 @@ public class TestRepairBP extends TestApiBaseRepair {
         assertEquals(expectedEvents.size(), events.size());
         int index = 0;
         for (final ExistingEvent e : expectedEvents) {
-            validateExistingEventForAssertion(e, events.get(index++));
+            testUtil.validateExistingEventForAssertion(e, events.get(index++));
         }
         final SubscriptionData dryRunBaseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
 
@@ -375,7 +373,7 @@ public class TestRepairBP extends TestApiBaseRepair {
         assertEquals(events.size(), expectedEvents.size());
         index = 0;
         for (final ExistingEvent e : expectedEvents) {
-            validateExistingEventForAssertion(e, events.get(index++));
+            testUtil.validateExistingEventForAssertion(e, events.get(index++));
         }
         final SubscriptionData realRunBaseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
         assertEquals(realRunBaseSubscription.getAllTransitions().size(), 2);
@@ -407,12 +405,12 @@ public class TestRepairBP extends TestApiBaseRepair {
         final DateTime changeDate = startDate.plusDays(clockShift).minusDays(1);
         final LinkedList<ExistingEvent> expected = new LinkedList<SubscriptionTimeline.ExistingEvent>();
 
-        expected.add(createExistingEventForAssertion(SubscriptionTransitionType.CREATE, baseProduct, PhaseType.TRIAL,
-                                                     ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.NO_BILLING_PERIOD, startDate));
-        expected.add(createExistingEventForAssertion(SubscriptionTransitionType.CHANGE, newBaseProduct, PhaseType.TRIAL,
-                                                     ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.NO_BILLING_PERIOD, changeDate));
-        expected.add(createExistingEventForAssertion(SubscriptionTransitionType.PHASE, newBaseProduct, PhaseType.EVERGREEN,
-                                                     ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, startDate.plusDays(30)));
+        expected.add(testUtil.createExistingEventForAssertion(SubscriptionTransitionType.CREATE, baseProduct, PhaseType.TRIAL,
+                                                              ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.NO_BILLING_PERIOD, startDate));
+        expected.add(testUtil.createExistingEventForAssertion(SubscriptionTransitionType.CHANGE, newBaseProduct, PhaseType.TRIAL,
+                                                              ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.NO_BILLING_PERIOD, changeDate));
+        expected.add(testUtil.createExistingEventForAssertion(SubscriptionTransitionType.PHASE, newBaseProduct, PhaseType.EVERGREEN,
+                                                              ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, startDate.plusDays(30)));
 
         final UUID baseSubscriptionId = testBPRepairAddChange(true, startDate, clockShift, baseProduct, newBaseProduct, expected, 3);
 
@@ -451,12 +449,12 @@ public class TestRepairBP extends TestApiBaseRepair {
         final DateTime changeDate = startDate.plusDays(clockShift).minusDays(1);
 
         final LinkedList<ExistingEvent> expected = new LinkedList<SubscriptionTimeline.ExistingEvent>();
-        expected.add(createExistingEventForAssertion(SubscriptionTransitionType.CREATE, baseProduct, PhaseType.TRIAL,
-                                                     ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.NO_BILLING_PERIOD, startDate));
-        expected.add(createExistingEventForAssertion(SubscriptionTransitionType.PHASE, baseProduct, PhaseType.EVERGREEN,
-                                                     ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, startDate.plusDays(30)));
-        expected.add(createExistingEventForAssertion(SubscriptionTransitionType.CHANGE, newBaseProduct, PhaseType.EVERGREEN,
-                                                     ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, changeDate));
+        expected.add(testUtil.createExistingEventForAssertion(SubscriptionTransitionType.CREATE, baseProduct, PhaseType.TRIAL,
+                                                              ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.NO_BILLING_PERIOD, startDate));
+        expected.add(testUtil.createExistingEventForAssertion(SubscriptionTransitionType.PHASE, baseProduct, PhaseType.EVERGREEN,
+                                                              ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, startDate.plusDays(30)));
+        expected.add(testUtil.createExistingEventForAssertion(SubscriptionTransitionType.CHANGE, newBaseProduct, PhaseType.EVERGREEN,
+                                                              ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, changeDate));
         testBPRepairAddChange(false, startDate, clockShift, baseProduct, newBaseProduct, expected, 3);
 
         assertListenerStatus();
@@ -465,7 +463,7 @@ public class TestRepairBP extends TestApiBaseRepair {
     private UUID testBPRepairAddChange(final boolean inTrial, final DateTime startDate, final int clockShift,
                                        final String baseProduct, final String newBaseProduct, final List<ExistingEvent> expectedEvents, final int expectedTransitions) throws Exception {
         // CREATE BP
-        final Subscription baseSubscription = createSubscription(baseProduct, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, startDate);
+        final Subscription baseSubscription = testUtil.createSubscription(bundle, baseProduct, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, startDate);
 
         // MOVE CLOCK
         if (!inTrial) {
@@ -479,21 +477,21 @@ public class TestRepairBP extends TestApiBaseRepair {
         }
 
         final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId(), callContext);
-        sortEventsOnBundle(bundleRepair);
+        testUtil.sortEventsOnBundle(bundleRepair);
 
         final DateTime changeTime = baseSubscription.getStartDate().plusDays(clockShift - 1);
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(newBaseProduct, ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.TRIAL);
 
-        final NewEvent ne = createNewEvent(SubscriptionTransitionType.CHANGE, changeTime, spec);
+        final NewEvent ne = testUtil.createNewEvent(SubscriptionTransitionType.CHANGE, changeTime, spec);
         final List<DeletedEvent> des = new LinkedList<SubscriptionTimeline.DeletedEvent>();
         if (inTrial) {
-            des.add(createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(1).getEventId()));
+            des.add(testUtil.createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(1).getEventId()));
         }
-        final SubscriptionTimeline sRepair = createSubscriptionRepair(baseSubscription.getId(), des, Collections.singletonList(ne));
+        final SubscriptionTimeline sRepair = testUtil.createSubscriptionRepair(baseSubscription.getId(), des, Collections.singletonList(ne));
 
         // FIRST ISSUE DRY RUN
-        final BundleTimeline bRepair = createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
+        final BundleTimeline bRepair = testUtil.createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
 
         boolean dryRun = true;
         final BundleTimeline dryRunBundleRepair = repairApi.repairBundle(bRepair, dryRun, callContext);
@@ -507,7 +505,7 @@ public class TestRepairBP extends TestApiBaseRepair {
         assertEquals(expectedEvents.size(), events.size());
         int index = 0;
         for (final ExistingEvent e : expectedEvents) {
-            validateExistingEventForAssertion(e, events.get(index++));
+            testUtil.validateExistingEventForAssertion(e, events.get(index++));
         }
         final SubscriptionData dryRunBaseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
 
@@ -544,7 +542,7 @@ public class TestRepairBP extends TestApiBaseRepair {
         assertEquals(expectedEvents.size(), events.size());
         index = 0;
         for (final ExistingEvent e : expectedEvents) {
-            validateExistingEventForAssertion(e, events.get(index++));
+            testUtil.validateExistingEventForAssertion(e, events.get(index++));
         }
         final SubscriptionData realRunBaseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
         assertEquals(realRunBaseSubscription.getAllTransitions().size(), expectedTransitions);
@@ -574,7 +572,7 @@ public class TestRepairBP extends TestApiBaseRepair {
         final DateTime startDate = clock.getUTCNow();
 
         // CREATE BP
-        Subscription baseSubscription = createSubscription("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, startDate);
+        Subscription baseSubscription = testUtil.createSubscription(bundle, "Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, startDate);
 
         // MOVE CLOCK -- OUT OF TRIAL
         testListener.pushExpectedEvent(NextEvent.PHASE);
@@ -600,18 +598,18 @@ public class TestRepairBP extends TestApiBaseRepair {
 
         final DateTime repairTime = clock.getUTCNow().minusDays(1);
         final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId(), callContext);
-        sortEventsOnBundle(bundleRepair);
+        testUtil.sortEventsOnBundle(bundleRepair);
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
 
-        final NewEvent ne = createNewEvent(SubscriptionTransitionType.CHANGE, repairTime, spec);
+        final NewEvent ne = testUtil.createNewEvent(SubscriptionTransitionType.CHANGE, repairTime, spec);
         final List<DeletedEvent> des = new LinkedList<SubscriptionTimeline.DeletedEvent>();
-        des.add(createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(2).getEventId()));
+        des.add(testUtil.createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(2).getEventId()));
 
-        final SubscriptionTimeline sRepair = createSubscriptionRepair(baseSubscription.getId(), des, Collections.singletonList(ne));
+        final SubscriptionTimeline sRepair = testUtil.createSubscriptionRepair(baseSubscription.getId(), des, Collections.singletonList(ne));
 
         // SKIP DRY RUN AND DO REPAIR...
-        final BundleTimeline bRepair = createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
+        final BundleTimeline bRepair = testUtil.createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
 
         final boolean dryRun = false;
         testListener.pushExpectedEvent(NextEvent.REPAIR_BUNDLE);
@@ -643,22 +641,22 @@ public class TestRepairBP extends TestApiBaseRepair {
         final TestWithException test = new TestWithException();
         final DateTime startDate = clock.getUTCNow();
 
-        final Subscription baseSubscription = createSubscription("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, startDate);
+        final Subscription baseSubscription = testUtil.createSubscription(bundle, "Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, startDate);
 
         test.withException(new TestWithExceptionCallback() {
             @Override
             public void doTest() throws EntitlementRepairException, EntitlementUserApiException {
 
                 final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId(), callContext);
-                sortEventsOnBundle(bundleRepair);
+                testUtil.sortEventsOnBundle(bundleRepair);
                 final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
-                final NewEvent ne = createNewEvent(SubscriptionTransitionType.CHANGE, baseSubscription.getStartDate().plusDays(10), spec);
+                final NewEvent ne = testUtil.createNewEvent(SubscriptionTransitionType.CHANGE, baseSubscription.getStartDate().plusDays(10), spec);
                 final List<DeletedEvent> des = new LinkedList<SubscriptionTimeline.DeletedEvent>();
-                des.add(createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(0).getEventId()));
-                des.add(createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(1).getEventId()));
-                final SubscriptionTimeline sRepair = createSubscriptionRepair(baseSubscription.getId(), des, Collections.singletonList(ne));
+                des.add(testUtil.createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(0).getEventId()));
+                des.add(testUtil.createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(1).getEventId()));
+                final SubscriptionTimeline sRepair = testUtil.createSubscriptionRepair(baseSubscription.getId(), des, Collections.singletonList(ne));
 
-                final BundleTimeline bRepair = createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
+                final BundleTimeline bRepair = testUtil.createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
 
                 testListener.pushExpectedEvent(NextEvent.CHANGE);
                 final DateTime changeTime = clock.getUTCNow();
@@ -676,22 +674,22 @@ public class TestRepairBP extends TestApiBaseRepair {
         final TestWithException test = new TestWithException();
         final DateTime startDate = clock.getUTCNow();
 
-        final Subscription baseSubscription = createSubscription("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, startDate);
+        final Subscription baseSubscription = testUtil.createSubscription(bundle, "Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, startDate);
 
         test.withException(new TestWithExceptionCallback() {
             @Override
             public void doTest() throws EntitlementRepairException, EntitlementUserApiException {
 
                 final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId(), callContext);
-                sortEventsOnBundle(bundleRepair);
+                testUtil.sortEventsOnBundle(bundleRepair);
                 final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
-                final NewEvent ne = createNewEvent(SubscriptionTransitionType.CHANGE, baseSubscription.getStartDate().plusDays(10), spec);
+                final NewEvent ne = testUtil.createNewEvent(SubscriptionTransitionType.CHANGE, baseSubscription.getStartDate().plusDays(10), spec);
                 final List<DeletedEvent> des = new LinkedList<SubscriptionTimeline.DeletedEvent>();
-                des.add(createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(0).getEventId()));
-                des.add(createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(1).getEventId()));
-                final SubscriptionTimeline sRepair = createSubscriptionRepair(baseSubscription.getId(), des, Collections.singletonList(ne));
+                des.add(testUtil.createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(0).getEventId()));
+                des.add(testUtil.createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(1).getEventId()));
+                final SubscriptionTimeline sRepair = testUtil.createSubscriptionRepair(baseSubscription.getId(), des, Collections.singletonList(ne));
 
-                final BundleTimeline bRepair = createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
+                final BundleTimeline bRepair = testUtil.createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
 
                 final DateTime newChargedThroughDate = baseSubscription.getStartDate().plusDays(30).plusMonths(1);
 

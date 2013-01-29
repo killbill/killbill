@@ -24,7 +24,9 @@ import org.mockito.Mockito;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.IDBI;
 
+import com.ning.billing.GuicyKillbillTestModule;
 import com.ning.billing.ObjectType;
+import com.ning.billing.api.TestListenerStatus;
 import com.ning.billing.entitlement.api.timeline.RepairEntitlementLifecycleDao;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.engine.dao.MockEntitlementDaoMemory;
@@ -68,10 +70,15 @@ public class MockEngineModuleMemory extends MockEngineModule {
     @Override
     protected void configure() {
         installDBI();
+
+        install(new GuicyKillbillTestModule());
+
         super.configure();
+
         install(new BusModule(BusType.MEMORY));
         installNotificationQueue();
 
         install(new MockNonEntityDaoModule());
+
     }
 }

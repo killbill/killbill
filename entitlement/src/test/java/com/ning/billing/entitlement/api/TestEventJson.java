@@ -22,7 +22,8 @@ import org.joda.time.DateTime;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.entitlement.EntitlementTestSuite;
+import com.ning.billing.GuicyKillbillTestSuiteNoDB;
+import com.ning.billing.api.TestListenerStatus;
 import com.ning.billing.entitlement.api.timeline.DefaultRepairEntitlementEvent;
 import com.ning.billing.entitlement.api.user.DefaultEffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
@@ -30,7 +31,8 @@ import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 import com.ning.billing.util.events.RepairEntitlementInternalEvent;
 import com.ning.billing.util.jackson.ObjectMapper;
 
-public class TestEventJson extends EntitlementTestSuite {
+public class TestEventJson extends GuicyKillbillTestSuiteNoDB  {
+
     private final ObjectMapper mapper = new ObjectMapper();
 
     @Test(groups = "fast")

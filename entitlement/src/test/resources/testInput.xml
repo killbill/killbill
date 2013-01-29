@@ -71,6 +71,10 @@
 				<phaseType>TRIAL</phaseType>
 				<policy>IMMEDIATE</policy>
 			</changePolicyCase>
+                       <changePolicyCase>
+                                <toPriceList>rescue</toPriceList>
+                                <policy>END_OF_TERM</policy>
+                        </changePolicyCase>
 			<changePolicyCase>
 				<toProduct>Assault-Rifle</toProduct>
 				<policy>IMMEDIATE</policy>
@@ -79,10 +83,6 @@
 				<fromProduct>Pistol</fromProduct>
 				<toProduct>Shotgun</toProduct>
 				<policy>IMMEDIATE</policy>
-			</changePolicyCase>
-			<changePolicyCase>
-				<toPriceList>rescue</toPriceList>
-				<policy>END_OF_TERM</policy>
 			</changePolicyCase>
 			<changePolicyCase>
 				<fromBillingPeriod>MONTHLY</fromBillingPeriod>

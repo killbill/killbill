@@ -27,10 +27,11 @@ import org.testng.annotations.Test;
 import com.ning.billing.KillbillTestSuite;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.entitlement.EntitlementTestSuiteNoDB;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 
-public class TestTimedMigration extends KillbillTestSuite {
+public class TestTimedMigration extends EntitlementTestSuiteNoDB {
     @Test(groups = "fast")
     public void testConstructor() throws Exception {
         final DateTime eventTime = new DateTime(DateTimeZone.UTC);

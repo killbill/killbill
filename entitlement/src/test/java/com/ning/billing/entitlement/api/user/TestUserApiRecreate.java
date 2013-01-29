@@ -24,16 +24,19 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
+import org.testng.annotations.Test;
 
 import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PriceListSet;
-import com.ning.billing.entitlement.api.TestApiBase;
+import com.ning.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
 
-public abstract class TestUserApiRecreate extends TestApiBase {
+public abstract class TestUserApiRecreate extends EntitlementTestSuiteWithEmbeddedDB {
+
     private static final Logger log = LoggerFactory.getLogger(TestUserApiRecreate.class);
 
-    protected void testRecreateWithBPCanceledThroughSubscription() {
+    @Test(groups = "slow")
+    public void testRecreateWithBPCanceledThroughSubscription() {
         try {
             testCreateAndRecreate(false);
             assertListenerStatus();
@@ -43,7 +46,8 @@ public abstract class TestUserApiRecreate extends TestApiBase {
         }
     }
 
-    protected void testCreateWithBPCanceledFromUserApi() {
+    @Test(groups = "slow")
+    public void testCreateWithBPCanceledFromUserApi() {
         try {
             testCreateAndRecreate(true);
             assertListenerStatus();
@@ -64,7 +68,7 @@ public abstract class TestUserApiRecreate extends TestApiBase {
         testListener.pushExpectedEvent(NextEvent.PHASE);
         testListener.pushExpectedEvent(NextEvent.CREATE);
         SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
-                                                                                             getProductSpecifier(productName, planSetName, term, null), requestedDate, callContext);
+                                                                                             testUtil.getProductSpecifier(productName, planSetName, term, null), requestedDate, callContext);
         assertNotNull(subscription);
         assertEquals(subscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
         assertEquals(subscription.getBundleId(), bundle.getId());
@@ -81,9 +85,9 @@ public abstract class TestUserApiRecreate extends TestApiBase {
 
             if (fromUserAPi) {
                 subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
-                                                                                    getProductSpecifier(productName, planSetName, term, null), requestedDate, callContext);
+                                                                                    testUtil.getProductSpecifier(productName, planSetName, term, null), requestedDate, callContext);
             } else {
-                subscription.recreate(getProductSpecifier(productName, planSetName, term, null), requestedDate, callContext);
+                subscription.recreate(testUtil.getProductSpecifier(productName, planSetName, term, null), requestedDate, callContext);
             }
             Assert.fail("Expected Create API to fail since BP already exists");
         } catch (EntitlementUserApiException e) {
@@ -106,9 +110,9 @@ public abstract class TestUserApiRecreate extends TestApiBase {
 
         if (fromUserAPi) {
             subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
-                                                                                getProductSpecifier(productName, planSetName, term, null), requestedDate, callContext);
+                                                                                testUtil.getProductSpecifier(productName, planSetName, term, null), requestedDate, callContext);
         } else {
-            subscription.recreate(getProductSpecifier(productName, planSetName, term, null), clock.getUTCNow(), callContext);
+            subscription.recreate(testUtil.getProductSpecifier(productName, planSetName, term, null), clock.getUTCNow(), callContext);
         }
         assertEquals(subscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
         assertEquals(subscription.getBundleId(), bundle.getId());

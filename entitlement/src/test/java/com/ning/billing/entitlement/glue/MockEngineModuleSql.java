@@ -19,6 +19,7 @@ package com.ning.billing.entitlement.glue;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.IDBI;
 
+import com.ning.billing.GuicyKillbillTestWithEmbeddedDBModule;
 import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.dbi.DBIProvider;
 import com.ning.billing.dbi.DBTestingHelper;
@@ -44,6 +45,7 @@ public class MockEngineModuleSql extends MockEngineModule {
         bind(RepairEntitlementDao.class).asEagerSingleton();
     }
 
+/*
     protected void installDBI() {
         final DBTestingHelper helper = KillbillTestSuiteWithEmbeddedDB.getDBTestingHelper();
         if (helper.isUsingLocalInstance()) {
@@ -55,11 +57,17 @@ public class MockEngineModuleSql extends MockEngineModule {
             bind(IDBI.class).toInstance(dbi);
         }
     }
+*/
 
     @Override
     protected void configure() {
+
+        install(new GuicyKillbillTestWithEmbeddedDBModule());
+
         install(new NonEntityDaoModule());
-        installDBI();
+
+        //installDBI();
+
         install(new NotificationQueueModule());
         install(new CustomFieldModule());
         install(new BusModule(BusType.PERSISTENT));

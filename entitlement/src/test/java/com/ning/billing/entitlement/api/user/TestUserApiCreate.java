@@ -20,10 +20,10 @@ import java.util.List;
 
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
-import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
+import org.testng.annotations.Test;
 
 import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -32,21 +32,20 @@ import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.entitlement.api.TestApiBase;
+import com.ning.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
-import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.clock.DefaultClock;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
-public abstract class TestUserApiCreate extends TestApiBase {
+public class TestUserApiCreate extends EntitlementTestSuiteWithEmbeddedDB {
 
     private static final Logger log = LoggerFactory.getLogger(TestUserApiCreate.class);
 
+    @Test(groups = "slow")
     public void testCreateWithRequestedDate() {
         try {
             final DateTime init = clock.getUTCNow();
@@ -60,7 +59,7 @@ public abstract class TestUserApiCreate extends TestApiBase {
             testListener.pushExpectedEvent(NextEvent.CREATE);
 
             final SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
-                                                                                                       getProductSpecifier(productName, planSetName, term, null), requestedDate, callContext);
+                                                                                                       testUtil.getProductSpecifier(productName, planSetName, term, null), requestedDate, callContext);
             assertNotNull(subscription);
 
             assertEquals(subscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
@@ -78,7 +77,8 @@ public abstract class TestUserApiCreate extends TestApiBase {
         }
     }
 
-    protected void testCreateWithInitialPhase() {
+    @Test(groups = "slow")
+    public void testCreateWithInitialPhase() {
         try {
             final DateTime init = clock.getUTCNow();
 
@@ -89,14 +89,14 @@ public abstract class TestUserApiCreate extends TestApiBase {
             testListener.pushExpectedEvent(NextEvent.CREATE);
 
             final SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
-                                                                                                       getProductSpecifier(productName, planSetName, term, PhaseType.EVERGREEN), clock.getUTCNow(), callContext);
+                                                                                                       testUtil.getProductSpecifier(productName, planSetName, term, PhaseType.EVERGREEN), clock.getUTCNow(), callContext);
             assertNotNull(subscription);
 
             assertEquals(subscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
             //assertEquals(subscription.getAccount(), account.getId());
             assertEquals(subscription.getBundleId(), bundle.getId());
-            assertDateWithin(subscription.getStartDate(), init, clock.getUTCNow());
-            assertDateWithin(subscription.getBundleStartDate(), init, clock.getUTCNow());
+            testUtil.assertDateWithin(subscription.getStartDate(), init, clock.getUTCNow());
+            testUtil.assertDateWithin(subscription.getBundleStartDate(), init, clock.getUTCNow());
 
             final Plan currentPlan = subscription.getCurrentPlan();
             assertNotNull(currentPlan);
@@ -115,7 +115,8 @@ public abstract class TestUserApiCreate extends TestApiBase {
         }
     }
 
-    protected void testSimpleCreateSubscription() {
+    @Test(groups = "slow")
+    public void testSimpleCreateSubscription() {
         try {
             final DateTime init = clock.getUTCNow();
 
@@ -126,15 +127,15 @@ public abstract class TestUserApiCreate extends TestApiBase {
             testListener.pushExpectedEvent(NextEvent.CREATE);
 
             final SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
-                                                                                                       getProductSpecifier(productName, planSetName, term, null),
+                                                                                                       testUtil.getProductSpecifier(productName, planSetName, term, null),
                                                                                                        clock.getUTCNow(), callContext);
             assertNotNull(subscription);
 
             assertEquals(subscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
             //assertEquals(subscription.getAccount(), account.getId());
             assertEquals(subscription.getBundleId(), bundle.getId());
-            assertDateWithin(subscription.getStartDate(), init, clock.getUTCNow());
-            assertDateWithin(subscription.getBundleStartDate(), init, clock.getUTCNow());
+            testUtil.assertDateWithin(subscription.getStartDate(), init, clock.getUTCNow());
+            testUtil.assertDateWithin(subscription.getBundleStartDate(), init, clock.getUTCNow());
 
             final Plan currentPlan = subscription.getCurrentPlan();
             assertNotNull(currentPlan);
@@ -149,7 +150,7 @@ public abstract class TestUserApiCreate extends TestApiBase {
 
             final List<EntitlementEvent> events = dao.getPendingEventsForSubscription(subscription.getId(), internalCallContext);
             assertNotNull(events);
-            printEvents(events);
+            testUtil.printEvents(events);
             assertTrue(events.size() == 1);
             assertTrue(events.get(0) instanceof PhaseEvent);
             final DateTime nextPhaseChange = ((PhaseEvent) events.get(0)).getEffectiveDate();
@@ -171,7 +172,8 @@ public abstract class TestUserApiCreate extends TestApiBase {
         }
     }
 
-    protected void testSimpleSubscriptionThroughPhases() {
+    @Test(groups = "slow")
+    public void testSimpleSubscriptionThroughPhases() {
         try {
             final String productName = "Pistol";
             final BillingPeriod term = BillingPeriod.ANNUAL;
@@ -181,7 +183,7 @@ public abstract class TestUserApiCreate extends TestApiBase {
 
             // CREATE SUBSCRIPTION
             SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
-                                                                                                 getProductSpecifier(productName, planSetName, term, null), clock.getUTCNow(), callContext);
+                                                                                                 testUtil.getProductSpecifier(productName, planSetName, term, null), clock.getUTCNow(), callContext);
             assertNotNull(subscription);
 
             PlanPhase currentPhase = subscription.getCurrentPhase();
@@ -215,7 +217,8 @@ public abstract class TestUserApiCreate extends TestApiBase {
         }
     }
 
-    protected void testSubscriptionWithAddOn() {
+    @Test(groups = "slow")
+    public void testSubscriptionWithAddOn() {
         try {
             final String productName = "Shotgun";
             final BillingPeriod term = BillingPeriod.ANNUAL;
@@ -224,7 +227,7 @@ public abstract class TestUserApiCreate extends TestApiBase {
             testListener.pushExpectedEvent(NextEvent.CREATE);
 
             final SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
-                                                                                                       getProductSpecifier(productName, planSetName, term, null), clock.getUTCNow(), callContext);
+                                                                                                       testUtil.getProductSpecifier(productName, planSetName, term, null), clock.getUTCNow(), callContext);
             assertNotNull(subscription);
 
             assertListenerStatus();

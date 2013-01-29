@@ -24,8 +24,9 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.KillbillTestSuite;
 import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.entitlement.EntitlementTestSuiteNoDB;
 
-public class TestTimedPhase extends KillbillTestSuite {
+public class TestTimedPhase extends EntitlementTestSuiteNoDB {
     @Test(groups = "fast")
     public void testConstructor() throws Exception {
         final PlanPhase planPhase = Mockito.mock(PlanPhase.class);

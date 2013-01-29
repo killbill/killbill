@@ -266,7 +266,7 @@ public class PlanAligner {
                 planStartDate = bundleStartDate;
                 break;
             case CHANGE_OF_PLAN:
-                planStartDate = requestedDate;
+                planStartDate = effectiveDate;
                 break;
             case CHANGE_OF_PRICELIST:
                 throw new EntitlementError(String.format("Not implemented yet %s", alignment));

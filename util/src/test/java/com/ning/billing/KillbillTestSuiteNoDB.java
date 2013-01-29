@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -14,21 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.entitlement.api.user;
+package com.ning.billing;
 
-import com.ning.billing.entitlement.api.TestApiBase;
-
-import com.google.inject.Injector;
-
-public class TestUserApiPriceList extends TestApiBase {
-    @Override
-    protected Injector getInjector() {
-        return null;
-    }
-
-    protected void testChangeDefaultToDiscountToDefault() {
-    }
-
-    protected void testChangeDiscountToDefaultoDiscount() {
-    }
+public class KillbillTestSuiteNoDB extends KillbillTestSuite {
 }

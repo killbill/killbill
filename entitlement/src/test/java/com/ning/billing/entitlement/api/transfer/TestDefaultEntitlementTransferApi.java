@@ -21,11 +21,12 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.mockito.Mockito;
-import org.skife.jdbi.v2.IDBI;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.ning.billing.GuicyKillbillTestSuiteNoDB;
+import com.ning.billing.api.TestListenerStatus;
 import com.ning.billing.catalog.MockCatalog;
 import com.ning.billing.catalog.MockCatalogService;
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -34,7 +35,8 @@ import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.entitlement.EntitlementTestSuite;
+import com.ning.billing.entitlement.EntitlementTestSuiteNoDB;
+import com.ning.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
 import com.ning.billing.entitlement.api.SubscriptionApiService;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
@@ -55,9 +57,7 @@ import com.ning.billing.util.dao.NonEntityDao;
 import com.google.common.collect.ImmutableList;
 
 // Simple unit tests for DefaultEntitlementTransferApi, see TestTransfer for more advanced tests with dao
-public class TestDefaultEntitlementTransferApi extends EntitlementTestSuite {
-
-    private final Clock clock = new ClockMock();
+public class TestDefaultEntitlementTransferApi extends EntitlementTestSuiteNoDB {
 
     private DefaultEntitlementTransferApi transferApi;
 

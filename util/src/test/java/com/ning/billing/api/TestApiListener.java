@@ -20,6 +20,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
 
+import javax.inject.Inject;
+
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,6 +48,7 @@ public class TestApiListener {
 
     private volatile boolean completed;
 
+    @Inject
     public TestApiListener(final TestListenerStatus testStatus) {
         nextExpectedEvent = new Stack<NextEvent>();
         this.completed = false;

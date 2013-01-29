@@ -24,6 +24,7 @@ import static org.testng.Assert.assertTrue;
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
 import org.testng.Assert;
+import org.testng.annotations.Test;
 
 import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -32,12 +33,14 @@ import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PriceListSet;
-import com.ning.billing.entitlement.api.TestApiBase;
+import com.ning.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.clock.DefaultClock;
 import com.ning.billing.util.svcapi.entitlement.EntitlementBillingApiException;
 
-public abstract class TestUserApiCancel extends TestApiBase {
-    protected void testCancelSubscriptionIMM() {
+public class TestUserApiCancel extends EntitlementTestSuiteWithEmbeddedDB {
+
+    @Test(groups = "slow")
+    public void testCancelSubscriptionIMM() {
         try {
             final DateTime init = clock.getUTCNow();
 
@@ -46,7 +49,7 @@ public abstract class TestUserApiCancel extends TestApiBase {
             final String planSet = PriceListSet.DEFAULT_PRICELIST_NAME;
 
             // CREATE
-            final SubscriptionData subscription = createSubscription(prod, term, planSet);
+            final SubscriptionData subscription = testUtil.createSubscription(bundle, prod, term, planSet);
             PlanPhase currentPhase = subscription.getCurrentPhase();
             assertEquals(currentPhase.getPhaseType(), PhaseType.TRIAL);
 
@@ -75,7 +78,7 @@ public abstract class TestUserApiCancel extends TestApiBase {
 
 
             assertNull(currentPhase);
-            checkNextPhaseChange(subscription, 0, null);
+            testUtil.checkNextPhaseChange(subscription, 0, null);
 
             assertListenerStatus();
         } catch (EntitlementUserApiException e) {
@@ -83,20 +86,21 @@ public abstract class TestUserApiCancel extends TestApiBase {
         }
     }
 
-    protected void testCancelSubscriptionEOTWithChargeThroughDate() throws EntitlementBillingApiException {
+    @Test(groups = "slow")
+    public void testCancelSubscriptionEOTWithChargeThroughDate() throws EntitlementBillingApiException {
         try {
             final String prod = "Shotgun";
             final BillingPeriod term = BillingPeriod.MONTHLY;
             final String planSet = PriceListSet.DEFAULT_PRICELIST_NAME;
 
             // CREATE
-            SubscriptionData subscription = createSubscription(prod, term, planSet);
+            SubscriptionData subscription = testUtil.createSubscription(bundle, prod, term, planSet);
             PlanPhase trialPhase = subscription.getCurrentPhase();
             assertEquals(trialPhase.getPhaseType(), PhaseType.TRIAL);
 
             // NEXT PHASE
             final DateTime expectedPhaseTrialChange = DefaultClock.addDuration(subscription.getStartDate(), trialPhase.getDuration());
-            checkNextPhaseChange(subscription, 1, expectedPhaseTrialChange);
+            testUtil.checkNextPhaseChange(subscription, 1, expectedPhaseTrialChange);
 
             // MOVE TO NEXT PHASE
             testListener.pushExpectedEvent(NextEvent.PHASE);
@@ -108,7 +112,7 @@ public abstract class TestUserApiCancel extends TestApiBase {
             assertEquals(trialPhase.getPhaseType(), PhaseType.EVERGREEN);
 
             // SET CTD + RE READ SUBSCRIPTION + CHANGE PLAN
-            final Duration ctd = getDurationMonth(1);
+            final Duration ctd = testUtil.getDurationMonth(1);
             final DateTime newChargedThroughDate = DefaultClock.addDuration(expectedPhaseTrialChange, ctd);
             entitlementInternalApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate.toLocalDate(), internalCallContext);
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId(), callContext);
@@ -145,7 +149,7 @@ public abstract class TestUserApiCancel extends TestApiBase {
 
             final PlanPhase currentPhase = subscription.getCurrentPhase();
             assertNull(currentPhase);
-            checkNextPhaseChange(subscription, 0, null);
+            testUtil.checkNextPhaseChange(subscription, 0, null);
 
             assertEquals(subscription.getLastActiveProductName(), prod);
             assertEquals(subscription.getLastActivePriceListName(), planSet);
@@ -159,20 +163,21 @@ public abstract class TestUserApiCancel extends TestApiBase {
         }
     }
 
-    protected void testCancelSubscriptionEOTWithNoChargeThroughDate() {
+    @Test(groups = "slow")
+    public void testCancelSubscriptionEOTWithNoChargeThroughDate() {
         try {
             final String prod = "Shotgun";
             final BillingPeriod term = BillingPeriod.MONTHLY;
             final String planSet = PriceListSet.DEFAULT_PRICELIST_NAME;
 
             // CREATE
-            final SubscriptionData subscription = createSubscription(prod, term, planSet);
+            final SubscriptionData subscription = testUtil.createSubscription(bundle, prod, term, planSet);
             PlanPhase trialPhase = subscription.getCurrentPhase();
             assertEquals(trialPhase.getPhaseType(), PhaseType.TRIAL);
 
             // NEXT PHASE
             final DateTime expectedPhaseTrialChange = DefaultClock.addDuration(subscription.getStartDate(), trialPhase.getDuration());
-            checkNextPhaseChange(subscription, 1, expectedPhaseTrialChange);
+            testUtil.checkNextPhaseChange(subscription, 1, expectedPhaseTrialChange);
 
             // MOVE TO NEXT PHASE
             testListener.pushExpectedEvent(NextEvent.PHASE);
@@ -191,7 +196,7 @@ public abstract class TestUserApiCancel extends TestApiBase {
 
             final PlanPhase currentPhase = subscription.getCurrentPhase();
             assertNull(currentPhase);
-            checkNextPhaseChange(subscription, 0, null);
+            testUtil.checkNextPhaseChange(subscription, 0, null);
 
             assertListenerStatus();
         } catch (EntitlementUserApiException e) {
@@ -202,20 +207,21 @@ public abstract class TestUserApiCancel extends TestApiBase {
     // Similar test to testCancelSubscriptionEOTWithChargeThroughDate except we uncancel and check things
     // are as they used to be and we can move forward without hitting cancellation
     //
-    protected void testUncancel() throws EntitlementBillingApiException {
+    @Test(groups = "slow")
+    public void testUncancel() throws EntitlementBillingApiException {
         try {
             final String prod = "Shotgun";
             final BillingPeriod term = BillingPeriod.MONTHLY;
             final String planSet = PriceListSet.DEFAULT_PRICELIST_NAME;
 
             // CREATE
-            SubscriptionData subscription = createSubscription(prod, term, planSet);
+            SubscriptionData subscription = testUtil.createSubscription(bundle, prod, term, planSet);
             final PlanPhase trialPhase = subscription.getCurrentPhase();
             assertEquals(trialPhase.getPhaseType(), PhaseType.TRIAL);
 
             // NEXT PHASE
             final DateTime expectedPhaseTrialChange = DefaultClock.addDuration(subscription.getStartDate(), trialPhase.getDuration());
-            checkNextPhaseChange(subscription, 1, expectedPhaseTrialChange);
+            testUtil.checkNextPhaseChange(subscription, 1, expectedPhaseTrialChange);
 
             // MOVE TO NEXT PHASE
             testListener.pushExpectedEvent(NextEvent.PHASE);
@@ -226,7 +232,7 @@ public abstract class TestUserApiCancel extends TestApiBase {
             assertEquals(currentPhase.getPhaseType(), PhaseType.EVERGREEN);
 
             // SET CTD + RE READ SUBSCRIPTION + CHANGE PLAN
-            final Duration ctd = getDurationMonth(1);
+            final Duration ctd = testUtil.getDurationMonth(1);
             final DateTime newChargedThroughDate = DefaultClock.addDuration(expectedPhaseTrialChange, ctd);
             entitlementInternalApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate.toLocalDate(), internalCallContext);
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId(), callContext);

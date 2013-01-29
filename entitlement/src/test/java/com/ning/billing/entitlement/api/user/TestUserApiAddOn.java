@@ -39,21 +39,12 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.entitlement.api.TestApiBase;
+import com.ning.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.api.user.SubscriptionStatusDryRun.DryRunChangeReason;
-import com.ning.billing.entitlement.glue.MockEngineModuleSql;
 import com.ning.billing.util.clock.DefaultClock;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Stage;
-
-public class TestUserApiAddOn extends TestApiBase {
-    @Override
-    public Injector getInjector() {
-        return Guice.createInjector(Stage.DEVELOPMENT, new MockEngineModuleSql());
-    }
+public class TestUserApiAddOn extends EntitlementTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testCreateCancelAddon() {
@@ -62,13 +53,13 @@ public class TestUserApiAddOn extends TestApiBase {
             final BillingPeriod baseTerm = BillingPeriod.MONTHLY;
             final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-            createSubscription(baseProduct, baseTerm, basePriceList);
+            testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList);
 
             final String aoProduct = "Telescopic-Scope";
             final BillingPeriod aoTerm = BillingPeriod.MONTHLY;
             final String aoPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-            final SubscriptionData aoSubscription = createSubscription(aoProduct, aoTerm, aoPriceList);
+            final SubscriptionData aoSubscription = testUtil.createSubscription(bundle, aoProduct, aoTerm, aoPriceList);
             assertEquals(aoSubscription.getState(), SubscriptionState.ACTIVE);
 
             final DateTime now = clock.getUTCNow();
@@ -94,13 +85,13 @@ public class TestUserApiAddOn extends TestApiBase {
             final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
             // CREATE BP
-            SubscriptionData baseSubscription = createSubscription(baseProduct, baseTerm, basePriceList);
+            SubscriptionData baseSubscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList);
 
             final String aoProduct = "Telescopic-Scope";
             final BillingPeriod aoTerm = BillingPeriod.MONTHLY;
             final String aoPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-            SubscriptionData aoSubscription = createSubscription(aoProduct, aoTerm, aoPriceList);
+            SubscriptionData aoSubscription = testUtil.createSubscription(bundle, aoProduct, aoTerm, aoPriceList);
 
             testListener.reset();
             testListener.pushExpectedEvent(NextEvent.PHASE);
@@ -113,7 +104,7 @@ public class TestUserApiAddOn extends TestApiBase {
 
             // SET CTD TO CANCEL IN FUTURE
             final DateTime now = clock.getUTCNow();
-            final Duration ctd = getDurationMonth(1);
+            final Duration ctd = testUtil.getDurationMonth(1);
             // Why not just use clock.getUTCNow().plusMonths(1) ?
             final DateTime newChargedThroughDate = DefaultClock.addDuration(now, ctd);
             entitlementInternalApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate.toLocalDate(), internalCallContext);
@@ -155,13 +146,13 @@ public class TestUserApiAddOn extends TestApiBase {
             final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
             // CREATE BP
-            SubscriptionData baseSubscription = createSubscription(baseProduct, baseTerm, basePriceList);
+            SubscriptionData baseSubscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList);
 
             final String aoProduct = "Telescopic-Scope";
             final BillingPeriod aoTerm = BillingPeriod.MONTHLY;
             final String aoPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-            SubscriptionData aoSubscription = createSubscription(aoProduct, aoTerm, aoPriceList);
+            SubscriptionData aoSubscription = testUtil.createSubscription(bundle, aoProduct, aoTerm, aoPriceList);
 
             testListener.reset();
             testListener.pushExpectedEvent(NextEvent.PHASE);
@@ -174,7 +165,7 @@ public class TestUserApiAddOn extends TestApiBase {
 
             // SET CTD TO CHANGE IN FUTURE
             final DateTime now = clock.getUTCNow();
-            final Duration ctd = getDurationMonth(1);
+            final Duration ctd = testUtil.getDurationMonth(1);
             final DateTime newChargedThroughDate = DefaultClock.addDuration(now, ctd);
             entitlementInternalApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate.toLocalDate(), internalCallContext);
             baseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
@@ -218,13 +209,13 @@ public class TestUserApiAddOn extends TestApiBase {
             final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
             // CREATE BP
-            SubscriptionData baseSubscription = createSubscription(baseProduct, baseTerm, basePriceList);
+            SubscriptionData baseSubscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList);
 
             final String aoProduct = "Telescopic-Scope";
             final BillingPeriod aoTerm = BillingPeriod.MONTHLY;
             final String aoPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-            SubscriptionData aoSubscription = createSubscription(aoProduct, aoTerm, aoPriceList);
+            SubscriptionData aoSubscription = testUtil.createSubscription(bundle, aoProduct, aoTerm, aoPriceList);
 
             testListener.reset();
             testListener.pushExpectedEvent(NextEvent.PHASE);
@@ -237,7 +228,7 @@ public class TestUserApiAddOn extends TestApiBase {
 
             // SET CTD TO CANCEL IN FUTURE
             final DateTime now = clock.getUTCNow();
-            final Duration ctd = getDurationMonth(1);
+            final Duration ctd = testUtil.getDurationMonth(1);
             final DateTime newChargedThroughDate = DefaultClock.addDuration(now, ctd);
             entitlementInternalApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate.toLocalDate(), internalCallContext);
             baseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
@@ -335,7 +326,7 @@ public class TestUserApiAddOn extends TestApiBase {
             final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
             // CREATE BP
-            final SubscriptionData baseSubscription = createSubscription(baseProduct, baseTerm, basePriceList);
+            final SubscriptionData baseSubscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList);
 
             // MOVE CLOCK 14 DAYS LATER
             Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(14));
@@ -343,7 +334,7 @@ public class TestUserApiAddOn extends TestApiBase {
 
             // CREATE ADDON
             final DateTime beforeAOCreation = clock.getUTCNow();
-            SubscriptionData aoSubscription = createSubscription(aoProduct, aoTerm, aoPriceList);
+            SubscriptionData aoSubscription = testUtil.createSubscription(bundle, aoProduct, aoTerm, aoPriceList);
             final DateTime afterAOCreation = clock.getUTCNow();
 
             // CHECK EVERYTHING
@@ -357,7 +348,7 @@ public class TestUserApiAddOn extends TestApiBase {
             assertNotNull(aoCurrentPhase);
             assertEquals(aoCurrentPhase.getPhaseType(), PhaseType.DISCOUNT);
 
-            assertDateWithin(aoSubscription.getStartDate(), beforeAOCreation, afterAOCreation);
+            testUtil.assertDateWithin(aoSubscription.getStartDate(), beforeAOCreation, afterAOCreation);
             assertEquals(aoSubscription.getBundleStartDate(), baseSubscription.getBundleStartDate());
 
             // CHECK next AO PHASE EVENT IS INDEED A MONTH AFTER BP STARTED => BUNDLE ALIGNMENT
