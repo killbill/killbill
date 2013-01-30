@@ -39,7 +39,7 @@ public class DefaultNonEntityDao implements NonEntityDao {
     }
 
 
-    public Long retrieveRecordIdFromObject(final UUID objectId, final ObjectType objectType, @Nullable final CacheController<Object, Object> cache) {
+    public Long retrieveRecordIdFromObject(@Nullable final UUID objectId, final ObjectType objectType, @Nullable final CacheController<Object, Object> cache) {
 
         return containedCall.withCaching(new OperationRetrieval<Long>() {
             @Override
@@ -51,7 +51,7 @@ public class DefaultNonEntityDao implements NonEntityDao {
 
     }
 
-    public Long retrieveAccountRecordIdFromObject(final UUID objectId, final ObjectType objectType, @Nullable final CacheController<Object, Object> cache) {
+    public Long retrieveAccountRecordIdFromObject(@Nullable final UUID objectId, final ObjectType objectType, @Nullable final CacheController<Object, Object> cache) {
 
 
         return containedCall.withCaching(new OperationRetrieval<Long>() {
@@ -75,7 +75,7 @@ public class DefaultNonEntityDao implements NonEntityDao {
     }
 
 
-    public Long retrieveTenantRecordIdFromObject(final UUID objectId, final ObjectType objectType, @Nullable final CacheController<Object, Object> cache) {
+    public Long retrieveTenantRecordIdFromObject(@Nullable final UUID objectId, final ObjectType objectType, @Nullable final CacheController<Object, Object> cache) {
 
 
         return containedCall.withCaching(new OperationRetrieval<Long>() {
@@ -95,13 +95,13 @@ public class DefaultNonEntityDao implements NonEntityDao {
     }
 
     @Override
-    public Long retrieveLastHistoryRecordIdFromTransaction(final Long targetRecordId, final TableName tableName, final NonEntitySqlDao transactional) {
+    public Long retrieveLastHistoryRecordIdFromTransaction(@Nullable final Long targetRecordId, final TableName tableName, final NonEntitySqlDao transactional) {
         // There is no caching here because the value returned changes as we add more history records, and so we would need some cache invalidation
         return transactional.getLastHistoryRecordId(targetRecordId, tableName.getTableName());
     }
 
     @Override
-    public Long retrieveHistoryTargetRecordId(final Long recordId, final TableName tableName) {
+    public Long retrieveHistoryTargetRecordId(@Nullable final Long recordId, final TableName tableName) {
         return nonEntitySqlDao.getHistoryTargetRecordId(recordId, tableName.getTableName());
     }
 
@@ -113,7 +113,12 @@ public class DefaultNonEntityDao implements NonEntityDao {
 
     // 'cache' will be null for the CacheLoader classes -- or if cache is not configured.
     private class WithCaching {
-        private Long withCaching(final OperationRetrieval<Long> op, final UUID objectId, final ObjectType objectType, @Nullable final CacheController<Object, Object> cache) {
+        private Long withCaching(final OperationRetrieval<Long> op, @Nullable final UUID objectId, final ObjectType objectType, @Nullable final CacheController<Object, Object> cache) {
+
+            if (objectId == null) {
+                return null;
+            }
+
             if (cache != null) {
                 final Long cachedResult = (Long) cache.get(objectId.toString(), objectType);
                 return cachedResult;
