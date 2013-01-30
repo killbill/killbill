@@ -198,10 +198,14 @@ public class ServiceFinder {
         int prevLen;
         if (dir.isDirectory()) {
             final File[] files = dir.listFiles();
-            for (int i = 0; i < files.length; i++) {
+            if (files == null) {
+                return;
+            }
+
+            for (final File file : files) {
                 prevLen = relativePath.length();
-                recursivelyListDir(dirListing, files[i],
-                                   relativePath.append(prevLen == 0 ? "" : "/").append(files[i].getName()));
+                recursivelyListDir(dirListing, file,
+                                   relativePath.append(prevLen == 0 ? "" : "/").append(file.getName()));
                 relativePath.delete(prevLen, relativePath.length());
             }
         } else {
