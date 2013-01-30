@@ -122,16 +122,14 @@ public class EntitlementTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB  {
     protected AccountData accountData;
     protected SubscriptionBundle bundle;
 
-
-    @BeforeClass(groups = "slow")
+    @BeforeClass(groups = "fast")
     public void setup() throws Exception {
         DefaultEntitlementTestInitializer.loadSystemPropertiesFromClasspath("/entitlement.properties");
         final Injector g = Guice.createInjector(Stage.PRODUCTION, new MockEngineModuleMemory());
         g.injectMembers(this);
     }
 
-
-    @BeforeMethod(groups = "slow")
+    @BeforeMethod(groups = "fast")
     public void setupTest() throws Exception {
 
         // CLEANUP ALL DB TABLES OR IN MEMORY STRUCTURES
@@ -144,8 +142,7 @@ public class EntitlementTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB  {
         this.bundle = entitlementTestInitializer.initBundle(entitlementApi, callContext);
     }
 
-
-    @AfterMethod(groups = "slow")
+    @AfterMethod(groups = "fast")
     public void cleanupTest() throws Exception {
         entitlementTestInitializer.stopTestFramework(testListener, busService, entitlementService);
     }
