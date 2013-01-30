@@ -118,7 +118,8 @@ public class Engine implements EventListener, EntitlementService {
                     final EntitlementNotificationKey key = (EntitlementNotificationKey) inputKey;
                     final EntitlementEvent event = dao.getEventById(key.getEventId(), internalCallContextFactory.createInternalTenantContext(tenantRecordId, accountRecordId));
                     if (event == null) {
-                        log.warn("Failed to extract event for notification key {}", inputKey);
+                        // This can be expected if the event is soft deleted (is_active = 0)
+                        log.info("Failed to extract event for notification key {}", inputKey);
                         return;
                     }
 
