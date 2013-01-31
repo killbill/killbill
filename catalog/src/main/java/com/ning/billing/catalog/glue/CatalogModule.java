@@ -22,14 +22,18 @@ import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.config.SimplePropertyConfigSource;
 
-import com.google.inject.AbstractModule;
 import com.ning.billing.catalog.DefaultCatalogService;
 import com.ning.billing.catalog.api.CatalogService;
+import com.ning.billing.catalog.api.CatalogUserApi;
+import com.ning.billing.catalog.api.user.DefaultCatalogUserApi;
 import com.ning.billing.catalog.io.ICatalogLoader;
 import com.ning.billing.catalog.io.VersionedCatalogLoader;
 import com.ning.billing.util.config.CatalogConfig;
 
+import com.google.inject.AbstractModule;
+
 public class CatalogModule extends AbstractModule {
+
     final ConfigSource configSource;
 
     public CatalogModule() {
@@ -54,9 +58,14 @@ public class CatalogModule extends AbstractModule {
         bind(ICatalogLoader.class).to(VersionedCatalogLoader.class).asEagerSingleton();
     }
 
+    protected void installCatalogUserApi() {
+        bind(CatalogUserApi.class).to(DefaultCatalogUserApi.class).asEagerSingleton();
+    }
+
     @Override
     protected void configure() {
         installConfig();
         installCatalog();
+        installCatalogUserApi();
     }
 }

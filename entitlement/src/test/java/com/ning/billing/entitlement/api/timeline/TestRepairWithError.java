@@ -23,7 +23,6 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
-import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -43,11 +42,6 @@ import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.api.user.TestUtil.TestWithException;
 import com.ning.billing.entitlement.api.user.TestUtil.TestWithExceptionCallback;
-import com.ning.billing.entitlement.glue.MockEngineModuleMemory;
-
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Stage;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
@@ -57,7 +51,6 @@ public class TestRepairWithError extends EntitlementTestSuiteNoDB {
     private static final String baseProduct = "Shotgun";
     private TestWithException test;
     private Subscription baseSubscription;
-
 
     @BeforeMethod(alwaysRun = true)
     public void setupTest() throws Exception {

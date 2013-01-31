@@ -1,5 +1,7 @@
 language: java
 script: mvn clean install -Ptravis
+# Remove --quiet to avoid timeouts
+install: mvn install -DskipTests=true
 
 notifications:
   email:

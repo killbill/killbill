@@ -25,7 +25,4 @@ public class DefaultAccountService implements AccountService {
         return ACCOUNT_SERVICE_NAME;
     }
 
-    //    @LifecycleHandlerType(LifecycleLevel.INIT_SERVICE)
-    //    public void initialize() {
-    //    }
 }

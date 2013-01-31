@@ -20,7 +20,6 @@ import javax.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -50,7 +49,6 @@ import com.google.inject.Injector;
 import com.google.inject.Stage;
 
 public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWithEmbeddedDB {
-
 
     protected static final Logger log = LoggerFactory.getLogger(EntitlementTestSuiteWithEmbeddedDB.class);
 
@@ -93,14 +91,12 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
     protected AccountData accountData;
     protected SubscriptionBundle bundle;
 
-
     @BeforeClass(groups = "slow")
     public void setup() throws Exception {
         DefaultEntitlementTestInitializer.loadSystemPropertiesFromClasspath("/entitlement.properties");
         final Injector g = Guice.createInjector(Stage.PRODUCTION, new MockEngineModuleSql());
         g.injectMembers(this);
     }
-
 
     @BeforeMethod(groups = "slow")
     public void setupTest() throws Exception {
@@ -110,7 +106,6 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
         this.accountData = entitlementTestInitializer.initAccountData();
         this.bundle = entitlementTestInitializer.initBundle(entitlementApi, callContext);
     }
-
 
     @AfterMethod(groups = "slow")
     public void cleanupTest() throws Exception {

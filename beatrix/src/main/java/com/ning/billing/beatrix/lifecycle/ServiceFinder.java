@@ -89,10 +89,21 @@ public class ServiceFinder {
         for (int h = 0; h < classPaths.length; h++) {
             Enumeration<?> files = null;
             JarFile module = null;
-            final File classPath = new File((URL.class).isInstance(classPaths[h]) ?
-                                              ((URL) classPaths[h]).getFile() : classPaths[h].toString());
-            if (classPath.isDirectory()) {
 
+            final String protocol;
+            final File classPath;
+            if ((URL.class).isInstance(classPaths[h])) {
+                final URL urlClassPath = (URL) classPaths[h];
+                classPath = new File(urlClassPath.getFile());
+                protocol = urlClassPath.getProtocol();
+            } else {
+                classPath = new File(classPaths[h].toString());
+                protocol = "file";
+            }
+
+            // Check if the protocol is "file". For example, if classPath is http://felix.extensions:9/,
+            // the file will be "/" and we don't want to scan the full filesystem
+            if ("file".equals(protocol) && classPath.isDirectory()) {
                 log.debug("DIR : " + classPath);
 
                 final List<String> dirListing = new ArrayList<String>();

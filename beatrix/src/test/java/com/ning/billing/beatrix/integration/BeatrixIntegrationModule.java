@@ -50,10 +50,15 @@ import com.ning.billing.invoice.api.InvoiceService;
 import com.ning.billing.invoice.glue.DefaultInvoiceModule;
 import com.ning.billing.junction.glue.DefaultJunctionModule;
 import com.ning.billing.lifecycle.KillbillService;
+import com.ning.billing.meter.glue.MeterModule;
+import com.ning.billing.osgi.DefaultOSGIService;
+import com.ning.billing.osgi.glue.DefaultOSGIModule;
 import com.ning.billing.overdue.OverdueService;
 import com.ning.billing.payment.api.PaymentService;
 import com.ning.billing.payment.glue.PaymentModule;
 import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
+import com.ning.billing.tenant.glue.TenantModule;
+import com.ning.billing.usage.glue.UsageModule;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.config.PaymentConfig;
@@ -65,6 +70,7 @@ import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.CacheModule;
 import com.ning.billing.util.glue.CallContextModule;
 import com.ning.billing.util.glue.CustomFieldModule;
+import com.ning.billing.util.glue.ExportModule;
 import com.ning.billing.util.glue.NonEntityDaoModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.TagStoreModule;
@@ -119,6 +125,11 @@ public class BeatrixIntegrationModule extends AbstractModule {
         install(new DefaultJunctionModule());
         install(new IntegrationTestOverdueModule());
         install(new AuditModule());
+        install(new MeterModule());
+        install(new UsageModule());
+        install(new TenantModule());
+        install(new ExportModule());
+        install(new DefaultOSGIModule());
         install(new NonEntityDaoModule());
 
         bind(AccountChecker.class).asEagerSingleton();
@@ -172,6 +183,7 @@ public class BeatrixIntegrationModule extends AbstractModule {
                     .add(injector.getInstance(PaymentService.class))
                     .add(injector.getInstance(OverdueService.class))
                     .add(injector.getInstance(DefaultBeatrixService.class))
+                    .add(injector.getInstance(DefaultOSGIService.class))
                     .build();
             return services;
         }

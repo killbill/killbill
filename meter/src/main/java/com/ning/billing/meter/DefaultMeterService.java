@@ -57,8 +57,10 @@ public class DefaultMeterService implements MeterService {
     public void start() {
         // Replay any log files that might not have been committed in the db-- should only occur if we crashed previously
         timelineEventHandler.replay(config.getSpoolDir(), internalCallContext);
-        // Start the aggregation thread
-        timelineAggregator.runAggregationThread();
+        // Start the aggregation thread, if enabled
+        if (config.getTimelineAggregationEnabled()) {
+            timelineAggregator.runAggregationThread();
+        }
         // Start the backgroundDBChunkWriter thread
         backgroundDBChunkWriter.runBackgroundWriteThread();
         // Start the purger thread to delete old log files

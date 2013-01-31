@@ -17,7 +17,6 @@
 package com.ning.billing;
 
 import java.lang.reflect.Method;
-import java.util.UUID;
 
 import javax.inject.Inject;
 
@@ -28,11 +27,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.callcontext.InternalCallContextFactory;
-import com.ning.billing.util.callcontext.UserType;
-import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 
 public class GuicyKillbillTestSuite {

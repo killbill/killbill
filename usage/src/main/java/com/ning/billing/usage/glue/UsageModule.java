@@ -16,11 +16,26 @@
 
 package com.ning.billing.usage.glue;
 
+import com.ning.billing.usage.api.UsageUserApi;
+import com.ning.billing.usage.api.user.DefaultUsageUserApi;
+import com.ning.billing.usage.dao.DefaultRolledUpUsageDao;
+import com.ning.billing.usage.dao.RolledUpUsageDao;
+
 import com.google.inject.AbstractModule;
 
 public class UsageModule extends AbstractModule {
 
+    protected void installRolledUpUsageDao() {
+        bind(RolledUpUsageDao.class).to(DefaultRolledUpUsageDao.class).asEagerSingleton();
+    }
+
+    protected void installUsageUserApi() {
+        bind(UsageUserApi.class).to(DefaultUsageUserApi.class).asEagerSingleton();
+    }
+
     @Override
     protected void configure() {
+        installRolledUpUsageDao();
+        installUsageUserApi();
     }
 }

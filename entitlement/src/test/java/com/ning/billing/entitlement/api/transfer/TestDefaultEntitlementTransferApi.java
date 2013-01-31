@@ -25,8 +25,6 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.ning.billing.GuicyKillbillTestSuiteNoDB;
-import com.ning.billing.api.TestListenerStatus;
 import com.ning.billing.catalog.MockCatalog;
 import com.ning.billing.catalog.MockCatalogService;
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -36,7 +34,6 @@ import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.EntitlementTestSuiteNoDB;
-import com.ning.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
 import com.ning.billing.entitlement.api.SubscriptionApiService;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
@@ -50,8 +47,6 @@ import com.ning.billing.entitlement.events.user.ApiEventTransfer;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
-import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.dao.NonEntityDao;
 
 import com.google.common.collect.ImmutableList;
@@ -66,7 +61,7 @@ public class TestDefaultEntitlementTransferApi extends EntitlementTestSuiteNoDB 
         final NonEntityDao nonEntityDao = Mockito.mock(NonEntityDao.class);
         final EntitlementDao dao = Mockito.mock(EntitlementDao.class);
         final CatalogService catalogService = new MockCatalogService(new MockCatalog());
-        final SubscriptionApiService apiService =  Mockito.mock(SubscriptionApiService.class);
+        final SubscriptionApiService apiService = Mockito.mock(SubscriptionApiService.class);
         final EntitlementTimelineApi timelineApi = Mockito.mock(EntitlementTimelineApi.class);
         final InternalCallContextFactory internalCallContextFactory = new InternalCallContextFactory(clock, nonEntityDao, new CacheControllerDispatcher());
         transferApi = new DefaultEntitlementTransferApi(clock, dao, timelineApi, catalogService, apiService, internalCallContextFactory);
