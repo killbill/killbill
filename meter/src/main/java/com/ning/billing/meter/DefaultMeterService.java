@@ -55,6 +55,7 @@ public class DefaultMeterService implements MeterService {
 
     @LifecycleHandlerType(LifecycleLevel.START_SERVICE)
     public void start() {
+        /*
         // Replay any log files that might not have been committed in the db-- should only occur if we crashed previously
         timelineEventHandler.replay(config.getSpoolDir(), internalCallContext);
         // Start the aggregation thread
@@ -63,11 +64,13 @@ public class DefaultMeterService implements MeterService {
         backgroundDBChunkWriter.runBackgroundWriteThread();
         // Start the purger thread to delete old log files
         timelineEventHandler.startPurgeThread();
+        */
 
     }
 
     @LifecycleHandlerType(LifecycleLevel.STOP_SERVICE)
     public void stop() {
+        /*
         // Stop the aggregation thread
         timelineAggregator.stopAggregationThread();
         // . Depending on shutdown mode, commit in memory timeline accumulators
@@ -75,5 +78,6 @@ public class DefaultMeterService implements MeterService {
         // . Will stop the backgroundDBChunkWriter thread
         //. Will stop the purger thread
         timelineEventHandler.commitAndShutdown(internalCallContext);
+        */
     }
 }
