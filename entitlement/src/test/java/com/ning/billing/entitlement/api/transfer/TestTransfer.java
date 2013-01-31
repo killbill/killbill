@@ -178,7 +178,7 @@ public class TestTransfer extends EntitlementTestSuiteWithEmbeddedDB {
         final Subscription baseSubscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList);
         final DateTime ctd = baseSubscription.getStartDate().plusDays(30);
 
-        entitlementInternalApi.setChargedThroughDate(baseSubscription.getId(), ctd.toLocalDate(), internalCallContext);
+        entitlementInternalApi.setChargedThroughDate(baseSubscription.getId(), ctd, internalCallContext);
 
         final DateTime evergreenPhaseDate = ((SubscriptionData) baseSubscription).getPendingTransition().getEffectiveTransitionTime();
 
@@ -281,7 +281,7 @@ public class TestTransfer extends EntitlementTestSuiteWithEmbeddedDB {
 
         // SET CTD
         final DateTime ctd = baseSubscription.getStartDate().plusDays(30).plusMonths(1);
-        entitlementInternalApi.setChargedThroughDate(baseSubscription.getId(), ctd.toLocalDate(), internalCallContext);
+        entitlementInternalApi.setChargedThroughDate(baseSubscription.getId(), ctd, internalCallContext);
 
 
         final DateTime transferRequestedDate = clock.getUTCNow();
@@ -326,7 +326,7 @@ public class TestTransfer extends EntitlementTestSuiteWithEmbeddedDB {
         clock.addDays(2);
 
         final DateTime newCtd = newBaseSubscription.getStartDate().plusYears(1);
-        entitlementInternalApi.setChargedThroughDate(newBaseSubscription.getId(), newCtd.toLocalDate(), internalCallContext);
+        entitlementInternalApi.setChargedThroughDate(newBaseSubscription.getId(), newCtd, internalCallContext);
         final Subscription newBaseSubscriptionWithCtd = entitlementApi.getSubscriptionFromId(newBaseSubscription.getId(), callContext);
 
         final String newBaseProduct2 = "Pistol";
@@ -377,7 +377,7 @@ public class TestTransfer extends EntitlementTestSuiteWithEmbeddedDB {
 
         // SET CTD TO TRIGGER CANCELLATION EOT
         final DateTime ctd = baseSubscription.getStartDate().plusDays(30).plusMonths(1);
-        entitlementInternalApi.setChargedThroughDate(baseSubscription.getId(), ctd.toLocalDate(), internalCallContext);
+        entitlementInternalApi.setChargedThroughDate(baseSubscription.getId(), ctd, internalCallContext);
 
         final DateTime transferRequestedDate = clock.getUTCNow();
         testListener.pushExpectedEvent(NextEvent.TRANSFER);

@@ -32,5 +32,5 @@ import com.ning.billing.util.svcapi.junction.BillingEventSet;
 public interface InvoiceGenerator {
 
     public Invoice generateInvoice(UUID accountId, @Nullable BillingEventSet events, @Nullable List<Invoice> existingInvoices,
-                                   LocalDate targetDate, DateTimeZone accountTimeZone, Currency targetCurrency) throws InvoiceApiException;
+                                   LocalDate targetDate, Currency targetCurrency) throws InvoiceApiException;
 }

@@ -114,7 +114,7 @@ public class TestUserApiCancel extends EntitlementTestSuiteWithEmbeddedDB {
             // SET CTD + RE READ SUBSCRIPTION + CHANGE PLAN
             final Duration ctd = testUtil.getDurationMonth(1);
             final DateTime newChargedThroughDate = DefaultClock.addDuration(expectedPhaseTrialChange, ctd);
-            entitlementInternalApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate.toLocalDate(), internalCallContext);
+            entitlementInternalApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate, internalCallContext);
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId(), callContext);
 
             assertEquals(subscription.getLastActiveProductName(), prod);
@@ -234,7 +234,7 @@ public class TestUserApiCancel extends EntitlementTestSuiteWithEmbeddedDB {
             // SET CTD + RE READ SUBSCRIPTION + CHANGE PLAN
             final Duration ctd = testUtil.getDurationMonth(1);
             final DateTime newChargedThroughDate = DefaultClock.addDuration(expectedPhaseTrialChange, ctd);
-            entitlementInternalApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate.toLocalDate(), internalCallContext);
+            entitlementInternalApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate, internalCallContext);
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId(), callContext);
 
             // CANCEL EOT

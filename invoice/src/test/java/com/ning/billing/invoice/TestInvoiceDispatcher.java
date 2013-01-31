@@ -45,6 +45,7 @@ import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.invoice.InvoiceDispatcher.DateAndTimeZoneContext;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
@@ -267,10 +268,15 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
     @Test(groups = "slow")
     public void testCreateNextFutureNotificationDate() throws Exception {
 
+
+
         final LocalDate startDate = new LocalDate("2012-10-26");
         final LocalDate endDate = new LocalDate("2012-11-26");
 
         clock.setTime(new DateTime(2012, 10, 26, 1, 12, 23, DateTimeZone.UTC));
+
+        final InvoiceDispatcher.DateAndTimeZoneContext dateAndTimeZoneContext = new DateAndTimeZoneContext(clock.getUTCNow(),DateTimeZone.forID("Pacific/Pitcairn"), clock);
+
         final InvoiceItemModelDao item = new InvoiceItemModelDao(UUID.randomUUID(), clock.getUTCNow(), InvoiceItemType.RECURRING, UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
                                                                  "planName", "phaseName", startDate, endDate, new BigDecimal("23.9"), new BigDecimal("23.9"), Currency.EUR, null);
 
@@ -280,7 +286,7 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
                                                                    clock);
 
         final DateTime expectedBefore = clock.getUTCNow();
-        final Map<UUID, DateTime> result = dispatcher.createNextFutureNotificationDate(Collections.singletonList(item), DateTimeZone.forID("Pacific/Pitcairn"));
+        final Map<UUID, DateTime> result = dispatcher.createNextFutureNotificationDate(Collections.singletonList(item), dateAndTimeZoneContext);
         final DateTime expectedAfter = clock.getUTCNow();
 
         Assert.assertEquals(result.size(), 1);

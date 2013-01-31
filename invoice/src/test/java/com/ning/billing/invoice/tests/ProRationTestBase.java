@@ -19,7 +19,6 @@ package com.ning.billing.invoice.tests;
 import java.math.BigDecimal;
 import java.util.List;
 
-import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -63,7 +62,7 @@ public abstract class ProRationTestBase extends InvoicingTestBase {
     }
 
     protected BigDecimal calculateNumberOfBillingCycles(final LocalDate startDate, final LocalDate endDate, final LocalDate targetDate, final int billingCycleDay) throws InvalidDateSequenceException {
-        final List<RecurringInvoiceItemData> items = getBillingMode().calculateInvoiceItemData(startDate, endDate, targetDate, DateTimeZone.UTC, billingCycleDay, getBillingPeriod());
+        final List<RecurringInvoiceItemData> items = getBillingMode().calculateInvoiceItemData(startDate, endDate, targetDate, billingCycleDay, getBillingPeriod());
 
         BigDecimal numberOfBillingCycles = ZERO;
         for (final RecurringInvoiceItemData item : items) {
@@ -74,7 +73,7 @@ public abstract class ProRationTestBase extends InvoicingTestBase {
     }
 
     protected BigDecimal calculateNumberOfBillingCycles(final LocalDate startDate, final LocalDate targetDate, final int billingCycleDay) throws InvalidDateSequenceException {
-        final List<RecurringInvoiceItemData> items = getBillingMode().calculateInvoiceItemData(startDate, null, targetDate, DateTimeZone.UTC, billingCycleDay, getBillingPeriod());
+        final List<RecurringInvoiceItemData> items = getBillingMode().calculateInvoiceItemData(startDate, null, targetDate, billingCycleDay, getBillingPeriod());
 
         BigDecimal numberOfBillingCycles = ZERO;
         for (final RecurringInvoiceItemData item : items) {

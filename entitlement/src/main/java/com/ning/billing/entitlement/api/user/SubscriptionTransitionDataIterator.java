@@ -81,8 +81,8 @@ public class SubscriptionTransitionDataIterator implements Iterator<Subscription
         if (visibility == Visibility.FROM_DISK_ONLY && !input.isFromDisk()) {
             return true;
         }
-        if ((kind == Kind.ENTITLEMENT && input.getTransitionType() == SubscriptionTransitionType.MIGRATE_BILLING) ||
-                (kind == Kind.BILLING && input.getTransitionType() == SubscriptionTransitionType.MIGRATE_ENTITLEMENT)) {
+        if ((kind == Kind.ENTITLEMENT && shouldSkipForEntitlementEvents(input)) ||
+            (kind == Kind.BILLING && shouldSkipForBillingEvents(input))) {
             return true;
         }
         if ((timeLimit == TimeLimit.FUTURE_ONLY && !input.getEffectiveTransitionTime().isAfter(clock.getUTCNow())) ||
@@ -91,6 +91,19 @@ public class SubscriptionTransitionDataIterator implements Iterator<Subscription
         }
         return false;
     }
+
+    private boolean shouldSkipForEntitlementEvents(final SubscriptionTransitionData input) {
+        // Entitlement system knows about all events except for MIGRATE_BILLING
+        return (input.getTransitionType() == SubscriptionTransitionType.MIGRATE_BILLING);
+    }
+
+    private boolean shouldSkipForBillingEvents(final SubscriptionTransitionData input) {
+        // Junction system knows about all events except for MIGRATE_ENTITLEMENT and UNCANCEL-- which is a NO event as it undo
+        // something that should have happened in the future.
+        return (input.getTransitionType() == SubscriptionTransitionType.MIGRATE_ENTITLEMENT ||
+                input.getTransitionType() == SubscriptionTransitionType.UNCANCEL);
+    }
+
 
     @Override
     public SubscriptionTransitionData next() {

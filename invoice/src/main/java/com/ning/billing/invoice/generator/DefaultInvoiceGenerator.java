@@ -28,7 +28,6 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.joda.time.Months;
 import org.slf4j.Logger;
@@ -82,7 +81,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
     @Override
     public Invoice generateInvoice(final UUID accountId, @Nullable final BillingEventSet events,
                                    @Nullable final List<Invoice> existingInvoices,
-                                   final LocalDate targetDate, final DateTimeZone accountTimeZone,
+                                   final LocalDate targetDate,
                                    final Currency targetCurrency) throws InvoiceApiException {
         if ((events == null) || (events.size() == 0) || events.isAccountAutoInvoiceOff()) {
             return null;
@@ -111,7 +110,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
 
         final Invoice invoice = new DefaultInvoice(accountId, clock.getUTCToday(), adjustedTargetDate, targetCurrency);
         final UUID invoiceId = invoice.getId();
-        final List<InvoiceItem> proposedItems = generateInvoiceItems(invoiceId, accountId, events, adjustedTargetDate, accountTimeZone, targetCurrency);
+        final List<InvoiceItem> proposedItems = generateInvoiceItems(invoiceId, accountId, events, adjustedTargetDate, targetCurrency);
 
         removeCancellingInvoiceItems(existingItems);
         removeDuplicatedInvoiceItems(proposedItems, existingItems);
@@ -298,7 +297,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
     }
 
     private List<InvoiceItem> generateInvoiceItems(final UUID invoiceId, final UUID accountId, final BillingEventSet events,
-                                                   final LocalDate targetDate, final DateTimeZone accountTimeZone, final Currency currency) throws InvoiceApiException {
+                                                   final LocalDate targetDate, final Currency currency) throws InvoiceApiException {
         final List<InvoiceItem> items = new ArrayList<InvoiceItem>();
 
         if (events.size() == 0) {
@@ -319,10 +318,10 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
             if (!events.getSubscriptionIdsWithAutoInvoiceOff().
                     contains(thisEvent.getSubscription().getId())) { // don't consider events for subscriptions that have auto_invoice_off
                 final BillingEvent adjustedNextEvent = (thisEvent.getSubscription().getId() == nextEvent.getSubscription().getId()) ? nextEvent : null;
-                items.addAll(processEvents(invoiceId, accountId, thisEvent, adjustedNextEvent, targetDate, accountTimeZone, currency, logStringBuilder));
+                items.addAll(processEvents(invoiceId, accountId, thisEvent, adjustedNextEvent, targetDate, currency, logStringBuilder));
             }
         }
-        items.addAll(processEvents(invoiceId, accountId, nextEvent, null, targetDate, accountTimeZone, currency, logStringBuilder));
+        items.addAll(processEvents(invoiceId, accountId, nextEvent, null, targetDate, currency, logStringBuilder));
 
         log.info(logStringBuilder.toString());
 
@@ -331,7 +330,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
 
     // Turn a set of events into a list of invoice items. Note that the dates on the invoice items will be rounded (granularity of a day)
     private List<InvoiceItem> processEvents(final UUID invoiceId, final UUID accountId, final BillingEvent thisEvent, @Nullable final BillingEvent nextEvent,
-                                            final LocalDate targetDate, final DateTimeZone accountTimeZone, final Currency currency,
+                                            final LocalDate targetDate, final Currency currency,
                                             final StringBuilder logStringBuilder) throws InvoiceApiException {
         final List<InvoiceItem> items = new ArrayList<InvoiceItem>();
 
@@ -354,7 +353,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
 
                 final List<RecurringInvoiceItemData> itemData;
                 try {
-                    itemData = billingMode.calculateInvoiceItemData(startDate, endDate, targetDate, accountTimeZone, billCycleDayLocal, billingPeriod);
+                    itemData = billingMode.calculateInvoiceItemData(startDate, endDate, targetDate, billCycleDayLocal, billingPeriod);
                 } catch (InvalidDateSequenceException e) {
                     throw new InvoiceApiException(ErrorCode.INVOICE_INVALID_DATE_SEQUENCE, startDate, endDate, targetDate);
                 }

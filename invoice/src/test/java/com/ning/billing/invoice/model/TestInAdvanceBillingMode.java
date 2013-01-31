@@ -149,7 +149,7 @@ public class TestInAdvanceBillingMode {
                                     final LinkedHashMap<LocalDate, LocalDate> expectedDates) throws InvalidDateSequenceException {
         final InAdvanceBillingMode billingMode = new InAdvanceBillingMode();
 
-        final List<RecurringInvoiceItemData> invoiceItems = billingMode.calculateInvoiceItemData(startDate, endDate, targetDate, dateTimeZone, billingCycleDayLocal, billingPeriod);
+        final List<RecurringInvoiceItemData> invoiceItems = billingMode.calculateInvoiceItemData(startDate, endDate, targetDate, billingCycleDayLocal, billingPeriod);
 
         int i = 0;
         for (final LocalDate periodStartDate : expectedDates.keySet()) {

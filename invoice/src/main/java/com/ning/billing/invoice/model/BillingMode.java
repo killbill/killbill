@@ -28,5 +28,5 @@ import com.ning.billing.catalog.api.BillingPeriod;
 public interface BillingMode {
 
     List<RecurringInvoiceItemData> calculateInvoiceItemData(LocalDate startDate, @Nullable LocalDate endDate, LocalDate targetDate,
-                                                            DateTimeZone accountTimeZone, int billingCycleDay, BillingPeriod billingPeriod) throws InvalidDateSequenceException;
+                                                            int billingCycleDay, BillingPeriod billingPeriod) throws InvalidDateSequenceException;
 }

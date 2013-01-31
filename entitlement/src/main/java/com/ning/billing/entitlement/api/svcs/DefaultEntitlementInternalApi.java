@@ -113,14 +113,12 @@ public class DefaultEntitlementInternalApi extends EntitlementApiBase implements
 
     @Override
     public void setChargedThroughDate(UUID subscriptionId,
-                                      LocalDate localChargedThruDate, InternalCallContext context) {
+                                      DateTime chargedThruDate, InternalCallContext context) {
         final SubscriptionData subscription = (SubscriptionData) dao.getSubscriptionFromId(subscriptionId, context);
-        final DateTime chargedThroughDate = localChargedThruDate.toDateTime(new LocalTime(subscription.getStartDate(), DateTimeZone.UTC), DateTimeZone.UTC);
         final SubscriptionBuilder builder = new SubscriptionBuilder(subscription)
-                .setChargedThroughDate(chargedThroughDate)
+                .setChargedThroughDate(chargedThruDate)
                 .setPaidThroughDate(subscription.getPaidThroughDate());
 
-        log.info("Setting CTD for subscription {} to {} ({} local)", new Object[]{subscriptionId, chargedThroughDate, localChargedThruDate});
         dao.updateChargedThroughDate(new SubscriptionData(builder), context);
     }
 

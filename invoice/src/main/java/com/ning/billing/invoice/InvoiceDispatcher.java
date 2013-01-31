@@ -34,7 +34,6 @@ import org.slf4j.LoggerFactory;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.invoice.api.Invoice;
@@ -49,7 +48,6 @@ import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.dao.InvoiceItemModelDao;
 import com.ning.billing.invoice.dao.InvoiceModelDao;
 import com.ning.billing.invoice.dao.InvoicePaymentModelDao;
-import com.ning.billing.invoice.generator.InvoiceDateUtils;
 import com.ning.billing.invoice.generator.InvoiceGenerator;
 import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
@@ -152,14 +150,20 @@ public class InvoiceDispatcher {
         return null;
     }
 
+
     private Invoice processAccountWithLock(final UUID accountId, final DateTime targetDateTime,
                                            final boolean dryRun, final InternalCallContext context) throws InvoiceApiException {
         try {
 
             // Make sure to first set the BCD if needed then get the account object (to have the BCD set)
             final BillingEventSet billingEvents = billingApi.getBillingEventsForAccountAndUpdateAccountBCD(accountId, context);
-
             final Account account = accountApi.getAccountById(accountId, context);
+
+            final DateAndTimeZoneContext dateAndTimeZoneContext = billingEvents.iterator().hasNext() ?
+                                                                  new DateAndTimeZoneContext(billingEvents.iterator().next().getEffectiveDate(), account.getTimeZone(), clock) :
+                                                                  new DateAndTimeZoneContext(null, account.getTimeZone(), clock);
+
+
             List<Invoice> invoices = new ArrayList<Invoice>();
             if (!billingEvents.isAccountAutoInvoiceOff()) {
                 invoices = ImmutableList.<Invoice>copyOf(Collections2.transform(invoiceDao.getInvoicesByAccount(accountId, context),
@@ -173,10 +177,8 @@ public class InvoiceDispatcher {
 
             final Currency targetCurrency = account.getCurrency();
 
-            // All the computations in invoice are performed on days, in the account timezone
-            final LocalDate targetDate = new LocalDate(targetDateTime, account.getTimeZone());
-
-            final Invoice invoice = generator.generateInvoice(accountId, billingEvents, invoices, targetDate, account.getTimeZone(), targetCurrency);
+            final LocalDate targetDate = dateAndTimeZoneContext.computeTargetDate(targetDateTime);
+            final Invoice invoice = generator.generateInvoice(accountId, billingEvents, invoices, targetDate, targetCurrency);
             if (invoice == null) {
                 log.info("Generated null invoice for accountId {} and targetDate {} (targetDateTime {})", new Object[]{accountId, targetDate, targetDateTime});
                 if (!dryRun) {
@@ -186,7 +188,7 @@ public class InvoiceDispatcher {
                 }
             } else {
                 log.info("Generated invoice {} with {} items for accountId {} and targetDate {} (targetDateTime {})", new Object[]{invoice.getId(), invoice.getNumberOfItems(),
-                                                                                                                                   accountId, targetDate, targetDateTime});
+                        accountId, targetDate, targetDateTime});
                 if (!dryRun) {
                     // We need to check whether this is just a 'shell' invoice or a real invoice with items on it
                     final boolean isRealInvoiceWithItems = Collections2.filter(invoice.getInvoiceItems(), new Predicate<InvoiceItem>() {
@@ -213,12 +215,12 @@ public class InvoiceDispatcher {
                                                                                                                                                          }
                                                                                                                                                      }));
 
-                    final Map<UUID, DateTime> callbackDateTimePerSubscriptions = createNextFutureNotificationDate(invoiceItemModelDaos, account.getTimeZone());
+                    final Map<UUID, DateTime> callbackDateTimePerSubscriptions = createNextFutureNotificationDate(invoiceItemModelDaos, dateAndTimeZoneContext);
                     invoiceDao.createInvoice(invoiceModelDao, invoiceItemModelDaos, invoicePaymentModelDaos, isRealInvoiceWithItems, callbackDateTimePerSubscriptions, context);
 
                     final List<InvoiceItem> fixedPriceInvoiceItems = invoice.getInvoiceItems(FixedPriceInvoiceItem.class);
                     final List<InvoiceItem> recurringInvoiceItems = invoice.getInvoiceItems(RecurringInvoiceItem.class);
-                    setChargedThroughDates(account.getBillCycleDay(), account.getTimeZone(), fixedPriceInvoiceItems, recurringInvoiceItems, context);
+                    setChargedThroughDates(dateAndTimeZoneContext, fixedPriceInvoiceItems, recurringInvoiceItems, context);
 
                     final InvoiceCreationInternalEvent event = new DefaultInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
                                                                                                invoice.getBalance(), invoice.getCurrency(),
@@ -247,7 +249,7 @@ public class InvoiceDispatcher {
 
 
     @VisibleForTesting
-    Map<UUID, DateTime> createNextFutureNotificationDate(final List<InvoiceItemModelDao> invoiceItems, final DateTimeZone accountTimeZone) {
+    Map<UUID, DateTime> createNextFutureNotificationDate(final List<InvoiceItemModelDao> invoiceItems, final DateAndTimeZoneContext dateAndTimeZoneContext) {
         final Map<UUID, DateTime> result = new HashMap<UUID, DateTime>();
 
         // For each subscription that has a positive (amount) recurring item, create the date
@@ -258,40 +260,24 @@ public class InvoiceDispatcher {
                 if ((item.getEndDate() != null) &&
                     (item.getAmount() == null ||
                      item.getAmount().compareTo(BigDecimal.ZERO) >= 0)) {
-
-                    //
-                    // Since we create the targetDate for next invoice using the date from the notificationQ, we need to make sure
-                    // that this datetime once transformed into a LocalDate points to the correct day.
-                    //
-                    // e.g If accountTimeZone is -8 and we want to invoice on the 16, with a toDateTimeAtCurrentTime = 00:00:23,
-                    // we will generate a datetime that is 16T08:00:23 => LocalDate in that timeZone stays on the 16.
-                    //
-                    // With that approach, the time (part) will vary between each call, but the day will stay correct:
-                    // e.g 00:00:23 -> 08:00:23 -> 16:00:23 -> 00:00:23 (3 different times generated)
-                    //
-                    final int deltaMs = accountTimeZone.getOffset(clock.getUTCNow());
-                    final int negativeDeltaMs = -1 * deltaMs;
-
-                    final LocalTime localTime = clock.getUTCNow().toLocalTime();
-                    result.put(item.getSubscriptionId(), item.getEndDate().toDateTime(localTime, DateTimeZone.UTC).plusMillis(negativeDeltaMs));
+                    result.put(item.getSubscriptionId(), dateAndTimeZoneContext.computeUTCDateTimeFromLocalDate(item.getEndDate()));
                 }
             }
         }
         return result;
     }
 
-    private void setChargedThroughDates(final BillCycleDay billCycleDay,
-                                        final DateTimeZone accountTimeZone,
+    private void setChargedThroughDates(final DateAndTimeZoneContext dateAndTimeZoneContext,
                                         final Collection<InvoiceItem> fixedPriceItems,
                                         final Collection<InvoiceItem> recurringItems,
                                         final InternalCallContext context) {
-        final Map<UUID, LocalDate> chargeThroughDates = new HashMap<UUID, LocalDate>();
-        addInvoiceItemsToChargeThroughDates(billCycleDay, accountTimeZone, chargeThroughDates, fixedPriceItems);
-        addInvoiceItemsToChargeThroughDates(billCycleDay, accountTimeZone, chargeThroughDates, recurringItems);
+        final Map<UUID, DateTime> chargeThroughDates = new HashMap<UUID, DateTime>();
+        addInvoiceItemsToChargeThroughDates(dateAndTimeZoneContext, chargeThroughDates, fixedPriceItems);
+        addInvoiceItemsToChargeThroughDates(dateAndTimeZoneContext, chargeThroughDates, recurringItems);
 
         for (final UUID subscriptionId : chargeThroughDates.keySet()) {
             if (subscriptionId != null) {
-                final LocalDate chargeThroughDate = chargeThroughDates.get(subscriptionId);
+                final DateTime chargeThroughDate = chargeThroughDates.get(subscriptionId);
                 entitlementApi.setChargedThroughDate(subscriptionId, chargeThroughDate, context);
             }
         }
@@ -305,24 +291,58 @@ public class InvoiceDispatcher {
         }
     }
 
-    private void addInvoiceItemsToChargeThroughDates(final BillCycleDay billCycleDay,
-                                                     final DateTimeZone accountTimeZone,
-                                                     final Map<UUID, LocalDate> chargeThroughDates,
+    private void addInvoiceItemsToChargeThroughDates(final DateAndTimeZoneContext dateAndTimeZoneContext,
+                                                     final Map<UUID, DateTime> chargeThroughDates,
                                                      final Collection<InvoiceItem> items) {
 
         for (final InvoiceItem item : items) {
             final UUID subscriptionId = item.getSubscriptionId();
             final LocalDate endDate = (item.getEndDate() != null) ? item.getEndDate() : item.getStartDate();
 
+            final DateTime proposedChargedThroughDate = dateAndTimeZoneContext.computeUTCDateTimeFromLocalDate(endDate);
             if (chargeThroughDates.containsKey(subscriptionId)) {
-                if (chargeThroughDates.get(subscriptionId).isBefore(endDate)) {
-                    // The CTD should always align with the BCD
-                    final LocalDate ctd = InvoiceDateUtils.calculateBillingCycleDateOnOrAfter(endDate, accountTimeZone, billCycleDay.getDayOfMonthLocal());
-                    chargeThroughDates.put(subscriptionId, ctd);
+                if (chargeThroughDates.get(subscriptionId).isBefore(proposedChargedThroughDate)) {
+                    chargeThroughDates.put(subscriptionId, proposedChargedThroughDate);
                 }
             } else {
-                chargeThroughDates.put(subscriptionId, endDate);
+                chargeThroughDates.put(subscriptionId, proposedChargedThroughDate);
             }
+        }
+    }
+
+    final static class DateAndTimeZoneContext {
+
+        private final LocalTime referenceTime;
+        private final DateTimeZone accountTimeZone;
+        private final Clock clock;
+
+        public DateAndTimeZoneContext(final DateTime effectiveDateTime, final DateTimeZone accountTimeZone, final Clock clock) {
+            this.clock = clock;
+            this.referenceTime = effectiveDateTime != null ? effectiveDateTime.toLocalTime() : null;
+            this.accountTimeZone = accountTimeZone;
+        }
+        public LocalDate computeTargetDate(final DateTime targetDateTime) {
+            return new LocalDate(targetDateTime, accountTimeZone);
+        }
+
+        public DateTime computeUTCDateTimeFromLocalDate(final LocalDate invoiceItemEndDate) {
+            //
+            // Since we create the targetDate for next invoice using the date from the notificationQ, we need to make sure
+            // that this datetime once transformed into a LocalDate points to the correct day.
+            //
+            // e.g If accountTimeZone is -8 and we want to invoice on the 16, with a toDateTimeAtCurrentTime = 00:00:23,
+            // we will generate a datetime that is 16T08:00:23 => LocalDate in that timeZone stays on the 16.
+            //
+            //
+            // We use clock.getUTCNow() to get the offset with account timezone but that may not be correct
+            // when we transition from standard time and daylight saving time. We could end up with a result
+            // that is slightly in advance and therefore results in a null invoice.
+            // We will fix that by re-inserting ourselves in the notificationQ if we detect that there is no invoice
+            // and yet the subscription is recurring and not cancelled.
+            //
+            final int utcOffest = accountTimeZone.getOffset(clock.getUTCNow());
+            final int localToUTCOffest = -1 * utcOffest;
+            return invoiceItemEndDate.toDateTime(referenceTime, DateTimeZone.UTC).plusMillis(localToUTCOffest);
         }
     }
 }

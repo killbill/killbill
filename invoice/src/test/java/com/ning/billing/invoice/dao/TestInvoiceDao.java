@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.mockito.Mockito;
 import org.skife.jdbi.v2.exceptions.TransactionFailedException;
@@ -1031,7 +1030,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         final BillingEventSet events = new MockBillingEventSet();
         events.add(event1);
 
-        final Invoice invoice1 = generator.generateInvoice(accountId, events, invoiceList, targetDate, DateTimeZone.UTC, Currency.USD);
+        final Invoice invoice1 = generator.generateInvoice(accountId, events, invoiceList, targetDate, Currency.USD);
         assertEquals(invoice1.getBalance(), TEN);
         invoiceList.add(invoice1);
 
@@ -1049,7 +1048,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
 
         // second invoice should be for one half (14/28 days) the difference between the rate plans
         // this is a temporary state, since it actually contains an adjusting item that properly belong to invoice 1
-        final Invoice invoice2 = generator.generateInvoice(accountId, events, invoiceList, targetDate, DateTimeZone.UTC, Currency.USD);
+        final Invoice invoice2 = generator.generateInvoice(accountId, events, invoiceList, targetDate, Currency.USD);
         assertEquals(invoice2.getBalance(), FIVE);
         invoiceList.add(invoice2);
 
@@ -1081,7 +1080,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         events.add(event);
 
         final LocalDate targetDate = buildDate(2011, 1, 15);
-        final Invoice invoice = generator.generateInvoice(UUID.randomUUID(), events, null, targetDate, DateTimeZone.UTC, Currency.USD);
+        final Invoice invoice = generator.generateInvoice(UUID.randomUUID(), events, null, targetDate, Currency.USD);
 
         // expect one pro-ration item and one full-period item
         assertEquals(invoice.getNumberOfItems(), 2);
@@ -1120,7 +1119,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         events.add(event1);
 
         final UUID accountId = UUID.randomUUID();
-        final Invoice invoice1 = generator.generateInvoice(accountId, events, null, new LocalDate(effectiveDate1), DateTimeZone.UTC, Currency.USD);
+        final Invoice invoice1 = generator.generateInvoice(accountId, events, null, new LocalDate(effectiveDate1), Currency.USD);
         assertNotNull(invoice1);
         assertEquals(invoice1.getNumberOfItems(), 1);
         assertEquals(invoice1.getBalance().compareTo(ZERO), 0);
@@ -1136,7 +1135,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
                                                            "testEvent2", 2L, SubscriptionTransitionType.PHASE);
         events.add(event2);
 
-        final Invoice invoice2 = generator.generateInvoice(accountId, events, invoiceList, new LocalDate(effectiveDate2), DateTimeZone.UTC, Currency.USD);
+        final Invoice invoice2 = generator.generateInvoice(accountId, events, invoiceList, new LocalDate(effectiveDate2), Currency.USD);
         assertNotNull(invoice2);
         assertEquals(invoice2.getNumberOfItems(), 1);
         assertEquals(invoice2.getBalance().compareTo(cheapAmount), 0);
@@ -1146,7 +1145,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         //createInvoice(invoice2, invoice2.getTargetDate().getDayOfMonth(), internalCallContext);
 
         final DateTime effectiveDate3 = effectiveDate2.plusMonths(1);
-        final Invoice invoice3 = generator.generateInvoice(accountId, events, invoiceList, new LocalDate(effectiveDate3), DateTimeZone.UTC, Currency.USD);
+        final Invoice invoice3 = generator.generateInvoice(accountId, events, invoiceList, new LocalDate(effectiveDate3), Currency.USD);
         assertNotNull(invoice3);
         assertEquals(invoice3.getNumberOfItems(), 1);
         assertEquals(invoice3.getBalance().compareTo(cheapAmount), 0);
@@ -1157,7 +1156,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
     @Test(groups = "slow")
     public void testInvoiceForEmptyEventSet() throws InvoiceApiException {
         final BillingEventSet events = new MockBillingEventSet();
-        final Invoice invoice = generator.generateInvoice(UUID.randomUUID(), events, null, new LocalDate(), DateTimeZone.UTC, Currency.USD);
+        final Invoice invoice = generator.generateInvoice(UUID.randomUUID(), events, null, new LocalDate(), Currency.USD);
         assertNull(invoice);
     }
 
@@ -1191,7 +1190,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
                                                            "testEvent2", 2L, SubscriptionTransitionType.CHANGE);
         events.add(event2);
 
-        final Invoice invoice = generator.generateInvoice(UUID.randomUUID(), events, null, new LocalDate(effectiveDate2), DateTimeZone.UTC, Currency.USD);
+        final Invoice invoice = generator.generateInvoice(UUID.randomUUID(), events, null, new LocalDate(effectiveDate2), Currency.USD);
         assertNotNull(invoice);
         assertEquals(invoice.getNumberOfItems(), 2);
         assertEquals(invoice.getBalance().compareTo(cheapAmount), 0);
@@ -1266,7 +1265,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
                                                            BillingPeriod.MONTHLY, 1, BillingModeType.IN_ADVANCE,
                                                            "new-event", 1L, SubscriptionTransitionType.CREATE);
         events.add(event1);
-        final Invoice newInvoice = generator.generateInvoice(UUID.randomUUID(), events, invoices, targetDate, DateTimeZone.UTC, Currency.USD);
+        final Invoice newInvoice = generator.generateInvoice(UUID.randomUUID(), events, invoices, targetDate, Currency.USD);
         createInvoice(newInvoice, true, internalCallContext);
 
         // VERIFY THAT WE STILL HAVE ONLY 2 ITEMS, MENAING THERE WERE NO REPAIR AND NO CBA GENERATED
@@ -1301,7 +1300,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
                                                            "testEvent1", 1L, SubscriptionTransitionType.CHANGE);
         events.add(event1);
 
-        Invoice invoice1 = generator.generateInvoice(UUID.randomUUID(), events, invoices, new LocalDate(targetDate1), DateTimeZone.UTC, Currency.USD);
+        Invoice invoice1 = generator.generateInvoice(UUID.randomUUID(), events, invoices, new LocalDate(targetDate1), Currency.USD);
         invoices.add(invoice1);
         createInvoice(invoice1, true, internalCallContext);
         invoice1 = new DefaultInvoice(invoiceDao.getById(invoice1.getId(), internalCallContext));
@@ -1312,7 +1311,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
                                                            BillingPeriod.MONTHLY, 31, BillingModeType.IN_ADVANCE,
                                                            "testEvent2", 2L, SubscriptionTransitionType.CHANGE);
         events.add(event2);
-        Invoice invoice2 = generator.generateInvoice(UUID.randomUUID(), events, invoices, new LocalDate(targetDate2), DateTimeZone.UTC, Currency.USD);
+        Invoice invoice2 = generator.generateInvoice(UUID.randomUUID(), events, invoices, new LocalDate(targetDate2), Currency.USD);
         createInvoice(invoice2, true, internalCallContext);
         invoice2 = new DefaultInvoice(invoiceDao.getById(invoice2.getId(), internalCallContext));
         assertNotNull(invoice2.getInvoiceNumber());

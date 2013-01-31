@@ -18,6 +18,7 @@ package com.ning.billing.util.svcapi.entitlement;
 import java.util.List;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
@@ -42,7 +43,7 @@ public interface EntitlementInternalApi {
 
     public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId, final InternalTenantContext context) throws EntitlementUserApiException;
 
-    public void setChargedThroughDate(final UUID subscriptionId, final LocalDate localChargedThruDate, final InternalCallContext context);
+    public void setChargedThroughDate(final UUID subscriptionId, final DateTime chargedThruDate, final InternalCallContext context);
 
     public List<EffectiveSubscriptionInternalEvent> getAllTransitions(final Subscription subscription, final InternalTenantContext context);
 

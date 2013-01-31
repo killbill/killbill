@@ -192,7 +192,7 @@ public class TestUserApiError extends EntitlementTestSuiteNoDB {
             final DateTime expectedPhaseTrialChange = DefaultClock.addDuration(subscription.getStartDate(), trialPhase.getDuration());
             final Duration ctd = testUtil.getDurationMonth(1);
             final DateTime newChargedThroughDate = DefaultClock.addDuration(expectedPhaseTrialChange, ctd);
-            entitlementInternalApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate.toLocalDate(), internalCallContext);
+            entitlementInternalApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate, internalCallContext);
 
             subscription = entitlementApi.getSubscriptionFromId(subscription.getId(), tenantContext);
 

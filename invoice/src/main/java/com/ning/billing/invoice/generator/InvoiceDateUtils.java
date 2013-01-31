@@ -140,6 +140,7 @@ public class InvoiceDateUtils {
         return days.divide(daysInPeriod, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD);
     }
 
+ /*
     public static LocalDate calculateBillingCycleDateOnOrAfter(final LocalDate date, final DateTimeZone accountTimeZone,
                                                                final int billingCycleDayLocal) {
         final DateTime tmp = date.toDateTimeAtStartOfDay(accountTimeZone);
@@ -155,30 +156,30 @@ public class InvoiceDateUtils {
 
         return new LocalDate(proposedDateTime, accountTimeZone);
     }
+    */
 
-    private static DateTime calculateBillingCycleDateOnOrAfter(final DateTime date, final int billingCycleDayLocal) {
+    public static LocalDate calculateBillingCycleDateOnOrAfter(final LocalDate date, final int billingCycleDayLocal) {
         final int lastDayOfMonth = date.dayOfMonth().getMaximumValue();
 
-        final MutableDateTime tmp = date.toMutableDateTime();
+        final LocalDate fixedDate;
         if (billingCycleDayLocal > lastDayOfMonth) {
-            tmp.setDayOfMonth(lastDayOfMonth);
+            fixedDate = new LocalDate(date.getYear(), date.getMonthOfYear(), lastDayOfMonth, date.getChronology());
         } else {
-            tmp.setDayOfMonth(billingCycleDayLocal);
+            fixedDate = new LocalDate(date.getYear(), date.getMonthOfYear(), billingCycleDayLocal, date.getChronology());
         }
-        DateTime proposedDate = tmp.toDateTime();
 
+        LocalDate proposedDate = fixedDate;
         while (proposedDate.isBefore(date)) {
             proposedDate = proposedDate.plusMonths(1);
         }
         return proposedDate;
     }
 
-    private static DateTime calculateBillingCycleDateAfter(final DateTime date, final int billingCycleDayLocal) {
-        DateTime proposedDate = calculateBillingCycleDateOnOrAfter(date, billingCycleDayLocal);
+    public static LocalDate calculateBillingCycleDateAfter(final LocalDate date, final int billingCycleDayLocal) {
+        LocalDate proposedDate = calculateBillingCycleDateOnOrAfter(date, billingCycleDayLocal);
         if (date.compareTo(proposedDate) == 0) {
             proposedDate = proposedDate.plusMonths(1);
         }
-
         return proposedDate;
     }
 }

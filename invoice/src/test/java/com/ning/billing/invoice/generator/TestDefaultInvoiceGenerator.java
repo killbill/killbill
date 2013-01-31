@@ -97,7 +97,7 @@ public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
     @Test(groups = "fast")
     public void testWithNullEventSetAndNullInvoiceSet() throws InvoiceApiException {
         final UUID accountId = UUID.randomUUID();
-        final Invoice invoice = generator.generateInvoice(accountId, null, null, clock.getUTCToday(), DateTimeZone.UTC, Currency.USD);
+        final Invoice invoice = generator.generateInvoice(accountId, null, null, clock.getUTCToday(), Currency.USD);
 
         assertNull(invoice);
     }
@@ -107,7 +107,7 @@ public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
         final BillingEventSet events = new MockBillingEventSet();
 
         final UUID accountId = UUID.randomUUID();
-        final Invoice invoice = generator.generateInvoice(accountId, events, null, clock.getUTCToday(), DateTimeZone.UTC, Currency.USD);
+        final Invoice invoice = generator.generateInvoice(accountId, events, null, clock.getUTCToday(), Currency.USD);
 
         assertNull(invoice);
     }
@@ -128,7 +128,7 @@ public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
 
         final LocalDate targetDate = buildDate(2011, 10, 3);
         final UUID accountId = UUID.randomUUID();
-        final Invoice invoice = generator.generateInvoice(accountId, events, null, targetDate, DateTimeZone.UTC, Currency.USD);
+        final Invoice invoice = generator.generateInvoice(accountId, events, null, targetDate, Currency.USD);
 
         assertNotNull(invoice);
         assertEquals(invoice.getNumberOfItems(), 2);
@@ -168,7 +168,7 @@ public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
         // Target date is the next BCD, in local time
         final LocalDate targetDate = buildDate(2012, 8, bcdLocal);
         final DateTimeZone accountTimeZone = DateTimeZone.forID("HST");
-        final Invoice invoice = generator.generateInvoice(accountId, events, null, targetDate, accountTimeZone, Currency.USD);
+        final Invoice invoice = generator.generateInvoice(accountId, events, null, targetDate, Currency.USD);
 
         assertNotNull(invoice);
         assertEquals(invoice.getNumberOfItems(), 2);
@@ -193,7 +193,7 @@ public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
 
         // Set a target date of today (start date)
         final LocalDate targetDate = startDate;
-        final Invoice invoice = generator.generateInvoice(accountId, events, null, targetDate, accountTimeZone, Currency.USD);
+        final Invoice invoice = generator.generateInvoice(accountId, events, null, targetDate, Currency.USD);
 
         assertNotNull(invoice);
         assertEquals(invoice.getNumberOfItems(), 1);
@@ -216,7 +216,7 @@ public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
 
         final LocalDate targetDate = buildDate(2011, 10, 3);
         final UUID accountId = UUID.randomUUID();
-        final Invoice invoice = generator.generateInvoice(accountId, events, null, targetDate, DateTimeZone.UTC, Currency.USD);
+        final Invoice invoice = generator.generateInvoice(accountId, events, null, targetDate, Currency.USD);
 
         assertNotNull(invoice);
         assertEquals(invoice.getNumberOfItems(), 2);
@@ -249,7 +249,7 @@ public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
 
         final LocalDate targetDate = buildDate(2011, 10, 3);
         final UUID accountId = UUID.randomUUID();
-        final Invoice invoice = generator.generateInvoice(accountId, events, null, targetDate, DateTimeZone.UTC, Currency.USD);
+        final Invoice invoice = generator.generateInvoice(accountId, events, null, targetDate, Currency.USD);
 
         assertNotNull(invoice);
         assertEquals(invoice.getNumberOfItems(), 2);
@@ -275,7 +275,7 @@ public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
 
         final LocalDate targetDate = buildDate(2011, 12, 3);
         final UUID accountId = UUID.randomUUID();
-        final Invoice invoice = generator.generateInvoice(accountId, events, null, targetDate, DateTimeZone.UTC, Currency.USD);
+        final Invoice invoice = generator.generateInvoice(accountId, events, null, targetDate, Currency.USD);
 
         assertNotNull(invoice);
         assertEquals(invoice.getNumberOfItems(), 4);
@@ -317,7 +317,7 @@ public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
 
         final LocalDate targetDate = buildDate(2011, 12, 3);
         final UUID accountId = UUID.randomUUID();
-        final Invoice invoice = generator.generateInvoice(accountId, events, null, targetDate, DateTimeZone.UTC, Currency.USD);
+        final Invoice invoice = generator.generateInvoice(accountId, events, null, targetDate, Currency.USD);
 
         assertNotNull(invoice);
         assertEquals(invoice.getNumberOfItems(), 4);
@@ -340,12 +340,12 @@ public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
 
         LocalDate targetDate = buildDate(2011, 12, 1);
         final UUID accountId = UUID.randomUUID();
-        final Invoice invoice1 = generator.generateInvoice(accountId, events, null, targetDate, DateTimeZone.UTC, Currency.USD);
+        final Invoice invoice1 = generator.generateInvoice(accountId, events, null, targetDate, Currency.USD);
         final List<Invoice> existingInvoices = new ArrayList<Invoice>();
         existingInvoices.add(invoice1);
 
         targetDate = buildDate(2011, 12, 3);
-        final Invoice invoice2 = generator.generateInvoice(accountId, events, existingInvoices, targetDate, DateTimeZone.UTC, Currency.USD);
+        final Invoice invoice2 = generator.generateInvoice(accountId, events, existingInvoices, targetDate, Currency.USD);
 
         assertNull(invoice2);
     }
@@ -520,7 +520,7 @@ public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
         final LocalDate targetDate = buildDate(2011, 1, 1);
         events.add(createBillingEvent(UUID.randomUUID(), targetDate, plan, planPhase, 1));
 
-        final Invoice invoice = generator.generateInvoice(UUID.randomUUID(), events, null, targetDate, DateTimeZone.UTC, Currency.USD);
+        final Invoice invoice = generator.generateInvoice(UUID.randomUUID(), events, null, targetDate, Currency.USD);
 
         assertEquals(invoice.getNumberOfItems(), 1);
     }
@@ -535,7 +535,7 @@ public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
 
         events.add(createBillingEvent(UUID.randomUUID(), startDate, plan, planPhase, startDate.getDayOfMonth()));
 
-        final Invoice invoice = generator.generateInvoice(UUID.randomUUID(), events, null, targetDate, DateTimeZone.UTC, Currency.USD);
+        final Invoice invoice = generator.generateInvoice(UUID.randomUUID(), events, null, targetDate, Currency.USD);
         final RecurringInvoiceItem item = (RecurringInvoiceItem) invoice.getInvoiceItems().get(0);
 
         // end date of the invoice item should be equal to exactly one month later (rounded)
@@ -572,13 +572,13 @@ public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
 
         events.add(event2);
         events.add(event1);
-        final Invoice invoice1 = generator.generateInvoice(accountId, events, null, new LocalDate("2012-02-01"), DateTimeZone.UTC, Currency.USD);
+        final Invoice invoice1 = generator.generateInvoice(accountId, events, null, new LocalDate("2012-02-01"), Currency.USD);
         assertNotNull(invoice1);
         assertEquals(invoice1.getNumberOfItems(), 1);
 
         final List<Invoice> invoiceList = new ArrayList<Invoice>();
         invoiceList.add(invoice1);
-        final Invoice invoice2 = generator.generateInvoice(accountId, events, invoiceList, new LocalDate("2012-04-05"), DateTimeZone.UTC, Currency.USD);
+        final Invoice invoice2 = generator.generateInvoice(accountId, events, invoiceList, new LocalDate("2012-04-05"), Currency.USD);
         assertNotNull(invoice2);
         assertEquals(invoice2.getNumberOfItems(), 1);
         final FixedPriceInvoiceItem item = (FixedPriceInvoiceItem) invoice2.getInvoiceItems().get(0);
@@ -602,7 +602,7 @@ public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
         events.add(event1);
 
         // ensure both components are invoiced
-        final Invoice invoice1 = generator.generateInvoice(accountId, events, null, startDate, DateTimeZone.UTC, Currency.USD);
+        final Invoice invoice1 = generator.generateInvoice(accountId, events, null, startDate, Currency.USD);
         assertNotNull(invoice1);
         assertEquals(invoice1.getNumberOfItems(), 2);
         assertEquals(invoice1.getBalance(), FIFTEEN);
@@ -614,7 +614,7 @@ public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
         final LocalDate currentDate = startDate.plusMonths(1);
 
         // ensure that only the recurring price is invoiced
-        final Invoice invoice2 = generator.generateInvoice(accountId, events, invoiceList, currentDate, DateTimeZone.UTC, Currency.USD);
+        final Invoice invoice2 = generator.generateInvoice(accountId, events, invoiceList, currentDate, Currency.USD);
         assertNotNull(invoice2);
         assertEquals(invoice2.getNumberOfItems(), 1);
         assertEquals(invoice2.getBalance(), FIVE);
@@ -638,7 +638,7 @@ public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
         events.add(event1);
 
         // ensure that a single invoice item is generated for the fixed cost
-        final Invoice invoice1 = generator.generateInvoice(accountId, events, null, startDate, DateTimeZone.UTC, Currency.USD);
+        final Invoice invoice1 = generator.generateInvoice(accountId, events, null, startDate, Currency.USD);
         assertNotNull(invoice1);
         assertEquals(invoice1.getNumberOfItems(), 1);
         assertEquals(invoice1.getBalance(), fixedCost1);
@@ -652,7 +652,7 @@ public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
         events.add(event2);
 
         // ensure that a single invoice item is generated for the fixed cost
-        final Invoice invoice2 = generator.generateInvoice(accountId, events, invoiceList, phaseChangeDate, DateTimeZone.UTC, Currency.USD);
+        final Invoice invoice2 = generator.generateInvoice(accountId, events, invoiceList, phaseChangeDate, Currency.USD);
         assertNotNull(invoice2);
         assertEquals(invoice2.getNumberOfItems(), 1);
         assertEquals(invoice2.getBalance(), fixedCost2);
@@ -684,7 +684,7 @@ public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
         final LocalDate discountPhaseEndDate = trialPhaseEndDate.plusMonths(6);
         events.add(createBillingEvent(subscriptionId, discountPhaseEndDate, plan1, phase3, BILL_CYCLE_DAY));
 
-        final Invoice invoice1 = generator.generateInvoice(accountId, events, null, creationDate, DateTimeZone.UTC, Currency.USD);
+        final Invoice invoice1 = generator.generateInvoice(accountId, events, null, creationDate, Currency.USD);
         assertNotNull(invoice1);
         assertEquals(invoice1.getNumberOfItems(), 1);
         assertEquals(invoice1.getBalance().compareTo(ZERO), 0);
@@ -692,7 +692,7 @@ public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
         final List<Invoice> invoiceList = new ArrayList<Invoice>();
         invoiceList.add(invoice1);
 
-        final Invoice invoice2 = generator.generateInvoice(accountId, events, invoiceList, trialPhaseEndDate, DateTimeZone.UTC, Currency.USD);
+        final Invoice invoice2 = generator.generateInvoice(accountId, events, invoiceList, trialPhaseEndDate, Currency.USD);
         assertNotNull(invoice2);
         assertEquals(invoice2.getNumberOfItems(), 1);
         assertEquals(invoice2.getInvoiceItems().get(0).getStartDate(), trialPhaseEndDate);
@@ -700,7 +700,7 @@ public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
 
         invoiceList.add(invoice2);
         LocalDate targetDate = new LocalDate(trialPhaseEndDate.getYear(), trialPhaseEndDate.getMonthOfYear(), BILL_CYCLE_DAY);
-        final Invoice invoice3 = generator.generateInvoice(accountId, events, invoiceList, targetDate, DateTimeZone.UTC, Currency.USD);
+        final Invoice invoice3 = generator.generateInvoice(accountId, events, invoiceList, targetDate, Currency.USD);
         assertNotNull(invoice3);
         assertEquals(invoice3.getNumberOfItems(), 1);
         assertEquals(invoice3.getInvoiceItems().get(0).getStartDate(), targetDate);
@@ -708,7 +708,7 @@ public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
 
         invoiceList.add(invoice3);
         targetDate = targetDate.plusMonths(6);
-        final Invoice invoice4 = generator.generateInvoice(accountId, events, invoiceList, targetDate, DateTimeZone.UTC, Currency.USD);
+        final Invoice invoice4 = generator.generateInvoice(accountId, events, invoiceList, targetDate, Currency.USD);
         assertNotNull(invoice4);
         assertEquals(invoice4.getNumberOfItems(), 7);
     }
@@ -720,7 +720,7 @@ public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
         final Plan plan1 = new MockPlan();
         final PlanPhase phase1 = createMockMonthlyPlanPhase(null, ZERO, PhaseType.TRIAL);
         events.add(createBillingEvent(UUID.randomUUID(), clock.getUTCToday(), plan1, phase1, 1));
-        generator.generateInvoice(UUID.randomUUID(), events, null, targetDate, DateTimeZone.UTC, Currency.USD);
+        generator.generateInvoice(UUID.randomUUID(), events, null, targetDate, Currency.USD);
     }
 
     private MockPlanPhase createMockMonthlyPlanPhase() {
@@ -772,7 +772,7 @@ public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
                                        final LocalDate targetDate, final int expectedNumberOfItems,
                                        final BigDecimal expectedAmount) throws InvoiceApiException {
         final Currency currency = Currency.USD;
-        final Invoice invoice = generator.generateInvoice(accountId, events, existingInvoices, targetDate, DateTimeZone.UTC, currency);
+        final Invoice invoice = generator.generateInvoice(accountId, events, existingInvoices, targetDate, currency);
         assertNotNull(invoice);
         assertEquals(invoice.getNumberOfItems(), expectedNumberOfItems);
         existingInvoices.add(invoice);
@@ -799,7 +799,7 @@ public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
         events.add(createBillingEvent(baseSubscription.getId(), april25, basePlan, basePlanEvergreen, 25));
 
         // generate invoice
-        final Invoice invoice1 = generator.generateInvoice(accountId, events, null, april25, DateTimeZone.UTC, Currency.USD);
+        final Invoice invoice1 = generator.generateInvoice(accountId, events, null, april25, Currency.USD);
         assertNotNull(invoice1);
         assertEquals(invoice1.getNumberOfItems(), 1);
         assertEquals(invoice1.getBalance().compareTo(TEN), 0);
@@ -820,7 +820,7 @@ public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
         events.add(createBillingEvent(addOnSubscription2.getId(), april28, addOn2Plan, addOn2PlanPhaseEvergreen, 25));
 
         // generate invoice
-        final Invoice invoice2 = generator.generateInvoice(accountId, events, invoices, april28, DateTimeZone.UTC, Currency.USD);
+        final Invoice invoice2 = generator.generateInvoice(accountId, events, invoices, april28, Currency.USD);
         invoices.add(invoice2);
         assertNotNull(invoice2);
         assertEquals(invoice2.getNumberOfItems(), 2);
@@ -837,7 +837,7 @@ public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
 
         // generate invoice
         final LocalDate may1 = new LocalDate(2012, 5, 1);
-        final Invoice invoice3 = generator.generateInvoice(accountId, newEvents, invoices, may1, DateTimeZone.UTC, Currency.USD);
+        final Invoice invoice3 = generator.generateInvoice(accountId, newEvents, invoices, may1, Currency.USD);
         assertNotNull(invoice3);
         assertEquals(invoice3.getNumberOfItems(), 5);
         // -4.50 -18 - 10 (to correct the previous 2 invoices) + 4.50 + 13
@@ -860,7 +860,7 @@ public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
         final BillingEventSet events = new MockBillingEventSet();
         events.add(createBillingEvent(originalSubscription.getId(), april25, originalPlan, originalPlanEvergreen, 25));
 
-        final Invoice invoice1 = generator.generateInvoice(accountId, events, null, april25, DateTimeZone.UTC, Currency.USD);
+        final Invoice invoice1 = generator.generateInvoice(accountId, events, null, april25, Currency.USD);
 
         printDetailInvoice(invoice1);
 
@@ -881,7 +881,7 @@ public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
         events.add(createBillingEvent(newSubscription.getId(), april25, newPlan, newPlanEvergreen, 25));
 
         // generate a new invoice
-        final Invoice invoice2 = generator.generateInvoice(accountId, events, invoices, april25, DateTimeZone.UTC, Currency.USD);
+        final Invoice invoice2 = generator.generateInvoice(accountId, events, invoices, april25, Currency.USD);
 
         printDetailInvoice(invoice2);
         assertEquals(invoice2.getNumberOfItems(), 4);
@@ -944,7 +944,7 @@ public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
 
         final LocalDate targetDate = buildDate(2011, 10, 3);
         final UUID accountId = UUID.randomUUID();
-        final Invoice invoice = generator.generateInvoice(accountId, events, null, targetDate, DateTimeZone.UTC, Currency.USD);
+        final Invoice invoice = generator.generateInvoice(accountId, events, null, targetDate, Currency.USD);
 
         assertNull(invoice);
     }
@@ -971,7 +971,7 @@ public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
         eventSet.add(createBillingEvent(subscriptionId2, startDate, plan2, plan2phase1, 1));
 
         // generate the first invoice
-        final Invoice invoice1 = generator.generateInvoice(accountId, eventSet, invoices, startDate, DateTimeZone.UTC, currency);
+        final Invoice invoice1 = generator.generateInvoice(accountId, eventSet, invoices, startDate, currency);
         assertNotNull(invoice1);
         assertTrue(invoice1.getBalance().compareTo(FIFTEEN.add(TWELVE)) == 0);
         invoices.add(invoice1);
@@ -982,7 +982,7 @@ public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
         eventSet.addSubscriptionWithAutoInvoiceOff(subscriptionId1);
 
         final LocalDate targetDate2 = startDate.plusMonths(1);
-        final Invoice invoice2 = generator.generateInvoice(accountId, eventSet, invoices, targetDate2, DateTimeZone.UTC, currency);
+        final Invoice invoice2 = generator.generateInvoice(accountId, eventSet, invoices, targetDate2, currency);
         assertNotNull(invoice2);
         assertTrue(invoice2.getBalance().compareTo(TWELVE) == 0);
         invoices.add(invoice2);
@@ -990,7 +990,7 @@ public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
         final LocalDate targetDate3 = targetDate2.plusMonths(1);
         eventSet.clearSubscriptionsWithAutoInvoiceOff();
         eventSet.add(subscription1creation);
-        final Invoice invoice3 = generator.generateInvoice(accountId, eventSet, invoices, targetDate3, DateTimeZone.UTC, currency);
+        final Invoice invoice3 = generator.generateInvoice(accountId, eventSet, invoices, targetDate3, currency);
         assertNotNull(invoice3);
         assertTrue(invoice3.getBalance().compareTo(FIFTEEN.multiply(TWO).add(TWELVE)) == 0);
     }
@@ -1010,7 +1010,7 @@ public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
 
         final List<Invoice> invoices = new ArrayList<Invoice>();
 
-        final Invoice initialInvoice = generator.generateInvoice(accountId, billingEventSet, null, startDate, DateTimeZone.UTC, Currency.USD);
+        final Invoice initialInvoice = generator.generateInvoice(accountId, billingEventSet, null, startDate, Currency.USD);
         assertNotNull(initialInvoice);
         assertEquals(initialInvoice.getNumberOfItems(), 1);
         assertEquals(initialInvoice.getBalance().compareTo(TEN), 0);
@@ -1028,7 +1028,7 @@ public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
         printDetailInvoice(invoiceWithCredit);
 
         // invoice one month after the initial subscription
-        final Invoice finalInvoice = generator.generateInvoice(accountId, billingEventSet, invoices, startDate.plusMonths(1), DateTimeZone.UTC, Currency.USD);
+        final Invoice finalInvoice = generator.generateInvoice(accountId, billingEventSet, invoices, startDate.plusMonths(1), Currency.USD);
 
         printDetailInvoice(finalInvoice);
 

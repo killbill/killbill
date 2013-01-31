@@ -107,7 +107,7 @@ public class TestUserApiAddOn extends EntitlementTestSuiteWithEmbeddedDB {
             final Duration ctd = testUtil.getDurationMonth(1);
             // Why not just use clock.getUTCNow().plusMonths(1) ?
             final DateTime newChargedThroughDate = DefaultClock.addDuration(now, ctd);
-            entitlementInternalApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate.toLocalDate(), internalCallContext);
+            entitlementInternalApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate, internalCallContext);
             baseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
 
             // FUTURE CANCELLATION
@@ -167,7 +167,7 @@ public class TestUserApiAddOn extends EntitlementTestSuiteWithEmbeddedDB {
             final DateTime now = clock.getUTCNow();
             final Duration ctd = testUtil.getDurationMonth(1);
             final DateTime newChargedThroughDate = DefaultClock.addDuration(now, ctd);
-            entitlementInternalApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate.toLocalDate(), internalCallContext);
+            entitlementInternalApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate, internalCallContext);
             baseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
 
             // CHANGE IMMEDIATELY WITH TO BP WITH NON INCLUDED ADDON
@@ -230,7 +230,7 @@ public class TestUserApiAddOn extends EntitlementTestSuiteWithEmbeddedDB {
             final DateTime now = clock.getUTCNow();
             final Duration ctd = testUtil.getDurationMonth(1);
             final DateTime newChargedThroughDate = DefaultClock.addDuration(now, ctd);
-            entitlementInternalApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate.toLocalDate(), internalCallContext);
+            entitlementInternalApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate, internalCallContext);
             baseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
 
             // CHANGE IMMEDIATELY WITH TO BP WITH NON AVAILABLE ADDON

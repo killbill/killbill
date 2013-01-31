@@ -202,7 +202,7 @@ public class OverdueStateApplicator<T extends Blockable> {
         poster.clearNotificationsFor(blockable, context);
     }
 
-    private void cancelSubscriptionsIfRequired(final T blockable, final OverdueState<T> nextOverdueState, final InternalCallContext context) throws OverdueException {
+    private void  cancelSubscriptionsIfRequired(final T blockable, final OverdueState<T> nextOverdueState, final InternalCallContext context) throws OverdueException {
         if (nextOverdueState.getSubscriptionCancellationPolicy() == OverdueCancellationPolicicy.NONE) {
             return;
         }

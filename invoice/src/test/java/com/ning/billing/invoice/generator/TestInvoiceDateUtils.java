@@ -39,7 +39,7 @@ public class TestInvoiceDateUtils {
     @Test(groups = "fast")
     public void testNextBCDShouldNotBeInThePast() throws Exception {
         final LocalDate from = new LocalDate("2012-07-16");
-        final LocalDate to = InvoiceDateUtils.calculateBillingCycleDateOnOrAfter(from, DateTimeZone.forID("Pacific/Pitcairn"), 15);
+        final LocalDate to = InvoiceDateUtils.calculateBillingCycleDateOnOrAfter(from, 15);
         Assert.assertEquals(to, new LocalDate("2012-08-15"));
     }
 
@@ -54,42 +54,42 @@ public class TestInvoiceDateUtils {
     @Test(groups = "fast")
     public void testBeforeBCDWithAfter() throws Exception {
         final LocalDate from = new LocalDate("2012-03-02");
-        final LocalDate to = InvoiceDateUtils.calculateBillingCycleDateAfter(from, DateTimeZone.UTC, 3);
+        final LocalDate to = InvoiceDateUtils.calculateBillingCycleDateAfter(from, 3);
         Assert.assertEquals(to, new LocalDate("2012-03-03"));
     }
 
     @Test(groups = "fast")
     public void testEqualBCDWithAfter() throws Exception {
         final LocalDate from = new LocalDate("2012-03-03");
-        final LocalDate to = InvoiceDateUtils.calculateBillingCycleDateAfter(from, DateTimeZone.UTC, 3);
+        final LocalDate to = InvoiceDateUtils.calculateBillingCycleDateAfter(from, 3);
         Assert.assertEquals(to, new LocalDate("2012-04-03"));
     }
 
     @Test(groups = "fast")
     public void testAfterBCDWithAfter() throws Exception {
         final LocalDate from = new LocalDate("2012-03-04");
-        final LocalDate to = InvoiceDateUtils.calculateBillingCycleDateAfter(from, DateTimeZone.UTC, 3);
+        final LocalDate to = InvoiceDateUtils.calculateBillingCycleDateAfter(from, 3);
         Assert.assertEquals(to, new LocalDate("2012-04-03"));
     }
 
     @Test(groups = "fast")
     public void testBeforeBCDWithOnOrAfter() throws Exception {
         final LocalDate from = new LocalDate("2012-03-02");
-        final LocalDate to = InvoiceDateUtils.calculateBillingCycleDateOnOrAfter(from, DateTimeZone.UTC, 3);
+        final LocalDate to = InvoiceDateUtils.calculateBillingCycleDateOnOrAfter(from, 3);
         Assert.assertEquals(to, new LocalDate("2012-03-03"));
     }
 
     @Test(groups = "fast")
     public void testEqualBCDWithOnOrAfter() throws Exception {
         final LocalDate from = new LocalDate("2012-03-03");
-        final LocalDate to = InvoiceDateUtils.calculateBillingCycleDateOnOrAfter(from, DateTimeZone.UTC, 3);
+        final LocalDate to = InvoiceDateUtils.calculateBillingCycleDateOnOrAfter(from, 3);
         Assert.assertEquals(to, new LocalDate("2012-03-03"));
     }
 
     @Test(groups = "fast")
     public void testAfterBCDWithOnOrAfter() throws Exception {
         final LocalDate from = new LocalDate("2012-03-04");
-        final LocalDate to = InvoiceDateUtils.calculateBillingCycleDateOnOrAfter(from, DateTimeZone.UTC, 3);
+        final LocalDate to = InvoiceDateUtils.calculateBillingCycleDateOnOrAfter(from, 3);
         Assert.assertEquals(to, new LocalDate("2012-04-03"));
     }
 

@@ -22,7 +22,6 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +41,7 @@ public class InAdvanceBillingMode implements BillingMode {
 
     @Override
     public List<RecurringInvoiceItemData> calculateInvoiceItemData(final LocalDate startDate, @Nullable final LocalDate endDate,
-                                                                   final LocalDate targetDate, final DateTimeZone accountTimeZone,
+                                                                   final LocalDate targetDate,
                                                                    final int billingCycleDayLocal, final BillingPeriod billingPeriod) throws InvalidDateSequenceException {
         if (endDate != null && endDate.isBefore(startDate)) {
             throw new InvalidDateSequenceException();
@@ -53,7 +52,7 @@ public class InAdvanceBillingMode implements BillingMode {
 
         final List<RecurringInvoiceItemData> results = new ArrayList<RecurringInvoiceItemData>();
 
-        final LocalDate firstBillingCycleDate = calculateBillingCycleDateOnOrAfter(startDate, accountTimeZone, billingCycleDayLocal);
+        final LocalDate firstBillingCycleDate = calculateBillingCycleDateOnOrAfter(startDate, billingCycleDayLocal);
 
         // We are not billing for less than a day (we could...)
         if (endDate != null && endDate.equals(startDate)) {

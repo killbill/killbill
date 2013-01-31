@@ -583,7 +583,7 @@ public class TestRepairBP extends EntitlementTestSuiteWithEmbeddedDB {
 
         // SET CTD to BASE SUBSCRIPTION SP CANCEL OCCURS EOT
         final DateTime newChargedThroughDate = baseSubscription.getStartDate().plusDays(30).plusMonths(1);
-        entitlementInternalApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate.toLocalDate(), internalCallContext);
+        entitlementInternalApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate, internalCallContext);
         baseSubscription = entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
 
         final DateTime requestedChange = clock.getUTCNow();
@@ -696,7 +696,7 @@ public class TestRepairBP extends EntitlementTestSuiteWithEmbeddedDB {
                 // Move clock at least a sec to make sure the last_sys_update from bundle is different-- and therefore generates a different viewId
                 clock.setDeltaFromReality(1000);
 
-                entitlementInternalApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate.toLocalDate(), internalCallContext);
+                entitlementInternalApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate, internalCallContext);
                 entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
 
                 repairApi.repairBundle(bRepair, true, callContext);
