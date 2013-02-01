@@ -23,7 +23,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.ErrorCode;
-import com.ning.billing.catalog.CatalogTestSuite;
+import com.ning.billing.catalog.CatalogTestSuiteNoDB;
 import com.ning.billing.catalog.DefaultPriceList;
 import com.ning.billing.catalog.DefaultProduct;
 import com.ning.billing.catalog.MockCatalog;
@@ -34,7 +34,7 @@ import com.ning.billing.catalog.api.PlanSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 
-public class TestCase extends CatalogTestSuite {
+public class TestCase extends CatalogTestSuiteNoDB {
     protected class CaseResult extends Case<Result> {
         @XmlElement(required = true)
         private final Result policy;

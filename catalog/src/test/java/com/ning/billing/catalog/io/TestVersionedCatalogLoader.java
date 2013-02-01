@@ -32,14 +32,14 @@ import org.testng.annotations.Test;
 import org.xml.sax.SAXException;
 
 import com.google.common.io.Resources;
-import com.ning.billing.catalog.CatalogTestSuite;
+import com.ning.billing.catalog.CatalogTestSuiteNoDB;
 import com.ning.billing.catalog.StandaloneCatalog;
 import com.ning.billing.catalog.VersionedCatalog;
 import com.ning.billing.catalog.api.InvalidConfigException;
 import com.ning.billing.lifecycle.KillbillService.ServiceException;
 import com.ning.billing.util.clock.DefaultClock;
 
-public class TestVersionedCatalogLoader extends CatalogTestSuite {
+public class TestVersionedCatalogLoader extends CatalogTestSuiteNoDB {
     private final VersionedCatalogLoader loader = new VersionedCatalogLoader(new DefaultClock());
 
     @Test(groups = "fast")

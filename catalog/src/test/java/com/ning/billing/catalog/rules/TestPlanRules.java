@@ -22,7 +22,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-import com.ning.billing.catalog.CatalogTestSuite;
+import com.ning.billing.catalog.CatalogTestSuiteNoDB;
 import com.ning.billing.catalog.DefaultPriceList;
 import com.ning.billing.catalog.DefaultProduct;
 import com.ning.billing.catalog.MockCatalog;
@@ -37,7 +37,7 @@ import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PlanSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 
-public class TestPlanRules extends CatalogTestSuite {
+public class TestPlanRules extends CatalogTestSuiteNoDB {
     private final Logger log = LoggerFactory.getLogger(TestPlanRules.class);
     private MockCatalog cat = null;
 

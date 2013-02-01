@@ -22,7 +22,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.google.common.io.Resources;
-import com.ning.billing.catalog.CatalogTestSuite;
+import com.ning.billing.catalog.CatalogTestSuiteNoDB;
 import com.ning.billing.catalog.StandaloneCatalog;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PlanAlignmentCreate;
@@ -30,7 +30,7 @@ import com.ning.billing.catalog.api.PlanSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.util.config.catalog.XMLLoader;
 
-public class TestLoadRules extends CatalogTestSuite {
+public class TestLoadRules extends CatalogTestSuiteNoDB {
     @Test(groups = "fast")
     public void test() throws Exception {
         final URI uri = new URI(Resources.getResource("WeaponsHireSmall.xml").toExternalForm());

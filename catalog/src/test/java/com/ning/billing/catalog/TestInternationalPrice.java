@@ -29,7 +29,7 @@ import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.config.catalog.ValidationErrors;
 
-public class TestInternationalPrice extends CatalogTestSuite {
+public class TestInternationalPrice extends CatalogTestSuiteNoDB {
     private static final Logger log = LoggerFactory.getLogger(TestInternationalPrice.class);
 
     @Test(groups = "fast")

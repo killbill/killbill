@@ -22,7 +22,7 @@ import org.testng.annotations.Test;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.PhaseType;
 
-public class TestStandaloneCatalog extends CatalogTestSuite {
+public class TestStandaloneCatalog extends CatalogTestSuiteNoDB {
     @Test(groups = "fast")
     public void testFindPhase() throws CatalogApiException {
         final DefaultPlanPhase phaseTrial1 = new MockPlanPhase().setPhaseType(PhaseType.TRIAL);

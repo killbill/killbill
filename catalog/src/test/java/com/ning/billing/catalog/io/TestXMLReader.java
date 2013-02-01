@@ -20,11 +20,11 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.google.common.io.Resources;
-import com.ning.billing.catalog.CatalogTestSuite;
+import com.ning.billing.catalog.CatalogTestSuiteNoDB;
 import com.ning.billing.catalog.StandaloneCatalog;
 import com.ning.billing.util.config.catalog.XMLLoader;
 
-public class TestXMLReader extends CatalogTestSuite {
+public class TestXMLReader extends CatalogTestSuiteNoDB {
     @Test(groups = "fast")
     public void testCatalogLoad() {
         try {

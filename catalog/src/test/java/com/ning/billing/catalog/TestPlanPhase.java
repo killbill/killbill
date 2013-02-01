@@ -26,7 +26,7 @@ import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.util.config.catalog.ValidationErrors;
 
-public class TestPlanPhase extends CatalogTestSuite {
+public class TestPlanPhase extends CatalogTestSuiteNoDB {
     private final Logger log = LoggerFactory.getLogger(TestPlanPhase.class);
 
     @Test(groups = "fast")

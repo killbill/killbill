@@ -27,7 +27,7 @@ import org.testng.annotations.Test;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.config.catalog.ValidationErrors;
 
-public class TestPlan extends CatalogTestSuite {
+public class TestPlan extends CatalogTestSuiteNoDB {
     private static final Logger log = LoggerFactory.getLogger(TestPlan.class);
 
     @Test(groups = "fast")

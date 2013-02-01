@@ -41,7 +41,7 @@ import com.ning.billing.catalog.io.VersionedCatalogLoader;
 import com.ning.billing.lifecycle.KillbillService.ServiceException;
 import com.ning.billing.util.clock.DefaultClock;
 
-public class TestVersionedCatalog extends CatalogTestSuite {
+public class TestVersionedCatalog extends CatalogTestSuiteNoDB {
     private static final Logger log = LoggerFactory.getLogger(TestVersionedCatalog.class);
     private final VersionedCatalogLoader loader = new VersionedCatalogLoader(new DefaultClock());
     private VersionedCatalog vc;

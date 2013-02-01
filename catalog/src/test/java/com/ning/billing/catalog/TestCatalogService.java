@@ -24,7 +24,7 @@ import com.ning.billing.util.config.CatalogConfig;
 import com.ning.billing.lifecycle.KillbillService.ServiceException;
 import com.ning.billing.util.clock.DefaultClock;
 
-public class TestCatalogService extends CatalogTestSuite {
+public class TestCatalogService extends CatalogTestSuiteNoDB {
     @Test(groups = "fast")
     public void testCatalogServiceDirectory() throws ServiceException {
         final DefaultCatalogService service = new DefaultCatalogService(new CatalogConfig() {
