@@ -24,12 +24,12 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.invoice.InvoiceTestSuite;
+import com.ning.billing.invoice.InvoiceTestSuiteNoDB;
 import com.ning.billing.util.events.InvoiceCreationInternalEvent;
 import com.ning.billing.util.events.NullInvoiceInternalEvent;
 import com.ning.billing.util.jackson.ObjectMapper;
 
-public class TestEventJson extends InvoiceTestSuite {
+public class TestEventJson extends InvoiceTestSuiteNoDB {
 
     private static final ObjectMapper mapper = new ObjectMapper();
 

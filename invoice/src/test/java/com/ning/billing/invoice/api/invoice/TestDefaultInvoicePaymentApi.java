@@ -63,33 +63,6 @@ public class TestDefaultInvoicePaymentApi extends InvoiceTestSuiteWithEmbeddedDB
     private static final BigDecimal THIRTY = new BigDecimal("30.00");
     private static final Currency CURRENCY = Currency.EUR;
 
-    private final Clock clock = new ClockMock();
-    private final CacheControllerDispatcher controllerDispatcher = new CacheControllerDispatcher();
-
-    private InvoiceSqlDao invoiceSqlDao;
-    private InvoiceItemSqlDao invoiceItemSqlDao;
-    private InvoicePaymentApi invoicePaymentApi;
-    private InvoiceInternalApi invoiceInternalApi;
-    private InternalCallContextFactory internalCallContextFactory;
-
-    @BeforeSuite(groups = "slow")
-    public void setup() throws IOException {
-        final IDBI dbi = getDBI();
-
-        invoiceSqlDao = dbi.onDemand(InvoiceSqlDao.class);
-        invoiceSqlDao.test(internalCallContext);
-
-        invoiceItemSqlDao = dbi.onDemand(InvoiceItemSqlDao.class);
-        invoiceItemSqlDao.test(internalCallContext);
-
-        final NonEntityDao nonEntityDao = new DefaultNonEntityDao(dbi);
-        final NextBillingDatePoster nextBillingDatePoster = new MockNextBillingDatePoster();
-        internalCallContextFactory = new InternalCallContextFactory(clock, nonEntityDao, controllerDispatcher);
-        final InvoiceDao invoiceDao = new DefaultInvoiceDao(dbi, nextBillingDatePoster, Mockito.mock(InternalBus.class), clock, controllerDispatcher, nonEntityDao);
-        invoicePaymentApi = new DefaultInvoicePaymentApi(invoiceDao, internalCallContextFactory);
-        invoiceInternalApi = new DefaultInvoiceInternalApi(invoiceDao);
-    }
-
     @Test(groups = "slow")
     public void testFullRefundWithNoAdjustment() throws Exception {
         verifyRefund(THIRTY, THIRTY, THIRTY, false, ImmutableMap.<UUID, BigDecimal>of());
@@ -113,8 +86,8 @@ public class TestDefaultInvoicePaymentApi extends InvoiceTestSuiteWithEmbeddedDB
     @Test(groups = "slow")
     public void testFullRefundWithBothInvoiceItemAdjustments() throws Exception {
         // Create an invoice with two items (30 \u20ac and 10 \u20ac)
-        final Invoice invoice = createAndPersistInvoice(invoiceSqlDao, invoiceItemSqlDao, clock,
-                                                        ImmutableList.<BigDecimal>of(THIRTY, BigDecimal.TEN), CURRENCY, callContext, internalCallContextFactory);
+        final Invoice invoice = createAndPersistInvoice(invoiceDao,  clock,
+                                                        ImmutableList.<BigDecimal>of(THIRTY, BigDecimal.TEN), CURRENCY, internalCallContext);
 
         // Fully adjust both items
         final Map<UUID, BigDecimal> adjustments = new HashMap<UUID, BigDecimal>();
@@ -127,8 +100,8 @@ public class TestDefaultInvoicePaymentApi extends InvoiceTestSuiteWithEmbeddedDB
     @Test(groups = "slow")
     public void testPartialRefundWithSingleInvoiceItemAdjustment() throws Exception {
         // Create an invoice with two items (30 \u20ac and 10 \u20ac)
-        final Invoice invoice = createAndPersistInvoice(invoiceSqlDao, invoiceItemSqlDao, clock,
-                                                        ImmutableList.<BigDecimal>of(THIRTY, BigDecimal.TEN), CURRENCY, callContext, internalCallContextFactory);
+        final Invoice invoice = createAndPersistInvoice(invoiceDao,  clock,
+                                                        ImmutableList.<BigDecimal>of(THIRTY, BigDecimal.TEN), CURRENCY, internalCallContext);
 
         // Fully adjust both items
         final Map<UUID, BigDecimal> adjustments = new HashMap<UUID, BigDecimal>();
@@ -140,8 +113,8 @@ public class TestDefaultInvoicePaymentApi extends InvoiceTestSuiteWithEmbeddedDB
     @Test(groups = "slow")
     public void testPartialRefundWithTwoInvoiceItemAdjustment() throws Exception {
         // Create an invoice with two items (30 \u20ac and 10 \u20ac)
-        final Invoice invoice = createAndPersistInvoice(invoiceSqlDao, invoiceItemSqlDao, clock,
-                                                        ImmutableList.<BigDecimal>of(THIRTY, BigDecimal.TEN), CURRENCY, callContext, internalCallContextFactory);
+        final Invoice invoice = createAndPersistInvoice(invoiceDao,  clock,
+                                                        ImmutableList.<BigDecimal>of(THIRTY, BigDecimal.TEN), CURRENCY, internalCallContext);
         // Adjust partially both items: the invoice posted was 40 \u20ac, but we should really just have charged you 2 \u20ac
         final ImmutableMap<UUID, BigDecimal> adjustments = ImmutableMap.<UUID, BigDecimal>of(invoice.getInvoiceItems().get(0).getId(), new BigDecimal("29"),
                                                                                              invoice.getInvoiceItems().get(1).getId(), new BigDecimal("9"));
@@ -150,7 +123,7 @@ public class TestDefaultInvoicePaymentApi extends InvoiceTestSuiteWithEmbeddedDB
 
     private void verifyRefund(final BigDecimal invoiceAmount, final BigDecimal refundAmount, final BigDecimal finalInvoiceAmount,
                               final boolean adjusted, final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts) throws InvoiceApiException {
-        final Invoice invoice = createAndPersistInvoice(invoiceSqlDao, invoiceItemSqlDao, clock, invoiceAmount, CURRENCY, callContext, internalCallContextFactory);
+        final Invoice invoice = createAndPersistInvoice(invoiceDao,  clock, invoiceAmount, CURRENCY, internalCallContext);
         verifyRefund(invoice, invoiceAmount, refundAmount, finalInvoiceAmount, adjusted, invoiceItemIdsWithAmounts);
     }
 

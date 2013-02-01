@@ -41,7 +41,7 @@ import com.ning.billing.util.email.templates.MustacheTemplateEngine;
 import com.ning.billing.util.email.templates.TemplateEngine;
 import com.ning.billing.util.template.translation.TranslatorConfig;
 
-public class TestHtmlInvoiceGenerator extends InvoiceTestSuite {
+public class TestHtmlInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
     private HtmlInvoiceGenerator g;
 

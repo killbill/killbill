@@ -30,7 +30,7 @@ import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.invoice.InvoiceTestSuite;
+import com.ning.billing.invoice.InvoiceTestSuiteNoDB;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
@@ -38,7 +38,7 @@ import com.ning.billing.util.LocaleUtils;
 import com.ning.billing.util.email.templates.MustacheTemplateEngine;
 import com.ning.billing.util.template.translation.TranslatorConfig;
 
-public class TestDefaultInvoiceItemFormatter extends InvoiceTestSuite {
+public class TestDefaultInvoiceItemFormatter extends InvoiceTestSuiteNoDB {
 
     private TranslatorConfig config;
     private MustacheTemplateEngine templateEngine;

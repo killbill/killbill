@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.mockito.Mockito;
 import org.testng.Assert;
 
@@ -30,9 +31,11 @@ import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.InvoicePayment.InvoicePaymentType;
+import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.dao.InvoiceItemModelDao;
 import com.ning.billing.invoice.dao.InvoiceItemSqlDao;
 import com.ning.billing.invoice.dao.InvoiceModelDao;
+import com.ning.billing.invoice.dao.InvoicePaymentModelDao;
 import com.ning.billing.invoice.dao.InvoiceSqlDao;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.util.callcontext.CallContext;
@@ -43,34 +46,31 @@ import com.ning.billing.util.entity.EntityPersistenceException;
 import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 public class InvoiceTestUtils {
 
     private InvoiceTestUtils() {}
 
-    public static Invoice createAndPersistInvoice(final InvoiceSqlDao invoiceSqlDao,
-                                                  final InvoiceItemSqlDao invoiceItemSqlDao,
+    public static Invoice createAndPersistInvoice(final InvoiceDao invoiceDao,
                                                   final Clock clock,
                                                   final BigDecimal amount,
                                                   final Currency currency,
-                                                  final CallContext callContext,
-                                                  final InternalCallContextFactory internalCallContextFactory) {
+                                                  final InternalCallContext internalCallContext) {
         try {
-            return createAndPersistInvoice(invoiceSqlDao, invoiceItemSqlDao, clock, ImmutableList.<BigDecimal>of(amount),
-                                           currency, callContext, internalCallContextFactory);
+            return createAndPersistInvoice(invoiceDao, clock, ImmutableList.<BigDecimal>of(amount),
+                                           currency, internalCallContext);
         } catch (EntityPersistenceException e) {
             Assert.fail(e.getMessage());
             return null;
         }
     }
 
-    public static Invoice createAndPersistInvoice(final InvoiceSqlDao invoiceSqlDao,
-                                                  final InvoiceItemSqlDao invoiceItemSqlDao,
+    public static Invoice createAndPersistInvoice(final InvoiceDao invoiceDao,
                                                   final Clock clock,
                                                   final List<BigDecimal> amounts,
                                                   final Currency currency,
-                                                  final CallContext callContext,
-                                                  final InternalCallContextFactory internalCallContextFactory) throws EntityPersistenceException {
+                                                  final InternalCallContext internalCallContext) throws EntityPersistenceException {
         final Invoice invoice = Mockito.mock(Invoice.class);
         final UUID invoiceId = UUID.randomUUID();
         final UUID accountId = UUID.randomUUID();
@@ -83,18 +83,15 @@ public class InvoiceTestUtils {
         Mockito.when(invoice.isMigrationInvoice()).thenReturn(false);
 
         final List<InvoiceItem> invoiceItems = new ArrayList<InvoiceItem>();
+        final List<InvoiceItemModelDao> invoiceModelItems = new ArrayList<InvoiceItemModelDao>();
         for (final BigDecimal amount : amounts) {
             final InvoiceItem invoiceItem = createInvoiceItem(clock, invoiceId, accountId, amount, currency);
-            invoiceItemSqlDao.create(new InvoiceItemModelDao(invoiceItem), internalCallContextFactory.createInternalCallContext(accountId, callContext));
+            invoiceModelItems.add(new InvoiceItemModelDao(invoiceItem));
             invoiceItems.add(invoiceItem);
         }
         Mockito.when(invoice.getInvoiceItems()).thenReturn(invoiceItems);
 
-        try {
-            invoiceSqlDao.create(new InvoiceModelDao(invoice), internalCallContextFactory.createInternalCallContext(accountId, callContext));
-        } catch (EntityPersistenceException e) {
-            Assert.fail(e.getMessage());
-        }
+        invoiceDao.createInvoice(new InvoiceModelDao(invoice), invoiceModelItems, ImmutableList.<InvoicePaymentModelDao>of(), true, ImmutableMap.<UUID, DateTime>of(), internalCallContext);
 
         return invoice;
     }

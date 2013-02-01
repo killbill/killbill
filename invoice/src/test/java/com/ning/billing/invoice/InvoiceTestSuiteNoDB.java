@@ -19,25 +19,21 @@ package com.ning.billing.invoice;
 import java.io.IOException;
 import java.net.URL;
 
-import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
-import com.ning.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
+import com.ning.billing.KillbillTestSuite;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceMigrationApi;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.invoice.dao.InvoiceDao;
-import com.ning.billing.invoice.dao.InvoiceItemSqlDao;
-import com.ning.billing.invoice.dao.InvoicePaymentSqlDao;
-import com.ning.billing.invoice.dao.InvoiceSqlDao;
 import com.ning.billing.invoice.generator.InvoiceGenerator;
 import com.ning.billing.invoice.glue.InvoiceModuleWithEmbeddedDb;
-import com.ning.billing.invoice.glue.TestInvoiceModuleWithEmbeddedDb;
+import com.ning.billing.invoice.glue.TestInvoiceModuleNoDB;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
@@ -56,9 +52,9 @@ import com.google.inject.Injector;
 
 import static org.testng.Assert.assertNotNull;
 
-public abstract class InvoiceTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWithEmbeddedDB {
+public abstract class InvoiceTestSuiteNoDB extends KillbillTestSuite {
 
-    private static final Logger log = LoggerFactory.getLogger(InvoiceTestSuiteWithEmbeddedDB.class);
+    private static final Logger log = LoggerFactory.getLogger(InvoiceTestSuiteNoDB.class);
 
 
     protected static final Currency accountCurrency = Currency.USD;
@@ -84,8 +80,6 @@ public abstract class InvoiceTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     @Inject
     protected BusService busService;
     @Inject
-    protected InvoiceDao invoiceDao;
-    @Inject
     protected TagUserApi tagUserApi;
     @Inject
     protected GlobalLocker locker;
@@ -95,23 +89,25 @@ public abstract class InvoiceTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     protected InternalCallContextFactory internalCallContextFactory;
     @Inject
     protected InvoiceInternalApi invoiceInternalApi;
+    @Inject
+    protected InvoiceDao invoiceDao;
 
 
-    @BeforeClass(groups = "slow")
+    @BeforeClass(groups = "fast")
     protected void setup() throws Exception {
 
         loadSystemPropertiesFromClasspath("/resource.properties");
 
-        final Injector injector = Guice.createInjector(new TestInvoiceModuleWithEmbeddedDb());
+        final Injector injector = Guice.createInjector(new TestInvoiceModuleNoDB());
         injector.injectMembers(this);
     }
 
-    @BeforeMethod(groups = "slow")
+    @BeforeMethod(groups = "fast")
     public void setupTest() {
         bus.start();
     }
 
-    @AfterMethod(groups = "slow")
+    @AfterMethod(groups = "fast")
     public void cleanupTest() {
         bus.stop();
     }
@@ -125,5 +121,4 @@ public abstract class InvoiceTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
             throw new RuntimeException(e);
         }
     }
-
 }
