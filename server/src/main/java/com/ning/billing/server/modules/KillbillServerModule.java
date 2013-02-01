@@ -29,7 +29,6 @@ import com.ning.billing.jaxrs.resources.AccountResource;
 import com.ning.billing.jaxrs.resources.BundleResource;
 import com.ning.billing.jaxrs.resources.CatalogResource;
 import com.ning.billing.jaxrs.resources.InvoiceResource;
-import com.ning.billing.jaxrs.resources.MeterResource;
 import com.ning.billing.jaxrs.resources.PaymentMethodResource;
 import com.ning.billing.jaxrs.resources.PaymentResource;
 import com.ning.billing.jaxrs.resources.RefundResource;
@@ -38,7 +37,6 @@ import com.ning.billing.jaxrs.resources.TagResource;
 import com.ning.billing.jaxrs.resources.TenantResource;
 import com.ning.billing.jaxrs.util.KillbillEventHandler;
 import com.ning.billing.junction.glue.DefaultJunctionModule;
-import com.ning.billing.meter.glue.MeterModule;
 import com.ning.billing.overdue.glue.DefaultOverdueModule;
 import com.ning.billing.payment.glue.PaymentModule;
 import com.ning.billing.server.DefaultServerService;
@@ -97,7 +95,6 @@ public class KillbillServerModule extends AbstractModule {
         bind(PaymentResource.class).asEagerSingleton();
         bind(RefundResource.class).asEagerSingleton();
         bind(TenantResource.class).asEagerSingleton();
-        bind(MeterResource.class).asEagerSingleton();
         bind(KillbillEventHandler.class).asEagerSingleton();
     }
 
@@ -126,7 +123,6 @@ public class KillbillServerModule extends AbstractModule {
         install(new DefaultOverdueModule());
         install(new TenantModule());
         install(new ExportModule());
-        install(new MeterModule());
         install(new TagStoreModule());
         install(new NonEntityDaoModule());
         installClock();

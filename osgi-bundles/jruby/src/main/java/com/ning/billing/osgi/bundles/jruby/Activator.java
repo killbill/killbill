@@ -39,7 +39,6 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.invoice.api.InvoiceMigrationApi;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.api.InvoiceUserApi;
-import com.ning.billing.meter.api.MeterUserApi;
 import com.ning.billing.osgi.api.config.PluginConfig.PluginType;
 import com.ning.billing.osgi.api.config.PluginConfigServiceApi;
 import com.ning.billing.osgi.api.config.PluginRubyConfig;
@@ -131,7 +130,6 @@ public class Activator implements BundleActivator {
         killbillUserApis.put("invoice_migration_api", retrieveApi(context, InvoiceMigrationApi.class));
         killbillUserApis.put("invoice_payment_api", retrieveApi(context, InvoicePaymentApi.class));
         killbillUserApis.put("invoice_user_api", retrieveApi(context, InvoiceUserApi.class));
-        killbillUserApis.put("meter_user_api", retrieveApi(context, MeterUserApi.class));
         killbillUserApis.put("overdue_user_api", retrieveApi(context, OverdueUserApi.class));
         killbillUserApis.put("payment_api", retrieveApi(context, PaymentApi.class));
         killbillUserApis.put("tenant_user_api", retrieveApi(context, TenantUserApi.class));

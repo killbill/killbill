@@ -34,7 +34,6 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.invoice.api.InvoiceMigrationApi;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.api.InvoiceUserApi;
-import com.ning.billing.meter.api.MeterUserApi;
 import com.ning.billing.osgi.api.config.PluginConfigServiceApi;
 import com.ning.billing.overdue.OverdueUserApi;
 import com.ning.billing.payment.api.PaymentApi;
@@ -58,7 +57,6 @@ public class KillbillActivator implements BundleActivator {
     private final InvoiceMigrationApi invoiceMigrationApi;
     private final InvoicePaymentApi invoicePaymentApi;
     private final InvoiceUserApi invoiceUserApi;
-    private final MeterUserApi meterUserApi;
     private final OverdueUserApi overdueUserApi;
     private final PaymentApi paymentApi;
     private final TenantUserApi tenantUserApi;
@@ -107,7 +105,6 @@ public class KillbillActivator implements BundleActivator {
                              final InvoiceMigrationApi invoiceMigrationApi,
                              final InvoicePaymentApi invoicePaymentApi,
                              final InvoiceUserApi invoiceUserApi,
-                             final MeterUserApi meterUserApi,
                              final OverdueUserApi overdueUserApi,
                              final PaymentApi paymentApi,
                              final TenantUserApi tenantUserApi,
@@ -129,7 +126,6 @@ public class KillbillActivator implements BundleActivator {
         this.invoiceMigrationApi = invoiceMigrationApi;
         this.invoicePaymentApi = invoicePaymentApi;
         this.invoiceUserApi = invoiceUserApi;
-        this.meterUserApi = meterUserApi;
         this.overdueUserApi = overdueUserApi;
         this.paymentApi = paymentApi;
         this.tenantUserApi = tenantUserApi;
@@ -159,7 +155,6 @@ public class KillbillActivator implements BundleActivator {
         invoiceMigrationApiRegistration = context.registerService(InvoiceMigrationApi.class.getName(), invoiceMigrationApi, null);
         invoicePaymentApiRegistration = context.registerService(InvoicePaymentApi.class.getName(), invoicePaymentApi, null);
         invoiceUserApiRegistration = context.registerService(InvoiceUserApi.class.getName(), invoiceUserApi, null);
-        meterUserApiRegistration = context.registerService(MeterUserApi.class.getName(), meterUserApi, null);
         overdueUserApiRegistration = context.registerService(OverdueUserApi.class.getName(), overdueUserApi, null);
         paymentApiRegistration = context.registerService(PaymentApi.class.getName(), paymentApi, null);
         tenantUserApiRegistration = context.registerService(TenantUserApi.class.getName(), tenantUserApi, null);

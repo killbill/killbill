@@ -27,7 +27,6 @@ import javax.inject.Inject;
 import org.joda.time.DateTime;
 
 import com.ning.billing.meter.api.DecimationMode;
-import com.ning.billing.meter.api.MeterUserApi;
 import com.ning.billing.meter.api.TimeAggregationMode;
 import com.ning.billing.meter.timeline.TimelineEventHandler;
 import com.ning.billing.meter.timeline.persistent.TimelineDao;

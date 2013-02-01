@@ -50,7 +50,6 @@ import com.ning.billing.invoice.api.InvoiceService;
 import com.ning.billing.invoice.glue.DefaultInvoiceModule;
 import com.ning.billing.junction.glue.DefaultJunctionModule;
 import com.ning.billing.lifecycle.KillbillService;
-import com.ning.billing.meter.glue.MeterModule;
 import com.ning.billing.osgi.DefaultOSGIService;
 import com.ning.billing.osgi.glue.DefaultOSGIModule;
 import com.ning.billing.overdue.OverdueService;
@@ -125,7 +124,6 @@ public class BeatrixIntegrationModule extends AbstractModule {
         install(new DefaultJunctionModule());
         install(new IntegrationTestOverdueModule());
         install(new AuditModule());
-        install(new MeterModule());
         install(new UsageModule());
         install(new TenantModule());
         install(new ExportModule());

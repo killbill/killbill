@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.meter.api;
+package com.ning.billing.meter.api.user;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -25,6 +25,8 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.meter.api.DecimationMode;
+import com.ning.billing.meter.api.TimeAggregationMode;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TenantContext;
 

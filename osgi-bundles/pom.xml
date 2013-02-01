@@ -29,5 +29,6 @@
     <modules>
         <module>hello</module>
         <module>jruby</module>
+        <module>meter</module>
     </modules>
 </project>

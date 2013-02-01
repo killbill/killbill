@@ -24,7 +24,7 @@ import org.skife.config.SimplePropertyConfigSource;
 
 import com.ning.billing.meter.DefaultMeterService;
 import com.ning.billing.meter.MeterService;
-import com.ning.billing.meter.api.MeterUserApi;
+import com.ning.billing.meter.api.user.MeterUserApi;
 import com.ning.billing.meter.api.user.DefaultMeterUserApi;
 import com.ning.billing.meter.timeline.TimelineEventHandler;
 import com.ning.billing.meter.timeline.codec.DefaultSampleCoder;

@@ -79,14 +79,6 @@ public interface JaxrsResource {
 
     public static final String QUERY_NOTIFICATION_CALLBACK = "cb";
 
-    public static final String QUERY_METER_WITH_CATEGORY_AGGREGATE = "withCategoryAggregate";
-    public static final String QUERY_METER_TIME_AGGREGATION_MODE = "timeAggregationMode";
-    public static final String QUERY_METER_TIMESTAMP = "timestamp";
-    public static final String QUERY_METER_FROM = "from";
-    public static final String QUERY_METER_TO = "to";
-    public static final String QUERY_METER_CATEGORY = "category";
-    public static final String QUERY_METER_CATEGORY_AND_METRIC = "category_and_metric";
-
     public static final String ACCOUNTS = "accounts";
     public static final String ACCOUNTS_PATH = PREFIX + "/" + ACCOUNTS;
 
@@ -142,7 +134,4 @@ public interface JaxrsResource {
     public static final String EXPORT_PATH = PREFIX + "/" + EXPORT;
 
     public static final String CBA_REBALANCING = "cbaRebalancing";
-
-    public static final String METER = "meter";
-    public static final String METER_PATH = PREFIX + "/" + METER;
 }

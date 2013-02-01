@@ -806,27 +806,6 @@ public abstract class KillbillClient extends ServerTestSuiteWithEmbeddedDB {
     }
 
     //
-    // METERING
-    //
-
-    protected void recordMeteringUsage(final String source, final String category, final String metric, final DateTime timestamp) throws IOException {
-        final String meterURI = JaxrsResource.METER_PATH + "/" + source + "/" + category + "/" + metric;
-        final Response meterResponse = doPost(meterURI, null, ImmutableMap.<String, String>of(JaxrsResource.QUERY_METER_WITH_CATEGORY_AGGREGATE, "true",
-                                                                                              JaxrsResource.QUERY_METER_TIMESTAMP, timestamp.toString()), DEFAULT_HTTP_TIMEOUT_SEC);
-        assertEquals(meterResponse.getStatusCode(), Status.OK.getStatusCode());
-    }
-
-    protected List<Map<String, Object>> getMeteringAggregateUsage(final String source, final String category, final DateTime from, final DateTime to) throws IOException {
-        final String meterURI = JaxrsResource.METER_PATH + "/" + source;
-        final Response meterResponse = doGet(meterURI, ImmutableMap.<String, String>of(JaxrsResource.QUERY_METER_CATEGORY, category,
-                                                                                       JaxrsResource.QUERY_METER_FROM, from.toString(),
-                                                                                       JaxrsResource.QUERY_METER_TO, to.toString()), DEFAULT_HTTP_TIMEOUT_SEC);
-        assertEquals(meterResponse.getStatusCode(), Status.OK.getStatusCode());
-
-        return mapper.readValue(meterResponse.getResponseBody(), new TypeReference<List<Map<String, Object>>>() {});
-    }
-
-    //
     // HTTP CLIENT HELPERS
     //
     protected Response doPost(final String uri, @Nullable final String body, final Map<String, String> queryParams, final int timeoutSec) {
