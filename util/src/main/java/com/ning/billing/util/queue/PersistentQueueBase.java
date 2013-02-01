@@ -94,12 +94,8 @@ public abstract class PersistentQueueBase implements QueueLifecycle {
 
                     try {
                         while (true) {
-
-                            synchronized (thePersistentQ) {
-                                if (!isProcessingEvents) {
-                                    thePersistentQ.notify();
-                                    break;
-                                }
+                            if (!isProcessingEvents) {
+                                break;
                             }
 
                             try {
@@ -119,10 +115,10 @@ public abstract class PersistentQueueBase implements QueueLifecycle {
                     } catch (Throwable e) {
                         log.error(String.format("%s: Thread %s got an exception, exting... ", svcQName, Thread.currentThread().getName()), e);
                     } finally {
-
                         log.info(String.format("%s: Thread %s has exited", svcQName, Thread.currentThread().getName()));
                         synchronized (thePersistentQ) {
                             curActiveThreads--;
+                            thePersistentQ.notify();
                         }
                     }
                 }
