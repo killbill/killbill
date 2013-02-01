@@ -24,7 +24,6 @@ import org.skife.config.SimplePropertyConfigSource;
 
 import com.ning.billing.util.cache.AccountRecordIdCacheLoader;
 import com.ning.billing.util.cache.Cachable;
-import com.ning.billing.util.cache.Cachable.CacheType;
 import com.ning.billing.util.cache.CacheController;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.cache.CacheControllerProvider;
@@ -34,7 +33,6 @@ import com.ning.billing.util.cache.TenantRecordIdCacheLoader;
 import com.ning.billing.util.config.CacheConfig;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
@@ -43,20 +41,27 @@ import net.sf.ehcache.loader.CacheLoader;
 
 public class CacheModule extends AbstractModule {
 
-
     public static final Named RECORD_ID_CACHE_NAMED = Names.named(Cachable.RECORD_ID_CACHE_NAME);
     public static final Named ACCOUNT_RECORD_ID_CACHE_NAMED = Names.named(Cachable.ACCOUNT_RECORD_ID_CACHE_NAME);
     public static final Named TENANT_RECORD_ID_CACHE_NAMED = Names.named(Cachable.TENANT_RECORD_ID_CACHE_NAME);
 
+    private final ConfigSource configSource;
+
+    public CacheModule() {
+        this(new SimplePropertyConfigSource(System.getProperties()));
+    }
+
+    public CacheModule(final ConfigSource configSource) {
+        this.configSource = configSource;
+    }
+
     protected void installConfig() {
-        final ConfigSource configSource = new SimplePropertyConfigSource(System.getProperties());
         final CacheConfig config = new ConfigurationObjectFactory(configSource).build(CacheConfig.class);
         bind(CacheConfig.class).toInstance(config);
     }
 
     @Override
     protected void configure() {
-
         installConfig();
 
         bind(CacheManager.class).toProvider(CacheManagerProvider.class).asEagerSingleton();
