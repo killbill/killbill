@@ -249,5 +249,5 @@ delete from last_start_times where <CHECK_TENANT()>;
 >>
 
 test() ::= <<
-select 1 from timeline_chunks where <CHECK_TENANT()>;
+select 1 from timeline_chunks where <CHECK_TENANT()> limit 1;
 >>

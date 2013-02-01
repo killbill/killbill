@@ -35,5 +35,5 @@ delete from bac_tags where account_id = :account_id and name = :name <AND_CHECK_
 >>
 
 test() ::= <<
-select 1 from bac_tags where <CHECK_TENANT()>;
+select 1 from bac_tags where <CHECK_TENANT()> limit 1;
 >>

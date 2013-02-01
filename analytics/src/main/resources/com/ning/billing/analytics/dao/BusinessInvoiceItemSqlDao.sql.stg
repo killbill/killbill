@@ -137,5 +137,5 @@ delete from bii where bii.invoice_id in (select invoice_id from bin where bin.ac
 >>
 
 test() ::= <<
-select 1 from bii where <CHECK_TENANT()>;
+select 1 from bii where <CHECK_TENANT()> limit 1;
 >>

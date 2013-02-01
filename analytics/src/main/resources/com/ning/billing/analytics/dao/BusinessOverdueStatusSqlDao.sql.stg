@@ -46,5 +46,5 @@ delete from bos where bundle_id = :bundle_id <AND_CHECK_TENANT()>;
 >>
 
 test() ::= <<
-select 1 from bos where <CHECK_TENANT()>;
+select 1 from bos where <CHECK_TENANT()> limit 1;
 >>

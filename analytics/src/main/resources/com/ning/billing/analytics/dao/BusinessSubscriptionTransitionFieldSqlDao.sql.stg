@@ -42,5 +42,5 @@ delete from bst_fields where bundle_id = :bundle_id and name = :name <AND_CHECK_
 >>
 
 test() ::= <<
-select 1 from bst_fields where <CHECK_TENANT()>;
+select 1 from bst_fields where <CHECK_TENANT()> limit 1;
 >>

@@ -33,5 +33,5 @@ delete from bin_tags where invoice_id = :invoice_id and name = :name <AND_CHECK_
 >>
 
 test() ::= <<
-select 1 from bin_tags where <CHECK_TENANT()>;
+select 1 from bin_tags where <CHECK_TENANT()> limit 1;
 >>

@@ -225,5 +225,5 @@ deleteTransitionsForBundle(bundle_id) ::= <<
 >>
 
 test() ::= <<
-  select 1 from bst where <CHECK_TENANT()>;
+select 1 from bst where <CHECK_TENANT()> limit 1;
 >>

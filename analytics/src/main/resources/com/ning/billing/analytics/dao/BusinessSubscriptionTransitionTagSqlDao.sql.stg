@@ -39,5 +39,5 @@ delete from bst_tags where bundle_id = :bundle_id and name = :name <AND_CHECK_TE
 >>
 
 test() ::= <<
-select 1 from bst_tags where <CHECK_TENANT()>;
+select 1 from bst_tags where <CHECK_TENANT()> limit 1;
 >>

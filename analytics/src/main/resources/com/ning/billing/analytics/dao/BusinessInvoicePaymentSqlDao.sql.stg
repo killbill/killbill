@@ -118,5 +118,5 @@ delete from bip where payment_id = :payment_id <AND_CHECK_TENANT()>
 >>
 
 test() ::= <<
-select 1 from bip where <CHECK_TENANT()>;
+select 1 from bip where <CHECK_TENANT()> limit 1;
 >>
