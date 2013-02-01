@@ -68,5 +68,6 @@ CREATE TABLE invoice_payments (
 );
 CREATE UNIQUE INDEX invoice_payments_id ON invoice_payments(id);
 CREATE INDEX invoice_payments ON invoice_payments(payment_id);
+CREATE INDEX invoice_payments_invoice_id ON invoice_payments(invoice_id);
 CREATE INDEX invoice_payments_reversals ON invoice_payments(linked_invoice_payment_id);
 CREATE INDEX invoice_payments_tenant_account_record_id ON invoice_payments(tenant_record_id, account_record_id);
