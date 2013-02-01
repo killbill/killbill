@@ -14,19 +14,18 @@
  * under the License.
  */
 
-package com.ning.billing.catalog;
+package com.ning.billing.catalog.util;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.Writer;
 
+import com.ning.billing.catalog.StandaloneCatalog;
 import com.ning.billing.util.config.catalog.XMLSchemaGenerator;
 
+// Tool to print the catalog XML Schema (XSD)
 public class CreateCatalogSchema {
 
-    /**
-     * @param args
-     */
     public static void main(final String[] args) throws Exception {
         if (args.length != 1) {
             System.err.println("Usage: <filepath>");
@@ -37,7 +36,5 @@ public class CreateCatalogSchema {
         final Writer w = new FileWriter(f);
         w.write(XMLSchemaGenerator.xmlSchemaAsString(StandaloneCatalog.class));
         w.close();
-
     }
-
 }
