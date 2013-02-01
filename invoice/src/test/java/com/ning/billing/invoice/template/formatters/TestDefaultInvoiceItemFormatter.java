@@ -26,6 +26,7 @@ import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormat;
 import org.skife.config.ConfigurationObjectFactory;
 import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Test;
 
@@ -43,8 +44,9 @@ public class TestDefaultInvoiceItemFormatter extends InvoiceTestSuiteNoDB {
     private TranslatorConfig config;
     private MustacheTemplateEngine templateEngine;
 
-    @BeforeSuite(groups = "fast")
-    public void setup() {
+    @BeforeClass(groups = "fast")
+    public void setup() throws Exception {
+        super.setup();
         config = new ConfigurationObjectFactory(System.getProperties()).build(TranslatorConfig.class);
         templateEngine = new MustacheTemplateEngine();
     }

@@ -22,10 +22,10 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.invoice.InvoiceTestSuiteNoDB;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
@@ -33,19 +33,12 @@ import com.ning.billing.invoice.model.CreditBalanceAdjInvoiceItem;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.invoice.model.RepairAdjInvoiceItem;
-import com.ning.billing.invoice.tests.InvoicingTestBase;
-import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.clock.ClockMock;
-import com.ning.billing.util.config.InvoiceConfig;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
 
-public class TestDefaultInvoiceGeneratorUnit extends InvoicingTestBase {
-
-    private DefaultInvoiceGenerator gen;
-    private Clock clock;
+public class TestDefaultInvoiceGeneratorUnit extends InvoiceTestSuiteNoDB {
 
     private final UUID invoiceId = UUID.randomUUID();
     private final UUID accountId = UUID.randomUUID();
@@ -55,28 +48,6 @@ public class TestDefaultInvoiceGeneratorUnit extends InvoicingTestBase {
     private final String phaseName = "my-phase";
     private final Currency currency = Currency.USD;
 
-    public static final class TestDefaultInvoiceGeneratorMock extends DefaultInvoiceGenerator {
-
-        public TestDefaultInvoiceGeneratorMock(final Clock clock, final InvoiceConfig config) {
-            super(clock, config);
-        }
-    }
-
-    @BeforeClass(groups = "fast")
-    public void setup() {
-        clock = new ClockMock();
-        gen = new TestDefaultInvoiceGeneratorMock(clock, new InvoiceConfig() {
-            @Override
-            public boolean isEmailNotificationsEnabled() {
-                return false;
-            }
-
-            @Override
-            public int getNumberOfMonthsInFuture() {
-                return 5;
-            }
-        });
-    }
 
     @Test(groups = "fast")
     public void testRemoveCancellingInvoiceItemsFixedPrice() {
@@ -92,7 +63,7 @@ public class TestDefaultInvoiceGeneratorUnit extends InvoicingTestBase {
         items.add(item1);
         items.add(new RepairAdjInvoiceItem(invoiceId, accountId, startDate, endDate, amount.negate(), currency, item1.getId()));
         items.add(new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, endDate, nextEndDate, amount2, rate2, currency));
-        gen.removeCancellingInvoiceItems(items);
+        ((DefaultInvoiceGenerator) generator).removeCancellingInvoiceItems(items);
         assertEquals(items.size(), 1);
         final InvoiceItem leftItem = items.get(0);
         assertEquals(leftItem.getInvoiceItemType(), InvoiceItemType.RECURRING);
@@ -114,7 +85,7 @@ public class TestDefaultInvoiceGeneratorUnit extends InvoicingTestBase {
         items.add(item1);
         items.add(new RepairAdjInvoiceItem(invoiceId, accountId, startDate, endDate, amount1.negate(), currency, item1.getId()));
         items.add(new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, endDate, nextEndDate, amount2, rate2, currency));
-        gen.removeCancellingInvoiceItems(items);
+        ((DefaultInvoiceGenerator) generator).removeCancellingInvoiceItems(items);
         assertEquals(items.size(), 1);
         final InvoiceItem leftItem = items.get(0);
         assertEquals(leftItem.getInvoiceItemType(), InvoiceItemType.RECURRING);
@@ -138,7 +109,7 @@ public class TestDefaultInvoiceGeneratorUnit extends InvoicingTestBase {
         final InvoiceItem other1 = new FixedPriceInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, amount, currency);
         proposed.add(other1);
 
-        gen.removeDuplicatedInvoiceItems(proposed, existing);
+        ((DefaultInvoiceGenerator) generator).removeDuplicatedInvoiceItems(proposed, existing);
         assertEquals(existing.size(), 1);
         assertEquals(proposed.size(), 0);
     }
@@ -160,7 +131,7 @@ public class TestDefaultInvoiceGeneratorUnit extends InvoicingTestBase {
         proposed.add(other1);
         proposed.add(other2);
 
-        gen.removeDuplicatedInvoiceItems(proposed, existing);
+        ((DefaultInvoiceGenerator) generator).removeDuplicatedInvoiceItems(proposed, existing);
         assertEquals(existing.size(), 0);
         assertEquals(proposed.size(), 1);
     }
@@ -187,7 +158,7 @@ public class TestDefaultInvoiceGeneratorUnit extends InvoicingTestBase {
         proposed.add(other1);
         proposed.add(other2);
 
-        gen.removeDuplicatedInvoiceItems(proposed, existing);
+        ((DefaultInvoiceGenerator) generator).removeDuplicatedInvoiceItems(proposed, existing);
         assertEquals(existing.size(), 0);
         assertEquals(proposed.size(), 1);
     }
@@ -214,7 +185,7 @@ public class TestDefaultInvoiceGeneratorUnit extends InvoicingTestBase {
         proposed.add(item1);
         proposed.add(other);
 
-        gen.removeDuplicatedInvoiceItems(proposed, existing);
+        ((DefaultInvoiceGenerator) generator).removeDuplicatedInvoiceItems(proposed, existing);
         assertEquals(existing.size(), 0);
         assertEquals(proposed.size(), 1);
         final InvoiceItem leftItem = proposed.get(0);
@@ -243,7 +214,7 @@ public class TestDefaultInvoiceGeneratorUnit extends InvoicingTestBase {
         proposed.add(item1);
         proposed.add(other);
 
-        gen.removeDuplicatedInvoiceItems(proposed, existing);
+        ((DefaultInvoiceGenerator) generator).removeDuplicatedInvoiceItems(proposed, existing);
         assertEquals(existing.size(), 0);
         assertEquals(proposed.size(), 1);
         final InvoiceItem leftItem = proposed.get(0);
@@ -273,7 +244,7 @@ public class TestDefaultInvoiceGeneratorUnit extends InvoicingTestBase {
         final InvoiceItem other = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, endDate, nextEndDate, amount2, rate2, currency);
         proposed.add(other);
 
-        gen.addRepairedItems(existing, proposed);
+        ((DefaultInvoiceGenerator) generator).addRepairedItems(existing, proposed);
         assertEquals(existing.size(), 1);
         assertEquals(proposed.size(), 2);
         final InvoiceItem leftItem1 = proposed.get(0);
@@ -318,7 +289,7 @@ public class TestDefaultInvoiceGeneratorUnit extends InvoicingTestBase {
         proposed.add(reversedItem1);
         proposed.add(newItem1);
 
-        gen.generateCBAForExistingInvoices(accountId, existingInvoices, proposed, currency);
+        ((DefaultInvoiceGenerator) generator).generateCBAForExistingInvoices(accountId, existingInvoices, proposed, currency);
 
         assertEquals(proposed.size(), 3);
         final InvoiceItem reversedItemCheck1 = proposed.get(0);
@@ -379,7 +350,7 @@ public class TestDefaultInvoiceGeneratorUnit extends InvoicingTestBase {
         final InvoiceItem item2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate.plusMonths(1), endDate.plusMonths(1), newAmount2, newRate2, currency);
         proposed.add(item2);
 
-        gen.consumeExistingCredit(invoiceId, firstInvoiceId, existing, proposed, currency);
+        ((DefaultInvoiceGenerator) generator).consumeExistingCredit(invoiceId, firstInvoiceId, existing, proposed, currency);
         assertEquals(proposed.size(), 2);
         final InvoiceItem item2Check = proposed.get(0);
         assertEquals(item2Check.getInvoiceId(), invoiceId);

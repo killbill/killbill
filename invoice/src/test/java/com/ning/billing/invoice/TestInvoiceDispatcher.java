@@ -29,9 +29,7 @@ import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeSuite;
-import org.testng.annotations.Guice;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
@@ -51,101 +49,25 @@ import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.invoice.api.InvoiceNotifier;
-import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.dao.InvoiceItemModelDao;
 import com.ning.billing.invoice.dao.InvoiceModelDao;
-import com.ning.billing.invoice.generator.InvoiceGenerator;
-import com.ning.billing.invoice.notification.NextBillingDateNotifier;
 import com.ning.billing.invoice.notification.NullInvoiceNotifier;
-import com.ning.billing.invoice.tests.InvoicingTestBase;
-import com.ning.billing.mock.api.MockBillCycleDay;
-import com.ning.billing.util.bus.DefaultBusService;
 import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.ClockMock;
-import com.ning.billing.util.globallocker.GlobalLocker;
-import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 import com.ning.billing.util.svcapi.junction.BillingEventSet;
-import com.ning.billing.util.svcapi.junction.BillingInternalApi;
 import com.ning.billing.util.svcapi.junction.BillingModeType;
-import com.ning.billing.util.svcsapi.bus.BusService;
 
-import com.google.inject.Inject;
-
-@Guice(modules = {MockModule.class})
-public class TestInvoiceDispatcher extends InvoicingTestBase {
-
-    private final Logger log = LoggerFactory.getLogger(TestInvoiceDispatcher.class);
-
-    @Inject
-    private InvoiceGenerator generator;
-
-    @Inject
-    private InvoiceDao invoiceDao;
-
-    @Inject
-    private GlobalLocker locker;
-
-    @Inject
-    private NextBillingDateNotifier notifier;
-
-    @Inject
-    private BusService busService;
-
-    @Inject
-    private BillingInternalApi billingApi;
-
-    @Inject
-    private ClockMock clock;
-
-    @Inject
-    private AccountInternalApi accountInternalApi;
-
-    @Inject
-    private EntitlementInternalApi entitlementInternalApi;
-
-    @Inject
-    private InternalCallContextFactory internalCallContextFactory;
+public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
 
     private Account account;
     private Subscription subscription;
 
-    @BeforeSuite(groups = "slow")
-    public void setup() throws Exception {
-        notifier.initialize();
-        notifier.start();
-
-        busService.getBus().start();
-
-        account = Mockito.mock(Account.class);
-
-        final UUID accountId = UUID.randomUUID();
-
-        Mockito.when(accountInternalApi.getAccountById(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(account);
-
-        Mockito.when(account.getCurrency()).thenReturn(Currency.USD);
-        Mockito.when(account.getId()).thenReturn(accountId);
-        Mockito.when(account.isNotifiedForInvoices()).thenReturn(true);
-        Mockito.when(account.getBillCycleDay()).thenReturn(new MockBillCycleDay(30));
-        // The timezone is required to compute the date of the next invoice notification
-        Mockito.when(account.getTimeZone()).thenReturn(DateTimeZone.UTC);
-
-        subscription = Mockito.mock(Subscription.class);
-        final UUID subscriptionId = UUID.randomUUID();
-        Mockito.when(subscription.getId()).thenReturn(subscriptionId);
-        Mockito.when(subscription.getBundleId()).thenReturn(new UUID(0L, 0L));
-    }
-
-    @AfterClass(groups = "slow")
-    public void tearDown() {
-        try {
-            ((DefaultBusService) busService).stopBus();
-            notifier.stop();
-        } catch (Exception e) {
-            log.warn("Failed to tearDown test properly ", e);
-        }
+    @BeforeMethod(groups = "slow")
+    public void setupTest() throws Exception {
+        super.setupTest();
+        account = invoiceUtil.createAccount();
+        subscription = invoiceUtil.createSubscription();
     }
 
     @Test(groups = "slow")
@@ -158,16 +80,16 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
         final DateTime effectiveDate = new DateTime().minusDays(1);
         final Currency currency = Currency.USD;
         final BigDecimal fixedPrice = null;
-        events.add(createMockBillingEvent(account, subscription, effectiveDate, plan, planPhase,
-                                          fixedPrice, BigDecimal.ONE, currency, BillingPeriod.MONTHLY, 1,
-                                          BillingModeType.IN_ADVANCE, "", 1L, SubscriptionTransitionType.CREATE));
+        events.add(invoiceUtil.createMockBillingEvent(account, subscription, effectiveDate, plan, planPhase,
+                                                      fixedPrice, BigDecimal.ONE, currency, BillingPeriod.MONTHLY, 1,
+                                                      BillingModeType.IN_ADVANCE, "", 1L, SubscriptionTransitionType.CREATE));
 
         Mockito.when(billingApi.getBillingEventsForAccountAndUpdateAccountBCD(Mockito.<UUID>any(), Mockito.<InternalCallContext>any())).thenReturn(events);
 
         final DateTime target = new DateTime();
 
         final InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
-        final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountInternalApi, billingApi, entitlementInternalApi, invoiceDao,
+        final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountApi, billingApi, entitlementApi, invoiceDao,
                                                                    invoiceNotifier, locker, busService.getBus(),
                                                                    clock);
 
@@ -199,29 +121,29 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
 
         // Initial trial
         final MockPlan bicycleTrialEvergreen1USD = MockPlan.createBicycleTrialEvergreen1USD();
-        events.add(createMockBillingEvent(account, subscription, new DateTime("2012-05-01T00:03:42.000Z"), bicycleTrialEvergreen1USD,
-                                          new MockPlanPhase(bicycleTrialEvergreen1USD, PhaseType.TRIAL), BigDecimal.ZERO, null, account.getCurrency(), BillingPeriod.NO_BILLING_PERIOD,
-                                          31, 31, BillingModeType.IN_ADVANCE, "CREATE", 1L, SubscriptionTransitionType.CREATE));
+        events.add(invoiceUtil.createMockBillingEvent(account, subscription, new DateTime("2012-05-01T00:03:42.000Z"), bicycleTrialEvergreen1USD,
+                                                      new MockPlanPhase(bicycleTrialEvergreen1USD, PhaseType.TRIAL), BigDecimal.ZERO, null, account.getCurrency(), BillingPeriod.NO_BILLING_PERIOD,
+                                                      31, 31, BillingModeType.IN_ADVANCE, "CREATE", 1L, SubscriptionTransitionType.CREATE));
         // Phase change to evergreen
-        events.add(createMockBillingEvent(account, subscription, new DateTime("2012-05-31T00:03:42.000Z"), bicycleTrialEvergreen1USD,
-                                          new MockPlanPhase(bicycleTrialEvergreen1USD, PhaseType.EVERGREEN), null, new BigDecimal("249.95"), account.getCurrency(), BillingPeriod.MONTHLY,
-                                          31, 31, BillingModeType.IN_ADVANCE, "PHASE", 2L, SubscriptionTransitionType.PHASE));
+        events.add(invoiceUtil.createMockBillingEvent(account, subscription, new DateTime("2012-05-31T00:03:42.000Z"), bicycleTrialEvergreen1USD,
+                                                      new MockPlanPhase(bicycleTrialEvergreen1USD, PhaseType.EVERGREEN), null, new BigDecimal("249.95"), account.getCurrency(), BillingPeriod.MONTHLY,
+                                                      31, 31, BillingModeType.IN_ADVANCE, "PHASE", 2L, SubscriptionTransitionType.PHASE));
         // Overdue period
-        events.add(createMockBillingEvent(account, subscription, new DateTime("2012-07-15T00:00:00.000Z"), bicycleTrialEvergreen1USD,
-                                          new MockPlanPhase(bicycleTrialEvergreen1USD, PhaseType.EVERGREEN), null, null, account.getCurrency(), BillingPeriod.NO_BILLING_PERIOD,
-                                          31, 31, BillingModeType.IN_ADVANCE, "", 0L, SubscriptionTransitionType.START_BILLING_DISABLED));
-        events.add(createMockBillingEvent(account, subscription, new DateTime("2012-07-25T00:00:00.000Z"), bicycleTrialEvergreen1USD,
-                                          new MockPlanPhase(bicycleTrialEvergreen1USD, PhaseType.EVERGREEN), null, new BigDecimal("249.95"), account.getCurrency(), BillingPeriod.MONTHLY,
-                                          31, 31, BillingModeType.IN_ADVANCE, "", 1L, SubscriptionTransitionType.END_BILLING_DISABLED));
+        events.add(invoiceUtil.createMockBillingEvent(account, subscription, new DateTime("2012-07-15T00:00:00.000Z"), bicycleTrialEvergreen1USD,
+                                                      new MockPlanPhase(bicycleTrialEvergreen1USD, PhaseType.EVERGREEN), null, null, account.getCurrency(), BillingPeriod.NO_BILLING_PERIOD,
+                                                      31, 31, BillingModeType.IN_ADVANCE, "", 0L, SubscriptionTransitionType.START_BILLING_DISABLED));
+        events.add(invoiceUtil.createMockBillingEvent(account, subscription, new DateTime("2012-07-25T00:00:00.000Z"), bicycleTrialEvergreen1USD,
+                                                      new MockPlanPhase(bicycleTrialEvergreen1USD, PhaseType.EVERGREEN), null, new BigDecimal("249.95"), account.getCurrency(), BillingPeriod.MONTHLY,
+                                                      31, 31, BillingModeType.IN_ADVANCE, "", 1L, SubscriptionTransitionType.END_BILLING_DISABLED));
         // Upgrade after the overdue period
         final MockPlan jetTrialEvergreen1000USD = MockPlan.createJetTrialEvergreen1000USD();
-        events.add(createMockBillingEvent(account, subscription, new DateTime("2012-07-25T00:04:00.000Z"), jetTrialEvergreen1000USD,
-                                          new MockPlanPhase(jetTrialEvergreen1000USD, PhaseType.EVERGREEN), null, new BigDecimal("1000"), account.getCurrency(), BillingPeriod.MONTHLY,
-                                          31, 31, BillingModeType.IN_ADVANCE, "CHANGE", 3L, SubscriptionTransitionType.CHANGE));
+        events.add(invoiceUtil.createMockBillingEvent(account, subscription, new DateTime("2012-07-25T00:04:00.000Z"), jetTrialEvergreen1000USD,
+                                                      new MockPlanPhase(jetTrialEvergreen1000USD, PhaseType.EVERGREEN), null, new BigDecimal("1000"), account.getCurrency(), BillingPeriod.MONTHLY,
+                                                      31, 31, BillingModeType.IN_ADVANCE, "CHANGE", 3L, SubscriptionTransitionType.CHANGE));
 
         Mockito.when(billingApi.getBillingEventsForAccountAndUpdateAccountBCD(Mockito.<UUID>any(), Mockito.<InternalCallContext>any())).thenReturn(events);
         final InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
-        final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountInternalApi, billingApi, entitlementInternalApi, invoiceDao,
+        final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountApi, billingApi, entitlementApi, invoiceDao,
                                                                    invoiceNotifier, locker, busService.getBus(),
                                                                    clock);
 
@@ -269,19 +191,19 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
     public void testCreateNextFutureNotificationDate() throws Exception {
 
 
-
         final LocalDate startDate = new LocalDate("2012-10-26");
         final LocalDate endDate = new LocalDate("2012-11-26");
 
-        clock.setTime(new DateTime(2012, 10, 26, 1, 12, 23, DateTimeZone.UTC));
 
-        final InvoiceDispatcher.DateAndTimeZoneContext dateAndTimeZoneContext = new DateAndTimeZoneContext(clock.getUTCNow(),DateTimeZone.forID("Pacific/Pitcairn"), clock);
+        ((ClockMock) clock).setTime(new DateTime(2012, 10, 26, 1, 12, 23, DateTimeZone.UTC));
+
+        final InvoiceDispatcher.DateAndTimeZoneContext dateAndTimeZoneContext = new DateAndTimeZoneContext(clock.getUTCNow(), DateTimeZone.forID("Pacific/Pitcairn"), clock);
 
         final InvoiceItemModelDao item = new InvoiceItemModelDao(UUID.randomUUID(), clock.getUTCNow(), InvoiceItemType.RECURRING, UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
                                                                  "planName", "phaseName", startDate, endDate, new BigDecimal("23.9"), new BigDecimal("23.9"), Currency.EUR, null);
 
         final InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
-        final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountInternalApi, billingApi, entitlementInternalApi, invoiceDao,
+        final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountApi, billingApi, entitlementApi, invoiceDao,
                                                                    invoiceNotifier, locker, busService.getBus(),
                                                                    clock);
 

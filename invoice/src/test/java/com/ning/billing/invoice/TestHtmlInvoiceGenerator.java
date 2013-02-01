@@ -27,6 +27,7 @@ import org.joda.time.LocalDate;
 import org.mockito.Mockito;
 import org.skife.config.ConfigurationObjectFactory;
 import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Test;
 
@@ -45,8 +46,9 @@ public class TestHtmlInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
     private HtmlInvoiceGenerator g;
 
-    @BeforeSuite(groups = "fast")
-    public void setup() {
+    @BeforeClass(groups = "fast")
+    public void setup() throws Exception {
+        super.setup();
         final TranslatorConfig config = new ConfigurationObjectFactory(System.getProperties()).build(TranslatorConfig.class);
         final TemplateEngine templateEngine = new MustacheTemplateEngine();
         final InvoiceFormatterFactory factory = new DefaultInvoiceFormatterFactory();

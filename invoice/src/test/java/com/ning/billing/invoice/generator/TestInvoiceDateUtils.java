@@ -24,8 +24,9 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.invoice.InvoiceTestSuiteNoDB;
 
-public class TestInvoiceDateUtils {
+public class TestInvoiceDateUtils extends InvoiceTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testLastBCDShouldNotBeBeforePreviousBCD() throws Exception {

@@ -19,7 +19,6 @@ package com.ning.billing.invoice;
 import java.io.IOException;
 import java.net.URL;
 
-import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -28,21 +27,21 @@ import org.testng.annotations.BeforeMethod;
 
 import com.ning.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.invoice.api.DefaultInvoiceService;
 import com.ning.billing.invoice.api.InvoiceMigrationApi;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
+import com.ning.billing.invoice.api.InvoiceService;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.invoice.dao.InvoiceDao;
-import com.ning.billing.invoice.dao.InvoiceItemSqlDao;
-import com.ning.billing.invoice.dao.InvoicePaymentSqlDao;
-import com.ning.billing.invoice.dao.InvoiceSqlDao;
 import com.ning.billing.invoice.generator.InvoiceGenerator;
-import com.ning.billing.invoice.glue.InvoiceModuleWithEmbeddedDb;
 import com.ning.billing.invoice.glue.TestInvoiceModuleWithEmbeddedDb;
+import com.ning.billing.invoice.notification.NextBillingDateNotifier;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.globallocker.GlobalLocker;
+import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
@@ -63,6 +62,8 @@ public abstract class InvoiceTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
 
     protected static final Currency accountCurrency = Currency.USD;
 
+    @Inject
+    protected InvoiceService invoiceService;
     @Inject
     protected InternalBus bus;
     @Inject
@@ -95,6 +96,14 @@ public abstract class InvoiceTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     protected InternalCallContextFactory internalCallContextFactory;
     @Inject
     protected InvoiceInternalApi invoiceInternalApi;
+    @Inject
+    protected NextBillingDateNotifier nextBillingDateNotifier;
+    @Inject
+    protected NotificationQueueService notificationQueueService;
+    @Inject
+    protected TestInvoiceUtil invoiceUtil;
+    @Inject
+    protected TestInvoiceNotificationQListener testInvoiceNotificationQListener;
 
 
     @BeforeClass(groups = "slow")
@@ -107,17 +116,30 @@ public abstract class InvoiceTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     }
 
     @BeforeMethod(groups = "slow")
-    public void setupTest() {
+    public void setupTest() throws Exception {
         bus.start();
+        restartInvoiceService(invoiceService);
+    }
+
+    private void restartInvoiceService(final InvoiceService invoiceService) throws Exception {
+        ((DefaultInvoiceService) invoiceService).initialize();
+        ((DefaultInvoiceService) invoiceService).registerForNotifications();
+        ((DefaultInvoiceService) invoiceService).start();
+    }
+
+    private void stopInvoiceService(final InvoiceService invoiceService) throws Exception {
+        ((DefaultInvoiceService) invoiceService).unregisterForNotifications();
+        ((DefaultInvoiceService) invoiceService).stop();
     }
 
     @AfterMethod(groups = "slow")
-    public void cleanupTest() {
+    public void cleanupTest() throws Exception {
         bus.stop();
+        stopInvoiceService(invoiceService);
     }
 
     private static void loadSystemPropertiesFromClasspath(final String resource) {
-        final URL url = InvoiceModuleWithEmbeddedDb.class.getResource(resource);
+        final URL url = InvoiceTestSuiteWithEmbeddedDB.class.getResource(resource);
         assertNotNull(url);
         try {
             System.getProperties().load(url.openStream());
@@ -125,5 +147,4 @@ public abstract class InvoiceTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
             throw new RuntimeException(e);
         }
     }
-
 }

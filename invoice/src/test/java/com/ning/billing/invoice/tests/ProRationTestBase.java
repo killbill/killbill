@@ -16,12 +16,15 @@
 
 package com.ning.billing.invoice.tests;
 
+import static com.ning.billing.invoice.TestInvoiceUtil.*;
+
 import java.math.BigDecimal;
 import java.util.List;
 
 import org.joda.time.LocalDate;
 
 import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.invoice.InvoiceTestSuiteNoDB;
 import com.ning.billing.invoice.model.BillingMode;
 import com.ning.billing.invoice.model.InvalidDateSequenceException;
 import com.ning.billing.invoice.model.RecurringInvoiceItemData;
@@ -29,7 +32,7 @@ import com.ning.billing.invoice.model.RecurringInvoiceItemData;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.fail;
 
-public abstract class ProRationTestBase extends InvoicingTestBase {
+public abstract class ProRationTestBase extends InvoiceTestSuiteNoDB {
 
     protected abstract BillingMode getBillingMode();
 
