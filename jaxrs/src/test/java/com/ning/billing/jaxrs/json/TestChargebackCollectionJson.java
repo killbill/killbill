@@ -25,21 +25,13 @@ import org.joda.time.DateTimeZone;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.jaxrs.JaxrsTestSuite;
+import com.ning.billing.jaxrs.JaxrsTestSuiteNoDB;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.common.collect.ImmutableList;
 
-public class TestChargebackCollectionJson extends JaxrsTestSuite {
+import static com.ning.billing.jaxrs.JaxrsTestUtils.createAuditLogsJson;
 
-    private static final ObjectMapper mapper = new ObjectMapper();
-
-    static {
-        mapper.registerModule(new JodaModule());
-        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-    }
+public class TestChargebackCollectionJson extends JaxrsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testJson() throws Exception {
@@ -48,7 +40,7 @@ public class TestChargebackCollectionJson extends JaxrsTestSuite {
         final BigDecimal chargebackAmount = BigDecimal.TEN;
         final String paymentId = UUID.randomUUID().toString();
         final String reason = UUID.randomUUID().toString();
-        final List<AuditLogJson> auditLogs = createAuditLogsJson();
+        final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
         final ChargebackJson chargebackJson = new ChargebackJson(requestedDate, effectiveDate, chargebackAmount, paymentId,
                                                                  reason, auditLogs);
 

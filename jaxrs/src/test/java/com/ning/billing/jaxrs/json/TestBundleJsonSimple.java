@@ -22,15 +22,17 @@ import java.util.UUID;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.jaxrs.JaxrsTestSuite;
+import com.ning.billing.jaxrs.JaxrsTestSuiteNoDB;
 
-public class TestBundleJsonSimple extends JaxrsTestSuite {
+import static com.ning.billing.jaxrs.JaxrsTestUtils.createAuditLogsJson;
+
+public class TestBundleJsonSimple extends JaxrsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testJson() throws Exception {
         final String bundleId = UUID.randomUUID().toString();
         final String externalKey = UUID.randomUUID().toString();
-        final List<AuditLogJson> auditLogs = createAuditLogsJson();
+        final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
         final BundleJsonSimple bundleJsonSimple = new BundleJsonSimple(bundleId, externalKey, auditLogs);
         Assert.assertEquals(bundleJsonSimple.getBundleId(), bundleId);
         Assert.assertEquals(bundleJsonSimple.getExternalKey(), externalKey);

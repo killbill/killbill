@@ -28,15 +28,13 @@ import org.testng.annotations.Test;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.jaxrs.JaxrsTestSuite;
-import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.clock.DefaultClock;
+import com.ning.billing.jaxrs.JaxrsTestSuiteNoDB;
 
 import com.google.common.collect.ImmutableList;
 
-public class TestInvoiceJsonWithItems extends JaxrsTestSuite {
+import static com.ning.billing.jaxrs.JaxrsTestUtils.createAuditLogsJson;
 
-    private final Clock clock = new DefaultClock();
+public class TestInvoiceJsonWithItems extends JaxrsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testJson() throws Exception {
@@ -51,7 +49,7 @@ public class TestInvoiceJsonWithItems extends JaxrsTestSuite {
         final BigDecimal balance = BigDecimal.ZERO;
         final String accountId = UUID.randomUUID().toString();
         final InvoiceItemJsonSimple invoiceItemJsonSimple = createInvoiceItemJson();
-        final List<AuditLogJson> auditLogs = createAuditLogsJson();
+        final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
         final InvoiceJsonWithItems invoiceJsonWithItems = new InvoiceJsonWithItems(amount, cba, creditAdj, refundAdj, invoiceId, invoiceDate,
                                                                                    targetDate, invoiceNumber, balance, accountId,
                                                                                    ImmutableList.<InvoiceItemJsonSimple>of(invoiceItemJsonSimple), auditLogs);

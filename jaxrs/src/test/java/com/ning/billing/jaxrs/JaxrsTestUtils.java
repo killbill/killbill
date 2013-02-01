@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -20,30 +20,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import com.ning.billing.KillbillTestSuite;
+import org.joda.time.DateTime;
+
 import com.ning.billing.jaxrs.json.AuditLogJson;
-import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.clock.ClockMock;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.joda.JodaModule;
+public abstract class JaxrsTestUtils {
 
-public abstract class JaxrsTestSuite extends KillbillTestSuite {
-
-    private final Clock clock = new ClockMock();
-
-    protected static final ObjectMapper mapper = new ObjectMapper();
-
-    static {
-        mapper.registerModule(new JodaModule());
-        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-    }
-
-    protected List<AuditLogJson> createAuditLogsJson() {
+    public static List<AuditLogJson> createAuditLogsJson(final DateTime changeDate) {
         final List<AuditLogJson> auditLogs = new ArrayList<AuditLogJson>();
         for (int i = 0; i < 20; i++) {
-            auditLogs.add(new AuditLogJson(UUID.randomUUID().toString(), clock.getUTCNow(), UUID.randomUUID().toString(),
+            auditLogs.add(new AuditLogJson(UUID.randomUUID().toString(), changeDate, UUID.randomUUID().toString(),
                                            UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString()));
         }
 

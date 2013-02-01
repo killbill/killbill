@@ -21,12 +21,10 @@ import java.util.UUID;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ning.billing.account.api.AccountEmail;
-import com.ning.billing.jaxrs.JaxrsTestSuite;
+import com.ning.billing.jaxrs.JaxrsTestSuiteNoDB;
 
-public class TestAccountEmailJson extends JaxrsTestSuite {
-    private static final ObjectMapper mapper = new ObjectMapper();
+public class TestAccountEmailJson extends JaxrsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testJson() throws Exception {
@@ -39,7 +37,7 @@ public class TestAccountEmailJson extends JaxrsTestSuite {
 
         final String asJson = mapper.writeValueAsString(accountEmailJson);
         Assert.assertEquals(asJson, "{\"accountId\":\"" + accountId + "\"," +
-                "\"email\":\"" + email + "\"}");
+                                    "\"email\":\"" + email + "\"}");
 
         final AccountEmailJson fromJson = mapper.readValue(asJson, AccountEmailJson.class);
         Assert.assertEquals(fromJson, accountEmailJson);

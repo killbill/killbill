@@ -27,15 +27,13 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.jaxrs.JaxrsTestSuite;
-import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.clock.DefaultClock;
+import com.ning.billing.jaxrs.JaxrsTestSuiteNoDB;
 
 import com.google.common.collect.ImmutableList;
 
-public class TestInvoiceJsonWithBundleKeys extends JaxrsTestSuite {
+import static com.ning.billing.jaxrs.JaxrsTestUtils.createAuditLogsJson;
 
-    private final Clock clock = new DefaultClock();
+public class TestInvoiceJsonWithBundleKeys extends JaxrsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testJson() throws Exception {
@@ -52,7 +50,7 @@ public class TestInvoiceJsonWithBundleKeys extends JaxrsTestSuite {
         final String bundleKeys = UUID.randomUUID().toString();
         final CreditJson creditJson = createCreditJson();
         final List<CreditJson> credits = ImmutableList.<CreditJson>of(creditJson);
-        final List<AuditLogJson> auditLogs = createAuditLogsJson();
+        final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
         final InvoiceJsonWithBundleKeys invoiceJsonSimple = new InvoiceJsonWithBundleKeys(amount, cba, creditAdj, refundAdj, invoiceId, invoiceDate,
                                                                                           targetDate, invoiceNumber, balance, accountId, bundleKeys,
                                                                                           credits, auditLogs);

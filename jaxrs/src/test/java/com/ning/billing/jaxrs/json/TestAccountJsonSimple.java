@@ -21,11 +21,9 @@ import java.util.UUID;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ning.billing.jaxrs.JaxrsTestSuite;
+import com.ning.billing.jaxrs.JaxrsTestSuiteNoDB;
 
-public class TestAccountJsonSimple extends JaxrsTestSuite {
-    private static final ObjectMapper mapper = new ObjectMapper();
+public class TestAccountJsonSimple extends JaxrsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testJson() throws Exception {
@@ -37,7 +35,7 @@ public class TestAccountJsonSimple extends JaxrsTestSuite {
 
         final String asJson = mapper.writeValueAsString(accountJsonSimple);
         Assert.assertEquals(asJson, "{\"accountId\":\"" + accountJsonSimple.getAccountId() + "\"," +
-                "\"externalKey\":\"" + accountJsonSimple.getExternalKey() + "\"}");
+                                    "\"externalKey\":\"" + accountJsonSimple.getExternalKey() + "\"}");
 
         final AccountJsonSimple fromJson = mapper.readValue(asJson, AccountJsonSimple.class);
         Assert.assertEquals(fromJson, accountJsonSimple);

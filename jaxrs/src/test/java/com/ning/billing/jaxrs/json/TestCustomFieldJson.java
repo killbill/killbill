@@ -21,11 +21,9 @@ import java.util.UUID;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ning.billing.jaxrs.JaxrsTestSuite;
+import com.ning.billing.jaxrs.JaxrsTestSuiteNoDB;
 
-public class TestCustomFieldJson extends JaxrsTestSuite {
-    private static final ObjectMapper mapper = new ObjectMapper();
+public class TestCustomFieldJson extends JaxrsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testJson() throws Exception {
@@ -37,7 +35,7 @@ public class TestCustomFieldJson extends JaxrsTestSuite {
 
         final String asJson = mapper.writeValueAsString(customFieldJson);
         Assert.assertEquals(asJson, "{\"name\":\"" + customFieldJson.getName() + "\"," +
-                "\"value\":\"" + customFieldJson.getValue() + "\"}");
+                                    "\"value\":\"" + customFieldJson.getValue() + "\"}");
 
         final CustomFieldJson fromJson = mapper.readValue(asJson, CustomFieldJson.class);
         Assert.assertEquals(fromJson, customFieldJson);

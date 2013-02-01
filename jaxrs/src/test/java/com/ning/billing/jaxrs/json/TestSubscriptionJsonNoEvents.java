@@ -33,20 +33,11 @@ import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.jaxrs.JaxrsTestSuite;
+import com.ning.billing.jaxrs.JaxrsTestSuiteNoDB;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.joda.JodaModule;
+import static com.ning.billing.jaxrs.JaxrsTestUtils.createAuditLogsJson;
 
-public class TestSubscriptionJsonNoEvents extends JaxrsTestSuite {
-
-    private static final ObjectMapper mapper = new ObjectMapper();
-
-    static {
-        mapper.registerModule(new JodaModule());
-        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-    }
+public class TestSubscriptionJsonNoEvents extends JaxrsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testJson() throws Exception {
@@ -59,7 +50,7 @@ public class TestSubscriptionJsonNoEvents extends JaxrsTestSuite {
         final String priceList = UUID.randomUUID().toString();
         final DateTime chargedThroughDate = new DateTime(DateTimeZone.UTC);
         final DateTime endDate = new DateTime(DateTimeZone.UTC);
-        final List<AuditLogJson> auditLogs = createAuditLogsJson();
+        final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
         final SubscriptionJsonNoEvents subscriptionJsonNoEvents = new SubscriptionJsonNoEvents(subscriptionId, bundleId, startDate,
                                                                                                productName, productCategory, billingPeriod,
                                                                                                priceList, chargedThroughDate, endDate,

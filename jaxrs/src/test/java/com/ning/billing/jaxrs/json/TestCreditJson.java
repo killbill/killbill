@@ -24,13 +24,11 @@ import org.joda.time.DateTime;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.jaxrs.JaxrsTestSuite;
-import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.clock.DefaultClock;
+import com.ning.billing.jaxrs.JaxrsTestSuiteNoDB;
 
-public class TestCreditJson extends JaxrsTestSuite {
+import static com.ning.billing.jaxrs.JaxrsTestUtils.createAuditLogsJson;
 
-    private final Clock clock = new DefaultClock();
+public class TestCreditJson extends JaxrsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testJson() throws Exception {
@@ -41,7 +39,7 @@ public class TestCreditJson extends JaxrsTestSuite {
         final DateTime effectiveDate = clock.getUTCNow();
         final String reason = UUID.randomUUID().toString();
         final String accountId = UUID.randomUUID().toString();
-        final List<AuditLogJson> auditLogs = createAuditLogsJson();
+        final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
         final CreditJson creditJson = new CreditJson(creditAmount, invoiceId, invoiceNumber, requestedDate, effectiveDate,
                                                      reason, accountId, auditLogs);
         Assert.assertEquals(creditJson.getRequestedDate(), requestedDate);

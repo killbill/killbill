@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -14,9 +14,20 @@
  * under the License.
  */
 
-package com.ning.billing.jaxrs.json;
+package com.ning.billing.jaxrs.glue;
 
-import com.ning.billing.jaxrs.JaxrsTestSuiteNoDB;
+import com.ning.billing.util.jackson.ObjectMapper;
 
-public class TestAccountTimelineJson extends JaxrsTestSuiteNoDB {
+import com.google.inject.AbstractModule;
+
+public class TestJaxrsModule extends AbstractModule {
+
+    private void installObjectMapper() {
+        bind(com.fasterxml.jackson.databind.ObjectMapper.class).toInstance(new ObjectMapper());
+    }
+
+    @Override
+    protected void configure() {
+        installObjectMapper();
+    }
 }

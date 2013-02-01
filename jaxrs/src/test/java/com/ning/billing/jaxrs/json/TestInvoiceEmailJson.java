@@ -21,11 +21,9 @@ import java.util.UUID;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ning.billing.jaxrs.JaxrsTestSuite;
+import com.ning.billing.jaxrs.JaxrsTestSuiteNoDB;
 
-public class TestInvoiceEmailJson extends JaxrsTestSuite {
-    private static final ObjectMapper mapper = new ObjectMapper();
+public class TestInvoiceEmailJson extends JaxrsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testJson() throws Exception {
@@ -38,7 +36,7 @@ public class TestInvoiceEmailJson extends JaxrsTestSuite {
 
         final String asJson = mapper.writeValueAsString(invoiceEmailJson);
         Assert.assertEquals(asJson, "{\"accountId\":\"" + accountId + "\"," +
-                "\"isNotifiedForInvoices\":" + isNotifiedForInvoices + "}");
+                                    "\"isNotifiedForInvoices\":" + isNotifiedForInvoices + "}");
 
         final InvoiceEmailJson fromJson = mapper.readValue(asJson, InvoiceEmailJson.class);
         Assert.assertEquals(fromJson, invoiceEmailJson);

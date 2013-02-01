@@ -26,15 +26,13 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.jaxrs.JaxrsTestSuite;
-import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.jaxrs.JaxrsTestSuiteNoDB;
 
 import com.google.common.collect.ImmutableList;
 
-public class TestRefundJson extends JaxrsTestSuite {
+import static com.ning.billing.jaxrs.JaxrsTestUtils.createAuditLogsJson;
 
-    private final Clock clock = new ClockMock();
+public class TestRefundJson extends JaxrsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testJson() throws Exception {
@@ -46,7 +44,7 @@ public class TestRefundJson extends JaxrsTestSuite {
         final DateTime requestedDate = clock.getUTCNow();
         final DateTime effectiveDate = clock.getUTCNow();
         final List<InvoiceItemJsonSimple> adjustments = ImmutableList.<InvoiceItemJsonSimple>of(createInvoiceItemJson());
-        final List<AuditLogJson> auditLogs = createAuditLogsJson();
+        final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
         final RefundJson refundJson = new RefundJson(refundId, paymentId, amount, currency, isAdjusted, requestedDate,
                                                      effectiveDate, adjustments, auditLogs);
         Assert.assertEquals(refundJson.getRefundId(), refundId);
@@ -78,7 +76,7 @@ public class TestRefundJson extends JaxrsTestSuite {
         final LocalDate endDate = clock.getUTCToday();
         final BigDecimal amount = BigDecimal.TEN;
         final Currency currency = Currency.MXN;
-        final List<AuditLogJson> auditLogs = createAuditLogsJson();
+        final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
         return new InvoiceItemJsonSimple(invoiceItemId, invoiceId, linkedInvoiceItemId, accountId, bundleId, subscriptionId,
                                          planName, phaseName, description, startDate, endDate,
                                          amount, currency, auditLogs);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -14,9 +14,15 @@
  * under the License.
  */
 
-package com.ning.billing.jaxrs.json;
+package com.ning.billing.jaxrs.glue;
 
-import com.ning.billing.jaxrs.JaxrsTestSuiteNoDB;
+import com.ning.billing.GuicyKillbillTestNoDBModule;
 
-public class TestAccountTimelineJson extends JaxrsTestSuiteNoDB {
+public class TestJaxrsModuleNoDB extends TestJaxrsModule {
+
+    @Override
+    public void configure() {
+        super.configure();
+        install(new GuicyKillbillTestNoDBModule());
+    }
 }

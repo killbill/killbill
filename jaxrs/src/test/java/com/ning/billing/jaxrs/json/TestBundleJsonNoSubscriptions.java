@@ -24,16 +24,18 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.jaxrs.JaxrsTestSuite;
+import com.ning.billing.jaxrs.JaxrsTestSuiteNoDB;
 
-public class TestBundleJsonNoSubscriptions extends JaxrsTestSuite {
+import static com.ning.billing.jaxrs.JaxrsTestUtils.createAuditLogsJson;
+
+public class TestBundleJsonNoSubscriptions extends JaxrsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testJson() throws Exception {
         final String bundleId = UUID.randomUUID().toString();
         final String accountId = UUID.randomUUID().toString();
         final String externalKey = UUID.randomUUID().toString();
-        final List<AuditLogJson> auditLogs = createAuditLogsJson();
+        final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
         final BundleJsonNoSubscriptions bundleJsonNoSubscriptions = new BundleJsonNoSubscriptions(bundleId, accountId, externalKey, null, auditLogs);
         Assert.assertEquals(bundleJsonNoSubscriptions.getBundleId(), bundleId);
         Assert.assertEquals(bundleJsonNoSubscriptions.getAccountId(), accountId);

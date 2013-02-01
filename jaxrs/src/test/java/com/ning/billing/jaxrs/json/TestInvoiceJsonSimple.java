@@ -26,13 +26,11 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.jaxrs.JaxrsTestSuite;
-import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.clock.DefaultClock;
+import com.ning.billing.jaxrs.JaxrsTestSuiteNoDB;
 
-public class TestInvoiceJsonSimple extends JaxrsTestSuite {
+import static com.ning.billing.jaxrs.JaxrsTestUtils.createAuditLogsJson;
 
-    private final Clock clock = new DefaultClock();
+public class TestInvoiceJsonSimple extends JaxrsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testJson() throws Exception {
@@ -46,7 +44,7 @@ public class TestInvoiceJsonSimple extends JaxrsTestSuite {
         final String invoiceNumber = UUID.randomUUID().toString();
         final BigDecimal balance = BigDecimal.ZERO;
         final String accountId = UUID.randomUUID().toString();
-        final List<AuditLogJson> auditLogs = createAuditLogsJson();
+        final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
         final InvoiceJsonSimple invoiceJsonSimple = new InvoiceJsonSimple(amount, cba, creditAdj, refundAdj, invoiceId, invoiceDate,
                                                                           targetDate, invoiceNumber, balance, accountId, auditLogs);
         Assert.assertEquals(invoiceJsonSimple.getAmount(), amount);

@@ -22,7 +22,6 @@ import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.InternationalPrice;
 import com.ning.billing.catalog.api.Listing;
@@ -30,10 +29,9 @@ import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.Product;
-import com.ning.billing.jaxrs.JaxrsTestSuite;
+import com.ning.billing.jaxrs.JaxrsTestSuiteNoDB;
 
-public class TestPlanDetailJason extends JaxrsTestSuite {
-    private static final ObjectMapper mapper = new ObjectMapper();
+public class TestPlanDetailJason extends JaxrsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testJson() throws Exception {
@@ -50,10 +48,10 @@ public class TestPlanDetailJason extends JaxrsTestSuite {
 
         final String asJson = mapper.writeValueAsString(planDetailJason);
         Assert.assertEquals(asJson, "{\"productName\":\"" + planDetailJason.getProductName() + "\"," +
-                "\"planName\":\"" + planDetailJason.getPlanName() + "\"," +
-                "\"billingPeriod\":\"" + planDetailJason.getBillingPeriod().toString() + "\"," +
-                "\"priceListName\":\"" + planDetailJason.getPriceListName() + "\"," +
-                "\"finalPhasePrice\":null}");
+                                    "\"planName\":\"" + planDetailJason.getPlanName() + "\"," +
+                                    "\"billingPeriod\":\"" + planDetailJason.getBillingPeriod().toString() + "\"," +
+                                    "\"priceListName\":\"" + planDetailJason.getPriceListName() + "\"," +
+                                    "\"finalPhasePrice\":null}");
 
         final PlanDetailJason fromJson = mapper.readValue(asJson, PlanDetailJason.class);
         Assert.assertEquals(fromJson, planDetailJason);
