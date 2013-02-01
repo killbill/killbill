@@ -16,7 +16,11 @@
 
 package com.ning.billing.account.glue;
 
+import java.util.Properties;
+
 import org.mockito.Mockito;
+import org.skife.config.ConfigSource;
+import org.skife.config.SimplePropertyConfigSource;
 
 import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
 import com.ning.billing.util.glue.AuditModule;
@@ -26,6 +30,19 @@ import com.ning.billing.util.glue.CustomFieldModule;
 import com.ning.billing.util.glue.TagStoreModule;
 
 public class TestAccountModule extends DefaultAccountModule {
+
+    protected final ConfigSource configSource;
+
+    public TestAccountModule() {
+        final Properties properties = new Properties(System.getProperties());
+        // Speed up the bus
+        properties.put("killbill.billing.util.persistent.bus.sleep", "10");
+        properties.put("killbill.billing.util.persistent.bus.nbThreads", "1");
+        configSource = new SimplePropertyConfigSource(properties);
+
+        // Ignore ehcache checks. Unfortunately, ehcache looks at system properties directly...
+        System.setProperty("net.sf.ehcache.skipUpdateCheck", "true");
+    }
 
     private void installExternalApis() {
         // Needed for Audit

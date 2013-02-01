@@ -34,6 +34,6 @@ public class TestAccountModuleNoDB extends TestAccountModule {
         super.configure();
         install(new GuicyKillbillTestNoDBModule());
         install(new MockNonEntityDaoModule());
-        install(new InMemoryBusModule());
+        install(new InMemoryBusModule(configSource));
     }
 }

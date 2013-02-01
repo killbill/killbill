@@ -28,6 +28,6 @@ public class TestAccountModuleWithEmbeddedDB extends TestAccountModule {
 
         install(new GuicyKillbillTestWithEmbeddedDBModule());
         install(new NonEntityDaoModule());
-        install(new BusModule());
+        install(new BusModule(configSource));
     }
 }
