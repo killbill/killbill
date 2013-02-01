@@ -31,7 +31,7 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.dao.MockNonEntityDao;
-import com.ning.billing.invoice.InvoiceTestSuite;
+import com.ning.billing.invoice.InvoiceTestSuiteNoDB;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
@@ -42,35 +42,7 @@ import com.ning.billing.util.svcsapi.bus.InternalBus;
 
 import com.google.common.collect.ImmutableMap;
 
-public class TestDefaultInvoiceDao extends InvoiceTestSuite {
-
-    private InvoiceSqlDao invoiceSqlDao;
-    private DefaultInvoiceDao dao;
-    private final CacheControllerDispatcher controllerDispatcher = new CacheControllerDispatcher();
-
-
-    @BeforeMethod(groups = "fast")
-    public void setUp() throws Exception {
-        final IDBI idbi = Mockito.mock(IDBI.class);
-        invoiceSqlDao = Mockito.mock(InvoiceSqlDao.class);
-        Mockito.when(idbi.onDemand(InvoiceSqlDao.class)).thenReturn(invoiceSqlDao);
-        Mockito.when(invoiceSqlDao.getById(Mockito.anyString(), Mockito.<InternalTenantContext>any())).thenReturn(Mockito.mock(InvoiceModelDao.class));
-        Mockito.when(invoiceSqlDao.inTransaction(Mockito.<Transaction<Void, EntitySqlDao<InvoiceModelDao, Invoice>>>any())).thenAnswer(new Answer() {
-            @Override
-            public Object answer(final InvocationOnMock invocation) {
-                final Object[] args = invocation.getArguments();
-                try {
-                    ((Transaction<Void, InvoiceSqlDao>) args[0]).inTransaction(invoiceSqlDao, null);
-                } catch (Exception e) {
-                    Assert.fail(e.toString());
-                }
-                return null;
-            }
-        });
-
-        final NextBillingDatePoster poster = Mockito.mock(NextBillingDatePoster.class);
-        dao = new DefaultInvoiceDao(idbi, poster, Mockito.mock(InternalBus.class), clock, controllerDispatcher, new MockNonEntityDao());
-    }
+public class TestDefaultInvoiceDao extends InvoiceTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testComputePositiveRefundAmount() throws Exception {
@@ -105,7 +77,7 @@ public class TestDefaultInvoiceDao extends InvoiceTestSuite {
         final InvoicePaymentModelDao invoicePayment = Mockito.mock(InvoicePaymentModelDao.class);
         Mockito.when(invoicePayment.getAmount()).thenReturn(paymentAmount);
 
-        final BigDecimal actualRefundAmount = dao.computePositiveRefundAmount(invoicePayment, requestedAmount, invoiceItemIdsWithAmounts);
+        final BigDecimal actualRefundAmount = DefaultInvoiceDao.computePositiveRefundAmount(invoicePayment, requestedAmount, invoiceItemIdsWithAmounts);
         Assert.assertEquals(actualRefundAmount, expectedRefundAmount);
     }
 }

@@ -25,6 +25,7 @@ import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.IDBI;
 
 import com.ning.billing.GuicyKillbillTestModule;
+import com.ning.billing.GuicyKillbillTestNoDBModule;
 import com.ning.billing.ObjectType;
 import com.ning.billing.api.TestListenerStatus;
 import com.ning.billing.entitlement.api.timeline.RepairEntitlementLifecycleDao;
@@ -62,16 +63,10 @@ public class MockEngineModuleMemory extends MockEngineModule {
         bind(NotificationQueueConfig.class).toInstance(config);
     }
 
-    protected void installDBI() {
-        final IDBI idbi = Mockito.mock(IDBI.class);
-        bind(IDBI.class).toInstance(idbi);
-    }
-
     @Override
     protected void configure() {
-        installDBI();
 
-        install(new GuicyKillbillTestModule());
+        install(new GuicyKillbillTestNoDBModule());
 
         super.configure();
 
