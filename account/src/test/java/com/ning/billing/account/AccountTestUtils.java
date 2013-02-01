@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -16,98 +16,27 @@
 
 package com.ning.billing.account;
 
-import java.io.IOException;
 import java.util.Locale;
 import java.util.UUID;
 
 import org.joda.time.DateTimeZone;
-import org.skife.jdbi.v2.IDBI;
 import org.testng.Assert;
-import org.testng.annotations.BeforeClass;
 
 import com.ning.billing.account.api.AccountData;
-import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.account.api.DefaultBillCycleDay;
 import com.ning.billing.account.api.DefaultMutableAccountData;
-import com.ning.billing.account.api.user.DefaultAccountUserApi;
-import com.ning.billing.account.dao.AccountDao;
 import com.ning.billing.account.dao.AccountModelDao;
-import com.ning.billing.account.dao.DefaultAccountDao;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.util.audit.dao.AuditDao;
-import com.ning.billing.util.audit.dao.DefaultAuditDao;
-import com.ning.billing.util.bus.DefaultBusService;
-import com.ning.billing.util.bus.InMemoryInternalBus;
-import com.ning.billing.util.cache.CacheControllerDispatcher;
-import com.ning.billing.util.callcontext.DefaultCallContextFactory;
-import com.ning.billing.util.callcontext.InternalCallContextFactory;
-import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.clock.ClockMock;
-import com.ning.billing.util.customfield.dao.CustomFieldDao;
-import com.ning.billing.util.customfield.dao.DefaultCustomFieldDao;
-import com.ning.billing.util.dao.DefaultNonEntityDao;
-import com.ning.billing.util.dao.NonEntityDao;
-import com.ning.billing.util.svcsapi.bus.BusService;
-import com.ning.billing.util.svcsapi.bus.InternalBus;
-import com.ning.billing.util.tag.api.user.TagEventBuilder;
-import com.ning.billing.util.tag.dao.DefaultTagDao;
-import com.ning.billing.util.tag.dao.DefaultTagDefinitionDao;
-import com.ning.billing.util.tag.dao.TagDao;
-import com.ning.billing.util.tag.dao.TagDefinitionDao;
 
-import static org.testng.Assert.fail;
+public abstract class AccountTestUtils {
 
-public abstract class AccountTestBase extends AccountTestSuiteWithEmbeddedDB {
-
-    protected final TagEventBuilder tagEventBuilder = new TagEventBuilder();
-    protected final Clock clock = new ClockMock();
-    protected final InternalBus bus = new InMemoryInternalBus();
-
-    protected AccountDao accountDao;
-    protected AuditDao auditDao;
-    protected CustomFieldDao customFieldDao;
-    protected TagDefinitionDao tagDefinitionDao;
-    protected TagDao tagDao;
-    protected CacheControllerDispatcher controllerDispatcher;
-    protected NonEntityDao nonEntityDao;
-
-    protected AccountUserApi accountUserApi;
-
-    @BeforeClass(groups = "slow")
-    protected void setup() throws IOException {
-        try {
-            final IDBI dbi = getDBI();
-
-            controllerDispatcher = new CacheControllerDispatcher();
-            nonEntityDao = new DefaultNonEntityDao(dbi);
-            final InternalCallContextFactory internalCallContextFactory = new InternalCallContextFactory(clock, nonEntityDao, controllerDispatcher);
-            accountDao = new DefaultAccountDao(dbi, bus, clock, controllerDispatcher, internalCallContextFactory, nonEntityDao);
-            auditDao = new DefaultAuditDao(dbi);
-            customFieldDao = new DefaultCustomFieldDao(dbi, clock, controllerDispatcher, nonEntityDao);
-            tagDefinitionDao = new DefaultTagDefinitionDao(dbi, tagEventBuilder, bus, clock, controllerDispatcher, nonEntityDao);
-
-            tagDao = new DefaultTagDao(dbi, tagEventBuilder, bus, clock, controllerDispatcher, nonEntityDao);
-
-            // Health check test to make sure MySQL is setup properly
-            accountDao.test(internalCallContext);
-
-            final BusService busService = new DefaultBusService(bus);
-            ((DefaultBusService) busService).startBus();
-
-            final DefaultCallContextFactory callContextFactory = new DefaultCallContextFactory(clock);
-            accountUserApi = new DefaultAccountUserApi(callContextFactory, internalCallContextFactory, accountDao);
-        } catch (Throwable t) {
-            fail(t.toString());
-        }
-    }
-
-    protected void checkAccountsEqual(final AccountData retrievedAccount, final AccountData account) {
+    public static void checkAccountsEqual(final AccountData retrievedAccount, final AccountData account) {
         final UUID fakeId = UUID.randomUUID();
         checkAccountsEqual(new AccountModelDao(fakeId, retrievedAccount), new AccountModelDao(fakeId, account));
     }
 
-    protected void checkAccountsEqual(final AccountModelDao retrievedAccount, final AccountModelDao account) {
+    public static void checkAccountsEqual(final AccountModelDao retrievedAccount, final AccountModelDao account) {
         if (retrievedAccount == null || account == null) {
             Assert.assertNull(retrievedAccount);
             Assert.assertNull(account);
@@ -138,29 +67,28 @@ public abstract class AccountTestBase extends AccountTestSuiteWithEmbeddedDB {
         Assert.assertEquals(retrievedAccount.getMigrated(), account.getMigrated());
     }
 
-    protected AccountModelDao createTestAccount() {
+    public static AccountModelDao createTestAccount() {
         return createTestAccount(30, 31, UUID.randomUUID().toString().substring(0, 4));
     }
 
-    protected AccountModelDao createTestAccount(final String phone) {
+    public static AccountModelDao createTestAccount(final String phone) {
         return createTestAccount(30, 31, phone);
     }
 
-    protected AccountModelDao createTestAccount(final int billCycleDay) {
+    public static AccountModelDao createTestAccount(final int billCycleDay) {
         return createTestAccount(billCycleDay, billCycleDay, UUID.randomUUID().toString().substring(0, 4));
     }
 
-    private AccountModelDao createTestAccount(final int billCycleDayUTC, final int billCycleDayLocal, final String phone) {
+    private static AccountModelDao createTestAccount(final int billCycleDayUTC, final int billCycleDayLocal, final String phone) {
         final AccountData accountData = createAccountData(billCycleDayUTC, billCycleDayLocal, phone);
         return new AccountModelDao(UUID.randomUUID(), accountData);
     }
 
-    protected AccountData createAccountData() {
+    public static AccountData createAccountData() {
         return createAccountData(30, 31, UUID.randomUUID().toString().substring(0, 4));
     }
 
-    private AccountData createAccountData(final int billCycleDayUTC, final int billCycleDayLocal, final String phone) {
-
+    private static AccountData createAccountData(final int billCycleDayUTC, final int billCycleDayLocal, final String phone) {
         final String externalKey = UUID.randomUUID().toString();
         final String email = UUID.randomUUID().toString().substring(0, 4) + '@' + UUID.randomUUID().toString().substring(0, 4);
         final String name = UUID.randomUUID().toString();

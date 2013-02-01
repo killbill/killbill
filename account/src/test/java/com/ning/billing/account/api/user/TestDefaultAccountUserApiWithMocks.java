@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -24,7 +24,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.ning.billing.account.AccountTestSuite;
+import com.ning.billing.account.AccountTestSuiteNoDB;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.account.api.BillCycleDay;
@@ -41,7 +41,7 @@ import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.svcsapi.bus.InternalBus;
 
-public class TestDefaultAccountUserApiWithMocks extends AccountTestSuite {
+public class TestDefaultAccountUserApiWithMocks extends AccountTestSuiteNoDB {
 
     private final CallContextFactory factory = Mockito.mock(CallContextFactory.class);
     private final InternalCallContextFactory internalFactory = Mockito.mock(InternalCallContextFactory.class);

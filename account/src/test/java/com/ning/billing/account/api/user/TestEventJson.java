@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -23,7 +23,7 @@ import java.util.UUID;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.account.AccountTestSuite;
+import com.ning.billing.account.AccountTestSuiteNoDB;
 import com.ning.billing.account.api.DefaultBillCycleDay;
 import com.ning.billing.account.api.DefaultChangedField;
 import com.ning.billing.account.api.user.DefaultAccountCreationEvent.DefaultAccountData;
@@ -31,7 +31,7 @@ import com.ning.billing.util.events.AccountChangeInternalEvent;
 import com.ning.billing.util.events.ChangedField;
 import com.ning.billing.util.jackson.ObjectMapper;
 
-public class TestEventJson extends AccountTestSuite {
+public class TestEventJson extends AccountTestSuiteNoDB {
 
     private final ObjectMapper mapper = new ObjectMapper();
 

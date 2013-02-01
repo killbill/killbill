@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -27,7 +27,7 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.ObjectType;
-import com.ning.billing.account.AccountTestBase;
+import com.ning.billing.account.AccountTestSuiteWithEmbeddedDB;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.AccountEmail;
@@ -51,7 +51,10 @@ import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.dao.TagDefinitionModelDao;
 import com.ning.billing.util.tag.dao.TagModelDao;
 
-public class TestAccountDao extends AccountTestBase {
+import static com.ning.billing.account.AccountTestUtils.checkAccountsEqual;
+import static com.ning.billing.account.AccountTestUtils.createTestAccount;
+
+public class TestAccountDao extends AccountTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testBasic() throws AccountApiException {

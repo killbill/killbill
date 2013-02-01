@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -23,7 +23,7 @@ import org.joda.time.DateTime;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.account.AccountTestBase;
+import com.ning.billing.account.AccountTestSuiteWithEmbeddedDB;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.BillCycleDay;
@@ -33,7 +33,11 @@ import com.ning.billing.account.api.MigrationAccountData;
 import com.ning.billing.account.api.MutableAccountData;
 import com.ning.billing.catalog.api.Currency;
 
-public class TestDefaultAccountUserApi extends AccountTestBase {
+import static com.ning.billing.account.AccountTestUtils.checkAccountsEqual;
+import static com.ning.billing.account.AccountTestUtils.createAccountData;
+import static com.ning.billing.account.AccountTestUtils.createTestAccount;
+
+public class TestDefaultAccountUserApi extends AccountTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testMigrate() throws Exception {
