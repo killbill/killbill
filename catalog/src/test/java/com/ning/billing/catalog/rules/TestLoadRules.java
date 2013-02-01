@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -21,7 +21,6 @@ import java.net.URI;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.google.common.io.Resources;
 import com.ning.billing.catalog.CatalogTestSuiteNoDB;
 import com.ning.billing.catalog.StandaloneCatalog;
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -30,7 +29,10 @@ import com.ning.billing.catalog.api.PlanSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.util.config.catalog.XMLLoader;
 
+import com.google.common.io.Resources;
+
 public class TestLoadRules extends CatalogTestSuiteNoDB {
+
     @Test(groups = "fast")
     public void test() throws Exception {
         final URI uri = new URI(Resources.getResource("WeaponsHireSmall.xml").toExternalForm());

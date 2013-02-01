@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -20,8 +20,6 @@ import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -30,7 +28,6 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.config.catalog.ValidationErrors;
 
 public class TestInternationalPrice extends CatalogTestSuiteNoDB {
-    private static final Logger log = LoggerFactory.getLogger(TestInternationalPrice.class);
 
     @Test(groups = "fast")
     public void testZeroValue() throws URISyntaxException, CatalogApiException {

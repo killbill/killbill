@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -16,8 +16,6 @@
 
 package com.ning.billing.catalog.rules;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
@@ -38,11 +36,11 @@ import com.ning.billing.catalog.api.PlanSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 
 public class TestPlanRules extends CatalogTestSuiteNoDB {
-    private final Logger log = LoggerFactory.getLogger(TestPlanRules.class);
+
     private MockCatalog cat = null;
 
     @BeforeTest(groups = "fast")
-    public void setup() {
+    public void setupTest() {
         cat = new MockCatalog();
 
         final DefaultPriceList priceList2 = cat.getPriceLists().getChildPriceLists()[0];
@@ -53,8 +51,8 @@ public class TestPlanRules extends CatalogTestSuiteNoDB {
 
         cat.getPlanRules().
                 setChangeCase(new CaseChangePlanPolicy[]{casePolicy}).
-                setChangeAlignmentCase(new CaseChangePlanAlignment[]{caseAlignment}).
-                setPriceListCase(new CasePriceList[]{casePriceList});
+                   setChangeAlignmentCase(new CaseChangePlanAlignment[]{caseAlignment}).
+                   setPriceListCase(new CasePriceList[]{casePriceList});
     }
 
     @Test(groups = "fast")
@@ -69,7 +67,7 @@ public class TestPlanRules extends CatalogTestSuiteNoDB {
             cat.getPlanRules().planChange(from, to, cat);
             Assert.fail("We did not see an exception when  trying to change plan to the same plan");
         } catch (IllegalPlanChange e) {
-            log.info("Correct - cannot change to the same plan:", e);
+            // Correct - cannot change to the same plan
         } catch (CatalogApiException e) {
             Assert.fail("", e);
         }
@@ -87,7 +85,6 @@ public class TestPlanRules extends CatalogTestSuiteNoDB {
         try {
             result = cat.getPlanRules().planChange(from, to, cat);
         } catch (IllegalPlanChange e) {
-            log.info("Correct - cannot change to the same plan:", e);
             Assert.fail("We should not have triggered this error");
         } catch (CatalogApiException e) {
             Assert.fail("", e);
@@ -112,7 +109,6 @@ public class TestPlanRules extends CatalogTestSuiteNoDB {
         try {
             result = cat.getPlanRules().planChange(from, to, cat);
         } catch (IllegalPlanChange e) {
-            log.info("Correct - cannot change to the same plan:", e);
             Assert.fail("We should not have triggered this error");
         } catch (CatalogApiException e) {
             Assert.fail("", e);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -19,8 +19,6 @@ package com.ning.billing.catalog;
 import java.util.Date;
 
 import org.joda.time.DateTime;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -28,7 +26,6 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.config.catalog.ValidationErrors;
 
 public class TestPlan extends CatalogTestSuiteNoDB {
-    private static final Logger log = LoggerFactory.getLogger(TestPlan.class);
 
     @Test(groups = "fast")
     public void testDateValidation() {

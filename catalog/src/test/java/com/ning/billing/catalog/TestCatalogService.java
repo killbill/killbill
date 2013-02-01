@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -20,11 +20,12 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.io.VersionedCatalogLoader;
-import com.ning.billing.util.config.CatalogConfig;
 import com.ning.billing.lifecycle.KillbillService.ServiceException;
 import com.ning.billing.util.clock.DefaultClock;
+import com.ning.billing.util.config.CatalogConfig;
 
 public class TestCatalogService extends CatalogTestSuiteNoDB {
+
     @Test(groups = "fast")
     public void testCatalogServiceDirectory() throws ServiceException {
         final DefaultCatalogService service = new DefaultCatalogService(new CatalogConfig() {

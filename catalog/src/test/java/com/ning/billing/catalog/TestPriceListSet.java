@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -31,6 +31,7 @@ import static com.ning.billing.catalog.api.PhaseType.DISCOUNT;
 import static com.ning.billing.catalog.api.PhaseType.EVERGREEN;
 
 public class TestPriceListSet extends CatalogTestSuiteNoDB {
+
     @Test(groups = "fast")
     public void testOverriding() throws CatalogApiException {
         final DefaultProduct foo = new DefaultProduct("Foo", ProductCategory.BASE);

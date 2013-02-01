@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -16,7 +16,6 @@
 
 package com.ning.billing.catalog;
 
-
 public class MockPlan extends DefaultPlan {
 
     public static MockPlan createBicycleTrialEvergreen1USD(final int trialDurationInDays) {
@@ -26,7 +25,6 @@ public class MockPlan extends DefaultPlan {
                             MockPlanPhase.create1USDMonthlyEvergreen(),
                             -1);
     }
-
 
     public static MockPlan createBicycleTrialEvergreen1USD() {
         return new MockPlan("BicycleTrialEvergreen1USD",
@@ -97,7 +95,6 @@ public class MockPlan extends DefaultPlan {
         }
     }
 
-
     public static MockPlan createBicycleNoTrialEvergreen1USD() {
         return new MockPlan("BicycleNoTrialEvergreen1USD",
                             MockProduct.createBicycle(),
@@ -121,7 +118,6 @@ public class MockPlan extends DefaultPlan {
         setInitialPhases(null);
         setPlansAllowedInBundle(1);
     }
-
 
     public static DefaultPlan[] createAll() {
         return new DefaultPlan[]{

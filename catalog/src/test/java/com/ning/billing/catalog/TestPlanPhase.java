@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -16,8 +16,6 @@
 
 package com.ning.billing.catalog;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -27,12 +25,9 @@ import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.util.config.catalog.ValidationErrors;
 
 public class TestPlanPhase extends CatalogTestSuiteNoDB {
-    private final Logger log = LoggerFactory.getLogger(TestPlanPhase.class);
 
     @Test(groups = "fast")
     public void testValidation() {
-        log.info("Testing Plan Phase Validation");
-
         DefaultPlanPhase pp = MockPlanPhase.createUSDMonthlyEvergreen(null, "1.00").setPlan(MockPlan.createBicycleNoTrialEvergreen1USD());//new MockPlanPhase().setBillCycleDuration(BillingPeriod.MONTHLY).setRecurringPrice(null).setFixedPrice(new DefaultInternationalPrice());
 
         ValidationErrors errors = pp.validate(new MockCatalog(), new ValidationErrors());

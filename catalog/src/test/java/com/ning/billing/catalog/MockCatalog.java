@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -42,6 +42,7 @@ import com.ning.billing.catalog.rules.CaseCreateAlignment;
 import com.ning.billing.catalog.rules.PlanRules;
 
 public class MockCatalog extends StandaloneCatalog implements Catalog {
+
     private static final String[] PRODUCT_NAMES = new String[]{"TestProduct1", "TestProduct2", "TestProduct3"};
     private boolean canCreatePlan;
     private PlanChangeResult planChange;
@@ -68,7 +69,6 @@ public class MockCatalog extends StandaloneCatalog implements Catalog {
                         ) {
 
     }
-
 
     public void populatePriceLists() {
         final DefaultPlan[] plans = getCurrentPlans();

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -35,7 +35,9 @@ import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 
 public class TestCase extends CatalogTestSuiteNoDB {
+
     protected class CaseResult extends Case<Result> {
+
         @XmlElement(required = true)
         private final Result policy;
 

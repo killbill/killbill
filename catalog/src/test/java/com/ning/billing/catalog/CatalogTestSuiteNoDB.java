@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -20,11 +20,16 @@ import org.testng.annotations.BeforeClass;
 
 import com.ning.billing.GuicyKillbillTestSuiteNoDB;
 import com.ning.billing.catalog.glue.TestCatalogModuleNoDB;
+import com.ning.billing.catalog.io.VersionedCatalogLoader;
 
 import com.google.inject.Guice;
+import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 public abstract class CatalogTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
+
+    @Inject
+    protected VersionedCatalogLoader loader;
 
     @BeforeClass(groups = "fast")
     protected void setup() throws Exception {

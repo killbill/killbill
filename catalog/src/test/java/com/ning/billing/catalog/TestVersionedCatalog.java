@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -16,34 +16,31 @@
 
 package com.ning.billing.catalog;
 
-import javax.xml.bind.JAXBException;
-import javax.xml.transform.TransformerException;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URISyntaxException;
 import java.util.Date;
 
+import javax.xml.bind.JAXBException;
+import javax.xml.transform.TransformerException;
+
 import org.joda.time.DateTime;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import org.xml.sax.SAXException;
 
-import com.google.common.io.Resources;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.InvalidConfigException;
 import com.ning.billing.catalog.api.Plan;
-import com.ning.billing.catalog.io.VersionedCatalogLoader;
 import com.ning.billing.lifecycle.KillbillService.ServiceException;
-import com.ning.billing.util.clock.DefaultClock;
+
+import com.google.common.io.Resources;
 
 public class TestVersionedCatalog extends CatalogTestSuiteNoDB {
-    private static final Logger log = LoggerFactory.getLogger(TestVersionedCatalog.class);
-    private final VersionedCatalogLoader loader = new VersionedCatalogLoader(new DefaultClock());
+
     private VersionedCatalog vc;
 
     @BeforeClass(groups = "fast")
@@ -103,9 +100,7 @@ public class TestVersionedCatalog extends CatalogTestSuiteNoDB {
             vc.findPlan("foo", dt0);
             Assert.fail("Date is too early an exception should have been thrown");
         } catch (CatalogApiException e) {
-            e.printStackTrace();
             Assert.assertEquals(e.getCode(), ErrorCode.CAT_NO_CATALOG_FOR_GIVEN_DATE.getCode());
-
         }
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -19,12 +19,14 @@ package com.ning.billing.catalog.io;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.google.common.io.Resources;
 import com.ning.billing.catalog.CatalogTestSuiteNoDB;
 import com.ning.billing.catalog.StandaloneCatalog;
 import com.ning.billing.util.config.catalog.XMLLoader;
 
+import com.google.common.io.Resources;
+
 public class TestXMLReader extends CatalogTestSuiteNoDB {
+
     @Test(groups = "fast")
     public void testCatalogLoad() {
         try {
