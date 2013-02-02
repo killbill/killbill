@@ -38,7 +38,7 @@ public class GuicyKillbillTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
     private static final Logger log = LoggerFactory.getLogger(KillbillTestSuiteWithEmbeddedDB.class);
 
     @Inject
-    private DBTestingHelper helper;
+    protected DBTestingHelper helper;
 
     public DBTestingHelper getDBTestingHelper() {
         return GuicyKillbillTestWithEmbeddedDBModule.getDBTestingHelper();

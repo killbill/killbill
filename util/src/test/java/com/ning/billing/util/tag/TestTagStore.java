@@ -16,37 +16,17 @@
 
 package com.ning.billing.util.tag;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
-import org.skife.jdbi.v2.IDBI;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import com.ning.billing.ObjectType;
-import com.ning.billing.mock.glue.MockDbHelperModule;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagDefinitionApiException;
-import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.glue.BusModule;
-import com.ning.billing.util.glue.CacheModule;
-import com.ning.billing.util.glue.ClockModule;
-import com.ning.billing.util.glue.NonEntityDaoModule;
-import com.ning.billing.util.glue.TagStoreModule;
-import com.ning.billing.util.svcsapi.bus.InternalBus;
-import com.ning.billing.util.tag.dao.TagDao;
-import com.ning.billing.util.tag.dao.TagDefinitionDao;
 import com.ning.billing.util.tag.dao.TagDefinitionModelDao;
 import com.ning.billing.util.tag.dao.TagModelDao;
-
-import com.google.inject.Inject;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -54,61 +34,18 @@ import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
-@Test(groups = {"slow"})
-@Guice(modules = {TagStoreModule.class, ClockModule.class, BusModule.class, CacheModule.class, MockDbHelperModule.class, NonEntityDaoModule.class})
 public class TestTagStore extends UtilTestSuiteWithEmbeddedDB {
 
-    @Inject
-    private IDBI dbi;
-
-    @Inject
-    private TagDao tagDao;
-
-    @Inject
-    private TagDefinitionDao tagDefinitionDao;
-
-    @Inject
-    private Clock clock;
-
-    @Inject
-    private InternalBus bus;
-
-    private TagDefinitionModelDao testTagDefinition;
-
-    private final Logger log = LoggerFactory.getLogger(TestTagStore.class);
-
-    @BeforeClass(groups = "slow")
-    protected void setup() throws IOException {
-        try {
-            bus.start();
-
-        } catch (Throwable t) {
-            log.error("Failed to start tag store tests", t);
-            fail(t.toString());
-        }
-    }
-
-    // We need tag definitions before we start the tests
-    @Override
-    @BeforeMethod(groups = "slow")
-    public void cleanupTablesBetweenMethods() {
-        super.cleanupTablesBetweenMethods();
-        try {
-            tagDefinitionDao.create("tag1", "First tag", internalCallContext);
-            testTagDefinition = tagDefinitionDao.create("testTagDefinition", "Second tag", internalCallContext);
-        } catch (TagDefinitionApiException e) {
-            fail(e.toString());
-        }
-    }
-
-    @AfterClass(groups = "slow")
-    public void tearDown() {
-        bus.stop();
-    }
 
     @Test(groups = "slow")
-    public void testTagCreationAndRetrieval() throws TagApiException {
+    public void testTagCreationAndRetrieval() throws TagApiException, TagDefinitionApiException {
         final UUID accountId = UUID.randomUUID();
+
+        TagDefinitionModelDao testTagDefinition;
+        tagDefinitionDao.create("tag1", "First tag", internalCallContext);
+        testTagDefinition = tagDefinitionDao.create("testTagDefinition", "Second tag", internalCallContext);
+
+
         final Tag tag = new DescriptiveTag(testTagDefinition.getId(), ObjectType.ACCOUNT, accountId, clock.getUTCNow());
 
         tagDao.create(new TagModelDao(tag), internalCallContext);

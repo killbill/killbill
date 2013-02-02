@@ -22,7 +22,7 @@ import org.skife.config.ConfigurationObjectFactory;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import com.ning.billing.util.UtilTestSuite;
+import com.ning.billing.util.UtilTestSuiteNoDB;
 import com.ning.billing.util.template.translation.DefaultCatalogTranslator;
 import com.ning.billing.util.template.translation.Translator;
 import com.ning.billing.util.template.translation.TranslatorConfig;
@@ -31,11 +31,14 @@ import com.google.common.collect.ImmutableMap;
 
 import static org.testng.Assert.assertEquals;
 
-public class DefaultCatalogTranslationTest extends UtilTestSuite {
+public class DefaultCatalogTranslationTest extends UtilTestSuiteNoDB {
+
     private Translator translation;
 
+    @Override
     @BeforeClass(groups = "fast")
-    public void setup() {
+    public void setup() throws Exception {
+        super.setup();
         final ConfigSource configSource = new ConfigSource() {
             private final Map<String, String> properties = ImmutableMap.<String, String>of("killbill.template.invoiceFormatterFactoryClass",
                                                                                            "com.ning.billing.mock.MockInvoiceFormatterFactory");

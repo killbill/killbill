@@ -22,14 +22,14 @@ import java.util.UUID;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.util.UtilTestSuite;
+import com.ning.billing.util.UtilTestSuiteNoDB;
 import com.ning.billing.util.api.ColumnInfo;
 import com.ning.billing.util.validation.DefaultColumnInfo;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-public class TestCSVExportOutputStream extends UtilTestSuite {
+public class TestCSVExportOutputStream extends UtilTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testSimpleGenerator() throws Exception {

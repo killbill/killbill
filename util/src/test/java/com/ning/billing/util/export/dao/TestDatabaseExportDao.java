@@ -32,14 +32,6 @@ import com.ning.billing.util.validation.dao.DatabaseSchemaDao;
 
 public class TestDatabaseExportDao extends UtilTestSuiteWithEmbeddedDB {
 
-    private DatabaseExportDao dao;
-
-    @BeforeMethod(groups = "slow")
-    public void setUp() throws Exception {
-        final DatabaseSchemaDao databaseSchemaDao = new DatabaseSchemaDao(getDBI());
-        dao = new DatabaseExportDao(databaseSchemaDao, getDBI());
-    }
-
     @Test(groups = "slow")
     public void testExportSimpleData() throws Exception {
         // Empty database

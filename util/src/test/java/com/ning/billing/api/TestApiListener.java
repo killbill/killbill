@@ -32,6 +32,8 @@ import com.ning.billing.util.events.InvoiceCreationInternalEvent;
 import com.ning.billing.util.events.PaymentErrorInternalEvent;
 import com.ning.billing.util.events.PaymentInfoInternalEvent;
 import com.ning.billing.util.events.RepairEntitlementInternalEvent;
+import com.ning.billing.util.events.TagDefinitionInternalEvent;
+import com.ning.billing.util.events.TagInternalEvent;
 
 import com.google.common.base.Joiner;
 import com.google.common.eventbus.Subscribe;
@@ -72,7 +74,9 @@ public class TestApiListener {
         INVOICE_ADJUSTMENT,
         PAYMENT,
         PAYMENT_ERROR,
-        REPAIR_BUNDLE
+        REPAIR_BUNDLE,
+        TAG,
+        TAG_DEFINITION
     }
 
     public void setNonExpectedMode() {
@@ -131,6 +135,20 @@ public class TestApiListener {
             default:
                 throw new RuntimeException("Unexpected event type " + eventEffective.getRequestedTransitionTime());
         }
+    }
+
+    @Subscribe
+    public synchronized void processTagEvent(final TagInternalEvent event) {
+        log.info(String.format("Got TagInternalEvent event %s", event.toString()));
+        assertEqualsNicely(NextEvent.TAG);
+        notifyIfStackEmpty();
+    }
+
+    @Subscribe
+    public synchronized void processTagDefinitonEvent(final TagDefinitionInternalEvent event) {
+        log.info(String.format("Got TagDefinitionInternalEvent event %s", event.toString()));
+        assertEqualsNicely(NextEvent.TAG_DEFINITION);
+        notifyIfStackEmpty();
     }
 
     @Subscribe

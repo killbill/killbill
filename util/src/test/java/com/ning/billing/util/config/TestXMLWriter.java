@@ -22,20 +22,21 @@ import java.net.URI;
 
 import org.testng.annotations.Test;
 
-import com.ning.billing.util.UtilTestSuite;
+import com.ning.billing.util.UtilTestSuiteNoDB;
 import com.ning.billing.util.config.catalog.XMLLoader;
 import com.ning.billing.util.config.catalog.XMLWriter;
 
 import static org.testng.Assert.assertEquals;
 
-public class TestXMLWriter extends UtilTestSuite {
+public class TestXMLWriter extends UtilTestSuiteNoDB {
+
     public static final String TEST_XML =
             "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
-                    "<xmlTestClass>" +
-                    "<foo>foo</foo>" +
-                    "<bar>1.0</bar>" +
-                    "<lala>42</lala>" +
-                    "</xmlTestClass>";
+            "<xmlTestClass>" +
+            "<foo>foo</foo>" +
+            "<bar>1.0</bar>" +
+            "<lala>42</lala>" +
+            "</xmlTestClass>";
 
     @Test(groups = "fast")
     public void test() throws Exception {

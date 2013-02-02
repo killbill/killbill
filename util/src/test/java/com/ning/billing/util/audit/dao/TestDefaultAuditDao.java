@@ -16,85 +16,36 @@
 
 package com.ning.billing.util.audit.dao;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
 import org.skife.jdbi.v2.Handle;
-import org.skife.jdbi.v2.IDBI;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import com.ning.billing.ObjectType;
-import com.ning.billing.mock.glue.MockDbHelperModule;
-import com.ning.billing.mock.glue.MockEntitlementModule;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.api.AuditLevel;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.audit.AuditLog;
 import com.ning.billing.util.audit.ChangeType;
-import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.dao.TableName;
-import com.ning.billing.util.glue.AuditModule;
-import com.ning.billing.util.glue.BusModule;
-import com.ning.billing.util.glue.CacheModule;
-import com.ning.billing.util.glue.ClockModule;
-import com.ning.billing.util.glue.NonEntityDaoModule;
-import com.ning.billing.util.glue.TagStoreModule;
-import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.tag.DescriptiveTag;
 import com.ning.billing.util.tag.Tag;
-import com.ning.billing.util.tag.dao.DefaultTagDao;
-import com.ning.billing.util.tag.dao.TagDefinitionDao;
 import com.ning.billing.util.tag.dao.TagDefinitionModelDao;
 import com.ning.billing.util.tag.dao.TagModelDao;
 
-import com.google.inject.Inject;
-
-@Guice(modules = {TagStoreModule.class, CacheModule.class, AuditModule.class, MockEntitlementModule.class, ClockModule.class, BusModule.class, MockDbHelperModule.class, NonEntityDaoModule.class})
 public class TestDefaultAuditDao extends UtilTestSuiteWithEmbeddedDB {
 
-    @Inject
-    private TagDefinitionDao tagDefinitionDao;
-
-    @Inject
-    private DefaultTagDao tagDao;
-
-    @Inject
-    private AuditDao auditDao;
-
-    @Inject
-    private Clock clock;
-
-    @Inject
-    private InternalBus bus;
-
-    @Inject
-    private IDBI dbi;
-
     private UUID tagId;
-
-    @BeforeClass(groups = "slow")
-    public void setup() throws IOException {
-        bus.start();
-    }
-
-    @AfterClass(groups = "slow")
-    public void tearDown() {
-        bus.stop();
-    }
 
     @Test(groups = "slow")
     public void testRetrieveAuditsDirectly() throws Exception {
         addTag();
 
         // Verify we get an audit entry for the tag_history table
-        final Handle handle = dbi.open();
+        final Handle handle = getDBI().open();
         final String tagHistoryString = (String) handle.select("select id from tag_history limit 1").get(0).get("id");
         handle.close();
 

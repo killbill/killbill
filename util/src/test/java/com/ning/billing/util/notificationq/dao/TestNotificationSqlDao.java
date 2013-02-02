@@ -22,11 +22,10 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.Handle;
-import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeSuite;
-import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
@@ -35,25 +34,20 @@ import com.ning.billing.util.notificationq.Notification;
 import com.ning.billing.util.notificationq.dao.NotificationSqlDao.NotificationSqlMapper;
 import com.ning.billing.util.queue.PersistentQueueEntryLifecycle.PersistentQueueEntryLifecycleState;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
-
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
-@Guice(modules = TestNotificationSqlDao.TestNotificationSqlDaoModule.class)
 public class TestNotificationSqlDao extends UtilTestSuiteWithEmbeddedDB {
 
     private static final String hostname = "Yop";
 
-    @Inject
-    private IDBI dbi;
-
     private NotificationSqlDao dao;
 
-    @BeforeSuite(groups = "slow")
-    public void setup() {
-        dao = dbi.onDemand(NotificationSqlDao.class);
+    @Override
+    @BeforeClass(groups = "slow")
+    public void setup() throws Exception {
+        super.setup();
+        dao = getDBI().onDemand(NotificationSqlDao.class);
     }
 
     @Test(groups = "slow")
@@ -130,7 +124,7 @@ public class TestNotificationSqlDao extends UtilTestSuiteWithEmbeddedDB {
     }
 
     private Notification fetchNotification(final String notificationId) {
-        return dbi.withHandle(new HandleCallback<Notification>() {
+        return getDBI().withHandle(new HandleCallback<Notification>() {
             @Override
             public Notification withHandle(final Handle handle) throws Exception {
                 return handle.createQuery("   select" +
@@ -178,6 +172,7 @@ public class TestNotificationSqlDao extends UtilTestSuiteWithEmbeddedDB {
         return result.toDateTime(DateTimeZone.UTC);
     }
 
+    /*
     public static class TestNotificationSqlDaoModule extends AbstractModule {
 
         @Override
@@ -186,4 +181,5 @@ public class TestNotificationSqlDao extends UtilTestSuiteWithEmbeddedDB {
             bind(IDBI.class).toInstance(dbi);
         }
     }
+    */
 }

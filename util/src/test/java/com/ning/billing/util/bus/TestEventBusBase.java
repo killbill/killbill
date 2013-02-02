@@ -25,6 +25,7 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
+import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.events.BusInternalEvent;
 import com.ning.billing.util.events.BusInternalEvent.BusInternalEventType;
 import com.ning.billing.util.events.DefaultBusInternalEvent;
@@ -36,20 +37,16 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
 
-public abstract class TestEventBusBase extends UtilTestSuiteWithEmbeddedDB {
+public class TestEventBusBase {
+
     protected static final Logger log = LoggerFactory.getLogger(TestEventBusBase.class);
 
-    @Inject
-    protected InternalBus eventBus;
+    private final InternalBus eventBus;
+    private final InternalCallContext internalCallContext;
 
-    @BeforeClass(groups = "slow")
-    public void setup() throws Exception {
-        eventBus.start();
-    }
-
-    @AfterClass(groups = "slow")
-    public void tearDown() {
-        eventBus.stop();
+    public TestEventBusBase(final InternalBus eventBus, final InternalCallContext internalCallContext) {
+        this.eventBus = eventBus;
+        this.internalCallContext = internalCallContext;
     }
 
     public static class MyEvent extends DefaultBusInternalEvent implements BusInternalEvent {

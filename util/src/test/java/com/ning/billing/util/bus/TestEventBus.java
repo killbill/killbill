@@ -19,20 +19,26 @@ package com.ning.billing.util.bus;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-public class TestEventBus extends TestEventBusBase {
-    @BeforeClass(groups = "slow")
+import com.ning.billing.util.UtilTestSuiteNoDB;
+
+public class TestEventBus extends UtilTestSuiteNoDB {
+
+    private TestEventBusBase testEventBusBase;
+
+    @Override
+    @BeforeClass(groups = "fast")
     public void setup() throws Exception {
-        eventBus = new InMemoryInternalBus();
         super.setup();
+        testEventBusBase = new TestEventBusBase(eventBus, internalCallContext);
     }
 
-    @Test(groups = "slow")
+    @Test(groups = "fast")
     public void testSimple() {
-        super.testSimple();
+        testEventBusBase.testSimple();
     }
 
-    @Test(groups = "slow")
+    @Test(groups = "fast")
     public void testDifferentType() {
-        super.testDifferentType();
+        testEventBusBase.testDifferentType();
     }
 }

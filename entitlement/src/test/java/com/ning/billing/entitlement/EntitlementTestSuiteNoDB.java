@@ -39,7 +39,7 @@ import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.TestEntitlementHelper;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.engine.dao.MockEntitlementDaoMemory;
-import com.ning.billing.entitlement.glue.TestEngineModuleMemory;
+import com.ning.billing.entitlement.glue.TestEngineModuleNoDB;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.config.EntitlementConfig;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
@@ -95,7 +95,7 @@ public class EntitlementTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     @BeforeClass(groups = "fast")
     public void setup() throws Exception {
         DefaultEntitlementTestInitializer.loadSystemPropertiesFromClasspath("/entitlement.properties");
-        final Injector g = Guice.createInjector(Stage.PRODUCTION, new TestEngineModuleMemory());
+        final Injector g = Guice.createInjector(Stage.PRODUCTION, new TestEngineModuleNoDB());
         g.injectMembers(this);
     }
 

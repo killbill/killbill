@@ -22,7 +22,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.ObjectType;
-import com.ning.billing.util.UtilTestSuite;
+import com.ning.billing.util.UtilTestSuiteNoDB;
 import com.ning.billing.util.events.ControlTagCreationInternalEvent;
 import com.ning.billing.util.events.ControlTagDefinitionCreationInternalEvent;
 import com.ning.billing.util.events.ControlTagDefinitionDeletionInternalEvent;
@@ -37,7 +37,8 @@ import com.ning.billing.util.tag.DefaultTagDefinition;
 import com.ning.billing.util.tag.TagDefinition;
 import com.ning.billing.util.tag.dao.TagDefinitionModelDao;
 
-public class TestTagEventBuilder extends UtilTestSuite {
+public class TestTagEventBuilder extends UtilTestSuiteNoDB
+{
 
     @Test(groups = "fast")
     public void testNewUserTagDefinitionCreationEvent() throws Exception {

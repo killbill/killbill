@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -19,31 +19,24 @@ package com.ning.billing.util;
 import javax.inject.Inject;
 
 import org.testng.annotations.AfterMethod;
-import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.BeforeTest;
 
-import com.ning.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
+import com.ning.billing.GuicyKillbillTestSuiteNoDB;
+import com.ning.billing.util.api.AuditUserApi;
 import com.ning.billing.util.audit.dao.AuditDao;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
-import com.ning.billing.util.customfield.api.DefaultCustomFieldUserApi;
-import com.ning.billing.util.customfield.dao.CustomFieldDao;
 import com.ning.billing.util.dao.NonEntityDao;
-import com.ning.billing.util.export.dao.DatabaseExportDao;
-import com.ning.billing.util.glue.TestUtilModuleWithEmbeddedDB;
-import com.ning.billing.util.notificationq.NotificationQueueService;
+import com.ning.billing.util.glue.TestUtilModuleNoDB;
 import com.ning.billing.util.svcsapi.bus.InternalBus;
-import com.ning.billing.util.tag.dao.DefaultTagDao;
-import com.ning.billing.util.tag.dao.TagDefinitionDao;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 
+public class UtilTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
-public abstract class UtilTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWithEmbeddedDB {
 
     @Inject
     protected InternalBus eventBus;
@@ -56,35 +49,24 @@ public abstract class UtilTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
     @Inject
     protected CacheControllerDispatcher cacheControllerDispatcher;
     @Inject
-    protected DefaultCustomFieldUserApi customFieldUserApi;
-    @Inject
-    protected CustomFieldDao customFieldDao;
-    @Inject
-    protected DatabaseExportDao dao;
-    @Inject
-    protected NotificationQueueService queueService;
-    @Inject
-    protected TagDefinitionDao tagDefinitionDao;
-    @Inject
-    protected DefaultTagDao tagDao;
-    @Inject
     protected AuditDao auditDao;
+    @Inject
+    protected AuditUserApi auditUserApi;
 
-    @BeforeClass(groups = "slow")
+    @BeforeClass(groups = "fast")
     public void setup() throws Exception {
-        final Injector g = Guice.createInjector(Stage.PRODUCTION, new TestUtilModuleWithEmbeddedDB());
+        final Injector g = Guice.createInjector(Stage.PRODUCTION, new TestUtilModuleNoDB());
         g.injectMembers(this);
     }
 
-    @BeforeMethod(groups = "slow")
-    public void setupTest() throws Exception  {
+    @BeforeMethod(groups = "fast")
+    public void setupTest() throws Exception {
         eventBus.start();
     }
 
-    @AfterMethod(groups = "slow")
+    @AfterMethod(groups = "fast")
     public void cleanupTest() throws Exception {
         eventBus.stop();
     }
-
 
 }

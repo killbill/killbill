@@ -21,10 +21,11 @@ import org.skife.config.ConfigurationObjectFactory;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import com.ning.billing.util.UtilTestSuite;
+import com.ning.billing.util.UtilTestSuiteNoDB;
 
 @Test(groups = "slow")
-public class EmailSenderTest extends UtilTestSuite {
+public class EmailSenderTest extends UtilTestSuiteNoDB {
+
     private EmailConfig config;
 
     @BeforeClass

@@ -34,16 +34,6 @@ import com.ning.billing.util.dao.NonEntityDao;
 
 public class TestInternalCallContextFactory extends UtilTestSuiteWithEmbeddedDB {
 
-    private InternalCallContextFactory internalCallContextFactory;
-    private CacheControllerDispatcher cacheControllerDispatcher;
-    private NonEntityDao nonEntityDao;
-
-    @BeforeMethod(groups = "slow")
-    public void setUp() throws Exception {
-        cacheControllerDispatcher =  new CacheControllerDispatcher();
-        nonEntityDao = new DefaultNonEntityDao(getDBI());
-        internalCallContextFactory = new InternalCallContextFactory(new ClockMock(), nonEntityDao, cacheControllerDispatcher);
-    }
 
     @Test(groups = "slow")
     public void testCreateInternalCallContextWithAccountRecordIdFromSimpleObjectType() throws Exception {

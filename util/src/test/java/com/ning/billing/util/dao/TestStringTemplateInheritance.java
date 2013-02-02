@@ -25,23 +25,27 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.ning.billing.util.UtilTestSuite;
+import com.ning.billing.util.UtilTestSuiteNoDB;
 
 import com.google.common.collect.ImmutableMap;
 
-public class TestStringTemplateInheritance extends UtilTestSuite {
+public class TestStringTemplateInheritance extends UtilTestSuiteNoDB {
 
     InputStream entityStream;
     InputStream kombuchaStream;
 
+    @Override
     @BeforeMethod(groups = "fast")
-    public void setUp() throws Exception {
+    public void setupTest() throws Exception {
+        super.setupTest();
         entityStream = this.getClass().getResourceAsStream("/com/ning/billing/util/entity/dao/EntitySqlDao.sql.stg");
         kombuchaStream = this.getClass().getResourceAsStream("/com/ning/billing/util/dao/Kombucha.sql.stg");
     }
 
+    @Override
     @AfterMethod(groups = "fast")
-    public void tearDown() throws Exception {
+    public void cleanupTest() throws Exception {
+        super.cleanupTest();
         if (entityStream != null) {
             entityStream.close();
         }

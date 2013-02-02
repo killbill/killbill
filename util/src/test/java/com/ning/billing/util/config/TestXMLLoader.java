@@ -29,14 +29,14 @@ import org.testng.annotations.Test;
 import org.xml.sax.SAXException;
 
 import com.ning.billing.catalog.api.InvalidConfigException;
-import com.ning.billing.util.UtilTestSuite;
+import com.ning.billing.util.UtilTestSuiteNoDB;
 import com.ning.billing.util.config.catalog.ValidationException;
 import com.ning.billing.util.config.catalog.XMLLoader;
 
 import static org.testng.Assert.assertEquals;
 
 
-public class TestXMLLoader extends UtilTestSuite {
+public class TestXMLLoader extends UtilTestSuiteNoDB {
     public static final String TEST_XML =
             "<xmlTestClass>" +
                     "	<foo>foo</foo>" +

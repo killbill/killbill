@@ -22,13 +22,9 @@ import org.joda.time.DateTime;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.util.UtilTestSuite;
-import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.UtilTestSuiteNoDB;
 
-public class TestDefaultCallContext extends UtilTestSuite {
-
-    private final Clock clock = new ClockMock();
+public class TestDefaultCallContext extends UtilTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testGetters() throws Exception {

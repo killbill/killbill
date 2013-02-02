@@ -21,7 +21,7 @@ import java.util.UUID;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.util.UtilTestSuite;
+import com.ning.billing.util.UtilTestSuiteNoDB;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.DefaultCallContext;
@@ -30,7 +30,7 @@ import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.dao.EntityAudit;
 import com.ning.billing.util.dao.TableName;
 
-public class TestDefaultAuditLog extends UtilTestSuite {
+public class TestDefaultAuditLog extends UtilTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testGetters() throws Exception {

@@ -23,6 +23,7 @@ import java.util.UUID;
 
 import org.mockito.Mockito;
 import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
@@ -51,23 +52,24 @@ import com.google.common.collect.ImmutableList;
 
 public class TestDefaultAuditUserApi extends AuditLogsTestBase {
 
-    private final List<AuditLog> auditLogs = ImmutableList.<AuditLog>of(createAuditLog(), createAuditLog(), createAuditLog(), createAuditLog());
-    private final List<UUID> objectIds = ImmutableList.<UUID>of(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
+    private List<AuditLog> auditLogs;
+    private List<UUID> objectIds;
 
-    private AuditUserApi auditUserApi;
 
-    @BeforeTest(groups = "fast")
-    public void setupAuditLogs() throws Exception {
-        final MockAuditDao auditDao = new MockAuditDao();
+    @Override
+    @BeforeClass(groups = "fast")
+    public void setup() throws Exception {
+        super.setup();
+        auditLogs = ImmutableList.<AuditLog>of(createAuditLog(), createAuditLog(), createAuditLog(), createAuditLog());
+        objectIds = ImmutableList.<UUID>of(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
+        super.setup();
         for (final TableName tableName : TableName.values()) {
             for (final UUID objectId : objectIds) {
                 for (final AuditLog auditLog : auditLogs) {
-                    auditDao.addAuditLogForId(tableName, objectId, auditLog);
+                    ((MockAuditDao) auditDao).addAuditLogForId(tableName, objectId, auditLog);
                 }
             }
         }
-
-        auditUserApi = new DefaultAuditUserApi(auditDao, null, Mockito.mock(InternalCallContextFactory.class));
     }
 
     @Test(groups = "fast")

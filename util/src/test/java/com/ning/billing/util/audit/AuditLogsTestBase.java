@@ -21,16 +21,12 @@ import java.util.UUID;
 
 import org.mockito.Mockito;
 
-import com.ning.billing.util.UtilTestSuite;
-import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.UtilTestSuiteNoDB;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-public abstract class AuditLogsTestBase extends UtilTestSuite {
-
-    private final Clock clock = new ClockMock();
+public abstract class AuditLogsTestBase extends UtilTestSuiteNoDB {
 
     protected ImmutableMap<UUID, List<AuditLog>> createAuditLogsAssociation() {
         final UUID id1 = UUID.randomUUID();

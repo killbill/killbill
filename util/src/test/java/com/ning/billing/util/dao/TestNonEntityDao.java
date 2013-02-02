@@ -22,14 +22,12 @@ import java.util.UUID;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.testng.Assert;
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import com.ning.billing.ObjectType;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 
 public class TestNonEntityDao extends UtilTestSuiteWithEmbeddedDB {
-
 
     final Long tenantRecordId = 123123123L;
     final UUID tenantId = UUID.fromString("121c59d4-0458-4038-a683-698c9a121c12");
@@ -46,14 +44,6 @@ public class TestNonEntityDao extends UtilTestSuiteWithEmbeddedDB {
 
     final UUID tagId = UUID.fromString("123c59d4-0458-4038-a683-698c9a121456");
     final Long tagRecordId = 55555555L;
-
-
-    private NonEntityDao nonEntityDao;
-
-    @BeforeClass(groups = "slow")
-    public void setup() {
-        nonEntityDao = new DefaultNonEntityDao(getDBI());
-    }
 
 
     @Test(groups = "slow")
@@ -99,7 +89,7 @@ public class TestNonEntityDao extends UtilTestSuiteWithEmbeddedDB {
 
         insertAccount();
 
-        final Long resultTenantRecordId = nonEntityDao.retrieveTenantRecordIdFromObject(accountId, ObjectType.ACCOUNT,null);
+        final Long resultTenantRecordId = nonEntityDao.retrieveTenantRecordIdFromObject(accountId, ObjectType.ACCOUNT, null);
         Assert.assertEquals(resultTenantRecordId, tenantRecordId);
     }
 
@@ -111,18 +101,6 @@ public class TestNonEntityDao extends UtilTestSuiteWithEmbeddedDB {
         final Long resultTenantRecordId = nonEntityDao.retrieveTenantRecordIdFromObject(tenantId, ObjectType.TENANT, null);
         Assert.assertEquals(resultTenantRecordId, tenantRecordId);
     }
-
-    /*
-    @Test(groups = "slow")
-    public void testRetrieveTenantRecordIdFromTenantObject() {
-
-        insertTenant();
-
-        final Long resultTenantRecordId = nonEntityDao.retrieveLastHistoryRecordIdFromTransaction();
-        Assert.assertEquals(resultTenantRecordId, tenantRecordId);
-    }
-*/
-
     private void insertAccount() {
         getDBI().withHandle(new HandleCallback<Void>() {
             @Override
@@ -178,7 +156,7 @@ public class TestNonEntityDao extends UtilTestSuiteWithEmbeddedDB {
             public Void withHandle(final Handle handle) throws Exception {
                 // Note: we always create an accounts table, see MysqlTestingHelper
                 handle.execute("insert into tenants (record_id, id, external_key, api_key, api_secret, api_salt, created_date, created_by, updated_date, updated_by) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                               tenantRecordId, tenantId.toString(), "foo",  "key", "secret", "salt", new Date(), "i", new Date(), "j");
+                               tenantRecordId, tenantId.toString(), "foo", "key", "secret", "salt", new Date(), "i", new Date(), "j");
                 return null;
             }
         });

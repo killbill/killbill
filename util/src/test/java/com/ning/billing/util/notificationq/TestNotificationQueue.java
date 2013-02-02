@@ -24,64 +24,36 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 import org.joda.time.DateTime;
-import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
-import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
-import com.ning.billing.util.cache.CacheControllerDispatcher;
-import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
-import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
-import com.ning.billing.util.glue.CacheModule;
-import com.ning.billing.util.glue.NonEntityDaoModule;
-import com.ning.billing.util.io.IOUtils;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
-import com.ning.billing.util.notificationq.dao.NotificationSqlDao;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
-import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
-import com.google.inject.name.Names;
 
 import static com.jayway.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.testng.Assert.assertEquals;
 
-@Guice(modules = {TestNotificationQueue.TestNotificationQueueModule.class, CacheModule.class, NonEntityDaoModule.class})
 public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
 
     private final Logger log = LoggerFactory.getLogger(TestNotificationQueue.class);
 
     private EntitySqlDaoTransactionalJdbiWrapper entitySqlDaoTransactionalJdbiWrapper;
-
-    @Inject
-    private IDBI dbi;
-
-    @Inject
-    private Clock clock;
-
-    @Inject
-    private NotificationQueueService queueService;
-
-    @Inject
-    private CacheControllerDispatcher controllerDispatcher;
-
-    @Inject
-    private NonEntityDao nonEntityDao;
-
 
     private int eventsReceived;
 
@@ -112,17 +84,19 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
         }
     }
 
-    @BeforeSuite(groups = "slow")
+    @Override
+    @BeforeClass(groups = "slow")
     public void setup() throws Exception {
-        final String testDdl = IOUtils.toString(NotificationSqlDao.class.getResourceAsStream("/com/ning/billing/util/ddl_test.sql"));
-        helper.initDb(testDdl);
-        entitySqlDaoTransactionalJdbiWrapper = new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, controllerDispatcher, nonEntityDao);
+        super.setup();
+        entitySqlDaoTransactionalJdbiWrapper = new EntitySqlDaoTransactionalJdbiWrapper(getDBI(), clock, cacheControllerDispatcher, nonEntityDao);
     }
+    @Override
+    @BeforeMethod(groups = "slow")
+    public void setupTest() throws Exception {
+        super.setupTest();
 
-    @BeforeTest(groups = "slow")
-    public void beforeTest() {
         // Reset time to real value
-        ((ClockMock) clock).resetDeltaFromReality();
+        clock.resetDeltaFromReality();
         eventsReceived = 0;
     }
 
@@ -442,6 +416,7 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
         };
     }
 
+    /*
     public static class TestNotificationQueueModule extends AbstractModule {
 
         @Override
@@ -456,4 +431,5 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
             bind(NotificationQueueConfig.class).toInstance(getNotificationConfig(false, 100));
         }
     }
+    */
 }

@@ -24,36 +24,17 @@ import java.util.UUID;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.ObjectType;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
-import com.ning.billing.util.cache.CacheControllerDispatcher;
-import com.ning.billing.util.callcontext.InternalCallContextFactory;
-import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.customfield.StringCustomField;
-import com.ning.billing.util.customfield.dao.DefaultCustomFieldDao;
-import com.ning.billing.util.customfield.dao.CustomFieldDao;
-import com.ning.billing.util.dao.DefaultNonEntityDao;
-import com.ning.billing.util.dao.NonEntityDao;
 
 import com.google.common.collect.ImmutableList;
 
 public class TestDefaultCustomFieldUserApi extends UtilTestSuiteWithEmbeddedDB {
 
-    private DefaultCustomFieldUserApi customFieldUserApi;
-
-    private CacheControllerDispatcher controllerDispatcher = new CacheControllerDispatcher();
-
-    @BeforeMethod(groups = "slow")
-    public void setUp() throws Exception {
-        final NonEntityDao nonEntityDao = new DefaultNonEntityDao(getDBI());
-        final InternalCallContextFactory internalCallContextFactory = new InternalCallContextFactory(new ClockMock(), nonEntityDao, controllerDispatcher);
-        final CustomFieldDao customFieldDao = new DefaultCustomFieldDao(getDBI(), clock, controllerDispatcher, nonEntityDao);
-        customFieldUserApi = new DefaultCustomFieldUserApi(internalCallContextFactory, customFieldDao);
-    }
 
     @Test(groups = "slow")
     public void testSaveCustomFieldWithAccountRecordId() throws Exception {
@@ -65,7 +46,7 @@ public class TestDefaultCustomFieldUserApi extends UtilTestSuiteWithEmbeddedDB {
             public Void withHandle(final Handle handle) throws Exception {
                 // Note: we always create an accounts table, see MysqlTestingHelper
                 handle.execute("insert into accounts (record_id, id, email, name, first_name_length, is_notified_for_invoices, created_date, created_by, updated_date, updated_by) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                        accountRecordId, accountId.toString(), "yo@t.com", "toto", 4, false, new Date(), "i", new Date(), "j");
+                               accountRecordId, accountId.toString(), "yo@t.com", "toto", 4, false, new Date(), "i", new Date(), "j");
 
                 return null;
             }

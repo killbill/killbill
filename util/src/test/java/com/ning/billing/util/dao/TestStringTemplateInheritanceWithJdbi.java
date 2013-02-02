@@ -20,17 +20,14 @@ import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
-import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
+import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.entity.Entity;
 import com.ning.billing.util.entity.dao.EntityModelDao;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 
-public class TestStringTemplateInheritanceWithJdbi extends KillbillTestSuiteWithEmbeddedDB {
-
-    private final Clock clock = new ClockMock();
+public class TestStringTemplateInheritanceWithJdbi extends UtilTestSuiteWithEmbeddedDB {
 
     private static interface Kombucha extends Entity {}
 

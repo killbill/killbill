@@ -24,11 +24,12 @@ import javax.xml.transform.TransformerException;
 
 import org.testng.annotations.Test;
 
-import com.ning.billing.util.UtilTestSuite;
+import com.ning.billing.util.UtilTestSuiteNoDB;
 import com.ning.billing.util.config.catalog.XMLSchemaGenerator;
 import com.ning.billing.util.io.IOUtils;
 
-public class TestXMLSchemaGenerator extends UtilTestSuite {
+public class TestXMLSchemaGenerator extends UtilTestSuiteNoDB {
+
     @Test(groups = "fast", enabled = false)
     public void test() throws IOException, TransformerException, JAXBException {
         final InputStream stream = XMLSchemaGenerator.xmlSchema(XmlTestClass.class);

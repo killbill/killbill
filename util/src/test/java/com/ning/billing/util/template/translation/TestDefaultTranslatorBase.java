@@ -23,10 +23,12 @@ import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.util.UtilTestSuite;
+import com.ning.billing.util.UtilTestSuiteNoDB;
 
-public class TestDefaultTranslatorBase extends UtilTestSuite {
+public class TestDefaultTranslatorBase extends UtilTestSuiteNoDB {
+
     private final class TestTranslatorBase extends DefaultTranslatorBase {
+
         public TestTranslatorBase(final TranslatorConfig config) {
             super(config);
         }

@@ -16,17 +16,13 @@
 
 package com.ning.billing.util.validation;
 
-import java.io.IOException;
 import java.util.Collection;
 
 import org.joda.time.DateTime;
-import org.skife.jdbi.v2.IDBI;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
-import com.ning.billing.util.globallocker.TestMysqlGlobalLocker;
-import com.ning.billing.util.io.IOUtils;
 import com.ning.billing.util.validation.dao.DatabaseSchemaDao;
 
 import static org.testng.Assert.assertEquals;
@@ -36,27 +32,20 @@ import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 public class TestValidationManager extends UtilTestSuiteWithEmbeddedDB {
+
     private static final String TABLE_NAME = "validation_test";
 
     private ValidationManager vm;
 
+    @Override
     @BeforeClass(groups = "slow")
-    public void setup() throws IOException {
-        setupDatabase();
-        setupDao();
-    }
-
-    private void setupDao() {
-        final IDBI dbi = helper.getDBI();
-        final DatabaseSchemaDao dao = new DatabaseSchemaDao(dbi);
+    public void setup() throws Exception {
+        super.setup();
+        final DatabaseSchemaDao dao = new DatabaseSchemaDao(getDBI());
         vm = new ValidationManager(dao);
         vm.loadSchemaInformation(helper.getDbName());
     }
 
-    private void setupDatabase() throws IOException {
-        final String testDdl = IOUtils.toString(TestMysqlGlobalLocker.class.getResourceAsStream("/com/ning/billing/util/ddl_test.sql"));
-        helper.initDb(testDdl);
-    }
 
     @Test(groups = "slow")
     public void testRetrievingColumnInfo() {
@@ -141,6 +130,7 @@ public class TestValidationManager extends UtilTestSuiteWithEmbeddedDB {
     }
 
     private class SimpleTestClass {
+
         private String stringField1;
         private String stringField2;
         private double numericField1;

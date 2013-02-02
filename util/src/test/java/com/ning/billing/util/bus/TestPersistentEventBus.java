@@ -16,59 +16,31 @@
 
 package com.ning.billing.util.bus;
 
-import org.skife.config.ConfigurationObjectFactory;
-import org.skife.jdbi.v2.IDBI;
-import org.testng.annotations.Guice;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
-import com.ning.billing.dbi.DBIProvider;
-import com.ning.billing.dbi.DBTestingHelper;
-import com.ning.billing.dbi.DbiConfig;
-import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.clock.ClockMock;
-import com.ning.billing.util.glue.BusModule;
-import com.ning.billing.util.glue.BusModule.BusType;
-import com.ning.billing.util.glue.CacheModule;
-import com.ning.billing.util.glue.NonEntityDaoModule;
+import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 
-import com.google.inject.AbstractModule;
+public class TestPersistentEventBus extends UtilTestSuiteWithEmbeddedDB {
 
-@Guice(modules = TestPersistentEventBus.PersistentBusModuleTest.class)
-public class TestPersistentEventBus extends TestEventBusBase {
 
-    public static class PersistentBusModuleTest extends AbstractModule {
+    private TestEventBusBase testEventBusBase;
 
-        @Override
-        protected void configure() {
-            //System.setProperty("com.ning.billing.dbi.test.useLocalDb", "true");
-
-            bind(Clock.class).to(ClockMock.class).asEagerSingleton();
-            bind(ClockMock.class).asEagerSingleton();
-
-            final DBTestingHelper helper = KillbillTestSuiteWithEmbeddedDB.getDBTestingHelper();
-            if (helper.isUsingLocalInstance()) {
-                bind(IDBI.class).toProvider(DBIProvider.class).asEagerSingleton();
-                final DbiConfig config = new ConfigurationObjectFactory(System.getProperties()).build(DbiConfig.class);
-                bind(DbiConfig.class).toInstance(config);
-            } else {
-                final IDBI dbi = helper.getDBI();
-                bind(IDBI.class).toInstance(dbi);
-            }
-            install(new BusModule(BusType.PERSISTENT));
-            install(new NonEntityDaoModule());
-            install(new CacheModule());
-        }
+    @Override
+    @BeforeClass(groups = "slow")
+    public void setup() throws Exception {
+        super.setup();
+        testEventBusBase = new TestEventBusBase(eventBus, internalCallContext);
     }
 
     @Test(groups = "slow")
     public void testSimple() {
-        super.testSimple();
+        testEventBusBase.testSimple();
     }
 
     // Until Guava fixes exception handling, r13?
     @Test(groups = "slow", enabled = false)
     public void testSimpleWithException() {
-        super.testSimpleWithException();
+        testEventBusBase.testSimpleWithException();
     }
 }

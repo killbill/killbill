@@ -39,14 +39,7 @@ import com.ning.billing.util.glue.NonEntityDaoModule;
 import com.ning.billing.util.tag.dao.TagModelDao;
 import com.ning.billing.util.tag.dao.TagSqlDao;
 
-@Guice(modules = {ClockModule.class, CacheModule.class, MockDbHelperModule.class, NonEntityDaoModule.class } )
 public class TestCache extends UtilTestSuiteWithEmbeddedDB {
-
-    @Inject
-    private CacheControllerDispatcher controlCacheDispatcher;
-
-    @Inject
-    private NonEntityDao nonEntityDao;
 
     private  EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao;
 

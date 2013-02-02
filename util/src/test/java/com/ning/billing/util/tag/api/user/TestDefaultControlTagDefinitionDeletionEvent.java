@@ -21,13 +21,14 @@ import java.util.UUID;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.util.UtilTestSuite;
+import com.ning.billing.util.UtilTestSuiteNoDB;
 import com.ning.billing.util.events.BusInternalEvent;
 import com.ning.billing.util.jackson.ObjectMapper;
 import com.ning.billing.util.tag.DefaultTagDefinition;
 import com.ning.billing.util.tag.TagDefinition;
 
-public class TestDefaultControlTagDefinitionDeletionEvent extends UtilTestSuite {
+public class TestDefaultControlTagDefinitionDeletionEvent extends UtilTestSuiteNoDB {
+
     @Test(groups = "fast")
     public void testPojo() throws Exception {
         final UUID tagDefinitionId = UUID.randomUUID();
