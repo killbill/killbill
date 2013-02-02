@@ -101,7 +101,7 @@ public abstract class InvoiceTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     @Inject
     protected NotificationQueueService notificationQueueService;
     @Inject
-    protected TestInvoiceUtil invoiceUtil;
+    protected TestInvoiceHelper invoiceUtil;
     @Inject
     protected TestInvoiceNotificationQListener testInvoiceNotificationQListener;
 

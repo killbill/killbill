@@ -36,9 +36,9 @@ import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
 import com.ning.billing.entitlement.api.transfer.EntitlementTransferApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.entitlement.api.user.TestUtil;
+import com.ning.billing.entitlement.api.user.TestEntitlementHelper;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
-import com.ning.billing.entitlement.glue.MockEngineModuleSql;
+import com.ning.billing.entitlement.glue.TestEngineModuleSql;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.config.EntitlementConfig;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
@@ -78,7 +78,7 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
     protected BusService busService;
 
     @Inject
-    protected TestUtil testUtil;
+    protected TestEntitlementHelper testUtil;
     @Inject
     protected TestApiListener testListener;
     @Inject
@@ -94,7 +94,7 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
     @BeforeClass(groups = "slow")
     public void setup() throws Exception {
         DefaultEntitlementTestInitializer.loadSystemPropertiesFromClasspath("/entitlement.properties");
-        final Injector g = Guice.createInjector(Stage.PRODUCTION, new MockEngineModuleSql());
+        final Injector g = Guice.createInjector(Stage.PRODUCTION, new TestEngineModuleSql());
         g.injectMembers(this);
     }
 

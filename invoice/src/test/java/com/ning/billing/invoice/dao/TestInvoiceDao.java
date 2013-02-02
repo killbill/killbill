@@ -16,7 +16,7 @@
 
 package com.ning.billing.invoice.dao;
 
-import static com.ning.billing.invoice.TestInvoiceUtil.*;
+import static com.ning.billing.invoice.TestInvoiceHelper.*;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;

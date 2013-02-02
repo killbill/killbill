@@ -27,14 +27,11 @@ import com.ning.billing.entitlement.EntitlementTestInitializer;
 import com.ning.billing.entitlement.EntitlementTestListenerStatus;
 import com.ning.billing.entitlement.api.user.DefaultEntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
-import com.ning.billing.entitlement.api.user.TestUtil;
-import com.ning.billing.mock.glue.MockClockModule;
+import com.ning.billing.entitlement.api.user.TestEntitlementHelper;
 import com.ning.billing.util.glue.CacheModule;
 import com.ning.billing.util.glue.CallContextModule;
-import com.ning.billing.util.glue.NonEntityDaoModule;
-import com.ning.billing.util.glue.RealImplementation;
 
-public class MockEngineModule extends DefaultEntitlementModule {
+public class TestEngineModule extends DefaultEntitlementModule {
 
 
     @Override
@@ -51,7 +48,7 @@ public class MockEngineModule extends DefaultEntitlementModule {
 
         bind(AccountUserApi.class).toInstance(Mockito.mock(AccountUserApi.class));
 
-        bind(TestUtil.class).asEagerSingleton();
+        bind(TestEntitlementHelper.class).asEagerSingleton();
         bind(TestListenerStatus.class).to(EntitlementTestListenerStatus.class).asEagerSingleton();
         bind(TestApiListener.class).asEagerSingleton();
         bind(EntitlementTestInitializer.class).to(DefaultEntitlementTestInitializer.class).asEagerSingleton();

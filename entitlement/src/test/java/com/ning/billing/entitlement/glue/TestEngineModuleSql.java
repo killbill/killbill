@@ -16,14 +16,7 @@
 
 package com.ning.billing.entitlement.glue;
 
-import org.skife.config.ConfigurationObjectFactory;
-import org.skife.jdbi.v2.IDBI;
-
 import com.ning.billing.GuicyKillbillTestWithEmbeddedDBModule;
-import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
-import com.ning.billing.dbi.DBIProvider;
-import com.ning.billing.dbi.DBTestingHelper;
-import com.ning.billing.dbi.DbiConfig;
 import com.ning.billing.entitlement.api.timeline.RepairEntitlementLifecycleDao;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.engine.dao.MockEntitlementDaoSql;
@@ -36,7 +29,7 @@ import com.ning.billing.util.glue.NotificationQueueModule;
 
 import com.google.inject.name.Names;
 
-public class MockEngineModuleSql extends MockEngineModule {
+public class TestEngineModuleSql extends TestEngineModule {
     @Override
     protected void installEntitlementDao() {
         bind(EntitlementDao.class).to(MockEntitlementDaoSql.class).asEagerSingleton();
@@ -44,20 +37,6 @@ public class MockEngineModuleSql extends MockEngineModule {
         bind(RepairEntitlementLifecycleDao.class).annotatedWith(Names.named(REPAIR_NAMED)).to(RepairEntitlementDao.class);
         bind(RepairEntitlementDao.class).asEagerSingleton();
     }
-
-/*
-    protected void installDBI() {
-        final DBTestingHelper helper = KillbillTestSuiteWithEmbeddedDB.getDBTestingHelper();
-        if (helper.isUsingLocalInstance()) {
-            bind(IDBI.class).toProvider(DBIProvider.class).asEagerSingleton();
-            final DbiConfig config = new ConfigurationObjectFactory(System.getProperties()).build(DbiConfig.class);
-            bind(DbiConfig.class).toInstance(config);
-        } else {
-            final IDBI dbi = helper.getDBI();
-            bind(IDBI.class).toInstance(dbi);
-        }
-    }
-*/
 
     @Override
     protected void configure() {

@@ -34,7 +34,7 @@ import com.ning.billing.invoice.model.InvoiceItemFactory;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.util.entity.EntityPersistenceException;
 
-import static com.ning.billing.invoice.TestInvoiceUtil.TEN;
+import static com.ning.billing.invoice.TestInvoiceHelper.TEN;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;

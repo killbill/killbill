@@ -82,7 +82,7 @@ import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-public class TestInvoiceUtil {
+public class TestInvoiceHelper {
 
 
     public static final Currency accountCurrency = Currency.USD;
@@ -151,9 +151,9 @@ public class TestInvoiceUtil {
 
 
     @Inject
-    public TestInvoiceUtil(final InvoiceGenerator generator, final IDBI dbi,
-                           final BillingInternalApi billingApi, final AccountInternalApi accountApi, final EntitlementInternalApi entitlementApi, final BusService busService,
-                           final InvoiceDao invoiceDao, final GlobalLocker locker, final Clock clock, final InternalCallContext internalCallContext) {
+    public TestInvoiceHelper(final InvoiceGenerator generator, final IDBI dbi,
+                             final BillingInternalApi billingApi, final AccountInternalApi accountApi, final EntitlementInternalApi entitlementApi, final BusService busService,
+                             final InvoiceDao invoiceDao, final GlobalLocker locker, final Clock clock, final InternalCallContext internalCallContext) {
         this.generator = generator;
         this.billingApi = billingApi;
         this.accountApi = accountApi;

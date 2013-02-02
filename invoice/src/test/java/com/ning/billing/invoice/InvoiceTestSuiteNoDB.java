@@ -26,7 +26,6 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
 import com.ning.billing.GuicyKillbillTestSuiteNoDB;
-import com.ning.billing.KillbillTestSuite;
 import com.ning.billing.invoice.api.InvoiceMigrationApi;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.api.InvoiceUserApi;
@@ -88,7 +87,7 @@ public abstract class InvoiceTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     @Inject
     protected InvoiceDao invoiceDao;
     @Inject
-    protected TestInvoiceUtil invoiceUtil;
+    protected TestInvoiceHelper invoiceUtil;
 
 
     @BeforeClass(groups = "fast")

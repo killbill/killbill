@@ -16,7 +16,7 @@
 
 package com.ning.billing.invoice.generator;
 
-import static com.ning.billing.invoice.TestInvoiceUtil.*;
+import static com.ning.billing.invoice.TestInvoiceHelper.*;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -60,7 +60,6 @@ import com.ning.billing.invoice.model.DefaultInvoicePayment;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.clock.DefaultClock;
 import com.ning.billing.util.config.InvoiceConfig;
 import com.ning.billing.util.svcapi.junction.BillingEvent;
@@ -557,16 +556,16 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         final BillingEventSet events = new MockBillingEventSet();
 
         final BillingEvent event1 = invoiceUtil.createMockBillingEvent(null, subscription, new DateTime("2012-01-1"),
-                                                           plan, phase1,
-                                                           ZERO, null, Currency.USD, BillingPeriod.NO_BILLING_PERIOD, 1,
-                                                           BillingModeType.IN_ADVANCE, "Test Event 1", 1L,
-                                                           SubscriptionTransitionType.CREATE);
+                                                                       plan, phase1,
+                                                                       ZERO, null, Currency.USD, BillingPeriod.NO_BILLING_PERIOD, 1,
+                                                                       BillingModeType.IN_ADVANCE, "Test Event 1", 1L,
+                                                                       SubscriptionTransitionType.CREATE);
 
         final BillingEvent event2 = invoiceUtil.createMockBillingEvent(null, subscription, changeDate,
-                                                           plan, phase2,
-                                                           ZERO, null, Currency.USD, BillingPeriod.NO_BILLING_PERIOD, 1,
-                                                           BillingModeType.IN_ADVANCE, "Test Event 2", 2L,
-                                                           SubscriptionTransitionType.PHASE);
+                                                                       plan, phase2,
+                                                                       ZERO, null, Currency.USD, BillingPeriod.NO_BILLING_PERIOD, 1,
+                                                                       BillingModeType.IN_ADVANCE, "Test Event 2", 2L,
+                                                                       SubscriptionTransitionType.PHASE);
 
         events.add(event2);
         events.add(event1);
@@ -760,10 +759,10 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         final Currency currency = Currency.USD;
 
         return invoiceUtil.createMockBillingEvent(null, sub, startDate.toDateTimeAtStartOfDay(), plan, planPhase,
-                                      planPhase.getFixedPrice() == null ? null : planPhase.getFixedPrice().getPrice(currency),
-                                      planPhase.getRecurringPrice() == null ? null : planPhase.getRecurringPrice().getPrice(currency),
-                                      currency, planPhase.getBillingPeriod(),
-                                      billCycleDayUTC, billCycleDayLocal, BillingModeType.IN_ADVANCE, "Test", 1L, SubscriptionTransitionType.CREATE);
+                                                  planPhase.getFixedPrice() == null ? null : planPhase.getFixedPrice().getPrice(currency),
+                                                  planPhase.getRecurringPrice() == null ? null : planPhase.getRecurringPrice().getPrice(currency),
+                                                  currency, planPhase.getBillingPeriod(),
+                                                  billCycleDayUTC, billCycleDayLocal, BillingModeType.IN_ADVANCE, "Test", 1L, SubscriptionTransitionType.CREATE);
     }
 
     private void testInvoiceGeneration(final UUID accountId, final BillingEventSet events, final List<Invoice> existingInvoices,

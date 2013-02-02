@@ -44,11 +44,6 @@ import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline.NewEvent;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.api.user.SubscriptionEvents;
-import com.ning.billing.entitlement.glue.MockEngineModuleSql;
-
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Stage;
 
 public class TestRepairWithAO extends EntitlementTestSuiteWithEmbeddedDB {
 
