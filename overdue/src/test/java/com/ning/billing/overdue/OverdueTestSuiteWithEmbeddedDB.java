@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -16,7 +16,92 @@
 
 package com.ning.billing.overdue;
 
-import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 
-public abstract class OverdueTestSuiteWithEmbeddedDB extends KillbillTestSuiteWithEmbeddedDB {
+import com.ning.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
+import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.ovedue.notification.OverdueCheckNotifier;
+import com.ning.billing.ovedue.notification.OverdueCheckPoster;
+import com.ning.billing.overdue.applicator.OverdueBusListenerTester;
+import com.ning.billing.overdue.applicator.OverdueStateApplicator;
+import com.ning.billing.overdue.calculator.BillingStateCalculatorBundle;
+import com.ning.billing.overdue.glue.TestOverdueModuleWithEmbeddedDB;
+import com.ning.billing.overdue.service.DefaultOverdueService;
+import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
+import com.ning.billing.util.notificationq.NotificationQueueService;
+import com.ning.billing.util.svcapi.account.AccountInternalApi;
+import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
+import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
+import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
+import com.ning.billing.util.svcsapi.bus.BusService;
+import com.ning.billing.util.svcsapi.bus.InternalBus;
+
+import com.google.inject.Guice;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+
+public abstract class OverdueTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWithEmbeddedDB {
+
+    @Inject
+    protected AccountInternalApi accountApi;
+    @Inject
+    protected BillingStateCalculatorBundle calculatorBundle;
+    @Inject
+    protected BlockingInternalApi blockingApi;
+    @Inject
+    protected BusService busService;
+    @Inject
+    protected DefaultOverdueService service;
+    @Inject
+    protected EntitlementInternalApi entitlementApi;
+    @Inject
+    protected InternalBus bus;
+    @Inject
+    protected InternalCallContextFactory internalCallContextFactory;
+    @Inject
+    protected InvoiceInternalApi invoiceApi;
+    @Inject
+    protected NotificationQueueService notificationQueueService;
+    @Inject
+    protected OverdueBusListenerTester listener;
+    @Inject
+    protected OverdueCheckNotifier notifier;
+    @Inject
+    protected OverdueCheckPoster poster;
+    @Inject
+    protected OverdueStateApplicator<SubscriptionBundle> applicator;
+    @Inject
+    protected OverdueUserApi overdueApi;
+    @Inject
+    protected OverdueProperties overdueProperties;
+    @Inject
+    protected OverdueWrapperFactory overdueWrapperFactory;
+    @Inject
+    protected TestOverdueHelper testOverdueHelper;
+
+    @BeforeClass(groups = "slow")
+    protected void setup() throws Exception {
+        final Injector injector = Guice.createInjector(new TestOverdueModuleWithEmbeddedDB());
+        injector.injectMembers(this);
+    }
+
+    @BeforeMethod(groups = "slow")
+    public void setupTest() throws Exception {
+        bus.register(listener);
+        bus.start();
+
+        // The service will initialize and start the notifier
+        service.registerForBus();
+        service.initialize();
+        service.start();
+    }
+
+    @AfterMethod(groups = "slow")
+    public void cleanupTest() throws Exception {
+        service.stop();
+        bus.stop();
+    }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -16,9 +16,6 @@
 
 package com.ning.billing.overdue.applicator;
 
-import static com.jayway.awaitility.Awaitility.await;
-import static java.util.concurrent.TimeUnit.SECONDS;
-
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.List;
@@ -31,32 +28,21 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.overdue.OverdueState;
-import com.ning.billing.overdue.OverdueTestBase;
+import com.ning.billing.overdue.OverdueTestSuiteWithEmbeddedDB;
 import com.ning.billing.overdue.config.OverdueConfig;
-import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.config.catalog.XMLLoader;
 import com.ning.billing.util.events.OverdueChangeInternalEvent;
 import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 
-import com.google.inject.Inject;
+import static com.jayway.awaitility.Awaitility.await;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
-public class TestOverdueStateApplicator extends OverdueTestBase {
-
-    @Inject
-    OverdueStateApplicator<SubscriptionBundle> applicator;
-
-    @Inject
-    OverdueBusListenerTester listener;
-
-    @Inject
-    InternalBus bus;
+public class TestOverdueStateApplicator extends OverdueTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testApplicator() throws Exception {
-        bus.register(listener);
-        bus.start();
-        final InputStream is = new ByteArrayInputStream(configXml.getBytes());
-        config = XMLLoader.getObjectFromStreamNoValidation(is, OverdueConfig.class);
+        final InputStream is = new ByteArrayInputStream(testOverdueHelper.getConfigXml().getBytes());
+        final OverdueConfig config = XMLLoader.getObjectFromStreamNoValidation(is, OverdueConfig.class);
         overdueWrapperFactory.setOverdueConfig(config);
 
         final SubscriptionBundle bundle = Mockito.mock(SubscriptionBundle.class);
@@ -66,19 +52,18 @@ public class TestOverdueStateApplicator extends OverdueTestBase {
 
         state = config.getBundleStateSet().findState("OD1");
         applicator.apply(null, null, bundle, DefaultBlockingState.CLEAR_STATE_NAME, state, internalCallContext);
-        checkStateApplied(state);
+        testOverdueHelper.checkStateApplied(state);
         checkBussEvent("OD1");
 
         state = config.getBundleStateSet().findState("OD2");
-        applicator.apply(null, null,bundle, DefaultBlockingState.CLEAR_STATE_NAME, state, internalCallContext);
-        checkStateApplied(state);
+        applicator.apply(null, null, bundle, DefaultBlockingState.CLEAR_STATE_NAME, state, internalCallContext);
+        testOverdueHelper.checkStateApplied(state);
         checkBussEvent("OD2");
 
         state = config.getBundleStateSet().findState("OD3");
         applicator.apply(null, null, bundle, DefaultBlockingState.CLEAR_STATE_NAME, state, internalCallContext);
-        checkStateApplied(state);
+        testOverdueHelper.checkStateApplied(state);
         checkBussEvent("OD3");
-        bus.stop();
     }
 
     private void checkBussEvent(final String state) throws Exception {

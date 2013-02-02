@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -24,10 +24,10 @@ import org.joda.time.LocalDate;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.overdue.OverdueTestSuite;
+import com.ning.billing.overdue.OverdueTestSuiteNoDB;
 import com.ning.billing.overdue.config.api.BillingState;
 
-public class TestDefaultBillingStateFormatter extends OverdueTestSuite {
+public class TestDefaultBillingStateFormatter extends OverdueTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testBalanceFormatting() throws Exception {

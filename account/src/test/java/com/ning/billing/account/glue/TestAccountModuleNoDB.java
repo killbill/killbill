@@ -32,6 +32,7 @@ public class TestAccountModuleNoDB extends TestAccountModule {
     @Override
     public void configure() {
         super.configure();
+
         install(new GuicyKillbillTestNoDBModule());
         install(new MockNonEntityDaoModule());
         install(new InMemoryBusModule(configSource));

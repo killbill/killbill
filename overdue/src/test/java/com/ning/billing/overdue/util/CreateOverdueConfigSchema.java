@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -14,15 +14,17 @@
  * under the License.
  */
 
-package com.ning.billing.overdue.config;
+package com.ning.billing.overdue.util;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.Writer;
 
+import com.ning.billing.overdue.config.OverdueConfig;
 import com.ning.billing.util.config.catalog.XMLSchemaGenerator;
 
 public class CreateOverdueConfigSchema {
+
     public static void main(final String[] args) throws Exception {
         if (args.length != 1) {
             System.err.println("Usage: <filepath>");

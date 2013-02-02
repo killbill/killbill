@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -21,11 +21,9 @@ import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 public class MockOverdueStatesBundle extends OverdueStatesBundle {
 
     public MockOverdueStatesBundle() {
-
     }
 
     public MockOverdueStatesBundle(final DefaultOverdueState<SubscriptionBundle>[] states) {
         setBundleOverdueStates(states);
     }
-
 }
