@@ -34,20 +34,13 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.overdue.OverdueTestSuite;
+import com.ning.billing.overdue.OverdueTestSuiteNoDB;
 import com.ning.billing.overdue.config.api.BillingState;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.clock.ClockMock;
-import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
 
-public class TestBillingStateCalculator extends OverdueTestSuite {
+public class TestBillingStateCalculator extends OverdueTestSuiteNoDB {
 
-    Clock clock = new ClockMock();
-    InvoiceInternalApi invoiceApi = Mockito.mock(InvoiceInternalApi.class);
-    AccountInternalApi accountApi = Mockito.mock(AccountInternalApi.class);
-    LocalDate now;
+    protected LocalDate now;
 
     @BeforeMethod(groups = "fast")
     public void setUp() throws Exception {

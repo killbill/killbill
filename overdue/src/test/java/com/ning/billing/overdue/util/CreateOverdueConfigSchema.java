@@ -14,15 +14,17 @@
  * under the License.
  */
 
-package com.ning.billing.overdue.config;
+package com.ning.billing.overdue.util;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.Writer;
 
+import com.ning.billing.overdue.config.OverdueConfig;
 import com.ning.billing.util.config.catalog.XMLSchemaGenerator;
 
 public class CreateOverdueConfigSchema {
+
     public static void main(final String[] args) throws Exception {
         if (args.length != 1) {
             System.err.println("Usage: <filepath>");

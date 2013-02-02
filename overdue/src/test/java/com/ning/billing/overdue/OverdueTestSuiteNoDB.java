@@ -20,18 +20,19 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
-import com.ning.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
+import com.ning.billing.GuicyKillbillTestSuiteNoDB;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.ovedue.notification.OverdueCheckNotifier;
 import com.ning.billing.ovedue.notification.OverdueCheckPoster;
 import com.ning.billing.overdue.applicator.OverdueBusListenerTester;
 import com.ning.billing.overdue.applicator.OverdueStateApplicator;
 import com.ning.billing.overdue.calculator.BillingStateCalculatorBundle;
-import com.ning.billing.overdue.glue.TestOverdueModuleWithEmbeddedDB;
+import com.ning.billing.overdue.glue.TestOverdueModuleNoDB;
 import com.ning.billing.overdue.service.DefaultOverdueService;
 import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.notificationq.NotificationQueueService;
+import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
@@ -43,7 +44,7 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
-public abstract class OverdueTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWithEmbeddedDB {
+public abstract class OverdueTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
     @Inject
     protected AccountInternalApi accountApi;
@@ -82,25 +83,29 @@ public abstract class OverdueTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     @Inject
     protected TestOverdueHelper testOverdueHelper;
 
-    @BeforeClass(groups = "slow")
+    @BeforeClass(groups = "fast")
     protected void setup() throws Exception {
-        final Injector injector = Guice.createInjector(new TestOverdueModuleWithEmbeddedDB());
+        final Injector injector = Guice.createInjector(new TestOverdueModuleNoDB());
         injector.injectMembers(this);
     }
 
-    @BeforeMethod(groups = "slow")
-    public void setupTest() throws Exception {
-        bus.register(listener);
+    @BeforeMethod(groups = "fast")
+    public void setupTest() {
         bus.start();
 
-        // The service will initialize and start the notifier
         service.registerForBus();
-        service.initialize();
+        try {
+            service.initialize();
+        } catch (RuntimeException e) {
+            if (!(e.getCause() instanceof NotificationQueueAlreadyExists)) {
+                throw e;
+            }
+        }
         service.start();
     }
 
-    @AfterMethod(groups = "slow")
-    public void cleanupTest() throws Exception {
+    @AfterMethod(groups = "fast")
+    public void cleanupTest() {
         service.stop();
         bus.stop();
     }

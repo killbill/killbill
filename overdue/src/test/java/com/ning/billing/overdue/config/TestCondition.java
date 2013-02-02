@@ -30,23 +30,19 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.ObjectType;
 import com.ning.billing.junction.api.Blockable;
-import com.ning.billing.overdue.OverdueTestSuite;
+import com.ning.billing.overdue.OverdueTestSuiteNoDB;
 import com.ning.billing.overdue.config.api.BillingState;
 import com.ning.billing.overdue.config.api.PaymentResponse;
-import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.config.catalog.XMLLoader;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.DefaultControlTag;
 import com.ning.billing.util.tag.DescriptiveTag;
 import com.ning.billing.util.tag.Tag;
 
-public class TestCondition extends OverdueTestSuite {
+public class TestCondition extends OverdueTestSuiteNoDB {
 
     @XmlRootElement(name = "condition")
     private static class MockCondition extends DefaultCondition<Blockable> {}
-
-    private Clock clock = new ClockMock();
 
     @Test(groups = "fast")
     public void testNumberOfUnpaidInvoicesEqualsOrExceeds() throws Exception {
@@ -157,8 +153,8 @@ public class TestCondition extends OverdueTestSuite {
         final UUID objectId = new UUID(0L, 1L);
         final BillingState<Blockable> state0 = new BillingState<Blockable>(objectId, 0, BigDecimal.ZERO, null,
                                                                            DateTimeZone.UTC, unpaidInvoiceId, PaymentResponse.LOST_OR_STOLEN_CARD,
-                                                                           new Tag[]{new DefaultControlTag( ControlTagType.AUTO_INVOICING_OFF, objectType, objectId, clock.getUTCNow()),
-                                                                                   new DescriptiveTag(UUID.randomUUID(), objectType, objectId, clock.getUTCNow())});
+                                                                           new Tag[]{new DefaultControlTag(ControlTagType.AUTO_INVOICING_OFF, objectType, objectId, clock.getUTCNow()),
+                                                                                     new DescriptiveTag(UUID.randomUUID(), objectType, objectId, clock.getUTCNow())});
 
         final BillingState<Blockable> state1 = new BillingState<Blockable>(objectId, 1, new BigDecimal("100.00"), now.minusDays(10),
                                                                            DateTimeZone.UTC, unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS,

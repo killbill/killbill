@@ -19,6 +19,7 @@ package com.ning.billing.overdue.notification;
 import com.ning.billing.ovedue.notification.OverdueCheckNotifier;
 
 public class MockOverdueCheckNotifier implements OverdueCheckNotifier {
+
     @Override
     public void initialize() {
         // do nothing

@@ -24,16 +24,17 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.overdue.OverdueState;
-import com.ning.billing.overdue.OverdueTestBase;
+import com.ning.billing.overdue.OverdueTestSuiteWithEmbeddedDB;
 import com.ning.billing.overdue.config.OverdueConfig;
 import com.ning.billing.util.config.catalog.XMLLoader;
 import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 
-public class TestOverdueWrapper extends OverdueTestBase {
+public class TestOverdueWrapper extends OverdueTestSuiteWithEmbeddedDB {
+
     @Test(groups = "slow")
     public void testWrapperBasic() throws Exception {
-        final InputStream is = new ByteArrayInputStream(configXml.getBytes());
-        config = XMLLoader.getObjectFromStreamNoValidation(is, OverdueConfig.class);
+        final InputStream is = new ByteArrayInputStream(testOverdueHelper.getConfigXml().getBytes());
+        final OverdueConfig config = XMLLoader.getObjectFromStreamNoValidation(is, OverdueConfig.class);
         overdueWrapperFactory.setOverdueConfig(config);
 
         SubscriptionBundle bundle;
@@ -41,22 +42,22 @@ public class TestOverdueWrapper extends OverdueTestBase {
         OverdueState<SubscriptionBundle> state;
 
         state = config.getBundleStateSet().findState("OD1");
-        bundle = createBundle(clock.getUTCToday().minusDays(31));
+        bundle = testOverdueHelper.createBundle(clock.getUTCToday().minusDays(31));
         wrapper = overdueWrapperFactory.createOverdueWrapperFor(bundle);
         wrapper.refresh(internalCallContext);
-        checkStateApplied(state);
+        testOverdueHelper.checkStateApplied(state);
 
         state = config.getBundleStateSet().findState("OD2");
-        bundle = createBundle(clock.getUTCToday().minusDays(41));
+        bundle = testOverdueHelper.createBundle(clock.getUTCToday().minusDays(41));
         wrapper = overdueWrapperFactory.createOverdueWrapperFor(bundle);
         wrapper.refresh(internalCallContext);
-        checkStateApplied(state);
+        testOverdueHelper.checkStateApplied(state);
 
         state = config.getBundleStateSet().findState("OD3");
-        bundle = createBundle(clock.getUTCToday().minusDays(51));
+        bundle = testOverdueHelper.createBundle(clock.getUTCToday().minusDays(51));
         wrapper = overdueWrapperFactory.createOverdueWrapperFor(bundle);
         wrapper.refresh(internalCallContext);
-        checkStateApplied(state);
+        testOverdueHelper.checkStateApplied(state);
     }
 
     @Test(groups = "slow")
@@ -67,10 +68,10 @@ public class TestOverdueWrapper extends OverdueTestBase {
         final OverdueWrapper<SubscriptionBundle> wrapper;
         final OverdueState<SubscriptionBundle> state;
 
-        final InputStream is = new ByteArrayInputStream(configXml.getBytes());
-        config = XMLLoader.getObjectFromStreamNoValidation(is, OverdueConfig.class);
+        final InputStream is = new ByteArrayInputStream(testOverdueHelper.getConfigXml().getBytes());
+        final OverdueConfig config = XMLLoader.getObjectFromStreamNoValidation(is, OverdueConfig.class);
         state = config.getBundleStateSet().findState(DefaultBlockingState.CLEAR_STATE_NAME);
-        bundle = createBundle(clock.getUTCToday().minusDays(31));
+        bundle = testOverdueHelper.createBundle(clock.getUTCToday().minusDays(31));
         wrapper = overdueWrapperFactory.createOverdueWrapperFor(bundle);
         final OverdueState<SubscriptionBundle> result = wrapper.refresh(internalCallContext);
 

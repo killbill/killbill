@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.overdue.applicator;
+package com.ning.billing.overdue.glue;
 
 import java.util.List;
 import java.util.UUID;
@@ -22,8 +22,8 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import com.ning.billing.junction.api.Blockable;
-import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.junction.api.Blockable.Type;
+import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.mock.glue.MockJunctionModule;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
@@ -41,7 +41,7 @@ public class ApplicatorMockJunctionModule extends MockJunctionModule {
         }
 
         @Override
-        public BlockingState getBlockingStateFor(final Blockable overdueable, InternalTenantContext context) {
+        public BlockingState getBlockingStateFor(final Blockable overdueable, final InternalTenantContext context) {
             return new BlockingState() {
 
                 @Override

@@ -24,10 +24,10 @@ import org.joda.time.LocalDate;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.overdue.OverdueTestSuite;
+import com.ning.billing.overdue.OverdueTestSuiteNoDB;
 import com.ning.billing.overdue.config.api.BillingState;
 
-public class TestDefaultBillingStateFormatter extends OverdueTestSuite {
+public class TestDefaultBillingStateFormatter extends OverdueTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testBalanceFormatting() throws Exception {

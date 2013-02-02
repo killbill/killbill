@@ -22,27 +22,27 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.eventbus.Subscribe;
-
 import com.ning.billing.util.events.OverdueChangeInternalEvent;
 
+import com.google.common.eventbus.Subscribe;
+
 public class OverdueBusListenerTester {
-    public static final Logger log = LoggerFactory.getLogger(OverdueBusListenerTester.class);
-    
-    private List<OverdueChangeInternalEvent> eventsReceived = new ArrayList<OverdueChangeInternalEvent>();
-    
+
+    private static final Logger log = LoggerFactory.getLogger(OverdueBusListenerTester.class);
+
+    private final List<OverdueChangeInternalEvent> eventsReceived = new ArrayList<OverdueChangeInternalEvent>();
+
     @Subscribe
     public void handleOverdueChange(final OverdueChangeInternalEvent changeEvent) {
         log.info("Received subscription transition.");
         eventsReceived.add(changeEvent);
     }
-    
+
     public List<OverdueChangeInternalEvent> getEventsReceived() {
         return eventsReceived;
     }
-    
+
     public void clearEventsReceived() {
         eventsReceived.clear();
     }
-
 }

@@ -16,11 +16,10 @@
 
 package com.ning.billing.overdue.config;
 
-
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 
-
 public class MockOverdueRules extends OverdueConfig {
+
     public static final String CLEAR_STATE = "Clear";
 
     @SuppressWarnings("unchecked")

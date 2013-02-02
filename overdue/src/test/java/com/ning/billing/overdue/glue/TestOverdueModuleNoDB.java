@@ -14,20 +14,14 @@
  * under the License.
  */
 
-package com.ning.billing.account.glue;
+package com.ning.billing.overdue.glue;
 
 import com.ning.billing.GuicyKillbillTestNoDBModule;
-import com.ning.billing.account.dao.AccountDao;
-import com.ning.billing.account.dao.MockAccountDao;
 import com.ning.billing.mock.glue.MockNonEntityDaoModule;
+import com.ning.billing.mock.glue.MockNotificationQueueModule;
 import com.ning.billing.util.bus.InMemoryBusModule;
 
-public class TestAccountModuleNoDB extends TestAccountModule {
-
-    @Override
-    protected void installAccountDao() {
-        bind(AccountDao.class).to(MockAccountDao.class);
-    }
+public class TestOverdueModuleNoDB extends TestOverdueModule {
 
     @Override
     public void configure() {
@@ -35,6 +29,7 @@ public class TestAccountModuleNoDB extends TestAccountModule {
 
         install(new GuicyKillbillTestNoDBModule());
         install(new MockNonEntityDaoModule());
+        install(new MockNotificationQueueModule());
         install(new InMemoryBusModule(configSource));
     }
 }

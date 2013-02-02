@@ -23,10 +23,10 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.overdue.EmailNotification;
-import com.ning.billing.overdue.OverdueTestSuite;
+import com.ning.billing.overdue.OverdueTestSuiteNoDB;
 import com.ning.billing.util.config.catalog.XMLLoader;
 
-public class TestOverdueConfig extends OverdueTestSuite {
+public class TestOverdueConfig extends OverdueTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testParseConfig() throws Exception {
