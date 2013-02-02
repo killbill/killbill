@@ -16,6 +16,8 @@
 
 package com.ning.billing.invoice.tests.inAdvance;
 
+import static com.ning.billing.invoice.TestInvoiceUtil.*;
+
 import com.ning.billing.invoice.model.BillingMode;
 import com.ning.billing.invoice.model.InAdvanceBillingMode;
 import com.ning.billing.invoice.tests.ProRationTestBase;

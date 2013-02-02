@@ -25,14 +25,13 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
+import com.ning.billing.GuicyKillbillTestSuiteNoDB;
 import com.ning.billing.KillbillTestSuite;
-import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceMigrationApi;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.generator.InvoiceGenerator;
-import com.ning.billing.invoice.glue.InvoiceModuleWithEmbeddedDb;
 import com.ning.billing.invoice.glue.TestInvoiceModuleNoDB;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
@@ -52,12 +51,9 @@ import com.google.inject.Injector;
 
 import static org.testng.Assert.assertNotNull;
 
-public abstract class InvoiceTestSuiteNoDB extends KillbillTestSuite {
+public abstract class InvoiceTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
     private static final Logger log = LoggerFactory.getLogger(InvoiceTestSuiteNoDB.class);
-
-
-    protected static final Currency accountCurrency = Currency.USD;
 
     @Inject
     protected InternalBus bus;
@@ -91,6 +87,8 @@ public abstract class InvoiceTestSuiteNoDB extends KillbillTestSuite {
     protected InvoiceInternalApi invoiceInternalApi;
     @Inject
     protected InvoiceDao invoiceDao;
+    @Inject
+    protected TestInvoiceUtil invoiceUtil;
 
 
     @BeforeClass(groups = "fast")
@@ -113,7 +111,7 @@ public abstract class InvoiceTestSuiteNoDB extends KillbillTestSuite {
     }
 
     private static void loadSystemPropertiesFromClasspath(final String resource) {
-        final URL url = InvoiceModuleWithEmbeddedDb.class.getResource(resource);
+        final URL url = InvoiceTestSuiteNoDB.class.getResource(resource);
         assertNotNull(url);
         try {
             System.getProperties().load(url.openStream());

@@ -16,6 +16,8 @@
 
 package com.ning.billing.invoice.tests.inAdvance.monthly;
 
+import static com.ning.billing.invoice.TestInvoiceUtil.*;
+
 import java.math.BigDecimal;
 
 import com.ning.billing.catalog.api.BillingPeriod;

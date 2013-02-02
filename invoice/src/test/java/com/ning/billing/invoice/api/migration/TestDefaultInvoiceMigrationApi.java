@@ -31,12 +31,13 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.invoice.InvoiceTestSuiteWithEmbeddedDB;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.dao.InvoiceModelDao;
 import com.ning.billing.invoice.dao.InvoiceModelDaoHelper;
 
-public class TestDefaultInvoiceMigrationApi extends InvoiceApiTestBase {
+public class TestDefaultInvoiceMigrationApi extends InvoiceTestSuiteWithEmbeddedDB {
 
     private final Logger log = LoggerFactory.getLogger(TestDefaultInvoiceMigrationApi.class);
 
@@ -51,14 +52,15 @@ public class TestDefaultInvoiceMigrationApi extends InvoiceApiTestBase {
     private static final Currency MIGRATION_INVOICE_CURRENCY = Currency.USD;
 
     @BeforeMethod(groups = "slow")
-    public void setupMethod() throws Exception {
+    public void setupTest() throws Exception {
+        super.setupTest();
         date_migrated = clock.getUTCToday().minusYears(1);
         date_regular = clock.getUTCNow();
 
-        final Account account = createAccount();
+        final Account account = invoiceUtil.createAccount();
         accountId = account.getId();
         migrationInvoiceId = createAndCheckMigrationInvoice(accountId);
-        regularInvoiceId = generateRegularInvoice(account, date_regular);
+        regularInvoiceId = invoiceUtil.generateRegularInvoice(account, date_regular);
     }
 
     private UUID createAndCheckMigrationInvoice(final UUID accountId) throws InvoiceApiException {

@@ -24,10 +24,11 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.invoice.InvoiceTestSuiteNoDB;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
 
-public class TestItemAdjInvoiceItem {
+public class TestItemAdjInvoiceItem extends InvoiceTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testType() throws Exception {

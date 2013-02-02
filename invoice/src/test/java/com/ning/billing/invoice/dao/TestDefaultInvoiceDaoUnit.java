@@ -42,7 +42,7 @@ import com.ning.billing.util.svcsapi.bus.InternalBus;
 
 import com.google.common.collect.ImmutableMap;
 
-public class TestDefaultInvoiceDao extends InvoiceTestSuiteNoDB {
+public class TestDefaultInvoiceDaoUnit extends InvoiceTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testComputePositiveRefundAmount() throws Exception {

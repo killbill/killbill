@@ -17,14 +17,18 @@
 package com.ning.billing.invoice.glue;
 
 import com.ning.billing.GuicyKillbillTestWithEmbeddedDBModule;
+import com.ning.billing.invoice.InvoiceListener;
+import com.ning.billing.invoice.TestInvoiceNotificationQListener;
 import com.ning.billing.util.glue.BusModule;
-import com.ning.billing.util.glue.CustomFieldModule;
 import com.ning.billing.util.glue.NonEntityDaoModule;
-import com.ning.billing.util.glue.NotificationQueueModule;
-import com.ning.billing.util.glue.TagStoreModule;
 
 public class TestInvoiceModuleWithEmbeddedDb extends TestInvoiceModule {
 
+    @Override
+    protected void installInvoiceListener() {
+        bind(InvoiceListener.class).to(TestInvoiceNotificationQListener.class).asEagerSingleton();
+        bind(TestInvoiceNotificationQListener.class).asEagerSingleton();
+    }
 
     @Override
     public void configure() {

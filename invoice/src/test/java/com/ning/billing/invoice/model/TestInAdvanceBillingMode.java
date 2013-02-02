@@ -27,8 +27,9 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.invoice.InvoiceTestSuiteNoDB;
 
-public class TestInAdvanceBillingMode {
+public class TestInAdvanceBillingMode extends InvoiceTestSuiteNoDB {
 
     private static final DateTimeZone TIMEZONE = DateTimeZone.forID("Pacific/Pitcairn");
     private static final BillingPeriod BILLING_PERIOD = BillingPeriod.MONTHLY;

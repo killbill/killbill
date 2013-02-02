@@ -21,6 +21,7 @@ import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.dao.MockInvoiceDao;
 import com.ning.billing.mock.glue.MockNonEntityDaoModule;
 import com.ning.billing.util.bus.InMemoryBusModule;
+import com.ning.billing.util.glue.NonEntityDaoModule;
 
 public class TestInvoiceModuleNoDB extends TestInvoiceModule {
 

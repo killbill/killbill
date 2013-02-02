@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -14,9 +14,17 @@
  * under the License.
  */
 
-package com.ning.billing.payment;
+package com.ning.billing.payment.glue;
 
-import com.ning.billing.KillbillTestSuite;
+import com.ning.billing.GuicyKillbillTestWithEmbeddedDBModule;
+import com.ning.billing.util.glue.NonEntityDaoModule;
 
-public abstract class PaymentTestSuite extends KillbillTestSuite {
+public class TestPaymentModuleWithEmbeddedDB extends TestPaymentModule {
+
+    @Override
+    protected void configure() {
+        install(new GuicyKillbillTestWithEmbeddedDBModule());
+        install(new NonEntityDaoModule());
+        super.configure();
+    }
 }

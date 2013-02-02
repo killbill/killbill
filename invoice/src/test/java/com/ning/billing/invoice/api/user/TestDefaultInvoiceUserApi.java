@@ -22,7 +22,6 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -30,61 +29,53 @@ import org.testng.annotations.Test;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
+import com.ning.billing.invoice.InvoiceTestSuiteWithEmbeddedDB;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
-import com.ning.billing.invoice.api.migration.InvoiceApiTestBase;
 import com.ning.billing.invoice.model.InvoicingConfiguration;
 import com.ning.billing.util.api.TagApiException;
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallOrigin;
-import com.ning.billing.util.callcontext.DefaultCallContextFactory;
-import com.ning.billing.util.callcontext.TenantContext;
-import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.Tag;
 
 import static org.testng.Assert.assertEquals;
 
-public class TestDefaultInvoiceUserApi extends InvoiceApiTestBase {
+public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
 
     private UUID accountId;
     private UUID invoiceId;
-    private CallContext context;
-    private TenantContext tenantContext;
 
     @BeforeMethod(groups = "slow")
-    public void setupMethod() throws Exception {
-        final Account account = createAccount();
+    public void setupTest() throws Exception {
+        super.setupTest();
+        final Account account = invoiceUtil.createAccount();
         accountId = account.getId();
-        invoiceId = generateRegularInvoice(account, clock.getUTCNow());
-        context = new DefaultCallContextFactory(clock).createCallContext(callContext.getTenantId(), "Unit test", CallOrigin.TEST, UserType.TEST);
-        tenantContext = Mockito.mock(TenantContext.class);
+        invoiceId = invoiceUtil.generateRegularInvoice(account, clock.getUTCNow());
     }
 
     @Test(groups = "slow")
     public void testPostExternalChargeOnNewInvoice() throws Exception {
         // Initial account balance
-        final BigDecimal accountBalance = invoiceUserApi.getAccountBalance(accountId, tenantContext);
+        final BigDecimal accountBalance = invoiceUserApi.getAccountBalance(accountId, callContext);
 
         // Post an external charge
         final BigDecimal externalChargeAmount = BigDecimal.TEN;
         final InvoiceItem externalChargeInvoiceItem = invoiceUserApi.insertExternalCharge(accountId, externalChargeAmount, UUID.randomUUID().toString(),
-                                                                                          clock.getUTCToday(), accountCurrency, context);
+                                                                                          clock.getUTCToday(), accountCurrency, callContext);
         verifyExternalChargeOnNewInvoice(accountBalance, null, externalChargeAmount, externalChargeInvoiceItem);
     }
 
     @Test(groups = "slow")
     public void testPostExternalChargeForBundleOnNewInvoice() throws Exception {
         // Initial account balance
-        final BigDecimal accountBalance = invoiceUserApi.getAccountBalance(accountId, tenantContext);
+        final BigDecimal accountBalance = invoiceUserApi.getAccountBalance(accountId, callContext);
 
         // Post an external charge
         final BigDecimal externalChargeAmount = BigDecimal.TEN;
         final UUID bundleId = UUID.randomUUID();
         final InvoiceItem externalChargeInvoiceItem = invoiceUserApi.insertExternalChargeForBundle(accountId, bundleId, externalChargeAmount,
                                                                                                    UUID.randomUUID().toString(), clock.getUTCToday(),
-                                                                                                   accountCurrency, context);
+                                                                                                   accountCurrency, callContext);
         verifyExternalChargeOnNewInvoice(accountBalance, bundleId, externalChargeAmount, externalChargeInvoiceItem);
     }
 
@@ -100,40 +91,40 @@ public class TestDefaultInvoiceUserApi extends InvoiceApiTestBase {
         Assert.assertNull(externalChargeInvoiceItem.getLinkedItemId());
 
         // Verify the adjusted invoice balance
-        final BigDecimal adjustedInvoiceBalance = invoiceUserApi.getInvoice(externalChargeInvoiceItem.getInvoiceId(), tenantContext).getBalance();
+        final BigDecimal adjustedInvoiceBalance = invoiceUserApi.getInvoice(externalChargeInvoiceItem.getInvoiceId(), callContext).getBalance();
         Assert.assertEquals(adjustedInvoiceBalance.compareTo(externalChargeAmount), 0);
 
         // Verify the adjusted account balance
-        final BigDecimal adjustedAccountBalance = invoiceUserApi.getAccountBalance(accountId, tenantContext);
+        final BigDecimal adjustedAccountBalance = invoiceUserApi.getAccountBalance(accountId, callContext);
         Assert.assertEquals(adjustedAccountBalance, initialAccountBalance.add(externalChargeAmount));
     }
 
     @Test(groups = "slow")
     public void testPostExternalChargeOnExistingInvoice() throws Exception {
         // Verify the initial invoice balance
-        final BigDecimal invoiceBalance = invoiceUserApi.getInvoice(invoiceId, tenantContext).getBalance();
+        final BigDecimal invoiceBalance = invoiceUserApi.getInvoice(invoiceId, callContext).getBalance();
         Assert.assertEquals(invoiceBalance.compareTo(BigDecimal.ZERO), 1);
 
         // Verify the initial account balance
-        final BigDecimal accountBalance = invoiceUserApi.getAccountBalance(accountId, tenantContext);
+        final BigDecimal accountBalance = invoiceUserApi.getAccountBalance(accountId, callContext);
         Assert.assertEquals(accountBalance, invoiceBalance);
 
         // Post an external charge
         final BigDecimal externalChargeAmount = BigDecimal.TEN;
         final InvoiceItem externalChargeInvoiceItem = invoiceUserApi.insertExternalChargeForInvoice(accountId, invoiceId,
                                                                                                     externalChargeAmount, UUID.randomUUID().toString(),
-                                                                                                    clock.getUTCToday(), accountCurrency, context);
+                                                                                                    clock.getUTCToday(), accountCurrency, callContext);
         verifyExternalChargeOnExistingInvoice(invoiceBalance, null, externalChargeAmount, externalChargeInvoiceItem);
     }
 
     @Test(groups = "slow")
     public void testPostExternalChargeForBundleOnExistingInvoice() throws Exception {
         // Verify the initial invoice balance
-        final BigDecimal invoiceBalance = invoiceUserApi.getInvoice(invoiceId, tenantContext).getBalance();
+        final BigDecimal invoiceBalance = invoiceUserApi.getInvoice(invoiceId, callContext).getBalance();
         Assert.assertEquals(invoiceBalance.compareTo(BigDecimal.ZERO), 1);
 
         // Verify the initial account balance
-        final BigDecimal accountBalance = invoiceUserApi.getAccountBalance(accountId, tenantContext);
+        final BigDecimal accountBalance = invoiceUserApi.getAccountBalance(accountId, callContext);
         Assert.assertEquals(accountBalance, invoiceBalance);
 
         // Post an external charge
@@ -141,7 +132,7 @@ public class TestDefaultInvoiceUserApi extends InvoiceApiTestBase {
         final UUID bundleId = UUID.randomUUID();
         final InvoiceItem externalChargeInvoiceItem = invoiceUserApi.insertExternalChargeForInvoiceAndBundle(accountId, invoiceId, bundleId,
                                                                                                              externalChargeAmount, UUID.randomUUID().toString(),
-                                                                                                             clock.getUTCToday(), accountCurrency, context);
+                                                                                                             clock.getUTCToday(), accountCurrency, callContext);
         verifyExternalChargeOnExistingInvoice(invoiceBalance, bundleId, externalChargeAmount, externalChargeInvoiceItem);
     }
 
@@ -156,27 +147,27 @@ public class TestDefaultInvoiceUserApi extends InvoiceApiTestBase {
         Assert.assertNull(externalChargeInvoiceItem.getLinkedItemId());
 
         // Verify the adjusted invoice balance
-        final BigDecimal adjustedInvoiceBalance = invoiceUserApi.getInvoice(invoiceId, tenantContext).getBalance();
+        final BigDecimal adjustedInvoiceBalance = invoiceUserApi.getInvoice(invoiceId, callContext).getBalance();
         Assert.assertEquals(adjustedInvoiceBalance.compareTo(initialInvoiceBalance.add(externalChargeAmount)), 0);
 
         // Verify the adjusted account balance
-        final BigDecimal adjustedAccountBalance = invoiceUserApi.getAccountBalance(accountId, tenantContext);
+        final BigDecimal adjustedAccountBalance = invoiceUserApi.getAccountBalance(accountId, callContext);
         Assert.assertEquals(adjustedAccountBalance, adjustedInvoiceBalance);
     }
 
     @Test(groups = "slow")
     public void testAdjustFullInvoice() throws Exception {
         // Verify the initial invoice balance
-        final BigDecimal invoiceBalance = invoiceUserApi.getInvoice(invoiceId, tenantContext).getBalance();
+        final BigDecimal invoiceBalance = invoiceUserApi.getInvoice(invoiceId, callContext).getBalance();
         Assert.assertEquals(invoiceBalance.compareTo(BigDecimal.ZERO), 1);
 
         // Verify the initial account balance
-        final BigDecimal accountBalance = invoiceUserApi.getAccountBalance(accountId, tenantContext);
+        final BigDecimal accountBalance = invoiceUserApi.getAccountBalance(accountId, callContext);
         Assert.assertEquals(accountBalance, invoiceBalance);
 
         // Adjust the invoice for the full amount
         final InvoiceItem creditInvoiceItem = invoiceUserApi.insertCreditForInvoice(accountId, invoiceId, invoiceBalance,
-                                                                                    clock.getUTCToday(), accountCurrency, context);
+                                                                                    clock.getUTCToday(), accountCurrency, callContext);
         Assert.assertEquals(creditInvoiceItem.getInvoiceId(), invoiceId);
         Assert.assertEquals(creditInvoiceItem.getInvoiceItemType(), InvoiceItemType.CREDIT_ADJ);
         Assert.assertEquals(creditInvoiceItem.getAccountId(), accountId);
@@ -185,28 +176,28 @@ public class TestDefaultInvoiceUserApi extends InvoiceApiTestBase {
         Assert.assertNull(creditInvoiceItem.getLinkedItemId());
 
         // Verify the adjusted invoice balance
-        final BigDecimal adjustedInvoiceBalance = invoiceUserApi.getInvoice(invoiceId, tenantContext).getBalance();
+        final BigDecimal adjustedInvoiceBalance = invoiceUserApi.getInvoice(invoiceId, callContext).getBalance();
         Assert.assertEquals(adjustedInvoiceBalance.compareTo(BigDecimal.ZERO), 0);
 
         // Verify the adjusted account balance
-        final BigDecimal adjustedAccountBalance = invoiceUserApi.getAccountBalance(accountId, tenantContext);
+        final BigDecimal adjustedAccountBalance = invoiceUserApi.getAccountBalance(accountId, callContext);
         Assert.assertEquals(adjustedAccountBalance, adjustedInvoiceBalance);
     }
 
     @Test(groups = "slow")
     public void testAdjustPartialInvoice() throws Exception {
         // Verify the initial invoice balance
-        final BigDecimal invoiceBalance = invoiceUserApi.getInvoice(invoiceId, tenantContext).getBalance();
+        final BigDecimal invoiceBalance = invoiceUserApi.getInvoice(invoiceId, callContext).getBalance();
         Assert.assertEquals(invoiceBalance.compareTo(BigDecimal.ZERO), 1);
 
         // Verify the initial account balance
-        final BigDecimal accountBalance = invoiceUserApi.getAccountBalance(accountId, tenantContext);
+        final BigDecimal accountBalance = invoiceUserApi.getAccountBalance(accountId, callContext);
         Assert.assertEquals(accountBalance, invoiceBalance);
 
         // Adjust the invoice for a fraction of the balance
         final BigDecimal creditAmount = invoiceBalance.divide(BigDecimal.TEN);
         final InvoiceItem creditInvoiceItem = invoiceUserApi.insertCreditForInvoice(accountId, invoiceId, creditAmount,
-                                                                                    clock.getUTCToday(), accountCurrency, context);
+                                                                                    clock.getUTCToday(), accountCurrency, callContext);
         Assert.assertEquals(creditInvoiceItem.getInvoiceId(), invoiceId);
         Assert.assertEquals(creditInvoiceItem.getInvoiceItemType(), InvoiceItemType.CREDIT_ADJ);
         Assert.assertEquals(creditInvoiceItem.getAccountId(), accountId);
@@ -215,19 +206,19 @@ public class TestDefaultInvoiceUserApi extends InvoiceApiTestBase {
         Assert.assertNull(creditInvoiceItem.getLinkedItemId());
 
         // Verify the adjusted invoice balance
-        final BigDecimal adjustedInvoiceBalance = invoiceUserApi.getInvoice(invoiceId, tenantContext).getBalance();
+        final BigDecimal adjustedInvoiceBalance = invoiceUserApi.getInvoice(invoiceId, callContext).getBalance();
         // Note! The invoice code will round (see InvoiceItemList)
         verifyAdjustedInvoiceBalance(invoiceBalance, creditAmount, adjustedInvoiceBalance);
 
         // Verify the adjusted account balance
-        final BigDecimal adjustedAccountBalance = invoiceUserApi.getAccountBalance(accountId, tenantContext);
+        final BigDecimal adjustedAccountBalance = invoiceUserApi.getAccountBalance(accountId, callContext);
         Assert.assertEquals(adjustedAccountBalance, adjustedInvoiceBalance);
     }
 
     @Test(groups = "slow")
     public void testCantAdjustInvoiceWithNegativeAmount() throws Exception {
         try {
-            invoiceUserApi.insertCreditForInvoice(accountId, invoiceId, BigDecimal.TEN.negate(), clock.getUTCToday(), accountCurrency, context);
+            invoiceUserApi.insertCreditForInvoice(accountId, invoiceId, BigDecimal.TEN.negate(), clock.getUTCToday(), accountCurrency, callContext);
             Assert.fail("Should not have been able to adjust an invoice with a negative amount");
         } catch (InvoiceApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.CREDIT_AMOUNT_INVALID.getCode());
@@ -236,21 +227,21 @@ public class TestDefaultInvoiceUserApi extends InvoiceApiTestBase {
 
     @Test(groups = "slow")
     public void testAdjustFullInvoiceItem() throws Exception {
-        final InvoiceItem invoiceItem = invoiceUserApi.getInvoice(invoiceId, tenantContext).getInvoiceItems().get(0);
+        final InvoiceItem invoiceItem = invoiceUserApi.getInvoice(invoiceId, callContext).getInvoiceItems().get(0);
         // Verify we picked a non zero item
         Assert.assertEquals(invoiceItem.getAmount().compareTo(BigDecimal.ZERO), 1);
 
         // Verify the initial invoice balance
-        final BigDecimal invoiceBalance = invoiceUserApi.getInvoice(invoiceId, tenantContext).getBalance();
+        final BigDecimal invoiceBalance = invoiceUserApi.getInvoice(invoiceId, callContext).getBalance();
         Assert.assertEquals(invoiceBalance.compareTo(BigDecimal.ZERO), 1);
 
         // Verify the initial account balance
-        final BigDecimal accountBalance = invoiceUserApi.getAccountBalance(accountId, tenantContext);
+        final BigDecimal accountBalance = invoiceUserApi.getAccountBalance(accountId, callContext);
         Assert.assertEquals(accountBalance, invoiceBalance);
 
         // Adjust the invoice for the full amount
         final InvoiceItem adjInvoiceItem = invoiceUserApi.insertInvoiceItemAdjustment(accountId, invoiceId, invoiceItem.getId(),
-                                                                                      clock.getUTCToday(), context);
+                                                                                      clock.getUTCToday(), callContext);
         Assert.assertEquals(adjInvoiceItem.getInvoiceId(), invoiceId);
         Assert.assertEquals(adjInvoiceItem.getInvoiceItemType(), InvoiceItemType.ITEM_ADJ);
         Assert.assertEquals(adjInvoiceItem.getAccountId(), accountId);
@@ -259,34 +250,34 @@ public class TestDefaultInvoiceUserApi extends InvoiceApiTestBase {
         Assert.assertEquals(adjInvoiceItem.getLinkedItemId(), invoiceItem.getId());
 
         // Verify the adjusted invoice balance
-        final BigDecimal adjustedInvoiceBalance = invoiceUserApi.getInvoice(invoiceId, tenantContext).getBalance();
+        final BigDecimal adjustedInvoiceBalance = invoiceUserApi.getInvoice(invoiceId, callContext).getBalance();
         // Note! The invoice code will round (see InvoiceItemList)
         verifyAdjustedInvoiceBalance(invoiceBalance, invoiceItem.getAmount(), adjustedInvoiceBalance);
 
         // Verify the adjusted account balance
-        final BigDecimal adjustedAccountBalance = invoiceUserApi.getAccountBalance(accountId, tenantContext);
+        final BigDecimal adjustedAccountBalance = invoiceUserApi.getAccountBalance(accountId, callContext);
         Assert.assertEquals(adjustedAccountBalance, adjustedInvoiceBalance);
     }
 
     @Test(groups = "slow")
     public void testAdjustPartialInvoiceItem() throws Exception {
-        final InvoiceItem invoiceItem = invoiceUserApi.getInvoice(invoiceId, tenantContext).getInvoiceItems().get(0);
+        final InvoiceItem invoiceItem = invoiceUserApi.getInvoice(invoiceId, callContext).getInvoiceItems().get(0);
         // Verify we picked a non zero item
         Assert.assertEquals(invoiceItem.getAmount().compareTo(BigDecimal.ZERO), 1);
 
         // Verify the initial invoice balance
-        final BigDecimal invoiceBalance = invoiceUserApi.getInvoice(invoiceId, tenantContext).getBalance();
+        final BigDecimal invoiceBalance = invoiceUserApi.getInvoice(invoiceId, callContext).getBalance();
         Assert.assertEquals(invoiceBalance.compareTo(BigDecimal.ZERO), 1);
 
         // Verify the initial account balance
-        final BigDecimal accountBalance = invoiceUserApi.getAccountBalance(accountId, tenantContext);
+        final BigDecimal accountBalance = invoiceUserApi.getAccountBalance(accountId, callContext);
         Assert.assertEquals(accountBalance, invoiceBalance);
 
         // Adjust the invoice for a fraction of the balance
         final BigDecimal adjAmount = invoiceItem.getAmount().divide(BigDecimal.TEN);
         final InvoiceItem adjInvoiceItem = invoiceUserApi.insertInvoiceItemAdjustment(accountId, invoiceId, invoiceItem.getId(),
                                                                                       clock.getUTCToday(), adjAmount, accountCurrency,
-                                                                                      context);
+                                                                                      callContext);
         Assert.assertEquals(adjInvoiceItem.getInvoiceId(), invoiceId);
         Assert.assertEquals(adjInvoiceItem.getInvoiceItemType(), InvoiceItemType.ITEM_ADJ);
         Assert.assertEquals(adjInvoiceItem.getAccountId(), accountId);
@@ -295,22 +286,22 @@ public class TestDefaultInvoiceUserApi extends InvoiceApiTestBase {
         Assert.assertEquals(adjInvoiceItem.getLinkedItemId(), invoiceItem.getId());
 
         // Verify the adjusted invoice balance
-        final BigDecimal adjustedInvoiceBalance = invoiceUserApi.getInvoice(invoiceId, tenantContext).getBalance();
+        final BigDecimal adjustedInvoiceBalance = invoiceUserApi.getInvoice(invoiceId, callContext).getBalance();
         // Note! The invoice code will round (see InvoiceItemList)
         verifyAdjustedInvoiceBalance(invoiceBalance, adjAmount, adjustedInvoiceBalance);
 
         // Verify the adjusted account balance
-        final BigDecimal adjustedAccountBalance = invoiceUserApi.getAccountBalance(accountId, tenantContext);
+        final BigDecimal adjustedAccountBalance = invoiceUserApi.getAccountBalance(accountId, callContext);
         Assert.assertEquals(adjustedAccountBalance, adjustedInvoiceBalance);
     }
 
     @Test(groups = "slow")
     public void testCantAdjustInvoiceItemWithNegativeAmount() throws Exception {
-        final InvoiceItem invoiceItem = invoiceUserApi.getInvoice(invoiceId, tenantContext).getInvoiceItems().get(0);
+        final InvoiceItem invoiceItem = invoiceUserApi.getInvoice(invoiceId, callContext).getInvoiceItems().get(0);
 
         try {
             invoiceUserApi.insertInvoiceItemAdjustment(accountId, invoiceId, invoiceItem.getId(), clock.getUTCToday(),
-                                                       BigDecimal.TEN.negate(), accountCurrency, context);
+                                                       BigDecimal.TEN.negate(), accountCurrency, callContext);
             Assert.fail("Should not have been able to adjust an item with a negative amount");
         } catch (InvoiceApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.INVOICE_ITEM_ADJUSTMENT_AMOUNT_INVALID.getCode());
@@ -328,12 +319,12 @@ public class TestDefaultInvoiceUserApi extends InvoiceApiTestBase {
     public void testAddRemoveWrittenOffTag() throws InvoiceApiException, TagApiException {
         invoiceUserApi.tagInvoiceAsWrittenOff(invoiceId, callContext);
 
-        List<Tag> tags = tagUserApi.getTags(invoiceId, ObjectType.INVOICE, tenantContext);
+        List<Tag> tags = tagUserApi.getTags(invoiceId, ObjectType.INVOICE, callContext);
         assertEquals(tags.size(), 1);
         assertEquals(tags.get(0).getTagDefinitionId(), ControlTagType.WRITTEN_OFF.getId());
 
         invoiceUserApi.tagInvoiceAsNotWrittenOff(invoiceId, callContext);
-        tags = tagUserApi.getTags(invoiceId, ObjectType.INVOICE, tenantContext);
+        tags = tagUserApi.getTags(invoiceId, ObjectType.INVOICE, callContext);
         assertEquals(tags.size(), 0);
     }
 }

@@ -26,6 +26,7 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.invoice.InvoiceTestSuiteWithEmbeddedDB;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
@@ -33,7 +34,7 @@ import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
 
-public class TestInvoiceDaoForItemAdjustment extends InvoiceDaoTestBase {
+public class TestInvoiceDaoForItemAdjustment extends InvoiceTestSuiteWithEmbeddedDB {
 
     private static final BigDecimal INVOICE_ITEM_AMOUNT = new BigDecimal("21.00");
 
@@ -60,7 +61,7 @@ public class TestInvoiceDaoForItemAdjustment extends InvoiceDaoTestBase {
                                                                  new LocalDate(2010, 1, 1), new LocalDate(2010, 4, 1),
                                                                  INVOICE_ITEM_AMOUNT, new BigDecimal("7.00"), Currency.USD);
         invoice.addInvoiceItem(invoiceItem);
-        createInvoice(invoice, true, internalCallContext);
+        invoiceUtil.createInvoice(invoice, true, internalCallContext);
 
         try {
             invoiceDao.insertInvoiceItemAdjustment(invoice.getAccountId(), UUID.randomUUID(), invoiceItem.getId(), new LocalDate(2010, 1, 1), null, null, internalCallContext);
@@ -78,7 +79,7 @@ public class TestInvoiceDaoForItemAdjustment extends InvoiceDaoTestBase {
                                                                  new LocalDate(2010, 1, 1), new LocalDate(2010, 4, 1),
                                                                  INVOICE_ITEM_AMOUNT, new BigDecimal("7.00"), Currency.USD);
         invoice.addInvoiceItem(invoiceItem);
-        createInvoice(invoice, true, internalCallContext);
+        invoiceUtil.createInvoice(invoice, true, internalCallContext);
 
         final InvoiceItemModelDao adjustedInvoiceItem = createAndCheckAdjustment(invoice, invoiceItem, null);
         Assert.assertEquals(adjustedInvoiceItem.getAmount().compareTo(invoiceItem.getAmount().negate()), 0);
@@ -92,7 +93,7 @@ public class TestInvoiceDaoForItemAdjustment extends InvoiceDaoTestBase {
                                                                  new LocalDate(2010, 1, 1), new LocalDate(2010, 4, 1),
                                                                  INVOICE_ITEM_AMOUNT, new BigDecimal("7.00"), Currency.USD);
         invoice.addInvoiceItem(invoiceItem);
-        createInvoice(invoice, true, internalCallContext);
+        invoiceUtil.createInvoice(invoice, true, internalCallContext);
 
         final InvoiceItemModelDao adjustedInvoiceItem = createAndCheckAdjustment(invoice, invoiceItem, BigDecimal.TEN);
         Assert.assertEquals(adjustedInvoiceItem.getAmount().compareTo(BigDecimal.TEN.negate()), 0);
@@ -116,7 +117,7 @@ public class TestInvoiceDaoForItemAdjustment extends InvoiceDaoTestBase {
         Assert.assertNull(adjustedInvoiceItem.getSubscriptionId());
 
         // Retrieve the item by id
-        final InvoiceItemModelDao retrievedInvoiceItem = invoiceItemSqlDao.getById(adjustedInvoiceItem.getId().toString(), internalCallContext);
+        final InvoiceItemModelDao retrievedInvoiceItem = invoiceUtil.getInvoiceItemById(adjustedInvoiceItem.getId(), internalCallContext);
         // TODO We can't use equals() due to the createdDate field
         Assert.assertEquals(retrievedInvoiceItem.getAccountId(), adjustedInvoiceItem.getAccountId());
         Assert.assertNull(retrievedInvoiceItem.getBundleId());

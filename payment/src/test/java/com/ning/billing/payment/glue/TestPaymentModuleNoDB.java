@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -14,24 +14,24 @@
  * under the License.
  */
 
-package com.ning.billing.invoice.tests.inAdvance.quarterly;
+package com.ning.billing.payment.glue;
 
-import static com.ning.billing.invoice.TestInvoiceUtil.*;
+import com.ning.billing.GuicyKillbillTestNoDBModule;
+import com.ning.billing.mock.glue.MockNonEntityDaoModule;
+import com.ning.billing.payment.dao.MockPaymentDao;
+import com.ning.billing.payment.dao.PaymentDao;
 
-import java.math.BigDecimal;
-
-import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.invoice.tests.inAdvance.GenericProRationTestBase;
-
-public class GenericProRationTests extends GenericProRationTestBase {
+public class TestPaymentModuleNoDB extends TestPaymentModule {
 
     @Override
-    protected BillingPeriod getBillingPeriod() {
-        return BillingPeriod.QUARTERLY;
+    protected void installPaymentDao() {
+        bind(PaymentDao.class).to(MockPaymentDao.class).asEagerSingleton();
     }
 
     @Override
-    protected BigDecimal getDaysInTestPeriod() {
-        return NINETY;
+    protected void configure() {
+        install(new GuicyKillbillTestNoDBModule());
+        install(new MockNonEntityDaoModule());
+        super.configure();
     }
 }

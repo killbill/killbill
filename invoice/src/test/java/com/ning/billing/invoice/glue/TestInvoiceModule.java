@@ -18,24 +18,21 @@ package com.ning.billing.invoice.glue;
 
 import org.mockito.Mockito;
 
-import com.ning.billing.GuicyKillbillTestWithEmbeddedDBModule;
 import com.ning.billing.catalog.glue.CatalogModule;
+import com.ning.billing.invoice.TestInvoiceUtil;
 import com.ning.billing.mock.glue.MockGlobalLockerModule;
 import com.ning.billing.util.email.EmailModule;
 import com.ning.billing.util.email.templates.TemplateModule;
 import com.ning.billing.util.glue.CacheModule;
-import com.ning.billing.util.glue.CallContextModule;
 import com.ning.billing.util.glue.CustomFieldModule;
-import com.ning.billing.util.glue.NonEntityDaoModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.TagStoreModule;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 import com.ning.billing.util.svcapi.junction.BillingInternalApi;
 
+
 public class TestInvoiceModule extends DefaultInvoiceModule {
-
-
 
     private void installExternalApis() {
         bind(EntitlementInternalApi.class).toInstance(Mockito.mock(EntitlementInternalApi.class));
@@ -60,5 +57,6 @@ public class TestInvoiceModule extends DefaultInvoiceModule {
 
         installExternalApis();
 
+        bind(TestInvoiceUtil.class).asEagerSingleton();
     }
 }
