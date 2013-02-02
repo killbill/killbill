@@ -18,11 +18,10 @@ package com.ning.billing.account.glue;
 
 import java.util.Properties;
 
-import org.mockito.Mockito;
 import org.skife.config.ConfigSource;
 import org.skife.config.SimplePropertyConfigSource;
 
-import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
+import com.ning.billing.mock.glue.MockEntitlementModule;
 import com.ning.billing.util.glue.AuditModule;
 import com.ning.billing.util.glue.CacheModule;
 import com.ning.billing.util.glue.CallContextModule;
@@ -44,11 +43,6 @@ public class TestAccountModule extends DefaultAccountModule {
         System.setProperty("net.sf.ehcache.skipUpdateCheck", "true");
     }
 
-    private void installExternalApis() {
-        // Needed for Audit
-        bind(EntitlementTimelineApi.class).toInstance(Mockito.mock(EntitlementTimelineApi.class));
-    }
-
     @Override
     protected void configure() {
         super.configure();
@@ -57,8 +51,8 @@ public class TestAccountModule extends DefaultAccountModule {
         install(new CacheModule());
         install(new CallContextModule());
         install(new CustomFieldModule());
+        // Needed for Audit
+        install(new MockEntitlementModule());
         install(new TagStoreModule());
-
-        installExternalApis();
     }
 }
