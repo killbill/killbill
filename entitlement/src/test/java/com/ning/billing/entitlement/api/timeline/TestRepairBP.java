@@ -49,13 +49,8 @@ import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.api.user.SubscriptionEvents;
-import com.ning.billing.entitlement.api.user.TestUtil.TestWithException;
-import com.ning.billing.entitlement.api.user.TestUtil.TestWithExceptionCallback;
-import com.ning.billing.entitlement.glue.MockEngineModuleSql;
-
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Stage;
+import com.ning.billing.entitlement.api.user.TestEntitlementHelper.TestWithException;
+import com.ning.billing.entitlement.api.user.TestEntitlementHelper.TestWithExceptionCallback;
 
 public class TestRepairBP extends EntitlementTestSuiteWithEmbeddedDB {
 

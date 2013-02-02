@@ -35,7 +35,6 @@ import org.testng.Assert;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.api.TestApiListener;
 import com.ning.billing.api.TestApiListener.NextEvent;
-import com.ning.billing.api.TestListenerStatus;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Duration;
 import com.ning.billing.catalog.api.PhaseType;
@@ -68,9 +67,9 @@ import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
-public class TestUtil {
+public class TestEntitlementHelper {
 
-    private final Logger log = LoggerFactory.getLogger(TestUtil.class);
+    private final Logger log = LoggerFactory.getLogger(TestEntitlementHelper.class);
 
     private final EntitlementUserApi entitlementApi;
 
@@ -85,7 +84,7 @@ public class TestUtil {
 
 
     @Inject
-    public TestUtil(final EntitlementUserApi entitlementApi, final Clock clock, final InternalCallContext callContext, final TestApiListener testListener, final EntitlementDao dao) {
+    public TestEntitlementHelper(final EntitlementUserApi entitlementApi, final Clock clock, final InternalCallContext callContext, final TestApiListener testListener, final EntitlementDao dao) {
         this.entitlementApi = entitlementApi;
         this.clock = clock;
         this.callContext = callContext;

@@ -40,8 +40,8 @@ import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline.NewEvent;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
-import com.ning.billing.entitlement.api.user.TestUtil.TestWithException;
-import com.ning.billing.entitlement.api.user.TestUtil.TestWithExceptionCallback;
+import com.ning.billing.entitlement.api.user.TestEntitlementHelper.TestWithException;
+import com.ning.billing.entitlement.api.user.TestEntitlementHelper.TestWithExceptionCallback;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;

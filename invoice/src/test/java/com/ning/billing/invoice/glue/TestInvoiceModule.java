@@ -19,7 +19,7 @@ package com.ning.billing.invoice.glue;
 import org.mockito.Mockito;
 
 import com.ning.billing.catalog.glue.CatalogModule;
-import com.ning.billing.invoice.TestInvoiceUtil;
+import com.ning.billing.invoice.TestInvoiceHelper;
 import com.ning.billing.mock.glue.MockGlobalLockerModule;
 import com.ning.billing.util.email.EmailModule;
 import com.ning.billing.util.email.templates.TemplateModule;
@@ -57,6 +57,6 @@ public class TestInvoiceModule extends DefaultInvoiceModule {
 
         installExternalApis();
 
-        bind(TestInvoiceUtil.class).asEagerSingleton();
+        bind(TestInvoiceHelper.class).asEagerSingleton();
     }
 }
