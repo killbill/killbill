@@ -69,7 +69,9 @@ public class TestOverdueWithOverdueEnforcementOffTag extends TestOverdueBase {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
         // Set the OVERDUE_ENFORCEMENT_OFF tag
+        busHandler.pushExpectedEvent(NextEvent.TAG);
         tagUserApi.addTag(account.getId(), ObjectType.ACCOUNT, ControlTagType.OVERDUE_ENFORCEMENT_OFF.getId(), callContext);
+        busHandler.isCompleted(DELAY);
 
         // Set next invoice to fail and create subscription
         paymentPlugin.makeAllInvoicesFailWithError(true);
@@ -91,8 +93,9 @@ public class TestOverdueWithOverdueEnforcementOffTag extends TestOverdueBase {
         checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
 
         // Now remove OVERDUE_ENFORCEMENT_OFF tag
+        busHandler.pushExpectedEvent(NextEvent.TAG);
         tagUserApi.removeTag(account.getId(), ObjectType.ACCOUNT, ControlTagType.OVERDUE_ENFORCEMENT_OFF.getId(), callContext);
-
+        busHandler.isCompleted(DELAY);
         checkODState("OD1");
     }
 
@@ -123,14 +126,18 @@ public class TestOverdueWithOverdueEnforcementOffTag extends TestOverdueBase {
         checkODState("OD1");
 
         // Set the OVERDUE_ENFORCEMENT_OFF tag
+        busHandler.pushExpectedEvent(NextEvent.TAG);
         tagUserApi.addTag(account.getId(), ObjectType.ACCOUNT, ControlTagType.OVERDUE_ENFORCEMENT_OFF.getId(), callContext);
+        busHandler.isCompleted(DELAY);
 
         // Should now be in clear state
         checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
 
         // Now remove OVERDUE_ENFORCEMENT_OFF tag
+        busHandler.pushExpectedEvent(NextEvent.TAG);
         tagUserApi.removeTag(account.getId(), ObjectType.ACCOUNT, ControlTagType.OVERDUE_ENFORCEMENT_OFF.getId(), callContext);
-
+        busHandler.isCompleted(DELAY);
+        
         // Account should be back in overdue
         checkODState("OD1");
     }

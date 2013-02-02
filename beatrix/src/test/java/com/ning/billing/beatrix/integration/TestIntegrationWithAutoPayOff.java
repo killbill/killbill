@@ -279,13 +279,17 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
 
 
     private void add_AUTO_PAY_OFF_Tag(final UUID id, final ObjectType type) throws TagDefinitionApiException, TagApiException {
+        busHandler.pushExpectedEvent(NextEvent.TAG);
         tagApi.addTag(id, type, ControlTagType.AUTO_PAY_OFF.getId(), callContext);
+        assertTrue(busHandler.isCompleted(DELAY));
         final List<Tag> tags = tagApi.getTags(id, type, callContext);
         assertEquals(tags.size(), 1);
     }
 
     private void remove_AUTO_PAY_OFF_Tag(final UUID id, final ObjectType type) throws TagDefinitionApiException, TagApiException {
+        busHandler.pushExpectedEvent(NextEvent.TAG);
         tagApi.removeTag(id, type, ControlTagType.AUTO_PAY_OFF.getId(), callContext);
+        assertTrue(busHandler.isCompleted(DELAY));
     }
 }
 
