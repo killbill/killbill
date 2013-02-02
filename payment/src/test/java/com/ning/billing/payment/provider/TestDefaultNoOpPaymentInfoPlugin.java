@@ -23,14 +23,12 @@ import org.joda.time.DateTime;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.payment.PaymentTestSuite;
+import com.ning.billing.payment.PaymentTestSuiteNoDB;
 import com.ning.billing.payment.plugin.api.PaymentInfoPlugin.PaymentPluginStatus;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 
-public class TestDefaultNoOpPaymentInfoPlugin extends PaymentTestSuite {
-
-    private final Clock clock = new ClockMock();
+public class TestDefaultNoOpPaymentInfoPlugin extends PaymentTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testEquals() throws Exception {

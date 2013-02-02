@@ -22,12 +22,12 @@ import java.util.UUID;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.payment.PaymentTestSuite;
+import com.ning.billing.payment.PaymentTestSuiteNoDB;
 import com.ning.billing.payment.api.PaymentMethodPlugin.PaymentMethodKVInfo;
 
 import com.google.common.collect.ImmutableList;
 
-public class TestDefaultNoOpPaymentMethodPlugin extends PaymentTestSuite {
+public class TestDefaultNoOpPaymentMethodPlugin extends PaymentTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testEquals() throws Exception {

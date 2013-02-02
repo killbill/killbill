@@ -27,35 +27,17 @@ import java.util.concurrent.TimeoutException;
 import org.joda.time.LocalDate;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.mock.glue.MockNonEntityDaoModule;
-import com.ning.billing.util.config.PaymentConfig;
 import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.mock.glue.MockClockModule;
-import com.ning.billing.mock.glue.MockJunctionModule;
 import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.Payment.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.PaymentStatus;
-import com.ning.billing.payment.core.PaymentProcessor;
 import com.ning.billing.payment.glue.DefaultPaymentService;
-import com.ning.billing.payment.glue.PaymentTestModuleWithMocks;
 import com.ning.billing.payment.provider.MockPaymentProviderPlugin;
-import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
-import com.ning.billing.payment.retry.FailedPaymentRetryService;
-import com.ning.billing.payment.retry.PluginFailureRetryService;
-import com.ning.billing.util.clock.ClockMock;
-import com.ning.billing.util.glue.CacheModule;
-import com.ning.billing.util.glue.CallContextModule;
-import com.ning.billing.util.glue.NonEntityDaoModule;
-import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
-import com.ning.billing.util.svcsapi.bus.InternalBus;
-
-import com.google.inject.Inject;
 
 import static com.jayway.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -63,48 +45,30 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
-@Guice(modules = {PaymentTestModuleWithMocks.class, MockClockModule.class, MockJunctionModule.class, CacheModule.class, CallContextModule.class, MockNonEntityDaoModule.class})
-public class TestRetryService extends PaymentTestSuite {
-    @Inject
-    private PaymentConfig paymentConfig;
-    @Inject
-    private InternalBus eventBus;
-    @Inject
-    private PaymentProcessor paymentProcessor;
-    @Inject
-    private InvoiceInternalApi invoiceApi;
-    @Inject
-    private TestHelper testHelper;
-    @Inject
-    private PaymentProviderPluginRegistry registry;
-    @Inject
-    private FailedPaymentRetryService retryService;
-    @Inject
-    private PluginFailureRetryService pluginRetryService;
-
-    @Inject
-    private ClockMock clock;
+public class TestRetryService extends PaymentTestSuiteNoDB {
 
     private MockPaymentProviderPlugin mockPaymentProviderPlugin;
 
+    @Override
     @BeforeMethod(groups = "fast")
-    public void setUp() throws Exception {
+    public void setupTest() throws Exception {
+        super.setupTest();
         pluginRetryService.initialize(DefaultPaymentService.SERVICE_NAME);
         pluginRetryService.start();
 
         retryService.initialize(DefaultPaymentService.SERVICE_NAME);
         retryService.start();
-        eventBus.start();
 
         mockPaymentProviderPlugin = (MockPaymentProviderPlugin) registry.getPlugin(null);
         mockPaymentProviderPlugin.clear();
     }
 
+    @Override
     @AfterMethod(groups = "fast")
-    public void tearDown() throws Exception {
+    public void cleanupTest() throws Exception {
+        super.cleanupTest();
         retryService.stop();
         pluginRetryService.stop();
-        eventBus.stop();
     }
 
     private Payment getPaymentForInvoice(final UUID invoiceId) throws PaymentApiException {

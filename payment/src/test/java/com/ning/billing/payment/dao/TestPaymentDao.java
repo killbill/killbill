@@ -48,32 +48,6 @@ import static org.testng.Assert.fail;
 
 public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
 
-    private PaymentDao paymentDao;
-    private DBTestingHelper helper;
-    private IDBI dbi;
-    private Clock clock;
-    private CacheControllerDispatcher controllerDispatcher;
-
-
-    @BeforeSuite(groups = "slow")
-    public void setup() throws IOException {
-        clock = new DefaultClock();
-        controllerDispatcher = new CacheControllerDispatcher();
-        setupDb();
-        paymentDao = new DefaultPaymentDao(dbi, clock, controllerDispatcher, new DefaultNonEntityDao(dbi));
-    }
-
-    private void setupDb() {
-        helper = KillbillTestSuiteWithEmbeddedDB.getDBTestingHelper();
-        if (helper.isUsingLocalInstance()) {
-            final DbiConfig config = new ConfigurationObjectFactory(System.getProperties()).build(DbiConfig.class);
-            final DBIProvider provider = new DBIProvider(config);
-            dbi = provider.get();
-        } else {
-            dbi = helper.getDBI();
-        }
-    }
-
     @Test(groups = "slow")
     public void testRefund() {
         final UUID accountId = UUID.randomUUID();

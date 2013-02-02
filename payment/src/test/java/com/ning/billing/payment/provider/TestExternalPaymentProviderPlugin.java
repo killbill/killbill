@@ -26,14 +26,14 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.payment.PaymentTestSuite;
+import com.ning.billing.payment.PaymentTestSuiteNoDB;
 import com.ning.billing.payment.plugin.api.PaymentInfoPlugin;
 import com.ning.billing.payment.plugin.api.PaymentInfoPlugin.PaymentPluginStatus;
 import com.ning.billing.payment.plugin.api.PaymentPluginApiException;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 
-public class TestExternalPaymentProviderPlugin extends PaymentTestSuite {
+public class TestExternalPaymentProviderPlugin extends PaymentTestSuiteNoDB {
 
     private final Clock clock = new ClockMock();
     private ExternalPaymentProviderPlugin plugin;

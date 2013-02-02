@@ -23,12 +23,12 @@ import org.joda.time.DateTime;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.payment.PaymentTestSuite;
+import com.ning.billing.payment.PaymentTestSuiteNoDB;
 import com.ning.billing.util.events.PaymentErrorInternalEvent;
 import com.ning.billing.util.events.PaymentInfoInternalEvent;
 import com.ning.billing.util.jackson.ObjectMapper;
 
-public class TestEventJson extends PaymentTestSuite {
+public class TestEventJson extends PaymentTestSuiteNoDB {
     private final ObjectMapper mapper = new ObjectMapper();
 
     @Test(groups = "fast")

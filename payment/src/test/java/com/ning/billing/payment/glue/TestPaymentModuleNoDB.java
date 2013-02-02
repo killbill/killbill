@@ -14,26 +14,24 @@
  * under the License.
  */
 
-package com.ning.billing.invoice.glue;
+package com.ning.billing.payment.glue;
 
 import com.ning.billing.GuicyKillbillTestNoDBModule;
-import com.ning.billing.invoice.dao.InvoiceDao;
-import com.ning.billing.invoice.dao.MockInvoiceDao;
 import com.ning.billing.mock.glue.MockNonEntityDaoModule;
-import com.ning.billing.util.bus.InMemoryBusModule;
-import com.ning.billing.util.glue.NonEntityDaoModule;
+import com.ning.billing.payment.dao.MockPaymentDao;
+import com.ning.billing.payment.dao.PaymentDao;
 
-public class TestInvoiceModuleNoDB extends TestInvoiceModule {
+public class TestPaymentModuleNoDB extends TestPaymentModule {
 
-    protected void installInvoiceDao() {
-        bind(InvoiceDao.class).to(MockInvoiceDao.class);
+    @Override
+    protected void installPaymentDao() {
+        bind(PaymentDao.class).to(MockPaymentDao.class).asEagerSingleton();
     }
 
     @Override
-    public void configure() {
-        super.configure();
+    protected void configure() {
         install(new GuicyKillbillTestNoDBModule());
         install(new MockNonEntityDaoModule());
-        install(new InMemoryBusModule());
+        super.configure();
     }
 }

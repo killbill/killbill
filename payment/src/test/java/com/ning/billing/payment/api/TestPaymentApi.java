@@ -25,72 +25,42 @@ import org.joda.time.LocalDate;
 import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.mock.glue.MockClockModule;
-import com.ning.billing.mock.glue.MockJunctionModule;
-import com.ning.billing.mock.glue.MockNonEntityDaoModule;
 import com.ning.billing.payment.MockRecurringInvoiceItem;
-import com.ning.billing.payment.PaymentTestSuite;
-import com.ning.billing.payment.TestHelper;
+import com.ning.billing.payment.PaymentTestSuiteNoDB;
+import com.ning.billing.payment.TestPaymentHelper;
 import com.ning.billing.payment.api.Payment.PaymentAttempt;
-import com.ning.billing.payment.glue.PaymentTestModuleWithMocks;
 import com.ning.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
-import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.glue.CacheModule;
-import com.ning.billing.util.glue.CallContextModule;
-import com.ning.billing.util.glue.NonEntityDaoModule;
-import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcsapi.bus.InternalBus;
-import com.ning.billing.util.svcsapi.bus.InternalBus.EventBusException;
-
-import com.google.inject.Inject;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
-@Guice(modules = {PaymentTestModuleWithMocks.class, MockClockModule.class, MockJunctionModule.class, CacheModule.class, MockNonEntityDaoModule.class, CallContextModule.class})
-public class TestPaymentApi extends PaymentTestSuite {
-    private static final Logger log = LoggerFactory.getLogger(TestPaymentApi.class);
+public class TestPaymentApi extends PaymentTestSuiteNoDB {
 
-    @Inject
-    private InternalBus eventBus;
-    @Inject
-    protected PaymentApi paymentApi;
-    @Inject
-    protected AccountInternalApi accountApi;
-    @Inject
-    protected TestHelper testHelper;
-    @Inject
-    protected Clock clock;
+    private static final Logger log = LoggerFactory.getLogger(TestPaymentApi.class);
 
     private Account account;
 
     @BeforeClass(groups = "fast")
-    public void setupClass() throws Exception {
+    public void setup() throws Exception {
+        super.setup();
         account = testHelper.createTestAccount("yoyo.yahoo.com", false);
     }
 
     @BeforeMethod(groups = "fast")
-    public void setUp() throws Exception {
+    public void setupTest() throws Exception {
+        super.setupTest();
         final PaymentMethodPlugin paymentMethodInfo = new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), true, null);
         testHelper.addTestPaymentMethod(account, paymentMethodInfo);
-        eventBus.start();
-    }
-
-    @AfterMethod(groups = "fast")
-    public void tearDown() throws EventBusException {
-        eventBus.stop();
     }
 
     @Test(groups = "fast")
@@ -181,7 +151,7 @@ public class TestPaymentApi extends PaymentTestSuite {
         assertEquals(initDefaultMethod.getId(), account.getPaymentMethodId());
 
         final PaymentMethodPlugin newPaymenrMethod = new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), true, null);
-        final UUID newPaymentMethodId = paymentApi.addPaymentMethod(PaymentTestModuleWithMocks.PLUGIN_TEST_NAME, account, true, newPaymenrMethod, callContext);
+        final UUID newPaymentMethodId = paymentApi.addPaymentMethod(TestPaymentHelper.PLUGIN_TEST_NAME, account, true, newPaymenrMethod, callContext);
         Mockito.when(account.getPaymentMethodId()).thenReturn(newPaymentMethodId);
 
         methods = paymentApi.getPaymentMethods(account, false, callContext);

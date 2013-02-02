@@ -29,14 +29,10 @@ import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.mock.api.MockBillCycleDay;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
-import com.ning.billing.payment.glue.PaymentTestModuleWithMocks;
 import com.ning.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallContextFactory;
-import com.ning.billing.util.callcontext.CallOrigin;
-import com.ning.billing.util.callcontext.InternalCallContextFactory;
+import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.events.InvoiceCreationInternalEvent;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
@@ -46,25 +42,30 @@ import com.ning.billing.util.svcsapi.bus.InternalBus.EventBusException;
 
 import com.google.inject.Inject;
 
-public class TestHelper {
+public class TestPaymentHelper {
+
+    public static final String PLUGIN_TEST_NAME = "my-mock";
+
     protected final AccountInternalApi AccountApi;
     protected final InvoiceInternalApi invoiceApi;
     protected PaymentApi paymentApi;
-    private final CallContext context;
     private final InternalBus eventBus;
     private final Clock clock;
-    private final InternalCallContextFactory internalCallContextFactory;
+
+    private final CallContext context;
+    private final InternalCallContext internalCallContext;
 
     @Inject
-    public TestHelper(final CallContextFactory factory, final AccountInternalApi AccountApi, final InvoiceInternalApi invoiceApi,
-                      final PaymentApi paymentApi, final InternalBus eventBus, final Clock clock, final InternalCallContextFactory internalCallContextFactory) {
+    public TestPaymentHelper(final AccountInternalApi AccountApi, final InvoiceInternalApi invoiceApi,
+                             final PaymentApi paymentApi, final InternalBus eventBus, final Clock clock,
+                             final CallContext context, final InternalCallContext internalCallContext) {
         this.eventBus = eventBus;
         this.AccountApi = AccountApi;
         this.invoiceApi = invoiceApi;
         this.paymentApi = paymentApi;
         this.clock = clock;
-        this.internalCallContextFactory = internalCallContextFactory;
-        context = factory.createCallContext(null, "Princess Buttercup", CallOrigin.TEST, UserType.TEST);
+        this.context = context;
+        this.internalCallContext = internalCallContext;
     }
 
     public Invoice createTestInvoice(final Account account,
@@ -97,7 +98,7 @@ public class TestHelper {
                                                                         invoice.getInvoiceDate(),
                                                                         context.getUserToken());
 
-        eventBus.post(event, internalCallContextFactory.createInternalCallContext(account.getId(), context));
+        eventBus.post(event, internalCallContext);
         return invoice;
     }
 
@@ -128,7 +129,7 @@ public class TestHelper {
     }
 
     public void addTestPaymentMethod(final Account account, final PaymentMethodPlugin paymentMethodInfo) throws Exception {
-        final UUID paymentMethodId = paymentApi.addPaymentMethod(PaymentTestModuleWithMocks.PLUGIN_TEST_NAME, account, true, paymentMethodInfo, context);
+        final UUID paymentMethodId = paymentApi.addPaymentMethod(PLUGIN_TEST_NAME, account, true, paymentMethodInfo, context);
         Mockito.when(account.getPaymentMethodId()).thenReturn(paymentMethodId);
     }
 }

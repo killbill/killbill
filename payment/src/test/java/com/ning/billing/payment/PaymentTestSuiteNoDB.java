@@ -24,12 +24,11 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
-import com.ning.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
+import com.ning.billing.GuicyKillbillTestSuiteNoDB;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.core.PaymentMethodProcessor;
 import com.ning.billing.payment.core.PaymentProcessor;
-import com.ning.billing.payment.dao.PaymentDao;
-import com.ning.billing.payment.glue.TestPaymentModuleWithEmbeddedDB;
+import com.ning.billing.payment.glue.TestPaymentModuleNoDB;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
 import com.ning.billing.payment.retry.FailedPaymentRetryService;
 import com.ning.billing.payment.retry.PluginFailureRetryService;
@@ -44,7 +43,7 @@ import com.google.inject.Injector;
 
 import static org.testng.Assert.assertNotNull;
 
-public abstract class PaymentTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWithEmbeddedDB {
+public abstract class PaymentTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
     @Inject
     protected PaymentConfig paymentConfig;
@@ -67,25 +66,25 @@ public abstract class PaymentTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     @Inject
     protected AccountInternalApi accountApi;
     @Inject
-    protected PaymentDao paymentDao;
-    @Inject
     protected TestPaymentHelper testHelper;
 
-    @BeforeClass(groups = "slow")
+
+
+    @BeforeClass(groups = "fast")
     protected void setup() throws Exception {
 
         loadSystemPropertiesFromClasspath("/resource.properties");
 
-        final Injector injector = Guice.createInjector(new TestPaymentModuleWithEmbeddedDB());
+        final Injector injector = Guice.createInjector(new TestPaymentModuleNoDB());
         injector.injectMembers(this);
     }
 
-    @BeforeMethod(groups = "slow")
+    @BeforeMethod(groups = "fast")
     public void setupTest() throws Exception {
         eventBus.start();
     }
 
-    @AfterMethod(groups = "slow")
+    @AfterMethod(groups = "fast")
     public void cleanupTest()throws Exception  {
         eventBus.stop();
     }
@@ -93,14 +92,20 @@ public abstract class PaymentTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
 
 
     private void loadSystemPropertiesFromClasspath(final String resource) {
-        final URL url = PaymentTestSuiteWithEmbeddedDB.class.getResource(resource);
+        final URL url = PaymentTestSuiteNoDB.class.getResource(resource);
         assertNotNull(url);
 
         try {
             final Properties properties = System.getProperties();
             properties.load(url.openStream());
+
+            properties.setProperty("killbill.payment.provider.default", TestPaymentHelper.PLUGIN_TEST_NAME);
+            properties.setProperty("killbill.payment.engine.events.off", "false");
+
+            //configSource = new SimplePropertyConfigSource(properties);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
+
 }

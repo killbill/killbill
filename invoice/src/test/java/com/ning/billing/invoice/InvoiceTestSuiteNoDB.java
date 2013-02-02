@@ -25,6 +25,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
+import com.ning.billing.GuicyKillbillTestSuiteNoDB;
 import com.ning.billing.KillbillTestSuite;
 import com.ning.billing.invoice.api.InvoiceMigrationApi;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
@@ -50,10 +51,9 @@ import com.google.inject.Injector;
 
 import static org.testng.Assert.assertNotNull;
 
-public abstract class InvoiceTestSuiteNoDB extends KillbillTestSuite {
+public abstract class InvoiceTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
     private static final Logger log = LoggerFactory.getLogger(InvoiceTestSuiteNoDB.class);
-
 
     @Inject
     protected InternalBus bus;
