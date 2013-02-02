@@ -16,10 +16,6 @@
 
 package com.ning.billing.junction.plumbing.billing;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertNull;
-
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Hashtable;
@@ -33,7 +29,7 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.mockito.Mockito;
-import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
@@ -46,69 +42,53 @@ import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.junction.JunctionTestSuite;
+import com.ning.billing.junction.JunctionTestSuiteNoDB;
 import com.ning.billing.junction.api.Blockable;
-import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.junction.api.Blockable.Type;
-import com.ning.billing.junction.dao.BlockingStateDao;
+import com.ning.billing.junction.api.BlockingState;
+import com.ning.billing.junction.dao.MockBlockingStateDao;
 import com.ning.billing.junction.plumbing.billing.BlockingCalculator.DisabledDuration;
 import com.ning.billing.mock.api.MockBillCycleDay;
-import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.svcapi.junction.BillingEvent;
 import com.ning.billing.util.svcapi.junction.BillingModeType;
-import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
 import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
 
-public class TestBlockingCalculator extends JunctionTestSuite {
+public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
 
     private static final String DISABLED_BUNDLE = "disabled-bundle";
     private static final String CLEAR_BUNDLE = "clear-bundle";
 
-    private BlockingInternalApi blockingApi;
+    private final UUID bundleId1 = UUID.randomUUID();
+    private final UUID bundleId2 = UUID.randomUUID();
+
     private Account account;
     private Subscription subscription1;
     private Subscription subscription2;
     private Subscription subscription3;
     private Subscription subscription4;
-    private final UUID bundleId1 = UUID.randomUUID();
-    private final UUID bundleId2 = UUID.randomUUID();
-    private ClockMock clock;
-    private BlockingCalculator odc;
 
-    @BeforeClass(groups = "fast")
-    public void setUpBeforeClass() throws Exception {
-        clock = new ClockMock();
+    @BeforeMethod(groups = "fast")
+    public void setUpTest() throws Exception {
+        account = Mockito.mock(Account.class);
+        subscription1 = Mockito.mock(Subscription.class);
+        subscription2 = Mockito.mock(Subscription.class);
+        subscription3 = Mockito.mock(Subscription.class);
+        subscription4 = Mockito.mock(Subscription.class);
+        Mockito.when(account.getId()).thenReturn(UUID.randomUUID());
+        Mockito.when(subscription1.getBundleId()).thenReturn(bundleId1);
+        Mockito.when(subscription2.getBundleId()).thenReturn(bundleId1);
+        Mockito.when(subscription3.getBundleId()).thenReturn(bundleId1);
+        Mockito.when(subscription4.getBundleId()).thenReturn(bundleId2);
+        Mockito.when(subscription1.getId()).thenReturn(UUID.randomUUID());
+        Mockito.when(subscription2.getId()).thenReturn(UUID.randomUUID());
+        Mockito.when(subscription3.getId()).thenReturn(UUID.randomUUID());
+        Mockito.when(subscription4.getId()).thenReturn(UUID.randomUUID());
 
-        final Injector i = Guice.createInjector(new AbstractModule() {
-            @Override
-            protected void configure() {
-                blockingApi = Mockito.mock(BlockingInternalApi.class);
-                account = Mockito.mock(Account.class);
-                subscription1 = Mockito.mock(Subscription.class);
-                subscription2 = Mockito.mock(Subscription.class);
-                subscription3 = Mockito.mock(Subscription.class);
-                subscription4 = Mockito.mock(Subscription.class);
-                Mockito.when(account.getId()).thenReturn(UUID.randomUUID());
-                Mockito.when(subscription1.getBundleId()).thenReturn(bundleId1);
-                Mockito.when(subscription2.getBundleId()).thenReturn(bundleId1);
-                Mockito.when(subscription3.getBundleId()).thenReturn(bundleId1);
-                Mockito.when(subscription4.getBundleId()).thenReturn(bundleId2);
-                Mockito.when(subscription1.getId()).thenReturn(UUID.randomUUID());
-                Mockito.when(subscription2.getId()).thenReturn(UUID.randomUUID());
-                Mockito.when(subscription3.getId()).thenReturn(UUID.randomUUID());
-                Mockito.when(subscription4.getId()).thenReturn(UUID.randomUUID());
-
-                bind(BlockingStateDao.class).toInstance(Mockito.mock(BlockingStateDao.class));
-                bind(BlockingInternalApi.class).toInstance(blockingApi);
-            }
-
-        });
-        odc = i.getInstance(BlockingCalculator.class);
-
+        ((MockBlockingStateDao) blockingStateDao).clear();
     }
 
     // S1-S2-S3 subscriptions in B1
@@ -139,25 +119,25 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         blockingStates.add(new DefaultBlockingState(UUID.randomUUID(), bundleId1, DISABLED_BUNDLE, Blockable.Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now, null));
         blockingStates.add(new DefaultBlockingState(UUID.randomUUID(), bundleId1, CLEAR_BUNDLE, Blockable.Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now.plusDays(2), null));
 
-        Mockito.when(blockingApi.getBlockingHistory(bundleId1, internalCallContext)).thenReturn(blockingStates);
+        setBlockingStates(bundleId1, blockingStates);
 
-        odc.insertBlockingEvents(billingEvents, internalCallContext);
+        blockingCalculator.insertBlockingEvents(billingEvents, internalCallContext);
 
         assertEquals(billingEvents.size(), 7);
 
-        final SortedSet<BillingEvent> s1Events = odc.filter(billingEvents, subscription1);
+        final SortedSet<BillingEvent> s1Events = blockingCalculator.filter(billingEvents, subscription1);
         final Iterator<BillingEvent> it1 = s1Events.iterator();
         assertEquals(it1.next(), A);
         assertEquals(it1.next().getTransitionType(), SubscriptionTransitionType.START_BILLING_DISABLED);
         assertEquals(it1.next().getTransitionType(), SubscriptionTransitionType.END_BILLING_DISABLED);
 
-        final SortedSet<BillingEvent> s2Events = odc.filter(billingEvents, subscription2);
+        final SortedSet<BillingEvent> s2Events = blockingCalculator.filter(billingEvents, subscription2);
         final Iterator<BillingEvent> it2 = s2Events.iterator();
         assertEquals(it2.next(), B);
         assertEquals(it2.next().getTransitionType(), SubscriptionTransitionType.START_BILLING_DISABLED);
         assertEquals(it2.next().getTransitionType(), SubscriptionTransitionType.END_BILLING_DISABLED);
 
-        final SortedSet<BillingEvent> s3Events = odc.filter(billingEvents, subscription3);
+        final SortedSet<BillingEvent> s3Events = blockingCalculator.filter(billingEvents, subscription3);
         final Iterator<BillingEvent> it3 = s3Events.iterator();
         assertEquals(it3.next(), D);
     }
@@ -173,7 +153,7 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         disabledDuration.add(new DisabledDuration(now, null));
         billingEvents.add(createRealEvent(now.minusDays(1), subscription1));
 
-        final SortedSet<BillingEvent> results = odc.eventsToRemove(disabledDuration, billingEvents, subscription1);
+        final SortedSet<BillingEvent> results = blockingCalculator.eventsToRemove(disabledDuration, billingEvents, subscription1);
 
         assertEquals(results.size(), 0);
     }
@@ -192,7 +172,7 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         billingEvents.add(e1);
         billingEvents.add(e2);
 
-        final SortedSet<BillingEvent> results = odc.eventsToRemove(disabledDuration, billingEvents, subscription1);
+        final SortedSet<BillingEvent> results = blockingCalculator.eventsToRemove(disabledDuration, billingEvents, subscription1);
 
         assertEquals(results.size(), 1);
         assertEquals(results.first(), e2);
@@ -210,7 +190,7 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         final BillingEvent e1 = createRealEvent(now.plusDays(1), subscription1);
         billingEvents.add(e1);
 
-        final SortedSet<BillingEvent> results = odc.eventsToRemove(disabledDuration, billingEvents, subscription1);
+        final SortedSet<BillingEvent> results = blockingCalculator.eventsToRemove(disabledDuration, billingEvents, subscription1);
 
         assertEquals(results.size(), 1);
         assertEquals(results.first(), e1);
@@ -228,7 +208,7 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         final BillingEvent e1 = createRealEvent(now.minusDays(1), subscription1);
         billingEvents.add(e1);
 
-        final SortedSet<BillingEvent> results = odc.eventsToRemove(disabledDuration, billingEvents, subscription1);
+        final SortedSet<BillingEvent> results = blockingCalculator.eventsToRemove(disabledDuration, billingEvents, subscription1);
 
         assertEquals(results.size(), 0);
     }
@@ -247,7 +227,7 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         billingEvents.add(e1);
         billingEvents.add(e2);
 
-        final SortedSet<BillingEvent> results = odc.eventsToRemove(disabledDuration, billingEvents, subscription1);
+        final SortedSet<BillingEvent> results = blockingCalculator.eventsToRemove(disabledDuration, billingEvents, subscription1);
 
         assertEquals(results.size(), 1);
         assertEquals(results.first(), e2);
@@ -269,7 +249,7 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         billingEvents.add(e2);
         billingEvents.add(e3);
 
-        final SortedSet<BillingEvent> results = odc.eventsToRemove(disabledDuration, billingEvents, subscription1);
+        final SortedSet<BillingEvent> results = blockingCalculator.eventsToRemove(disabledDuration, billingEvents, subscription1);
 
         assertEquals(results.size(), 1);
         assertEquals(results.first(), e2);
@@ -287,7 +267,7 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         final BillingEvent e2 = createRealEvent(now.plusDays(1), subscription1);
         billingEvents.add(e2);
 
-        final SortedSet<BillingEvent> results = odc.eventsToRemove(disabledDuration, billingEvents, subscription1);
+        final SortedSet<BillingEvent> results = blockingCalculator.eventsToRemove(disabledDuration, billingEvents, subscription1);
 
         assertEquals(results.size(), 1);
         assertEquals(results.first(), e2);
@@ -308,7 +288,7 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         billingEvents.add(e2);
         billingEvents.add(e3);
 
-        final SortedSet<BillingEvent> results = odc.eventsToRemove(disabledDuration, billingEvents, subscription1);
+        final SortedSet<BillingEvent> results = blockingCalculator.eventsToRemove(disabledDuration, billingEvents, subscription1);
 
         assertEquals(results.size(), 1);
         assertEquals(results.first(), e2);
@@ -328,7 +308,7 @@ public class TestBlockingCalculator extends JunctionTestSuite {
 
         billingEvents.add(e3);
 
-        final SortedSet<BillingEvent> results = odc.eventsToRemove(disabledDuration, billingEvents, subscription1);
+        final SortedSet<BillingEvent> results = blockingCalculator.eventsToRemove(disabledDuration, billingEvents, subscription1);
 
         assertEquals(results.size(), 0);
     }
@@ -344,7 +324,7 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         disabledDuration.add(new DisabledDuration(now, null));
         billingEvents.add(createRealEvent(now.minusDays(1), subscription1));
 
-        final SortedSet<BillingEvent> results = odc.createNewEvents(disabledDuration, billingEvents, account, subscription1);
+        final SortedSet<BillingEvent> results = blockingCalculator.createNewEvents(disabledDuration, billingEvents, account, subscription1);
 
         assertEquals(results.size(), 1);
         assertEquals(results.first().getEffectiveDate(), now);
@@ -366,7 +346,7 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         billingEvents.add(createRealEvent(now.minusDays(1), subscription1));
         billingEvents.add(createRealEvent(now.plusDays(1), subscription1));
 
-        final SortedSet<BillingEvent> results = odc.createNewEvents(disabledDuration, billingEvents, account, subscription1);
+        final SortedSet<BillingEvent> results = blockingCalculator.createNewEvents(disabledDuration, billingEvents, account, subscription1);
 
         assertEquals(results.size(), 1);
         assertEquals(results.first().getEffectiveDate(), now);
@@ -387,7 +367,7 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         disabledDuration.add(new DisabledDuration(now, null));
         billingEvents.add(createRealEvent(now.plusDays(1), subscription1));
 
-        final SortedSet<BillingEvent> results = odc.createNewEvents(disabledDuration, billingEvents, account, subscription1);
+        final SortedSet<BillingEvent> results = blockingCalculator.createNewEvents(disabledDuration, billingEvents, account, subscription1);
 
         assertEquals(results.size(), 0);
     }
@@ -403,7 +383,7 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         disabledDuration.add(new DisabledDuration(now, now.plusDays(2)));
         billingEvents.add(createRealEvent(now.minusDays(1), subscription1));
 
-        final SortedSet<BillingEvent> results = odc.createNewEvents(disabledDuration, billingEvents, account, subscription1);
+        final SortedSet<BillingEvent> results = blockingCalculator.createNewEvents(disabledDuration, billingEvents, account, subscription1);
 
         assertEquals(results.size(), 2);
         assertEquals(results.first().getEffectiveDate(), now);
@@ -428,7 +408,7 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         billingEvents.add(createRealEvent(now.minusDays(1), subscription1));
         billingEvents.add(createRealEvent(now.plusDays(1), subscription1));
 
-        final SortedSet<BillingEvent> results = odc.createNewEvents(disabledDuration, billingEvents, account, subscription1);
+        final SortedSet<BillingEvent> results = blockingCalculator.createNewEvents(disabledDuration, billingEvents, account, subscription1);
 
         assertEquals(results.size(), 2);
         assertEquals(results.first().getEffectiveDate(), now);
@@ -454,7 +434,7 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         billingEvents.add(createRealEvent(now.plusDays(1), subscription1));
         billingEvents.add(createRealEvent(now.plusDays(3), subscription1));
 
-        final SortedSet<BillingEvent> results = odc.createNewEvents(disabledDuration, billingEvents, account, subscription1);
+        final SortedSet<BillingEvent> results = blockingCalculator.createNewEvents(disabledDuration, billingEvents, account, subscription1);
 
         assertEquals(results.size(), 2);
         assertEquals(results.first().getEffectiveDate(), now);
@@ -478,7 +458,7 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         disabledDuration.add(new DisabledDuration(now, now.plusDays(2)));
         billingEvents.add(createRealEvent(now.plusDays(1), subscription1));
 
-        final SortedSet<BillingEvent> results = odc.createNewEvents(disabledDuration, billingEvents, account, subscription1);
+        final SortedSet<BillingEvent> results = blockingCalculator.createNewEvents(disabledDuration, billingEvents, account, subscription1);
 
         assertEquals(results.size(), 1);
         assertEquals(results.last().getEffectiveDate(), now.plusDays(2));
@@ -497,7 +477,7 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         disabledDuration.add(new DisabledDuration(now, now.plusDays(2)));
         billingEvents.add(createRealEvent(now.plusDays(1), subscription1));
 
-        final SortedSet<BillingEvent> results = odc.createNewEvents(disabledDuration, billingEvents, account, subscription1);
+        final SortedSet<BillingEvent> results = blockingCalculator.createNewEvents(disabledDuration, billingEvents, account, subscription1);
 
         assertEquals(results.size(), 1);
         assertEquals(results.last().getEffectiveDate(), now.plusDays(2));
@@ -516,7 +496,7 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         disabledDuration.add(new DisabledDuration(now, now.plusDays(2)));
         billingEvents.add(createRealEvent(now.plusDays(3), subscription1));
 
-        final SortedSet<BillingEvent> results = odc.createNewEvents(disabledDuration, billingEvents, account, subscription1);
+        final SortedSet<BillingEvent> results = blockingCalculator.createNewEvents(disabledDuration, billingEvents, account, subscription1);
 
         assertEquals(results.size(), 0);
     }
@@ -532,10 +512,10 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         events.add(createRealEvent(now.minusDays(5), subscription1));
         events.add(createRealEvent(now.minusDays(1), subscription1));
 
-        final BillingEvent minus11 = odc.precedingBillingEventForSubscription(now.minusDays(11), events, subscription1);
+        final BillingEvent minus11 = blockingCalculator.precedingBillingEventForSubscription(now.minusDays(11), events, subscription1);
         assertNull(minus11);
 
-        final BillingEvent minus5andAHalf = odc.precedingBillingEventForSubscription(now.minusDays(5).minusHours(12), events, subscription1);
+        final BillingEvent minus5andAHalf = blockingCalculator.precedingBillingEventForSubscription(now.minusDays(5).minusHours(12), events, subscription1);
         assertNotNull(minus5andAHalf);
         assertEquals(minus5andAHalf.getEffectiveDate(), now.minusDays(6));
 
@@ -575,9 +555,9 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         events.add(createBillingEvent(subscription1));
         events.add(createBillingEvent(subscription2));
 
-        final SortedSet<BillingEvent> result1 = odc.filter(events, subscription1);
-        final SortedSet<BillingEvent> result2 = odc.filter(events, subscription2);
-        final SortedSet<BillingEvent> result3 = odc.filter(events, subscription3);
+        final SortedSet<BillingEvent> result1 = blockingCalculator.filter(events, subscription1);
+        final SortedSet<BillingEvent> result2 = blockingCalculator.filter(events, subscription2);
+        final SortedSet<BillingEvent> result3 = blockingCalculator.filter(events, subscription3);
 
         assertEquals(result1.size(), 3);
         assertEquals(result1.first().getSubscription(), subscription1);
@@ -592,7 +572,7 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         final DateTime now = clock.getUTCNow();
         final BillingEvent event = new MockBillingEvent();
 
-        final BillingEvent result = odc.createNewDisableEvent(now, event);
+        final BillingEvent result = blockingCalculator.createNewDisableEvent(now, event);
         assertEquals(result.getBillCycleDay(), event.getBillCycleDay());
         assertEquals(result.getEffectiveDate(), now);
         assertEquals(result.getPlanPhase(), event.getPlanPhase());
@@ -613,7 +593,7 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         final DateTime now = clock.getUTCNow();
         final BillingEvent event = new MockBillingEvent();
 
-        final BillingEvent result = odc.createNewReenableEvent(now, event);
+        final BillingEvent result = blockingCalculator.createNewReenableEvent(now, event);
         assertEquals(result.getBillCycleDay(), event.getBillCycleDay());
         assertEquals(result.getEffectiveDate(), now);
         assertEquals(result.getPlanPhase(), event.getPlanPhase());
@@ -645,7 +625,7 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         events.add(createBillingEvent(subscription3));
         events.add(createBillingEvent(subscription4));
 
-        final Hashtable<UUID, List<Subscription>> map = odc.createBundleSubscriptionMap(events);
+        final Hashtable<UUID, List<Subscription>> map = blockingCalculator.createBundleSubscriptionMap(events);
 
         assertNotNull(map);
         assertEquals(map.keySet().size(), 2);
@@ -669,10 +649,10 @@ public class TestBlockingCalculator extends JunctionTestSuite {
 
         //simple events open clear -> disabled
         blockingEvents = new ArrayList<BlockingState>();
-        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(),ovdId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now, null));
-        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(),ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now.plusDays(1), null));
+        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now, null));
+        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now.plusDays(1), null));
 
-        List<DisabledDuration> pairs = odc.createBlockingDurations(blockingEvents);
+        List<DisabledDuration> pairs = blockingCalculator.createBlockingDurations(blockingEvents);
         assertEquals(pairs.size(), 1);
         assertNotNull(pairs.get(0).getStart());
         assertEquals(pairs.get(0).getStart(), now.plusDays(1));
@@ -680,11 +660,11 @@ public class TestBlockingCalculator extends JunctionTestSuite {
 
         //simple events closed clear -> disabled
         blockingEvents = new ArrayList<BlockingState>();
-        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(),ovdId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now, null));
-        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(),ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now.plusDays(1), null));
-        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(),ovdId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now.plusDays(2), null));
+        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now, null));
+        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now.plusDays(1), null));
+        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now.plusDays(2), null));
 
-        pairs = odc.createBlockingDurations(blockingEvents);
+        pairs = blockingCalculator.createBlockingDurations(blockingEvents);
         assertEquals(pairs.size(), 1);
         assertNotNull(pairs.get(0).getStart());
         assertEquals(pairs.get(0).getStart(), now.plusDays(1));
@@ -693,11 +673,11 @@ public class TestBlockingCalculator extends JunctionTestSuite {
 
         //simple BUNDLE events closed clear -> disabled
         blockingEvents = new ArrayList<BlockingState>();
-        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(),ovdId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now, null));
-        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(),ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now.plusDays(1), null));
-        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(),ovdId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now.plusDays(2), null));
+        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now, null));
+        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now.plusDays(1), null));
+        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now.plusDays(2), null));
 
-        pairs = odc.createBlockingDurations(blockingEvents);
+        pairs = blockingCalculator.createBlockingDurations(blockingEvents);
         assertEquals(pairs.size(), 1);
         assertNotNull(pairs.get(0).getStart());
         assertEquals(pairs.get(0).getStart(), now.plusDays(1));
@@ -706,12 +686,12 @@ public class TestBlockingCalculator extends JunctionTestSuite {
 
         //two or more disableds in a row
         blockingEvents = new ArrayList<BlockingState>();
-        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(),ovdId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now, null));
-        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(),ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now.plusDays(1), null));
-        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(),ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now.plusDays(2), null));
-        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(),ovdId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now.plusDays(3), null));
+        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now, null));
+        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now.plusDays(1), null));
+        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now.plusDays(2), null));
+        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now.plusDays(3), null));
 
-        pairs = odc.createBlockingDurations(blockingEvents);
+        pairs = blockingCalculator.createBlockingDurations(blockingEvents);
         assertEquals(pairs.size(), 1);
         assertNotNull(pairs.get(0).getStart());
         assertEquals(pairs.get(0).getStart(), now.plusDays(1));
@@ -719,13 +699,13 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         assertEquals(pairs.get(0).getEnd(), now.plusDays(3));
 
         blockingEvents = new ArrayList<BlockingState>();
-        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(),ovdId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now, null));
-        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(),ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now.plusDays(1), null));
-        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(),ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now.plusDays(2), null));
-        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(),ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now.plusDays(3), null));
-        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(),ovdId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now.plusDays(4), null));
+        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now, null));
+        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now.plusDays(1), null));
+        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now.plusDays(2), null));
+        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now.plusDays(3), null));
+        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now.plusDays(4), null));
 
-        pairs = odc.createBlockingDurations(blockingEvents);
+        pairs = blockingCalculator.createBlockingDurations(blockingEvents);
         assertEquals(pairs.size(), 1);
         assertNotNull(pairs.get(0).getStart());
         assertEquals(pairs.get(0).getStart(), now.plusDays(1));
@@ -746,14 +726,14 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         billingEvents.add(upgrade);
 
         final List<BlockingState> blockingEvents = new ArrayList<BlockingState>();
-        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(),ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, false, false, new LocalDate(2012, 7, 5).toDateTimeAtStartOfDay(DateTimeZone.UTC), null));
-        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(),ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, new LocalDate(2012, 7, 15).toDateTimeAtStartOfDay(DateTimeZone.UTC), null));
-        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(),ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, new LocalDate(2012, 7, 25).toDateTimeAtStartOfDay(DateTimeZone.UTC), null));
-        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(),ovdId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, new LocalDate(2012, 7, 25).toDateTimeAtStartOfDay(DateTimeZone.UTC), null));
+        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, false, false, new LocalDate(2012, 7, 5).toDateTimeAtStartOfDay(DateTimeZone.UTC), null));
+        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, new LocalDate(2012, 7, 15).toDateTimeAtStartOfDay(DateTimeZone.UTC), null));
+        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, new LocalDate(2012, 7, 25).toDateTimeAtStartOfDay(DateTimeZone.UTC), null));
+        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, new LocalDate(2012, 7, 25).toDateTimeAtStartOfDay(DateTimeZone.UTC), null));
 
-        Mockito.when(blockingApi.getBlockingHistory(bundleId1, internalCallContext)).thenReturn(blockingEvents);
+        setBlockingStates(bundleId1, blockingEvents);
 
-        odc.insertBlockingEvents(billingEvents, internalCallContext);
+        blockingCalculator.insertBlockingEvents(billingEvents, internalCallContext);
 
         assertEquals(billingEvents.size(), 5);
         final List<BillingEvent> events = new ArrayList<BillingEvent>(billingEvents);
@@ -767,5 +747,9 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         assertEquals(events.get(3).getTransitionType(), SubscriptionTransitionType.END_BILLING_DISABLED);
         assertEquals(events.get(4).getEffectiveDate(), new LocalDate(2012, 7, 25).toDateTimeAtStartOfDay(DateTimeZone.UTC));
         assertEquals(events.get(4).getTransitionType(), SubscriptionTransitionType.CHANGE);
+    }
+
+    private void setBlockingStates(final UUID blockedId, final List<BlockingState> blockingStates) {
+        ((MockBlockingStateDao) blockingStateDao).setBlockingStates(blockedId, blockingStates);
     }
 }

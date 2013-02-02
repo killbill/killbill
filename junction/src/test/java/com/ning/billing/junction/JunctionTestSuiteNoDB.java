@@ -20,12 +20,13 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
-import com.ning.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
+import com.ning.billing.GuicyKillbillTestSuiteNoDB;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.junction.block.BlockingChecker;
 import com.ning.billing.junction.dao.BlockingStateDao;
-import com.ning.billing.junction.glue.TestJunctionModuleWithEmbeddedDB;
+import com.ning.billing.junction.glue.TestJunctionModuleNoDB;
+import com.ning.billing.junction.plumbing.billing.BillCycleDayCalculator;
 import com.ning.billing.junction.plumbing.billing.BlockingCalculator;
 import com.ning.billing.util.glue.RealImplementation;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
@@ -40,10 +41,12 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
-public abstract class JunctionTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWithEmbeddedDB {
+public abstract class JunctionTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
     @Inject
     protected AccountInternalApi accountInternalApi;
+    @Inject
+    protected BillCycleDayCalculator billCycleDayCalculator;
     @Inject
     protected BillingInternalApi billingInternalApi;
     @Inject
@@ -70,7 +73,7 @@ public abstract class JunctionTestSuiteWithEmbeddedDB extends GuicyKillbillTestS
 
     @BeforeClass(groups = "fast")
     protected void setup() throws Exception {
-        final Injector injector = Guice.createInjector(new TestJunctionModuleWithEmbeddedDB());
+        final Injector injector = Guice.createInjector(new TestJunctionModuleNoDB());
         injector.injectMembers(this);
     }
 

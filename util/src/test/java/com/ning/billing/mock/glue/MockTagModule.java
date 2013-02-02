@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -14,9 +14,19 @@
  * under the License.
  */
 
-package com.ning.billing.junction;
+package com.ning.billing.mock.glue;
 
-import com.ning.billing.KillbillTestSuite;
+import com.ning.billing.util.glue.TagStoreModule;
+import com.ning.billing.util.tag.dao.MockTagDao;
+import com.ning.billing.util.tag.dao.MockTagDefinitionDao;
+import com.ning.billing.util.tag.dao.TagDao;
+import com.ning.billing.util.tag.dao.TagDefinitionDao;
 
-public abstract class JunctionTestSuite extends KillbillTestSuite {
+public class MockTagModule extends TagStoreModule {
+
+    @Override
+    protected void installDaos() {
+        bind(TagDefinitionDao.class).to(MockTagDefinitionDao.class).asEagerSingleton();
+        bind(TagDao.class).to(MockTagDao.class).asEagerSingleton();
+    }
 }

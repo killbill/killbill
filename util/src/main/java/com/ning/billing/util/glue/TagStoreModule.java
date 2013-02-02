@@ -28,15 +28,24 @@ import com.ning.billing.util.tag.dao.TagDefinitionDao;
 import com.google.inject.AbstractModule;
 
 public class TagStoreModule extends AbstractModule {
-    protected void installDaos() {
-        bind(TagDefinitionDao.class).to(DefaultTagDefinitionDao.class).asEagerSingleton();
-        bind(TagDao.class).to(DefaultTagDao.class).asEagerSingleton();
-    }
 
     @Override
     protected void configure() {
+        installUserApi();
+        installInternalApi();
         installDaos();
+    }
+
+    protected void installUserApi() {
         bind(TagUserApi.class).to(DefaultTagUserApi.class).asEagerSingleton();
+    }
+
+    protected void installInternalApi() {
         bind(TagInternalApi.class).to(DefaultTagInternalApi.class).asEagerSingleton();
+    }
+
+    protected void installDaos() {
+        bind(TagDefinitionDao.class).to(DefaultTagDefinitionDao.class).asEagerSingleton();
+        bind(TagDao.class).to(DefaultTagDao.class).asEagerSingleton();
     }
 }

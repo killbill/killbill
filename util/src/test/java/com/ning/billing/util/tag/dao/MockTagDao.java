@@ -77,4 +77,8 @@ public class MockTagDao implements TagDao {
             }
         }));
     }
+
+    public void clear() {
+        tagStore.clear();
+    }
 }

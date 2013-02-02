@@ -23,39 +23,18 @@ import java.util.UUID;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.junction.JunctionTestSuiteWithEmbeddedDB;
 import com.ning.billing.junction.api.Blockable.Type;
-import com.ning.billing.junction.api.svcs.DefaultInternalBlockingApi;
 import com.ning.billing.junction.api.BlockingState;
-import com.ning.billing.junction.dao.BlockingStateDao;
-import com.ning.billing.junction.dao.DefaultBlockingStateDao;
-import com.ning.billing.util.cache.CacheControllerDispatcher;
-import com.ning.billing.util.clock.ClockMock;
-import com.ning.billing.util.dao.DefaultNonEntityDao;
 import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 
 public class TestDefaultBlockingApi extends JunctionTestSuiteWithEmbeddedDB {
 
-    private final ClockMock clock = new ClockMock();
-    private final CacheControllerDispatcher controllerDispatcher = new CacheControllerDispatcher();
-
-
-    private DefaultInternalBlockingApi blockingApi;
-
-
-    @BeforeMethod(groups = "slow")
-    public void setUp() throws Exception {
-        final BlockingStateDao blockingStateDao = new DefaultBlockingStateDao(getDBI(), clock, controllerDispatcher, new DefaultNonEntityDao(getDBI()));
-        blockingApi = new DefaultInternalBlockingApi(blockingStateDao, clock);
-    }
-
-    @Test(groups = "slow", enabled=false)
+    @Test(groups = "slow")
     public void testSetBlockingStateOnBundle() throws Exception {
         final UUID bundleId = UUID.randomUUID();
-        final Long accountRecordId = 123049714L;
         getDBI().withHandle(new HandleCallback<Void>() {
             @Override
             public Void withHandle(final Handle handle) throws Exception {
@@ -71,26 +50,26 @@ public class TestDefaultBlockingApi extends JunctionTestSuiteWithEmbeddedDB {
                                "    PRIMARY KEY(record_id)\n" +
                                ") ENGINE=innodb;");
                 handle.execute("insert into bundles (id, external_key, account_id, account_record_id) values (?, 'foo', ?, ?)",
-                               bundleId.toString(), UUID.randomUUID().toString(), accountRecordId);
+                               bundleId.toString(), UUID.randomUUID().toString(), internalCallContext.getAccountRecordId());
                 return null;
             }
         });
 
         final BlockingState blockingState = new DefaultBlockingState(UUID.randomUUID(), bundleId, "BLOCKED", Type.SUBSCRIPTION_BUNDLE, "myService", true, true, true, internalCallContext.getCreatedDate(), null);
-        blockingApi.setBlockingState(blockingState, internalCallContext);
+        blockingInternalApi.setBlockingState(blockingState, internalCallContext);
 
         // Verify the blocking state was applied
-        final BlockingState resultState = blockingApi.getBlockingStateFor(bundleId, internalCallContext);
+        final BlockingState resultState = blockingInternalApi.getBlockingStateFor(bundleId, internalCallContext);
 
         Assert.assertEquals(resultState.getStateName(), blockingState.getStateName());
         // Verify the account_record_id was populated
         getDBI().withHandle(new HandleCallback<Void>() {
             @Override
             public Void withHandle(final Handle handle) throws Exception {
-                final List<Map<String, Object>> values = handle.select("select account_record_id from blocking_states where id = ?", bundleId.toString());
+                final List<Map<String, Object>> values = handle.select("select account_record_id from blocking_states where blockable_id = ?", bundleId.toString());
                 Assert.assertEquals(values.size(), 1);
                 Assert.assertEquals(values.get(0).keySet().size(), 1);
-                Assert.assertEquals(values.get(0).get("account_record_id"), accountRecordId);
+                Assert.assertEquals(values.get(0).get("account_record_id"), internalCallContext.getAccountRecordId());
                 return null;
             }
         });

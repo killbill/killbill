@@ -21,32 +21,18 @@ import java.util.UUID;
 
 import org.mockito.Mockito;
 import org.testng.Assert;
-import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.JunctionTestSuiteWithEmbeddedDB;
-import com.ning.billing.junction.MockModule;
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.BlockingState;
-import com.ning.billing.mock.glue.MockEntitlementModule;
-import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 
-import com.google.inject.Inject;
-
-@Guice(modules = {MockModule.class, MockEntitlementModule.class})
 public class TestBlockingDao extends JunctionTestSuiteWithEmbeddedDB {
-
-    @Inject
-    private BlockingStateDao dao;
-
 
     @Test(groups = "slow")
     public void testDao() {
-        final ClockMock clock = new ClockMock();
         final UUID uuid = UUID.randomUUID();
         final String overdueStateName = "WayPassedItMan";
         final String service = "TEST";
@@ -56,22 +42,21 @@ public class TestBlockingDao extends JunctionTestSuiteWithEmbeddedDB {
         final boolean blockBilling = false;
 
         final BlockingState state1 = new DefaultBlockingState(uuid, overdueStateName, Blockable.Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement, blockBilling);
-        dao.setBlockingState(state1, clock, internalCallContext);
+        blockingStateDao.setBlockingState(state1, clock, internalCallContext);
         clock.setDeltaFromReality(1000 * 3600 * 24);
 
         final String overdueStateName2 = "NoReallyThisCantGoOn";
         final BlockingState state2 = new DefaultBlockingState(uuid, overdueStateName2, Blockable.Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement, blockBilling);
-        dao.setBlockingState(state2, clock, internalCallContext);
+        blockingStateDao.setBlockingState(state2, clock, internalCallContext);
 
         final SubscriptionBundle bundle = Mockito.mock(SubscriptionBundle.class);
         Mockito.when(bundle.getId()).thenReturn(uuid);
 
-        Assert.assertEquals(dao.getBlockingStateFor(uuid, internalCallContext).getStateName(), state2.getStateName());
+        Assert.assertEquals(blockingStateDao.getBlockingStateFor(uuid, internalCallContext).getStateName(), state2.getStateName());
     }
 
     @Test(groups = "slow")
     public void testDaoHistory() throws Exception {
-        final ClockMock clock = new ClockMock();
         final UUID uuid = UUID.randomUUID();
         final String overdueStateName = "WayPassedItMan";
         final String service = "TEST";
@@ -81,18 +66,17 @@ public class TestBlockingDao extends JunctionTestSuiteWithEmbeddedDB {
         final boolean blockBilling = false;
 
         final BlockingState state1 = new DefaultBlockingState(uuid, overdueStateName, Blockable.Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement, blockBilling);
-        dao.setBlockingState(state1, clock, internalCallContext);
+        blockingStateDao.setBlockingState(state1, clock, internalCallContext);
         clock.setDeltaFromReality(1000 * 3600 * 24);
 
         final String overdueStateName2 = "NoReallyThisCantGoOn";
         final BlockingState state2 = new DefaultBlockingState(uuid, overdueStateName2, Blockable.Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement, blockBilling);
-        dao.setBlockingState(state2, clock, internalCallContext);
+        blockingStateDao.setBlockingState(state2, clock, internalCallContext);
 
         final SubscriptionBundle bundle = Mockito.mock(SubscriptionBundle.class);
         Mockito.when(bundle.getId()).thenReturn(uuid);
 
-
-        final List<BlockingState> history2 = dao.getBlockingHistoryFor(bundle.getId(), internalCallContext);
+        final List<BlockingState> history2 = blockingStateDao.getBlockingHistoryFor(bundle.getId(), internalCallContext);
         Assert.assertEquals(history2.size(), 2);
         Assert.assertEquals(history2.get(0).getStateName(), overdueStateName);
         Assert.assertEquals(history2.get(1).getStateName(), overdueStateName2);

@@ -42,13 +42,13 @@ import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.junction.JunctionTestSuite;
+import com.ning.billing.junction.JunctionTestSuiteNoDB;
 import com.ning.billing.mock.MockAccountBuilder;
 import com.ning.billing.mock.api.MockBillCycleDay;
 import com.ning.billing.util.svcapi.junction.BillingEvent;
 import com.ning.billing.util.svcapi.junction.BillingModeType;
 
-public class TestDefaultBillingEvent extends JunctionTestSuite {
+public class TestDefaultBillingEvent extends JunctionTestSuiteNoDB {
 
     private static final UUID ID_ZERO = new UUID(0L, 0L);
     private static final UUID ID_ONE = new UUID(0L, 1L);
