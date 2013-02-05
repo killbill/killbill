@@ -44,8 +44,8 @@ import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcapi.payment.PaymentInternalApi;
 import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
+import com.ning.billing.util.svcapi.payment.PaymentInternalApi;
 
 public class BusinessInvoicePaymentDao {
 
@@ -95,12 +95,11 @@ public class BusinessInvoicePaymentDao {
             return;
         }
 
-        final PaymentMethod paymentMethod;
+        PaymentMethod paymentMethod = null;
         try {
             paymentMethod = paymentApi.getPaymentMethod(account, payment.getPaymentMethodId(), true, context);
         } catch (PaymentApiException e) {
-            log.warn("Ignoring payment {}: payment method {} does not exist", paymentId, payment.getPaymentMethodId());
-            return;
+            log.info("For payment {}: payment method {} does not exist", paymentId, payment.getPaymentMethodId());
         }
 
         Invoice invoice = null;
@@ -119,12 +118,22 @@ public class BusinessInvoicePaymentDao {
     }
 
     private void createPayment(final Account account, @Nullable final Invoice invoice, @Nullable final InvoicePayment invoicePayment, final Payment payment,
-                               final PaymentMethod paymentMethod, final String extFirstPaymentRefId, final String extSecondPaymentRefId,
+                               @Nullable final PaymentMethod paymentMethod, final String extFirstPaymentRefId, final String extSecondPaymentRefId,
                                final String message, final InternalCallContext context) {
-        final PaymentMethodPlugin pluginDetail = paymentMethod.getPluginDetail();
-        final String cardCountry = PaymentMethodUtils.getCardCountry(pluginDetail);
-        final String cardType = PaymentMethodUtils.getCardType(pluginDetail);
-        final String paymentMethodString = PaymentMethodUtils.getPaymentMethodType(pluginDetail);
+        // paymentMethod may be null if the payment method has been deleted
+        final String cardCountry;
+        final String cardType;
+        final String paymentMethodString;
+        if (paymentMethod != null) {
+            final PaymentMethodPlugin pluginDetail = paymentMethod.getPluginDetail();
+            cardCountry = PaymentMethodUtils.getCardCountry(pluginDetail);
+            cardType = PaymentMethodUtils.getCardType(pluginDetail);
+            paymentMethodString = PaymentMethodUtils.getPaymentMethodType(pluginDetail);
+        } else {
+            cardCountry = null;
+            cardType = null;
+            paymentMethodString = null;
+        }
 
         // invoicePayment may be null on payment failures
         final String invoicePaymentType;
