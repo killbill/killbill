@@ -167,7 +167,7 @@ public class BusinessInvoicePaymentDao {
                 payment.getId(),
                 paymentMethodString,
                 "Electronic",
-                paymentMethod.getPluginName(),
+                paymentMethod == null ? null : paymentMethod.getPluginName(),
                 payment.getPaymentStatus().toString(),
                 payment.getAmount(),
                 updatedDate,

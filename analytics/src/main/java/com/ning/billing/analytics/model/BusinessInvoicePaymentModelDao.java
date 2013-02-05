@@ -52,7 +52,7 @@ public class BusinessInvoicePaymentModelDao extends EntityBase {
                                           final String cardCountry, final String cardType, final DateTime createdDate,
                                           final Currency currency, final DateTime effectiveDate, final UUID invoiceId,
                                           final String paymentError, final UUID paymentId, final String paymentMethod,
-                                          final String paymentType, final String pluginName, final String processingStatus,
+                                          final String paymentType, @Nullable final String pluginName, final String processingStatus,
                                           final BigDecimal requestedAmount, final DateTime updatedDate, @Nullable final String invoicePaymentType,
                                           @Nullable final UUID linkedInvoicePaymentId) {
         super(paymentId, createdDate, updatedDate);
