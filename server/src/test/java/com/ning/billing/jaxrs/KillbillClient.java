@@ -78,6 +78,7 @@ import com.google.common.collect.ImmutableMap;
 
 import static com.ning.billing.jaxrs.resources.JaxrsResource.ACCOUNTS;
 import static com.ning.billing.jaxrs.resources.JaxrsResource.BUNDLES;
+import static com.ning.billing.jaxrs.resources.JaxrsResource.QUERY_DELETE_DEFAULT_PM_WITH_AUTO_PAY_OFF;
 import static com.ning.billing.jaxrs.resources.JaxrsResource.QUERY_PAYMENT_METHOD_PLUGIN_INFO;
 import static com.ning.billing.jaxrs.resources.JaxrsResource.SUBSCRIPTIONS;
 import static org.testng.Assert.assertEquals;
@@ -578,6 +579,13 @@ public abstract class KillbillClient extends ServerTestSuiteWithEmbeddedDB {
         assertNotNull(paymentMethodJson);
 
         return paymentMethodJson;
+    }
+
+    protected void deletePaymentMethod(final String paymentMethodId, final Boolean deleteDefault) throws IOException {
+        final String paymentMethodURI = JaxrsResource.PAYMENT_METHODS_PATH + "/" + paymentMethodId;
+
+        final Response response = doDelete(paymentMethodURI, ImmutableMap.<String, String>of(QUERY_DELETE_DEFAULT_PM_WITH_AUTO_PAY_OFF, deleteDefault.toString()), DEFAULT_HTTP_TIMEOUT_SEC);
+        assertEquals(response.getStatusCode(), javax.ws.rs.core.Response.Status.OK.getStatusCode());
     }
 
     protected List<PaymentJsonSimple> getPaymentsForAccount(final String accountId) throws IOException {
