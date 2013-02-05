@@ -39,6 +39,7 @@ import com.ning.billing.beatrix.util.AuditChecker;
 import com.ning.billing.beatrix.util.EntitlementChecker;
 import com.ning.billing.beatrix.util.InvoiceChecker;
 import com.ning.billing.beatrix.util.PaymentChecker;
+import com.ning.billing.beatrix.util.RefundChecker;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.dbi.DBIProvider;
@@ -134,6 +135,7 @@ public class BeatrixIntegrationModule extends AbstractModule {
         bind(EntitlementChecker.class).asEagerSingleton();
         bind(InvoiceChecker.class).asEagerSingleton();
         bind(PaymentChecker.class).asEagerSingleton();
+        bind(RefundChecker.class).asEagerSingleton();
         bind(AuditChecker.class).asEagerSingleton();
 
         installPublicBus();

@@ -94,7 +94,7 @@ public class InvoiceChecker {
             boolean found = false;
             for (final InvoiceItem in : actual) {
                 // Match first on type and start date
-                if (in.getInvoiceItemType() != cur.getType() || (in.getStartDate().compareTo(cur.getStartDate()) != 0)) {
+                if (in.getInvoiceItemType() != cur.getType() || (cur.shouldCheckDates() && in.getStartDate().compareTo(cur.getStartDate()) != 0)) {
                     continue;
                 }
                 if (in.getAmount().compareTo(cur.getAmount()) != 0) {
@@ -103,7 +103,8 @@ public class InvoiceChecker {
                     continue;
                 }
 
-                if ((cur.getEndDate() == null && in.getEndDate() == null) ||
+                if (!cur.shouldCheckDates() ||
+                    (cur.getEndDate() == null && in.getEndDate() == null) ||
                     (cur.getEndDate() != null && in.getEndDate() != null && cur.getEndDate().compareTo(in.getEndDate()) == 0)) {
                     found = true;
                     break;
@@ -143,17 +144,32 @@ public class InvoiceChecker {
 
     public static class ExpectedInvoiceItemCheck {
 
+        private final boolean checkDates;
         private final LocalDate startDate;
         private final LocalDate endDate;
         private final InvoiceItemType type;
         private final BigDecimal Amount;
 
+
+        public ExpectedInvoiceItemCheck(final InvoiceItemType type, final BigDecimal amount) {
+            this.checkDates = false;
+            this.type = type;
+            this.startDate = null;
+            this.endDate = null;
+            Amount = amount;
+        }
+
         public ExpectedInvoiceItemCheck(final LocalDate startDate, final LocalDate endDate,
                                         final InvoiceItemType type, final BigDecimal amount) {
+            this.checkDates = true;
             this.startDate = startDate;
             this.endDate = endDate;
             this.type = type;
             Amount = amount;
+        }
+
+        public boolean shouldCheckDates() {
+            return checkDates;
         }
 
         public LocalDate getStartDate() {

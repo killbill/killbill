@@ -18,6 +18,7 @@ package com.ning.billing.beatrix.integration;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -49,6 +50,7 @@ import com.ning.billing.beatrix.util.AccountChecker;
 import com.ning.billing.beatrix.util.EntitlementChecker;
 import com.ning.billing.beatrix.util.InvoiceChecker;
 import com.ning.billing.beatrix.util.PaymentChecker;
+import com.ning.billing.beatrix.util.RefundChecker;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
@@ -185,6 +187,9 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
     @Inject
     protected ExternalBus externalBus;
+
+    @Inject
+    protected RefundChecker refundChecker;
 
     @Inject
     protected EntitlementChecker entitlementChecker;
@@ -406,6 +411,34 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             public Void apply(@Nullable final Void input) {
                 try {
                     paymentApi.createRefund(account, payment.getId(), payment.getPaidAmount(), callContext);
+                } catch (PaymentApiException e) {
+                    fail(e.toString());
+                }
+                return null;
+            }
+        }, events);
+    }
+
+    protected void refundPaymentWithAdjustmenttAndCheckForCompletion(final Account account, final Payment payment, final NextEvent... events) {
+        doCallAndCheckForCompletion(new Function<Void, Void>() {
+            @Override
+            public Void apply(@Nullable final Void input) {
+                try {
+                    paymentApi.createRefundWithAdjustment(account, payment.getId(), payment.getPaidAmount(), callContext);
+                } catch (PaymentApiException e) {
+                    fail(e.toString());
+                }
+                return null;
+            }
+        }, events);
+    }
+
+    protected void refundPaymentWithInvoiceItemAdjAndCheckForCompletion(final Account account, final Payment payment, final Set<UUID> invoiceItems, final NextEvent... events) {
+        doCallAndCheckForCompletion(new Function<Void, Void>() {
+            @Override
+            public Void apply(@Nullable final Void input) {
+                try {
+                    paymentApi.createRefundWithItemsAdjustments(account, payment.getId(), invoiceItems, callContext);
                 } catch (PaymentApiException e) {
                     fail(e.toString());
                 }

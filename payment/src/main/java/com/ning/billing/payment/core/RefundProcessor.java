@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ning.billing.ErrorCode;
+import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.invoice.api.InvoiceApiException;
@@ -170,7 +171,7 @@ public class RefundProcessor extends ProcessorBase {
 
                     paymentDao.updateRefundStatus(refundInfo.getId(), RefundStatus.COMPLETED, context);
 
-                    return new DefaultRefund(refundInfo.getId(),refundInfo.getCreatedDate(), refundInfo.getUpdatedDate(),
+                    return new DefaultRefund(refundInfo.getId(), refundInfo.getCreatedDate(), refundInfo.getUpdatedDate(),
                                              paymentId, refundInfo.getAmount(), account.getCurrency(),
                                              isAdjusted, refundInfo.getCreatedDate());
                 } catch (PaymentPluginApiException e) {
@@ -199,7 +200,7 @@ public class RefundProcessor extends ProcessorBase {
             BigDecimal amountFromItems = BigDecimal.ZERO;
             for (final UUID itemId : invoiceItemIdsWithAmounts.keySet()) {
                 amountFromItems = amountFromItems.add(Objects.firstNonNull(invoiceItemIdsWithAmounts.get(itemId),
-                        getAmountFromItem(items, itemId)));
+                                                                           getAmountFromItem(items, itemId)));
             }
 
             // Sanity check: if some items were specified, then the sum should be equal to specified refund amount, if specified
@@ -295,7 +296,11 @@ public class RefundProcessor extends ProcessorBase {
         }
 
         try {
-            final InternalCallContext context = internalCallContextFactory.createInternalCallContext(tenantContext.getTenantRecordId(), tenantContext.getAccountRecordId(), "RefundProcessor", CallOrigin.INTERNAL, UserType.SYSTEM, null);
+
+            // TODO context should be created for each refund and have the correct userToken
+            final InternalCallContext context = internalCallContextFactory.createInternalCallContext(refundsToBeFixed.iterator().next().getId(), ObjectType.REFUND, "RefundProcessor",
+                                                                                                     CallOrigin.INTERNAL, UserType.SYSTEM, null);
+
             final Account account = accountInternalApi.getAccountById(refundsToBeFixed.iterator().next().getAccountId(), context);
             new WithAccountLock<Void>().processAccountWithLock(locker, account.getExternalKey(), new WithAccountLockCallback<Void>() {
 
@@ -303,6 +308,7 @@ public class RefundProcessor extends ProcessorBase {
                 public Void doOperation() throws PaymentApiException {
                     try {
                         for (final RefundModelDao cur : refundsToBeFixed) {
+
                             // TODO - we currently don't save the items to be adjusted. If we crash, they won't be adjusted...
                             invoiceApi.createRefund(cur.getPaymentId(), cur.getAmount(), cur.isAdjusted(), ImmutableMap.<UUID, BigDecimal>of(), cur.getId(), context);
                             paymentDao.updateRefundStatus(cur.getId(), RefundStatus.COMPLETED, context);

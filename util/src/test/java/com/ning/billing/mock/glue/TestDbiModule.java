@@ -19,6 +19,8 @@ package com.ning.billing.mock.glue;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.IDBI;
 
+import com.ning.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
+import com.ning.billing.GuicyKillbillTestWithEmbeddedDBModule;
 import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.dbi.DBIProvider;
 import com.ning.billing.dbi.DBTestingHelper;
@@ -28,7 +30,7 @@ import com.google.inject.AbstractModule;
 
 public class TestDbiModule extends AbstractModule {
     protected void configure() {
-        final DBTestingHelper helper = KillbillTestSuiteWithEmbeddedDB.getDBTestingHelper();
+        final DBTestingHelper helper = GuicyKillbillTestWithEmbeddedDBModule.getDBTestingHelper();
         if (helper.isUsingLocalInstance()) {
             bind(IDBI.class).toProvider(DBIProvider.class).asEagerSingleton();
             final DbiConfig config = new ConfigurationObjectFactory(System.getProperties()).build(DbiConfig.class);
