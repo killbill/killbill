@@ -343,8 +343,6 @@ public class DefaultAnalyticsUserApi implements AnalyticsUserApi {
             final Payment paymentInfo = payments.get(paymentId);
             bipDao.invoicePaymentPosted(paymentInfo.getAccountId(),
                                         paymentInfo.getId(),
-                                        paymentInfo.getExtFirstPaymentIdRef(),
-                                        paymentInfo.getExtSecondPaymentIdRef(),
                                         paymentInfo.getPaymentStatus().toString(),
                                         internalCallContext);
         }

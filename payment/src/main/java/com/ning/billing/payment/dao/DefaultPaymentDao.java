@@ -16,9 +16,7 @@
 
 package com.ning.billing.payment.dao;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 import javax.inject.Inject;
@@ -96,15 +94,13 @@ public class DefaultPaymentDao implements PaymentDao {
                                                   final PaymentStatus paymentStatus,
                                                   final String gatewayErrorCode,
                                                   final String gatewayErrorMsg,
-                                                  final String extFirstPaymentRefId,
-                                                  final String extSecondPaymentRefId,
                                                   final UUID attemptId,
                                                   final InternalCallContext context) {
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
 
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                entitySqlDaoWrapperFactory.become(PaymentSqlDao.class).updatePaymentStatusAndExtRef(paymentId.toString(), paymentStatus.toString(), extFirstPaymentRefId, extSecondPaymentRefId, context);
+                entitySqlDaoWrapperFactory.become(PaymentSqlDao.class).updatePaymentStatus(paymentId.toString(), paymentStatus.toString(), context);
                 entitySqlDaoWrapperFactory.become(PaymentAttemptSqlDao.class).updatePaymentAttemptStatus(attemptId.toString(), paymentStatus.toString(), gatewayErrorCode, gatewayErrorMsg, context);
                 return null;
             }
@@ -127,52 +123,6 @@ public class DefaultPaymentDao implements PaymentDao {
         transactional.create(paymentMethod, context);
 
         return transactional.getById(paymentMethod.getId().toString(), context);
-    }
-
-    @Override
-    public List<PaymentMethodModelDao> refreshPaymentMethods(final UUID accountId, final List<PaymentMethodModelDao> paymentMethods, final InternalCallContext context) {
-        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<PaymentMethodModelDao>>() {
-
-            @Override
-            public List<PaymentMethodModelDao> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                final PaymentMethodSqlDao transactional = entitySqlDaoWrapperFactory.become(PaymentMethodSqlDao.class);
-                final List<PaymentMethodModelDao> existingPaymentMethods = transactional.getByAccountId(accountId.toString(), context);
-
-                final Set<String> externalPaymentIdProcessed = new HashSet<String>();
-                for (final PaymentMethodModelDao finalPaymentMethod : paymentMethods) {
-                    boolean isExistingPaymentMethod = false;
-
-                    for (final PaymentMethodModelDao existingPaymentMethod : existingPaymentMethods) {
-                        if (existingPaymentMethod.equals(finalPaymentMethod)) {
-                            // We already have it - nothing to do
-                            isExistingPaymentMethod = true;
-                            break;
-                        } else if (existingPaymentMethod.equalsButActive(finalPaymentMethod)) {
-                            // We already have it but its status has changed - update it accordingly
-                            // Note - in the remote system, the payment method will always be active
-                            undeletedPaymentMethodInTransaction(entitySqlDaoWrapperFactory, existingPaymentMethod.getId(), context);
-                            isExistingPaymentMethod = true;
-                            break;
-                        }
-                        // Otherwise, we don't have it
-                    }
-
-                    if (!isExistingPaymentMethod) {
-                        insertPaymentMethodInTransaction(entitySqlDaoWrapperFactory, finalPaymentMethod, context);
-                    }
-
-                    externalPaymentIdProcessed.add(finalPaymentMethod.getExternalId());
-                }
-
-                // Finally, mark as deleted the ones that don't exist in the specified list (remote system)
-                for (final PaymentMethodModelDao existingPaymentMethod : existingPaymentMethods) {
-                    if (!externalPaymentIdProcessed.contains(existingPaymentMethod.getExternalId())) {
-                        deletedPaymentMethodInTransaction(entitySqlDaoWrapperFactory, existingPaymentMethod.getId(), context);
-                    }
-                }
-                return transactional.getByAccountId(accountId.toString(), context);
-            }
-        });
     }
 
     @Override

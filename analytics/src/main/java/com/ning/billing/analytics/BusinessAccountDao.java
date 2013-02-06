@@ -128,7 +128,7 @@ public class BusinessAccountDao {
             }
 
             // Retrieve payment methods
-            for (final PaymentMethod paymentMethod : paymentApi.getPaymentMethods(account, true, context)) {
+            for (final PaymentMethod paymentMethod : paymentApi.getPaymentMethods(account, context)) {
                 if (paymentMethod.getId().equals(account.getPaymentMethodId()) && paymentMethod.getPluginDetail() != null) {
                     paymentMethodType = PaymentMethodUtils.getPaymentMethodType(paymentMethod.getPluginDetail());
                     creditCardType = PaymentMethodUtils.getCardType(paymentMethod.getPluginDetail());

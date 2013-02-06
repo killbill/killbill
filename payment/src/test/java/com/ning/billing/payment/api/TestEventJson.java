@@ -43,7 +43,7 @@ public class TestEventJson extends PaymentTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testPaymentInfoEvent() throws Exception {
-        final PaymentInfoInternalEvent e = new DefaultPaymentInfoEvent(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), new BigDecimal(12.9), new Integer(13), PaymentStatus.SUCCESS, "ext-ref1-12345", "ext-ref2-12345",
+        final PaymentInfoInternalEvent e = new DefaultPaymentInfoEvent(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), new BigDecimal(12.9), new Integer(13), PaymentStatus.SUCCESS,
                 UUID.randomUUID(), new DateTime(), 1L, 1L);
         final String json = mapper.writeValueAsString(e);
 

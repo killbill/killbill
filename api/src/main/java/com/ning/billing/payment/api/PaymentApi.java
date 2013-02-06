@@ -111,25 +111,16 @@ public interface PaymentApi {
      */
     public Set<String> getAvailablePlugins();
 
-    public String initializeAccountPlugin(String pluginName, Account account, CallContext context)
-            throws PaymentApiException;
-
     public UUID addPaymentMethod(String pluginName, Account account, boolean setDefault, PaymentMethodPlugin paymentMethodInfo, CallContext context)
             throws PaymentApiException;
 
-    public List<PaymentMethod> refreshPaymentMethods(String pluginName, Account account, CallContext context)
-            throws PaymentApiException;
-
-    public List<PaymentMethod> getPaymentMethods(Account account, boolean withPluginDetail, TenantContext context)
+    public List<PaymentMethod> getPaymentMethods(Account account, TenantContext context)
             throws PaymentApiException;
 
     public PaymentMethod getPaymentMethodById(UUID paymentMethodId, TenantContext context)
             throws PaymentApiException;
 
-    public PaymentMethod getPaymentMethod(Account account, UUID paymentMethodId, boolean withPluginDetail, TenantContext context)
-            throws PaymentApiException;
-
-    public void updatePaymentMethod(Account account, UUID paymentMethodId, PaymentMethodPlugin paymentMethodInfo, CallContext context)
+    public PaymentMethod getPaymentMethod(Account account, UUID paymentMethodId, TenantContext context)
             throws PaymentApiException;
 
     public void deletedPaymentMethod(Account account, UUID paymentMethodId, boolean deleteDefaultPaymentMethodWithAutoPayOff, CallContext context)

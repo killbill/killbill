@@ -183,8 +183,6 @@ public class AnalyticsListener {
             public Void call() throws Exception {
                 bipDao.invoicePaymentPosted(paymentInfo.getAccountId(),
                                             paymentInfo.getPaymentId(),
-                                            paymentInfo.getExtFirstPaymentRefId(),
-                                            paymentInfo.getExtSecondPaymentRefId(),
                                             paymentInfo.getStatus().toString(),
                                             createCallContext(paymentInfo));
                 return null;
@@ -199,8 +197,6 @@ public class AnalyticsListener {
             public Void call() throws Exception {
                 bipDao.invoicePaymentPosted(paymentError.getAccountId(),
                                             paymentError.getPaymentId(),
-                                            null,
-                                            null,
                                             paymentError.getMessage(),
                                             createCallContext(paymentError));
                 return null;

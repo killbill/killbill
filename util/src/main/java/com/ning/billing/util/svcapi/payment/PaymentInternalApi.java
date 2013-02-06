@@ -16,7 +16,6 @@
 
 package com.ning.billing.util.svcapi.payment;
 
-
 import java.util.List;
 import java.util.UUID;
 
@@ -31,12 +30,12 @@ public interface PaymentInternalApi {
     public Payment getPayment(UUID paymentId, InternalTenantContext context)
             throws PaymentApiException;
 
-    public PaymentMethod getPaymentMethod(Account account, UUID paymentMethodId, boolean withPluginDetail, InternalTenantContext context)
+    public PaymentMethod getPaymentMethod(Account account, UUID paymentMethodId, InternalTenantContext context)
             throws PaymentApiException;
 
     public List<Payment> getAccountPayments(UUID accountId, InternalTenantContext context)
             throws PaymentApiException;
 
-    public List<PaymentMethod> getPaymentMethods(Account account, boolean withPluginDetail, InternalTenantContext context)
+    public List<PaymentMethod> getPaymentMethods(Account account, InternalTenantContext context)
             throws PaymentApiException;
 }

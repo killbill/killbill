@@ -13,8 +13,6 @@ tableFields(prefix) ::= <<
 , <prefix>effective_date
 , <prefix>currency
 , <prefix>payment_status
-, <prefix>ext_first_payment_ref_id
-, <prefix>ext_second_payment_ref_id
 , <prefix>created_by
 , <prefix>created_date
 , <prefix>updated_by
@@ -29,8 +27,6 @@ tableValues() ::= <<
 , :effectiveDate
 , :currency
 , :paymentStatus
-, :extFirstPaymentRefId
-, :extSecondPaymentRefId
 , :createdBy
 , :createdDate
 , :updatedBy

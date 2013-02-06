@@ -37,11 +37,9 @@ public interface PaymentSqlDao extends EntitySqlDao<PaymentModelDao, Payment> {
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
-    void updatePaymentStatusAndExtRef(@Bind("id") final String paymentId,
-                                      @Bind("paymentStatus") final String paymentStatus,
-                                      @Bind("extFirstPaymentRefId") final String extFirstPaymentRefId,
-                                      @Bind("extSecondPaymentRefId") final String extSecondPaymentRefId,
-                                      @BindBean final InternalCallContext context);
+    void updatePaymentStatus(@Bind("id") final String paymentId,
+                             @Bind("paymentStatus") final String paymentStatus,
+                             @BindBean final InternalCallContext context);
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)

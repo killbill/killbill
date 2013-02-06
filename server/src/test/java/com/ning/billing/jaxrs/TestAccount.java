@@ -25,16 +25,13 @@ import java.util.UUID;
 
 import javax.ws.rs.core.Response.Status;
 
-import org.joda.time.DateTime;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.AccountJsonWithBalance;
-import com.ning.billing.jaxrs.json.AccountTimelineJson;
 import com.ning.billing.jaxrs.json.BillCycleDayJson;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
-import com.ning.billing.jaxrs.json.InvoiceJsonSimple;
 import com.ning.billing.jaxrs.json.PaymentJsonSimple;
 import com.ning.billing.jaxrs.json.PaymentMethodJson;
 import com.ning.billing.jaxrs.json.RefundJson;
@@ -155,7 +152,6 @@ public class TestAccount extends TestJaxrsBase {
         // FETCH ALL PAYMENT METHODS
         //
         queryParams = new HashMap<String, String>();
-        queryParams.put(JaxrsResource.QUERY_PAYMENT_METHOD_PLUGIN_INFO, "true");
         response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
         baseJson = response.getResponseBody();
@@ -187,7 +183,6 @@ public class TestAccount extends TestJaxrsBase {
         //
         uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAccountId() + "/" + JaxrsResource.PAYMENT_METHODS;
         queryParams = new HashMap<String, String>();
-        queryParams.put(JaxrsResource.QUERY_PAYMENT_METHOD_PLUGIN_INFO, "true");
         response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
         baseJson = response.getResponseBody();

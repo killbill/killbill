@@ -20,18 +20,18 @@ import java.math.BigDecimal;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.payment.plugin.api.PaymentInfoPlugin;
+import com.ning.billing.payment.plugin.api.RefundInfoPlugin;
 
-public class DefaultNoOpPaymentInfoPlugin implements PaymentInfoPlugin {
+public class DefaultNoOpRefundInfoPlugin implements RefundInfoPlugin {
 
     private final BigDecimal amount;
     private final DateTime effectiveDate;
     private final DateTime createdDate;
-    private final PaymentPluginStatus status;
+    private final RefundPluginStatus status;
     private final String error;
 
-    public DefaultNoOpPaymentInfoPlugin(final BigDecimal amount, final DateTime effectiveDate,
-                                        final DateTime createdDate, final PaymentPluginStatus status, final String error) {
+    public DefaultNoOpRefundInfoPlugin(final BigDecimal amount, final DateTime effectiveDate,
+                                       final DateTime createdDate, final RefundPluginStatus status, final String error) {
         this.amount = amount;
         this.effectiveDate = effectiveDate;
         this.createdDate = createdDate;
@@ -50,7 +50,7 @@ public class DefaultNoOpPaymentInfoPlugin implements PaymentInfoPlugin {
     }
 
     @Override
-    public PaymentPluginStatus getStatus() {
+    public RefundPluginStatus getStatus() {
         return status;
     }
 
@@ -72,7 +72,7 @@ public class DefaultNoOpPaymentInfoPlugin implements PaymentInfoPlugin {
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
-        sb.append("DefaultNoOpPaymentInfoPlugin");
+        sb.append("DefaultNoOpRefundInfoPlugin");
         sb.append("{amount=").append(amount);
         sb.append(", effectiveDate=").append(effectiveDate);
         sb.append(", createdDate=").append(createdDate);
@@ -91,7 +91,7 @@ public class DefaultNoOpPaymentInfoPlugin implements PaymentInfoPlugin {
             return false;
         }
 
-        final DefaultNoOpPaymentInfoPlugin that = (DefaultNoOpPaymentInfoPlugin) o;
+        final DefaultNoOpRefundInfoPlugin that = (DefaultNoOpRefundInfoPlugin) o;
 
         if (amount != null ? !amount.equals(that.amount) : that.amount != null) {
             return false;

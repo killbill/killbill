@@ -55,7 +55,7 @@ public class MockPaymentDao implements PaymentDao {
 
     @Override
     public void updateStatusForPaymentWithAttempt(final UUID paymentId, final PaymentStatus paymentStatus, final String gatewayErrorCode,
-                                                  final String gatewayErrorMsg, final String extFirstPaymentRefId, final String extSecondPaymentRefId,
+                                                  final String gatewayErrorMsg,
                                                   final UUID attemptId, final InternalCallContext context) {
         synchronized (this) {
             final PaymentModelDao entry = payments.remove(paymentId);
@@ -124,11 +124,6 @@ public class MockPaymentDao implements PaymentDao {
     public PaymentMethodModelDao insertPaymentMethod(final PaymentMethodModelDao paymentMethod, final InternalCallContext context) {
         paymentMethods.add(paymentMethod);
         return paymentMethod;
-    }
-
-    @Override
-    public List<PaymentMethodModelDao> refreshPaymentMethods(final UUID accountId, final List<PaymentMethodModelDao> newPaymentMethods, final InternalCallContext context) {
-        throw new UnsupportedOperationException();
     }
 
     @Override

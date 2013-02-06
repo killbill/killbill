@@ -17,48 +17,89 @@
 package com.ning.billing.payment.plugin.api;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.UUID;
 
-import com.ning.billing.account.api.Account;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TenantContext;
 
 public interface PaymentPluginApi {
 
+    /**
+     * @return plugin name
+     */
     public String getName();
 
-    public PaymentInfoPlugin processPayment(String externalAccountKey, UUID paymentId, BigDecimal amount, CallContext context)
+    /**
+     * Charge a specific amount in the Gateway. Required.
+     *
+     * @param pluginPaymentMethodKey payment method key to charge
+     * @param kbPaymentId            killbill payment id (for reference)
+     * @param amount                 amount to charge
+     * @param context                call context
+     * @return information about the payment in the gateway
+     * @throws PaymentPluginApiException
+     */
+    public PaymentInfoPlugin processPayment(String pluginPaymentMethodKey, UUID kbPaymentId, BigDecimal amount, CallContext context)
             throws PaymentPluginApiException;
 
-    public PaymentInfoPlugin getPaymentInfo(UUID paymentId, TenantContext context)
+    /**
+     * Retrieve information about a given payment. Optional (not all gateways will support it).
+     *
+     *
+     * @param kbPaymentId      killbill payment id (for reference)
+     * @param context          call context
+     * @return information about the payment in the gateway
+     * @throws PaymentPluginApiException
+     */
+    public PaymentInfoPlugin getPaymentInfo(UUID kbPaymentId, TenantContext context)
             throws PaymentPluginApiException;
 
-    public void processRefund(final Account account, final UUID paymentId, BigDecimal refundAmount, CallContext context)
+    /**
+     * Process a refund against a given payment. Required.
+     *
+     *
+     * @param kbPaymentId      killbill payment id (for reference)
+     * @param refundAmount     call context
+     * @param context          call context
+     * @return information about the refund in the gateway
+     * @throws PaymentPluginApiException
+     */
+    public RefundInfoPlugin processRefund(UUID kbPaymentId, BigDecimal refundAmount, CallContext context)
             throws PaymentPluginApiException;
 
-    public int getNbRefundForPaymentAmount(final Account account, final UUID paymentId, final BigDecimal refundAmount, TenantContext context)
+    /**
+     * Add a payment method for a Killbill account in the gateway. Optional.
+     *
+     * @param paymentMethodProps payment method details
+     * @param kbAccountId        killbill account id
+     * @param setDefault         set it as the default payment method in the gateway
+     * @param context            call context
+     * @return payment method key in the gateway
+     * @throws PaymentPluginApiException
+     */
+    public String addPaymentMethod(PaymentMethodPlugin paymentMethodProps, UUID kbAccountId, boolean setDefault, CallContext context)
             throws PaymentPluginApiException;
 
-    public String createPaymentProviderAccount(Account account, CallContext context)
+    /**
+     * Delete a payment method in the gateway. Optional.
+     *
+     * @param pluginPaymentMethodKey payment method key to delete
+     * @param kbAccountId            killbill account id
+     * @param context                call context
+     * @throws PaymentPluginApiException
+     */
+    public void deletePaymentMethod(String pluginPaymentMethodKey, UUID kbAccountId, CallContext context)
             throws PaymentPluginApiException;
 
-    public List<PaymentMethodPlugin> getPaymentMethodDetails(String accountKey, TenantContext context)
-            throws PaymentPluginApiException;
-
-    public PaymentMethodPlugin getPaymentMethodDetail(String accountKey, String externalPaymentMethodId, TenantContext context)
-            throws PaymentPluginApiException;
-
-    public String addPaymentMethod(String accountKey, PaymentMethodPlugin paymentMethodProps, boolean setDefault, CallContext context)
-            throws PaymentPluginApiException;
-
-    public void updatePaymentMethod(String accountKey, PaymentMethodPlugin paymentMethodProps, CallContext context)
-            throws PaymentPluginApiException;
-
-    public void deletePaymentMethod(String accountKey, String externalPaymentMethodId, CallContext context)
-            throws PaymentPluginApiException;
-
-    public void setDefaultPaymentMethod(String accountKey, String externalPaymentId, CallContext context)
+    /**
+     * Set a payment method as default in the gateway. Optional.
+     *
+     * @param pluginPaymentMethodKey payment method key to update
+     * @param kbAccountId            killbill account id
+     * @param context                call context
+     * @throws PaymentPluginApiException
+     */
+    public void setDefaultPaymentMethod(String pluginPaymentMethodKey, UUID kbAccountId, CallContext context)
             throws PaymentPluginApiException;
 }

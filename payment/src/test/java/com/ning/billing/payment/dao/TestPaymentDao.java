@@ -16,30 +16,18 @@
 
 package com.ning.billing.payment.dao;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.skife.config.ConfigurationObjectFactory;
-import org.skife.jdbi.v2.IDBI;
-import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Test;
 
-import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.dbi.DBIProvider;
-import com.ning.billing.dbi.DBTestingHelper;
-import com.ning.billing.dbi.DbiConfig;
 import com.ning.billing.payment.PaymentTestSuiteWithEmbeddedDB;
 import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
-import com.ning.billing.util.cache.CacheControllerDispatcher;
-import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.clock.DefaultClock;
-import com.ning.billing.util.dao.DefaultNonEntityDao;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -111,7 +99,7 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         final PaymentStatus paymentStatus = PaymentStatus.SUCCESS;
         final String gatewayErrorCode = "OK";
 
-        paymentDao.updateStatusForPaymentWithAttempt(payment.getId(), paymentStatus, gatewayErrorCode, null, null, null, attempt.getId(), internalCallContext);
+        paymentDao.updateStatusForPaymentWithAttempt(payment.getId(), paymentStatus, gatewayErrorCode, null, attempt.getId(), internalCallContext);
 
         final List<PaymentModelDao> payments = paymentDao.getPaymentsForInvoice(invoiceId, internalCallContext);
         assertEquals(payments.size(), 1);

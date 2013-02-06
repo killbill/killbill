@@ -38,8 +38,6 @@ public class DefaultPaymentInfoEvent extends DefaultBusInternalEvent implements 
     private final PaymentStatus status;
     private final UUID userToken;
     private final DateTime effectiveDate;
-    private final String extFirstPaymentRefId;
-    private final String extSecondPaymentRefId;
 
     @JsonCreator
     public DefaultPaymentInfoEvent(@JsonProperty("id") final UUID id, /* not used */
@@ -49,8 +47,8 @@ public class DefaultPaymentInfoEvent extends DefaultBusInternalEvent implements 
                                    @JsonProperty("amount") final BigDecimal amount,
                                    @JsonProperty("paymentNumber") final Integer paymentNumber,
                                    @JsonProperty("status") final PaymentStatus status,
-                                   @JsonProperty("extFirstPaymentRefId") final String extFirstPaymentRefId,
-                                   @JsonProperty("extSecondPaymentRefId") final String extSecondPaymentRefId,
+                                   @JsonProperty("extFirstPaymentRefId") final String extFirstPaymentRefId /* TODO for backward compatibility only */,
+                                   @JsonProperty("extSecondPaymentRefId") final String extSecondPaymentRefId /* TODO for backward compatibility only */,
                                    @JsonProperty("userToken") final UUID userToken,
                                    @JsonProperty("effectiveDate") final DateTime effectiveDate,
                                    @JsonProperty("accountRecordId") final Long accountRecordId,
@@ -62,19 +60,16 @@ public class DefaultPaymentInfoEvent extends DefaultBusInternalEvent implements 
         this.amount = amount;
         this.paymentNumber = paymentNumber;
         this.status = status;
-        this.extFirstPaymentRefId = extFirstPaymentRefId;
-        this.extSecondPaymentRefId = extSecondPaymentRefId;
         this.userToken = userToken;
         this.effectiveDate = effectiveDate;
     }
 
-
     public DefaultPaymentInfoEvent(final UUID accountId, final UUID invoiceId,
                                    final UUID paymentId, final BigDecimal amount, final Integer paymentNumber,
-                                   final PaymentStatus status, final String extFirstPaymentRefId, final String extSecondPaymentRefId, final UUID userToken,
-                                   final DateTime effectiveDatefinal, Long accountRecordId, final Long tenantRecordId) {
-        this(UUID.randomUUID(), accountId, invoiceId, paymentId, amount, paymentNumber, status, extFirstPaymentRefId, extSecondPaymentRefId, userToken,
-                effectiveDatefinal, accountRecordId, tenantRecordId);
+                                   final PaymentStatus status, final UUID userToken,
+                                   final DateTime effectiveDatefinal, final Long accountRecordId, final Long tenantRecordId) {
+        this(UUID.randomUUID(), accountId, invoiceId, paymentId, amount, paymentNumber, status, null, null, userToken,
+             effectiveDatefinal, accountRecordId, tenantRecordId);
     }
 
     public DefaultPaymentInfoEvent(final DefaultPaymentInfoEvent src) {
@@ -85,14 +80,13 @@ public class DefaultPaymentInfoEvent extends DefaultBusInternalEvent implements 
              src.amount,
              src.paymentNumber,
              src.status,
-             src.extFirstPaymentRefId,
-             src.extSecondPaymentRefId,
+             null,
+             null,
              src.userToken,
              src.effectiveDate,
              src.getAccountRecordId(),
              src.getTenantRecordId());
     }
-
 
     @JsonIgnore
     @Override
@@ -115,7 +109,6 @@ public class DefaultPaymentInfoEvent extends DefaultBusInternalEvent implements 
         return invoiceId;
     }
 
-
     @Override
     public BigDecimal getAmount() {
         return amount;
@@ -136,20 +129,9 @@ public class DefaultPaymentInfoEvent extends DefaultBusInternalEvent implements 
         return paymentNumber;
     }
 
-
     @Override
     public PaymentStatus getStatus() {
         return status;
-    }
-
-    @Override
-    public String getExtFirstPaymentRefId() {
-        return extFirstPaymentRefId;
-    }
-
-    @Override
-    public String getExtSecondPaymentRefId() {
-        return extSecondPaymentRefId;
     }
 
     @Override
@@ -164,8 +146,6 @@ public class DefaultPaymentInfoEvent extends DefaultBusInternalEvent implements 
         sb.append(", status=").append(status);
         sb.append(", userToken=").append(userToken);
         sb.append(", effectiveDate=").append(effectiveDate);
-        sb.append(", extFirstPaymentRefId='").append(extFirstPaymentRefId).append('\'');
-        sb.append(", extSecondPaymentRefId='").append(extSecondPaymentRefId).append('\'');
         sb.append('}');
         return sb.toString();
     }
@@ -175,22 +155,21 @@ public class DefaultPaymentInfoEvent extends DefaultBusInternalEvent implements 
         final int prime = 31;
         int result = 1;
         result = prime * result
-                + ((accountId == null) ? 0 : accountId.hashCode());
+                 + ((accountId == null) ? 0 : accountId.hashCode());
         result = prime * result + ((amount == null) ? 0 : amount.hashCode());
         result = prime * result
-                + ((effectiveDate == null) ? 0 : effectiveDate.hashCode());
+                 + ((effectiveDate == null) ? 0 : effectiveDate.hashCode());
         result = prime * result
-                + ((invoiceId == null) ? 0 : invoiceId.hashCode());
+                 + ((invoiceId == null) ? 0 : invoiceId.hashCode());
         result = prime * result
-                + ((paymentId == null) ? 0 : paymentId.hashCode());
+                 + ((paymentId == null) ? 0 : paymentId.hashCode());
         result = prime * result
-                + ((paymentNumber == null) ? 0 : paymentNumber.hashCode());
+                 + ((paymentNumber == null) ? 0 : paymentNumber.hashCode());
         result = prime * result + ((status == null) ? 0 : status.hashCode());
         result = prime * result
-                + ((userToken == null) ? 0 : userToken.hashCode());
+                 + ((userToken == null) ? 0 : userToken.hashCode());
         return result;
     }
-
 
     @Override
     public boolean equals(final Object obj) {

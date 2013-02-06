@@ -11,8 +11,6 @@ CREATE TABLE payments (
     currency char(3),    
     effective_date datetime,
     payment_status varchar(50),
-    ext_first_payment_ref_id varchar(128),
-    ext_second_payment_ref_id varchar(128),    
     created_by varchar(50) NOT NULL,
     created_date datetime NOT NULL,
     updated_by varchar(50) NOT NULL,

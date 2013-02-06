@@ -77,15 +77,11 @@ public class PaymentMethodResource extends JaxRsResourceBase {
     @Path("/{paymentMethodId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
     public Response getPaymentMethod(@PathParam("paymentMethodId") final String paymentMethodId,
-                                     @QueryParam(QUERY_PAYMENT_METHOD_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException {
         final TenantContext tenantContext = context.createContext(request);
 
-        PaymentMethod paymentMethod = paymentApi.getPaymentMethodById(UUID.fromString(paymentMethodId), tenantContext);
+        final PaymentMethod paymentMethod = paymentApi.getPaymentMethodById(UUID.fromString(paymentMethodId), tenantContext);
         final Account account = accountApi.getAccountById(paymentMethod.getAccountId(), tenantContext);
-        if (withPluginInfo) {
-            paymentMethod = paymentApi.getPaymentMethod(account, paymentMethod.getId(), true, tenantContext);
-        }
         final PaymentMethodJson json = PaymentMethodJson.toPaymentMethodJson(account, paymentMethod);
 
         return Response.status(Status.OK).entity(json).build();
@@ -103,13 +99,14 @@ public class PaymentMethodResource extends JaxRsResourceBase {
                                         @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
-        final PaymentMethod input = json.toPaymentMethod();
         final PaymentMethod paymentMethod = paymentApi.getPaymentMethodById(UUID.fromString(paymentMethodId), callContext);
         final Account account = accountApi.getAccountById(paymentMethod.getAccountId(), callContext);
 
-        paymentApi.updatePaymentMethod(account, paymentMethod.getId(), input.getPluginDetail(), callContext);
+        if (json.isDefault()) {
+            paymentApi.setDefaultPaymentMethod(account, paymentMethod.getId(), callContext);
+        }
 
-        return getPaymentMethod(paymentMethod.getId().toString(), false, request);
+        return getPaymentMethod(paymentMethod.getId().toString(), request);
     }
 
     @DELETE

@@ -20,33 +20,33 @@ import java.math.BigDecimal;
 
 import org.joda.time.DateTime;
 
-public interface PaymentInfoPlugin {
+public interface RefundInfoPlugin {
 
-    public enum PaymentPluginStatus {
+    public enum RefundPluginStatus {
         UNDEFINED,
         PROCESSED,
         ERROR
     }
 
     /**
-     * @return payment amount
+     * @return refund amount
      */
     public BigDecimal getAmount();
 
     /**
-     * @return date when the payment was created
+     * @return date when the refund was created
      */
     public DateTime getCreatedDate();
 
     /**
-     * @return date when the payment is effective
+     * @return date when the refund is effective
      */
     public DateTime getEffectiveDate();
 
     /**
-     * @return payment status in the gateway
+     * @return refund status in the gateway
      */
-    public PaymentPluginStatus getStatus();
+    public RefundPluginStatus getStatus();
 
     /**
      * @return gateway error, if any

@@ -60,14 +60,11 @@ public interface JaxrsResource {
     public static final String QUERY_INVOICE_WITH_ITEMS = "withItems";
 
     public static final String QUERY_PAYMENT_EXTERNAL = "externalPayment";
-    public static final String QUERY_PAYMENT_LAST4_CC = "last4CC";
-    public static final String QUERY_PAYMENT_NAME_ON_CC = "nameOnCC";
     public static final String QUERY_PAYMENT_WITH_REFUNDS_AND_CHARGEBACKS = "withRefundsAndChargebacks";
 
     public static final String QUERY_TAGS = "tagList";
     public static final String QUERY_CUSTOM_FIELDS = "customFieldList";
 
-    public static final String QUERY_PAYMENT_METHOD_PLUGIN_INFO = "withPluginInfo";
     public static final String QUERY_PAYMENT_METHOD_IS_DEFAULT = "isDefault";
 
     public static final String QUERY_BUNDLE_TRANSFER_ADDON = "transferAddOn";

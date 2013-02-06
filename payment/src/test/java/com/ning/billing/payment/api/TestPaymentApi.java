@@ -144,7 +144,7 @@ public class TestPaymentApi extends PaymentTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testPaymentMethods() throws Exception {
-        List<PaymentMethod> methods = paymentApi.getPaymentMethods(account, false, callContext);
+        List<PaymentMethod> methods = paymentApi.getPaymentMethods(account, callContext);
         assertEquals(methods.size(), 1);
 
         final PaymentMethod initDefaultMethod = methods.get(0);
@@ -154,7 +154,7 @@ public class TestPaymentApi extends PaymentTestSuiteNoDB {
         final UUID newPaymentMethodId = paymentApi.addPaymentMethod(TestPaymentHelper.PLUGIN_TEST_NAME, account, true, newPaymenrMethod, callContext);
         Mockito.when(account.getPaymentMethodId()).thenReturn(newPaymentMethodId);
 
-        methods = paymentApi.getPaymentMethods(account, false, callContext);
+        methods = paymentApi.getPaymentMethods(account, callContext);
         assertEquals(methods.size(), 2);
 
         assertEquals(newPaymentMethodId, account.getPaymentMethodId());
@@ -168,13 +168,13 @@ public class TestPaymentApi extends PaymentTestSuiteNoDB {
         assertTrue(failed);
 
         paymentApi.deletedPaymentMethod(account, initDefaultMethod.getId(), true,  callContext);
-        methods = paymentApi.getPaymentMethods(account, false, callContext);
+        methods = paymentApi.getPaymentMethods(account, callContext);
         assertEquals(methods.size(), 1);
 
         // NOW retry with default payment method with special flag
         paymentApi.deletedPaymentMethod(account, newPaymentMethodId, true, callContext);
 
-        methods = paymentApi.getPaymentMethods(account, false, callContext);
+        methods = paymentApi.getPaymentMethods(account, callContext);
         assertEquals(methods.size(), 0);
     }
 }

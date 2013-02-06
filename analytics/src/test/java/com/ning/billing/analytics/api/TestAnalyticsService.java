@@ -265,7 +265,7 @@ public class TestAnalyticsService extends AnalyticsTestSuiteWithEmbeddedDB {
                                                                       INVOICE_AMOUNT, ACCOUNT_CURRENCY, null, 1L, 1L);
 
         paymentInfoNotification = new DefaultPaymentInfoEvent(account.getId(), invoices.get(0).getId(), null, InvoiceModelDaoHelper.getBalance(invoices.get(0)), -1,
-                                                              PaymentStatus.UNKNOWN, null, null, null, clock.getUTCNow(), 1L, 1L);
+                                                              PaymentStatus.UNKNOWN, null, clock.getUTCNow(), 1L, 1L);
 
         final PaymentModelDao paymentInfo = new PaymentModelDao(account.getId(), invoice.getId(), account.getPaymentMethodId(),
                                                                 BigDecimal.ONE, Currency.USD, clock.getUTCNow(), PaymentStatus.SUCCESS);

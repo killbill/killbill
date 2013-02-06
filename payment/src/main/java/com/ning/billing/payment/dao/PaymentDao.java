@@ -32,7 +32,7 @@ public interface PaymentDao {
     public PaymentAttemptModelDao insertNewAttemptForPayment(UUID paymentId, PaymentAttemptModelDao attempt, InternalCallContext context);
 
     public void updateStatusForPaymentWithAttempt(UUID paymentId, PaymentStatus paymentStatus, String gatewayErrorCode,
-                                                  String gatewayErrorMsg, String extFirstPaymentRefId, String extSecondPaymentRefId,
+                                                  String gatewayErrorMsg,
                                                   UUID attemptId, InternalCallContext context);
 
     public PaymentAttemptModelDao getPaymentAttempt(UUID attemptId, InternalTenantContext context);
@@ -58,8 +58,6 @@ public interface PaymentDao {
     public List<RefundModelDao> getRefundsForAccount(UUID accountId, InternalTenantContext context);
 
     public PaymentMethodModelDao insertPaymentMethod(PaymentMethodModelDao paymentMethod, InternalCallContext context);
-
-    public List<PaymentMethodModelDao> refreshPaymentMethods(UUID accountId, List<PaymentMethodModelDao> paymentMethods, InternalCallContext context);
 
     public PaymentMethodModelDao getPaymentMethod(UUID paymentMethodId, InternalTenantContext context);
 
