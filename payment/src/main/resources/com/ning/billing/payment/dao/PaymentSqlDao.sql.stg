@@ -69,11 +69,9 @@ order by effective_date desc limit 1
 >>
 
 
-updatePaymentStatusAndExtRef() ::= <<
+updatePaymentStatus() ::= <<
 update payments
 set payment_status = :paymentStatus
-, ext_first_payment_ref_id = :extFirstPaymentRefId
-, ext_second_payment_ref_id = :extSecondPaymentRefId
 where id = :id
 <AND_CHECK_TENANT()>
 ;
