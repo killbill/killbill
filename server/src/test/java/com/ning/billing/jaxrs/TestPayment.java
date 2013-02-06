@@ -168,7 +168,6 @@ public class TestPayment extends TestJaxrsBase {
         final PaymentMethodJson paymentMethodJson = getPaymentMethodWithPluginInfo(paymentMethodId);
         Assert.assertEquals(paymentMethodJson.getPaymentMethodId(), paymentMethodId);
         Assert.assertEquals(paymentMethodJson.getAccountId(), accountJson.getAccountId());
-        Assert.assertNotNull(paymentMethodJson.getPluginInfo().getExternalPaymentId());
 
         // Verify the refunds
         final List<RefundJson> objRefundFromJson = getRefundsForPayment(paymentJsonSimple.getPaymentId());
