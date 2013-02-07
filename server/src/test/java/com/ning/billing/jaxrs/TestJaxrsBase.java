@@ -23,6 +23,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.servlet.http.HttpServlet;
+
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.joda.time.LocalDate;
 import org.skife.config.ConfigurationObjectFactory;
@@ -47,12 +51,14 @@ import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.invoice.glue.DefaultInvoiceModule;
 import com.ning.billing.invoice.notification.NullInvoiceNotifier;
 import com.ning.billing.junction.glue.DefaultJunctionModule;
+import com.ning.billing.osgi.glue.DefaultOSGIModule;
 import com.ning.billing.overdue.glue.DefaultOverdueModule;
 import com.ning.billing.payment.glue.PaymentModule;
 import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
 import com.ning.billing.server.listeners.KillbillGuiceListener;
 import com.ning.billing.server.modules.KillbillServerModule;
 import com.ning.billing.tenant.glue.TenantModule;
+import com.ning.billing.usage.glue.UsageModule;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.config.PaymentConfig;
@@ -86,6 +92,10 @@ public class TestJaxrsBase extends KillbillClient {
     protected static final String PLUGIN_NAME = "noop";
 
     protected static final int DEFAULT_HTTP_TIMEOUT_SEC = 6000; // 5;
+
+    @Inject
+    @Named("osgi")
+    protected HttpServlet osgiServlet;
 
     protected static TestKillbillGuiceListener listener;
 
@@ -188,6 +198,8 @@ public class TestJaxrsBase extends KillbillClient {
             install(new DefaultOverdueModule());
             install(new TenantModule());
             install(new ExportModule());
+            install(new DefaultOSGIModule());
+            install(new UsageModule());
             installClock();
         }
 
@@ -248,6 +260,8 @@ public class TestJaxrsBase extends KillbillClient {
         server.configure(config, getListeners(), getFilters());
 
         server.start();
+
+        listener.getInstantiatedInjector().injectMembers(this);
     }
 
     protected Iterable<EventListener> getListeners() {

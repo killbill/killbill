@@ -812,6 +812,58 @@ public abstract class KillbillClient extends ServerTestSuiteWithEmbeddedDB {
     }
 
     //
+    // PLUGINS
+    //
+
+    protected Response pluginGET(final String uri) throws Exception {
+        return pluginGET(uri, DEFAULT_EMPTY_QUERY);
+    }
+
+    protected Response pluginGET(final String uri, final Map<String, String> queryParams) throws Exception {
+        return doGet(JaxrsResource.PLUGINS_PATH + "/" + uri, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
+    }
+
+    protected Response pluginHEAD(final String uri) throws Exception {
+        return pluginHEAD(uri, DEFAULT_EMPTY_QUERY);
+    }
+
+    protected Response pluginHEAD(final String uri, final Map<String, String> queryParams) throws Exception {
+        return doHead(JaxrsResource.PLUGINS_PATH + "/" + uri, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
+    }
+
+    protected Response pluginPOST(final String uri, @Nullable final String body) throws Exception {
+        return pluginPOST(uri, body, DEFAULT_EMPTY_QUERY);
+    }
+
+    protected Response pluginPOST(final String uri, @Nullable final String body, final Map<String, String> queryParams) throws Exception {
+        return doPost(JaxrsResource.PLUGINS_PATH + "/" + uri, body, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
+    }
+
+    protected Response pluginPUT(final String uri, @Nullable final String body) throws Exception {
+        return pluginPUT(uri, body, DEFAULT_EMPTY_QUERY);
+    }
+
+    protected Response pluginPUT(final String uri, @Nullable final String body, final Map<String, String> queryParams) throws Exception {
+        return doPut(JaxrsResource.PLUGINS_PATH + "/" + uri, body, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
+    }
+
+    protected Response pluginDELETE(final String uri) throws Exception {
+        return pluginDELETE(uri, DEFAULT_EMPTY_QUERY);
+    }
+
+    protected Response pluginDELETE(final String uri, final Map<String, String> queryParams) throws Exception {
+        return doDelete(JaxrsResource.PLUGINS_PATH + "/" + uri, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
+    }
+
+    protected Response pluginOPTIONS(final String uri) throws Exception {
+        return pluginOPTIONS(uri, DEFAULT_EMPTY_QUERY);
+    }
+
+    protected Response pluginOPTIONS(final String uri, final Map<String, String> queryParams) throws Exception {
+        return doOptions(JaxrsResource.PLUGINS_PATH + "/" + uri, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
+    }
+
+    //
     // HTTP CLIENT HELPERS
     //
     protected Response doPost(final String uri, @Nullable final String body, final Map<String, String> queryParams, final int timeoutSec) {
@@ -846,8 +898,28 @@ public abstract class KillbillClient extends ServerTestSuiteWithEmbeddedDB {
         return doGetWithUrl(url, queryParams, timeoutSec);
     }
 
+    protected Response doHead(final String uri, final Map<String, String> queryParams, final int timeoutSec) {
+        final String url = String.format("http://%s:%d%s", config.getServerHost(), config.getServerPort(), uri);
+        return doHeadWithUrl(url, queryParams, timeoutSec);
+    }
+
+    protected Response doOptions(final String uri, final Map<String, String> queryParams, final int timeoutSec) {
+        final String url = String.format("http://%s:%d%s", config.getServerHost(), config.getServerPort(), uri);
+        return doOptionsWithUrl(url, queryParams, timeoutSec);
+    }
+
     protected Response doGetWithUrl(final String url, final Map<String, String> queryParams, final int timeoutSec) {
         final BoundRequestBuilder builder = getBuilderWithHeaderAndQuery("GET", url, queryParams);
+        return executeAndWait(builder, timeoutSec, false);
+    }
+
+    protected Response doHeadWithUrl(final String url, final Map<String, String> queryParams, final int timeoutSec) {
+        final BoundRequestBuilder builder = getBuilderWithHeaderAndQuery("HEAD", url, queryParams);
+        return executeAndWait(builder, timeoutSec, false);
+    }
+
+    protected Response doOptionsWithUrl(final String url, final Map<String, String> queryParams, final int timeoutSec) {
+        final BoundRequestBuilder builder = getBuilderWithHeaderAndQuery("OPTIONS", url, queryParams);
         return executeAndWait(builder, timeoutSec, false);
     }
 
@@ -890,6 +962,10 @@ public abstract class KillbillClient extends ServerTestSuiteWithEmbeddedDB {
             builder = httpClient.preparePut(url);
         } else if (verb.equals("DELETE")) {
             builder = httpClient.prepareDelete(url);
+        } else if (verb.equals("HEAD")) {
+            builder = httpClient.prepareHead(url);
+        } else if (verb.equals("OPTIONS")) {
+            builder = httpClient.prepareOptions(url);
         } else {
             Assert.fail("Unknown verb " + verb);
         }

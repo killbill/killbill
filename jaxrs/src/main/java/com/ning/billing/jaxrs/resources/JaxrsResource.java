@@ -130,5 +130,9 @@ public interface JaxrsResource {
     public static final String EXPORT = "export";
     public static final String EXPORT_PATH = PREFIX + "/" + EXPORT;
 
+    public static final String PLUGINS = "plugins";
+    // No PREFIX here!
+    public static final String PLUGINS_PATH = "/" + PLUGINS;
+
     public static final String CBA_REBALANCING = "cbaRebalancing";
 }

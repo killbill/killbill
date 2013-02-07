@@ -16,12 +16,14 @@
 
 package com.ning.billing.osgi.glue;
 
+import javax.servlet.http.HttpServlet;
 import javax.sql.DataSource;
 
 import org.skife.config.ConfigurationObjectFactory;
 
 import com.ning.billing.osgi.DefaultOSGIKillbill;
 import com.ning.billing.osgi.KillbillActivator;
+import com.ning.billing.osgi.OSGIServlet;
 import com.ning.billing.osgi.api.OSGIKillbill;
 import com.ning.billing.osgi.api.config.PluginConfigServiceApi;
 import com.ning.billing.osgi.pluginconf.DefaultPluginConfigServiceApi;
@@ -43,9 +45,15 @@ public class DefaultOSGIModule extends AbstractModule {
         bind(OSGIDataSourceConfig.class).toInstance(osgiDataSourceConfig);
     }
 
+    protected void installOSGIServlet() {
+        bind(HttpServlet.class).annotatedWith(Names.named(OSGI_NAMED)).to(OSGIServlet.class).asEagerSingleton();
+    }
+
     @Override
     protected void configure() {
         installConfig();
+        installOSGIServlet();
+
         bind(KillbillActivator.class).asEagerSingleton();
         bind(PluginFinder.class).asEagerSingleton();
         bind(PluginConfigServiceApi.class).to(DefaultPluginConfigServiceApi.class).asEagerSingleton();
