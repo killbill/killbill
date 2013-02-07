@@ -23,6 +23,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.servlet.http.HttpServlet;
+
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.joda.time.LocalDate;
 import org.skife.config.ConfigurationObjectFactory;
@@ -88,6 +92,10 @@ public class TestJaxrsBase extends KillbillClient {
     protected static final String PLUGIN_NAME = "noop";
 
     protected static final int DEFAULT_HTTP_TIMEOUT_SEC = 6000; // 5;
+
+    @Inject
+    @Named("osgi")
+    protected HttpServlet osgiServlet;
 
     protected static TestKillbillGuiceListener listener;
 
