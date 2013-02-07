@@ -32,18 +32,16 @@ public class PaymentMethodModelDao extends EntityBase implements EntityModelDao<
     private UUID accountId;
     private String pluginName;
     private Boolean isActive;
-    private String externalId;
 
     public PaymentMethodModelDao() { /* For the DAO mapper */ }
 
     public PaymentMethodModelDao(final UUID id, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate,
                                  final UUID accountId, final String pluginName,
-                                 final Boolean isActive, final String externalId) {
+                                 final Boolean isActive) {
         super(id, createdDate, updatedDate);
         this.accountId = accountId;
         this.pluginName = pluginName;
         this.isActive = isActive;
-        this.externalId = externalId;
     }
 
     public UUID getAccountId() {
@@ -63,10 +61,6 @@ public class PaymentMethodModelDao extends EntityBase implements EntityModelDao<
         return isActive;
     }
 
-    public String getExternalId() {
-        return externalId;
-    }
-
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
@@ -74,7 +68,6 @@ public class PaymentMethodModelDao extends EntityBase implements EntityModelDao<
         sb.append("{accountId=").append(accountId);
         sb.append(", pluginName='").append(pluginName).append('\'');
         sb.append(", isActive=").append(isActive);
-        sb.append(", externalId='").append(externalId).append('\'');
         sb.append('}');
         return sb.toString();
     }
@@ -105,9 +98,6 @@ public class PaymentMethodModelDao extends EntityBase implements EntityModelDao<
         if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
             return false;
         }
-        if (externalId != null ? !externalId.equals(that.externalId) : that.externalId != null) {
-            return false;
-        }
         if (pluginName != null ? !pluginName.equals(that.pluginName) : that.pluginName != null) {
             return false;
         }
@@ -120,7 +110,6 @@ public class PaymentMethodModelDao extends EntityBase implements EntityModelDao<
         int result = accountId != null ? accountId.hashCode() : 0;
         result = 31 * result + (pluginName != null ? pluginName.hashCode() : 0);
         result = 31 * result + (isActive != null ? isActive.hashCode() : 0);
-        result = 31 * result + (externalId != null ? externalId.hashCode() : 0);
         return result;
     }
 

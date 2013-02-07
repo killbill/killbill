@@ -71,14 +71,14 @@ public class JRubyPaymentPlugin extends JRubyPlugin implements PaymentPluginApi 
     }
 
     @Override
-    public PaymentInfoPlugin processPayment(final String pluginPaymentMethodKey, final UUID kbPaymentId, final BigDecimal amount, final CallContext context) throws PaymentPluginApiException {
+    public PaymentInfoPlugin processPayment(final UUID kbPaymentId, final UUID kbPaymentMethodId, final BigDecimal amount, final CallContext context) throws PaymentPluginApiException {
         checkValidPaymentPlugin();
         checkPluginIsRunning();
 
         final Ruby runtime = getRuntime();
         pluginInstance.callMethod("charge",
-                                  JavaEmbedUtils.javaToRuby(runtime, pluginPaymentMethodKey),
                                   JavaEmbedUtils.javaToRuby(runtime, kbPaymentId.toString()),
+                                  JavaEmbedUtils.javaToRuby(runtime, kbPaymentMethodId.toString()),
                                   JavaEmbedUtils.javaToRuby(runtime, amount.longValue() * 100));
 
         // TODO
@@ -111,41 +111,36 @@ public class JRubyPaymentPlugin extends JRubyPlugin implements PaymentPluginApi 
     }
 
     @Override
-    public String addPaymentMethod(final PaymentMethodPlugin paymentMethodProps, final UUID kbAccountId, final boolean setDefault, final CallContext context) throws PaymentPluginApiException {
+    public void addPaymentMethod(final UUID kbPaymentMethodId, final PaymentMethodPlugin paymentMethodProps, final boolean setDefault, final CallContext context) throws PaymentPluginApiException {
         checkValidPaymentPlugin();
         checkPluginIsRunning();
 
         final Ruby runtime = getRuntime();
         pluginInstance.callMethod("add_payment_method",
-                                  JavaEmbedUtils.javaToRuby(runtime, kbAccountId.toString()),
+                                  JavaEmbedUtils.javaToRuby(runtime, kbPaymentMethodId.toString()),
                                   JavaEmbedUtils.javaToRuby(runtime, paymentMethodProps));
         if (setDefault) {
-            setDefaultPaymentMethod(paymentMethodProps.getExternalPaymentMethodId(), kbAccountId, context);
+            setDefaultPaymentMethod(kbPaymentMethodId, context);
         }
-
-        // TODO
-        return null;
     }
 
     @Override
-    public void deletePaymentMethod(final String pluginPaymentMethodKey, final UUID kbAccountId, final CallContext context) throws PaymentPluginApiException {
+    public void deletePaymentMethod(final UUID kbPaymentMethodId, final CallContext context) throws PaymentPluginApiException {
         checkValidPaymentPlugin();
         checkPluginIsRunning();
 
         final Ruby runtime = getRuntime();
         pluginInstance.callMethod("delete_payment_method",
-                                  JavaEmbedUtils.javaToRuby(runtime, pluginPaymentMethodKey),
-                                  JavaEmbedUtils.javaToRuby(runtime, kbAccountId.toString()));
+                                  JavaEmbedUtils.javaToRuby(runtime, kbPaymentMethodId.toString()));
     }
 
     @Override
-    public void setDefaultPaymentMethod(final String pluginPaymentMethodKey, final UUID kbAccountId, final CallContext context) throws PaymentPluginApiException {
+    public void setDefaultPaymentMethod(final UUID kbPaymentMethodId, final CallContext context) throws PaymentPluginApiException {
         checkValidPaymentPlugin();
         checkPluginIsRunning();
 
         final Ruby runtime = getRuntime();
         pluginInstance.callMethod("set_default_payment_method",
-                                  JavaEmbedUtils.javaToRuby(runtime, pluginPaymentMethodKey),
-                                  JavaEmbedUtils.javaToRuby(runtime, kbAccountId.toString()));
+                                  JavaEmbedUtils.javaToRuby(runtime, kbPaymentMethodId.toString()));
     }
 }

@@ -88,7 +88,7 @@ public class DefaultNoOpPaymentProviderPlugin implements NoOpPaymentPluginApi {
     }
 
     @Override
-    public PaymentInfoPlugin processPayment(final String pluginPaymentMethodKey, final UUID kbPaymentId, final BigDecimal amount, final CallContext context) throws PaymentPluginApiException {
+    public PaymentInfoPlugin processPayment(final UUID kbPaymentId, final UUID kbPaymentMethodId, final BigDecimal amount, final CallContext context) throws PaymentPluginApiException {
         if (makeNextInvoiceFailWithException.getAndSet(false)) {
             throw new PaymentPluginApiException("", "test error");
         }
@@ -109,25 +109,23 @@ public class DefaultNoOpPaymentProviderPlugin implements NoOpPaymentPluginApi {
     }
 
     @Override
-    public String addPaymentMethod(final PaymentMethodPlugin paymentMethodProps, final UUID kbAccountId, final boolean setDefault, final CallContext context) throws PaymentPluginApiException {
+    public void addPaymentMethod(final UUID kbPaymentMethodId, final PaymentMethodPlugin paymentMethodProps, final boolean setDefault, final CallContext context) throws PaymentPluginApiException {
         final PaymentMethodPlugin realWithID = new DefaultNoOpPaymentMethodPlugin(paymentMethodProps);
-        List<PaymentMethodPlugin> pms = paymentMethods.get(kbAccountId.toString());
+        List<PaymentMethodPlugin> pms = paymentMethods.get(kbPaymentMethodId.toString());
         if (pms == null) {
             pms = new LinkedList<PaymentMethodPlugin>();
-            paymentMethods.put(kbAccountId.toString(), pms);
+            paymentMethods.put(kbPaymentMethodId.toString(), pms);
         }
         pms.add(realWithID);
-
-        return realWithID.getExternalPaymentMethodId();
     }
 
     @Override
-    public void deletePaymentMethod(final String pluginPaymentMethodKey, final UUID kbAccountId, final CallContext context) throws PaymentPluginApiException {
+    public void deletePaymentMethod(final UUID kbPaymentMethodId, final CallContext context) throws PaymentPluginApiException {
         PaymentMethodPlugin toBeDeleted = null;
-        final List<PaymentMethodPlugin> pms = paymentMethods.get(kbAccountId.toString());
+        final List<PaymentMethodPlugin> pms = paymentMethods.get(kbPaymentMethodId.toString());
         if (pms != null) {
             for (final PaymentMethodPlugin cur : pms) {
-                if (cur.getExternalPaymentMethodId().equals(kbAccountId.toString())) {
+                if (cur.getExternalPaymentMethodId().equals(kbPaymentMethodId.toString())) {
                     toBeDeleted = cur;
                     break;
                 }
@@ -140,7 +138,7 @@ public class DefaultNoOpPaymentProviderPlugin implements NoOpPaymentPluginApi {
     }
 
     @Override
-    public void setDefaultPaymentMethod(final String pluginPaymentMethodKey, final UUID kbAccountId, final CallContext context) throws PaymentPluginApiException {
+    public void setDefaultPaymentMethod(final UUID kbPaymentMethodId, final CallContext context) throws PaymentPluginApiException {
     }
 
     @Override

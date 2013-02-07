@@ -50,10 +50,10 @@ public class TestExternalPaymentProviderPlugin extends PaymentTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testProcessPayment() throws Exception {
-        final String pluginPaymentMethodKey = UUID.randomUUID().toString();
         final UUID paymentId = UUID.randomUUID();
+        final UUID paymentMethodId = UUID.randomUUID();
         final BigDecimal amount = BigDecimal.TEN;
-        final PaymentInfoPlugin paymentInfoPlugin = plugin.processPayment(pluginPaymentMethodKey, paymentId, amount, callContext);
+        final PaymentInfoPlugin paymentInfoPlugin = plugin.processPayment(paymentId, paymentMethodId, amount, callContext);
 
         Assert.assertEquals(paymentInfoPlugin.getAmount(), amount);
         Assert.assertEquals(Seconds.secondsBetween(paymentInfoPlugin.getCreatedDate(), clock.getUTCNow()).getSeconds(), 0);
@@ -74,16 +74,18 @@ public class TestExternalPaymentProviderPlugin extends PaymentTestSuiteNoDB {
     @Test(groups = "fast", expectedExceptions = PaymentPluginApiException.class)
     public void testRefundTooLarge() throws Exception {
         final UUID paymentId = UUID.randomUUID();
-        plugin.processPayment(UUID.randomUUID().toString(), paymentId, BigDecimal.ZERO, callContext);
+        final UUID paymentMethodId = UUID.randomUUID();
 
+        plugin.processPayment(paymentId, paymentMethodId, BigDecimal.ZERO, callContext);
         plugin.processRefund(paymentId, BigDecimal.ONE, callContext);
     }
 
     @Test(groups = "fast")
     public void testRefundTooLargeMultipleTimes() throws Exception {
-        final String pluginPaymentKey = UUID.randomUUID().toString();
         final UUID paymentId = UUID.randomUUID();
-        plugin.processPayment(UUID.randomUUID().toString(), paymentId, BigDecimal.TEN, callContext);
+        final UUID paymentMethodId = UUID.randomUUID();
+
+        plugin.processPayment(paymentId, paymentMethodId, BigDecimal.TEN, callContext);
 
         final Account account = Mockito.mock(Account.class);
         for (int i = 0; i < 10; i++) {

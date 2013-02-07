@@ -16,6 +16,8 @@
 
 package com.ning.billing.payment.plugin.api;
 
+import com.ning.billing.BillingExceptionBase;
+
 public class PaymentPluginApiException extends Exception {
     private static final long serialVersionUID = 15642965L;
 
@@ -24,6 +26,11 @@ public class PaymentPluginApiException extends Exception {
 
     public PaymentPluginApiException(final String errorType, final String errorMessage) {
         this.errorMessage = errorMessage;
+        this.errorType = errorType;
+    }
+
+    public PaymentPluginApiException(final String errorType, BillingExceptionBase billingExceptionBase) {
+        this.errorMessage = billingExceptionBase.getMessage();
         this.errorType = errorType;
     }
 
