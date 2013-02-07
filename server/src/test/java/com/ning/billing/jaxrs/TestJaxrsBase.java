@@ -47,12 +47,14 @@ import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.invoice.glue.DefaultInvoiceModule;
 import com.ning.billing.invoice.notification.NullInvoiceNotifier;
 import com.ning.billing.junction.glue.DefaultJunctionModule;
+import com.ning.billing.osgi.glue.DefaultOSGIModule;
 import com.ning.billing.overdue.glue.DefaultOverdueModule;
 import com.ning.billing.payment.glue.PaymentModule;
 import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
 import com.ning.billing.server.listeners.KillbillGuiceListener;
 import com.ning.billing.server.modules.KillbillServerModule;
 import com.ning.billing.tenant.glue.TenantModule;
+import com.ning.billing.usage.glue.UsageModule;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.config.PaymentConfig;
@@ -188,6 +190,8 @@ public class TestJaxrsBase extends KillbillClient {
             install(new DefaultOverdueModule());
             install(new TenantModule());
             install(new ExportModule());
+            install(new DefaultOSGIModule());
+            install(new UsageModule());
             installClock();
         }
 
