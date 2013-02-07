@@ -18,6 +18,7 @@ package com.ning.billing.osgi;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.servlet.http.HttpServlet;
 import javax.sql.DataSource;
 
 import com.ning.billing.account.api.AccountUserApi;
@@ -34,6 +35,7 @@ import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.osgi.api.OSGIKillbill;
 import com.ning.billing.osgi.api.config.PluginConfigServiceApi;
+import com.ning.billing.osgi.api.http.ServletRouter;
 import com.ning.billing.osgi.glue.DefaultOSGIModule;
 import com.ning.billing.overdue.OverdueUserApi;
 import com.ning.billing.payment.api.PaymentApi;
@@ -70,9 +72,11 @@ public class DefaultOSGIKillbill implements OSGIKillbill {
     private final PluginConfigServiceApi configServiceApi;
 
     private final DataSource dataSource;
+    private final ServletRouter servletRouter;
 
     @Inject
-    public DefaultOSGIKillbill(final @Named(DefaultOSGIModule.OSGI_NAMED) DataSource dataSource,
+    public DefaultOSGIKillbill(@Named(DefaultOSGIModule.OSGI_NAMED) final DataSource dataSource,
+                               final ServletRouter servletRouter,
                                final AccountUserApi accountUserApi,
                                final AnalyticsSanityApi analyticsSanityApi,
                                final AnalyticsUserApi analyticsUserApi,
@@ -95,6 +99,7 @@ public class DefaultOSGIKillbill implements OSGIKillbill {
                                final ExternalBus externalBus,
                                final PluginConfigServiceApi configServiceApi) {
         this.dataSource = dataSource;
+        this.servletRouter = servletRouter;
         this.accountUserApi = accountUserApi;
         this.analyticsSanityApi = analyticsSanityApi;
         this.analyticsUserApi = analyticsUserApi;
@@ -226,5 +231,10 @@ public class DefaultOSGIKillbill implements OSGIKillbill {
     @Override
     public DataSource getDataSource() {
         return dataSource;
+    }
+
+    @Override
+    public void registerServlet(final String pluginName, final HttpServlet pluginServlet) {
+        servletRouter.registerServlet(pluginName, pluginServlet);
     }
 }

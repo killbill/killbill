@@ -14,24 +14,24 @@
  * under the License.
  */
 
-package com.ning.billing.osgi;
+package com.ning.billing.osgi.http;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.ning.billing.osgi.api.http.ServletRouter;
+
+@Singleton
 public class OSGIServlet extends HttpServlet {
 
-    private final Map<String, HttpServlet> pluginServlets = new HashMap<String, HttpServlet>();
-
-    public void registerResource(final String pluginName, final HttpServlet httpServlet) {
-        pluginServlets.put(pluginName, httpServlet);
-    }
+    @Inject
+    private ServletRouter servletRouter;
 
     @Override
     protected void doGet(final HttpServletRequest req, final HttpServletResponse resp) throws ServletException, IOException {
@@ -75,7 +75,7 @@ public class OSGIServlet extends HttpServlet {
     private HttpServlet getPluginServlet(final HttpServletRequest req) {
         final String pluginName = (String) req.getAttribute("killbill.osgi.pluginName");
         if (pluginName != null) {
-            return pluginServlets.get(pluginName);
+            return servletRouter.getServletForPlugin(pluginName);
         } else {
             return null;
         }

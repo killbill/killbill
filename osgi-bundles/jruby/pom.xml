@@ -37,6 +37,10 @@
             <artifactId>killbill-api</artifactId>
         </dependency>
         <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.jruby</groupId>
             <artifactId>jruby-complete</artifactId>
             <version>1.7.1</version>

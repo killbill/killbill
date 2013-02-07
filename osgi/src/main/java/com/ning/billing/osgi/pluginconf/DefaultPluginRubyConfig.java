@@ -26,14 +26,17 @@ public class DefaultPluginRubyConfig extends DefaultPluginConfig implements Plug
     private static final String INSTALLATION_GEM_NAME = "gems";
 
     private static final String PROP_RUBY_MAIN_CLASS_NAME = "mainClass";
+    private static final String PROP_RUBY_REQUIRE = "require";
 
     private final String rubyMainClass;
     private final File rubyLoadDir;
+    private final String rubyRequire;
 
     public DefaultPluginRubyConfig(final String pluginName, final String version, final File pluginVersionRoot, final Properties props) throws PluginConfigException {
         super(pluginName, version, props);
         this.rubyMainClass = props.getProperty(PROP_RUBY_MAIN_CLASS_NAME);
         this.rubyLoadDir = new File(pluginVersionRoot.getAbsolutePath() + "/" + INSTALLATION_GEM_NAME);
+        this.rubyRequire = props.getProperty(PROP_RUBY_REQUIRE);
         validate();
     }
 
@@ -55,6 +58,11 @@ public class DefaultPluginRubyConfig extends DefaultPluginConfig implements Plug
     @Override
     public String getRubyLoadDir() {
         return rubyLoadDir.getAbsolutePath();
+    }
+
+    @Override
+    public String getRubyRequire() {
+        return rubyRequire;
     }
 
     @Override

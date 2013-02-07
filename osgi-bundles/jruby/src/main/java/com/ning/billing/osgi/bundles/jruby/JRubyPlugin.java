@@ -20,14 +20,17 @@ import java.util.Arrays;
 import java.util.Map;
 
 import javax.annotation.Nullable;
+import javax.servlet.http.HttpServlet;
 
 import org.jruby.Ruby;
 import org.jruby.RubyObject;
 import org.jruby.embed.EvalFailedException;
 import org.jruby.embed.ScriptingContainer;
+import org.jruby.runtime.builtin.IRubyObject;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.log.LogService;
 
+import com.ning.billing.osgi.api.OSGIKillbill;
 import com.ning.billing.osgi.api.config.PluginRubyConfig;
 
 // Bridge between the OSGI bundle and the ruby plugin
@@ -43,7 +46,9 @@ public abstract class JRubyPlugin {
     private static final String ACTIVE = "@active";
 
     protected final LogService logger;
+    protected final OSGIKillbill osgiKillbill;
     protected final String pluginGemName;
+    protected final String rubyRequire;
     protected final String pluginMainClass;
     protected final ScriptingContainer container;
     protected final String pluginLibdir;
@@ -52,9 +57,12 @@ public abstract class JRubyPlugin {
 
     private String cachedRequireLine = null;
 
-    public JRubyPlugin(final PluginRubyConfig config, final ScriptingContainer container, @Nullable final LogService logger) {
+    public JRubyPlugin(final PluginRubyConfig config, final ScriptingContainer container,
+                       final OSGIKillbill osgiKillbill, @Nullable final LogService logger) {
         this.logger = logger;
+        this.osgiKillbill = osgiKillbill;
         this.pluginGemName = config.getPluginName();
+        this.rubyRequire = config.getRubyRequire();
         this.pluginMainClass = config.getRubyMainClass();
         this.container = container;
         this.pluginLibdir = config.getRubyLoadDir();
@@ -84,6 +92,12 @@ public abstract class JRubyPlugin {
 
         // Start the plugin
         pluginInstance = (RubyObject) container.runScriptlet(pluginMainClass + ".new(" + JAVA_APIS + ")");
+
+        // Register the rack handler
+        final IRubyObject rackHandler = pluginInstance.callMethod("rack_handler");
+        if (!rackHandler.isNil()) {
+            osgiKillbill.registerServlet(pluginGemName, (HttpServlet) rackHandler);
+        }
     }
 
     public void startPlugin(final BundleContext context) {
@@ -158,10 +172,22 @@ public abstract class JRubyPlugin {
             // Assume the plugin is shipped as a Gem
             builder.append("begin\n")
                    .append("gem '").append(pluginGemName).append("'\n")
-                   .append("require '").append(pluginGemName).append("' rescue warn \"WARN: unable to load ").append(pluginGemName).append("\"\n")
                    .append("rescue Gem::LoadError\n")
                    .append("warn \"WARN: unable to load gem ").append(pluginGemName).append("\"\n")
                    .append("end\n");
+            builder.append("begin\n")
+                   .append("require '").append(pluginGemName).append("'\n")
+                   .append("rescue LoadError\n")
+                   .append("warn \"WARN: unable to require ").append(pluginGemName).append("\"\n")
+                   .append("end\n");
+            // Load the extra require file, if specified
+            if (rubyRequire != null) {
+                builder.append("begin\n")
+                       .append("require '").append(rubyRequire).append("'\n")
+                       .append("rescue LoadError\n")
+                       .append("warn \"WARN: unable to require ").append(rubyRequire).append("\"\n")
+                       .append("end\n");
+            }
             // Require any file directly in the pluginLibdir directory (e.g. /var/tmp/bundles/ruby/foo/1.0/gems/*.rb).
             // Although it is likely that any Killbill plugin will be distributed as a gem, it is still useful to
             // be able to load individual scripts for prototyping/testing/...

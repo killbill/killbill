@@ -29,18 +29,36 @@ public interface OSGIConfig extends KillbillConfig {
     @Default("osgi-cache")
     public String getOSGIBundleCacheName();
 
-
     @Config("killbill.osgi.bundle.install.dir")
     @Default("/var/tmp/bundles")
     public String getRootInstallationDir();
 
     @Config("killbill.osgi.system.bundle.export.packages")
-    @Default("com.ning.billing.account.api,com.ning.billing.beatrix.bus.api,com.ning.billing.payment.plugin.api,com.ning.billing.osgi.api.config,com.ning.billing.util.callcontext,com.google.common.eventbus")
+    @Default("com.ning.billing.account.api," +
+             "com.ning.billing.analytics.api.sanity," +
+             "com.ning.billing.analytics.api.user," +
+             "com.ning.billing.beatrix.bus.api," +
+             "com.ning.billing.catalog.api," +
+             "com.ning.billing.entitlement.api.migration," +
+             "com.ning.billing.entitlement.api.timeline," +
+             "com.ning.billing.entitlement.api.transfer," +
+             "com.ning.billing.entitlement.api.user," +
+             "com.ning.billing.invoice.api," +
+             "com.ning.billing.osgi.api," +
+             "com.ning.billing.osgi.api.config," +
+             "com.ning.billing.overdue," +
+             "com.ning.billing.payment.api," +
+             "com.ning.billing.tenant.api," +
+             "com.ning.billing.usage.api," +
+             "com.ning.billing.util.api," +
+             "com.ning.billing.util.callcontext," +
+             "com.google.common.eventbus," +
+             "org.osgi.service.log")
     public String getSystemBundleExportPackages();
 
     // TODO FIXME OSGI
     @Config("killbill.osgi.jruby.bundle.path")
-    @Default("file:/var/tmp/killbill-osgi-jruby-bundle-0.1.51-SNAPSHOT-jar-with-dependencies.jar")
+    @Default("file:/var/tmp/killbill-osgi-bundles-jruby-0.1.52-SNAPSHOT-jar-with-dependencies.jar")
     public String getJrubyBundlePath();
 
 }

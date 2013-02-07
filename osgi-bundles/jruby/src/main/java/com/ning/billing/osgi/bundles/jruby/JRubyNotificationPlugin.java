@@ -26,14 +26,16 @@ import org.osgi.service.log.LogService;
 
 import com.ning.billing.beatrix.bus.api.ExtBusEvent;
 import com.ning.billing.beatrix.bus.api.ExternalBus;
+import com.ning.billing.osgi.api.OSGIKillbill;
 import com.ning.billing.osgi.api.config.PluginRubyConfig;
 
 import com.google.common.eventbus.Subscribe;
 
 public class JRubyNotificationPlugin extends JRubyPlugin {
 
-    public JRubyNotificationPlugin(final PluginRubyConfig config, final ScriptingContainer container, @Nullable final LogService logger) {
-        super(config, container, logger);
+    public JRubyNotificationPlugin(final PluginRubyConfig config, final ScriptingContainer container,
+                                   final OSGIKillbill osgiKillbill, @Nullable final LogService logger) {
+        super(config, container, osgiKillbill, logger);
     }
 
     @Override

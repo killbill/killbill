@@ -14,13 +14,13 @@
  * under the License.
  */
 
-package com.ning.billing.osgi.api.config;
+package com.ning.billing.osgi.api.http;
 
-public interface PluginRubyConfig extends PluginConfig {
+import javax.servlet.http.HttpServlet;
 
-    public String getRubyMainClass();
+public interface ServletRouter {
 
-    public String getRubyLoadDir();
+    void registerServlet(String pluginName, HttpServlet httpServlet);
 
-    public String getRubyRequire();
+    HttpServlet getServletForPlugin(String pluginName);
 }

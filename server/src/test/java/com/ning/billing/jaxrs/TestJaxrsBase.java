@@ -24,8 +24,6 @@ import java.util.Iterator;
 import java.util.Map;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.servlet.http.HttpServlet;
 
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.joda.time.LocalDate;
@@ -51,6 +49,7 @@ import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.invoice.glue.DefaultInvoiceModule;
 import com.ning.billing.invoice.notification.NullInvoiceNotifier;
 import com.ning.billing.junction.glue.DefaultJunctionModule;
+import com.ning.billing.osgi.api.http.ServletRouter;
 import com.ning.billing.osgi.glue.DefaultOSGIModule;
 import com.ning.billing.overdue.glue.DefaultOverdueModule;
 import com.ning.billing.payment.glue.PaymentModule;
@@ -94,8 +93,7 @@ public class TestJaxrsBase extends KillbillClient {
     protected static final int DEFAULT_HTTP_TIMEOUT_SEC = 6000; // 5;
 
     @Inject
-    @Named("osgi")
-    protected HttpServlet osgiServlet;
+    protected ServletRouter servletRouter;
 
     protected static TestKillbillGuiceListener listener;
 
