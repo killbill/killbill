@@ -31,6 +31,7 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.beatrix.bus.api.ExtBusEvent;
 import com.ning.billing.beatrix.bus.api.ExternalBus;
+import com.ning.billing.osgi.api.OSGIKillbill;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.payment.plugin.api.PaymentInfoPlugin;
 import com.ning.billing.payment.plugin.api.PaymentPluginApi;
@@ -43,12 +44,17 @@ import com.google.common.eventbus.Subscribe;
 
 public class HelloActivator implements BundleActivator {
 
+    private OSGIKillbill osgiKillbill;
+
+    private volatile ServiceReference<OSGIKillbill> osgiKillbillReference;
+
     private volatile boolean isRunning;
     private volatile ServiceRegistration paymentInfoPluginRegistration;
 
     @Override
     public void start(final BundleContext context) {
-        isRunning = true;
+        this.isRunning = true;
+        fetchOSGIKIllbill(context);
         System.out.println("Hello world from HelloActivator!");
 
         doSomeWorkWithKillbillApis(context);
@@ -58,7 +64,9 @@ public class HelloActivator implements BundleActivator {
 
     @Override
     public void stop(final BundleContext context) {
-        isRunning = false;
+        this.isRunning = false;
+        releaseOSGIKIllbill(context);
+        this.osgiKillbill = null;
         System.out.println("Good bye world from HelloActivator!");
     }
 
@@ -74,9 +82,8 @@ public class HelloActivator implements BundleActivator {
             @Override
             public void run() {
                 while (isRunning) {
-                    @SuppressWarnings("unchecked")
-                    final ServiceReference<AccountUserApi> accountUserApiReference = (ServiceReference<AccountUserApi>) context.getServiceReference(AccountUserApi.class.getName());
-                    final AccountUserApi accountUserApi = context.getService(accountUserApiReference);
+
+                    final AccountUserApi accountUserApi = osgiKillbill.getAccountUserApi();
 
                     try {
                         final List<Account> accounts = accountUserApi.getAccounts(tenantContext);
@@ -86,10 +93,6 @@ public class HelloActivator implements BundleActivator {
                         System.err.println("Interrupted in HelloActivator");
                     } catch (Exception e) {
                         System.err.println("Error in HelloActivator: " + e.getLocalizedMessage());
-                    } finally {
-                        if (accountUserApiReference != null) {
-                            context.ungetService(accountUserApiReference);
-                        }
                     }
                 }
             }
@@ -98,17 +101,27 @@ public class HelloActivator implements BundleActivator {
     }
 
     private void registerForKillbillEvents(final BundleContext context) {
-        @SuppressWarnings("unchecked")
-        final ServiceReference<ExternalBus> externalBusReference = (ServiceReference<ExternalBus>) context.getServiceReference(ExternalBus.class.getName());
         try {
-            final ExternalBus externalBus = context.getService(externalBusReference);
+            final ExternalBus externalBus = osgiKillbill.getExternalBus();
             externalBus.register(this);
         } catch (Exception e) {
             System.err.println("Error in HelloActivator: " + e.getLocalizedMessage());
         } finally {
-            if (externalBusReference != null) {
-                context.ungetService(externalBusReference);
-            }
+        }
+    }
+
+    private void fetchOSGIKIllbill(final BundleContext context) {
+        this.osgiKillbillReference = (ServiceReference<OSGIKillbill>) context.getServiceReference(OSGIKillbill.class.getName());
+        try {
+            this.osgiKillbill = context.getService(osgiKillbillReference);
+        } catch (Exception e) {
+            System.err.println("Error in HelloActivator: " + e.getLocalizedMessage());
+        }
+    }
+
+    private void releaseOSGIKIllbill(final BundleContext context) {
+        if (osgiKillbillReference != null) {
+            context.ungetService(osgiKillbillReference);
         }
     }
 

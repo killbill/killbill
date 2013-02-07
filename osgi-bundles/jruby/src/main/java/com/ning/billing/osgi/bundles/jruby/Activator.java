@@ -39,6 +39,7 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.invoice.api.InvoiceMigrationApi;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.api.InvoiceUserApi;
+import com.ning.billing.osgi.api.OSGIKillbill;
 import com.ning.billing.osgi.api.config.PluginConfig.PluginType;
 import com.ning.billing.osgi.api.config.PluginConfigServiceApi;
 import com.ning.billing.osgi.api.config.PluginRubyConfig;
@@ -55,11 +56,13 @@ public class Activator implements BundleActivator {
 
     private final List<ServiceReference<?>> serviceReferences = new ArrayList<ServiceReference<?>>();
 
+    private OSGIKillbill osgiKillbill;
     private LogService logger = null;
     private JRubyPlugin plugin = null;
 
     public void start(final BundleContext context) throws Exception {
         logger = retrieveApi(context, LogService.class);
+        osgiKillbill = retrieveApi(context, OSGIKillbill.class);
         log(LogService.LOG_INFO, "JRuby bundle activated");
 
         doMagicToMakeJRubyAndFelixHappy();
@@ -76,6 +79,7 @@ public class Activator implements BundleActivator {
         }
 
         // Validate and instantiate the plugin
+
         final Map<String, Object> killbillApis = retrieveKillbillApis(context);
         plugin.instantiatePlugin(killbillApis);
 
@@ -84,9 +88,7 @@ public class Activator implements BundleActivator {
     }
 
     private PluginRubyConfig retrievePluginRubyConfig(final BundleContext context) {
-        @SuppressWarnings("unchecked")
-        final ServiceReference<PluginConfigServiceApi> pluginConfigServiceApiServiceReference = (ServiceReference<PluginConfigServiceApi>) context.getServiceReference(PluginConfigServiceApi.class.getName());
-        final PluginConfigServiceApi pluginConfigServiceApi = context.getService(pluginConfigServiceApiServiceReference);
+        final PluginConfigServiceApi pluginConfigServiceApi = osgiKillbill.getPluginConfigServiceApi();
         return pluginConfigServiceApi.getPluginRubyConfig(context.getBundle().getBundleId());
     }
 
@@ -119,25 +121,25 @@ public class Activator implements BundleActivator {
         final Map<String, Object> killbillUserApis = new HashMap<String, Object>();
 
         // See killbill/plugin.rb for the naming convention magic
-        killbillUserApis.put("account_user_api", retrieveApi(context, AccountUserApi.class));
-        killbillUserApis.put("analytics_sanity_api", retrieveApi(context, AnalyticsSanityApi.class));
-        killbillUserApis.put("analytics_user_api", retrieveApi(context, AnalyticsUserApi.class));
-        killbillUserApis.put("catalog_user_api", retrieveApi(context, CatalogUserApi.class));
-        killbillUserApis.put("entitlement_migration_api", retrieveApi(context, EntitlementMigrationApi.class));
-        killbillUserApis.put("entitlement_timeline_api", retrieveApi(context, EntitlementTimelineApi.class));
-        killbillUserApis.put("entitlement_transfer_api", retrieveApi(context, EntitlementTransferApi.class));
-        killbillUserApis.put("entitlement_user_api", retrieveApi(context, EntitlementUserApi.class));
-        killbillUserApis.put("invoice_migration_api", retrieveApi(context, InvoiceMigrationApi.class));
-        killbillUserApis.put("invoice_payment_api", retrieveApi(context, InvoicePaymentApi.class));
-        killbillUserApis.put("invoice_user_api", retrieveApi(context, InvoiceUserApi.class));
-        killbillUserApis.put("overdue_user_api", retrieveApi(context, OverdueUserApi.class));
-        killbillUserApis.put("payment_api", retrieveApi(context, PaymentApi.class));
-        killbillUserApis.put("tenant_user_api", retrieveApi(context, TenantUserApi.class));
-        killbillUserApis.put("usage_user_api", retrieveApi(context, UsageUserApi.class));
-        killbillUserApis.put("audit_user_api", retrieveApi(context, AuditUserApi.class));
-        killbillUserApis.put("custom_field_user_api", retrieveApi(context, CustomFieldUserApi.class));
-        killbillUserApis.put("export_user_api", retrieveApi(context, ExportUserApi.class));
-        killbillUserApis.put("tag_user_api", retrieveApi(context, TagUserApi.class));
+        killbillUserApis.put("account_user_api", osgiKillbill.getAccountUserApi());
+        killbillUserApis.put("analytics_sanity_api", osgiKillbill.getAnalyticsSanityApi());
+        killbillUserApis.put("analytics_user_api", osgiKillbill.getAnalyticsUserApi());
+        killbillUserApis.put("catalog_user_api", osgiKillbill.getCatalogUserApi());
+        killbillUserApis.put("entitlement_migration_api", osgiKillbill.getEntitlementMigrationApi());
+        killbillUserApis.put("entitlement_timeline_api", osgiKillbill.getEntitlementMigrationApi());
+        killbillUserApis.put("entitlement_transfer_api", osgiKillbill.getEntitlementTransferApi());
+        killbillUserApis.put("entitlement_user_api", osgiKillbill.getEntitlementUserApi());
+        killbillUserApis.put("invoice_migration_api", osgiKillbill.getInvoiceMigrationApi());
+        killbillUserApis.put("invoice_payment_api", osgiKillbill.getInvoicePaymentApi());
+        killbillUserApis.put("invoice_user_api", osgiKillbill.getInvoiceUserApi());
+        killbillUserApis.put("overdue_user_api", osgiKillbill.getOverdueUserApi());
+        killbillUserApis.put("payment_api", osgiKillbill.getPaymentApi());
+        killbillUserApis.put("tenant_user_api", osgiKillbill.getTagUserApi());
+        killbillUserApis.put("usage_user_api", osgiKillbill.getUsageUserApi());
+        killbillUserApis.put("audit_user_api", osgiKillbill.getAuditUserApi());
+        killbillUserApis.put("custom_field_user_api", osgiKillbill.getCustomFieldUserApi());
+        killbillUserApis.put("export_user_api", osgiKillbill.getExportUserApi());
+        killbillUserApis.put("tag_user_api", osgiKillbill.getTagUserApi());
 
         return killbillUserApis;
     }
