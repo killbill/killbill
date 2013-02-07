@@ -37,6 +37,7 @@ import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.jetty.base.modules.ServerModuleBuilder;
 import com.ning.jetty.core.listeners.SetupServer;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import net.sf.ehcache.CacheManager;
@@ -47,6 +48,7 @@ public class KillbillGuiceListener extends SetupServer {
     public static final Logger logger = LoggerFactory.getLogger(KillbillGuiceListener.class);
     public static final String KILLBILL_MULTITENANT_PROPERTY = "killbill.server.multitenant";
 
+    private Injector injector;
     private DefaultLifecycle killbillLifecycle;
     private BusService killbillBusService;
     private KillbillEventHandler killbilleventHandler;
@@ -86,12 +88,15 @@ public class KillbillGuiceListener extends SetupServer {
         super.contextInitialized(event);
 
         logger.info("KillbillLifecycleListener : contextInitialized");
-        final Injector theInjector = injector(event);
-        killbillLifecycle = theInjector.getInstance(DefaultLifecycle.class);
-        killbillBusService = theInjector.getInstance(BusService.class);
-        killbilleventHandler = theInjector.getInstance(KillbillEventHandler.class);
 
-        registerMBeansForCache(theInjector.getInstance(CacheManager.class));
+        injector = injector(event);
+        event.getServletContext().setAttribute(Injector.class.getName(), injector);
+
+        killbillLifecycle = injector.getInstance(DefaultLifecycle.class);
+        killbillBusService = injector.getInstance(BusService.class);
+        killbilleventHandler = injector.getInstance(KillbillEventHandler.class);
+
+        registerMBeansForCache(injector.getInstance(CacheManager.class));
 
         /*
                 ObjectMapper mapper = theInjector.getInstance(ObjectMapper.class);
@@ -136,5 +141,10 @@ public class KillbillGuiceListener extends SetupServer {
 
         // Complete shutdown sequence
         killbillLifecycle.fireShutdownSequencePostEventUnRegistration();
+    }
+
+    @VisibleForTesting
+    public Injector getInstantiatedInjector() {
+        return injector;
     }
 }
