@@ -33,14 +33,14 @@ public interface PaymentPluginApi {
     /**
      * Charge a specific amount in the Gateway. Required.
      *
-     * @param pluginPaymentMethodKey payment method key to charge
      * @param kbPaymentId            killbill payment id (for reference)
+     * @param kbPaymentMethodId      killbill payment method id
      * @param amount                 amount to charge
      * @param context                call context
      * @return information about the payment in the gateway
      * @throws PaymentPluginApiException
      */
-    public PaymentInfoPlugin processPayment(String pluginPaymentMethodKey, UUID kbPaymentId, BigDecimal amount, CallContext context)
+    public PaymentInfoPlugin processPayment(UUID kbPaymentId, UUID kbPaymentMethodId, BigDecimal amount, CallContext context)
             throws PaymentPluginApiException;
 
     /**
@@ -72,34 +72,30 @@ public interface PaymentPluginApi {
      * Add a payment method for a Killbill account in the gateway. Optional.
      *
      * @param paymentMethodProps payment method details
-     * @param kbAccountId        killbill account id
      * @param setDefault         set it as the default payment method in the gateway
      * @param context            call context
-     * @return payment method key in the gateway
      * @throws PaymentPluginApiException
      */
-    public String addPaymentMethod(PaymentMethodPlugin paymentMethodProps, UUID kbAccountId, boolean setDefault, CallContext context)
+    public void addPaymentMethod(UUID kbPaymentMethodId, PaymentMethodPlugin paymentMethodProps, boolean setDefault, CallContext context)
             throws PaymentPluginApiException;
 
     /**
      * Delete a payment method in the gateway. Optional.
      *
-     * @param pluginPaymentMethodKey payment method key to delete
-     * @param kbAccountId            killbill account id
+     * @param kbPaymentMethodId      killbill payment method id
      * @param context                call context
      * @throws PaymentPluginApiException
      */
-    public void deletePaymentMethod(String pluginPaymentMethodKey, UUID kbAccountId, CallContext context)
+    public void deletePaymentMethod(UUID kbPaymentMethodId, CallContext context)
             throws PaymentPluginApiException;
 
     /**
      * Set a payment method as default in the gateway. Optional.
      *
-     * @param pluginPaymentMethodKey payment method key to update
-     * @param kbAccountId            killbill account id
+     * @param kbPaymentMethodId      killbill payment method id
      * @param context                call context
      * @throws PaymentPluginApiException
      */
-    public void setDefaultPaymentMethod(String pluginPaymentMethodKey, UUID kbAccountId, CallContext context)
+    public void setDefaultPaymentMethod(UUID kbPaymentMethodId, CallContext context)
             throws PaymentPluginApiException;
 }

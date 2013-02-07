@@ -86,9 +86,9 @@ public class PaymentMethodProcessor extends ProcessorBase {
                 try {
                     pluginApi = pluginRegistry.getPlugin(pluginName);
                     pm = new DefaultPaymentMethod(account.getId(), pluginName, paymentMethodProps);
-                    final String externalId = pluginApi.addPaymentMethod(paymentMethodProps, account.getId(), setDefault, context.toCallContext());
+                    pluginApi.addPaymentMethod(pm.getId(), paymentMethodProps, setDefault, context.toCallContext());
                     final PaymentMethodModelDao pmModel = new PaymentMethodModelDao(pm.getId(), pm.getCreatedDate(), pm.getUpdatedDate(),
-                                                                                    pm.getAccountId(), pm.getPluginName(), pm.isActive(), externalId);
+                                                                                    pm.getAccountId(), pm.getPluginName(), pm.isActive());
                     paymentDao.insertPaymentMethod(pmModel, context);
 
                     if (setDefault) {
@@ -195,7 +195,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                         }
                     }
                     final PaymentPluginApi pluginApi = getPluginApi(paymentMethodId, context);
-                    pluginApi.deletePaymentMethod(paymentMethodModel.getExternalId(), account.getId(), context.toCallContext());
+                    pluginApi.deletePaymentMethod(paymentMethodId, context.toCallContext());
                     paymentDao.deletedPaymentMethod(paymentMethodId, context);
                     return null;
                 } catch (PaymentPluginApiException e) {
@@ -222,7 +222,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                 try {
                     final PaymentPluginApi pluginApi = getPluginApi(paymentMethodId, context);
 
-                    pluginApi.setDefaultPaymentMethod(paymentMethodModel.getExternalId(), account.getId(), context.toCallContext());
+                    pluginApi.setDefaultPaymentMethod(paymentMethodId, context.toCallContext());
                     accountInternalApi.updatePaymentMethod(account.getId(), paymentMethodId, context);
                     return null;
                 } catch (PaymentPluginApiException e) {

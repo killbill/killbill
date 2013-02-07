@@ -12,7 +12,6 @@ tableFields(prefix) ::= <<
   <prefix>account_id
 , <prefix>plugin_name
 , <prefix>is_active
-, <prefix>external_id
 , <prefix>created_by
 , <prefix>created_date
 , <prefix>updated_by
@@ -23,7 +22,6 @@ tableValues() ::= <<
   :accountId
 , :pluginName
 , :isActive
-, :externalId
 , :createdBy
 , :createdDate
 , :updatedBy
