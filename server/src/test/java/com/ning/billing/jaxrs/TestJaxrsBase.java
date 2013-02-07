@@ -248,6 +248,8 @@ public class TestJaxrsBase extends KillbillClient {
         server.configure(config, getListeners(), getFilters());
 
         server.start();
+
+        listener.getInstantiatedInjector().injectMembers(this);
     }
 
     protected Iterable<EventListener> getListeners() {
