@@ -96,7 +96,7 @@ public abstract class JRubyPlugin {
         // Register the rack handler
         final IRubyObject rackHandler = pluginInstance.callMethod("rack_handler");
         if (!rackHandler.isNil()) {
-            osgiKillbill.registerServlet(pluginGemName, (HttpServlet) rackHandler);
+            osgiKillbill.registerServlet(pluginGemName, (HttpServlet) rackHandler.toJava(HttpServlet.class));
         }
     }
 
