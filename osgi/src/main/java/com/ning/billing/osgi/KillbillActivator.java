@@ -16,20 +16,27 @@
 
 package com.ning.billing.osgi;
 
+import java.util.List;
+
 import javax.inject.Inject;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
 import com.ning.billing.osgi.api.OSGIKillbill;
+import com.ning.billing.payment.plugin.api.PaymentPluginApi;
+
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
 
 public class KillbillActivator implements BundleActivator {
 
     private final OSGIKillbill osgiKillbill;
 
     private volatile ServiceRegistration osgiKillbillRegistration;
-
     @Inject
     public KillbillActivator(final OSGIKillbill osgiKillbill) {
         this.osgiKillbill = osgiKillbill;
@@ -52,17 +59,4 @@ public class KillbillActivator implements BundleActivator {
         }
     }
 
-    //    public PaymentPluginApi getPaymentPluginApiForPlugin(final String pluginName) {
-    //        try {
-    //            final ServiceReference<PaymentPluginApi>[] paymentApiReferences = (ServiceReference<PaymentPluginApi>[]) context.getServiceReferences(PaymentPluginApi.class.getName(), "(name=hello)");
-    //            final PaymentPluginApi pluginApi = context.getService(paymentApiReferences[0]);
-    //            return pluginApi;
-    //        } catch (InvalidSyntaxException e) {
-    //            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-    //        } finally {
-    //            //context.ungetService(paymentApiReferences[0]);
-    //            // STEPH TODO leak reference here
-    //        }
-    //        return null;
-    //    }
 }
