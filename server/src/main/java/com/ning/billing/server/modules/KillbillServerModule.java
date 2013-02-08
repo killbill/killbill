@@ -31,18 +31,21 @@ import com.ning.billing.jaxrs.resources.CatalogResource;
 import com.ning.billing.jaxrs.resources.InvoiceResource;
 import com.ning.billing.jaxrs.resources.PaymentMethodResource;
 import com.ning.billing.jaxrs.resources.PaymentResource;
+import com.ning.billing.jaxrs.resources.PluginResource;
 import com.ning.billing.jaxrs.resources.RefundResource;
 import com.ning.billing.jaxrs.resources.SubscriptionResource;
 import com.ning.billing.jaxrs.resources.TagResource;
 import com.ning.billing.jaxrs.resources.TenantResource;
 import com.ning.billing.jaxrs.util.KillbillEventHandler;
 import com.ning.billing.junction.glue.DefaultJunctionModule;
+import com.ning.billing.osgi.glue.DefaultOSGIModule;
 import com.ning.billing.overdue.glue.DefaultOverdueModule;
 import com.ning.billing.payment.glue.PaymentModule;
 import com.ning.billing.server.DefaultServerService;
 import com.ning.billing.server.ServerService;
 import com.ning.billing.server.notifications.PushNotificationListener;
 import com.ning.billing.tenant.glue.TenantModule;
+import com.ning.billing.usage.glue.UsageModule;
 import com.ning.billing.util.email.EmailModule;
 import com.ning.billing.util.email.templates.TemplateModule;
 import com.ning.billing.util.glue.AuditModule;
@@ -93,6 +96,7 @@ public class KillbillServerModule extends AbstractModule {
         bind(CatalogResource.class).asEagerSingleton();
         bind(PaymentMethodResource.class).asEagerSingleton();
         bind(PaymentResource.class).asEagerSingleton();
+        bind(PluginResource.class).asEagerSingleton();
         bind(RefundResource.class).asEagerSingleton();
         bind(TenantResource.class).asEagerSingleton();
         bind(KillbillEventHandler.class).asEagerSingleton();
@@ -125,6 +129,9 @@ public class KillbillServerModule extends AbstractModule {
         install(new ExportModule());
         install(new TagStoreModule());
         install(new NonEntityDaoModule());
+        install(new DefaultOSGIModule());
+        install(new UsageModule());
+
         installClock();
     }
 }
