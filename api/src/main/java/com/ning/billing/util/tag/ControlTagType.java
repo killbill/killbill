@@ -17,20 +17,19 @@
 package com.ning.billing.util.tag;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.ObjectType;
 
-import com.google.common.collect.ImmutableList;
-
 public enum ControlTagType {
 
-    AUTO_PAY_OFF(new UUID(0, 1), "Suspends payments until removed.", true, false, ImmutableList.<ObjectType>of(ObjectType.ACCOUNT)),
-    AUTO_INVOICING_OFF(new UUID(0, 2), "Suspends invoicing until removed.", false, true, ImmutableList.<ObjectType>of(ObjectType.ACCOUNT)),
-    OVERDUE_ENFORCEMENT_OFF(new UUID(0, 3), "Suspends overdue enforcement behaviour until removed.", false, false, ImmutableList.<ObjectType>of(ObjectType.ACCOUNT)),
-    WRITTEN_OFF(new UUID(0, 4), "Indicates that an invoice is written off. No billing or payment effect.", false, false, ImmutableList.<ObjectType>of(ObjectType.INVOICE)),
-    MANUAL_PAY(new UUID(0, 5), "Indicates that Killbill doesn't process payments for that account (external payments only)", true, false, ImmutableList.<ObjectType>of(ObjectType.ACCOUNT));
+    AUTO_PAY_OFF(new UUID(0, 1), "Suspends payments until removed.", true, false, Collections.<ObjectType>singletonList(ObjectType.ACCOUNT)),
+    AUTO_INVOICING_OFF(new UUID(0, 2), "Suspends invoicing until removed.", false, true, Collections.<ObjectType>singletonList(ObjectType.ACCOUNT)),
+    OVERDUE_ENFORCEMENT_OFF(new UUID(0, 3), "Suspends overdue enforcement behaviour until removed.", false, false, Collections.<ObjectType>singletonList(ObjectType.ACCOUNT)),
+    WRITTEN_OFF(new UUID(0, 4), "Indicates that an invoice is written off. No billing or payment effect.", false, false, Collections.<ObjectType>singletonList(ObjectType.INVOICE)),
+    MANUAL_PAY(new UUID(0, 5), "Indicates that Killbill doesn't process payments for that account (external payments only)", true, false, Collections.<ObjectType>singletonList(ObjectType.ACCOUNT));
 
     private final UUID id;
     private final String description;
