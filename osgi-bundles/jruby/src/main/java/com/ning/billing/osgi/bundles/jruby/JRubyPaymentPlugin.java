@@ -30,7 +30,6 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.log.LogService;
 
-import com.ning.billing.osgi.api.OSGIKillbill;
 import com.ning.billing.osgi.api.config.PluginRubyConfig;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.payment.plugin.api.PaymentInfoPlugin;
@@ -45,8 +44,8 @@ public class JRubyPaymentPlugin extends JRubyPlugin implements PaymentPluginApi 
     private volatile ServiceRegistration<PaymentPluginApi> paymentInfoPluginRegistration;
 
     public JRubyPaymentPlugin(final PluginRubyConfig config, final ScriptingContainer container,
-                              final OSGIKillbill osgiKillbill, @Nullable final LogService logger) {
-        super(config, container, osgiKillbill, logger);
+                              final BundleContext bundleContext, @Nullable final LogService logger) {
+        super(config, container, bundleContext, logger);
     }
 
     @Override

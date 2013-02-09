@@ -16,7 +16,6 @@
 
 package com.ning.billing.osgi.api;
 
-import javax.servlet.http.HttpServlet;
 import javax.sql.DataSource;
 
 import com.ning.billing.account.api.AccountUserApi;
@@ -92,12 +91,4 @@ public interface OSGIKillbill {
      * @return the dataSource for the OSGI bundles
      */
     public DataSource getDataSource();
-
-    /**
-     * Register a servlet
-     *
-     * @param pluginName plugin name
-     * @param pluginServlet servlet from the bundle
-     */
-    public void registerServlet(String pluginName, HttpServlet pluginServlet);
 }

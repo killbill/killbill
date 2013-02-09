@@ -14,15 +14,27 @@
  * under the License.
  */
 
-package com.ning.billing.osgi.api.http;
+package com.ning.billing.osgi.bundles.jruby;
 
+import java.io.IOException;
+
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
-public interface ServletRouter {
+import org.jruby.runtime.builtin.IRubyObject;
 
-    void registerServlet(String pluginName, HttpServlet httpServlet);
+public class JRubyHttpServlet extends HttpServlet {
 
-    void unregisterServlet(String pluginName);
+    private final HttpServlet delegate;
 
-    HttpServlet getServletForPlugin(String pluginName);
+    public JRubyHttpServlet(final IRubyObject rubyObject) {
+        delegate = (HttpServlet) rubyObject.toJava(HttpServlet.class);
+    }
+
+    @Override
+    protected void service(final HttpServletRequest req, final HttpServletResponse resp) throws ServletException, IOException {
+        delegate.service(req, resp);
+    }
 }

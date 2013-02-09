@@ -17,6 +17,7 @@
 package com.ning.billing.osgi.bundles.jruby;
 
 import java.util.Arrays;
+import java.util.Hashtable;
 import java.util.Map;
 
 import javax.annotation.Nullable;
@@ -28,9 +29,9 @@ import org.jruby.embed.EvalFailedException;
 import org.jruby.embed.ScriptingContainer;
 import org.jruby.runtime.builtin.IRubyObject;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.log.LogService;
 
-import com.ning.billing.osgi.api.OSGIKillbill;
 import com.ning.billing.osgi.api.config.PluginRubyConfig;
 
 // Bridge between the OSGI bundle and the ruby plugin
@@ -46,7 +47,7 @@ public abstract class JRubyPlugin {
     private static final String ACTIVE = "@active";
 
     protected final LogService logger;
-    protected final OSGIKillbill osgiKillbill;
+    protected final BundleContext bundleContext;
     protected final String pluginGemName;
     protected final String rubyRequire;
     protected final String pluginMainClass;
@@ -55,12 +56,13 @@ public abstract class JRubyPlugin {
 
     protected RubyObject pluginInstance;
 
+    private ServiceRegistration httpServletServiceRegistration = null;
     private String cachedRequireLine = null;
 
     public JRubyPlugin(final PluginRubyConfig config, final ScriptingContainer container,
-                       final OSGIKillbill osgiKillbill, @Nullable final LogService logger) {
+                       final BundleContext bundleContext, @Nullable final LogService logger) {
         this.logger = logger;
-        this.osgiKillbill = osgiKillbill;
+        this.bundleContext = bundleContext;
         this.pluginGemName = config.getPluginName();
         this.rubyRequire = config.getRubyRequire();
         this.pluginMainClass = config.getRubyMainClass();
@@ -92,24 +94,39 @@ public abstract class JRubyPlugin {
 
         // Start the plugin
         pluginInstance = (RubyObject) container.runScriptlet(pluginMainClass + ".new(" + JAVA_APIS + ")");
-
-        // Register the rack handler
-        final IRubyObject rackHandler = pluginInstance.callMethod("rack_handler");
-        if (!rackHandler.isNil()) {
-            osgiKillbill.registerServlet(pluginGemName, (HttpServlet) rackHandler.toJava(HttpServlet.class));
-        }
     }
 
     public void startPlugin(final BundleContext context) {
         checkPluginIsStopped();
         pluginInstance.callMethod("start_plugin");
         checkPluginIsRunning();
+        registerHttpServlet();
     }
 
     public void stopPlugin(final BundleContext context) {
         checkPluginIsRunning();
+        unregisterHttpServlet();
         pluginInstance.callMethod("stop_plugin");
         checkPluginIsStopped();
+    }
+
+    private void registerHttpServlet() {
+        // Register the rack handler
+        final IRubyObject rackHandler = pluginInstance.callMethod("rack_handler");
+        if (!rackHandler.isNil()) {
+            log(LogService.LOG_INFO, String.format("Using %s as rack handler", rackHandler.getMetaClass()));
+
+            final JRubyHttpServlet jRubyHttpServlet = new JRubyHttpServlet(rackHandler);
+            final Hashtable<String, String> properties = new Hashtable<>();
+            properties.put("killbill.pluginName", pluginGemName);
+            httpServletServiceRegistration = bundleContext.registerService(HttpServlet.class.getName(), jRubyHttpServlet, properties);
+        }
+    }
+
+    private void unregisterHttpServlet() {
+        if (httpServletServiceRegistration != null) {
+            httpServletServiceRegistration.unregister();
+        }
     }
 
     protected void checkPluginIsRunning() {
