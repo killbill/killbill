@@ -136,7 +136,7 @@ public class DefaultOSGIService implements OSGIService {
         }
     }
 
-    private void installAndStartBundles(final Framework framework) throws BundleException {
+    private void installAndStartBundles(final Framework framework) {
         try {
             final BundleContext context = framework.getBundleContext();
 
@@ -148,9 +148,15 @@ public class DefaultOSGIService implements OSGIService {
             // Start all the bundles
             for (final Bundle bundle : installedBundles) {
                 logger.info("Starting bundle {}", bundle.getLocation());
-                bundle.start();
+                try {
+                    bundle.start();
+                } catch (BundleException e) {
+                    logger.warn("Unable to start bundle", e);
+                }
             }
         } catch (PluginConfigException e) {
+            logger.error("Error while parsing plugin configurations", e);
+        } catch (BundleException e) {
             logger.error("Error while parsing plugin configurations", e);
         }
     }
