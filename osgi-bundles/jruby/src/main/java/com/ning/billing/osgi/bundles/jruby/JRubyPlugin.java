@@ -117,7 +117,7 @@ public abstract class JRubyPlugin {
             log(LogService.LOG_INFO, String.format("Using %s as rack handler", rackHandler.getMetaClass()));
 
             final JRubyHttpServlet jRubyHttpServlet = new JRubyHttpServlet(rackHandler);
-            final Hashtable<String, String> properties = new Hashtable<>();
+            final Hashtable<String, String> properties = new Hashtable<String, String>();
             properties.put("killbill.pluginName", pluginGemName);
             httpServletServiceRegistration = bundleContext.registerService(HttpServlet.class.getName(), jRubyHttpServlet, properties);
         }
