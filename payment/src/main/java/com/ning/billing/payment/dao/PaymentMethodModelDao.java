@@ -95,6 +95,9 @@ public class PaymentMethodModelDao extends EntityBase implements EntityModelDao<
     }
 
     public boolean equalsButActive(final PaymentMethodModelDao that) {
+        if (id != null ? !id.equals(that.id) : that.id != null) {
+            return false;
+        }
         if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
             return false;
         }

@@ -83,7 +83,6 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
     protected TestApiListener testListener;
     @Inject
     protected TestListenerStatus testListenerStatus;
-
     @Inject
     protected EntitlementTestInitializer entitlementTestInitializer;
 

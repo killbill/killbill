@@ -67,5 +67,7 @@ public interface PaymentDao {
 
     public void deletedPaymentMethod(UUID paymentMethodId, InternalCallContext context);
 
+    public List<PaymentMethodModelDao> refreshPaymentMethods(final UUID accountId, final List<PaymentMethodModelDao> paymentMethods, final InternalCallContext context);
+
     public void undeletedPaymentMethod(UUID paymentMethodId, InternalCallContext context);
 }

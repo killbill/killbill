@@ -160,6 +160,11 @@ public class MockPaymentDao implements PaymentDao {
     }
 
     @Override
+    public List<PaymentMethodModelDao> refreshPaymentMethods(final UUID accountId, final List<PaymentMethodModelDao> paymentMethods, final InternalCallContext context) {
+        return null;
+    }
+
+    @Override
     public void undeletedPaymentMethod(final UUID paymentMethodId, final InternalCallContext context) {
         throw new UnsupportedOperationException();
     }

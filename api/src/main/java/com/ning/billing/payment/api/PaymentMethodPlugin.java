@@ -20,6 +20,7 @@ import java.util.List;
 
 public interface PaymentMethodPlugin {
 
+
     public String getExternalPaymentMethodId();
 
     public boolean isDefaultPaymentMethod();

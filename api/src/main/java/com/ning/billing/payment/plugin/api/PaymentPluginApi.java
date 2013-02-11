@@ -17,6 +17,7 @@
 package com.ning.billing.payment.plugin.api;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.payment.api.PaymentMethodPlugin;
@@ -97,5 +98,29 @@ public interface PaymentPluginApi {
      * @throws PaymentPluginApiException
      */
     public void setDefaultPaymentMethod(UUID kbPaymentMethodId, CallContext context)
+            throws PaymentPluginApiException;
+
+    /**
+     *
+     * This is used to see the view of paymentMethods kept by the plugin or the view of
+     * existing payment method on the gateway.
+     *
+     * Sometimes payment methods have to be added directly to the gateway for PCI compliance issues
+     * and so Killbill needs to refresh its state.
+     *
+     * @param kbAccountId           killbill accountId
+     * @param refreshFromGateway    fetch the list of existing  payment methods from gateway-- if supported
+     * @param context               call context
+     * @return
+     */
+    public List<PaymentMethodInfoPlugin> getPaymentMethods(UUID kbAccountId, boolean refreshFromGateway, CallContext context)
+            throws PaymentPluginApiException;
+
+    /**
+     * This is used after Killbill decided to refresh its state from the gateway
+     *
+     * @param paymentMethods        the list of payment methods
+     */
+    public void resetPaymentMethods(List<PaymentMethodInfoPlugin> paymentMethods)
             throws PaymentPluginApiException;
 }

@@ -36,9 +36,11 @@ import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.payment.api.PaymentMethodPlugin.PaymentMethodKVInfo;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.dao.PaymentMethodModelDao;
+import com.ning.billing.payment.plugin.api.PaymentMethodInfoPlugin;
 import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 import com.ning.billing.payment.plugin.api.PaymentPluginApiException;
 import com.ning.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
+import com.ning.billing.payment.provider.DefaultPaymentMethodInfoPlugin;
 import com.ning.billing.payment.provider.ExternalPaymentProviderPlugin;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
 import com.ning.billing.util.callcontext.InternalCallContext;
@@ -48,6 +50,8 @@ import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.tag.TagInternalApi;
 import com.ning.billing.util.svcsapi.bus.InternalBus;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -241,5 +245,87 @@ public class PaymentMethodProcessor extends ProcessorBase {
             throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, paymentMethodId);
         }
         return pluginRegistry.getPlugin(paymentMethod.getPluginName());
+    }
+
+    /**
+     * This refreshed the payment methods from the plugin for cases when adding payment method does not flow through KB because of PCI compliance
+     * issues. The logic below is not optimal because there is no atomicity in the step but the goos news is that this is idempotent so can always be
+     * replayed if necessary-- partial failure scenario.
+     *
+     * @param pluginName
+     * @param account
+     * @param context
+     * @return the list of payment methods -- should be identical between KB, the plugin view-- if it keeps a state-- and the gateway.
+     * @throws PaymentApiException
+     */
+    public List<PaymentMethod> refreshPaymentMethods(final String pluginName, final Account account, final InternalCallContext context) throws PaymentApiException {
+
+
+        // Don't hold the account lock while fetching the payment methods from the gateway as those could change anyway
+        final PaymentPluginApi pluginApi = pluginRegistry.getPlugin(pluginName);
+        final List<PaymentMethodInfoPlugin> pluginPms;
+        try {
+            pluginPms = pluginApi.getPaymentMethods(account.getId(), true, context.toCallContext());
+            // The method should never return null by convention, but let's not trust the plugin...
+            if (pluginPms == null) {
+                log.warn("No payment methods defined on the account {} for plugin {}", account.getId(), pluginName);
+                return ImmutableList.<PaymentMethod>of();
+            }
+        } catch (PaymentPluginApiException e) {
+            throw new PaymentApiException(ErrorCode.PAYMENT_REFRESH_PAYMENT_METHOD, account.getId(), e.getErrorMessage());
+        }
+
+        return new WithAccountLock<List<PaymentMethod>>().processAccountWithLock(locker, account.getExternalKey(), new WithAccountLockCallback<List<PaymentMethod>>() {
+
+            @Override
+            public List<PaymentMethod> doOperation() throws PaymentApiException {
+
+                UUID defaultPaymentMethodId = null;
+
+                final List<PaymentMethodInfoPlugin> pluginPmsWithId = new ArrayList<PaymentMethodInfoPlugin>();
+                final List<PaymentMethodModelDao> finalPaymentMethods = new ArrayList<PaymentMethodModelDao>();
+                for (final PaymentMethodInfoPlugin cur : pluginPms) {
+
+                    // If the kbPaymentId is NULL, the plugin does not know about it, so we create a new UUID
+                    final UUID paymentMethodId = cur.getPaymentMethodId() != null ? cur.getPaymentMethodId() : UUID.randomUUID();
+                    final PaymentMethod input = new DefaultPaymentMethod(paymentMethodId, account.getId(), pluginName);
+                    final PaymentMethodModelDao pmModel = new PaymentMethodModelDao(input.getId(), input.getCreatedDate(), input.getUpdatedDate(),
+                                                                                    input.getAccountId(), input.getPluginName(), input.isActive());
+                    finalPaymentMethods.add(pmModel);
+
+                    pluginPmsWithId.add(new DefaultPaymentMethodInfoPlugin(cur, paymentMethodId));
+
+                    if (cur.isDefault()) {
+                        defaultPaymentMethodId = paymentMethodId;
+                    }
+                }
+
+                final List<PaymentMethodModelDao> refreshedPaymentMethods = paymentDao.refreshPaymentMethods(account.getId(),
+                                                                                                             finalPaymentMethods,
+                                                                                                             context);
+                try {
+                    pluginApi.resetPaymentMethods(pluginPmsWithId);
+                } catch (PaymentPluginApiException e) {
+                    throw new PaymentApiException(ErrorCode.PAYMENT_REFRESH_PAYMENT_METHOD, account.getId(), e.getErrorMessage());
+                }
+
+                try {
+                    if (defaultPaymentMethodId != null) {
+                        accountInternalApi.updatePaymentMethod(account.getId(), defaultPaymentMethodId, context);
+                    } else {
+                        accountInternalApi.removePaymentMethod(account.getId(), context);
+                    }
+                } catch (AccountApiException e) {
+                    throw new PaymentApiException(e);
+                }
+
+                return ImmutableList.<PaymentMethod>copyOf(Collections2.transform(refreshedPaymentMethods, new Function<PaymentMethodModelDao, PaymentMethod>() {
+                    @Override
+                    public PaymentMethod apply(final PaymentMethodModelDao input) {
+                        return new DefaultPaymentMethod(input, null);
+                    }
+                }));
+            }
+        });
     }
 }

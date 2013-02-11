@@ -180,4 +180,10 @@ public class DefaultPaymentApi implements PaymentApi {
             throws PaymentApiException {
         methodProcessor.setDefaultPaymentMethod(account, paymentMethodId, internalCallContextFactory.createInternalCallContext(account.getId(), context));
     }
+
+    @Override
+    public List<PaymentMethod> refreshPaymentMethods(final String pluginName, final Account account, final CallContext context)
+            throws PaymentApiException {
+        return methodProcessor.refreshPaymentMethods(pluginName, account, internalCallContextFactory.createInternalCallContext(account.getId(), context));
+    }
 }

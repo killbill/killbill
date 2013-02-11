@@ -19,6 +19,7 @@ package com.ning.billing.osgi.bundles.jruby;
 import java.math.BigDecimal;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -34,6 +35,7 @@ import com.ning.billing.osgi.api.OSGIKillbill;
 import com.ning.billing.osgi.api.config.PluginRubyConfig;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.payment.plugin.api.PaymentInfoPlugin;
+import com.ning.billing.payment.plugin.api.PaymentMethodInfoPlugin;
 import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 import com.ning.billing.payment.plugin.api.PaymentPluginApiException;
 import com.ning.billing.payment.plugin.api.RefundInfoPlugin;
@@ -144,5 +146,25 @@ public class JRubyPaymentPlugin extends JRubyPlugin implements PaymentPluginApi 
         final Ruby runtime = getRuntime();
         pluginInstance.callMethod("set_default_payment_method",
                                   JavaEmbedUtils.javaToRuby(runtime, kbPaymentMethodId.toString()));
+    }
+
+    @Override
+    public List<PaymentMethodInfoPlugin> getPaymentMethods(final UUID kbAccountId, final boolean refreshFromGateway, final CallContext context) throws PaymentPluginApiException {
+        checkPluginIsRunning();
+
+        final Ruby runtime = getRuntime();
+        pluginInstance.callMethod("get_payment_methods",
+                                  JavaEmbedUtils.javaToRuby(runtime, kbAccountId.toString()));
+        // TODO
+        return null;
+    }
+
+    @Override
+    public void resetPaymentMethods(final List<PaymentMethodInfoPlugin> paymentMethods) throws PaymentPluginApiException {
+        checkPluginIsRunning();
+
+        final Ruby runtime = getRuntime();
+        pluginInstance.callMethod("reset_payment_methods",
+                                  JavaEmbedUtils.javaToRuby(runtime, paymentMethods));
     }
 }

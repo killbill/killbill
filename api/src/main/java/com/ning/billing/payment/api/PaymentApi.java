@@ -129,4 +129,7 @@ public interface PaymentApi {
     public void setDefaultPaymentMethod(Account account, UUID paymentMethodId, CallContext context)
             throws PaymentApiException;
 
+    public List<PaymentMethod> refreshPaymentMethods(String pluginName, Account account, CallContext context)
+            throws PaymentApiException;
+
 }

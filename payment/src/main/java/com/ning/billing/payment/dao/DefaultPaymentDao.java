@@ -16,7 +16,9 @@
 
 package com.ning.billing.payment.dao;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.inject.Inject;
@@ -289,4 +291,47 @@ public class DefaultPaymentDao implements PaymentDao {
             }
         });
     }
+
+    @Override
+    public List<PaymentMethodModelDao> refreshPaymentMethods(final UUID accountId, final List<PaymentMethodModelDao> newPaymentMethods, final InternalCallContext context) {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<PaymentMethodModelDao>>() {
+
+            @Override
+            public List<PaymentMethodModelDao> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                final PaymentMethodSqlDao transactional = entitySqlDaoWrapperFactory.become(PaymentMethodSqlDao.class);
+                final List<PaymentMethodModelDao> existingPaymentMethods = transactional.getByAccountId(accountId.toString(), context);
+
+                for (final PaymentMethodModelDao finalPaymentMethod : newPaymentMethods) {
+
+                    PaymentMethodModelDao foundExistingPaymentMethod = null;
+                    for (final PaymentMethodModelDao existingPaymentMethod : existingPaymentMethods) {
+                        if (existingPaymentMethod.equals(finalPaymentMethod)) {
+                            // We already have it - nothing to do
+                            foundExistingPaymentMethod = existingPaymentMethod;
+                            break;
+                        } else if (existingPaymentMethod.equalsButActive(finalPaymentMethod)) {
+                            // We already have it but its status has changed - update it accordingly
+                            undeletedPaymentMethodInTransaction(entitySqlDaoWrapperFactory, existingPaymentMethod.getId(), context);
+                            foundExistingPaymentMethod = existingPaymentMethod;
+                            break;
+                        }
+                        // Otherwise, we don't have it
+                    }
+
+                    if (foundExistingPaymentMethod == null) {
+                        insertPaymentMethodInTransaction(entitySqlDaoWrapperFactory, finalPaymentMethod, context);
+                    } else {
+                        existingPaymentMethods.remove(foundExistingPaymentMethod);
+                    }
+                }
+
+                // Finally, all payment methods left in the existingPaymentMethods should be marked as deleted
+                for (final PaymentMethodModelDao existingPaymentMethod : existingPaymentMethods) {
+                        deletedPaymentMethodInTransaction(entitySqlDaoWrapperFactory, existingPaymentMethod.getId(), context);
+                }
+                return transactional.getByAccountId(accountId.toString(), context);
+            }
+        });
+    }
+
 }
