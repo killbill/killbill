@@ -16,8 +16,8 @@
 
 package com.ning.billing.osgi.http;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.inject.Singleton;
 import javax.servlet.http.HttpServlet;
@@ -27,11 +27,16 @@ import com.ning.billing.osgi.api.http.ServletRouter;
 @Singleton
 public class DefaultServletRouter implements ServletRouter {
 
-    private final Map<String, HttpServlet> pluginServlets = new HashMap<String, HttpServlet>();
+    private final Map<String, HttpServlet> pluginServlets = new ConcurrentHashMap<String, HttpServlet>();
 
     @Override
     public void registerServlet(final String pluginName, final HttpServlet httpServlet) {
         pluginServlets.put(pluginName, httpServlet);
+    }
+
+    @Override
+    public void unregisterServlet(final String pluginName) {
+        pluginServlets.remove(pluginName);
     }
 
     @Override

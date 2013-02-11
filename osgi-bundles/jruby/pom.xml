@@ -73,9 +73,10 @@
                 <configuration>
                     <instructions>
                         <Bundle-Activator>com.ning.billing.osgi.bundles.jruby.Activator</Bundle-Activator>
-                        <Import-Package>
-                            *;resolution:=optional,org.osgi.service.log;resolution:=optional,org.jruby;resolution:=optional;version="[1.7,2)",javax.management,javax.crypto,javax.net.ssl,javax.security.auth.x500;resolution:=optional
-                        </Import-Package>
+                        <Export-Package></Export-Package>
+                        <Private-Package>com.ning.billing.osgi.bundles.jruby.*</Private-Package>
+                        <!-- Optional resolution because exported by the Felix system bundle -->
+                        <Import-Package>*;resolution:=optional,javax.management;javax.management.*;javax.crypto;javax.crypto.*;javax.net;javax.net.*;javax.security;javax.security.*;resolution:=optional</Import-Package>
                     </instructions>
                 </configuration>
                 <executions>

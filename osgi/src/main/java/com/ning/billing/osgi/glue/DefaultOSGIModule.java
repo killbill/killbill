@@ -22,8 +22,10 @@ import javax.sql.DataSource;
 import org.skife.config.ConfigurationObjectFactory;
 
 import com.ning.billing.osgi.DefaultOSGIKillbill;
+import com.ning.billing.osgi.DefaultOSGIService;
 import com.ning.billing.osgi.KillbillActivator;
 import com.ning.billing.osgi.api.OSGIKillbill;
+import com.ning.billing.osgi.api.OSGIService;
 import com.ning.billing.osgi.api.config.PluginConfigServiceApi;
 import com.ning.billing.osgi.api.http.ServletRouter;
 import com.ning.billing.osgi.http.DefaultServletRouter;
@@ -56,6 +58,8 @@ public class DefaultOSGIModule extends AbstractModule {
     protected void configure() {
         installConfig();
         installOSGIServlet();
+
+        bind(OSGIService.class).to(DefaultOSGIService.class).asEagerSingleton();
 
         bind(KillbillActivator.class).asEagerSingleton();
         bind(PluginFinder.class).asEagerSingleton();

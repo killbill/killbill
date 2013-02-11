@@ -18,7 +18,6 @@ package com.ning.billing.osgi;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.servlet.http.HttpServlet;
 import javax.sql.DataSource;
 
 import com.ning.billing.account.api.AccountUserApi;
@@ -231,10 +230,5 @@ public class DefaultOSGIKillbill implements OSGIKillbill {
     @Override
     public DataSource getDataSource() {
         return dataSource;
-    }
-
-    @Override
-    public void registerServlet(final String pluginName, final HttpServlet pluginServlet) {
-        servletRouter.registerServlet(pluginName, pluginServlet);
     }
 }

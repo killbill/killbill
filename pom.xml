@@ -92,6 +92,7 @@
                 <groupId>javax.servlet</groupId>
                 <artifactId>javax.servlet-api</artifactId>
                 <version>3.0.1</version>
+                <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>com.ning.billing</groupId>
@@ -313,6 +314,12 @@
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
                 <version>12.0</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.google.code.findbugs</groupId>
+                <artifactId>jsr305</artifactId>
+                <version>1.3.9</version>
                 <scope>provided</scope>
             </dependency>
             <dependency>

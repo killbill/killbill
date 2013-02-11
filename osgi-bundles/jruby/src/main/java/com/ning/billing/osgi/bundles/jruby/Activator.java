@@ -54,9 +54,9 @@ public class Activator implements BundleActivator {
         // Setup JRuby
         final ScriptingContainer scriptingContainer = setupScriptingContainer(rubyConfig);
         if (PluginType.NOTIFICATION.equals(rubyConfig.getPluginType())) {
-            plugin = new JRubyNotificationPlugin(rubyConfig, scriptingContainer, osgiKillbill, logger);
+            plugin = new JRubyNotificationPlugin(rubyConfig, scriptingContainer, context, logger);
         } else if (PluginType.PAYMENT.equals(rubyConfig.getPluginType())) {
-            plugin = new JRubyPaymentPlugin(rubyConfig, scriptingContainer, osgiKillbill, logger);
+            plugin = new JRubyPaymentPlugin(rubyConfig, scriptingContainer, context, logger);
         }
 
         // Validate and instantiate the plugin
