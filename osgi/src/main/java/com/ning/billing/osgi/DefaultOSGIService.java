@@ -67,7 +67,7 @@ public class DefaultOSGIService implements OSGIService {
     private final KillbillActivator killbillActivator;
 
     private Framework framework;
-    private volatile ServiceReference<PaymentPluginApi>[] paymentApiReferences;
+    private volatile ServiceReference[] paymentApiReferences;
     private Map<String, PaymentPluginApi> paymentPluginApis;
 
     @Inject
