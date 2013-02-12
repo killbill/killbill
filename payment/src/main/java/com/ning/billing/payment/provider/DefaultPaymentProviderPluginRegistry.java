@@ -20,13 +20,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.ning.billing.util.config.PaymentConfig;
+import com.ning.billing.osgi.api.OSGIServiceRegistration;
 import com.ning.billing.payment.plugin.api.PaymentPluginApi;
+import com.ning.billing.util.config.PaymentConfig;
 
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 
-public class DefaultPaymentProviderPluginRegistry implements PaymentProviderPluginRegistry {
+public class DefaultPaymentProviderPluginRegistry implements OSGIServiceRegistration<PaymentPluginApi> {
 
     private final String defaultPlugin;
     private final Map<String, PaymentPluginApi> pluginsByName = new ConcurrentHashMap<String, PaymentPluginApi>();
@@ -36,13 +37,19 @@ public class DefaultPaymentProviderPluginRegistry implements PaymentProviderPlug
         this.defaultPlugin = config.getDefaultPaymentProvider();
     }
 
+
     @Override
-    public void register(final PaymentPluginApi plugin, final String name) {
-        pluginsByName.put(name.toLowerCase(), plugin);
+    public void registerService(final String pluginName, final PaymentPluginApi service) {
+        pluginsByName.put(pluginName.toLowerCase(), service);
     }
 
     @Override
-    public PaymentPluginApi getPlugin(final String name) {
+    public void unregisterService(final String pluginName) {
+        pluginsByName.remove(pluginName.toLowerCase());
+    }
+
+    @Override
+    public PaymentPluginApi getServiceForPluginName(final String name) {
         final PaymentPluginApi plugin = pluginsByName.get((Strings.emptyToNull(name) == null ? defaultPlugin : name).toLowerCase());
 
         if (plugin == null) {
@@ -53,7 +60,12 @@ public class DefaultPaymentProviderPluginRegistry implements PaymentProviderPlug
     }
 
     @Override
-    public Set<String> getRegisteredPluginNames() {
+    public Set<String> getAllServiceForPluginName() {
         return pluginsByName.keySet();
+    }
+
+    @Override
+    public Class<PaymentPluginApi> getServiceType() {
+        return PaymentPluginApi.class;
     }
 }

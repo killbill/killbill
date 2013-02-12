@@ -34,7 +34,6 @@ import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.osgi.api.OSGIKillbill;
 import com.ning.billing.osgi.api.config.PluginConfigServiceApi;
-import com.ning.billing.osgi.api.http.ServletRouter;
 import com.ning.billing.osgi.glue.DefaultOSGIModule;
 import com.ning.billing.overdue.OverdueUserApi;
 import com.ning.billing.payment.api.PaymentApi;
@@ -71,11 +70,9 @@ public class DefaultOSGIKillbill implements OSGIKillbill {
     private final PluginConfigServiceApi configServiceApi;
 
     private final DataSource dataSource;
-    private final ServletRouter servletRouter;
 
     @Inject
     public DefaultOSGIKillbill(@Named(DefaultOSGIModule.OSGI_NAMED) final DataSource dataSource,
-                               final ServletRouter servletRouter,
                                final AccountUserApi accountUserApi,
                                final AnalyticsSanityApi analyticsSanityApi,
                                final AnalyticsUserApi analyticsUserApi,
@@ -98,7 +95,6 @@ public class DefaultOSGIKillbill implements OSGIKillbill {
                                final ExternalBus externalBus,
                                final PluginConfigServiceApi configServiceApi) {
         this.dataSource = dataSource;
-        this.servletRouter = servletRouter;
         this.accountUserApi = accountUserApi;
         this.analyticsSanityApi = analyticsSanityApi;
         this.analyticsUserApi = analyticsUserApi;

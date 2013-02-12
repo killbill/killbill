@@ -14,15 +14,10 @@
  * under the License.
  */
 
-package com.ning.billing.osgi.api.http;
+package com.ning.billing.osgi.api;
 
-import javax.servlet.http.HttpServlet;
+public interface OSGIPluginProperties {
 
-public interface ServletRouter {
+    public static final String PLUGIN_NAME_PROP = "killbill.pluginName";
 
-    void registerServlet(String pluginName, HttpServlet httpServlet);
-
-    void unregisterServlet(String pluginName);
-
-    HttpServlet getServletForPlugin(String pluginName);
 }

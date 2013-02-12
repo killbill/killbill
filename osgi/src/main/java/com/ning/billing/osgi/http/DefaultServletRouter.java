@@ -17,30 +17,41 @@
 package com.ning.billing.osgi.http;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.inject.Singleton;
 import javax.servlet.http.HttpServlet;
 
-import com.ning.billing.osgi.api.http.ServletRouter;
+import com.ning.billing.osgi.api.OSGIServiceRegistration;
 
 @Singleton
-public class DefaultServletRouter implements ServletRouter {
+public class DefaultServletRouter implements OSGIServiceRegistration<HttpServlet> {
 
     private final Map<String, HttpServlet> pluginServlets = new ConcurrentHashMap<String, HttpServlet>();
 
     @Override
-    public void registerServlet(final String pluginName, final HttpServlet httpServlet) {
+    public void registerService(final String pluginName, final HttpServlet httpServlet) {
         pluginServlets.put(pluginName, httpServlet);
     }
 
     @Override
-    public void unregisterServlet(final String pluginName) {
+    public void unregisterService(final String pluginName) {
         pluginServlets.remove(pluginName);
     }
 
     @Override
-    public HttpServlet getServletForPlugin(final String pluginName) {
+    public HttpServlet getServiceForPluginName(final String pluginName) {
         return pluginServlets.get(pluginName);
+    }
+
+    @Override
+    public Set<String> getAllServiceForPluginName() {
+        return pluginServlets.keySet();
+    }
+
+    @Override
+    public Class<HttpServlet> getServiceType() {
+        return HttpServlet.class;
     }
 }

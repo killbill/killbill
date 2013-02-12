@@ -37,6 +37,7 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
+import com.ning.billing.osgi.api.OSGIServiceRegistration;
 import com.ning.billing.payment.api.DefaultPayment;
 import com.ning.billing.payment.api.DefaultPaymentErrorEvent;
 import com.ning.billing.payment.api.DefaultPaymentInfoEvent;
@@ -51,7 +52,6 @@ import com.ning.billing.payment.dispatcher.PluginDispatcher;
 import com.ning.billing.payment.plugin.api.PaymentInfoPlugin;
 import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 import com.ning.billing.payment.plugin.api.PaymentPluginApiException;
-import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
 import com.ning.billing.payment.retry.AutoPayRetryService.AutoPayRetryServiceScheduler;
 import com.ning.billing.payment.retry.FailedPaymentRetryService.FailedPaymentRetryServiceScheduler;
 import com.ning.billing.payment.retry.PluginFailureRetryService.PluginFailureRetryServiceScheduler;
@@ -91,7 +91,7 @@ public class PaymentProcessor extends ProcessorBase {
     private static final Logger log = LoggerFactory.getLogger(PaymentProcessor.class);
 
     @Inject
-    public PaymentProcessor(final PaymentProviderPluginRegistry pluginRegistry,
+    public PaymentProcessor(final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry,
                             final PaymentMethodProcessor paymentMethodProcessor,
                             final AccountInternalApi accountUserApi,
                             final InvoiceInternalApi invoiceApi,

@@ -16,6 +16,8 @@
 
 package com.ning.billing.osgi;
 
+import java.util.List;
+
 import javax.inject.Inject;
 import javax.servlet.http.HttpServlet;
 
@@ -27,12 +29,16 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
 import com.ning.billing.osgi.api.OSGIKillbill;
-import com.ning.billing.osgi.api.http.ServletRouter;
+import com.ning.billing.osgi.api.OSGIPluginProperties;
+import com.ning.billing.osgi.api.OSGIServiceRegistration;
+import com.ning.billing.payment.plugin.api.PaymentPluginApi;
+
+import com.google.common.collect.ImmutableList;
 
 public class KillbillActivator implements BundleActivator, ServiceListener {
 
     private final OSGIKillbill osgiKillbill;
-    private final ServletRouter servletRouter;
+    private final List<OSGIServiceRegistration> allRegistrationHandlers;
 
     private volatile ServiceRegistration osgiKillbillRegistration;
 
@@ -40,9 +46,10 @@ public class KillbillActivator implements BundleActivator, ServiceListener {
 
     @Inject
     public KillbillActivator(final OSGIKillbill osgiKillbill,
-                             final ServletRouter servletRouter) {
+                             final OSGIServiceRegistration<HttpServlet> servletRouter,
+                             final OSGIServiceRegistration<PaymentPluginApi> paymentProviderPluginRegistry) {
         this.osgiKillbill = osgiKillbill;
-        this.servletRouter = servletRouter;
+        this.allRegistrationHandlers = ImmutableList.<OSGIServiceRegistration>of(servletRouter, paymentProviderPluginRegistry);
     }
 
     @Override
@@ -63,40 +70,53 @@ public class KillbillActivator implements BundleActivator, ServiceListener {
 
     @Override
     public void serviceChanged(final ServiceEvent event) {
-        listenForServlets(event);
-    }
-
-    private void listenForServlets(final ServiceEvent event) {
-        if (event.getType() != ServiceEvent.REGISTERED && event.getType() != ServiceEvent.UNREGISTERING) {
-            // Servlets can only be added or removed, not modified
+        if (context == null || (event.getType() != ServiceEvent.REGISTERED && event.getType() != ServiceEvent.UNREGISTERING)) {
+            // We are not initialized or uninterested
             return;
         }
-        final ServiceReference serviceReference = event.getServiceReference();
+        for (OSGIServiceRegistration cur : allRegistrationHandlers) {
+            if (listenForServiceType(event, cur.getServiceType(), cur)) {
+                break;
+            }
+        }
+    }
+
+    private <T> boolean listenForServiceType(final ServiceEvent event, Class<T> claz, final OSGIServiceRegistration<T> registation) {
+
+        // Is that for us ?
+        final String[] objectClass = (String[]) event.getServiceReference().getProperty("objectClass");
+        if (objectClass == null || objectClass.length == 0 || !claz.getName().equals(objectClass[0])) {
+            return false;
+        }
 
         // Make sure we can retrieve the plugin name
-        final String pluginName = (String) serviceReference.getProperty("killbill.pluginName");
+        final ServiceReference serviceReference = event.getServiceReference();
+        final String pluginName = (String) serviceReference.getProperty(OSGIPluginProperties.PLUGIN_NAME_PROP);
         if (pluginName == null) {
-            return;
+            // STEPH logger ?
+            return true;
         }
 
-        // Make sure this event is for a servlet
-        HttpServlet httpServlet = null;
-        final String[] objectClass = (String[]) event.getServiceReference().getProperty("objectClass");
-        if (context != null && objectClass != null && objectClass.length > 0 && HttpServlet.class.getName().equals(objectClass[0])) {
-            final Object service = context.getService(serviceReference);
-            httpServlet = (HttpServlet) service;
+        final T theService = (T) context.getService(serviceReference);
+        if (theService == null) {
+            return true;
         }
 
-        if (httpServlet == null) {
-            return;
-        }
+        switch (event.getType()) {
+            case ServiceEvent.REGISTERED:
+                registation.registerService(pluginName, theService);
 
-        if (event.getType() == ServiceEvent.REGISTERED) {
-            servletRouter.registerServlet(pluginName, httpServlet);
-        } else if (event.getType() == ServiceEvent.UNREGISTERING) {
-            servletRouter.unregisterServlet(pluginName);
+                break;
+            case ServiceEvent.UNREGISTERING:
+                registation.unregisterService(pluginName);
+                break;
+
+            default:
+                break;
         }
+        return true;
     }
+
 
     private void registerServices(final BundleContext context) {
         osgiKillbillRegistration = context.registerService(OSGIKillbill.class.getName(), osgiKillbill, null);

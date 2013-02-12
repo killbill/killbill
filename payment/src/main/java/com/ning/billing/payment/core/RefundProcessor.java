@@ -37,6 +37,7 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.osgi.api.OSGIServiceRegistration;
 import com.ning.billing.payment.api.DefaultRefund;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.Refund;
@@ -46,7 +47,6 @@ import com.ning.billing.payment.dao.RefundModelDao;
 import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
 import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 import com.ning.billing.payment.plugin.api.PaymentPluginApiException;
-import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
@@ -75,7 +75,7 @@ public class RefundProcessor extends ProcessorBase {
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
-    public RefundProcessor(final PaymentProviderPluginRegistry pluginRegistry,
+    public RefundProcessor(final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry,
                            final AccountInternalApi accountApi,
                            final InvoiceInternalApi invoiceApi,
                            final InternalBus eventBus,

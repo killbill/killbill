@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.osgi.api.OSGIServiceRegistration;
 import com.ning.billing.payment.api.DefaultPaymentMethod;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.PaymentMethod;
@@ -42,7 +43,6 @@ import com.ning.billing.payment.plugin.api.PaymentPluginApiException;
 import com.ning.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
 import com.ning.billing.payment.provider.DefaultPaymentMethodInfoPlugin;
 import com.ning.billing.payment.provider.ExternalPaymentProviderPlugin;
-import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.globallocker.GlobalLocker;
@@ -63,7 +63,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
     private static final Logger log = LoggerFactory.getLogger(PaymentMethodProcessor.class);
 
     @Inject
-    public PaymentMethodProcessor(final PaymentProviderPluginRegistry pluginRegistry,
+    public PaymentMethodProcessor(final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry,
                                   final AccountInternalApi accountInternalApi,
                                   final InternalBus eventBus,
                                   final PaymentDao paymentDao,
@@ -74,7 +74,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
     }
 
     public Set<String> getAvailablePlugins() {
-        return pluginRegistry.getRegisteredPluginNames();
+        return pluginRegistry.getAllServiceForPluginName();
     }
 
     public UUID addPaymentMethod(final String pluginName, final Account account,
@@ -88,7 +88,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                 PaymentMethod pm = null;
                 PaymentPluginApi pluginApi = null;
                 try {
-                    pluginApi = pluginRegistry.getPlugin(pluginName);
+                    pluginApi = pluginRegistry.getServiceForPluginName(pluginName);
                     pm = new DefaultPaymentMethod(account.getId(), pluginName, paymentMethodProps);
                     pluginApi.addPaymentMethod(pm.getId(), paymentMethodProps, setDefault, context.toCallContext());
                     final PaymentMethodModelDao pmModel = new PaymentMethodModelDao(pm.getId(), pm.getCreatedDate(), pm.getUpdatedDate(),
@@ -157,7 +157,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
             addPaymentMethod(ExternalPaymentProviderPlugin.PLUGIN_NAME, account, false, props, context);
         }
 
-        return (ExternalPaymentProviderPlugin) pluginRegistry.getPlugin(ExternalPaymentProviderPlugin.PLUGIN_NAME);
+        return (ExternalPaymentProviderPlugin) pluginRegistry.getServiceForPluginName(ExternalPaymentProviderPlugin.PLUGIN_NAME);
     }
 
     private List<PaymentMethod> getPaymentMethodInternal(final List<PaymentMethodModelDao> paymentMethodModels, final UUID accountId,
@@ -244,7 +244,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
         if (paymentMethod == null) {
             throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, paymentMethodId);
         }
-        return pluginRegistry.getPlugin(paymentMethod.getPluginName());
+        return pluginRegistry.getServiceForPluginName(paymentMethod.getPluginName());
     }
 
     /**
@@ -262,7 +262,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
 
 
         // Don't hold the account lock while fetching the payment methods from the gateway as those could change anyway
-        final PaymentPluginApi pluginApi = pluginRegistry.getPlugin(pluginName);
+        final PaymentPluginApi pluginApi = pluginRegistry.getServiceForPluginName(pluginName);
         final List<PaymentMethodInfoPlugin> pluginPms;
         try {
             pluginPms = pluginApi.getPaymentMethods(account.getId(), true, context.toCallContext());

@@ -39,7 +39,9 @@ import org.slf4j.osgi.logservice.impl.Activator;
 
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
+import com.ning.billing.osgi.api.OSGIPluginProperties;
 import com.ning.billing.osgi.api.OSGIService;
+import com.ning.billing.osgi.api.OSGIServiceRegistration;
 import com.ning.billing.osgi.api.config.PluginConfigServiceApi;
 import com.ning.billing.osgi.api.config.PluginJavaConfig;
 import com.ning.billing.osgi.api.config.PluginRubyConfig;
@@ -47,7 +49,6 @@ import com.ning.billing.osgi.pluginconf.DefaultPluginConfigServiceApi;
 import com.ning.billing.osgi.pluginconf.PluginConfigException;
 import com.ning.billing.osgi.pluginconf.PluginFinder;
 import com.ning.billing.payment.plugin.api.PaymentPluginApi;
-import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
 import com.ning.billing.util.config.OSGIConfig;
 
 import com.google.common.collect.ImmutableList;
@@ -64,7 +65,6 @@ public class DefaultOSGIService implements OSGIService {
     private final PluginFinder pluginFinder;
     private final PluginConfigServiceApi pluginConfigServiceApi;
     private final KillbillActivator killbillActivator;
-    private final PaymentProviderPluginRegistry paymentProviderPluginRegistry;
 
     private Framework framework;
     private volatile ServiceReference<PaymentPluginApi>[] paymentApiReferences;
@@ -73,13 +73,11 @@ public class DefaultOSGIService implements OSGIService {
     @Inject
     public DefaultOSGIService(final OSGIConfig osgiConfig, final PluginFinder pluginFinder,
                               final PluginConfigServiceApi pluginConfigServiceApi,
-                              final KillbillActivator killbillActivator,
-                              final PaymentProviderPluginRegistry paymentProviderPluginRegistry) {
+                              final KillbillActivator killbillActivator) {
         this.osgiConfig = osgiConfig;
         this.pluginFinder = pluginFinder;
         this.pluginConfigServiceApi = pluginConfigServiceApi;
         this.killbillActivator = killbillActivator;
-        this.paymentProviderPluginRegistry = paymentProviderPluginRegistry;
         this.framework = null;
     }
 
@@ -107,16 +105,10 @@ public class DefaultOSGIService implements OSGIService {
 
     @LifecycleHandlerType(LifecycleHandlerType.LifecycleLevel.REGISTER_EVENTS)
     public void registerForExternalEvents() throws Exception {
-        // We use that level which comes before START to register the paymentPluginApis  -- before Payment system starts
-        fetchPaymentPluginApis();
-        for (String pluginName : paymentPluginApis.keySet()) {
-            paymentProviderPluginRegistry.register(paymentPluginApis.get(pluginName), pluginName);
-        }
     }
 
     @LifecycleHandlerType(LifecycleHandlerType.LifecycleLevel.UNREGISTER_EVENTS)
     public void unregisterForExternalEvents() {
-        releasePaymentPluginApis();
     }
 
     @LifecycleHandlerType(LifecycleLevel.START_SERVICE)
@@ -200,28 +192,6 @@ public class DefaultOSGIService implements OSGIService {
         final Framework felix = new Felix(felixConfig);
         felix.init();
         return felix;
-    }
-
-    private void fetchPaymentPluginApis() throws InvalidSyntaxException {
-
-        final BundleContext context = framework.getBundleContext();
-
-        paymentApiReferences = (ServiceReference<PaymentPluginApi>[]) context.getServiceReferences(PaymentPluginApi.class.getName(), null);
-        final ImmutableMap.Builder paymentPluginApisBuilder = ImmutableMap.builder();
-        for (ServiceReference<PaymentPluginApi> ref : paymentApiReferences) {
-            // TODO 'name' STEPH needs to be in API
-            paymentPluginApisBuilder.put(ref.getProperty("name"), context.getService(ref));
-        }
-        paymentPluginApis = paymentPluginApisBuilder.build();
-    }
-
-
-    private void releasePaymentPluginApis() {
-        for (ServiceReference<PaymentPluginApi> ref : paymentApiReferences) {
-            final BundleContext context = framework.getBundleContext();
-            context.ungetService(ref);
-        }
-        paymentApiReferences = null;
     }
 
     private void pruneOSGICache() {

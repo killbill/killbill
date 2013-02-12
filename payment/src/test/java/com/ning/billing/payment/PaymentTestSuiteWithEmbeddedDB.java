@@ -25,12 +25,13 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
 import com.ning.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
+import com.ning.billing.osgi.api.OSGIServiceRegistration;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.core.PaymentMethodProcessor;
 import com.ning.billing.payment.core.PaymentProcessor;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.glue.TestPaymentModuleWithEmbeddedDB;
-import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
+import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 import com.ning.billing.payment.retry.FailedPaymentRetryService;
 import com.ning.billing.payment.retry.PluginFailureRetryService;
 import com.ning.billing.util.config.PaymentConfig;
@@ -55,7 +56,7 @@ public abstract class PaymentTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     @Inject
     protected InvoiceInternalApi invoiceApi;
     @Inject
-    protected PaymentProviderPluginRegistry registry;
+    protected OSGIServiceRegistration<PaymentPluginApi> registry;
     @Inject
     protected FailedPaymentRetryService retryService;
     @Inject

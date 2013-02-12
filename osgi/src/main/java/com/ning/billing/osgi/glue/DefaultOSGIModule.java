@@ -26,8 +26,8 @@ import com.ning.billing.osgi.DefaultOSGIService;
 import com.ning.billing.osgi.KillbillActivator;
 import com.ning.billing.osgi.api.OSGIKillbill;
 import com.ning.billing.osgi.api.OSGIService;
+import com.ning.billing.osgi.api.OSGIServiceRegistration;
 import com.ning.billing.osgi.api.config.PluginConfigServiceApi;
-import com.ning.billing.osgi.api.http.ServletRouter;
 import com.ning.billing.osgi.http.DefaultServletRouter;
 import com.ning.billing.osgi.http.OSGIServlet;
 import com.ning.billing.osgi.pluginconf.DefaultPluginConfigServiceApi;
@@ -35,6 +35,7 @@ import com.ning.billing.osgi.pluginconf.PluginFinder;
 import com.ning.billing.util.config.OSGIConfig;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
 
 public class DefaultOSGIModule extends AbstractModule {
@@ -50,7 +51,7 @@ public class DefaultOSGIModule extends AbstractModule {
     }
 
     protected void installOSGIServlet() {
-        bind(ServletRouter.class).to(DefaultServletRouter.class).asEagerSingleton();
+        bind(new TypeLiteral<OSGIServiceRegistration<HttpServlet>>() {}).to(DefaultServletRouter.class).asEagerSingleton();
         bind(HttpServlet.class).annotatedWith(Names.named(OSGI_NAMED)).to(OSGIServlet.class).asEagerSingleton();
     }
 

@@ -25,13 +25,13 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.ning.billing.osgi.api.http.ServletRouter;
+import com.ning.billing.osgi.api.OSGIServiceRegistration;
 
 @Singleton
 public class OSGIServlet extends HttpServlet {
 
     @Inject
-    private ServletRouter servletRouter;
+    private OSGIServiceRegistration<HttpServlet> servletRouter;
 
     @Override
     protected void doGet(final HttpServletRequest req, final HttpServletResponse resp) throws ServletException, IOException {
@@ -75,7 +75,7 @@ public class OSGIServlet extends HttpServlet {
     private HttpServlet getPluginServlet(final HttpServletRequest req) {
         final String pluginName = (String) req.getAttribute("killbill.osgi.pluginName");
         if (pluginName != null) {
-            return servletRouter.getServletForPlugin(pluginName);
+            return servletRouter.getServiceForPluginName(pluginName);
         } else {
             return null;
         }

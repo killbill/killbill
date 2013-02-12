@@ -158,7 +158,7 @@ public class TestPlugin extends TestJaxrsBase {
     }
 
     private void setupOSGIPlugin() {
-        servletRouter.registerServlet(TEST_PLUGIN_NAME, new HttpServlet() {
+        servletRouter.registerService(TEST_PLUGIN_NAME, new HttpServlet() {
             @Override
             protected void doGet(final HttpServletRequest req, final HttpServletResponse resp) throws ServletException, IOException {
                 if ((JaxrsResource.PLUGINS_PATH + "/" + TEST_PLUGIN_NAME + "/" + TEST_PLUGIN_VALID_GET_PATH).equals(req.getPathInfo())) {
