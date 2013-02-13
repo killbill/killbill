@@ -94,6 +94,12 @@
                 <scope>provided</scope>
             </dependency>
             <dependency>
+                <groupId>javax.servlet</groupId>
+                <artifactId>javax.servlet-api</artifactId>
+                <version>3.0.1</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
                 <groupId>com.ning.billing</groupId>
                 <artifactId>killbill-beatrix</artifactId>
                 <version>${project.version}</version>
