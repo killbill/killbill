@@ -61,8 +61,10 @@ public class Activator implements BundleActivator {
 
         // Validate and instantiate the plugin
 
-        final Map<String, Object> killbillApis = retrieveKillbillApis(context);
-        plugin.instantiatePlugin(killbillApis);
+        final Map<String, Object> killbillServices = retrieveKillbillApis(context);
+        killbillServices.put("root", rubyConfig.getPluginVersionRoot().getAbsolutePath());
+        killbillServices.put("logger", logger);
+        plugin.instantiatePlugin(killbillServices);
 
         log(LogService.LOG_INFO, "Starting JRuby plugin " + plugin.getPluginMainClass());
         plugin.startPlugin(context);
