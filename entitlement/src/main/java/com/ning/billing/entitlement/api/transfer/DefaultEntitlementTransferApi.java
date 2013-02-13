@@ -39,6 +39,7 @@ import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
 import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline;
 import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline.ExistingEvent;
 
+import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.api.user.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
@@ -217,6 +218,10 @@ public class DefaultEntitlementTransferApi extends EntitlementApiBase implements
 
             for (final SubscriptionTimeline cur : bundleTimeline.getSubscriptions()) {
                 final SubscriptionData oldSubscription = (SubscriptionData) dao.getSubscriptionFromId(cur.getId(), fromInternalCallContext);
+                // Skip already cancelled subscriptions
+                if (oldSubscription.getState() == SubscriptionState.CANCELLED) {
+                    continue;
+                }
                 final List<ExistingEvent> existingEvents = cur.getExistingEvents();
                 final ProductCategory productCategory = existingEvents.get(0).getPlanPhaseSpecifier().getProductCategory();
                 if (productCategory == ProductCategory.ADD_ON) {
