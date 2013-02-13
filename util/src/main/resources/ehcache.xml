@@ -26,6 +26,7 @@
       timeToIdleSeconds="0"
       timeToLiveSeconds="0"
       overflowToDisk="false"
+      statistics="true"
       />
 
     <cache name="record-id"
