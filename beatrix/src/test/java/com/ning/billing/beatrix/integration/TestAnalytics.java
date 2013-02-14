@@ -65,7 +65,6 @@ import com.ning.billing.util.tag.TagDefinition;
 
 import static org.testng.Assert.assertTrue;
 
-@Guice(modules = BeatrixIntegrationModule.class)
 public class TestAnalytics extends TestIntegrationBase {
 
     private Account account;

@@ -39,7 +39,7 @@ import com.ning.http.client.Realm.AuthScheme;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-public class TestTenantFilter extends TestJaxrsBase {
+public class TestTenantFilter extends TestJaxrsBase  {
 
     @Override
     protected void loadConfig() {

@@ -17,9 +17,14 @@
 package com.ning.billing.payment.glue;
 
 import com.ning.billing.GuicyKillbillTestWithEmbeddedDBModule;
+import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.glue.NonEntityDaoModule;
 
 public class TestPaymentModuleWithEmbeddedDB extends TestPaymentModule {
+
+    public TestPaymentModuleWithEmbeddedDB(final Clock clock) {
+        super(clock);
+    }
 
     @Override
     protected void configure() {

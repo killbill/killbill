@@ -49,7 +49,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 
-@Guice(modules = {BeatrixIntegrationModule.class})
 public class TestPaymentRefund extends TestIntegrationBase {
 
     // Setup for all tests below

@@ -45,7 +45,6 @@ import static org.testng.Assert.assertTrue;
 
 
 @Test(groups = "slow")
-@Guice(modules = {BeatrixIntegrationModule.class})
 public class TestOverdueIntegration extends TestOverdueBase {
 
 

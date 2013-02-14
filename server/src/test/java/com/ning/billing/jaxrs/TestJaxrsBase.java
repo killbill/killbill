@@ -26,21 +26,18 @@ import java.util.Map;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.joda.time.LocalDate;
 import org.skife.config.ConfigurationObjectFactory;
-import org.skife.jdbi.v2.IDBI;
 import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
 
-import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
+import com.ning.billing.GuicyKillbillTestWithEmbeddedDBModule;
 import com.ning.billing.account.glue.DefaultAccountModule;
 import com.ning.billing.analytics.setup.AnalyticsModule;
 import com.ning.billing.api.TestApiListener;
 import com.ning.billing.beatrix.glue.BeatrixModule;
 import com.ning.billing.catalog.glue.CatalogModule;
-import com.ning.billing.dbi.DBIProvider;
 import com.ning.billing.dbi.DBTestingHelper;
-import com.ning.billing.dbi.DbiConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
 import com.ning.billing.invoice.api.InvoiceNotifier;
@@ -53,8 +50,6 @@ import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
 import com.ning.billing.server.listeners.KillbillGuiceListener;
 import com.ning.billing.server.modules.KillbillServerModule;
 import com.ning.billing.tenant.glue.TenantModule;
-import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.config.PaymentConfig;
 import com.ning.billing.util.email.EmailModule;
 import com.ning.billing.util.email.templates.TemplateModule;
@@ -89,8 +84,6 @@ public class TestJaxrsBase extends KillbillClient {
 
     protected static TestKillbillGuiceListener listener;
 
-    private final DBTestingHelper helper = KillbillTestSuiteWithEmbeddedDB.getDBTestingHelper();
-
     private HttpServer server;
     protected TestApiListener busHandler;
 
@@ -106,23 +99,19 @@ public class TestJaxrsBase extends KillbillClient {
 
     public static class TestKillbillGuiceListener extends KillbillGuiceListener {
 
-        private final DBTestingHelper helper;
-        private final Clock clock;
+        private final TestKillbillServerModule module;
 
-        public TestKillbillGuiceListener(final DBTestingHelper helper, final Clock clock) {
+
+        public TestKillbillGuiceListener(final DBTestingHelper helper) {
             super();
-            this.helper = helper;
-            this.clock = clock;
+            this.module = new TestKillbillServerModule(helper);
         }
 
         @Override
         protected Module getModule() {
-            return new TestKillbillServerModule(helper, clock);
+            return module;
         }
 
-        public Clock getClock() {
-            return clock;
-        }
     }
 
     public static class InvoiceModuleWithMockSender extends DefaultInvoiceModule {
@@ -136,24 +125,27 @@ public class TestJaxrsBase extends KillbillClient {
     public static class TestKillbillServerModule extends KillbillServerModule {
 
         private final DBTestingHelper helper;
-        private final Clock clock;
 
-        public TestKillbillServerModule(final DBTestingHelper helper, final Clock clock) {
+        public TestKillbillServerModule(final DBTestingHelper helper) {
             super();
             this.helper = helper;
-            this.clock = clock;
         }
 
         @Override
         protected void installClock() {
-            bind(Clock.class).toInstance(clock);
+            // Already done By Top test class
+        }
+
+        @Override
+        protected void configureDao() {
+            // Already done By Top test class
         }
 
         private static final class PaymentMockModule extends PaymentModule {
 
             @Override
             protected void installPaymentProviderPlugins(final PaymentConfig config) {
-                install(new MockPaymentProviderPluginModule(PLUGIN_NAME));
+                install(new MockPaymentProviderPluginModule(PLUGIN_NAME, getClock()));
             }
         }
 
@@ -166,6 +158,10 @@ public class TestJaxrsBase extends KillbillClient {
             super.installKillbillModules();
             Modules.override(new com.ning.billing.payment.setup.PaymentModule()).with(new PaymentMockModule());
             */
+
+            install(new GuicyKillbillTestWithEmbeddedDBModule());
+
+
             install(new EmailModule());
             install(new CacheModule());
             install(new NonEntityDaoModule());
@@ -190,18 +186,6 @@ public class TestJaxrsBase extends KillbillClient {
             install(new ExportModule());
             installClock();
         }
-
-        @Override
-        protected void configureDao() {
-            if (helper.isUsingLocalInstance()) {
-                bind(IDBI.class).toProvider(DBIProvider.class).asEagerSingleton();
-                final DbiConfig config = new ConfigurationObjectFactory(System.getProperties()).build(DbiConfig.class);
-                bind(DbiConfig.class).toInstance(config);
-            } else {
-                final IDBI dbi = helper.getDBI();
-                bind(IDBI.class).toInstance(dbi);
-            }
-        }
     }
 
     @BeforeMethod(groups = "slow")
@@ -214,6 +198,10 @@ public class TestJaxrsBase extends KillbillClient {
     @BeforeClass(groups = "slow")
     public void setupClass() throws IOException {
         loadConfig();
+
+
+        listener.getInstantiatedInjector().injectMembers(this);
+
         httpClient = new AsyncHttpClient(new AsyncHttpClientConfig.Builder().setRequestTimeoutInMs(DEFAULT_HTTP_TIMEOUT_SEC * 1000).build());
         mapper = new ObjectMapper();
         mapper.registerModule(new JodaModule());
@@ -222,7 +210,6 @@ public class TestJaxrsBase extends KillbillClient {
         //mapper.setPropertyNamingStrategy(new PropertyNamingStrategy.LowerCaseWithUnderscoresStrategy());
 
         busHandler = new TestApiListener(null);
-        this.clock = (ClockMock) listener.getClock();
     }
 
     protected void loadConfig() {
@@ -231,7 +218,7 @@ public class TestJaxrsBase extends KillbillClient {
         }
 
         // For shiro (outside of Guice control)
-        System.setProperty("com.ning.jetty.jdbi.url", helper.getJdbcConnectionString());
+        System.setProperty("com.ning.jetty.jdbi.url", getDBTestingHelper().getJdbcConnectionString());
         System.setProperty("com.ning.jetty.jdbi.user", MysqlTestingHelper.USERNAME);
         System.setProperty("com.ning.jetty.jdbi.password", MysqlTestingHelper.PASSWORD);
     }
@@ -241,15 +228,12 @@ public class TestJaxrsBase extends KillbillClient {
         loadSystemPropertiesFromClasspath("/killbill.properties");
         loadConfig();
 
-        this.clock = new ClockMock();
-        listener = new TestKillbillGuiceListener(helper, clock);
+        listener = new TestKillbillGuiceListener(getDBTestingHelper());
         server = new HttpServer();
 
         server.configure(config, getListeners(), getFilters());
 
         server.start();
-
-        listener.getInstantiatedInjector().injectMembers(this);
     }
 
     protected Iterable<EventListener> getListeners() {
