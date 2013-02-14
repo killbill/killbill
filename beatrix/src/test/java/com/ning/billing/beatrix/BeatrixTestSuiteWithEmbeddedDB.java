@@ -16,7 +16,7 @@
 
 package com.ning.billing.beatrix;
 
-import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
+import com.ning.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
 
-public abstract class BeatrixTestSuiteWithEmbeddedDB extends KillbillTestSuiteWithEmbeddedDB {
+public abstract class BeatrixTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWithEmbeddedDB {
 }

@@ -20,8 +20,13 @@ import com.ning.billing.GuicyKillbillTestNoDBModule;
 import com.ning.billing.mock.glue.MockNonEntityDaoModule;
 import com.ning.billing.payment.dao.MockPaymentDao;
 import com.ning.billing.payment.dao.PaymentDao;
+import com.ning.billing.util.clock.Clock;
 
 public class TestPaymentModuleNoDB extends TestPaymentModule {
+
+    public TestPaymentModuleNoDB(final Clock clock) {
+        super(clock);
+    }
 
     @Override
     protected void installPaymentDao() {

@@ -36,6 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 
+import com.ning.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PriceListSet;
@@ -83,12 +84,11 @@ import static com.ning.billing.jaxrs.resources.JaxrsResource.SUBSCRIPTIONS;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
-public abstract class KillbillClient extends ServerTestSuiteWithEmbeddedDB {
+public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedDB {
 
     protected static final String PLUGIN_NAME = "noop";
 
-    // STEPH
-    protected static final int DEFAULT_HTTP_TIMEOUT_SEC = 6000; // 5;
+    protected static final int DEFAULT_HTTP_TIMEOUT_SEC = 5;
 
     protected static final Map<String, String> DEFAULT_EMPTY_QUERY = new HashMap<String, String>();
 
@@ -102,7 +102,6 @@ public abstract class KillbillClient extends ServerTestSuiteWithEmbeddedDB {
     protected CoreConfig config;
     protected AsyncHttpClient httpClient;
     protected ObjectMapper mapper;
-    protected ClockMock clock;
 
     // Context information to be passed around
     protected static final String createdBy = "Toto";

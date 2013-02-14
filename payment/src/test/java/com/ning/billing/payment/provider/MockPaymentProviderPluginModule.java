@@ -16,21 +16,26 @@
 
 package com.ning.billing.payment.provider;
 
+import com.ning.billing.util.clock.Clock;
+
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 
 public class MockPaymentProviderPluginModule extends AbstractModule {
-    private final String instanceName;
 
-    public MockPaymentProviderPluginModule(final String instanceName) {
+    private final String instanceName;
+    private final Clock clock;
+
+    public MockPaymentProviderPluginModule(final String instanceName, final Clock clock) {
         this.instanceName = instanceName;
+        this.clock = clock;
     }
 
     @Override
     protected void configure() {
         bind(MockPaymentProviderPlugin.class)
                 .annotatedWith(Names.named(instanceName))
-                .toProvider(new MockPaymentProviderPluginProvider(instanceName))
+                .toProvider(new MockPaymentProviderPluginProvider(instanceName, clock))
                 .asEagerSingleton();
     }
 }

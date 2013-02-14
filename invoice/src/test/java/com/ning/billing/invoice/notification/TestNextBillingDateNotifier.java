@@ -40,8 +40,7 @@ public class TestNextBillingDateNotifier extends InvoiceTestSuiteWithEmbeddedDB 
         final UUID accountId = UUID.randomUUID();
         final Subscription subscription = invoiceUtil.createSubscription();
         final UUID subscriptionId = subscription.getId();
-        final DateTime now = new DateTime();
-        final DateTime readyTime = now.plusMillis(2000);
+        final DateTime now = clock.getUTCNow();
 
 
         final NotificationQueue nextBillingQueue = notificationQueueService.getNotificationQueue(DefaultInvoiceService.INVOICE_SERVICE_NAME, DefaultNextBillingDateNotifier.NEXT_BILLING_DATE_NOTIFIER_QUEUE);

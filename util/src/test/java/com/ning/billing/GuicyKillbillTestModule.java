@@ -34,20 +34,20 @@ public class GuicyKillbillTestModule extends AbstractModule {
     // CreatedFontTracker references that will later be injected through Guices.
     // That we we have only one clock and all internalContext/callContext are consistent
     //
-    private final ClockMock clock = new ClockMock();
 
     private final InternalCallContext internalCallContext = new InternalCallContext(InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID, 1687L, UUID.randomUUID(),
                                                                                     UUID.randomUUID().toString(), CallOrigin.TEST,
                                                                                     UserType.TEST, "Testing", "This is a test",
-                                                                                    clock.getUTCNow(), clock.getUTCNow());
+                                                                                    GuicyKillbillTestSuite.getClock().getUTCNow(), GuicyKillbillTestSuite.getClock().getUTCNow());
 
     private final CallContext callContext = internalCallContext.toCallContext();
 
 
+
     @Override
     protected void configure() {
-        bind(Clock.class).toInstance(clock);
-        bind(ClockMock.class).toInstance(clock);
+        bind(ClockMock.class).toInstance(GuicyKillbillTestSuite.getClock());
+        bind(Clock.class).to(ClockMock.class);
         bind(InternalCallContext.class).toInstance(internalCallContext);
         bind(CallContext.class).toInstance(callContext);
     }

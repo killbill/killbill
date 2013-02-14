@@ -34,7 +34,6 @@ import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 
 @Test(groups = "slow")
-@Guice(modules = {BeatrixIntegrationModule.class})
 public class TestOverdueWithSubscriptionCancellation extends TestOverdueBase {
 
 

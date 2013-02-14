@@ -21,7 +21,6 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.beatrix.integration.BeatrixIntegrationModule;
 
-@Guice(modules = {BeatrixIntegrationModule.class})
 public class TestOSGIIntegration extends TestOSGIBase {
 
     @Test(groups = "slow")

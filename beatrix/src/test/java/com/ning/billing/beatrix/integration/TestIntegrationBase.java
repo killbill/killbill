@@ -88,7 +88,10 @@ import com.ning.billing.util.svcsapi.bus.BusService;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.inject.Guice;
 import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.google.inject.Stage;
 import com.google.inject.name.Named;
 
 import static org.testng.Assert.assertNotNull;
@@ -112,11 +115,6 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
     protected static final long DELAY = 5000;
 
-    @Inject
-    protected IDBI dbi;
-
-    @Inject
-    protected ClockMock clock;
 
     @Inject
     protected Lifecycle lifecycle;
@@ -223,8 +221,12 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
     @BeforeClass(groups = "slow")
     public void setup() throws Exception {
+        final Injector g = Guice.createInjector(Stage.PRODUCTION, new BeatrixIntegrationModule());
+        g.injectMembers(this);
         busHandler = new TestApiListener(this);
+
     }
+
 
     @BeforeMethod(groups = "slow")
     public void setupTest() throws Exception {

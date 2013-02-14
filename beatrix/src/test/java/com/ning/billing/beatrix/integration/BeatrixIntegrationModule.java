@@ -20,10 +20,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Set;
 
-import org.skife.config.ConfigurationObjectFactory;
-import org.skife.jdbi.v2.IDBI;
-
-import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
+import com.ning.billing.GuicyKillbillTestWithEmbeddedDBModule;
 import com.ning.billing.account.api.AccountService;
 import com.ning.billing.account.glue.DefaultAccountModule;
 import com.ning.billing.analytics.setup.AnalyticsModule;
@@ -42,9 +39,6 @@ import com.ning.billing.beatrix.util.PaymentChecker;
 import com.ning.billing.beatrix.util.RefundChecker;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.glue.CatalogModule;
-import com.ning.billing.dbi.DBIProvider;
-import com.ning.billing.dbi.DBTestingHelper;
-import com.ning.billing.dbi.DbiConfig;
 import com.ning.billing.entitlement.api.EntitlementService;
 import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
 import com.ning.billing.invoice.api.InvoiceService;
@@ -59,18 +53,16 @@ import com.ning.billing.payment.glue.PaymentModule;
 import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
 import com.ning.billing.tenant.glue.TenantModule;
 import com.ning.billing.usage.glue.UsageModule;
-import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.config.PaymentConfig;
 import com.ning.billing.util.email.EmailModule;
 import com.ning.billing.util.email.templates.TemplateModule;
-import com.ning.billing.util.globallocker.TestGlobalLockerModule;
 import com.ning.billing.util.glue.AuditModule;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.CacheModule;
 import com.ning.billing.util.glue.CallContextModule;
 import com.ning.billing.util.glue.CustomFieldModule;
 import com.ning.billing.util.glue.ExportModule;
+import com.ning.billing.util.glue.GlobalLockerModule;
 import com.ning.billing.util.glue.NonEntityDaoModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.TagStoreModule;
@@ -92,25 +84,14 @@ public class BeatrixIntegrationModule extends AbstractModule {
 
         loadSystemPropertiesFromClasspath("/resource.properties");
 
-        bind(Clock.class).to(ClockMock.class).asEagerSingleton();
-        bind(ClockMock.class).asEagerSingleton();
         bind(Lifecycle.class).to(SubsetDefaultLifecycle.class).asEagerSingleton();
 
-        final DBTestingHelper helper = KillbillTestSuiteWithEmbeddedDB.getDBTestingHelper();
-        final IDBI dbi;
-        if (helper.isUsingLocalInstance()) {
-            final DbiConfig config = new ConfigurationObjectFactory(System.getProperties()).build(DbiConfig.class);
-            final DBIProvider provider = new DBIProvider(config);
-            dbi = provider.get();
-        } else {
-            dbi = helper.getDBI();
-        }
-        bind(IDBI.class).toInstance(dbi);
+        install(new GuicyKillbillTestWithEmbeddedDBModule());
 
+        install(new GlobalLockerModule());
         install(new CacheModule());
         install(new EmailModule());
         install(new CallContextModule());
-        install(new TestGlobalLockerModule(helper));
         install(new BusModule());
         install(new NotificationQueueModule());
         install(new TagStoreModule());
@@ -151,7 +132,7 @@ public class BeatrixIntegrationModule extends AbstractModule {
 
         @Override
         protected void installPaymentProviderPlugins(final PaymentConfig config) {
-            install(new MockPaymentProviderPluginModule(PLUGIN_NAME));
+            install(new MockPaymentProviderPluginModule(PLUGIN_NAME, TestIntegrationBase.getClock()));
         }
     }
 
