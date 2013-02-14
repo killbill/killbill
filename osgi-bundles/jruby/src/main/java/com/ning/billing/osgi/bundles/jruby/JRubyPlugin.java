@@ -43,7 +43,7 @@ public abstract class JRubyPlugin {
     private static final String KILLBILL_PLUGIN_PAYMENT = "Killbill::Plugin::Payment";
 
     // Magic ruby variables
-    private static final String JAVA_APIS = "java_apis";
+    private static final String KILLBILL_SERVICES = "java_apis";
     private static final String ACTIVE = "@active";
 
     protected final LogService logger;
@@ -87,13 +87,13 @@ public abstract class JRubyPlugin {
         checkValidPlugin();
 
         // Register all killbill APIs
-        container.put(JAVA_APIS, killbillApis);
+        container.put(KILLBILL_SERVICES, killbillApis);
 
-        // Note that the JAVA_APIS variable will be available once only!
+        // Note that the KILLBILL_SERVICES variable will be available once only!
         // Don't put any code here!
 
         // Start the plugin
-        pluginInstance = (RubyObject) container.runScriptlet(pluginMainClass + ".new(" + JAVA_APIS + ")");
+        pluginInstance = (RubyObject) container.runScriptlet(pluginMainClass + ".new(" + KILLBILL_SERVICES + ")");
     }
 
     public void startPlugin(final BundleContext context) {

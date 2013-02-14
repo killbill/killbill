@@ -16,6 +16,7 @@
 
 package com.ning.billing.osgi.pluginconf;
 
+import java.io.File;
 import java.util.Properties;
 
 import com.ning.billing.osgi.api.config.PluginConfig;
@@ -27,10 +28,12 @@ public abstract class DefaultPluginConfig implements PluginConfig {
     private final String pluginName;
     private final PluginType pluginType;
     private final String version;
+    private final File pluginVersionRoot;
 
-    public DefaultPluginConfig(final String pluginName, final String version, final Properties props) {
+    public DefaultPluginConfig(final String pluginName, final String version, final Properties props, final File pluginVersionRoot) {
         this.pluginName = pluginName;
         this.version = version;
+        this.pluginVersionRoot = pluginVersionRoot;
         this.pluginType = PluginType.valueOf(props.getProperty(PROP_PLUGIN_TYPE_NAME, PluginType.__UNKNOWN__.toString()));
     }
 
@@ -55,6 +58,11 @@ public abstract class DefaultPluginConfig implements PluginConfig {
     }
 
     @Override
+    public File getPluginVersionRoot() {
+        return pluginVersionRoot;
+    }
+
+    @Override
     public abstract PluginLanguage getPluginLanguage();
 
     protected abstract void validate() throws PluginConfigException;
@@ -70,13 +78,16 @@ public abstract class DefaultPluginConfig implements PluginConfig {
 
         final DefaultPluginConfig that = (DefaultPluginConfig) o;
 
-        if (!pluginName.equals(that.pluginName)) {
+        if (pluginName != null ? !pluginName.equals(that.pluginName) : that.pluginName != null) {
             return false;
         }
         if (pluginType != that.pluginType) {
             return false;
         }
-        if (!version.equals(that.version)) {
+        if (pluginVersionRoot != null ? !pluginVersionRoot.equals(that.pluginVersionRoot) : that.pluginVersionRoot != null) {
+            return false;
+        }
+        if (version != null ? !version.equals(that.version) : that.version != null) {
             return false;
         }
 
@@ -85,9 +96,10 @@ public abstract class DefaultPluginConfig implements PluginConfig {
 
     @Override
     public int hashCode() {
-        int result = pluginName.hashCode();
-        result = 31 * result + pluginType.hashCode();
-        result = 31 * result + version.hashCode();
+        int result = pluginName != null ? pluginName.hashCode() : 0;
+        result = 31 * result + (pluginType != null ? pluginType.hashCode() : 0);
+        result = 31 * result + (version != null ? version.hashCode() : 0);
+        result = 31 * result + (pluginVersionRoot != null ? pluginVersionRoot.hashCode() : 0);
         return result;
     }
 
@@ -98,8 +110,8 @@ public abstract class DefaultPluginConfig implements PluginConfig {
         sb.append("{pluginName='").append(pluginName).append('\'');
         sb.append(", pluginType=").append(pluginType);
         sb.append(", version='").append(version).append('\'');
+        sb.append(", pluginVersionRoot=").append(pluginVersionRoot);
         sb.append('}');
         return sb.toString();
     }
-
 }

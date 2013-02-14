@@ -26,7 +26,7 @@ public class DefaultPluginJavaConfig extends DefaultPluginConfig implements Plug
     private final String bundleJarPath;
 
     public DefaultPluginJavaConfig(final String pluginName, final String version, final File pluginVersionRoot, final Properties props) throws PluginConfigException {
-        super(pluginName, version, props);
+        super(pluginName, version, props, pluginVersionRoot);
         this.bundleJarPath = extractJarPath(pluginVersionRoot);
         validate();
     }
