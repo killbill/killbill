@@ -16,9 +16,11 @@
 
 package com.ning.billing.osgi.glue;
 
+import javax.servlet.Servlet;
 import javax.servlet.http.HttpServlet;
 import javax.sql.DataSource;
 
+import org.osgi.service.http.HttpService;
 import org.skife.config.ConfigurationObjectFactory;
 
 import com.ning.billing.osgi.DefaultOSGIKillbill;
@@ -28,6 +30,7 @@ import com.ning.billing.osgi.api.OSGIKillbill;
 import com.ning.billing.osgi.api.OSGIService;
 import com.ning.billing.osgi.api.OSGIServiceRegistration;
 import com.ning.billing.osgi.api.config.PluginConfigServiceApi;
+import com.ning.billing.osgi.http.DefaultHttpService;
 import com.ning.billing.osgi.http.DefaultServletRouter;
 import com.ning.billing.osgi.http.OSGIServlet;
 import com.ning.billing.osgi.pluginconf.DefaultPluginConfigServiceApi;
@@ -51,14 +54,19 @@ public class DefaultOSGIModule extends AbstractModule {
     }
 
     protected void installOSGIServlet() {
-        bind(new TypeLiteral<OSGIServiceRegistration<HttpServlet>>() {}).to(DefaultServletRouter.class).asEagerSingleton();
+        bind(new TypeLiteral<OSGIServiceRegistration<Servlet>>() {}).to(DefaultServletRouter.class).asEagerSingleton();
         bind(HttpServlet.class).annotatedWith(Names.named(OSGI_NAMED)).to(OSGIServlet.class).asEagerSingleton();
+    }
+
+    protected void installHttpService() {
+        bind(HttpService.class).to(DefaultHttpService.class).asEagerSingleton();
     }
 
     @Override
     protected void configure() {
         installConfig();
         installOSGIServlet();
+        installHttpService();
 
         bind(OSGIService.class).to(DefaultOSGIService.class).asEagerSingleton();
 

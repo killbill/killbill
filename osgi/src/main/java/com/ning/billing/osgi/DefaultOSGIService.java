@@ -24,13 +24,14 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
+import org.apache.felix.cm.impl.ConfigurationManager;
 import org.apache.felix.framework.Felix;
 import org.apache.felix.framework.util.FelixConstants;
+import org.apache.felix.webconsole.internal.OsgiManagerActivator;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
-import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.launch.Framework;
 import org.slf4j.Logger;
@@ -39,9 +40,7 @@ import org.slf4j.osgi.logservice.impl.Activator;
 
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
-import com.ning.billing.osgi.api.OSGIPluginProperties;
 import com.ning.billing.osgi.api.OSGIService;
-import com.ning.billing.osgi.api.OSGIServiceRegistration;
 import com.ning.billing.osgi.api.config.PluginConfigServiceApi;
 import com.ning.billing.osgi.api.config.PluginJavaConfig;
 import com.ning.billing.osgi.api.config.PluginRubyConfig;
@@ -52,14 +51,12 @@ import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 import com.ning.billing.util.config.OSGIConfig;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 public class DefaultOSGIService implements OSGIService {
 
     public static final String OSGI_SERVICE_NAME = "osgi-service";
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultOSGIService.class);
-
 
     private final OSGIConfig osgiConfig;
     private final PluginFinder pluginFinder;
@@ -114,7 +111,6 @@ public class DefaultOSGIService implements OSGIService {
     @LifecycleHandlerType(LifecycleLevel.START_SERVICE)
     public void startFramework() {
     }
-
 
     @LifecycleHandlerType(LifecycleLevel.STOP_SERVICE)
     public void stop() {
@@ -186,8 +182,19 @@ public class DefaultOSGIService implements OSGIService {
         final Map<Object, Object> felixConfig = new HashMap<Object, Object>();
         felixConfig.putAll(config);
 
-        // Install default bundles: killbill and slf4j ones
-        felixConfig.put(FelixConstants.SYSTEMBUNDLE_ACTIVATORS_PROP, ImmutableList.<BundleActivator>of(killbillActivator, new Activator()));
+        // Install default bundles
+        // TODO PIERRE Should the Felix Web Console (and its dependencies) be rather installed at deploy time?
+        felixConfig.put(FelixConstants.SYSTEMBUNDLE_ACTIVATORS_PROP,
+                        ImmutableList.<BundleActivator>of(killbillActivator,
+                                                          // SLF4J LogService
+                                                          new Activator(),
+                                                          // Felix Web Console
+                                                          new OsgiManagerActivator(),
+                                                          // Felix Log Service (installed for the Web Console)
+                                                          // TODO PIERRE Does it conflict with the SLF4J one?
+                                                          new org.apache.felix.log.Activator(),
+                                                          // Felix Configuration Admin Service (installed for the Web Console)
+                                                          new ConfigurationManager()));
 
         final Framework felix = new Felix(felixConfig);
         felix.init();

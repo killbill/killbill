@@ -19,7 +19,7 @@ package com.ning.billing.osgi;
 import java.util.List;
 
 import javax.inject.Inject;
-import javax.servlet.http.HttpServlet;
+import javax.servlet.Servlet;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -27,6 +27,7 @@ import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.http.HttpService;
 
 import com.ning.billing.osgi.api.OSGIKillbill;
 import com.ning.billing.osgi.api.OSGIPluginProperties;
@@ -38,6 +39,7 @@ import com.google.common.collect.ImmutableList;
 public class KillbillActivator implements BundleActivator, ServiceListener {
 
     private final OSGIKillbill osgiKillbill;
+    private final HttpService defaultHttpService;
     private final List<OSGIServiceRegistration> allRegistrationHandlers;
 
     private volatile ServiceRegistration osgiKillbillRegistration;
@@ -46,9 +48,11 @@ public class KillbillActivator implements BundleActivator, ServiceListener {
 
     @Inject
     public KillbillActivator(final OSGIKillbill osgiKillbill,
-                             final OSGIServiceRegistration<HttpServlet> servletRouter,
+                             final HttpService defaultHttpService,
+                             final OSGIServiceRegistration<Servlet> servletRouter,
                              final OSGIServiceRegistration<PaymentPluginApi> paymentProviderPluginRegistry) {
         this.osgiKillbill = osgiKillbill;
+        this.defaultHttpService = defaultHttpService;
         this.allRegistrationHandlers = ImmutableList.<OSGIServiceRegistration>of(servletRouter, paymentProviderPluginRegistry);
     }
 
@@ -117,9 +121,10 @@ public class KillbillActivator implements BundleActivator, ServiceListener {
         return true;
     }
 
-
     private void registerServices(final BundleContext context) {
         osgiKillbillRegistration = context.registerService(OSGIKillbill.class.getName(), osgiKillbill, null);
+
+        context.registerService(HttpService.class.getName(), defaultHttpService, null);
     }
 
     private void unregisterServices() {

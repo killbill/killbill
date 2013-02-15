@@ -21,28 +21,37 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.inject.Singleton;
-import javax.servlet.http.HttpServlet;
+import javax.servlet.Servlet;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.ning.billing.osgi.api.OSGIServiceRegistration;
 
 @Singleton
-public class DefaultServletRouter implements OSGIServiceRegistration<HttpServlet> {
+public class DefaultServletRouter implements OSGIServiceRegistration<Servlet> {
 
-    private final Map<String, HttpServlet> pluginServlets = new ConcurrentHashMap<String, HttpServlet>();
+    private static final Logger logger = LoggerFactory.getLogger(DefaultServletRouter.class);
+
+    // Internal Servlet routing table: map of plugin prefixes to servlet instances.
+    // A plugin prefix can be foo, foo/bar, foo/bar/baz, ... and is mounted on /plugins/<pluginPrefix>
+    private final Map<String, Servlet> pluginServlets = new ConcurrentHashMap<String, Servlet>();
 
     @Override
-    public void registerService(final String pluginName, final HttpServlet httpServlet) {
-        pluginServlets.put(pluginName, httpServlet);
+    public void registerService(final String pathPrefix, final Servlet httpServlet) {
+        logger.info("Registering OSGI servlet at " + pathPrefix);
+        pluginServlets.put(pathPrefix, httpServlet);
     }
 
     @Override
-    public void unregisterService(final String pluginName) {
-        pluginServlets.remove(pluginName);
+    public void unregisterService(final String pathPrefix) {
+        logger.info("Unregistering OSGI servlet at " + pathPrefix);
+        pluginServlets.remove(pathPrefix);
     }
 
     @Override
-    public HttpServlet getServiceForPluginName(final String pluginName) {
-        return pluginServlets.get(pluginName);
+    public Servlet getServiceForPluginName(final String pathPrefix) {
+        return getServletForPathPrefix(pathPrefix);
     }
 
     @Override
@@ -51,7 +60,23 @@ public class DefaultServletRouter implements OSGIServiceRegistration<HttpServlet
     }
 
     @Override
-    public Class<HttpServlet> getServiceType() {
-        return HttpServlet.class;
+    public Class<Servlet> getServiceType() {
+        return Servlet.class;
+    }
+
+    // TODO PIERRE Naive implementation - we should rather switch to e.g. heap tree
+    public String getPluginPrefixForPath(final String pathPrefix) {
+        String bestMatch = null;
+        for (final String potentialMatch : pluginServlets.keySet()) {
+            if (pathPrefix.startsWith(potentialMatch) && (bestMatch == null || bestMatch.length() < potentialMatch.length())) {
+                bestMatch = potentialMatch;
+            }
+        }
+        return bestMatch;
+    }
+
+    private Servlet getServletForPathPrefix(final String pathPrefix) {
+        final String bestMatch = getPluginPrefixForPath(pathPrefix);
+        return bestMatch == null ? null : pluginServlets.get(bestMatch);
     }
 }
