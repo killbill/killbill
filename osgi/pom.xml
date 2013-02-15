@@ -93,6 +93,10 @@
         </dependency>
         <dependency>
             <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-osgi-bundles-webconsolebranding</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing</groupId>
             <artifactId>killbill-api</artifactId>
         </dependency>
         <dependency>
