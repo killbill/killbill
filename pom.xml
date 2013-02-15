@@ -478,6 +478,43 @@
         <pluginManagement>
             <plugins>
                 <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-enforcer-plugin</artifactId>
+                    <version>1.2</version>
+                    <executions>
+                        <execution>
+                            <id>enforce-versions</id>
+                            <goals>
+                                <goal>enforce</goal>
+                            </goals>
+                            <configuration>
+                                <rules>
+                                    <requireMavenVersion>
+                                        <version>3.0.0</version>
+                                    </requireMavenVersion>
+                                    <requireJavaVersion>
+                                        <version>1.6</version>
+                                    </requireJavaVersion>
+                                    <bannedDependencies>
+                                        <excludes>
+                                            <exclude>com.google.collections:google-collections</exclude>
+                                            <exclude>com.google.guava:guava</exclude>
+                                        </excludes>
+                                        <includes>
+                                            <include>com.google.guava:guava:[12,)</include>
+                                        </includes>
+                                    </bannedDependencies>
+                                </rules>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
                     <groupId>org.apache.felix</groupId>
                     <artifactId>maven-bundle-plugin</artifactId>
                     <version>2.3.7</version>
@@ -487,138 +524,155 @@
                     <artifactId>maven-shade-plugin</artifactId>
                     <version>1.4</version>
                 </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-dependency-plugin</artifactId>
+                    <version>2.3</version>
+                    <executions>
+                        <execution>
+                            <id>analyze</id>
+                            <goals>
+                                <goal>analyze-only</goal>
+                            </goals>
+                            <configuration>
+                                <ignoreNonCompile>true</ignoreNonCompile>
+                                <failOnWarning>false</failOnWarning>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>com.ning.maven.plugins</groupId>
+                    <artifactId>maven-dependency-versions-check-plugin</artifactId>
+                    <version>2.0.2</version>
+                    <configuration>
+                        <failBuildInCaseOfConflict>true</failBuildInCaseOfConflict>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <phase>verify</phase>
+                            <goals>
+                                <goal>check</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>com.ning.maven.plugins</groupId>
+                    <artifactId>maven-duplicate-finder-plugin</artifactId>
+                    <version>1.0.4</version>
+                    <configuration>
+                        <failBuildInCaseOfConflict>false</failBuildInCaseOfConflict>
+                        <!-- That's for Jetty -->
+                        <ignoredResources>
+                            <ignoredResource>about.html</ignoredResource>
+                        </ignoredResources>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <phase>verify</phase>
+                            <goals>
+                                <goal>check</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.rat</groupId>
+                    <artifactId>apache-rat-plugin</artifactId>
+                    <version>0.7</version>
+                    <executions>
+                        <execution>
+                            <phase>verify</phase>
+                            <goals>
+                                <goal>check</goal>
+                            </goals>
+                            <configuration>
+                                <useEclipseDefaultExcludes>true</useEclipseDefaultExcludes>
+                                <useIdeaDefaultExcludes>true</useIdeaDefaultExcludes>
+                                <useMavenDefaultExcludes>true</useMavenDefaultExcludes>
+                                <excludes>
+                                    <!-- For some reason, useIdeaDefaultExcludes
+                                        doesn't pick up .idea directory -->
+                                    <exclude>.idea/**</exclude>
+                                    <exclude>**/*.iml</exclude>
+                                    <exclude>**/.project</exclude>
+                                    <exclude>.git/**</exclude>
+                                    <exclude>.gitignore</exclude>
+                                    <exclude>**/.classpath</exclude>
+                                    <exclude>ignore/**</exclude>
+                                    <exclude>API.txt</exclude>
+                                    <exclude>RELEASE.sh</exclude>
+                                    <exclude>deploy.sh</exclude>
+                                    <exclude>run.sh</exclude>
+                                    <exclude>run-local.sh</exclude>
+                                    <exclude>release-script</exclude>
+                                    <exclude>doc/**</exclude>
+                                    <exclude>src/site/**</exclude>
+                                    <exclude>*.log</exclude>
+                                    <exclude>README.*</exclude>
+                                    <exclude>TODO</exclude>
+                                    <exclude>logs/**</exclude>
+                                    <exclude>**/*.xsd</exclude>
+                                    <exclude>**/*.xml</exclude>
+                                    <exclude>**/*.stg</exclude>
+                                    <exclude>**/*.sql</exclude>
+                                    <exclude>**/*.properties</exclude>
+                                    <exclude>**/*.dont-let-git-remove-this-directory</exclude>
+                                    <exclude>**/test-output/**</exclude>
+                                    <exclude>**/bin/**</exclude>
+                                    <exclude>**/target/**</exclude>
+                                    <exclude>**/.settings/**</exclude>
+                                    <exclude>.travis.yml</exclude>
+                                    <exclude>bin/**</exclude>
+                                    <!-- exclude mustache template files -->
+                                    <exclude>**/*.mustache</exclude>
+                                    <exclude>examples/**</exclude>
+                                    <exclude>Gemfile.lock</exclude>
+                                    <exclude>src/main/ruby/kbadmin/**</exclude>
+                                </excludes>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>2.2.1</version>
+                    <executions>
+                        <execution>
+                            <id>attach-sources</id>
+                            <phase>verify</phase>
+                            <goals>
+                                <goal>jar</goal>
+                                <goal>test-jar</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
             </plugins>
         </pluginManagement>
         <plugins>
             <plugin>
-                <groupId>com.ning.maven.plugins</groupId>
-                <artifactId>maven-dependency-versions-check-plugin</artifactId>
-                <version>2.0.2</version>
-                <configuration>
-                    <failBuildInCaseOfConflict>true</failBuildInCaseOfConflict>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>none</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>com.ning.maven.plugins</groupId>
-                <artifactId>maven-duplicate-finder-plugin</artifactId>
-                <version>1.0.2</version>
-                <configuration>
-                    <failBuildInCaseOfConflict>false</failBuildInCaseOfConflict>
-                    <!-- That's for Jetty -->
-                    <ignoredResources>
-                        <ignoredResource>about.html</ignoredResource>
-                    </ignoredResources>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-clean-plugin</artifactId>
+                <version>2.5</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.3.2</version>
-                <configuration>
-                    <source>1.6</source>
-                    <target>1.6</target>
-                </configuration>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>2.6</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>2.2</version>
+                <version>2.4</version>
                 <executions>
                     <execution>
                         <goals>
+                            <goal>jar</goal>
                             <goal>test-jar</goal>
                         </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <version>2.3</version>
-                <executions>
-                    <execution>
-                        <id>analyze</id>
-                        <goals>
-                            <goal>analyze-only</goal>
-                        </goals>
-                        <configuration>
-                            <ignoreNonCompile>true</ignoreNonCompile>
-                            <failOnWarning>false</failOnWarning>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.rat</groupId>
-                <artifactId>apache-rat-plugin</artifactId>
-                <version>0.7</version>
-                <executions>
-                    <execution>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                        <configuration>
-                            <useEclipseDefaultExcludes>true</useEclipseDefaultExcludes>
-                            <useIdeaDefaultExcludes>true</useIdeaDefaultExcludes>
-                            <useMavenDefaultExcludes>true</useMavenDefaultExcludes>
-                            <excludes>
-                                <!-- For some reason, useIdeaDefaultExcludes 
-                                    doesn't pick up .idea directory -->
-                                <exclude>.idea/**</exclude>
-                                <exclude>**/*.iml</exclude>
-                                <exclude>**/.project</exclude>
-                                <exclude>.git/**</exclude>
-                                <exclude>.gitignore</exclude>
-                                <exclude>**/.classpath</exclude>
-                                <exclude>ignore/**</exclude>
-                                <exclude>API.txt</exclude>
-                                <exclude>RELEASE.sh</exclude>
-                                <exclude>deploy.sh</exclude>
-                                <exclude>run.sh</exclude>
-                                <exclude>run-local.sh</exclude>
-                                <exclude>release-script</exclude>
-                                <exclude>doc/**</exclude>
-                                <exclude>src/site/**</exclude>
-                                <exclude>*.log</exclude>
-                                <exclude>README.*</exclude>
-                                <exclude>TODO</exclude>
-                                <exclude>logs/**</exclude>
-                                <exclude>**/*.xsd</exclude>
-                                <exclude>**/*.xml</exclude>
-                                <exclude>**/*.stg</exclude>
-                                <exclude>**/*.sql</exclude>
-                                <exclude>**/*.properties</exclude>
-                                <exclude>**/*.dont-let-git-remove-this-directory</exclude>
-                                <exclude>**/test-output/**</exclude>
-                                <exclude>**/bin/**</exclude>
-                                <exclude>**/target/**</exclude>
-                                <exclude>**/.settings/**</exclude>
-                                <exclude>.travis.yml</exclude>
-                                <exclude>bin/**</exclude>
-                                <!-- exclude mustache template files -->
-                                <exclude>**/*.mustache</exclude>
-                                <exclude>examples/**</exclude>
-                                <exclude>Gemfile.lock</exclude>
-                                <exclude>src/main/ruby/kbadmin/**</exclude>
-                            </excludes>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>
@@ -667,21 +721,6 @@
                 <configuration>
                     <attachClasses>true</attachClasses>
                 </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-                <version>2.1.2</version>
-                <executions>
-                    <execution>
-                        <id>attach-sources</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>jar</goal>
-                            <goal>test-jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>
@@ -738,6 +777,10 @@
                 <plugins>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-enforcer-plugin</artifactId>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <version>2.11</version>
                         <configuration>
@@ -747,6 +790,26 @@
                                 <user.timezone>GMT</user.timezone>
                             </systemPropertyVariables>
                         </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-dependency-plugin</artifactId>
+                    </plugin>
+                    <plugin>
+                        <groupId>com.ning.maven.plugins</groupId>
+                        <artifactId>maven-dependency-versions-check-plugin</artifactId>
+                    </plugin>
+                    <plugin>
+                        <groupId>com.ning.maven.plugins</groupId>
+                        <artifactId>maven-duplicate-finder-plugin</artifactId>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.rat</groupId>
+                        <artifactId>apache-rat-plugin</artifactId>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
                     </plugin>
                 </plugins>
             </build>
@@ -772,6 +835,10 @@
                 <plugins>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-enforcer-plugin</artifactId>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
                         <version>1.4</version>
                         <executions>
@@ -794,6 +861,80 @@
                                 <file.encoding>UTF-8</file.encoding>
                                 <user.timezone>GMT</user.timezone>
                             </systemPropertyVariables>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-dependency-plugin</artifactId>
+                    </plugin>
+                    <plugin>
+                        <groupId>com.ning.maven.plugins</groupId>
+                        <artifactId>maven-dependency-versions-check-plugin</artifactId>
+                    </plugin>
+                    <plugin>
+                        <groupId>com.ning.maven.plugins</groupId>
+                        <artifactId>maven-duplicate-finder-plugin</artifactId>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.rat</groupId>
+                        <artifactId>apache-rat-plugin</artifactId>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>jdk16</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <configuration>
+                            <source>1.6</source>
+                            <target>1.6</target>
+                            <showDeprecation>true</showDeprecation>
+                            <showWarnings>true</showWarnings>
+                            <fork>true</fork>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>jdk17</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-jar-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <configuration>
+                                    <classifier>jdk17</classifier>
+                                </configuration>
+                                <goals>
+                                    <goal>jar</goal>
+                                    <goal>test-jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <configuration>
+                            <source>1.7</source>
+                            <target>1.7</target>
+                            <showDeprecation>true</showDeprecation>
+                            <showWarnings>true</showWarnings>
+                            <fork>true</fork>
                         </configuration>
                     </plugin>
                 </plugins>
