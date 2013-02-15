@@ -879,6 +879,6 @@
     </reporting>
     <issueManagement>
         <system>Github</system>
-        <url>http://github.com/ning/killbill</url>
+        <url>http://github.com/killbill/killbill</url>
     </issueManagement>
 </project>
