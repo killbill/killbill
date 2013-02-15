@@ -93,6 +93,14 @@ public class RepairEntitlementDao implements EntitlementDao, RepairEntitlementLi
             this.events = new TreeSet<EntitlementEventWithOrderingId>(new Comparator<EntitlementEventWithOrderingId>() {
                 @Override
                 public int compare(final EntitlementEventWithOrderingId o1, final EntitlementEventWithOrderingId o2) {
+                    // Work around jdk7 change: compare(o1, o1) is now invoked when inserting the first element
+                    // See:
+                    // - http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=5045147
+                    // - http://hg.openjdk.java.net/jdk7/tl/jdk/rev/bf37edb38fbb
+                    if (o1 == o2) {
+                        return 0;
+                    }
+
                     final int result = o1.getEvent().getEffectiveDate().compareTo(o2.getEvent().getEffectiveDate());
                     if (result == 0) {
                         if (o1.getOrderingId() < o2.getOrderingId()) {
