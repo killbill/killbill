@@ -217,7 +217,6 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>11.0.2</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
