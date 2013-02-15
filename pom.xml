@@ -515,6 +515,19 @@
                     </executions>
                 </plugin>
                 <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>2.13</version>
+                    <configuration>
+                        <argLine>-Xms512m -Xmx1024m -XX:MaxPermSize=512m -XX:MaxDirectMemorySize=512m</argLine>
+                        <useManifestOnlyJar>false</useManifestOnlyJar>
+                        <systemPropertyVariables>
+                            <file.encoding>UTF-8</file.encoding>
+                            <user.timezone>GMT</user.timezone>
+                        </systemPropertyVariables>
+                    </configuration>
+                </plugin>
+                <plugin>
                     <groupId>org.apache.felix</groupId>
                     <artifactId>maven-bundle-plugin</artifactId>
                     <version>2.3.7</version>
@@ -705,13 +718,8 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.11</version>
                 <configuration>
-                    <useManifestOnlyJar>false</useManifestOnlyJar>
                     <groups>fast,slow,mysql</groups>
-                    <systemPropertyVariables>
-                        <log4j.configuration>file:${project.basedir}/src/test/resources/log4j.xml</log4j.configuration>
-                    </systemPropertyVariables>
                 </configuration>
             </plugin>
             <plugin>
@@ -732,14 +740,11 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>2.11</version>
                         <configuration>
                             <groups>fast,slow</groups>
                             <excludedGroups>mysql</excludedGroups>
                             <systemPropertyVariables>
                                 <com.ning.billing.dbi.test.h2>true</com.ning.billing.dbi.test.h2>
-                                <file.encoding>UTF-8</file.encoding>
-                                <user.timezone>GMT</user.timezone>
                             </systemPropertyVariables>
                         </configuration>
                     </plugin>
@@ -753,18 +758,12 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>2.11</version>
                         <configuration>
                             <groups>fast,slow,mysql</groups>
-                            <useManifestOnlyJar>false</useManifestOnlyJar>
                             <systemPropertyVariables>
-                                <log4j.configuration>file:${project.basedir}/src/test/resources/log4j.xml
-                                </log4j.configuration>
                                 <com.ning.billing.dbi.test.useLocalDb>true</com.ning.billing.dbi.test.useLocalDb>
                                 <com.ning.billing.dbi.jdbc.url>jdbc:mysql://127.0.0.1:3306/killbill
                                 </com.ning.billing.dbi.jdbc.url>
-                                <file.encoding>UTF-8</file.encoding>
-                                <user.timezone>GMT</user.timezone>
                             </systemPropertyVariables>
                         </configuration>
                     </plugin>
@@ -782,13 +781,8 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>2.11</version>
                         <configuration>
                             <groups>fast</groups>
-                            <systemPropertyVariables>
-                                <file.encoding>UTF-8</file.encoding>
-                                <user.timezone>GMT</user.timezone>
-                            </systemPropertyVariables>
                         </configuration>
                     </plugin>
                     <plugin>
@@ -821,7 +815,6 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>2.11</version>
                         <configuration>
                             <groups>stress</groups>
                         </configuration>
@@ -854,13 +847,8 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>2.11</version>
                         <configuration>
-                            <groups>fast</groups>
-                            <systemPropertyVariables>
-                                <file.encoding>UTF-8</file.encoding>
-                                <user.timezone>GMT</user.timezone>
-                            </systemPropertyVariables>
+                            <skipTests>true</skipTests>
                         </configuration>
                     </plugin>
                     <plugin>
