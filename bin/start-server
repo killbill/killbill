@@ -28,7 +28,8 @@ PROPERTIES="$SERVER/src/main/resources/killbill-server.properties"
 DEBUG_OPTS_ECLIPSE=" -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=12345 "
 DEBUG_OPTS_ECLIPSE_WAIT=" -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=12345 "
 
-OPTS_ECLIPSE=" -Xmx2048m  -XX:+UseConcMarkSweepGC -XX:MaxPermSize=128m  "
+# Default JVM settings if unset
+MAVEN_OPTS=${MAVEN_OPTS-"-Xms512m -Xmx1024m -XX:MaxPermSize=512m -XX:MaxDirectMemorySize=512m -XX:+UseConcMarkSweepGC"}
 
 LOG="$SERVER/src/main/resources/logback.xml"
 
@@ -72,7 +73,7 @@ function start() {
             debug_opts_eclipse=$DEBUG_OPTS_ECLIPSE
         fi
     fi
-    export MAVEN_OPTS=" -Duser.timezone=UTC $OPTS_ECLIPSE $debug_opts_eclipse"
+    export MAVEN_OPTS="$MAVEN_OPTS -Duser.timezone=UTC $debug_opts_eclipse"
 
     echo "Starting IRS MAVEN_OPTS = $MAVEN_OPTS"
     echo "$start_cmd"
