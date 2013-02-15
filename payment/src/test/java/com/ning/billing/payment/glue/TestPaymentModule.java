@@ -29,6 +29,7 @@ import com.ning.billing.mock.glue.MockNotificationQueueModule;
 import com.ning.billing.payment.TestPaymentHelper;
 import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
 import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.config.PaymentConfig;
 import com.ning.billing.util.email.EmailModule;
 import com.ning.billing.util.email.templates.TemplateModule;
@@ -48,9 +49,15 @@ import static org.testng.Assert.assertNotNull;
 public class TestPaymentModule extends PaymentModule {
 
 
+    private final Clock clock;
+
+    public TestPaymentModule(final Clock clock) {
+        this.clock = clock;
+    }
+
     @Override
     protected void installPaymentProviderPlugins(final PaymentConfig config) {
-        install(new MockPaymentProviderPluginModule(TestPaymentHelper.PLUGIN_TEST_NAME));
+        install(new MockPaymentProviderPluginModule(TestPaymentHelper.PLUGIN_TEST_NAME, clock));
     }
 
     private void installExternalApis() {

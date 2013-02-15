@@ -28,11 +28,11 @@ public class MockPaymentProviderPluginProvider implements Provider<MockPaymentPr
     private OSGIServiceRegistration<PaymentPluginApi> registry;
     private final String instanceName;
 
-    @Inject
     private Clock clock;
 
-    public MockPaymentProviderPluginProvider(final String instanceName) {
+    public MockPaymentProviderPluginProvider(final String instanceName, Clock clock) {
         this.instanceName = instanceName;
+        this.clock = clock;
     }
 
     @Inject

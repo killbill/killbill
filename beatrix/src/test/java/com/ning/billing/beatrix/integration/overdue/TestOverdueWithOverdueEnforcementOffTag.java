@@ -37,7 +37,6 @@ import com.ning.billing.util.tag.ControlTagType;
 import static junit.framework.Assert.assertTrue;
 
 @Test(groups = "slow")
-@Guice(modules = {BeatrixIntegrationModule.class})
 public class TestOverdueWithOverdueEnforcementOffTag extends TestOverdueBase {
 
 

@@ -39,14 +39,20 @@ public class GuicyKillbillTestSuite {
     private boolean hasFailed = false;
 
     @Inject
-    protected ClockMock clock;
-
-    @Inject
     protected InternalCallContext internalCallContext;
 
     @Inject
     protected CallContext callContext;
 
+    @Inject
+    protected ClockMock clock;
+
+
+    private final static ClockMock theStaticClock = new ClockMock();
+
+    public static ClockMock getClock() {
+        return theStaticClock;
+    }
 
     @BeforeMethod(alwaysRun = true)
     public void startTestSuite(final Method method) throws Exception {

@@ -33,7 +33,6 @@ import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.invoice.api.InvoiceItemType;
 
-@Guice(modules = {BeatrixIntegrationModule.class})
 public class TestBillingAlignment extends TestIntegrationBase {
 
     // TODO test fails as it should not create a proration when the chnage to annual occurs. Instaed we should restart from the data of the chnage

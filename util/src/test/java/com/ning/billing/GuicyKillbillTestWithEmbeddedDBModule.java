@@ -17,9 +17,6 @@
 package com.ning.billing;
 
 
-import javax.inject.Provider;
-
-import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
