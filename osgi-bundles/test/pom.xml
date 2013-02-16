@@ -104,25 +104,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <version>1.4</version>
-                <executions>
-                    <execution>
-                        <id>copy</id>
-                        <phase>package</phase>
-                        <configuration>
-                            <tasks>
-                                <copy file="${basedir}/target/killbill-osgi-bundles-test-${project.version}-jar-with-dependencies.jar" tofile="${basedir}/../../beatrix/src/test/resources/killbill-osgi-bundles-test-${project.version}-jar-with-dependencies.jar"/>
-                            </tasks>
-                        </configuration>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
         </plugins>
     </build>
 </project>

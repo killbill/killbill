@@ -46,9 +46,11 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
+import com.ning.billing.dbi.DBTestingHelper;
 import com.ning.billing.osgi.api.OSGIServiceRegistration;
 import com.ning.billing.osgi.api.config.PluginConfig.PluginType;
 import com.ning.billing.osgi.api.config.PluginJavaConfig;
+import com.ning.billing.osgi.glue.OSGIDataSourceConfig;
 import com.ning.billing.payment.plugin.api.PaymentInfoPlugin;
 import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 import com.ning.billing.util.config.OSGIConfig;
@@ -77,6 +79,15 @@ public class TestBasicOSGIWithTestBundle extends TestOSGIBase {
     @BeforeClass(groups = "slow")
     public void setup() throws Exception {
 
+        final String jdbcConnection = getDBTestingHelper().getJdbcConnectionString();
+        final String userName = DBTestingHelper.USERNAME;
+        final String userPwd = DBTestingHelper.PASSWORD;
+
+        System.setProperty(OSGIDataSourceConfig.DATA_SOURCE_PROP_PREFIX + "jdbc.url", jdbcConnection);
+        System.setProperty(OSGIDataSourceConfig.DATA_SOURCE_PROP_PREFIX + "jdbc.user", userName);
+        System.setProperty(OSGIDataSourceConfig.DATA_SOURCE_PROP_PREFIX + "jdbc.password", userPwd);
+
+        // OSGIDataSourceConfig
         super.setup();
 
         // This is extracted from surefire system configuration-- needs to be added explicitely in IntelliJ for correct running
