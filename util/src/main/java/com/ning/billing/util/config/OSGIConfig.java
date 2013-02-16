@@ -58,7 +58,9 @@ public interface OSGIConfig extends KillbillConfig {
              // Note: bundles should mark javax.servlet:servlet-api as provided
              "javax.servlet;version=3.0," +
              "javax.servlet.http;version=3.0," +
-             "org.osgi.service.log;version=1.3")
+             "org.osgi.service.log;version=1.3," +
+             // Let the world know the System bundle exposes the requirement (osgi.wiring.package=org.osgi.service.http)
+             "org.osgi.service.http")
     public String getSystemBundleExportPackages();
 
     // TODO FIXME OSGI
