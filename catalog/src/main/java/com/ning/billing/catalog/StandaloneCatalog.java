@@ -66,6 +66,10 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
     @XmlElement(name = "currency", required = true)
     private Currency[] supportedCurrencies;
 
+    @XmlElementWrapper(name = "units", required = false)
+    @XmlElement(name = "unit", required = true)
+    private DefaultUnit[] units;
+
     @XmlElementWrapper(name = "products", required = true)
     @XmlElement(name = "product", required = true)
     private DefaultProduct[] products;
@@ -101,13 +105,20 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
     }
 
     /* (non-Javadoc)
-      * @see com.ning.billing.catalog.ICatalog#getProducts()
-      */
-    @Override
-    public DefaultProduct[] getCurrentProducts() {
-        return products;
-    }
+     * @see com.ning.billing.catalog.ICatalog#getProducts()
+     */
+   @Override
+   public DefaultProduct[] getCurrentProducts() {
+       return products;
+   }
 
+   /* (non-Javadoc)
+    * @see com.ning.billing.catalog.ICatalog#getProducts()
+    */
+    @Override
+    public DefaultUnit[] getCurrentUnits() {
+        return units;
+    }
 
     @Override
     public Currency[] getCurrentSupportedCurrencies() {

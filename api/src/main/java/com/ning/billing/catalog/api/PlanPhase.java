@@ -17,6 +17,7 @@
 package com.ning.billing.catalog.api;
 
 
+
 /**
  * The interface {@code PlanPhase} is used to express the various phases available on a given {@code Plan}
  * 
@@ -65,4 +66,10 @@ public interface PlanPhase {
      * @return  the {@code PhaseType}
      */
     public PhaseType getPhaseType();
+
+    /**
+    *
+    * @return  the {@code Limit}
+    */
+    public Limit[] getLimits();
 }
