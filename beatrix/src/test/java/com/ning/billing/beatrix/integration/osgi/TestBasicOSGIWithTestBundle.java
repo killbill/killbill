@@ -16,15 +16,7 @@
 
 package com.ning.billing.beatrix.integration.osgi;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.PrintStream;
 import java.math.BigDecimal;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.nio.channels.FileChannel;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Map;
@@ -46,16 +38,12 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
+import com.ning.billing.beatrix.osgi.SetupBundleWithAssertion;
 import com.ning.billing.dbi.DBTestingHelper;
 import com.ning.billing.osgi.api.OSGIServiceRegistration;
-import com.ning.billing.osgi.api.config.PluginConfig.PluginType;
-import com.ning.billing.osgi.api.config.PluginJavaConfig;
 import com.ning.billing.osgi.glue.OSGIDataSourceConfig;
 import com.ning.billing.payment.plugin.api.PaymentInfoPlugin;
 import com.ning.billing.payment.plugin.api.PaymentPluginApi;
-import com.ning.billing.util.config.OSGIConfig;
-
-import com.google.common.io.Resources;
 
 import static com.jayway.awaitility.Awaitility.await;
 
@@ -92,7 +80,7 @@ public class TestBasicOSGIWithTestBundle extends TestOSGIBase {
 
         // This is extracted from surefire system configuration-- needs to be added explicitely in IntelliJ for correct running
         final String killbillVersion = System.getProperty("killbill.version");
-        SetupBundleWithAssertion setupTest = new SetupBundleWithAssertion(BUNDLE_TEST_RESOURCE, config, killbillVersion);
+        SetupBundleWithAssertion setupTest = new SetupBundleWithAssertion(BUNDLE_TEST_RESOURCE, osgiConfig, killbillVersion);
         setupTest.setupBundle();
 
     }
@@ -117,176 +105,6 @@ public class TestBasicOSGIWithTestBundle extends TestOSGIBase {
         final PaymentInfoPlugin r = paymentPluginApi.processPayment(paymentId, account.getPaymentMethodId(), paymentAmount, callContext);
         assertTor.assertPluginCreatedPayment(paymentId, account.getPaymentMethodId(), paymentAmount);
     }
-
-    private static final class SetupBundleWithAssertion {
-
-        private final String bundleName;
-        private final OSGIConfig config;
-        private final String killbillVersion;
-
-        public SetupBundleWithAssertion(final String bundleName, final OSGIConfig config, final String killbillVersion) {
-            this.bundleName = bundleName;
-            this.config = config;
-            this.killbillVersion = killbillVersion;
-        }
-
-        public void setupBundle() {
-
-            try {
-                // Retrieve PluginConfig info from classpath
-                // test bundle should have been exported under Beatrix resource by the maven maven-dependency-plugin
-                final PluginJavaConfig pluginConfig = extractBundleTestResource();
-                Assert.assertNotNull(pluginConfig);
-
-                // Create OSGI install bundle directory
-                setupDirectoryStructure(pluginConfig);
-
-                // Copy the jar
-                copyFile(new File(pluginConfig.getBundleJarPath()), new File(pluginConfig.getPluginVersionRoot().getAbsolutePath(), pluginConfig.getPluginVersionnedName() + ".jar"));
-
-                // Create the config file
-                createConfigFile(pluginConfig);
-
-            } catch (IOException e) {
-                Assert.fail(e.getMessage());
-            }
-        }
-
-        private void createConfigFile(final PluginJavaConfig pluginConfig) throws IOException {
-
-            PrintStream printStream = null;
-            try {
-                final File configFile = new File(pluginConfig.getPluginVersionRoot(), config.getOSGIKillbillPropertyName());
-                configFile.createNewFile();
-                printStream = new PrintStream(new FileOutputStream(configFile));
-                printStream.print("pluginType=" + PluginType.NOTIFICATION);
-            } finally {
-                if (printStream != null) {
-                    printStream.close();
-                }
-            }
-        }
-
-        private void setupDirectoryStructure(final PluginJavaConfig pluginConfig) {
-
-            final File rootDir  = new File(config.getRootInstallationDir());
-            if (rootDir.exists()) {
-                deleteDirectory(rootDir, false);
-            }
-            pluginConfig.getPluginVersionRoot().mkdirs();
-        }
-
-        private static void deleteDirectory(final File path, final boolean deleteParent) {
-            if (path == null) {
-                return;
-            }
-
-            if (path.exists()) {
-                final File[] files = path.listFiles();
-                if (files != null) {
-                    for (final File f : files) {
-                        if (f.isDirectory()) {
-                            deleteDirectory(f, true);
-                        }
-                        f.delete();
-                    }
-                }
-
-                if (deleteParent) {
-                    path.delete();
-                }
-            }
-        }
-
-
-
-        private PluginJavaConfig extractBundleTestResource() {
-
-            final String resourceName = bundleName + "-" + killbillVersion + "-jar-with-dependencies.jar";
-            final URL resourceUrl = Resources.getResource(resourceName);
-            if (resourceUrl != null) {
-                final String[] parts = resourceUrl.getPath().split("/");
-                final String lastPart = parts[parts.length - 1];
-                if (lastPart.startsWith(bundleName)) {
-                    return createPluginConfig(resourceUrl.getPath(), lastPart);
-                }
-            }
-            return null;
-
-        }
-
-        private PluginJavaConfig createPluginConfig(final String bundleTestResourcePath, final String fileName) {
-
-            return new PluginJavaConfig() {
-                @Override
-                public String getBundleJarPath() {
-                    return bundleTestResourcePath;
-                }
-
-                @Override
-                public String getPluginName() {
-                    return bundleName;
-                }
-
-                @Override
-                public PluginType getPluginType() {
-                    return PluginType.PAYMENT;
-                }
-
-                @Override
-                public String getVersion() {
-                    return killbillVersion;
-                }
-
-                @Override
-                public String getPluginVersionnedName() {
-                    return bundleName + "-" + killbillVersion;
-                }
-
-                @Override
-                public File getPluginVersionRoot() {
-                    final StringBuilder tmp = new StringBuilder(config.getRootInstallationDir());
-                    tmp.append("/")
-                       .append(PluginLanguage.JAVA.toString().toLowerCase())
-                       .append("/")
-                       .append(bundleName)
-                       .append("/")
-                       .append(killbillVersion);
-                    final File result = new File(tmp.toString());
-                    return result;
-                }
-
-                @Override
-                public PluginLanguage getPluginLanguage() {
-                    return PluginLanguage.JAVA;
-                }
-            };
-        }
-
-        public static void copyFile(File sourceFile, File destFile) throws IOException {
-            if (!destFile.exists()) {
-                destFile.createNewFile();
-            }
-
-            FileChannel source = null;
-            FileChannel destination = null;
-
-            try {
-                source = new FileInputStream(sourceFile).getChannel();
-                destination = new FileOutputStream(destFile).getChannel();
-                destination.transferFrom(source, 0, source.size());
-            } finally {
-                if (source != null) {
-                    source.close();
-                }
-                if (destination != null) {
-                    destination.close();
-                }
-            }
-        }
-
-    }
-
 
     private PaymentPluginApi getTestPluginPaymentApi() {
         PaymentPluginApi result = paymentPluginApiOSGIServiceRegistration.getServiceForPluginName("test");
