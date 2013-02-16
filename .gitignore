@@ -17,3 +17,4 @@ logs/
 */bin/
 catalog/src/test/resources/CatalogSchema.xsd
 */test-output/
+server/load
