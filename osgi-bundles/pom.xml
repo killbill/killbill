@@ -31,5 +31,6 @@
         <module>jruby</module>
         <module>meter</module>
         <module>webconsolebranding</module>
+        <module>defaultbundles</module>
     </modules>
 </project>
