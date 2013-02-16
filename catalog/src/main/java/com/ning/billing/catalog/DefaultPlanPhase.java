@@ -16,13 +16,13 @@
 
 package com.ning.billing.catalog;
 
+import java.net.URI;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
-
-import java.net.URI;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -147,6 +147,27 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
     public DefaultLimit[] getLimits() {
         return limits;
     }
+    
+    
+    protected Limit findLimit(String unit) {
+        for(Limit limit: limits) {
+            if(limit.getUnit().getName().equals(unit) ) {
+                    return limit;
+            }
+        }
+        return null;
+    }
+    
+    
+    @Override
+    public boolean compliesWithLimits(String unit, double value) {
+        Limit l = findLimit(unit);
+        if (l == null) {
+            return true;
+        }
+        return l.compliesWith(value);
+    }
+
 
     @Override
     public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {

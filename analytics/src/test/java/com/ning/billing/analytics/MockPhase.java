@@ -116,4 +116,9 @@ public class MockPhase implements PlanPhase {
     public Limit[] getLimits() {
          return new Limit[0];
     }
+
+    @Override
+    public boolean compliesWithLimits(String unit, double value) {
+        return false;
+    }
 }

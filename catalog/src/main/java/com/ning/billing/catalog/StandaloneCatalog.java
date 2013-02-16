@@ -34,6 +34,7 @@ import com.ning.billing.catalog.api.BillingAlignment;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.catalog.api.Limit;
 import com.ning.billing.catalog.api.Listing;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanAlignmentChange;
@@ -283,6 +284,18 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
 
     }
 
+
+    //////////////////////////////////////////////////////////////////////////////
+    //
+    // UNIT LIMIT
+    //
+    //////////////////////////////////////////////////////////////////////////////
+    
+    @Override
+    public boolean compliesWithLimits(final String phaseName, final String unit, final double value) throws CatalogApiException {
+        PlanPhase phase = findCurrentPhase(phaseName);
+        return phase.compliesWithLimits(unit, value);
+    }
 
     protected StandaloneCatalog setProducts(final DefaultProduct[] products) {
         this.products = products;

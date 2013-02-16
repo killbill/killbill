@@ -72,4 +72,10 @@ public interface PlanPhase {
     * @return  the {@code Limit}
     */
     public Limit[] getLimits();
+    
+    /**
+    *
+    * @return  compliance boolean
+    */
+    public boolean compliesWithLimits(String unit, double value);
 }

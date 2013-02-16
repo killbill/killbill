@@ -456,4 +456,9 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
     public List<Listing> getAvailableBasePlanListings() throws CatalogApiException {
         return versionForDate(clock.getUTCNow()).getAvailableBasePlanListings();
     }
+
+    @Override
+    public boolean compliesWithLimits(String phaseName, String unit, double value) throws CatalogApiException {
+        return versionForDate(clock.getUTCNow()).compliesWithLimits(phaseName, unit, value);
+    }
 }

@@ -73,4 +73,19 @@ public class DefaultLimit extends ValidatingConfig<StandaloneCatalog> implements
 
         return errors;
     }
+
+    @Override
+    public boolean compliesWith(double value) {
+        if (max != null) {
+            if (value > max.doubleValue()) {
+                return false;
+            }
+        }
+        if (min != null) {
+            if (value < min.doubleValue()) {
+                return false;
+            }
+        }
+        return true;
+    }
 }

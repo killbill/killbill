@@ -25,4 +25,6 @@ public interface Limit {
 
     public abstract Double getMin();
 
+    public abstract boolean compliesWith(double value);
+
 }
