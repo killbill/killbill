@@ -195,7 +195,7 @@ public class DefaultOSGIService implements OSGIService {
     }
 
     private void pruneOSGICache() {
-        final String path = osgiConfig.getOSGIBundleRootDir() + "/" + osgiConfig.getOSGIBundleCacheName();
+        final String path = osgiConfig.getOSGIBundleRootDir();
         deleteUnderDirectory(new File(path));
     }
 

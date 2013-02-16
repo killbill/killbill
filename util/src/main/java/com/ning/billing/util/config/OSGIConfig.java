@@ -21,6 +21,10 @@ import org.skife.config.Default;
 
 public interface OSGIConfig extends KillbillConfig {
 
+    @Config("killbill.osgi.bundle.property.name")
+    @Default("killbill.properties")
+    public String getOSGIKillbillPropertyName();
+
     @Config("killbill.osgi.root.dir")
     @Default("/var/tmp/felix")
     public String getOSGIBundleRootDir();
@@ -48,6 +52,7 @@ public interface OSGIConfig extends KillbillConfig {
              "com.ning.billing.osgi.api.config," +
              "com.ning.billing.overdue," +
              "com.ning.billing.payment.api," +
+             "com.ning.billing.payment.plugin.api," +
              "com.ning.billing.tenant.api," +
              "com.ning.billing.usage.api," +
              "com.ning.billing.util.api," +

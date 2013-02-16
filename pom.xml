@@ -266,6 +266,11 @@
             </dependency>
             <dependency>
                 <groupId>com.ning.billing</groupId>
+                <artifactId>killbill-osgi-bundles-test</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.ning.billing</groupId>
                 <artifactId>killbill-osgi-bundles-meter</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -645,7 +650,9 @@
                     <useManifestOnlyJar>false</useManifestOnlyJar>
                     <groups>fast,slow,mysql</groups>
                     <systemPropertyVariables>
+                        <propertyName>propertyValue</propertyName>
                         <log4j.configuration>file:${project.basedir}/src/test/resources/log4j.xml</log4j.configuration>
+                        <killbill.version>${project.version}</killbill.version>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
@@ -715,6 +722,7 @@
                                 </com.ning.billing.dbi.jdbc.url>
                                 <file.encoding>UTF-8</file.encoding>
                                 <user.timezone>GMT</user.timezone>
+                                <killbill.version>${project.version}</killbill.version>
                             </systemPropertyVariables>
                         </configuration>
                     </plugin>
