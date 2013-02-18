@@ -20,17 +20,17 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
-import com.ning.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
-import com.ning.billing.usage.glue.TestUsageModuleWithEmbeddedDB;
+import com.ning.billing.GuicyKillbillTestSuiteNoDB;
+import com.ning.billing.usage.glue.TestUsageModuleNoDB;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
-public class UsageTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWithEmbeddedDB {
+public class UsageTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
-    @BeforeClass(groups = "slow")
+    @BeforeClass(groups = "fast")
     protected void setup() throws Exception {
-        final Injector injector = Guice.createInjector(new TestUsageModuleWithEmbeddedDB());
+        final Injector injector = Guice.createInjector(new TestUsageModuleNoDB());
         injector.injectMembers(this);
     }
 

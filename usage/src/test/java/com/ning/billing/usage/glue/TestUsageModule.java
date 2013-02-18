@@ -14,10 +14,12 @@
  * under the License.
  */
 
-package com.ning.billing.usage;
+package com.ning.billing.usage.glue;
 
-import com.ning.billing.KillbillTestSuite;
+public class TestUsageModule extends UsageModule {
 
-public class UsageTestSuite extends KillbillTestSuite {
-
+    @Override
+    protected void configure() {
+        super.configure();
+    }
 }
