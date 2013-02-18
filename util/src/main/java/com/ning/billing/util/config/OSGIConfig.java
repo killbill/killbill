@@ -71,7 +71,7 @@ public interface OSGIConfig extends KillbillConfig {
 
     // TODO FIXME OSGI
     @Config("killbill.osgi.jruby.bundle.path")
-    @Default("file:/var/tmp/killbill-osgi-bundles-jruby-0.1.52-SNAPSHOT-jar-with-dependencies.jar")
+    @Default("file:/var/tmp/killbill-osgi-bundles-jruby.jar")
     public String getJrubyBundlePath();
 
 }
