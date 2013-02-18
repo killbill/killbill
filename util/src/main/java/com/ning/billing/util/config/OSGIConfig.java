@@ -59,8 +59,14 @@ public interface OSGIConfig extends KillbillConfig {
              "javax.servlet;version=3.0," +
              "javax.servlet.http;version=3.0," +
              "org.osgi.service.log;version=1.3," +
-             // Let the world know the System bundle exposes the requirement (osgi.wiring.package=org.osgi.service.http)
-             "org.osgi.service.http")
+             // Let the world know the System bundle exposes (via org.osgi.compendium) the requirement (osgi.wiring.package=org.osgi.service.http)
+             "org.osgi.service.http," +
+             // Let the world know the System bundle exposes (via org.osgi.compendium) the requirement (&(osgi.wiring.package=org.osgi.service.deploymentadmin)(version>=1.1.0)(!(version>=2.0.0)))
+             "org.osgi.service.deploymentadmin;version=1.1.0," +
+             // Let the world know the System bundle exposes (via org.osgi.compendium) the requirement (&(osgi.wiring.package=org.osgi.service.event)(version>=1.2.0)(!(version>=2.0.0)))
+             "org.osgi.service.event;version=1.2.0," +
+             // Let the world know the System bundle exposes the requirement (&(osgi.wiring.package=org.slf4j)(version>=1.7.0)(!(version>=2.0.0)))
+             "org.slf4j;version=1.7.2")
     public String getSystemBundleExportPackages();
 
     // TODO FIXME OSGI
