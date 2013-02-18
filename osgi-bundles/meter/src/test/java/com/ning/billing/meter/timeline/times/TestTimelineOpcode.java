@@ -19,9 +19,9 @@ package com.ning.billing.meter.timeline.times;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.meter.MeterTestSuite;
+import com.ning.billing.meter.MeterTestSuiteNoDB;
 
-public class TestTimelineOpcode extends MeterTestSuite {
+public class TestTimelineOpcode extends MeterTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testMaxDeltaTime() throws Exception {

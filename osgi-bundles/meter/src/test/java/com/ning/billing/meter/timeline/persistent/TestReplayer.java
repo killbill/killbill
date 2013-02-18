@@ -24,14 +24,14 @@ import java.util.List;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.meter.MeterTestSuite;
+import com.ning.billing.meter.MeterTestSuiteNoDB;
 import com.ning.billing.meter.timeline.sources.SourceSamplesForTimestamp;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
-public class TestReplayer extends MeterTestSuite {
+public class TestReplayer extends MeterTestSuiteNoDB {
 
     private static final File basePath = new File(System.getProperty("java.io.tmpdir"), "TestReplayer-" + System.currentTimeMillis());
 

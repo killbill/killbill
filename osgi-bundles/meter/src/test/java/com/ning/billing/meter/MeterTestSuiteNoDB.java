@@ -14,20 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.meter.timeline.samples;
+package com.ning.billing.meter;
 
-import org.testng.Assert;
-import org.testng.annotations.Test;
-
-import com.ning.billing.meter.MeterTestSuiteNoDB;
-
-public class TestNullSample extends MeterTestSuiteNoDB {
-
-    @Test(groups = "fast")
-    public void testConstructor() throws Exception {
-        final NullSample sample = new NullSample();
-
-        Assert.assertEquals(sample.getOpcode(), SampleOpcode.NULL);
-        Assert.assertNull(sample.getSampleValue());
-    }
+public class MeterTestSuiteNoDB extends MeterTestSuite {
 }

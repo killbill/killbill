@@ -23,11 +23,10 @@ import java.util.Map;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.mockito.Mockito;
-import org.skife.jdbi.v2.DBI;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.meter.MeterTestSuite;
+import com.ning.billing.meter.MeterTestSuiteNoDB;
 import com.ning.billing.meter.timeline.codec.DefaultSampleCoder;
 import com.ning.billing.meter.timeline.codec.SampleCoder;
 import com.ning.billing.meter.timeline.samples.SampleOpcode;
@@ -40,7 +39,7 @@ import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.dao.NonEntityDao;
 
-public class TestTimelineSourceEventAccumulator extends MeterTestSuite {
+public class TestTimelineSourceEventAccumulator extends MeterTestSuiteNoDB {
 
     private static final int HOST_ID = 1;
     private static final int EVENT_CATEGORY_ID = 123;

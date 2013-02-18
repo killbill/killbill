@@ -19,9 +19,9 @@ package com.ning.billing.meter.timeline.samples;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.meter.MeterTestSuite;
+import com.ning.billing.meter.MeterTestSuiteNoDB;
 
-public class TestSampleOpcode extends MeterTestSuite {
+public class TestSampleOpcode extends MeterTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testGetKnownOpcodeFromIndex() throws Exception {

@@ -19,11 +19,11 @@ package com.ning.billing.meter.timeline.metrics;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.meter.MeterTestSuite;
+import com.ning.billing.meter.MeterTestSuiteNoDB;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class TestSamplesForMetricAndSource extends MeterTestSuite {
+public class TestSamplesForMetricAndSource extends MeterTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testMapping() throws Exception {

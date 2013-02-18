@@ -19,9 +19,9 @@ package com.ning.billing.meter.timeline.chunks;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.meter.MeterTestSuite;
+import com.ning.billing.meter.MeterTestSuiteNoDB;
 
-public class TestTimeBytesAndSampleBytes extends MeterTestSuite {
+public class TestTimeBytesAndSampleBytes extends MeterTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testGetters() throws Exception {

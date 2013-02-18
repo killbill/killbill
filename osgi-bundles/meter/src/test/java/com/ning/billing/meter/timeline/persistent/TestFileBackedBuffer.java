@@ -28,14 +28,13 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.mockito.Mockito;
 import org.skife.config.ConfigurationObjectFactory;
-import org.skife.jdbi.v2.DBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.ning.billing.meter.MeterTestSuite;
+import com.ning.billing.meter.MeterTestSuiteNoDB;
 import com.ning.billing.meter.timeline.BackgroundDBChunkWriter;
 import com.ning.billing.meter.timeline.MockTimelineDao;
 import com.ning.billing.meter.timeline.TimelineEventHandler;
@@ -52,7 +51,7 @@ import com.ning.billing.util.dao.NonEntityDao;
 
 import com.google.common.collect.ImmutableMap;
 
-public class TestFileBackedBuffer extends MeterTestSuite {
+public class TestFileBackedBuffer extends MeterTestSuiteNoDB {
 
     private static final Logger log = LoggerFactory.getLogger(TestFileBackedBuffer.class);
 

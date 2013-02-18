@@ -28,7 +28,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.ning.billing.meter.MeterTestSuite;
+import com.ning.billing.meter.MeterTestSuiteNoDB;
 import com.ning.billing.meter.timeline.chunks.TimelineChunk;
 import com.ning.billing.meter.timeline.chunks.TimelineChunksViews.Compact;
 import com.ning.billing.meter.timeline.chunks.TimelineChunksViews.Loose;
@@ -41,7 +41,7 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.TextNode;
 
-public class TestTimelineChunkToJson extends MeterTestSuite {
+public class TestTimelineChunkToJson extends MeterTestSuiteNoDB {
 
     private static final ObjectMapper mapper = new ObjectMapper().configure(MapperFeature.DEFAULT_VIEW_INCLUSION, false);
     private static final TimelineCoder timelineCoder = new DefaultTimelineCoder();
