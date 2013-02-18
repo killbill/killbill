@@ -50,6 +50,8 @@ public class MockAccountBuilder {
     private String phone = "";
     private boolean migrated;
     private boolean isNotifiedForInvoices;
+    private DateTime createdDate = new DateTime(DateTimeZone.UTC);
+    private DateTime updatedDate = new DateTime(DateTimeZone.UTC);
 
     public MockAccountBuilder() {
         this(UUID.randomUUID());
@@ -177,16 +179,26 @@ public class MockAccountBuilder {
         return this;
     }
 
+    public MockAccountBuilder createdDate(final DateTime createdDate) {
+        this.createdDate = createdDate;
+        return this;
+    }
+
+    public MockAccountBuilder updatedDate(final DateTime updatedDate) {
+        this.updatedDate = updatedDate;
+        return this;
+    }
+
     public Account build() {
         return new Account() {
             @Override
             public DateTime getCreatedDate() {
-                throw new UnsupportedOperationException();
+                return createdDate;
             }
 
             @Override
             public DateTime getUpdatedDate() {
-                throw new UnsupportedOperationException();
+                return updatedDate;
             }
 
             @Override

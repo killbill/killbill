@@ -21,28 +21,14 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-import org.skife.jdbi.v2.IDBI;
 import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.analytics.AnalyticsTestSuiteWithEmbeddedDB;
 import com.ning.billing.analytics.model.BusinessInvoiceItemModelDao;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.clock.DefaultClock;
 
 public class TestBusinessInvoiceItemSqlDao extends AnalyticsTestSuiteWithEmbeddedDB {
-
-    private final Clock clock = new DefaultClock();
-
-    private BusinessInvoiceItemSqlDao invoiceItemSqlDao;
-
-    @BeforeMethod(groups = "slow")
-    public void setUp() throws Exception {
-        final IDBI dbi = helper.getDBI();
-        invoiceItemSqlDao = dbi.onDemand(BusinessInvoiceItemSqlDao.class);
-    }
 
     @Test(groups = "slow")
     public void testCRUD() throws Exception {

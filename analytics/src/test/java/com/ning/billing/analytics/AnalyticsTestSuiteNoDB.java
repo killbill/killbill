@@ -20,9 +20,8 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
-import com.ning.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
+import com.ning.billing.GuicyKillbillTestSuiteNoDB;
 import com.ning.billing.account.api.AccountUserApi;
-import com.ning.billing.analytics.api.AnalyticsService;
 import com.ning.billing.analytics.api.DefaultAnalyticsService;
 import com.ning.billing.analytics.api.user.AnalyticsUserApi;
 import com.ning.billing.analytics.dao.BusinessAccountFieldSqlDao;
@@ -39,7 +38,7 @@ import com.ning.billing.analytics.dao.BusinessOverdueStatusSqlDao;
 import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionFieldSqlDao;
 import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionSqlDao;
 import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionTagSqlDao;
-import com.ning.billing.analytics.glue.TestAnalyticsModuleWithEmbeddedDB;
+import com.ning.billing.analytics.glue.TestAnalyticsModuleNoDB;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.invoice.api.InvoiceUserApi;
@@ -55,7 +54,7 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
-public abstract class AnalyticsTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWithEmbeddedDB {
+public abstract class AnalyticsTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
     @Inject
     @RealImplementation
@@ -64,8 +63,6 @@ public abstract class AnalyticsTestSuiteWithEmbeddedDB extends GuicyKillbillTest
     protected AccountInternalApi accountInternalApi;
     @Inject
     protected AnalyticsUserApi analyticsUserApi;
-    @Inject
-    protected AnalyticsService analyticsService;
     @Inject
     protected CatalogService catalogService;
     @Inject
@@ -124,29 +121,19 @@ public abstract class AnalyticsTestSuiteWithEmbeddedDB extends GuicyKillbillTest
     @Inject
     protected BusinessTagDao tagDao;
 
-    @BeforeClass(groups = "slow")
+    @BeforeClass(groups = "fast")
     protected void setup() throws Exception {
-        final Injector injector = Guice.createInjector(new TestAnalyticsModuleWithEmbeddedDB());
+        final Injector injector = Guice.createInjector(new TestAnalyticsModuleNoDB());
         injector.injectMembers(this);
     }
 
-    @BeforeMethod(groups = "slow")
-    public void setupTest() throws Exception {
+    @BeforeMethod(groups = "fast")
+    public void setupTest() {
         bus.start();
-        restartAnalyticsService();
     }
 
-    @AfterMethod(groups = "slow")
-    public void cleanupTest() throws Exception {
+    @AfterMethod(groups = "fast")
+    public void cleanupTest() {
         bus.stop();
-        stopAnalyticsService();
-    }
-
-    private void restartAnalyticsService() throws Exception {
-        ((DefaultAnalyticsService) analyticsService).registerForNotifications();
-    }
-
-    private void stopAnalyticsService() throws Exception {
-        ((DefaultAnalyticsService) analyticsService).unregisterForNotifications();
     }
 }

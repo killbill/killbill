@@ -38,7 +38,6 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 import com.ning.billing.util.events.SubscriptionInternalEvent;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
@@ -54,19 +53,16 @@ public class BusinessSubscriptionTransitionDao {
     private final EntitlementInternalApi entitlementApi;
     private final AccountInternalApi accountApi;
     private final CatalogService catalogService;
-    private final Clock clock;
 
     @Inject
     public BusinessSubscriptionTransitionDao(final BusinessSubscriptionTransitionSqlDao sqlDao,
                                              final CatalogService catalogService,
                                              final EntitlementInternalApi entitlementApi,
-                                             final AccountInternalApi accountApi,
-                                             final Clock clock) {
+                                             final AccountInternalApi accountApi) {
         this.sqlDao = sqlDao;
         this.catalogService = catalogService;
         this.entitlementApi = entitlementApi;
         this.accountApi = accountApi;
-        this.clock = clock;
     }
 
     public void rebuildTransitionsForBundle(final UUID bundleId, final InternalCallContext context) {

@@ -28,6 +28,7 @@ import com.ning.billing.analytics.api.user.AnalyticsUserApi;
 import com.ning.billing.analytics.api.user.DefaultAnalyticsUserApi;
 import com.ning.billing.analytics.dao.AnalyticsDao;
 import com.ning.billing.analytics.dao.AnalyticsSanityDao;
+import com.ning.billing.analytics.dao.BusinessAccountFieldSqlDao;
 import com.ning.billing.analytics.dao.BusinessAccountSqlDao;
 import com.ning.billing.analytics.dao.BusinessAccountTagSqlDao;
 import com.ning.billing.analytics.dao.BusinessInvoiceFieldSqlDao;
@@ -51,8 +52,37 @@ public class AnalyticsModule extends AbstractModule {
 
     @Override
     protected void configure() {
+        installAnalyticsUserApi();
+        installAnalyticsSanityApi();
+
+        installAnalyticsDao();
+        installAnalyticsSqlDao();
+
+        bind(AnalyticsListener.class).asEagerSingleton();
+        bind(AnalyticsService.class).to(DefaultAnalyticsService.class).asEagerSingleton();
+    }
+
+    protected void installAnalyticsUserApi() {
+        bind(DefaultAnalyticsUserApi.class).asEagerSingleton();
+        bind(AnalyticsUserApi.class).to(DefaultAnalyticsUserApi.class).asEagerSingleton();
+    }
+
+    protected void installAnalyticsSanityApi() {
+        bind(AnalyticsSanityApi.class).to(DefaultAnalyticsSanityApi.class).asEagerSingleton();
+    }
+
+    protected void installAnalyticsDao() {
+        bind(AnalyticsDao.class).to(DefaultAnalyticsDao.class).asEagerSingleton();
+        bind(AnalyticsSanityDao.class).to(DefaultAnalyticsSanityDao.class).asEagerSingleton();
+        bind(BusinessSubscriptionTransitionDao.class).asEagerSingleton();
+        bind(BusinessAccountDao.class).asEagerSingleton();
+        bind(BusinessTagDao.class).asEagerSingleton();
+    }
+
+    protected void installAnalyticsSqlDao() {
         bind(BusinessAccountSqlDao.class).toProvider(new BusinessSqlProvider<BusinessAccountSqlDao>(BusinessAccountSqlDao.class));
         bind(BusinessAccountTagSqlDao.class).toProvider(new BusinessSqlProvider<BusinessAccountTagSqlDao>(BusinessAccountTagSqlDao.class));
+        bind(BusinessAccountFieldSqlDao.class).toProvider(new BusinessSqlProvider<BusinessAccountFieldSqlDao>(BusinessAccountFieldSqlDao.class));
         bind(BusinessInvoiceFieldSqlDao.class).toProvider(new BusinessSqlProvider<BusinessInvoiceFieldSqlDao>(BusinessInvoiceFieldSqlDao.class));
         bind(BusinessInvoiceItemSqlDao.class).toProvider(new BusinessSqlProvider<BusinessInvoiceItemSqlDao>(BusinessInvoiceItemSqlDao.class));
         bind(BusinessInvoicePaymentFieldSqlDao.class).toProvider(new BusinessSqlProvider<BusinessInvoicePaymentFieldSqlDao>(BusinessInvoicePaymentFieldSqlDao.class));
@@ -64,18 +94,5 @@ public class AnalyticsModule extends AbstractModule {
         bind(BusinessSubscriptionTransitionFieldSqlDao.class).toProvider(new BusinessSqlProvider<BusinessSubscriptionTransitionFieldSqlDao>(BusinessSubscriptionTransitionFieldSqlDao.class));
         bind(BusinessSubscriptionTransitionSqlDao.class).toProvider(new BusinessSqlProvider<BusinessSubscriptionTransitionSqlDao>(BusinessSubscriptionTransitionSqlDao.class));
         bind(BusinessSubscriptionTransitionTagSqlDao.class).toProvider(new BusinessSqlProvider<BusinessSubscriptionTransitionTagSqlDao>(BusinessSubscriptionTransitionTagSqlDao.class));
-
-        bind(BusinessSubscriptionTransitionDao.class).asEagerSingleton();
-        bind(BusinessAccountDao.class).asEagerSingleton();
-        bind(BusinessTagDao.class).asEagerSingleton();
-        bind(AnalyticsListener.class).asEagerSingleton();
-
-        bind(AnalyticsDao.class).to(DefaultAnalyticsDao.class).asEagerSingleton();
-        bind(AnalyticsSanityDao.class).to(DefaultAnalyticsSanityDao.class).asEagerSingleton();
-        bind(AnalyticsService.class).to(DefaultAnalyticsService.class).asEagerSingleton();
-
-        bind(DefaultAnalyticsUserApi.class).asEagerSingleton();
-        bind(AnalyticsSanityApi.class).to(DefaultAnalyticsSanityApi.class).asEagerSingleton();
-        bind(AnalyticsUserApi.class).to(DefaultAnalyticsUserApi.class).asEagerSingleton();
     }
 }

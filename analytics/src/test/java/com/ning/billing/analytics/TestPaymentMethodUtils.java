@@ -24,7 +24,7 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.payment.api.PaymentMethodPlugin;
 
-public class TestPaymentMethodUtils {
+public class TestPaymentMethodUtils extends AnalyticsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testUnknowns() throws Exception {

@@ -25,13 +25,9 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.analytics.AnalyticsTestSuite;
-import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.clock.DefaultClock;
+import com.ning.billing.analytics.AnalyticsTestSuiteNoDB;
 
-public class TestBusinessAccount extends AnalyticsTestSuite {
-
-    private final Clock clock = new DefaultClock();
+public class TestBusinessAccount extends AnalyticsTestSuiteNoDB {
 
     private BusinessAccountModelDao account;
 

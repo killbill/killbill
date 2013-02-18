@@ -25,12 +25,11 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.ning.billing.analytics.AnalyticsTestSuite;
+import com.ning.billing.analytics.AnalyticsTestSuiteNoDB;
 import com.ning.billing.analytics.MockDuration;
 import com.ning.billing.analytics.MockPhase;
 import com.ning.billing.analytics.MockProduct;
 import com.ning.billing.catalog.api.Catalog;
-import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
@@ -42,7 +41,7 @@ import com.ning.billing.mock.MockSubscription;
 
 import static com.ning.billing.catalog.api.Currency.USD;
 
-public class TestBusinessSubscriptionTransition extends AnalyticsTestSuite {
+public class TestBusinessSubscriptionTransition extends AnalyticsTestSuiteNoDB {
 
     private BusinessSubscription prevSubscription;
     private BusinessSubscription nextSubscription;
@@ -56,7 +55,6 @@ public class TestBusinessSubscriptionTransition extends AnalyticsTestSuite {
     private UUID subscriptionId;
     private BusinessSubscriptionTransitionModelDao transition;
 
-    private final CatalogService catalogService = Mockito.mock(CatalogService.class);
     private final Catalog catalog = Mockito.mock(Catalog.class);
 
     @BeforeMethod(alwaysRun = true)

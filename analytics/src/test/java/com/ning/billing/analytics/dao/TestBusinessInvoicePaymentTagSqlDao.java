@@ -19,23 +19,13 @@ package com.ning.billing.analytics.dao;
 import java.util.List;
 import java.util.UUID;
 
-import org.skife.jdbi.v2.IDBI;
 import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.analytics.AnalyticsTestSuiteWithEmbeddedDB;
 import com.ning.billing.analytics.model.BusinessInvoicePaymentTagModelDao;
 
 public class TestBusinessInvoicePaymentTagSqlDao extends AnalyticsTestSuiteWithEmbeddedDB {
-
-    private BusinessInvoicePaymentTagSqlDao invoicePaymentTagSqlDao;
-
-    @BeforeMethod(groups = "slow")
-    public void setUp() throws Exception {
-        final IDBI dbi = helper.getDBI();
-        invoicePaymentTagSqlDao = dbi.onDemand(BusinessInvoicePaymentTagSqlDao.class);
-    }
 
     @Test(groups = "slow")
     public void testCRUD() throws Exception {

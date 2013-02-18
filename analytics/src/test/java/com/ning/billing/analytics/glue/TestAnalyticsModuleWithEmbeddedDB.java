@@ -14,9 +14,20 @@
  * under the License.
  */
 
-package com.ning.billing.analytics;
+package com.ning.billing.analytics.glue;
 
-import com.ning.billing.KillbillTestSuite;
+import com.ning.billing.GuicyKillbillTestWithEmbeddedDBModule;
+import com.ning.billing.util.glue.BusModule;
+import com.ning.billing.util.glue.NonEntityDaoModule;
 
-public abstract class AnalyticsTestSuite extends KillbillTestSuite {
+public class TestAnalyticsModuleWithEmbeddedDB extends TestAnalyticsModule {
+
+    @Override
+    public void configure() {
+        super.configure();
+
+        install(new GuicyKillbillTestWithEmbeddedDBModule());
+        install(new NonEntityDaoModule());
+        install(new BusModule(configSource));
+    }
 }

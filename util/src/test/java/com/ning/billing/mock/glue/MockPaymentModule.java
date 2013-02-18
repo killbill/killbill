@@ -19,12 +19,15 @@ package com.ning.billing.mock.glue;
 import org.mockito.Mockito;
 
 import com.ning.billing.payment.api.PaymentApi;
+import com.ning.billing.util.svcapi.payment.PaymentInternalApi;
 
 import com.google.inject.AbstractModule;
 
 public class MockPaymentModule extends AbstractModule {
+
     @Override
     protected void configure() {
         bind(PaymentApi.class).toInstance(Mockito.mock(PaymentApi.class));
+        bind(PaymentInternalApi.class).toInstance(Mockito.mock(PaymentInternalApi.class));
     }
 }
