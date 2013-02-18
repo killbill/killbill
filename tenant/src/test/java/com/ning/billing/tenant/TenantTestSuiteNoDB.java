@@ -20,30 +20,25 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
-import com.ning.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
-import com.ning.billing.tenant.dao.DefaultTenantDao;
-import com.ning.billing.tenant.glue.TestTenantModuleWithEmbeddedDB;
+import com.ning.billing.GuicyKillbillTestSuiteNoDB;
+import com.ning.billing.tenant.glue.TestTenantModuleNoDB;
 
 import com.google.inject.Guice;
-import com.google.inject.Inject;
 import com.google.inject.Injector;
 
-public class TenantTestSuiteWithEmbeddedDb extends GuicyKillbillTestSuiteWithEmbeddedDB {
+public class TenantTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
-    @Inject
-    protected DefaultTenantDao tenantDao;
-
-    @BeforeClass(groups = "slow")
+    @BeforeClass(groups = "fast")
     protected void setup() throws Exception {
-        final Injector injector = Guice.createInjector(new TestTenantModuleWithEmbeddedDB());
+        final Injector injector = Guice.createInjector(new TestTenantModuleNoDB());
         injector.injectMembers(this);
     }
 
-    @BeforeMethod(groups = "slow")
+    @BeforeMethod(groups = "fast")
     public void setupTest() {
     }
 
-    @AfterMethod(groups = "slow")
+    @AfterMethod(groups = "fast")
     public void cleanupTest() {
     }
 }
