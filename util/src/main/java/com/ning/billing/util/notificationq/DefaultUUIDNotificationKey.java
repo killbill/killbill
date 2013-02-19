@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.util.notificationq;
 
 import java.util.UUID;
@@ -23,7 +24,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class DefaultUUIDNotificationKey implements NotificationKey {
 
     private final UUID uuidKey;
-    
+
     @JsonCreator
     public DefaultUUIDNotificationKey(@JsonProperty("uuidKey") final UUID uuidKey) {
         this.uuidKey = uuidKey;
@@ -42,19 +43,24 @@ public class DefaultUUIDNotificationKey implements NotificationKey {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
+    public boolean equals(final Object obj) {
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
-        DefaultUUIDNotificationKey other = (DefaultUUIDNotificationKey) obj;
+        }
+        final DefaultUUIDNotificationKey other = (DefaultUUIDNotificationKey) obj;
         if (uuidKey == null) {
-            if (other.uuidKey != null)
+            if (other.uuidKey != null) {
                 return false;
-        } else if (!uuidKey.equals(other.uuidKey))
+            }
+        } else if (!uuidKey.equals(other.uuidKey)) {
             return false;
+        }
         return true;
     }
 }
