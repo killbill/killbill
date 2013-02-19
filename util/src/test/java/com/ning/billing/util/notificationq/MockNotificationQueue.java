@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.TreeSet;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
 
 import com.ning.billing.util.Hostname;
@@ -85,7 +87,6 @@ public class MockNotificationQueue implements NotificationQueue {
         recordFutureNotification(futureNotificationTime, notificationKey, context);
     }
 
-
     @Override
     public void removeNotificationsByKey(final NotificationKey key, final InternalCallContext context) {
         final List<Notification> toClearNotifications = new ArrayList<Notification>();
@@ -103,33 +104,40 @@ public class MockNotificationQueue implements NotificationQueue {
     }
 
     @Override
-    public List<Notification> getNotificationForAccountAndDate(final UUID accountId, final DateTime effectiveDate, final InternalCallContext context) {
-        /*
+    public List<Notification> getFutureNotificationsForKey(final NotificationKey notificationKey, final InternalCallContext context) {
+        return getFutureNotificationsForKeyFromTransaction(null, notificationKey, context);
+    }
+
+    @Override
+    public List<Notification> getFutureNotificationsForKeyFromTransaction(@Nullable final EntitySqlDaoWrapperFactory<EntitySqlDao> transactionalDao,
+                                                                          final NotificationKey notificationKey, final InternalCallContext context) {
         final List<Notification> result = new ArrayList<Notification>();
         synchronized (notifications) {
-            for (Notification cur : notifications) {
-                if (cur.getAccountId().equals(accountId) || cur.getEffectiveDate().compareTo(effectiveDate) == 0) {
-                    result.add(cur);
+            for (final Notification notification : notifications) {
+                if (notificationKey.toString().equals(notification.getNotificationKey()) && notification.getEffectiveDate().isAfter(clock.getUTCNow())) {
+                    result.add(notification);
                 }
             }
         }
-        return result;
-        */
-        return null;
-    }
 
+        return result;
+    }
 
     @Override
     public void removeNotification(final UUID notificationId, final InternalCallContext context) {
+        removeNotificationFromTransaction(null, notificationId, context);
+    }
+
+    @Override
+    public void removeNotificationFromTransaction(@Nullable final EntitySqlDaoWrapperFactory<EntitySqlDao> transactionalDao, final UUID notificationId, final InternalCallContext context) {
         synchronized (notifications) {
-            for (Notification cur : notifications) {
+            for (final Notification cur : notifications) {
                 if (cur.getId().equals(notificationId)) {
                     notifications.remove(cur);
                     break;
                 }
             }
         }
-
     }
 
     @Override
@@ -169,12 +177,7 @@ public class MockNotificationQueue implements NotificationQueue {
         return isStarted;
     }
 
-
     public List<Notification> getReadyNotifications() {
-        final int result;
-        final List<Notification> processedNotifications = new ArrayList<Notification>();
-        final List<Notification> oldNotifications = new ArrayList<Notification>();
-
         final List<Notification> readyNotifications = new ArrayList<Notification>();
         synchronized (notifications) {
             for (final Notification cur : notifications) {

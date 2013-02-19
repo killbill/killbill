@@ -63,9 +63,10 @@ public interface NotificationSqlDao extends Transactional<NotificationSqlDao>, C
 
     @SqlQuery
     @Mapper(NotificationSqlMapper.class)
-    public List<Notification> getNotificationForAccountAndDate(@Bind("accountRecordId") final long accountRecordId,
-                                                               @Bind("effectiveDate") final Date effectiveDate,
-                                                               @InternalTenantContextBinder final InternalTenantContext context);
+    public List<Notification> getFutureNotificationsForKey(@Bind("notificationKey") String key,
+                                                           @Bind("className") String className,
+                                                           @Bind("queueName") String queueName,
+                                                           @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlUpdate
     public void removeNotification(@Bind("id") String id,

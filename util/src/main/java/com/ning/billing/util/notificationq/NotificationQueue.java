@@ -60,13 +60,35 @@ public interface NotificationQueue extends QueueLifecycle {
     public void removeNotificationsByKey(final NotificationKey notificationKey,
                                          final InternalCallContext context);
 
-    public List<Notification> getNotificationForAccountAndDate(final UUID accountId,
-                                                               final DateTime effectiveDate,
-                                                               final InternalCallContext context);
+    /**
+     * Retrieve all future pending notifications for a given key
+     * Results are ordered by effective date asc.
+     *
+     * @param notificationKey notification key to look for
+     * @param context         internal call context
+     * @return future notifications matching that key
+     */
+    public List<Notification> getFutureNotificationsForKey(final NotificationKey notificationKey,
+                                                           final InternalCallContext context);
+
+    /**
+     * Retrieve all future pending notifications for a given key in a transaction.
+     * Results are ordered by effective date asc.
+     *
+     * @param notificationKey notification key to look for
+     * @param context         internal call context
+     * @return future notifications matching that key
+     */
+    public List<Notification> getFutureNotificationsForKeyFromTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> transactionalDao,
+                                                                          final NotificationKey notificationKey,
+                                                                          final InternalCallContext context);
 
     public void removeNotification(final UUID notificationId,
                                    final InternalCallContext context);
 
+    public void removeNotificationFromTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> transactionalDao,
+                                                  final UUID notificationId,
+                                                  final InternalCallContext context);
 
     /**
      * @return the name of that queue

@@ -18,20 +18,14 @@ package com.ning.billing.util.notificationq;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
-import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ning.billing.ObjectType;
 import com.ning.billing.util.Hostname;
-
-import com.ning.billing.util.cache.Cachable.CacheType;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.dao.NonEntityDao;
@@ -41,13 +35,11 @@ import com.ning.billing.util.notificationq.NotificationQueueService.Notification
 import com.ning.billing.util.notificationq.dao.NotificationSqlDao;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableList;
 
 public class DefaultNotificationQueue implements NotificationQueue {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultNotificationQueue.class);
 
-    private final IDBI dbi;
     private final NotificationSqlDao dao;
     private final String hostname;
 
@@ -62,7 +54,6 @@ public class DefaultNotificationQueue implements NotificationQueue {
     private final NonEntityDao nonEntityDao;
     private final CacheControllerDispatcher cacheControllerDispatcher;
 
-
     private volatile boolean isStarted;
 
     public DefaultNotificationQueue(final String svcName, final String queueName, final NotificationQueueHandler handler,
@@ -71,7 +62,6 @@ public class DefaultNotificationQueue implements NotificationQueue {
         this.svcName = svcName;
         this.queueName = queueName;
         this.handler = handler;
-        this.dbi = dbi;
         this.nonEntityDao = nonEntityDao;
         this.cacheControllerDispatcher = cacheControllerDispatcher;
         this.dao = dbi.onDemand(NotificationSqlDao.class);
@@ -79,7 +69,6 @@ public class DefaultNotificationQueue implements NotificationQueue {
         this.notificationQueueService = notificationQueueService;
         this.objectMapper = new ObjectMapper();
     }
-
 
     @Override
     public void recordFutureNotification(final DateTime futureNotificationTime,
@@ -109,26 +98,43 @@ public class DefaultNotificationQueue implements NotificationQueue {
         thisDao.insertNotification(notification, context);
     }
 
-
-
     @Override
     public void removeNotificationsByKey(final NotificationKey notificationKey, final InternalCallContext context) {
+        // TODO Pierre Don't we want to check for the notification key class and queue name as well?
         dao.removeNotificationsByKey(notificationKey.toString(), context);
     }
 
     @Override
-    public List<Notification> getNotificationForAccountAndDate(final UUID accountId, final DateTime effectiveDate, final InternalCallContext context) {
-        final Long accountRecordId = nonEntityDao.retrieveRecordIdFromObject(accountId, ObjectType.ACCOUNT, cacheControllerDispatcher.getCacheController(CacheType.RECORD_ID));
-        if (accountId == null) {
-            return ImmutableList.<Notification>of();
-        } else {
-            return dao.getNotificationForAccountAndDate(accountRecordId, effectiveDate.toDate(), context);
+    public List<Notification> getFutureNotificationsForKey(final NotificationKey notificationKey, final InternalCallContext context) {
+        return getFutureNotificationsForKeyInternal(dao, notificationKey, context);
+    }
+
+    @Override
+    public List<Notification> getFutureNotificationsForKeyFromTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> transactionalDao,
+                                                                          final NotificationKey notificationKey, final InternalCallContext context) {
+        final NotificationSqlDao transactionalNotificationDao = transactionalDao.transmogrify(NotificationSqlDao.class);
+        return getFutureNotificationsForKeyInternal(transactionalNotificationDao, notificationKey, context);
+    }
+
+    private List<Notification> getFutureNotificationsForKeyInternal(final NotificationSqlDao transactionalDao,
+                                                                    final NotificationKey notificationKey, final InternalCallContext context) {
+        try {
+            final String json = objectMapper.writeValueAsString(notificationKey);
+            return transactionalDao.getFutureNotificationsForKey(json, notificationKey.getClass().getName(), getFullQName(), context);
+        } catch (IOException e) {
+            throw new IllegalArgumentException(e);
         }
     }
 
     @Override
     public void removeNotification(final UUID notificationId, final InternalCallContext context) {
         dao.removeNotification(notificationId.toString(), context);
+    }
+
+    @Override
+    public void removeNotificationFromTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> transactionalDao, final UUID notificationId, final InternalCallContext context) {
+        final NotificationSqlDao transactionalNotificationDao = transactionalDao.transmogrify(NotificationSqlDao.class);
+        transactionalNotificationDao.removeNotification(notificationId.toString(), context);
     }
 
     @Override
