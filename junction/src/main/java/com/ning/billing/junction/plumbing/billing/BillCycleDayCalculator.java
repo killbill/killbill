@@ -26,7 +26,6 @@ import org.slf4j.LoggerFactory;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.catalog.api.BillingAlignment;
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogApiException;
@@ -60,7 +59,7 @@ public class BillCycleDayCalculator {
         this.entitlementApi = entitlementApi;
     }
 
-    protected BillCycleDay calculateBcd(final SubscriptionBundle bundle, final Subscription subscription, final EffectiveSubscriptionInternalEvent transition, final Account account, final InternalCallContext context)
+    protected int calculateBcd(final SubscriptionBundle bundle, final Subscription subscription, final EffectiveSubscriptionInternalEvent transition, final Account account, final InternalCallContext context)
             throws CatalogApiException, AccountApiException, EntitlementUserApiException {
 
         final Catalog catalog = catalogService.getFullCatalog();
@@ -88,13 +87,13 @@ public class BillCycleDayCalculator {
     }
 
     @VisibleForTesting
-    BillCycleDay calculateBcdForAlignment(final BillingAlignment alignment, final SubscriptionBundle bundle, final Subscription subscription,
-                                          final Account account, final Catalog catalog, final Plan plan, final InternalCallContext context) throws AccountApiException, EntitlementUserApiException, CatalogApiException {
-        BillCycleDay result = null;
+    int calculateBcdForAlignment(final BillingAlignment alignment, final SubscriptionBundle bundle, final Subscription subscription,
+                                 final Account account, final Catalog catalog, final Plan plan, final InternalCallContext context) throws AccountApiException, EntitlementUserApiException, CatalogApiException {
+        int result = 0;
         switch (alignment) {
             case ACCOUNT:
-                result = account.getBillCycleDay();
-                if (result == null || result.getDayOfMonthUTC() == 0) {
+                result = account.getBillCycleDayLocal();
+                if (result == 0) {
                     result = calculateBcdFromSubscription(subscription, plan, account, catalog, context);
                 }
                 break;
@@ -112,7 +111,7 @@ public class BillCycleDayCalculator {
                 break;
         }
 
-        if (result == null) {
+        if (result == 0) {
             throw new CatalogApiException(ErrorCode.CAT_INVALID_BILLING_ALIGNMENT, alignment.toString());
         }
 
@@ -120,12 +119,12 @@ public class BillCycleDayCalculator {
     }
 
     @VisibleForTesting
-    BillCycleDay calculateBcdFromSubscription(final Subscription subscription, final Plan plan, final Account account, final Catalog catalog, final InternalCallContext context)
+    int calculateBcdFromSubscription(final Subscription subscription, final Plan plan, final Account account, final Catalog catalog, final InternalCallContext context)
             throws AccountApiException, CatalogApiException {
         // Retrieve the initial phase type for that subscription
         // TODO - this should be extracted somewhere, along with this code above
         final PhaseType initialPhaseType;
-        final List<EffectiveSubscriptionInternalEvent> transitions =  entitlementApi.getAllTransitions(subscription, context);
+        final List<EffectiveSubscriptionInternalEvent> transitions = entitlementApi.getAllTransitions(subscription, context);
         if (transitions.size() == 0) {
             initialPhaseType = null;
         } else {
@@ -144,45 +143,11 @@ public class BillCycleDayCalculator {
         }
 
         final DateTime date = plan.dateOfFirstRecurringNonZeroCharge(subscription.getStartDate(), initialPhaseType);
-        // There are really two kinds of billCycleDay:
-        // - a System billingCycleDay which should be computed from UTC time (in order to get the correct notification time at
-        //   the end of each service period)
-        // - a User billingCycleDay which should align with the account timezone
-        final CalculatedBillCycleDay calculatedBillCycleDay = new CalculatedBillCycleDay(account.getTimeZone(), date);
+        final int bcdUTC = date.toDateTime(DateTimeZone.UTC).getDayOfMonth();
+        final int bcdLocal = date.toDateTime(account.getTimeZone()).getDayOfMonth();
         log.info("Calculated BCD: subscription id {}, subscription start {}, timezone {}, bcd UTC {}, bcd local {}",
-                 new Object[]{subscription.getId(), date.toDateTimeISO(), account.getTimeZone(),
-                              calculatedBillCycleDay.getDayOfMonthUTC(), calculatedBillCycleDay.getDayOfMonthLocal()});
-        return calculatedBillCycleDay;
-    }
+                 subscription.getId(), date.toDateTimeISO(), account.getTimeZone(), bcdUTC, bcdLocal);
 
-    private static final class CalculatedBillCycleDay implements BillCycleDay {
-
-        private final DateTime bcdTime;
-        private final DateTimeZone accountTimeZone;
-
-        private CalculatedBillCycleDay(final DateTimeZone accountTimeZone, final DateTime bcdTime) {
-            this.accountTimeZone = accountTimeZone;
-            this.bcdTime = bcdTime;
-        }
-
-        @Override
-        public int getDayOfMonthUTC() {
-            return bcdTime.toDateTime(DateTimeZone.UTC).getDayOfMonth();
-        }
-
-        @Override
-        public int getDayOfMonthLocal() {
-            return bcdTime.toDateTime(accountTimeZone).getDayOfMonth();
-        }
-
-        @Override
-        public String toString() {
-            final StringBuilder sb = new StringBuilder();
-            sb.append("CalculatedBillCycleDay");
-            sb.append("{bcdTime=").append(bcdTime);
-            sb.append(", accountTimeZone=").append(accountTimeZone);
-            sb.append('}');
-            return sb.toString();
-        }
+        return bcdLocal;
     }
 }

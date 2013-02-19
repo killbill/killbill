@@ -38,7 +38,6 @@ public class DefaultAccount extends EntityBase implements Account {
     // some fields
     public static final String DEFAULT_STRING_VALUE = "";
     public static final Integer DEFAULT_INTEGER_VALUE = 0;
-    public static final BillCycleDay DEFAULT_BCD_VALUE = new DefaultBillCycleDay(DEFAULT_INTEGER_VALUE);
     public static final Currency DEFAULT_CURRENCY_VALUE = Currency.USD;
     public static final DateTimeZone DEFAULT_TIMEZONE_VALUE = DateTimeZone.UTC;
     private static final Boolean DEFAULT_MIGRATED_VALUE = true;
@@ -49,7 +48,7 @@ public class DefaultAccount extends EntityBase implements Account {
     private final String name;
     private final Integer firstNameLength;
     private final Currency currency;
-    private final BillCycleDay billCycleDay;
+    private final Integer billCycleDayLocal;
     private final UUID paymentMethodId;
     private final DateTimeZone timeZone;
     private final String locale;
@@ -72,7 +71,7 @@ public class DefaultAccount extends EntityBase implements Account {
      */
     public DefaultAccount(final UUID id, final AccountData data) {
         this(id, data.getExternalKey(), data.getEmail(), data.getName(), data.getFirstNameLength(),
-             data.getCurrency(), data.getBillCycleDay(), data.getPaymentMethodId(),
+             data.getCurrency(), data.getBillCycleDayLocal(), data.getPaymentMethodId(),
              data.getTimeZone(), data.getLocale(),
              data.getAddress1(), data.getAddress2(), data.getCompanyName(),
              data.getCity(), data.getStateOrProvince(), data.getCountry(),
@@ -84,13 +83,13 @@ public class DefaultAccount extends EntityBase implements Account {
     */
     public DefaultAccount(final UUID id, final String externalKey, final String email,
                           final String name, final Integer firstNameLength,
-                          final Currency currency, final BillCycleDay billCycleDay, final UUID paymentMethodId,
+                          final Currency currency, final int billCycleDayLocal, final UUID paymentMethodId,
                           final DateTimeZone timeZone, final String locale,
                           final String address1, final String address2, final String companyName,
                           final String city, final String stateOrProvince, final String country,
                           final String postalCode, final String phone,
                           final Boolean isMigrated, final Boolean isNotifiedForInvoices) {
-        this(id, null, null, externalKey, email, name, firstNameLength, currency, billCycleDay, paymentMethodId,
+        this(id, null, null, externalKey, email, name, firstNameLength, currency, billCycleDayLocal, paymentMethodId,
              timeZone, locale, address1, address2, companyName, city, stateOrProvince, country, postalCode,
              phone, isMigrated, isNotifiedForInvoices);
     }
@@ -98,7 +97,7 @@ public class DefaultAccount extends EntityBase implements Account {
     public DefaultAccount(final UUID id, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate,
                           final String externalKey, final String email,
                           final String name, final Integer firstNameLength,
-                          final Currency currency, final BillCycleDay billCycleDay, final UUID paymentMethodId,
+                          final Currency currency, final int billCycleDayLocal, final UUID paymentMethodId,
                           final DateTimeZone timeZone, final String locale,
                           final String address1, final String address2, final String companyName,
                           final String city, final String stateOrProvince, final String country,
@@ -110,7 +109,7 @@ public class DefaultAccount extends EntityBase implements Account {
         this.name = name;
         this.firstNameLength = firstNameLength;
         this.currency = currency;
-        this.billCycleDay = billCycleDay;
+        this.billCycleDayLocal = billCycleDayLocal;
         this.paymentMethodId = paymentMethodId;
         this.timeZone = timeZone;
         this.locale = locale;
@@ -129,7 +128,7 @@ public class DefaultAccount extends EntityBase implements Account {
     public DefaultAccount(final AccountModelDao accountModelDao) {
         this(accountModelDao.getId(), accountModelDao.getCreatedDate(), accountModelDao.getUpdatedDate(), accountModelDao.getExternalKey(),
              accountModelDao.getEmail(), accountModelDao.getName(), accountModelDao.getFirstNameLength(), accountModelDao.getCurrency(),
-             new DefaultBillCycleDay(accountModelDao.getBillingCycleDayLocal(), accountModelDao.getBillingCycleDayUtc()), accountModelDao.getPaymentMethodId(),
+             accountModelDao.getBillingCycleDayLocal(), accountModelDao.getPaymentMethodId(),
              accountModelDao.getTimeZone(), accountModelDao.getLocale(), accountModelDao.getAddress1(), accountModelDao.getAddress2(),
              accountModelDao.getCompanyName(), accountModelDao.getCity(), accountModelDao.getStateOrProvince(), accountModelDao.getCountry(),
              accountModelDao.getPostalCode(), accountModelDao.getPhone(), accountModelDao.getMigrated(), accountModelDao.getIsNotifiedForInvoices());
@@ -161,8 +160,8 @@ public class DefaultAccount extends EntityBase implements Account {
     }
 
     @Override
-    public BillCycleDay getBillCycleDay() {
-        return Objects.firstNonNull(billCycleDay, DEFAULT_BCD_VALUE);
+    public Integer getBillCycleDayLocal() {
+        return Objects.firstNonNull(billCycleDayLocal, DEFAULT_INTEGER_VALUE);
     }
 
     @Override
@@ -260,19 +259,15 @@ public class DefaultAccount extends EntityBase implements Account {
             accountData.setCurrency(currentAccount.getCurrency());
         }
 
-        if (billCycleDay != null && currentAccount.getBillCycleDay() != null && currentAccount.getBillCycleDay().getDayOfMonthLocal() != 0 && currentAccount.getBillCycleDay().getDayOfMonthUTC() != 0) {
-            // We can't just use .equals here as the BillCycleDay class might not have implemented it
-            if ((billCycleDay.getDayOfMonthUTC() != currentAccount.getBillCycleDay().getDayOfMonthUTC() ||
-                 billCycleDay.getDayOfMonthLocal() != currentAccount.getBillCycleDay().getDayOfMonthLocal())) {
-                throw new IllegalArgumentException(String.format("Killbill doesn't support updating the account BCD yet: new=%s, current=%s",
-                                                                 billCycleDay, currentAccount.getBillCycleDay()));
-            }
-        } else if (billCycleDay != null) {
+        if (billCycleDayLocal != null && billCycleDayLocal != 0 && currentAccount.getBillCycleDayLocal() != 0 && !billCycleDayLocal.equals(currentAccount.getBillCycleDayLocal())) {
+            throw new IllegalArgumentException(String.format("Killbill doesn't support updating the account BCD yet: new=%s, current=%s",
+                                                             billCycleDayLocal, currentAccount.getBillCycleDayLocal()));
+        } else if (billCycleDayLocal != null && billCycleDayLocal != 0) {
             // Junction sets it
-            accountData.setBillCycleDay(billCycleDay);
+            accountData.setBillCycleDayLocal(billCycleDayLocal);
         } else {
             // Default to current value
-            accountData.setBillCycleDay(currentAccount.getBillCycleDay());
+            accountData.setBillCycleDayLocal(currentAccount.getBillCycleDayLocal());
         }
 
         // Set all updatable fields with the new values if non null, otherwise defaults to the current values
@@ -305,7 +300,7 @@ public class DefaultAccount extends EntityBase implements Account {
                ", firstNameLength=" + firstNameLength +
                ", phone=" + phone +
                ", currency=" + currency +
-               ", billCycleDay=" + billCycleDay +
+               ", billCycleDayLocal=" + billCycleDayLocal +
                ", paymentMethodId=" + paymentMethodId +
                ", timezone=" + timeZone +
                ", locale=" + locale +
@@ -327,16 +322,19 @@ public class DefaultAccount extends EntityBase implements Account {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
+        if (!super.equals(o)) {
+            return false;
+        }
 
         final DefaultAccount that = (DefaultAccount) o;
 
+        if (!billCycleDayLocal.equals(that.billCycleDayLocal)) {
+            return false;
+        }
         if (address1 != null ? !address1.equals(that.address1) : that.address1 != null) {
             return false;
         }
         if (address2 != null ? !address2.equals(that.address2) : that.address2 != null) {
-            return false;
-        }
-        if (billCycleDay != null ? !billCycleDay.equals(that.billCycleDay) : that.billCycleDay != null) {
             return false;
         }
         if (city != null ? !city.equals(that.city) : that.city != null) {
@@ -393,12 +391,13 @@ public class DefaultAccount extends EntityBase implements Account {
 
     @Override
     public int hashCode() {
-        int result = externalKey != null ? externalKey.hashCode() : 0;
+        int result = super.hashCode();
+        result = 31 * result + (externalKey != null ? externalKey.hashCode() : 0);
         result = 31 * result + (email != null ? email.hashCode() : 0);
         result = 31 * result + (name != null ? name.hashCode() : 0);
         result = 31 * result + (firstNameLength != null ? firstNameLength.hashCode() : 0);
         result = 31 * result + (currency != null ? currency.hashCode() : 0);
-        result = 31 * result + (billCycleDay != null ? billCycleDay.hashCode() : 0);
+        result = 31 * result + billCycleDayLocal;
         result = 31 * result + (paymentMethodId != null ? paymentMethodId.hashCode() : 0);
         result = 31 * result + (timeZone != null ? timeZone.hashCode() : 0);
         result = 31 * result + (locale != null ? locale.hashCode() : 0);

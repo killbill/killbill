@@ -32,7 +32,6 @@ import org.testng.Assert;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.catalog.MockPlan;
 import com.ning.billing.catalog.MockPlanPhase;
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -45,11 +44,8 @@ import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.invoice.api.InvoiceMigrationApi;
 import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.invoice.api.InvoicePayment;
-import com.ning.billing.invoice.api.InvoicePaymentApi;
-import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.dao.InvoiceItemModelDao;
 import com.ning.billing.invoice.dao.InvoiceItemSqlDao;
@@ -57,14 +53,10 @@ import com.ning.billing.invoice.dao.InvoiceModelDao;
 import com.ning.billing.invoice.dao.InvoiceModelDaoHelper;
 import com.ning.billing.invoice.dao.InvoicePaymentModelDao;
 import com.ning.billing.invoice.dao.InvoicePaymentSqlDao;
-import com.ning.billing.invoice.dao.InvoiceSqlDao;
 import com.ning.billing.invoice.generator.InvoiceGenerator;
 import com.ning.billing.invoice.model.InvoicingConfiguration;
 import com.ning.billing.invoice.notification.NullInvoiceNotifier;
-import com.ning.billing.mock.api.MockBillCycleDay;
-import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.entity.EntityPersistenceException;
@@ -218,7 +210,7 @@ public class TestInvoiceHelper {
         Mockito.when(account.getCurrency()).thenReturn(accountCurrency);
         Mockito.when(account.getId()).thenReturn(accountId);
         Mockito.when(account.isNotifiedForInvoices()).thenReturn(true);
-        Mockito.when(account.getBillCycleDay()).thenReturn(new MockBillCycleDay(31));
+        Mockito.when(account.getBillCycleDayLocal()).thenReturn(31);
         // The timezone is required to compute the date of the next invoice notification
         Mockito.when(account.getTimeZone()).thenReturn(DateTimeZone.UTC);
 
@@ -299,21 +291,8 @@ public class TestInvoiceHelper {
                                                final DateTime effectiveDate,
                                                final Plan plan, final PlanPhase planPhase,
                                                @Nullable final BigDecimal fixedPrice, @Nullable final BigDecimal recurringPrice,
-                                               final Currency currency, final BillingPeriod billingPeriod, final int billCycleDayUTC,
-                                               final BillingModeType billingModeType, final String description,
-                                               final long totalOrdering,
-                                               final SubscriptionTransitionType type) {
-        return createMockBillingEvent(account, subscription, effectiveDate, plan, planPhase, fixedPrice, recurringPrice,
-                                      currency, billingPeriod, billCycleDayUTC, billCycleDayUTC, billingModeType, description,
-                                      totalOrdering, type);
-    }
-
-    public BillingEvent createMockBillingEvent(@Nullable final Account account, final Subscription subscription,
-                                               final DateTime effectiveDate,
-                                               final Plan plan, final PlanPhase planPhase,
-                                               @Nullable final BigDecimal fixedPrice, @Nullable final BigDecimal recurringPrice,
                                                final Currency currency, final BillingPeriod billingPeriod,
-                                               final int billCycleDayUTC, final int billCycleDayLocal,
+                                               final int billCycleDayLocal,
                                                final BillingModeType billingModeType, final String description,
                                                final long totalOrdering,
                                                final SubscriptionTransitionType type) {
@@ -324,18 +303,8 @@ public class TestInvoiceHelper {
             }
 
             @Override
-            public BillCycleDay getBillCycleDay() {
-                return new BillCycleDay() {
-                    @Override
-                    public int getDayOfMonthUTC() {
-                        return billCycleDayUTC;
-                    }
-
-                    @Override
-                    public int getDayOfMonthLocal() {
-                        return billCycleDayLocal;
-                    }
-                };
+            public int getBillCycleDayLocal() {
+                return billCycleDayLocal;
             }
 
             @Override

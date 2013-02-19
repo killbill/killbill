@@ -22,7 +22,6 @@ import org.joda.time.DateTimeZone;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountData;
-import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.catalog.api.Currency;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -33,7 +32,7 @@ public class AccountJson extends AccountJsonSimple {
     protected final String name;
     protected final Integer length;
     protected final String email;
-    protected final BillCycleDayJson billCycleDayJson;
+    protected final Integer billCycleDayLocal;
     protected final String currency;
     protected final String paymentMethodId;
     protected final String timeZone;
@@ -54,7 +53,7 @@ public class AccountJson extends AccountJsonSimple {
         this.name = account.getName();
         this.length = account.getFirstNameLength();
         this.email = account.getEmail();
-        this.billCycleDayJson = new BillCycleDayJson(account.getBillCycleDay());
+        this.billCycleDayLocal = account.getBillCycleDayLocal();
         this.currency = account.getCurrency() != null ? account.getCurrency().toString() : null;
         this.paymentMethodId = account.getPaymentMethodId() != null ? account.getPaymentMethodId().toString() : null;
         this.timeZone = account.getTimeZone().toString();
@@ -158,22 +157,8 @@ public class AccountJson extends AccountJsonSimple {
             }
 
             @Override
-            public BillCycleDay getBillCycleDay() {
-                if (billCycleDayJson == null) {
-                    return null;
-                }
-
-                return new BillCycleDay() {
-                    @Override
-                    public int getDayOfMonthUTC() {
-                        return billCycleDayJson.getDayOfMonthUTC();
-                    }
-
-                    @Override
-                    public int getDayOfMonthLocal() {
-                        return billCycleDayJson.getDayOfMonthLocal();
-                    }
-                };
+            public Integer getBillCycleDayLocal() {
+                return billCycleDayLocal;
             }
 
             @Override
@@ -194,7 +179,7 @@ public class AccountJson extends AccountJsonSimple {
                        @JsonProperty("firstNameLength") final Integer length,
                        @JsonProperty("externalKey") final String externalKey,
                        @JsonProperty("email") final String email,
-                       @JsonProperty("billCycleDay") final BillCycleDayJson billCycleDay,
+                       @JsonProperty("billCycleDayLocal") final Integer billCycleDayLocal,
                        @JsonProperty("currency") final String currency,
                        @JsonProperty("paymentMethodId") final String paymentMethodId,
                        @JsonProperty("timezone") final String timeZone,
@@ -213,7 +198,7 @@ public class AccountJson extends AccountJsonSimple {
         this.name = name;
         this.length = length;
         this.email = email;
-        this.billCycleDayJson = billCycleDay;
+        this.billCycleDayLocal = billCycleDayLocal;
         this.currency = currency;
         this.paymentMethodId = paymentMethodId;
         this.timeZone = timeZone;
@@ -242,8 +227,8 @@ public class AccountJson extends AccountJsonSimple {
         return email;
     }
 
-    public BillCycleDayJson getBillCycleDay() {
-        return billCycleDayJson;
+    public Integer getBillCycleDayLocal() {
+        return billCycleDayLocal;
     }
 
     public String getCurrency() {
@@ -311,7 +296,7 @@ public class AccountJson extends AccountJsonSimple {
         sb.append("{name='").append(name).append('\'');
         sb.append(", length=").append(length);
         sb.append(", email='").append(email).append('\'');
-        sb.append(", billCycleDayJson=").append(billCycleDayJson);
+        sb.append(", billCycleDayJson=").append(billCycleDayLocal);
         sb.append(", currency='").append(currency).append('\'');
         sb.append(", paymentMethodId='").append(paymentMethodId).append('\'');
         sb.append(", timeZone='").append(timeZone).append('\'');
@@ -356,7 +341,7 @@ public class AccountJson extends AccountJsonSimple {
         if (address2 != null ? !address2.equals(that.address2) : that.address2 != null) {
             return false;
         }
-        if (billCycleDayJson != null ? !billCycleDayJson.equals(that.billCycleDayJson) : that.billCycleDayJson != null) {
+        if (billCycleDayLocal != null ? !billCycleDayLocal.equals(that.billCycleDayLocal) : that.billCycleDayLocal != null) {
             return false;
         }
         if (city != null ? !city.equals(that.city) : that.city != null) {
@@ -417,7 +402,7 @@ public class AccountJson extends AccountJsonSimple {
         result = 31 * result + (name != null ? name.hashCode() : 0);
         result = 31 * result + (length != null ? length.hashCode() : 0);
         result = 31 * result + (email != null ? email.hashCode() : 0);
-        result = 31 * result + (billCycleDayJson != null ? billCycleDayJson.hashCode() : 0);
+        result = 31 * result + (billCycleDayLocal != null ? billCycleDayLocal.hashCode() : 0);
         result = 31 * result + (currency != null ? currency.hashCode() : 0);
         result = 31 * result + (paymentMethodId != null ? paymentMethodId.hashCode() : 0);
         result = 31 * result + (timeZone != null ? timeZone.hashCode() : 0);

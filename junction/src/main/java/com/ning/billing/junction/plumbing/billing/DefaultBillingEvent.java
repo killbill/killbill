@@ -22,7 +22,6 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogApiException;
@@ -37,7 +36,7 @@ import com.ning.billing.util.svcapi.junction.BillingModeType;
 
 public class DefaultBillingEvent implements BillingEvent {
     private final Account account;
-    private final BillCycleDay billCycleDay;
+    private final int billCycleDayLocal;
     private final Subscription subscription;
     private final DateTime effectiveDate;
     private final PlanPhase planPhase;
@@ -52,10 +51,10 @@ public class DefaultBillingEvent implements BillingEvent {
     private final Long totalOrdering;
     private final DateTimeZone timeZone;
 
-    public DefaultBillingEvent(final Account account, final EffectiveSubscriptionInternalEvent transition, final Subscription subscription, final BillCycleDay billCycleDay, final Currency currency, final Catalog catalog) throws CatalogApiException {
+    public DefaultBillingEvent(final Account account, final EffectiveSubscriptionInternalEvent transition, final Subscription subscription, final int billCycleDayLocal, final Currency currency, final Catalog catalog) throws CatalogApiException {
 
         this.account = account;
-        this.billCycleDay = billCycleDay;
+        this.billCycleDayLocal = billCycleDayLocal;
         this.subscription = subscription;
         effectiveDate = transition.getEffectiveTransitionTime();
         final String planPhaseName = (transition.getTransitionType() != SubscriptionTransitionType.CANCEL) ?
@@ -88,7 +87,7 @@ public class DefaultBillingEvent implements BillingEvent {
 
     public DefaultBillingEvent(final Account account, final Subscription subscription, final DateTime effectiveDate, final Plan plan, final PlanPhase planPhase,
                                final BigDecimal fixedPrice, final BigDecimal recurringPrice, final Currency currency,
-                               final BillingPeriod billingPeriod, final BillCycleDay billCycleDay, final BillingModeType billingModeType,
+                               final BillingPeriod billingPeriod, final int billCycleDayLocal, final BillingModeType billingModeType,
                                final String description, final long totalOrdering, final SubscriptionTransitionType type, final DateTimeZone timeZone) {
         this.account = account;
         this.subscription = subscription;
@@ -99,7 +98,7 @@ public class DefaultBillingEvent implements BillingEvent {
         this.recurringPrice = recurringPrice;
         this.currency = currency;
         this.billingPeriod = billingPeriod;
-        this.billCycleDay = billCycleDay;
+        this.billCycleDayLocal = billCycleDayLocal;
         this.billingModeType = billingModeType;
         this.description = description;
         this.type = type;
@@ -159,8 +158,8 @@ public class DefaultBillingEvent implements BillingEvent {
     }
 
     @Override
-    public BillCycleDay getBillCycleDay() {
-        return billCycleDay;
+    public int getBillCycleDayLocal() {
+        return billCycleDayLocal;
     }
 
     @Override
@@ -250,7 +249,10 @@ public class DefaultBillingEvent implements BillingEvent {
 
         final DefaultBillingEvent that = (DefaultBillingEvent) o;
 
-        if (billCycleDay != that.billCycleDay) {
+        if (billCycleDayLocal != that.billCycleDayLocal) {
+            return false;
+        }
+        if (account != null ? !account.equals(that.account) : that.account != null) {
             return false;
         }
         if (billingModeType != that.billingModeType) {
@@ -262,28 +264,31 @@ public class DefaultBillingEvent implements BillingEvent {
         if (currency != that.currency) {
             return false;
         }
-        if (!description.equals(that.description)) {
+        if (description != null ? !description.equals(that.description) : that.description != null) {
             return false;
         }
-        if (!effectiveDate.equals(that.effectiveDate)) {
+        if (effectiveDate != null ? !effectiveDate.equals(that.effectiveDate) : that.effectiveDate != null) {
             return false;
         }
         if (fixedPrice != null ? !fixedPrice.equals(that.fixedPrice) : that.fixedPrice != null) {
             return false;
         }
-        if (!plan.equals(that.plan)) {
+        if (plan != null ? !plan.equals(that.plan) : that.plan != null) {
             return false;
         }
-        if (!planPhase.equals(that.planPhase)) {
+        if (planPhase != null ? !planPhase.equals(that.planPhase) : that.planPhase != null) {
             return false;
         }
         if (recurringPrice != null ? !recurringPrice.equals(that.recurringPrice) : that.recurringPrice != null) {
             return false;
         }
-        if (!subscription.equals(that.subscription)) {
+        if (subscription != null ? !subscription.equals(that.subscription) : that.subscription != null) {
             return false;
         }
-        if (!totalOrdering.equals(that.totalOrdering)) {
+        if (timeZone != null ? !timeZone.equals(that.timeZone) : that.timeZone != null) {
+            return false;
+        }
+        if (totalOrdering != null ? !totalOrdering.equals(that.totalOrdering) : that.totalOrdering != null) {
             return false;
         }
         if (type != that.type) {
@@ -295,19 +300,21 @@ public class DefaultBillingEvent implements BillingEvent {
 
     @Override
     public int hashCode() {
-        int result = billCycleDay.hashCode();
-        result = 31 * result + subscription.hashCode();
-        result = 31 * result + effectiveDate.hashCode();
-        result = 31 * result + planPhase.hashCode();
-        result = 31 * result + plan.hashCode();
+        int result = account != null ? account.hashCode() : 0;
+        result = 31 * result + billCycleDayLocal;
+        result = 31 * result + (subscription != null ? subscription.hashCode() : 0);
+        result = 31 * result + (effectiveDate != null ? effectiveDate.hashCode() : 0);
+        result = 31 * result + (planPhase != null ? planPhase.hashCode() : 0);
+        result = 31 * result + (plan != null ? plan.hashCode() : 0);
         result = 31 * result + (fixedPrice != null ? fixedPrice.hashCode() : 0);
         result = 31 * result + (recurringPrice != null ? recurringPrice.hashCode() : 0);
-        result = 31 * result + currency.hashCode();
-        result = 31 * result + description.hashCode();
-        result = 31 * result + billingModeType.hashCode();
-        result = 31 * result + billingPeriod.hashCode();
-        result = 31 * result + type.hashCode();
-        result = 31 * result + totalOrdering.hashCode();
+        result = 31 * result + (currency != null ? currency.hashCode() : 0);
+        result = 31 * result + (description != null ? description.hashCode() : 0);
+        result = 31 * result + (billingModeType != null ? billingModeType.hashCode() : 0);
+        result = 31 * result + (billingPeriod != null ? billingPeriod.hashCode() : 0);
+        result = 31 * result + (type != null ? type.hashCode() : 0);
+        result = 31 * result + (totalOrdering != null ? totalOrdering.hashCode() : 0);
+        result = 31 * result + (timeZone != null ? timeZone.hashCode() : 0);
         return result;
     }
 

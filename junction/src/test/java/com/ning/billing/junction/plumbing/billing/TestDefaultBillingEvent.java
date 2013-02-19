@@ -44,7 +44,6 @@ import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.junction.JunctionTestSuiteNoDB;
 import com.ning.billing.mock.MockAccountBuilder;
-import com.ning.billing.mock.api.MockBillCycleDay;
 import com.ning.billing.util.svcapi.junction.BillingEvent;
 import com.ning.billing.util.svcapi.junction.BillingModeType;
 
@@ -190,7 +189,7 @@ public class TestDefaultBillingEvent extends JunctionTestSuiteNoDB {
         final Account account = new MockAccountBuilder().build();
         return new DefaultBillingEvent(account, sub, effectiveDate,
                                        shotgun, shotgunMonthly,
-                                       BigDecimal.ZERO, null, Currency.USD, BillingPeriod.NO_BILLING_PERIOD, new MockBillCycleDay(billCycleDay),
+                                       BigDecimal.ZERO, null, Currency.USD, BillingPeriod.NO_BILLING_PERIOD, billCycleDay,
                                        BillingModeType.IN_ADVANCE, "Test Event 1", totalOrdering, type, DateTimeZone.UTC);
     }
 

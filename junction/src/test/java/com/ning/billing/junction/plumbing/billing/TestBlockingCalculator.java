@@ -33,7 +33,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.catalog.MockPlan;
 import com.ning.billing.catalog.MockPlanPhase;
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -48,7 +47,6 @@ import com.ning.billing.junction.api.Blockable.Type;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.junction.dao.MockBlockingStateDao;
 import com.ning.billing.junction.plumbing.billing.BlockingCalculator.DisabledDuration;
-import com.ning.billing.mock.api.MockBillCycleDay;
 import com.ning.billing.util.svcapi.junction.BillingEvent;
 import com.ning.billing.util.svcapi.junction.BillingModeType;
 import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
@@ -528,7 +526,7 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
 
     protected BillingEvent createRealEvent(final DateTime effectiveDate, final Subscription subscription, final SubscriptionTransitionType type) {
         final Account account = this.account;
-        final BillCycleDay billCycleDay = new MockBillCycleDay(1);
+        final Integer billCycleDay = 1;
         final PlanPhase planPhase = new MockPlanPhase();
         final Plan plan = new MockPlan();
         final BigDecimal fixedPrice = BigDecimal.TEN;
@@ -573,7 +571,7 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         final BillingEvent event = new MockBillingEvent();
 
         final BillingEvent result = blockingCalculator.createNewDisableEvent(now, event);
-        assertEquals(result.getBillCycleDay(), event.getBillCycleDay());
+        assertEquals(result.getBillCycleDayLocal(), event.getBillCycleDayLocal());
         assertEquals(result.getEffectiveDate(), now);
         assertEquals(result.getPlanPhase(), event.getPlanPhase());
         assertEquals(result.getPlan(), event.getPlan());
@@ -594,7 +592,7 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         final BillingEvent event = new MockBillingEvent();
 
         final BillingEvent result = blockingCalculator.createNewReenableEvent(now, event);
-        assertEquals(result.getBillCycleDay(), event.getBillCycleDay());
+        assertEquals(result.getBillCycleDayLocal(), event.getBillCycleDayLocal());
         assertEquals(result.getEffectiveDate(), now);
         assertEquals(result.getPlanPhase(), event.getPlanPhase());
         assertEquals(result.getPlan(), event.getPlan());
@@ -613,7 +611,7 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
 
         public MockBillingEvent() {
             super(account, subscription1, clock.getUTCNow(), null, null, BigDecimal.ZERO, BigDecimal.TEN, Currency.USD, BillingPeriod.ANNUAL,
-                  new MockBillCycleDay(4), BillingModeType.IN_ADVANCE, "", 3L, SubscriptionTransitionType.CREATE, DateTimeZone.UTC);
+                  4, BillingModeType.IN_ADVANCE, "", 3L, SubscriptionTransitionType.CREATE, DateTimeZone.UTC);
         }
     }
 

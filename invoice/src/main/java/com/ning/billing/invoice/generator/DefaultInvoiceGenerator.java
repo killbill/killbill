@@ -349,7 +349,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
             if (!startDate.isAfter(targetDate)) {
                 final LocalDate endDate = (nextEvent == null) ? null : new LocalDate(nextEvent.getEffectiveDate(), nextEvent.getTimeZone());
 
-                final int billCycleDayLocal = thisEvent.getBillCycleDay().getDayOfMonthLocal();
+                final int billCycleDayLocal = thisEvent.getBillCycleDayLocal();
 
                 final List<RecurringInvoiceItemData> itemData;
                 try {

@@ -24,7 +24,6 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.AccountTestSuiteNoDB;
-import com.ning.billing.account.api.DefaultBillCycleDay;
 import com.ning.billing.account.api.DefaultChangedField;
 import com.ning.billing.account.api.user.DefaultAccountCreationEvent.DefaultAccountData;
 import com.ning.billing.util.events.AccountChangeInternalEvent;
@@ -51,7 +50,7 @@ public class TestEventJson extends AccountTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testAccountCreationEvent() throws Exception {
-        final DefaultAccountData data = new DefaultAccountData("dsfdsf", "bobo", 3, "bobo@yahoo.com", new DefaultBillCycleDay(12), "USD", UUID.randomUUID(),
+        final DefaultAccountData data = new DefaultAccountData("dsfdsf", "bobo", 3, "bobo@yahoo.com", 12, "USD", UUID.randomUUID(),
                                                                "UTC", "US", "21 avenue", "", "Gling", "San Franciso", "CA", "94110", "USA", "4126789887", false, false);
         final DefaultAccountCreationEvent e = new DefaultAccountCreationEvent(data, UUID.randomUUID(), UUID.randomUUID(), 1L, 45L);
         final String json = mapper.writeValueAsString(e);
