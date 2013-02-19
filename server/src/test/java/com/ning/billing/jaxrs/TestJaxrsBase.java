@@ -189,14 +189,14 @@ public class TestJaxrsBase extends KillbillClient {
     }
 
     @BeforeMethod(groups = "slow")
-    public void cleanupBeforeMethod() {
+    public void cleanupBeforeMethod() throws Exception {
         busHandler.reset();
         clock.reset();
         clock.setDay(new LocalDate(2012, 8, 25));
     }
 
     @BeforeClass(groups = "slow")
-    public void setupClass() throws IOException {
+    public void setupClass() throws Exception {
         loadConfig();
 
 
