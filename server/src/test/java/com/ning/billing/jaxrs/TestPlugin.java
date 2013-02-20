@@ -29,7 +29,6 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.ning.billing.jaxrs.resources.JaxrsResource;
 import com.ning.http.client.Response;
 
 public class TestPlugin extends TestJaxrsBase {
@@ -161,7 +160,7 @@ public class TestPlugin extends TestJaxrsBase {
         servletRouter.registerService(TEST_PLUGIN_NAME, new HttpServlet() {
             @Override
             protected void doGet(final HttpServletRequest req, final HttpServletResponse resp) throws ServletException, IOException {
-                if ((JaxrsResource.PLUGINS_PATH + "/" + TEST_PLUGIN_NAME + "/" + TEST_PLUGIN_VALID_GET_PATH).equals(req.getPathInfo())) {
+                if (("/" + TEST_PLUGIN_VALID_GET_PATH).equals(req.getPathInfo())) {
                     requestGETMarker.set(true);
                     resp.getOutputStream().write(TEST_PLUGIN_RESPONSE_BYTES);
                     resp.setStatus(230);
@@ -170,14 +169,14 @@ public class TestPlugin extends TestJaxrsBase {
 
             @Override
             protected void doHead(final HttpServletRequest req, final HttpServletResponse resp) throws ServletException, IOException {
-                if ((JaxrsResource.PLUGINS_PATH + "/" + TEST_PLUGIN_NAME + "/" + TEST_PLUGIN_VALID_HEAD_PATH).equals(req.getPathInfo())) {
+                if (("/" + TEST_PLUGIN_VALID_HEAD_PATH).equals(req.getPathInfo())) {
                     requestHEADMarker.set(true);
                 }
             }
 
             @Override
             protected void doPost(final HttpServletRequest req, final HttpServletResponse resp) throws ServletException, IOException {
-                if ((JaxrsResource.PLUGINS_PATH + "/" + TEST_PLUGIN_NAME + "/" + TEST_PLUGIN_VALID_POST_PATH).equals(req.getPathInfo())) {
+                if (("/" + TEST_PLUGIN_VALID_POST_PATH).equals(req.getPathInfo())) {
                     requestPOSTMarker.set(true);
                     resp.getOutputStream().write(TEST_PLUGIN_RESPONSE_BYTES);
                     resp.setStatus(230);
@@ -186,7 +185,7 @@ public class TestPlugin extends TestJaxrsBase {
 
             @Override
             protected void doPut(final HttpServletRequest req, final HttpServletResponse resp) throws ServletException, IOException {
-                if ((JaxrsResource.PLUGINS_PATH + "/" + TEST_PLUGIN_NAME + "/" + TEST_PLUGIN_VALID_PUT_PATH).equals(req.getPathInfo())) {
+                if (("/" + TEST_PLUGIN_VALID_PUT_PATH).equals(req.getPathInfo())) {
                     requestPUTMarker.set(true);
                     resp.getOutputStream().write(TEST_PLUGIN_RESPONSE_BYTES);
                     resp.setStatus(230);
@@ -195,7 +194,7 @@ public class TestPlugin extends TestJaxrsBase {
 
             @Override
             protected void doDelete(final HttpServletRequest req, final HttpServletResponse resp) throws ServletException, IOException {
-                if ((JaxrsResource.PLUGINS_PATH + "/" + TEST_PLUGIN_NAME + "/" + TEST_PLUGIN_VALID_DELETE_PATH).equals(req.getPathInfo())) {
+                if (("/" + TEST_PLUGIN_VALID_DELETE_PATH).equals(req.getPathInfo())) {
                     requestDELETEMarker.set(true);
                     resp.getOutputStream().write(TEST_PLUGIN_RESPONSE_BYTES);
                     resp.setStatus(230);
@@ -204,7 +203,7 @@ public class TestPlugin extends TestJaxrsBase {
 
             @Override
             protected void doOptions(final HttpServletRequest req, final HttpServletResponse resp) throws ServletException, IOException {
-                if ((JaxrsResource.PLUGINS_PATH + "/" + TEST_PLUGIN_NAME + "/" + TEST_PLUGIN_VALID_OPTIONS_PATH).equals(req.getPathInfo())) {
+                if (("/" + TEST_PLUGIN_VALID_OPTIONS_PATH).equals(req.getPathInfo())) {
                     requestOPTIONSMarker.set(true);
                     resp.getOutputStream().write(TEST_PLUGIN_RESPONSE_BYTES);
                     resp.setStatus(230);
