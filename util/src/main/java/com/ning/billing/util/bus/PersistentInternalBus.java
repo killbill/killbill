@@ -24,6 +24,7 @@ import java.util.concurrent.ThreadFactory;
 
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
+import org.skife.jdbi.v2.TransactionIsolationLevel;
 import org.skife.jdbi.v2.TransactionStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -171,7 +172,7 @@ public class PersistentInternalBus extends PersistentQueueBase implements Intern
 
     @Override
     public void post(final BusInternalEvent event, final InternalCallContext context) throws EventBusException {
-        dao.inTransaction(new Transaction<Void, PersistentBusSqlDao>() {
+        dao.inTransaction(TransactionIsolationLevel.READ_COMMITTED, new Transaction<Void, PersistentBusSqlDao>() {
             @Override
             public Void inTransaction(final PersistentBusSqlDao transactional,
                                       final TransactionStatus status) throws Exception {

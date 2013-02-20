@@ -18,6 +18,8 @@ package com.ning.billing.server.modules;
 
 import java.util.concurrent.TimeUnit;
 
+import javax.sql.DataSource;
+
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.TimingCollector;
 import org.skife.jdbi.v2.tweak.SQLLog;
@@ -37,6 +39,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.jolbox.bonecp.BoneCPConfig;
 import com.jolbox.bonecp.BoneCPDataSource;
+import com.mchange.v2.c3p0.ComboPooledDataSource;
 import com.yammer.metrics.core.MetricsRegistry;
 import com.yammer.metrics.jdbi.InstrumentedTimingCollector;
 import com.yammer.metrics.jdbi.strategies.BasicSqlNameStrategy;
@@ -62,21 +65,8 @@ public class DBIProvider implements Provider<DBI> {
 
     @Override
     public DBI get() {
-        final BoneCPConfig dbConfig = new BoneCPConfig();
-        dbConfig.setJdbcUrl(config.getJdbcUrl());
-        dbConfig.setUsername(config.getUsername());
-        dbConfig.setPassword(config.getPassword());
-        dbConfig.setMinConnectionsPerPartition(config.getMinIdle());
-        dbConfig.setMaxConnectionsPerPartition(config.getMaxActive());
-        dbConfig.setConnectionTimeout(config.getConnectionTimeout().getPeriod(), config.getConnectionTimeout().getUnit());
-        dbConfig.setIdleMaxAge(config.getIdleMaxAge().getPeriod(), config.getIdleMaxAge().getUnit());
-        dbConfig.setMaxConnectionAge(config.getMaxConnectionAge().getPeriod(), config.getMaxConnectionAge().getUnit());
-        dbConfig.setIdleConnectionTestPeriod(config.getIdleConnectionTestPeriod().getPeriod(), config.getIdleConnectionTestPeriod().getUnit());
-        dbConfig.setPartitionCount(1);
-        dbConfig.setDefaultTransactionIsolation("READ_COMMITTED");
-        dbConfig.setDisableJMX(false);
 
-        final BoneCPDataSource ds = new BoneCPDataSource(dbConfig);
+        final DataSource ds = getC3P0DataSource();
         final DBI dbi = new DBI(ds);
         dbi.registerArgumentFactory(new UUIDArgumentFactory());
         dbi.registerArgumentFactory(new DateTimeZoneArgumentFactory());
@@ -103,5 +93,34 @@ public class DBIProvider implements Provider<DBI> {
         dbi.setTimingCollector(timingCollector);
 
         return dbi;
+    }
+
+
+    private DataSource getBoneCPDatSource() {
+        final BoneCPConfig dbConfig = new BoneCPConfig();
+        dbConfig.setJdbcUrl(config.getJdbcUrl());
+        dbConfig.setUsername(config.getUsername());
+        dbConfig.setPassword(config.getPassword());
+        dbConfig.setMinConnectionsPerPartition(config.getMinIdle());
+        dbConfig.setMaxConnectionsPerPartition(config.getMaxActive());
+        dbConfig.setConnectionTimeout(config.getConnectionTimeout().getPeriod(), config.getConnectionTimeout().getUnit());
+        dbConfig.setIdleMaxAge(config.getIdleMaxAge().getPeriod(), config.getIdleMaxAge().getUnit());
+        dbConfig.setMaxConnectionAge(config.getMaxConnectionAge().getPeriod(), config.getMaxConnectionAge().getUnit());
+        dbConfig.setIdleConnectionTestPeriod(config.getIdleConnectionTestPeriod().getPeriod(), config.getIdleConnectionTestPeriod().getUnit());
+        dbConfig.setPartitionCount(1);
+        dbConfig.setDisableJMX(false);
+
+        final BoneCPDataSource ds = new BoneCPDataSource(dbConfig);
+        return ds;
+    }
+
+    private DataSource getC3P0DataSource() {
+        ComboPooledDataSource cpds = new ComboPooledDataSource();
+        cpds.setJdbcUrl(config.getJdbcUrl());
+        cpds.setUser(config.getUsername());
+        cpds.setPassword(config.getPassword());
+        cpds.setMinPoolSize(1);
+        cpds.setMaxPoolSize(10);
+        return cpds;
     }
 }

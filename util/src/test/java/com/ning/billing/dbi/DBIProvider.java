@@ -18,6 +18,8 @@ package com.ning.billing.dbi;
 
 import java.util.concurrent.TimeUnit;
 
+import javax.sql.DataSource;
+
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.tweak.transactions.SerializableTransactionRunner;
@@ -33,38 +35,28 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.jolbox.bonecp.BoneCPConfig;
 import com.jolbox.bonecp.BoneCPDataSource;
+import com.mchange.v2.c3p0.ComboPooledDataSource;
 
 public class DBIProvider implements Provider<IDBI> {
 
-    private final BoneCPConfig dbConfig;
+    private final String jdbcUri;
+    private final String userName;
+    private final String userPwd;
 
     @Inject
     public DBIProvider(final DbiConfig config) {
         this(config.getJdbcUrl(), config.getUsername(), config.getPassword());
     }
 
-    public DBIProvider(final String dbiString, final String userName, final String pwd) {
-        this.dbConfig = createConfig(dbiString, userName, pwd);
-    }
-
-    BoneCPConfig createConfig(final String dbiString, final String userName, final String pwd) {
-        final BoneCPConfig dbConfig = new BoneCPConfig();
-        dbConfig.setJdbcUrl(dbiString);
-        dbConfig.setUsername(userName);
-        dbConfig.setPassword(pwd);
-        dbConfig.setMinConnectionsPerPartition(1);
-        dbConfig.setMaxConnectionsPerPartition(30);
-        dbConfig.setConnectionTimeout(10, TimeUnit.SECONDS);
-        dbConfig.setPartitionCount(1);
-        dbConfig.setDefaultTransactionIsolation("REPEATABLE_READ");
-        dbConfig.setDisableJMX(false);
-        dbConfig.setLazyInit(true);
-        return dbConfig;
+    public DBIProvider(final String jdbcUri, final String userName, final String userPwd) {
+        this.jdbcUri = jdbcUri;
+        this.userName = userName;
+        this.userPwd = userPwd;
     }
 
     @Override
     public IDBI get() {
-        final BoneCPDataSource ds = new BoneCPDataSource(dbConfig);
+        final DataSource ds = getC3P0DataSource();
         final DBI dbi = new DBI(ds);
         dbi.registerArgumentFactory(new UUIDArgumentFactory());
         dbi.registerArgumentFactory(new DateTimeZoneArgumentFactory());
@@ -79,5 +71,30 @@ public class DBIProvider implements Provider<IDBI> {
         //dbi.setSQLLog(log);
 
         return dbi;
+    }
+
+
+
+    private DataSource getBoneCPDatSource() {
+        final BoneCPConfig dbConfig = new BoneCPConfig();
+        dbConfig.setJdbcUrl(jdbcUri);
+        dbConfig.setUsername(userName);
+        dbConfig.setPassword(userPwd);
+        dbConfig.setPartitionCount(1);
+        //dbConfig.setDefaultTransactionIsolation("READ_COMMITTED");
+        dbConfig.setDisableJMX(false);
+
+        final BoneCPDataSource ds = new BoneCPDataSource(dbConfig);
+        return ds;
+    }
+
+    private DataSource getC3P0DataSource() {
+        ComboPooledDataSource cpds = new ComboPooledDataSource();
+        cpds.setJdbcUrl(jdbcUri);
+        cpds.setUser(userName);
+        cpds.setPassword(userPwd);
+        cpds.setMinPoolSize(1);
+        cpds.setMaxPoolSize(10);
+        return cpds;
     }
 }
