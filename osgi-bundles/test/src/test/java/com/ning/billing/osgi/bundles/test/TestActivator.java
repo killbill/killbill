@@ -53,9 +53,7 @@ public class TestActivator implements BundleActivator {
     private OSGIKillbill osgiKillbill;
     private volatile ServiceReference<OSGIKillbill> osgiKillbillReference;
 
-    private LogService logService;
-    private volatile ServiceReference<LogService> logServiceReference;
-
+    private final Logger logger = new Logger();
 
     private volatile boolean isRunning;
     private volatile ServiceRegistration paymentInfoPluginRegistration;
@@ -69,7 +67,7 @@ public class TestActivator implements BundleActivator {
         System.out.println("TestActivator starting bundle = " + bundleName);
 
         fetchOSGIKIllbill(context);
-        fetchLogService(context);
+        logger.start(context);
 
         final IDBI dbi = new DBI(osgiKillbill.getDataSource());
         testDao = new TestDao(dbi);
@@ -89,16 +87,15 @@ public class TestActivator implements BundleActivator {
         this.isRunning = false;
         releaseOSGIKIllbill(context);
         this.osgiKillbill = null;
-        releaseLogService(context);
-        this.logService = null;
         unregisterPlaymentPluginApi(context);
+        logger.close();
         System.out.println("Good bye world from TestActivator!");
     }
 
     @Subscribe
     public void handleKillbillEvent(final ExtBusEvent killbillEvent) {
 
-        logService.log(LogService.LOG_INFO, "Received external event " + killbillEvent.toString());
+        logger.log(LogService.LOG_INFO, "Received external event " + killbillEvent.toString());
 
         // Only looking at account creation
         if (killbillEvent.getEventType() != ExtBusEventType.ACCOUNT_CREATION) {
@@ -118,7 +115,7 @@ public class TestActivator implements BundleActivator {
             testDao.insertAccountExternalKey(account.getExternalKey());
 
         } catch (AccountApiException e) {
-            logService.log(LogService.LOG_ERROR, e.getMessage());
+            logger.log(LogService.LOG_ERROR, e.getMessage());
         }
     }
 
@@ -145,22 +142,6 @@ public class TestActivator implements BundleActivator {
     private void releaseOSGIKIllbill(final BundleContext context) {
         if (osgiKillbillReference != null) {
             context.ungetService(osgiKillbillReference);
-        }
-    }
-
-
-    private void fetchLogService(final BundleContext context) {
-        this.logServiceReference = (ServiceReference<LogService>) context.getServiceReference(LogService.class.getName());
-        try {
-            this.logService = context.getService(logServiceReference);
-        } catch (Exception e) {
-            System.err.println("Error in TestActivator: " + e.getLocalizedMessage());
-        }
-    }
-
-    private void releaseLogService(final BundleContext context) {
-        if (logServiceReference != null) {
-            context.ungetService(logServiceReference);
         }
     }
 
