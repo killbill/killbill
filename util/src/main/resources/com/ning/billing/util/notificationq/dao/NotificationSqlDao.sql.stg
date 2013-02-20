@@ -63,7 +63,7 @@ select
   , tenant_record_id
 from notifications
 where queue_name = :queueName
-and processing_state != 'REMOVED'
+and processing_state = 'AVAILABLE'
 and account_record_id = :accountRecordId
 and effective_date >= :now
 order by effective_date, record_id
