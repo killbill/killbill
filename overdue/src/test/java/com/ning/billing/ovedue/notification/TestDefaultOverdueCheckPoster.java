@@ -64,24 +64,24 @@ public class TestDefaultOverdueCheckPoster extends OverdueTestSuiteWithEmbeddedD
         final Blockable overdueable = Mockito.mock(Subscription.class);
         Mockito.when(overdueable.getId()).thenReturn(subscriptionId);
 
-        verifyQueueContent(overdueable, 10, 10);
-        verifyQueueContent(overdueable, 5, 5);
-        verifyQueueContent(overdueable, 15, 5);
+        insertOverdueCheckAndVerifyQueueContent(overdueable, 10, 10);
+        insertOverdueCheckAndVerifyQueueContent(overdueable, 5, 5);
+        insertOverdueCheckAndVerifyQueueContent(overdueable, 15, 5);
 
         // Check we don't conflict with other overdueables
         final UUID bundleId = UUID.randomUUID();
         final Blockable otherOverdueable = Mockito.mock(SubscriptionBundle.class);
         Mockito.when(otherOverdueable.getId()).thenReturn(bundleId);
 
-        verifyQueueContent(otherOverdueable, 10, 10);
-        verifyQueueContent(otherOverdueable, 5, 5);
-        verifyQueueContent(otherOverdueable, 15, 5);
+        insertOverdueCheckAndVerifyQueueContent(otherOverdueable, 10, 10);
+        insertOverdueCheckAndVerifyQueueContent(otherOverdueable, 5, 5);
+        insertOverdueCheckAndVerifyQueueContent(otherOverdueable, 15, 5);
 
         // Verify the final content of the queue
         Assert.assertEquals(overdueQueue.getFutureNotificationsForAccount(internalCallContext).size(), 2);
     }
 
-    private void verifyQueueContent(final Blockable overdueable, final int nbDaysInFuture, final int expectedNbDaysInFuture) throws IOException {
+    private void insertOverdueCheckAndVerifyQueueContent(final Blockable overdueable, final int nbDaysInFuture, final int expectedNbDaysInFuture) throws IOException {
         final DateTime futureNotificationTime = testReferenceTime.plusDays(nbDaysInFuture);
         poster.insertOverdueCheckNotification(overdueable, futureNotificationTime, internalCallContext);
 
