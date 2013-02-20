@@ -85,39 +85,32 @@ public class KillbillActivator implements BundleActivator, ServiceListener {
         }
     }
 
-    private <T> boolean listenForServiceType(final ServiceEvent event, Class<T> claz, final OSGIServiceRegistration<T> registation) {
-
-        // Is that for us ?
-        final String[] objectClass = (String[]) event.getServiceReference().getProperty("objectClass");
-        if (objectClass == null || objectClass.length == 0 || !claz.getName().equals(objectClass[0])) {
-            return false;
-        }
-
+    private <T> boolean listenForServiceType(final ServiceEvent event, final Class<T> claz, final OSGIServiceRegistration<T> registration) {
         // Make sure we can retrieve the plugin name
         final ServiceReference serviceReference = event.getServiceReference();
         final String pluginName = (String) serviceReference.getProperty(OSGIPluginProperties.PLUGIN_NAME_PROP);
         if (pluginName == null) {
-            // STEPH logger ?
+            // TODO STEPH logger ?
             return true;
         }
 
         final T theService = (T) context.getService(serviceReference);
-        if (theService == null) {
-            return true;
+        // Is that for us? We look for a subclass here for greater flexibility (e.g. HttpServlet for a Servlet service)
+        if (theService == null || !claz.isAssignableFrom(theService.getClass())) {
+            return false;
         }
 
         switch (event.getType()) {
             case ServiceEvent.REGISTERED:
-                registation.registerService(pluginName, theService);
-
+                registration.registerService(pluginName, theService);
                 break;
             case ServiceEvent.UNREGISTERING:
-                registation.unregisterService(pluginName);
+                registration.unregisterService(pluginName);
                 break;
-
             default:
                 break;
         }
+
         return true;
     }
 

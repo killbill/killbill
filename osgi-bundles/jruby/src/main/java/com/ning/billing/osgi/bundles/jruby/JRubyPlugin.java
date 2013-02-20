@@ -20,7 +20,6 @@ import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Map;
 
-import javax.annotation.Nullable;
 import javax.servlet.http.HttpServlet;
 
 import org.jruby.Ruby;
@@ -46,7 +45,7 @@ public abstract class JRubyPlugin {
     private static final String KILLBILL_SERVICES = "java_apis";
     private static final String ACTIVE = "@active";
 
-    protected final LogService logger;
+    protected final Logger logger;
     protected final BundleContext bundleContext;
     protected final String pluginGemName;
     protected final String rubyRequire;
@@ -60,7 +59,7 @@ public abstract class JRubyPlugin {
     private String cachedRequireLine = null;
 
     public JRubyPlugin(final PluginRubyConfig config, final ScriptingContainer container,
-                       final BundleContext bundleContext, @Nullable final LogService logger) {
+                       final BundleContext bundleContext, final Logger logger) {
         this.logger = logger;
         this.bundleContext = bundleContext;
         this.pluginGemName = config.getPluginName();
@@ -114,7 +113,7 @@ public abstract class JRubyPlugin {
         // Register the rack handler
         final IRubyObject rackHandler = pluginInstance.callMethod("rack_handler");
         if (!rackHandler.isNil()) {
-            log(LogService.LOG_INFO, String.format("Using %s as rack handler", rackHandler.getMetaClass()));
+            logger.log(LogService.LOG_INFO, String.format("Using %s as rack handler", rackHandler.getMetaClass()));
 
             final JRubyHttpServlet jRubyHttpServlet = new JRubyHttpServlet(rackHandler);
             final Hashtable<String, String> properties = new Hashtable<String, String>();
@@ -216,17 +215,5 @@ public abstract class JRubyPlugin {
 
     protected Ruby getRuntime() {
         return pluginInstance.getMetaClass().getRuntime();
-    }
-
-    protected void log(final int level, final String message) {
-        if (logger != null) {
-            logger.log(level, message);
-        }
-    }
-
-    protected void log(final int level, final String message, final Throwable throwable) {
-        if (logger != null) {
-            logger.log(level, message, throwable);
-        }
     }
 }

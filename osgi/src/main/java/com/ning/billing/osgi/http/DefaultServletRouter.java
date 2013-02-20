@@ -34,11 +34,18 @@ public class DefaultServletRouter implements OSGIServiceRegistration<Servlet> {
     private static final Logger logger = LoggerFactory.getLogger(DefaultServletRouter.class);
 
     // Internal Servlet routing table: map of plugin prefixes to servlet instances.
-    // A plugin prefix can be foo, foo/bar, foo/bar/baz, ... and is mounted on /plugins/<pluginPrefix>
+    // A plugin prefix can be /foo, /foo/bar, /foo/bar/baz, ... and is mounted on /plugins/<pluginPrefix>
     private final Map<String, Servlet> pluginServlets = new ConcurrentHashMap<String, Servlet>();
 
     @Override
-    public void registerService(final String pathPrefix, final Servlet httpServlet) {
+    public void registerService(final String originalPathPrefix, final Servlet httpServlet) {
+        // Enforce each route to start with /
+        final String pathPrefix;
+        if (originalPathPrefix.charAt(0) != '/') {
+            pathPrefix = "/" + originalPathPrefix;
+        } else {
+            pathPrefix = originalPathPrefix;
+        }
         logger.info("Registering OSGI servlet at " + pathPrefix);
         pluginServlets.put(pathPrefix, httpServlet);
     }

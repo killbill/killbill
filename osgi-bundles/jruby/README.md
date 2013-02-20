@@ -3,7 +3,7 @@ Testing the JRuby OSGI bridge
 
 1. Build the jruby OSGI module and copy the bundle to:
 
-        /var/tmp/killbill-osgi-bundles-jruby-*-jar-with-dependencies.jar 
+        /var/tmp/killbill-osgi-bundles-jruby.jar
 
 2. Build a ruby plugin, e.g. killbill-paypal-express:
 

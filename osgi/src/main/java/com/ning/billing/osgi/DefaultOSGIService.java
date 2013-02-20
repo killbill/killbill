@@ -24,19 +24,16 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
-import org.apache.felix.cm.impl.ConfigurationManager;
+import org.apache.felix.fileinstall.internal.FileInstall;
 import org.apache.felix.framework.Felix;
 import org.apache.felix.framework.util.FelixConstants;
-import org.apache.felix.webconsole.internal.OsgiManagerActivator;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
-import org.osgi.framework.ServiceReference;
 import org.osgi.framework.launch.Framework;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.osgi.logservice.impl.Activator;
 
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
@@ -47,7 +44,6 @@ import com.ning.billing.osgi.api.config.PluginRubyConfig;
 import com.ning.billing.osgi.pluginconf.DefaultPluginConfigServiceApi;
 import com.ning.billing.osgi.pluginconf.PluginConfigException;
 import com.ning.billing.osgi.pluginconf.PluginFinder;
-import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 import com.ning.billing.util.config.OSGIConfig;
 
 import com.google.common.collect.ImmutableList;
@@ -64,8 +60,6 @@ public class DefaultOSGIService implements OSGIService {
     private final KillbillActivator killbillActivator;
 
     private Framework framework;
-    private volatile ServiceReference[] paymentApiReferences;
-    private Map<String, PaymentPluginApi> paymentPluginApis;
 
     @Inject
     public DefaultOSGIService(final OSGIConfig osgiConfig, final PluginFinder pluginFinder,
@@ -129,6 +123,8 @@ public class DefaultOSGIService implements OSGIService {
             final BundleContext context = framework.getBundleContext();
 
             // Install all bundles and create service mapping
+            // TODO PIERRE Could we leverage Felix fileinstall plugin to manage Killbill plugins?
+
             final List<Bundle> installedBundles = new LinkedList<Bundle>();
             installAllJavaBundles(context, installedBundles);
             installAllJRubyBundles(context, installedBundles);
@@ -182,19 +178,12 @@ public class DefaultOSGIService implements OSGIService {
         final Map<Object, Object> felixConfig = new HashMap<Object, Object>();
         felixConfig.putAll(config);
 
-        // Install default bundles
-        // TODO PIERRE Should the Felix Web Console (and its dependencies) be rather installed at deploy time?
+        // Install default bundles in the Framework: Killbill bundle and Felix fileinstall bundle
+        // Note! Think twice before adding a bundle here as it will run inside the System bundle. This means the bundle
+        // context that the bundle will see is the System bundle one, which will break e.g. resources lookup
         felixConfig.put(FelixConstants.SYSTEMBUNDLE_ACTIVATORS_PROP,
-                        ImmutableList.<BundleActivator>of(killbillActivator,
-                                                          // SLF4J LogService
-                                                          new Activator(),
-                                                          // Felix Web Console
-                                                          new OsgiManagerActivator(),
-                                                          // Felix Log Service (installed for the Web Console)
-                                                          // TODO PIERRE Does it conflict with the SLF4J one?
-                                                          new org.apache.felix.log.Activator(),
-                                                          // Felix Configuration Admin Service (installed for the Web Console)
-                                                          new ConfigurationManager()));
+                        ImmutableList.<BundleActivator>of(new FileInstall(),
+                                                          killbillActivator));
 
         final Framework felix = new Felix(felixConfig);
         felix.init();
