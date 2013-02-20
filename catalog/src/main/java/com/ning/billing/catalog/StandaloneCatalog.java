@@ -34,6 +34,7 @@ import com.ning.billing.catalog.api.BillingAlignment;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.catalog.api.Limit;
 import com.ning.billing.catalog.api.Listing;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanAlignmentChange;
@@ -65,6 +66,10 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
     @XmlElementWrapper(name = "currencies", required = true)
     @XmlElement(name = "currency", required = true)
     private Currency[] supportedCurrencies;
+
+    @XmlElementWrapper(name = "units", required = false)
+    @XmlElement(name = "unit", required = true)
+    private DefaultUnit[] units;
 
     @XmlElementWrapper(name = "products", required = true)
     @XmlElement(name = "product", required = true)
@@ -101,13 +106,20 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
     }
 
     /* (non-Javadoc)
-      * @see com.ning.billing.catalog.ICatalog#getProducts()
-      */
-    @Override
-    public DefaultProduct[] getCurrentProducts() {
-        return products;
-    }
+     * @see com.ning.billing.catalog.ICatalog#getProducts()
+     */
+   @Override
+   public DefaultProduct[] getCurrentProducts() {
+       return products;
+   }
 
+   /* (non-Javadoc)
+    * @see com.ning.billing.catalog.ICatalog#getProducts()
+    */
+    @Override
+    public DefaultUnit[] getCurrentUnits() {
+        return units;
+    }
 
     @Override
     public Currency[] getCurrentSupportedCurrencies() {
@@ -272,6 +284,18 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
 
     }
 
+
+    //////////////////////////////////////////////////////////////////////////////
+    //
+    // UNIT LIMIT
+    //
+    //////////////////////////////////////////////////////////////////////////////
+    
+    @Override
+    public boolean compliesWithLimits(final String phaseName, final String unit, final double value) throws CatalogApiException {
+        PlanPhase phase = findCurrentPhase(phaseName);
+        return phase.compliesWithLimits(unit, value);
+    }
 
     protected StandaloneCatalog setProducts(final DefaultProduct[] products) {
         this.products = products;

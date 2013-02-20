@@ -14,14 +14,18 @@
  * under the License.
  */
 
-package com.ning.billing.account.api;
+package com.ning.billing.tenant.glue;
 
-/**
- * The interface {@code BillCycleDay} represents the default account billing date
- */
-public interface BillCycleDay {
+import com.ning.billing.GuicyKillbillTestWithEmbeddedDBModule;
+import com.ning.billing.util.glue.NonEntityDaoModule;
 
-    int getDayOfMonthUTC();
+public class TestTenantModuleWithEmbeddedDB extends TestTenantModule {
 
-    int getDayOfMonthLocal();
+    @Override
+    public void configure() {
+        super.configure();
+
+        install(new GuicyKillbillTestWithEmbeddedDBModule());
+        install(new NonEntityDaoModule());
+    }
 }

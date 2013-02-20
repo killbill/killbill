@@ -18,7 +18,6 @@ package com.ning.billing.beatrix.util;
 
 import java.util.UUID;
 
-
 import javax.inject.Inject;
 
 import org.slf4j.Logger;
@@ -37,13 +36,11 @@ public class AccountChecker {
     private final AccountUserApi accountApi;
     private final AuditChecker auditChecker;
 
-
     @Inject
     public AccountChecker(final AccountUserApi accountApi, final AuditChecker auditChecker) {
         this.accountApi = accountApi;
         this.auditChecker = auditChecker;
     }
-
 
     public Account checkAccount(final UUID accountId, final AccountData accountData, final CallContext context) throws Exception {
 
@@ -56,8 +53,7 @@ public class AccountChecker {
             Assert.assertEquals(account.getPhone(), accountData.getPhone());
             Assert.assertEquals(account.isNotifiedForInvoices(), accountData.isNotifiedForInvoices());
             Assert.assertEquals(account.getExternalKey(), accountData.getExternalKey());
-            Assert.assertEquals(account.getBillCycleDay().getDayOfMonthUTC(), accountData.getBillCycleDay().getDayOfMonthUTC());
-            Assert.assertEquals(account.getBillCycleDay().getDayOfMonthLocal(), accountData.getBillCycleDay().getDayOfMonthLocal());
+            Assert.assertEquals(account.getBillCycleDayLocal(), accountData.getBillCycleDayLocal());
             Assert.assertEquals(account.getCurrency(), accountData.getCurrency());
             Assert.assertEquals(account.getTimeZone(), accountData.getTimeZone());
             // createWithPaymentMethod will update the paymentMethod

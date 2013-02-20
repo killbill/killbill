@@ -24,7 +24,6 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.mockito.Mockito;
-import org.skife.jdbi.v2.IDBI;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -40,7 +39,6 @@ import com.ning.billing.analytics.model.BusinessSubscriptionTransitionModelDao;
 import com.ning.billing.analytics.utils.Rounder;
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogApiException;
-import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
@@ -49,8 +47,6 @@ import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.mock.MockPlan;
-import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.clock.DefaultClock;
 
 public class TestAnalyticsDao extends AnalyticsTestSuiteWithEmbeddedDB {
 
@@ -61,21 +57,17 @@ public class TestAnalyticsDao extends AnalyticsTestSuiteWithEmbeddedDB {
     private static final String ACCOUNT_KEY = "pierre-143343-vcc";
     private static final String CURRENCY = UUID.randomUUID().toString();
 
-    private final Clock clock = new DefaultClock();
     private final Product product = new MockProduct("platinium", "subscription", ProductCategory.BASE);
     private final Plan plan = new MockPlan("platinum-monthly", product);
     private final PlanPhase phase = new MockPhase(PhaseType.EVERGREEN, plan, MockDuration.UNLIMITED(), 25.95);
 
-    private BusinessSubscriptionTransitionSqlDao businessSubscriptionTransitionSqlDao;
     private BusinessSubscriptionTransitionModelDao transition;
-    private BusinessAccountSqlDao businessAccountSqlDao;
     private BusinessAccountModelDao account;
 
-    private final CatalogService catalogService = Mockito.mock(CatalogService.class);
     private final Catalog catalog = Mockito.mock(Catalog.class);
 
     @BeforeClass(groups = "slow")
-    public void setup() throws IOException, ClassNotFoundException, SQLException, CatalogApiException {
+    public void setupMocks() throws IOException, ClassNotFoundException, SQLException, CatalogApiException {
         Mockito.when(catalog.findPlan(Mockito.anyString(), Mockito.<DateTime>any())).thenReturn(plan);
         Mockito.when(catalog.findPlan(Mockito.anyString(), Mockito.<DateTime>any(), Mockito.<DateTime>any())).thenReturn(plan);
         Mockito.when(catalog.findPhase(Mockito.anyString(), Mockito.<DateTime>any(), Mockito.<DateTime>any())).thenReturn(phase);
@@ -93,31 +85,11 @@ public class TestAnalyticsDao extends AnalyticsTestSuiteWithEmbeddedDB {
 
         transition = new BusinessSubscriptionTransitionModelDao(TOTAL_ORDERING, BUNDLE_ID, EXTERNAL_KEY, ACCOUNT_ID, ACCOUNT_KEY,
                                                                 UUID.randomUUID(), requestedTimestamp, event, prevSubscription, nextSubscription);
-
-        final IDBI dbi = helper.getDBI();
-        businessSubscriptionTransitionSqlDao = dbi.onDemand(BusinessSubscriptionTransitionSqlDao.class);
-
-        // Healthcheck test to make sure MySQL is setup properly
-        try {
-            businessSubscriptionTransitionSqlDao.test(internalCallContext);
-        } catch (Throwable t) {
-            Assert.fail(t.toString());
-        }
     }
 
     private void setupBusinessAccount() {
         account = new BusinessAccountModelDao(UUID.randomUUID(), ACCOUNT_KEY, UUID.randomUUID().toString(), BigDecimal.ONE, clock.getUTCToday(),
                                               BigDecimal.TEN, "ERROR_NOT_ENOUGH_FUNDS", "CreditCard", "Visa", "FRANCE", CURRENCY, clock.getUTCNow(), clock.getUTCNow());
-
-        final IDBI dbi = helper.getDBI();
-        businessAccountSqlDao = dbi.onDemand(BusinessAccountSqlDao.class);
-
-        // Healthcheck test to make sure MySQL is setup properly
-        try {
-            businessAccountSqlDao.test(internalCallContext);
-        } catch (Throwable t) {
-            Assert.fail(t.toString());
-        }
     }
 
     @Test(groups = "slow")
@@ -134,9 +106,9 @@ public class TestAnalyticsDao extends AnalyticsTestSuiteWithEmbeddedDB {
                 null,
                 transition.getNextSubscription()
         );
-        businessSubscriptionTransitionSqlDao.createTransition(transitionWithNullPrev, internalCallContext);
+        subscriptionTransitionSqlDao.createTransition(transitionWithNullPrev, internalCallContext);
 
-        final List<BusinessSubscriptionTransitionModelDao> transitions = businessSubscriptionTransitionSqlDao.getTransitionsByKey(EXTERNAL_KEY, internalCallContext);
+        final List<BusinessSubscriptionTransitionModelDao> transitions = subscriptionTransitionSqlDao.getTransitionsByKey(EXTERNAL_KEY, internalCallContext);
         Assert.assertEquals(transitions.size(), 1);
         Assert.assertEquals(transitions.get(0), transitionWithNullPrev);
     }
@@ -155,9 +127,9 @@ public class TestAnalyticsDao extends AnalyticsTestSuiteWithEmbeddedDB {
                 transition.getPreviousSubscription(),
                 null
         );
-        businessSubscriptionTransitionSqlDao.createTransition(transitionWithNullNext, internalCallContext);
+        subscriptionTransitionSqlDao.createTransition(transitionWithNullNext, internalCallContext);
 
-        final List<BusinessSubscriptionTransitionModelDao> transitions = businessSubscriptionTransitionSqlDao.getTransitionsByKey(EXTERNAL_KEY, internalCallContext);
+        final List<BusinessSubscriptionTransitionModelDao> transitions = subscriptionTransitionSqlDao.getTransitionsByKey(EXTERNAL_KEY, internalCallContext);
         Assert.assertEquals(transitions.size(), 1);
         Assert.assertEquals(transitions.get(0), transitionWithNullNext);
     }
@@ -177,9 +149,9 @@ public class TestAnalyticsDao extends AnalyticsTestSuiteWithEmbeddedDB {
                 subscriptionWithNullFields,
                 subscriptionWithNullFields
         );
-        businessSubscriptionTransitionSqlDao.createTransition(transitionWithNullFields, internalCallContext);
+        subscriptionTransitionSqlDao.createTransition(transitionWithNullFields, internalCallContext);
 
-        final List<BusinessSubscriptionTransitionModelDao> transitions = businessSubscriptionTransitionSqlDao.getTransitionsByKey(EXTERNAL_KEY, internalCallContext);
+        final List<BusinessSubscriptionTransitionModelDao> transitions = subscriptionTransitionSqlDao.getTransitionsByKey(EXTERNAL_KEY, internalCallContext);
         Assert.assertEquals(transitions.size(), 1);
         Assert.assertEquals(transitions.get(0), transitionWithNullFields);
     }
@@ -199,9 +171,9 @@ public class TestAnalyticsDao extends AnalyticsTestSuiteWithEmbeddedDB {
                 subscriptionWithNullPlanAndPhase,
                 subscriptionWithNullPlanAndPhase
         );
-        businessSubscriptionTransitionSqlDao.createTransition(transitionWithNullPlanAndPhase, internalCallContext);
+        subscriptionTransitionSqlDao.createTransition(transitionWithNullPlanAndPhase, internalCallContext);
 
-        final List<BusinessSubscriptionTransitionModelDao> transitions = businessSubscriptionTransitionSqlDao.getTransitionsByKey(EXTERNAL_KEY, internalCallContext);
+        final List<BusinessSubscriptionTransitionModelDao> transitions = subscriptionTransitionSqlDao.getTransitionsByKey(EXTERNAL_KEY, internalCallContext);
         Assert.assertEquals(transitions.size(), 1);
         Assert.assertEquals(transitions.get(0).getExternalKey(), transition.getExternalKey());
         Assert.assertEquals(transitions.get(0).getRequestedTimestamp(), transition.getRequestedTimestamp());
@@ -225,9 +197,9 @@ public class TestAnalyticsDao extends AnalyticsTestSuiteWithEmbeddedDB {
                 subscriptionWithNullPlan,
                 subscriptionWithNullPlan
         );
-        businessSubscriptionTransitionSqlDao.createTransition(transitionWithNullPlan, internalCallContext);
+        subscriptionTransitionSqlDao.createTransition(transitionWithNullPlan, internalCallContext);
 
-        final List<BusinessSubscriptionTransitionModelDao> transitions = businessSubscriptionTransitionSqlDao.getTransitionsByKey(EXTERNAL_KEY, internalCallContext);
+        final List<BusinessSubscriptionTransitionModelDao> transitions = subscriptionTransitionSqlDao.getTransitionsByKey(EXTERNAL_KEY, internalCallContext);
         Assert.assertEquals(transitions.size(), 1);
         // Null Plan but Phase - we don't turn the subscription into a null
         Assert.assertEquals(transitions.get(0), transitionWithNullPlan);
@@ -248,9 +220,9 @@ public class TestAnalyticsDao extends AnalyticsTestSuiteWithEmbeddedDB {
                 subscriptionWithNullPhase,
                 subscriptionWithNullPhase
         );
-        businessSubscriptionTransitionSqlDao.createTransition(transitionWithNullPhase, internalCallContext);
+        subscriptionTransitionSqlDao.createTransition(transitionWithNullPhase, internalCallContext);
 
-        final List<BusinessSubscriptionTransitionModelDao> transitions = businessSubscriptionTransitionSqlDao.getTransitionsByKey(EXTERNAL_KEY, internalCallContext);
+        final List<BusinessSubscriptionTransitionModelDao> transitions = subscriptionTransitionSqlDao.getTransitionsByKey(EXTERNAL_KEY, internalCallContext);
         Assert.assertEquals(transitions.size(), 1);
         Assert.assertEquals(transitions.get(0).getExternalKey(), transition.getExternalKey());
         Assert.assertEquals(transitions.get(0).getRequestedTimestamp(), transition.getRequestedTimestamp());
@@ -264,20 +236,20 @@ public class TestAnalyticsDao extends AnalyticsTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testCreateAndRetrieveTransitions() {
-        businessSubscriptionTransitionSqlDao.createTransition(transition, internalCallContext);
+        subscriptionTransitionSqlDao.createTransition(transition, internalCallContext);
 
-        final List<BusinessSubscriptionTransitionModelDao> transitions = businessSubscriptionTransitionSqlDao.getTransitionsByKey(EXTERNAL_KEY, internalCallContext);
+        final List<BusinessSubscriptionTransitionModelDao> transitions = subscriptionTransitionSqlDao.getTransitionsByKey(EXTERNAL_KEY, internalCallContext);
         Assert.assertEquals(transitions.size(), 1);
         Assert.assertEquals(transitions.get(0), transition);
 
-        Assert.assertEquals(businessSubscriptionTransitionSqlDao.getTransitionsByKey("Doesn't exist", internalCallContext).size(), 0);
+        Assert.assertEquals(subscriptionTransitionSqlDao.getTransitionsByKey("Doesn't exist", internalCallContext).size(), 0);
     }
 
     @Test(groups = "slow")
     public void testCreateSaveAndRetrieveAccounts() {
         // Create and retrieve an account
-        businessAccountSqlDao.createAccount(account, internalCallContext);
-        final BusinessAccountModelDao foundAccount = businessAccountSqlDao.getAccountByKey(ACCOUNT_KEY, internalCallContext);
+        accountSqlDao.createAccount(account, internalCallContext);
+        final BusinessAccountModelDao foundAccount = accountSqlDao.getAccountByKey(ACCOUNT_KEY, internalCallContext);
         Assert.assertEquals(foundAccount.getCreatedDate().getMillis(), account.getCreatedDate().getMillis());
         Assert.assertEquals(foundAccount.getUpdatedDate().getMillis(), account.getUpdatedDate().getMillis());
         Assert.assertTrue(foundAccount.equals(account));
@@ -286,14 +258,14 @@ public class TestAnalyticsDao extends AnalyticsTestSuiteWithEmbeddedDB {
         account.setBalance(BigDecimal.TEN);
         account.setPaymentMethod("PayPal");
         account.setCurrency("CAD");
-        businessAccountSqlDao.saveAccount(account, internalCallContext);
+        accountSqlDao.saveAccount(account, internalCallContext);
         // Verify the save worked as expected
-        account = businessAccountSqlDao.getAccountByKey(ACCOUNT_KEY, internalCallContext);
+        account = accountSqlDao.getAccountByKey(ACCOUNT_KEY, internalCallContext);
         Assert.assertEquals(Rounder.round(BigDecimal.TEN), account.getRoundedBalance());
         Assert.assertEquals("PayPal", account.getPaymentMethod());
         Assert.assertEquals("CAD", account.getCurrency());
 
         // ACCOUNT not found
-        Assert.assertNull(businessAccountSqlDao.getAccountByKey("Doesn't exist", internalCallContext));
+        Assert.assertNull(accountSqlDao.getAccountByKey("Doesn't exist", internalCallContext));
     }
 }

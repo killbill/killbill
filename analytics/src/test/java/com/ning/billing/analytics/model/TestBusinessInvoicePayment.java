@@ -24,10 +24,10 @@ import org.joda.time.DateTimeZone;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.analytics.AnalyticsTestSuite;
+import com.ning.billing.analytics.AnalyticsTestSuiteNoDB;
 import com.ning.billing.catalog.api.Currency;
 
-public class TestBusinessInvoicePayment extends AnalyticsTestSuite {
+public class TestBusinessInvoicePayment extends AnalyticsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testEquals() throws Exception {

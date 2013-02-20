@@ -27,6 +27,7 @@ import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
 import com.google.inject.AbstractModule;
 
 public class MockInvoiceModule extends AbstractModule implements InvoiceModule {
+
     @Override
     public void installInvoiceUserApi() {
         bind(InvoiceUserApi.class).toInstance(Mockito.mock(InvoiceUserApi.class));

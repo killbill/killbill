@@ -21,9 +21,9 @@ import java.math.BigDecimal;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.analytics.AnalyticsTestSuite;
+import com.ning.billing.analytics.AnalyticsTestSuiteNoDB;
 
-public class TestRounder extends AnalyticsTestSuite {
+public class TestRounder extends AnalyticsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testRound() throws Exception {

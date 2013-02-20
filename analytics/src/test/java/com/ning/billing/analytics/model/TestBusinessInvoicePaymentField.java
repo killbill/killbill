@@ -21,9 +21,9 @@ import java.util.UUID;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.analytics.AnalyticsTestSuite;
+import com.ning.billing.analytics.AnalyticsTestSuiteNoDB;
 
-public class TestBusinessInvoicePaymentField extends AnalyticsTestSuite {
+public class TestBusinessInvoicePaymentField extends AnalyticsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testEquals() throws Exception {

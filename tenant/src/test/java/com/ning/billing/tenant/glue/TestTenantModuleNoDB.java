@@ -14,9 +14,18 @@
  * under the License.
  */
 
-package com.ning.billing.analytics;
+package com.ning.billing.tenant.glue;
 
-import com.ning.billing.KillbillTestSuite;
+import com.ning.billing.GuicyKillbillTestNoDBModule;
+import com.ning.billing.mock.glue.MockNonEntityDaoModule;
 
-public abstract class AnalyticsTestSuite extends KillbillTestSuite {
+public class TestTenantModuleNoDB extends TestTenantModule {
+
+    @Override
+    public void configure() {
+        super.configure();
+
+        install(new GuicyKillbillTestNoDBModule());
+        install(new MockNonEntityDaoModule());
+    }
 }

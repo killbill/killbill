@@ -26,7 +26,6 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.jaxrs.JaxrsTestSuiteNoDB;
 import com.ning.billing.mock.MockAccountBuilder;
-import com.ning.billing.mock.api.MockBillCycleDay;
 
 public class TestAccountJson extends JaxrsTestSuiteNoDB {
 
@@ -37,7 +36,7 @@ public class TestAccountJson extends JaxrsTestSuiteNoDB {
         final Integer length = 12;
         final String externalKey = UUID.randomUUID().toString();
         final String email = UUID.randomUUID().toString();
-        final BillCycleDayJson billCycleDay = new BillCycleDayJson(6, 6);
+        final Integer billCycleDayLocal = 6;
         final String currency = UUID.randomUUID().toString();
         final String paymentMethodId = UUID.randomUUID().toString();
         final String timeZone = UUID.randomUUID().toString();
@@ -54,7 +53,7 @@ public class TestAccountJson extends JaxrsTestSuiteNoDB {
         final Boolean isNotifiedForInvoice = false;
 
         final AccountJson accountJson = new AccountJson(accountId, name, length, externalKey,
-                                                        email, billCycleDay, currency, paymentMethodId,
+                                                        email, billCycleDayLocal, currency, paymentMethodId,
                                                         timeZone, address1, address2, postalCode, company, city, state,
                                                         country, locale, phone, isMigrated, isNotifiedForInvoice);
         Assert.assertEquals(accountJson.getAccountId(), accountId);
@@ -62,7 +61,7 @@ public class TestAccountJson extends JaxrsTestSuiteNoDB {
         Assert.assertEquals(accountJson.getLength(), length);
         Assert.assertEquals(accountJson.getExternalKey(), externalKey);
         Assert.assertEquals(accountJson.getEmail(), email);
-        Assert.assertEquals(accountJson.getBillCycleDay(), billCycleDay);
+        Assert.assertEquals(accountJson.getBillCycleDayLocal(), billCycleDayLocal);
         Assert.assertEquals(accountJson.getCurrency(), currency);
         Assert.assertEquals(accountJson.getPaymentMethodId(), paymentMethodId);
         Assert.assertEquals(accountJson.getTimeZone(), timeZone);
@@ -89,7 +88,7 @@ public class TestAccountJson extends JaxrsTestSuiteNoDB {
         accountBuilder.address1(UUID.randomUUID().toString());
         accountBuilder.address2(UUID.randomUUID().toString());
         final int bcd = 4;
-        accountBuilder.billingCycleDay(new MockBillCycleDay(bcd));
+        accountBuilder.billingCycleDayLocal(bcd);
         accountBuilder.city(UUID.randomUUID().toString());
         accountBuilder.companyName(UUID.randomUUID().toString());
         accountBuilder.country(UUID.randomUUID().toString());
@@ -111,7 +110,7 @@ public class TestAccountJson extends JaxrsTestSuiteNoDB {
         final AccountJson accountJson = new AccountJson(account);
         Assert.assertEquals(accountJson.getAddress1(), account.getAddress1());
         Assert.assertEquals(accountJson.getAddress2(), account.getAddress2());
-        Assert.assertEquals(accountJson.getBillCycleDay().toString(), "{\"dayOfMonthLocal\":" + bcd + ",\"dayOfMonthUTC\":" + bcd + "}");
+        Assert.assertEquals(accountJson.getBillCycleDayLocal(), (Integer) bcd);
         Assert.assertEquals(accountJson.getCountry(), account.getCountry());
         Assert.assertEquals(accountJson.getLocale(), account.getLocale());
         Assert.assertEquals(accountJson.getCompany(), account.getCompanyName());

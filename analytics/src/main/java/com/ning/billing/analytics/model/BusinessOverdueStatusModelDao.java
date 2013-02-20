@@ -18,6 +18,8 @@ package com.ning.billing.analytics.model;
 
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
 
 import com.ning.billing.util.entity.EntityBase;
@@ -31,7 +33,7 @@ public class BusinessOverdueStatusModelDao extends EntityBase {
     private final DateTime startDate;
     private final DateTime endDate;
 
-    public BusinessOverdueStatusModelDao(final String accountKey, final UUID bundleId, final DateTime endDate,
+    public BusinessOverdueStatusModelDao(final String accountKey, final UUID bundleId, @Nullable final DateTime endDate,
                                          final String externalKey, final DateTime startDate, final String status) {
         this.accountKey = accountKey;
         this.bundleId = bundleId;

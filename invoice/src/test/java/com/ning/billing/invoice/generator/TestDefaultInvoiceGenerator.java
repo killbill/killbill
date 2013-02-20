@@ -16,8 +16,6 @@
 
 package com.ning.billing.invoice.generator;
 
-import static com.ning.billing.invoice.TestInvoiceHelper.*;
-
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -66,6 +64,28 @@ import com.ning.billing.util.svcapi.junction.BillingEvent;
 import com.ning.billing.util.svcapi.junction.BillingEventSet;
 import com.ning.billing.util.svcapi.junction.BillingModeType;
 
+import static com.ning.billing.invoice.TestInvoiceHelper.EIGHT;
+import static com.ning.billing.invoice.TestInvoiceHelper.ELEVEN;
+import static com.ning.billing.invoice.TestInvoiceHelper.FIFTEEN;
+import static com.ning.billing.invoice.TestInvoiceHelper.FIVE;
+import static com.ning.billing.invoice.TestInvoiceHelper.FORTY;
+import static com.ning.billing.invoice.TestInvoiceHelper.FOURTEEN;
+import static com.ning.billing.invoice.TestInvoiceHelper.NINETEEN;
+import static com.ning.billing.invoice.TestInvoiceHelper.NUMBER_OF_DECIMALS;
+import static com.ning.billing.invoice.TestInvoiceHelper.ONE;
+import static com.ning.billing.invoice.TestInvoiceHelper.ONE_HUNDRED;
+import static com.ning.billing.invoice.TestInvoiceHelper.ROUNDING_METHOD;
+import static com.ning.billing.invoice.TestInvoiceHelper.TEN;
+import static com.ning.billing.invoice.TestInvoiceHelper.THIRTEEN;
+import static com.ning.billing.invoice.TestInvoiceHelper.THIRTY;
+import static com.ning.billing.invoice.TestInvoiceHelper.THIRTY_ONE;
+import static com.ning.billing.invoice.TestInvoiceHelper.TWELVE;
+import static com.ning.billing.invoice.TestInvoiceHelper.TWENTY;
+import static com.ning.billing.invoice.TestInvoiceHelper.TWENTY_FIVE;
+import static com.ning.billing.invoice.TestInvoiceHelper.TWENTY_FOUR;
+import static com.ning.billing.invoice.TestInvoiceHelper.TWENTY_SEVEN;
+import static com.ning.billing.invoice.TestInvoiceHelper.TWO;
+import static com.ning.billing.invoice.TestInvoiceHelper.ZERO;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
@@ -155,16 +175,14 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
         // Start date was the 16 local, but was the 17 UTC
         final int bcdLocal = 16;
-        final int bcdUTC = 17;
         final LocalDate startDate = invoiceUtil.buildDate(2012, 7, bcdLocal);
 
         final BillingEventSet events = new MockBillingEventSet();
-        final BillingEvent event = createBillingEvent(sub.getId(), startDate, plan, phase, bcdUTC, bcdLocal);
+        final BillingEvent event = createBillingEvent(sub.getId(), startDate, plan, phase, bcdLocal);
         events.add(event);
 
         // Target date is the next BCD, in local time
         final LocalDate targetDate = invoiceUtil.buildDate(2012, 8, bcdLocal);
-        final DateTimeZone accountTimeZone = DateTimeZone.forID("HST");
         final Invoice invoice = generator.generateInvoice(accountId, events, null, targetDate, Currency.USD);
 
         assertNotNull(invoice);
@@ -181,12 +199,11 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         final Subscription sub = createZombieSubscription();
         final Plan plan = new MockPlan("Plan with a single discount phase");
         final PlanPhase phaseEvergreen = createMockMonthlyPlanPhase(EIGHT, PhaseType.DISCOUNT);
-        final DateTimeZone accountTimeZone = DateTimeZone.UTC;
-        final int bcdUTC = 16;
+        final int bcdLocal = 16;
         final LocalDate startDate = invoiceUtil.buildDate(2012, 7, 16);
 
         final BillingEventSet events = new MockBillingEventSet();
-        events.add(createBillingEvent(sub.getId(), startDate, plan, phaseEvergreen, bcdUTC));
+        events.add(createBillingEvent(sub.getId(), startDate, plan, phaseEvergreen, bcdLocal));
 
         // Set a target date of today (start date)
         final LocalDate targetDate = startDate;
@@ -749,12 +766,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
     }
 
     private BillingEvent createBillingEvent(final UUID subscriptionId, final LocalDate startDate,
-                                            final Plan plan, final PlanPhase planPhase, final int billCycleDayUTC) throws CatalogApiException {
-        return createBillingEvent(subscriptionId, startDate, plan, planPhase, billCycleDayUTC, billCycleDayUTC);
-    }
-
-    private BillingEvent createBillingEvent(final UUID subscriptionId, final LocalDate startDate,
-                                            final Plan plan, final PlanPhase planPhase, final int billCycleDayUTC, final int billCycleDayLocal) throws CatalogApiException {
+                                            final Plan plan, final PlanPhase planPhase, final int billCycleDayLocal) throws CatalogApiException {
         final Subscription sub = createZombieSubscription(subscriptionId);
         final Currency currency = Currency.USD;
 
@@ -762,7 +774,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
                                                   planPhase.getFixedPrice() == null ? null : planPhase.getFixedPrice().getPrice(currency),
                                                   planPhase.getRecurringPrice() == null ? null : planPhase.getRecurringPrice().getPrice(currency),
                                                   currency, planPhase.getBillingPeriod(),
-                                                  billCycleDayUTC, billCycleDayLocal, BillingModeType.IN_ADVANCE, "Test", 1L, SubscriptionTransitionType.CREATE);
+                                                  billCycleDayLocal, BillingModeType.IN_ADVANCE, "Test", 1L, SubscriptionTransitionType.CREATE);
     }
 
     private void testInvoiceGeneration(final UUID accountId, final BillingEventSet events, final List<Invoice> existingInvoices,

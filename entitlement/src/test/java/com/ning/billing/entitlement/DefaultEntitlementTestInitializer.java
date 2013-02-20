@@ -22,12 +22,10 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ning.billing.account.api.AccountData;
-import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.api.TestApiListener;
 import com.ning.billing.api.TestListenerStatus;
 import com.ning.billing.catalog.DefaultCatalogService;
@@ -63,8 +61,6 @@ public class DefaultEntitlementTestInitializer implements EntitlementTestInitial
     }
 
     public AccountData initAccountData() {
-        final BillCycleDay billCycleDay = Mockito.mock(BillCycleDay.class);
-        Mockito.when(billCycleDay.getDayOfMonthUTC()).thenReturn(1);
         final AccountData accountData = new MockAccountBuilder().name(UUID.randomUUID().toString())
                                                                 .firstNameLength(6)
                                                                 .email(UUID.randomUUID().toString())
@@ -72,7 +68,7 @@ public class DefaultEntitlementTestInitializer implements EntitlementTestInitial
                                                                 .migrated(false)
                                                                 .isNotifiedForInvoices(false)
                                                                 .externalKey(UUID.randomUUID().toString())
-                                                                .billingCycleDay(billCycleDay)
+                                                                .billingCycleDayLocal(1)
                                                                 .currency(Currency.USD)
                                                                 .paymentMethodId(UUID.randomUUID())
                                                                 .timeZone(DateTimeZone.forID("Europe/Paris"))

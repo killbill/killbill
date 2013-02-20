@@ -26,5 +26,4 @@ public interface OverdueCheckPoster {
     void insertOverdueCheckNotification(Blockable blockable, DateTime futureNotificationTime, final InternalCallContext context);
 
     void clearNotificationsFor(Blockable blockable, final InternalCallContext context);
-
 }

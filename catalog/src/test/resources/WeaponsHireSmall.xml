@@ -26,6 +26,11 @@
 		<currency>EUR</currency>
 		<currency>GBP</currency>
 	</currencies>
+    
+    <units>
+        <unit name="targets"/>
+        <unit name="misfires"/>
+    </units>
 
 	<products>
 		<product name="Pistol">
@@ -69,7 +74,7 @@
                 <alignment>START_OF_BUNDLE</alignment>
             </createAlignmentCase>
         </createAlignment>
-	</rules>
+	</rules> 
 
 	<plans>
 		<plan name="pistol-monthly">
@@ -95,6 +100,16 @@
 					<price><currency>EUR</currency><value>29.95</value></price> 
 					<price><currency>USD</currency><value>29.95</value></price>								
 				</recurringPrice>
+                <limits>
+                    <limit>
+                        <unit>targets</unit>
+                        <min>3</min>
+                    </limit>
+                    <limit>
+                        <unit>misfires</unit>
+                        <max>20</max>
+                    </limit>
+                </limits>
 			</finalPhase>
 		</plan>
 		<plan name="shotgun-monthly">

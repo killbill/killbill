@@ -23,13 +23,13 @@ import org.joda.time.DateTime;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.meter.MeterTestSuite;
+import com.ning.billing.meter.MeterTestSuiteNoDB;
 import com.ning.billing.meter.timeline.samples.SampleOpcode;
 import com.ning.billing.meter.timeline.samples.ScalarSample;
 import com.ning.billing.meter.timeline.times.DefaultTimelineCoder;
 import com.ning.billing.meter.timeline.times.TimelineCoder;
 
-public class TestSampleCompression extends MeterTestSuite {
+public class TestSampleCompression extends MeterTestSuiteNoDB {
 
     private static final TimelineCoder timelineCoder = new DefaultTimelineCoder();
     private static final SampleCoder sampleCoder = new DefaultSampleCoder();

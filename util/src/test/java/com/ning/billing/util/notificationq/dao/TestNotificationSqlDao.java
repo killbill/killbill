@@ -25,7 +25,6 @@ import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Test;
 
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
@@ -94,33 +93,6 @@ public class TestNotificationSqlDao extends UtilTestSuiteWithEmbeddedDB {
         //assertEquals(notification.getOwner(), null);
         assertEquals(notification.getProcessingState(), PersistentQueueEntryLifecycleState.PROCESSED);
         validateDate(notification.getNextAvailableDate(), nextAvailable);
-    }
-
-    @Test(groups = "slow")
-    public void testGetByAccountAndDate() throws InterruptedException {
-        final long accountRecordId = 1242L;
-        final String notificationKey = UUID.randomUUID().toString();
-        final DateTime effDt = new DateTime();
-        final Notification notif1 = new DefaultNotification("testBasic1", hostname, notificationKey.getClass().getName(), notificationKey, UUID.randomUUID(), UUID.randomUUID(), effDt,
-                                                            accountRecordId, internalCallContext.getTenantRecordId());
-        dao.insertNotification(notif1, internalCallContext);
-
-        final Notification notif2 = new DefaultNotification("testBasic2", hostname, notificationKey.getClass().getName(), notificationKey, UUID.randomUUID(), UUID.randomUUID(), effDt,
-                                                            accountRecordId, internalCallContext.getTenantRecordId());
-        dao.insertNotification(notif2, internalCallContext);
-
-        List<Notification> notifications = dao.getNotificationForAccountAndDate(accountRecordId, effDt.toDate(), internalCallContext);
-        assertEquals(notifications.size(), 2);
-        for (final Notification cur : notifications) {
-            Assert.assertEquals(cur.getProcessingState(), PersistentQueueEntryLifecycleState.AVAILABLE);
-            dao.removeNotification(cur.getId().toString(), internalCallContext);
-        }
-
-        notifications = dao.getNotificationForAccountAndDate(accountRecordId, effDt.toDate(), internalCallContext);
-        assertEquals(notifications.size(), 2);
-        for (final Notification cur : notifications) {
-            Assert.assertEquals(cur.getProcessingState(), PersistentQueueEntryLifecycleState.REMOVED);
-        }
     }
 
     private Notification fetchNotification(final String notificationId) {

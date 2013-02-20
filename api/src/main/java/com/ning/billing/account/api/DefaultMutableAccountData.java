@@ -29,7 +29,7 @@ public class DefaultMutableAccountData implements MutableAccountData {
     private String name;
     private int firstNameLength;
     private Currency currency;
-    private BillCycleDay billCycleDay;
+    private int billCycleDayLocal;
     private UUID paymentMethodId;
     private DateTimeZone timeZone;
     private String locale;
@@ -45,19 +45,18 @@ public class DefaultMutableAccountData implements MutableAccountData {
     private boolean isNotifiedForInvoices;
 
     public DefaultMutableAccountData(final String externalKey, final String email, final String name,
-                                     final int firstNameLength, final Currency currency, final BillCycleDay billCycleDay,
+                                     final int firstNameLength, final Currency currency, final int billCycleDayLocal,
                                      final UUID paymentMethodId, final DateTimeZone timeZone,
                                      final String locale, final String address1, final String address2,
                                      final String companyName, final String city, final String stateOrProvince,
                                      final String country, final String postalCode, final String phone,
                                      final boolean isMigrated, final boolean isNotifiedForInvoices) {
-        super();
         this.externalKey = externalKey;
         this.email = email;
         this.name = name;
         this.firstNameLength = firstNameLength;
         this.currency = currency;
-        this.billCycleDay = billCycleDay;
+        this.billCycleDayLocal = billCycleDayLocal;
         this.paymentMethodId = paymentMethodId;
         this.timeZone = timeZone;
         this.locale = locale;
@@ -74,13 +73,12 @@ public class DefaultMutableAccountData implements MutableAccountData {
     }
 
     public DefaultMutableAccountData(final AccountData accountData) {
-        super();
         this.externalKey = accountData.getExternalKey();
         this.email = accountData.getEmail();
         this.name = accountData.getName();
         this.firstNameLength = accountData.getFirstNameLength();
         this.currency = accountData.getCurrency();
-        this.billCycleDay = accountData.getBillCycleDay();
+        this.billCycleDayLocal = accountData.getBillCycleDayLocal();
         this.paymentMethodId = accountData.getPaymentMethodId();
         this.timeZone = accountData.getTimeZone();
         this.locale = accountData.getLocale();
@@ -122,8 +120,8 @@ public class DefaultMutableAccountData implements MutableAccountData {
     }
 
     @Override
-    public BillCycleDay getBillCycleDay() {
-        return billCycleDay;
+    public Integer getBillCycleDayLocal() {
+        return billCycleDayLocal;
     }
 
     @Override
@@ -217,8 +215,8 @@ public class DefaultMutableAccountData implements MutableAccountData {
     }
 
     @Override
-    public void setBillCycleDay(final BillCycleDay billCycleDay) {
-        this.billCycleDay = billCycleDay;
+    public void setBillCycleDayLocal(final int billCycleDayLocal) {
+        this.billCycleDayLocal = billCycleDayLocal;
     }
 
     @Override

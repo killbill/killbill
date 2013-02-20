@@ -19,23 +19,13 @@ package com.ning.billing.analytics.dao;
 import java.util.List;
 import java.util.UUID;
 
-import org.skife.jdbi.v2.IDBI;
 import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.analytics.AnalyticsTestSuiteWithEmbeddedDB;
 import com.ning.billing.analytics.model.BusinessSubscriptionTransitionTagModelDao;
 
 public class TestBusinessSubscriptionTransitionTagSqlDao extends AnalyticsTestSuiteWithEmbeddedDB {
-
-    private BusinessSubscriptionTransitionTagSqlDao subscriptionTransitionTagSqlDao;
-
-    @BeforeMethod(groups = "slow")
-    public void setUp() throws Exception {
-        final IDBI dbi = helper.getDBI();
-        subscriptionTransitionTagSqlDao = dbi.onDemand(BusinessSubscriptionTransitionTagSqlDao.class);
-    }
 
     @Test(groups = "slow")
     public void testCRUD() throws Exception {

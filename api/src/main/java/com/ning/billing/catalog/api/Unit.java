@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -14,7 +14,10 @@
  * under the License.
  */
 
-package com.ning.billing;
+package com.ning.billing.catalog.api;
 
-public class KillbillTestSuiteNoDB extends KillbillTestSuite {
+public interface Unit {
+
+    public abstract String getName();
+
 }

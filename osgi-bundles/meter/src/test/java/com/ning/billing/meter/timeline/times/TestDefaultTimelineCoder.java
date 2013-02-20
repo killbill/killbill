@@ -26,11 +26,11 @@ import org.joda.time.DateTime;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.meter.MeterTestSuite;
+import com.ning.billing.meter.MeterTestSuiteNoDB;
 import com.ning.billing.meter.timeline.util.DateTimeUtils;
 import com.ning.billing.meter.timeline.util.Hex;
 
-public class TestDefaultTimelineCoder extends MeterTestSuite {
+public class TestDefaultTimelineCoder extends MeterTestSuiteNoDB {
 
     private static final TimelineCoder timelineCoder = new DefaultTimelineCoder();
 

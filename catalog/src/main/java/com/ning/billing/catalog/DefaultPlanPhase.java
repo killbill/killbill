@@ -16,17 +16,20 @@
 
 package com.ning.billing.catalog;
 
+import java.net.URI;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-import java.net.URI;
+import javax.xml.bind.annotation.XmlElementWrapper;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.Duration;
 import com.ning.billing.catalog.api.InternationalPrice;
+import com.ning.billing.catalog.api.Limit;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
@@ -51,6 +54,10 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
 
     @XmlElement(required = false)
     private DefaultInternationalPrice fixedPrice;
+
+    @XmlElementWrapper(name = "limits", required = false)
+    @XmlElement(name = "limit", required = true)
+    private DefaultLimit[] limits = new DefaultLimit[0];
 
 //  Not supported: variable pricing
 //	@XmlElement(required=false)
@@ -121,13 +128,46 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
         return plan;
     }
 
-    /* (non-Javadoc)
-      * @see com.ning.billing.catalog.IPlanPhase#getDuration()
-      */
+    /*
+     * (non-Javadoc)
+     * 
+     * @see com.ning.billing.catalog.IPlanPhase#getDuration()
+     */
     @Override
     public Duration getDuration() {
         return duration;
     }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see com.ning.billing.catalog.PlanPhase#getLimit()
+     */
+    @Override
+    public DefaultLimit[] getLimits() {
+        return limits;
+    }
+    
+    
+    protected Limit findLimit(String unit) {
+        for(Limit limit: limits) {
+            if(limit.getUnit().getName().equals(unit) ) {
+                    return limit;
+            }
+        }
+        return null;
+    }
+    
+    
+    @Override
+    public boolean compliesWithLimits(String unit, double value) {
+        Limit l = findLimit(unit);
+        if (l == null) {
+            return true;
+        }
+        return l.compliesWith(value);
+    }
+
 
     @Override
     public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {

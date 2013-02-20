@@ -30,7 +30,7 @@ import org.joda.time.format.ISODateTimeFormat;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.meter.MeterTestSuite;
+import com.ning.billing.meter.MeterTestSuiteNoDB;
 import com.ning.billing.meter.timeline.consumer.TimeRangeSampleProcessor;
 import com.ning.billing.meter.timeline.samples.RepeatSample;
 import com.ning.billing.meter.timeline.samples.SampleOpcode;
@@ -44,7 +44,7 @@ import com.ning.billing.meter.timeline.util.Hex;
 
 import com.google.common.collect.ImmutableList;
 
-public class TestSampleCoder extends MeterTestSuite {
+public class TestSampleCoder extends MeterTestSuiteNoDB {
 
     private static final TimelineCoder timelineCoder = new DefaultTimelineCoder();
     private static final DateTimeFormatter dateFormatter = ISODateTimeFormat.dateTime().withZone(DateTimeZone.UTC);

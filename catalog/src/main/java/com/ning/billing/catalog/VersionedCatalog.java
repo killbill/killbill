@@ -29,8 +29,6 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.joda.time.DateTime;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.ActionPolicy;
@@ -50,6 +48,7 @@ import com.ning.billing.catalog.api.PlanSpecifier;
 import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.StaticCatalog;
+import com.ning.billing.catalog.api.Unit;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.config.catalog.ValidatingConfig;
 import com.ning.billing.util.config.catalog.ValidationErrors;
@@ -58,7 +57,6 @@ import com.ning.billing.util.config.catalog.ValidationErrors;
 @XmlRootElement(name = "catalog")
 @XmlAccessorType(XmlAccessType.NONE)
 public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implements Catalog, StaticCatalog {
-    private static final Logger log = LoggerFactory.getLogger(VersionedCatalog.class);
 
     private final Clock clock;
     private String catalogName;
@@ -370,6 +368,11 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
     }
 
     @Override
+    public Unit[] getCurrentUnits() throws CatalogApiException {
+        return versionForDate(clock.getUTCNow()).getCurrentUnits();
+    }
+
+    @Override
     public Plan[] getCurrentPlans() throws CatalogApiException {
         return versionForDate(clock.getUTCNow()).getCurrentPlans();
     }
@@ -452,5 +455,10 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
     @Override
     public List<Listing> getAvailableBasePlanListings() throws CatalogApiException {
         return versionForDate(clock.getUTCNow()).getAvailableBasePlanListings();
+    }
+
+    @Override
+    public boolean compliesWithLimits(String phaseName, String unit, double value) throws CatalogApiException {
+        return versionForDate(clock.getUTCNow()).compliesWithLimits(phaseName, unit, value);
     }
 }

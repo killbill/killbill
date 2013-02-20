@@ -38,7 +38,6 @@ public class AccountModelDao extends EntityBase implements EntityModelDao<Accoun
     private Integer firstNameLength;
     private Currency currency;
     private int billingCycleDayLocal;
-    private int billingCycleDayUtc;
     private UUID paymentMethodId;
     private DateTimeZone timeZone;
     private String locale;
@@ -57,7 +56,7 @@ public class AccountModelDao extends EntityBase implements EntityModelDao<Accoun
 
     public AccountModelDao(final UUID id, final DateTime createdDate, final DateTime updatedDate, final String externalKey,
                            final String email, final String name, final Integer firstNameLength, final Currency currency,
-                           final int billingCycleDayLocal, final int billingCycleDayUtc, final UUID paymentMethodId, final DateTimeZone timeZone,
+                           final int billingCycleDayLocal, final UUID paymentMethodId, final DateTimeZone timeZone,
                            final String locale, final String address1, final String address2, final String companyName,
                            final String city, final String stateOrProvince, final String country, final String postalCode,
                            final String phone, final Boolean migrated, final Boolean notifiedForInvoices) {
@@ -68,7 +67,6 @@ public class AccountModelDao extends EntityBase implements EntityModelDao<Accoun
         this.firstNameLength = firstNameLength;
         this.currency = currency;
         this.billingCycleDayLocal = billingCycleDayLocal;
-        this.billingCycleDayUtc = billingCycleDayUtc;
         this.paymentMethodId = paymentMethodId;
         this.timeZone = timeZone;
         this.locale = locale;
@@ -86,8 +84,8 @@ public class AccountModelDao extends EntityBase implements EntityModelDao<Accoun
 
     public AccountModelDao(final UUID id, @Nullable final DateTime createdDate, final DateTime updatedDate, final AccountData account) {
         this(id, createdDate, updatedDate, account.getExternalKey(),
-             account.getEmail(), account.getName(), account.getFirstNameLength(), account.getCurrency(), account.getBillCycleDay() == null ? 0 : account.getBillCycleDay().getDayOfMonthLocal(),
-             account.getBillCycleDay() == null ? 0 : account.getBillCycleDay().getDayOfMonthUTC(), account.getPaymentMethodId(), account.getTimeZone(), account.getLocale(), account.getAddress1(), account.getAddress2(),
+             account.getEmail(), account.getName(), account.getFirstNameLength(), account.getCurrency(),
+             account.getBillCycleDayLocal() == null ? 0 : account.getBillCycleDayLocal(), account.getPaymentMethodId(), account.getTimeZone(), account.getLocale(), account.getAddress1(), account.getAddress2(),
              account.getCompanyName(), account.getCity(), account.getStateOrProvince(), account.getCountry(), account.getPostalCode(),
              account.getPhone(), account.isMigrated(), account.isNotifiedForInvoices());
     }
@@ -120,12 +118,8 @@ public class AccountModelDao extends EntityBase implements EntityModelDao<Accoun
         return currency;
     }
 
-    public int getBillingCycleDayLocal() {
+    public Integer getBillingCycleDayLocal() {
         return billingCycleDayLocal;
-    }
-
-    public int getBillingCycleDayUtc() {
-        return billingCycleDayUtc;
     }
 
     public UUID getPaymentMethodId() {
@@ -192,7 +186,6 @@ public class AccountModelDao extends EntityBase implements EntityModelDao<Accoun
         sb.append(", firstNameLength=").append(firstNameLength);
         sb.append(", currency=").append(currency);
         sb.append(", billingCycleDayLocal=").append(billingCycleDayLocal);
-        sb.append(", billingCycleDayUTC=").append(billingCycleDayUtc);
         sb.append(", paymentMethodId=").append(paymentMethodId);
         sb.append(", timeZone=").append(timeZone);
         sb.append(", locale='").append(locale).append('\'');
@@ -225,9 +218,6 @@ public class AccountModelDao extends EntityBase implements EntityModelDao<Accoun
         final AccountModelDao that = (AccountModelDao) o;
 
         if (billingCycleDayLocal != that.billingCycleDayLocal) {
-            return false;
-        }
-        if (billingCycleDayUtc != that.billingCycleDayUtc) {
             return false;
         }
         if (address1 != null ? !address1.equals(that.address1) : that.address1 != null) {
@@ -297,7 +287,6 @@ public class AccountModelDao extends EntityBase implements EntityModelDao<Accoun
         result = 31 * result + (firstNameLength != null ? firstNameLength.hashCode() : 0);
         result = 31 * result + (currency != null ? currency.hashCode() : 0);
         result = 31 * result + billingCycleDayLocal;
-        result = 31 * result + billingCycleDayUtc;
         result = 31 * result + (paymentMethodId != null ? paymentMethodId.hashCode() : 0);
         result = 31 * result + (timeZone != null ? timeZone.hashCode() : 0);
         result = 31 * result + (locale != null ? locale.hashCode() : 0);

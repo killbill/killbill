@@ -22,6 +22,7 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.Duration;
 import com.ning.billing.catalog.api.InternationalPrice;
+import com.ning.billing.catalog.api.Limit;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
@@ -109,5 +110,15 @@ public class MockPhase implements PlanPhase {
     @Override
     public PhaseType getPhaseType() {
         return cohort;
+    }
+
+    @Override
+    public Limit[] getLimits() {
+         return new Limit[0];
+    }
+
+    @Override
+    public boolean compliesWithLimits(String unit, double value) {
+        return false;
     }
 }
