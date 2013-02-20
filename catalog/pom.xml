@@ -20,7 +20,7 @@
     <parent>
         <groupId>com.ning.billing</groupId>
         <artifactId>killbill</artifactId>
-        <version>0.1.54-SNAPSHOT</version>
+        <version>0.1.54</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>killbill-catalog</artifactId>
@@ -102,8 +102,7 @@
                             <shadedArtifactAttached>true</shadedArtifactAttached>
                             <shadedClassifierName>load-tool</shadedClassifierName>
                             <transformers>
-                                <transformer
-                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <manifestEntries>
                                         <Main-Class>com.ning.billing.catalog.LoadCatalog</Main-Class>
                                     </manifestEntries>
