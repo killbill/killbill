@@ -107,8 +107,7 @@ public class PluginResource extends JaxRsResourceBase {
                            @javax.ws.rs.core.Context final HttpServletResponse response,
                            @javax.ws.rs.core.Context final ServletContext servletContext,
                            @javax.ws.rs.core.Context final ServletConfig servletConfig) throws ServletException, IOException {
-        prepareOSGIRequest(request, servletContext, servletConfig);
-        osgiServlet.service(request, response);
+        serviceViaOSGIPlugin(request, response, servletContext, servletConfig);
 
         // Make sure to return 204
         return Response.noContent().build();
