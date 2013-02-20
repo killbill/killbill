@@ -23,6 +23,4 @@ import com.google.inject.Inject;
 
 public class TestOSGIBase extends TestIntegrationBase {
 
-    @Inject
-    protected OSGIConfig config;
 }

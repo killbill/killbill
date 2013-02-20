@@ -46,6 +46,7 @@ import com.ning.billing.api.TestListenerStatus;
 import com.ning.billing.beatrix.BeatrixTestSuiteWithEmbeddedDB;
 import com.ning.billing.beatrix.bus.api.ExternalBus;
 import com.ning.billing.beatrix.lifecycle.Lifecycle;
+import com.ning.billing.beatrix.osgi.SetupBundleWithAssertion;
 import com.ning.billing.beatrix.util.AccountChecker;
 import com.ning.billing.beatrix.util.EntitlementChecker;
 import com.ning.billing.beatrix.util.InvoiceChecker;
@@ -82,6 +83,7 @@ import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.payment.provider.MockPaymentProviderPlugin;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.config.OSGIConfig;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
 import com.ning.billing.util.svcsapi.bus.BusService;
@@ -195,6 +197,10 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     @Inject
     protected AccountInternalApi accountInternalApi;
 
+    @Inject
+    protected OSGIConfig osgiConfig;
+
+
     protected TestApiListener busHandler;
 
     private boolean isListenerFailed;
@@ -224,6 +230,9 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         final Injector g = Guice.createInjector(Stage.PRODUCTION, new BeatrixIntegrationModule());
         g.injectMembers(this);
         busHandler = new TestApiListener(this);
+
+        SetupBundleWithAssertion setupTest = new SetupBundleWithAssertion("whatever", osgiConfig, "whatever");
+        setupTest.cleanBundleInstallDir();
 
     }
 

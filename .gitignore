@@ -17,3 +17,4 @@ logs/
 */bin/
 catalog/src/test/resources/CatalogSchema.xsd
 */test-output/
+beatrix/src/test/resources/killbill-osgi-bundles-test-*-jar-with-dependencies.jar

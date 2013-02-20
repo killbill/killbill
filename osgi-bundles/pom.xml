@@ -30,5 +30,6 @@
         <module>hello</module>
         <module>jruby</module>
         <module>meter</module>
+        <module>test</module>
     </modules>
 </project>
