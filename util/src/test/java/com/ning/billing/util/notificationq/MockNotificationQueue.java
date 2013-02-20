@@ -88,33 +88,17 @@ public class MockNotificationQueue implements NotificationQueue {
     }
 
     @Override
-    public void removeNotificationsByKey(final NotificationKey key, final InternalCallContext context) {
-        final List<Notification> toClearNotifications = new ArrayList<Notification>();
-        for (final Notification notification : notifications) {
-            if (notification.getNotificationKey().equals(key.toString())) {
-                toClearNotifications.add(notification);
-            }
-        }
-
-        synchronized (notifications) {
-            if (toClearNotifications.size() > 0) {
-                notifications.removeAll(toClearNotifications);
-            }
-        }
+    public List<Notification> getFutureNotificationsForAccount(final InternalCallContext context) {
+        return getFutureNotificationsForAccountFromTransaction(null, context);
     }
 
     @Override
-    public List<Notification> getFutureNotificationsForKey(final NotificationKey notificationKey, final InternalCallContext context) {
-        return getFutureNotificationsForKeyFromTransaction(null, notificationKey, context);
-    }
-
-    @Override
-    public List<Notification> getFutureNotificationsForKeyFromTransaction(@Nullable final EntitySqlDaoWrapperFactory<EntitySqlDao> transactionalDao,
-                                                                          final NotificationKey notificationKey, final InternalCallContext context) {
+    public List<Notification> getFutureNotificationsForAccountFromTransaction(@Nullable final EntitySqlDaoWrapperFactory<EntitySqlDao> transactionalDao,
+                                                                              final InternalCallContext context) {
         final List<Notification> result = new ArrayList<Notification>();
         synchronized (notifications) {
             for (final Notification notification : notifications) {
-                if (notificationKey.toString().equals(notification.getNotificationKey()) && notification.getEffectiveDate().isAfter(clock.getUTCNow())) {
+                if (notification.getAccountRecordId().equals(context.getAccountRecordId()) && notification.getEffectiveDate().isAfter(clock.getUTCNow())) {
                     result.add(notification);
                 }
             }

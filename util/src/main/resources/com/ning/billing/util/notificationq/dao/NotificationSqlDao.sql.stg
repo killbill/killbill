@@ -44,7 +44,7 @@ getPendingCountNotifications() ::= <<
     ;
 >>
 
-getFutureNotificationsForKey() ::= <<
+getFutureNotificationsForAccount() ::= <<
 select
     record_id
   , id
@@ -62,10 +62,10 @@ select
   , account_record_id
   , tenant_record_id
 from notifications
-where notification_key = :notificationKey
-and class_name = :className
-and queue_name = :queueName
+where queue_name = :queueName
 and processing_state != 'REMOVED'
+and account_record_id = :accountRecordId
+and effective_date >= :now
 order by effective_date, record_id
 ;
 >>

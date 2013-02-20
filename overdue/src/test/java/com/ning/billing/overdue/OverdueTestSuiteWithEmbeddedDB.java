@@ -30,7 +30,9 @@ import com.ning.billing.overdue.calculator.BillingStateCalculatorBundle;
 import com.ning.billing.overdue.glue.TestOverdueModuleWithEmbeddedDB;
 import com.ning.billing.overdue.service.DefaultOverdueService;
 import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
+import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
+import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
@@ -58,6 +60,8 @@ public abstract class OverdueTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     @Inject
     protected EntitlementInternalApi entitlementApi;
     @Inject
+    protected CacheControllerDispatcher cacheControllerDispatcher;
+    @Inject
     protected InternalBus bus;
     @Inject
     protected InternalCallContextFactory internalCallContextFactory;
@@ -79,6 +83,8 @@ public abstract class OverdueTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     protected OverdueProperties overdueProperties;
     @Inject
     protected OverdueWrapperFactory overdueWrapperFactory;
+    @Inject
+    protected NonEntityDao nonEntityDao;
     @Inject
     protected TestOverdueHelper testOverdueHelper;
 

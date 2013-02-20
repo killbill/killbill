@@ -55,33 +55,23 @@ public interface NotificationQueue extends QueueLifecycle {
             throws IOException;
 
     /**
-     * Remove all notifications associated with this key
-     */
-    public void removeNotificationsByKey(final NotificationKey notificationKey,
-                                         final InternalCallContext context);
-
-    /**
-     * Retrieve all future pending notifications for a given key
+     * Retrieve all future pending notifications for a given account (taken from the context)
      * Results are ordered by effective date asc.
      *
-     * @param notificationKey notification key to look for
-     * @param context         internal call context
+     * @param context internal call context
      * @return future notifications matching that key
      */
-    public List<Notification> getFutureNotificationsForKey(final NotificationKey notificationKey,
-                                                           final InternalCallContext context);
+    public List<Notification> getFutureNotificationsForAccount(final InternalCallContext context);
 
     /**
-     * Retrieve all future pending notifications for a given key in a transaction.
+     * Retrieve all future pending notifications for a given account (taken from the context) in a transaction.
      * Results are ordered by effective date asc.
      *
-     * @param notificationKey notification key to look for
-     * @param context         internal call context
+     * @param context internal call context
      * @return future notifications matching that key
      */
-    public List<Notification> getFutureNotificationsForKeyFromTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> transactionalDao,
-                                                                          final NotificationKey notificationKey,
-                                                                          final InternalCallContext context);
+    public List<Notification> getFutureNotificationsForAccountFromTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> transactionalDao,
+                                                                              final InternalCallContext context);
 
     public void removeNotification(final UUID notificationId,
                                    final InternalCallContext context);

@@ -41,7 +41,7 @@ public abstract class PersistentQueueBase implements QueueLifecycle {
     private boolean isProcessingEvents;
     private int curActiveThreads;
 
-    protected final ObjectMapper objectMapper;
+    protected static final ObjectMapper objectMapper = new ObjectMapper();
 
     private final AtomicBoolean isStarted = new AtomicBoolean(false);
 
@@ -54,7 +54,6 @@ public abstract class PersistentQueueBase implements QueueLifecycle {
         this.nbThreads = nbThreads;
         this.svcQName = svcQName;
         this.config = config;
-        this.objectMapper = new ObjectMapper();        
         this.isProcessingEvents = false;
         this.curActiveThreads = 0;
         this.isProcessingSuspended = new AtomicBoolean(false);
@@ -188,8 +187,8 @@ public abstract class PersistentQueueBase implements QueueLifecycle {
         return isProcessingSuspended.get();
     }
 
-
-    protected <T> T deserializeEvent(final String className, final String json) {
+    // TODO PIERRE Better API?
+    public static <T> T deserializeEvent(final String className, final String json) {
         try {
             final Class<?> claz = Class.forName(className);
             return (T) objectMapper.readValue(json, claz);

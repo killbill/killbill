@@ -29,9 +29,12 @@ import org.testng.annotations.Test;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.api.Blockable;
-import com.ning.billing.junction.api.Blockable.Type;
 import com.ning.billing.overdue.OverdueTestSuiteWithEmbeddedDB;
 import com.ning.billing.overdue.service.DefaultOverdueService;
+import com.ning.billing.util.entity.dao.EntitySqlDao;
+import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
+import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
+import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import com.ning.billing.util.jackson.ObjectMapper;
 import com.ning.billing.util.notificationq.Notification;
 import com.ning.billing.util.notificationq.NotificationQueue;
@@ -40,11 +43,14 @@ public class TestDefaultOverdueCheckPoster extends OverdueTestSuiteWithEmbeddedD
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
+    private EntitySqlDaoTransactionalJdbiWrapper entitySqlDaoTransactionalJdbiWrapper;
     private NotificationQueue overdueQueue;
     private DateTime testReferenceTime;
 
     @BeforeMethod(groups = "slow")
     public void setUp() throws Exception {
+        entitySqlDaoTransactionalJdbiWrapper = new EntitySqlDaoTransactionalJdbiWrapper(getDBI(), clock, cacheControllerDispatcher, nonEntityDao);
+
         overdueQueue = notificationQueueService.getNotificationQueue(DefaultOverdueService.OVERDUE_SERVICE_NAME,
                                                                      DefaultOverdueCheckNotifier.OVERDUE_CHECK_NOTIFIER_QUEUE);
         Assert.assertTrue(overdueQueue.isStarted());
@@ -71,11 +77,8 @@ public class TestDefaultOverdueCheckPoster extends OverdueTestSuiteWithEmbeddedD
         verifyQueueContent(otherOverdueable, 5, 5);
         verifyQueueContent(otherOverdueable, 15, 5);
 
-        // Verify the final content of the queue for each key
-        final OverdueCheckNotificationKey notificationKey = new OverdueCheckNotificationKey(subscriptionId, Type.SUBSCRIPTION);
-        Assert.assertEquals(overdueQueue.getFutureNotificationsForKey(notificationKey, internalCallContext).size(), 1);
-        final OverdueCheckNotificationKey otherNotificationKey = new OverdueCheckNotificationKey(bundleId, Type.SUBSCRIPTION_BUNDLE);
-        Assert.assertEquals(overdueQueue.getFutureNotificationsForKey(otherNotificationKey, internalCallContext).size(), 1);
+        // Verify the final content of the queue
+        Assert.assertEquals(overdueQueue.getFutureNotificationsForAccount(internalCallContext).size(), 2);
     }
 
     private void verifyQueueContent(final Blockable overdueable, final int nbDaysInFuture, final int expectedNbDaysInFuture) throws IOException {
@@ -83,9 +86,18 @@ public class TestDefaultOverdueCheckPoster extends OverdueTestSuiteWithEmbeddedD
         poster.insertOverdueCheckNotification(overdueable, futureNotificationTime, internalCallContext);
 
         final OverdueCheckNotificationKey notificationKey = new OverdueCheckNotificationKey(overdueable.getId(), Blockable.Type.get(overdueable));
-        final List<Notification> notificationsForKey = overdueQueue.getFutureNotificationsForKey(notificationKey, internalCallContext);
+        final List<Notification> notificationsForKey = getNotificationsForOverdueable(overdueable);
         Assert.assertEquals(notificationsForKey.size(), 1);
         Assert.assertEquals(notificationsForKey.get(0).getNotificationKey(), objectMapper.writeValueAsString(notificationKey));
         Assert.assertEquals(notificationsForKey.get(0).getEffectiveDate(), testReferenceTime.plusDays(expectedNbDaysInFuture));
+    }
+
+    private List<Notification> getNotificationsForOverdueable(final Blockable overdueable) {
+        return entitySqlDaoTransactionalJdbiWrapper.execute(new EntitySqlDaoTransactionWrapper<List<Notification>>() {
+            @Override
+            public List<Notification> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                return ((DefaultOverdueCheckPoster) poster).getFutureNotificationsForAccountAndOverdueableInTransaction(entitySqlDaoWrapperFactory, overdueQueue, overdueable, internalCallContext);
+            }
+        });
     }
 }
