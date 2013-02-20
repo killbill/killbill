@@ -19,8 +19,8 @@ package com.ning.billing.beatrix.integration;
 import java.math.BigDecimal;
 import java.util.List;
 
+import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
-import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
@@ -52,7 +52,7 @@ public class TestEntitlement extends TestIntegrationBase {
         final Account account = createAccountWithPaymentMethod(getAccountData(1));
 
         // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
-        clock.setDeltaFromReality(today.toDateTimeAtCurrentTime().getMillis() - clock.getUTCNow().getMillis());
+        clock.setDeltaFromReality(today.toDateTimeAtCurrentTime(DateTimeZone.UTC).getMillis() - clock.getUTCNow().getMillis());
         final SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
 
         final String productName = "Shotgun";

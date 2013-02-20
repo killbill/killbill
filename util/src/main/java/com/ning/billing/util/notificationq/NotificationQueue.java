@@ -55,18 +55,30 @@ public interface NotificationQueue extends QueueLifecycle {
             throws IOException;
 
     /**
-     * Remove all notifications associated with this key
+     * Retrieve all future pending notifications for a given account (taken from the context)
+     * Results are ordered by effective date asc.
+     *
+     * @param context internal call context
+     * @return future notifications matching that key
      */
-    public void removeNotificationsByKey(final NotificationKey notificationKey,
-                                         final InternalCallContext context);
+    public List<Notification> getFutureNotificationsForAccount(final InternalCallContext context);
 
-    public List<Notification> getNotificationForAccountAndDate(final UUID accountId,
-                                                               final DateTime effectiveDate,
-                                                               final InternalCallContext context);
+    /**
+     * Retrieve all future pending notifications for a given account (taken from the context) in a transaction.
+     * Results are ordered by effective date asc.
+     *
+     * @param context internal call context
+     * @return future notifications matching that key
+     */
+    public List<Notification> getFutureNotificationsForAccountFromTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> transactionalDao,
+                                                                              final InternalCallContext context);
 
     public void removeNotification(final UUID notificationId,
                                    final InternalCallContext context);
 
+    public void removeNotificationFromTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> transactionalDao,
+                                                  final UUID notificationId,
+                                                  final InternalCallContext context);
 
     /**
      * @return the name of that queue

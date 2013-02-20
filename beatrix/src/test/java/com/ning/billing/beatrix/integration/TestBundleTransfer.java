@@ -15,20 +15,14 @@
  */
 package com.ning.billing.beatrix.integration;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
-
 import java.math.BigDecimal;
 import java.util.List;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -42,6 +36,10 @@ import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
 
 import com.google.common.collect.ImmutableList;
+
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 
 public class TestBundleTransfer extends TestIntegrationBase {
 
@@ -156,11 +154,11 @@ public class TestBundleTransfer extends TestIntegrationBase {
         assertListenerStatus();
 
         // Verify the BCD of the new account
-        final BillCycleDay oldBCD = accountUserApi.getAccountById(account.getId(), callContext).getBillCycleDay();
-        final BillCycleDay newBCD = accountUserApi.getAccountById(newAccount.getId(), callContext).getBillCycleDay();
-        assertEquals(oldBCD.getDayOfMonthUTC(), 1);
+        final Integer oldBCD = accountUserApi.getAccountById(account.getId(), callContext).getBillCycleDayLocal();
+        final Integer newBCD = accountUserApi.getAccountById(newAccount.getId(), callContext).getBillCycleDayLocal();
+        assertEquals(oldBCD, (Integer) 1);
         // Day of the transfer
-        assertEquals(newBCD.getDayOfMonthUTC(), 3);
+        assertEquals(newBCD, (Integer) 3);
 
         final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(newAccount.getId(), callContext);
         assertEquals(invoices.size(), 1);

@@ -23,7 +23,6 @@ import org.joda.time.DateTimeZone;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountData;
-import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.account.api.MutableAccountData;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.junction.api.BlockingState;
@@ -36,7 +35,7 @@ public class MockAccountBuilder {
     private String name = "";
     private int firstNameLength;
     private Currency currency = Currency.USD;
-    private BillCycleDay billingCycleDay;
+    private int billingCycleDayLocal;
     private UUID paymentMethodId;
     private DateTimeZone timeZone = DateTimeZone.UTC;
     private String locale = "";
@@ -65,7 +64,7 @@ public class MockAccountBuilder {
         this.id = UUID.randomUUID();
         this.address1(data.getAddress1());
         this.address2(data.getAddress2());
-        this.billingCycleDay(data.getBillCycleDay());
+        this.billingCycleDayLocal(data.getBillCycleDayLocal());
         this.city(data.getCity());
         this.companyName(data.getCompanyName());
         this.country(data.getCountry());
@@ -104,8 +103,8 @@ public class MockAccountBuilder {
         return this;
     }
 
-    public MockAccountBuilder billingCycleDay(final BillCycleDay billingCycleDay) {
-        this.billingCycleDay = billingCycleDay;
+    public MockAccountBuilder billingCycleDayLocal(final int billingCycleDayLocal) {
+        this.billingCycleDayLocal = billingCycleDayLocal;
         return this;
     }
 
@@ -225,9 +224,9 @@ public class MockAccountBuilder {
             }
 
             @Override
-            public BillCycleDay getBillCycleDay() {
+            public Integer getBillCycleDayLocal() {
 
-                return billingCycleDay;
+                return billingCycleDayLocal;
             }
 
             @Override

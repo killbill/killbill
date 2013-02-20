@@ -44,7 +44,6 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.jaxrs.json.AccountEmailJson;
 import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.AccountTimelineJson;
-import com.ning.billing.jaxrs.json.BillCycleDayJson;
 import com.ning.billing.jaxrs.json.BundleJsonNoSubscriptions;
 import com.ning.billing.jaxrs.json.ChargebackJson;
 import com.ning.billing.jaxrs.json.CreditJson;
@@ -908,8 +907,6 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
     public AccountJson getAccountJson(final String name, final String externalKey, final String email) {
         final String accountId = UUID.randomUUID().toString();
         final int length = 4;
-        // Let junction figure it out
-        final BillCycleDayJson billCycleDay = null;
         final String currency = DEFAULT_CURRENCY;
         final String timeZone = "UTC";
         final String address1 = "12 rue des ecoles";
@@ -923,7 +920,7 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         final String phone = "81 53 26 56";
 
         // Note: the accountId payload is ignored on account creation
-        return new AccountJson(accountId, name, length, externalKey, email, billCycleDay, currency, null, timeZone,
+        return new AccountJson(accountId, name, length, externalKey, email, null, currency, null, timeZone,
                                address1, address2, postalCode, company, city, state, country, locale, phone, false, false);
     }
 

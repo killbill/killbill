@@ -38,7 +38,7 @@ public class AccountJsonWithBalance extends AccountJson {
                                   @JsonProperty("firstNameLength") final Integer length,
                                   @JsonProperty("externalKey") final String externalKey,
                                   @JsonProperty("email") final String email,
-                                  @JsonProperty("billCycleDay") final BillCycleDayJson billCycleDay,
+                                  @JsonProperty("billCycleDayLocal") final Integer billCycleDayLocal,
                                   @JsonProperty("currency") final String currency,
                                   @JsonProperty("paymentMethodId") final String paymentMethodId,
                                   @JsonProperty("timezone") final String timeZone,
@@ -54,7 +54,7 @@ public class AccountJsonWithBalance extends AccountJson {
                                   @JsonProperty("isMigrated") final Boolean isMigrated,
                                   @JsonProperty("isNotifiedForInvoices") final Boolean isNotifiedForInvoices,
                                   @JsonProperty("accountBalance") final BigDecimal accountBalance) {
-        super(accountId, name, length, externalKey, email, billCycleDay, currency, paymentMethodId, timeZone,
+        super(accountId, name, length, externalKey, email, billCycleDayLocal, currency, paymentMethodId, timeZone,
               address1, address2, postalCode, company, city, state, country, locale, phone, isMigrated, isNotifiedForInvoices);
         this.accountBalance = accountBalance;
     }

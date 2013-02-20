@@ -65,11 +65,11 @@ public interface MutableAccountData extends AccountData {
     public void setCurrency(Currency currency);
 
     /**
-     * Sets the account billCycleDay
+     * Sets the account billCycleDayLocal
      *
-     * @param billCycleDay
+     * @param billCycleDayLocal
      */
-    public void setBillCycleDay(BillCycleDay billCycleDay);
+    public void setBillCycleDayLocal(int billCycleDayLocal);
 
     /**
      * Sets the UUID of the default paymentMethod

@@ -29,7 +29,6 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.Plan;
@@ -193,7 +192,7 @@ public class BlockingCalculator {
 
     protected BillingEvent createNewDisableEvent(final DateTime odEventTime, final BillingEvent previousEvent) {
         final Account account = previousEvent.getAccount();
-        final BillCycleDay billCycleDay = previousEvent.getBillCycleDay();
+        final int billCycleDay = previousEvent.getBillCycleDayLocal();
         final Subscription subscription = previousEvent.getSubscription();
         final DateTime effectiveDate = odEventTime;
         final PlanPhase planPhase = previousEvent.getPlanPhase();
@@ -221,7 +220,7 @@ public class BlockingCalculator {
     protected BillingEvent createNewReenableEvent(final DateTime odEventTime, final BillingEvent previousEvent) {
         // All fields are populated with the event state from before the blocking period, for invoice to resume invoicing
         final Account account = previousEvent.getAccount();
-        final BillCycleDay billCycleDay = previousEvent.getBillCycleDay();
+        final int billCycleDay = previousEvent.getBillCycleDayLocal();
         final Subscription subscription = previousEvent.getSubscription();
         final DateTime effectiveDate = odEventTime;
         final PlanPhase planPhase = previousEvent.getPlanPhase();

@@ -18,19 +18,19 @@ package com.ning.billing.ovedue.notification;
 
 import java.util.UUID;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.util.notificationq.DefaultUUIDNotificationKey;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class OverdueCheckNotificationKey extends DefaultUUIDNotificationKey {
 
     private final Blockable.Type type;
 
     @JsonCreator
-    public OverdueCheckNotificationKey(@JsonProperty("uuidKey") UUID uuidKey,
-            @JsonProperty("type") Blockable.Type type) {
+    public OverdueCheckNotificationKey(@JsonProperty("uuidKey") final UUID uuidKey,
+                                       @JsonProperty("type") final Blockable.Type type) {
         super(uuidKey);
         this.type = type;
     }
@@ -38,5 +38,43 @@ public class OverdueCheckNotificationKey extends DefaultUUIDNotificationKey {
     // Hack : We default to SubscriptionBundle which is the only one supported at the time
     public Blockable.Type getType() {
         return type == null ? Blockable.Type.SUBSCRIPTION_BUNDLE : type;
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+
+        final OverdueCheckNotificationKey that = (OverdueCheckNotificationKey) o;
+
+        if (type != that.type) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (type != null ? type.hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append("OverdueCheckNotificationKey");
+        sb.append("{type=").append(type);
+        sb.append(", uuidKey=").append(getUuidKey());
+        sb.append('}');
+        return sb.toString();
     }
 }

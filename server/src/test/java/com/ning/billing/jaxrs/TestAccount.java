@@ -25,16 +25,12 @@ import java.util.UUID;
 
 import javax.ws.rs.core.Response.Status;
 
-import org.joda.time.DateTime;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.AccountJsonWithBalance;
-import com.ning.billing.jaxrs.json.AccountTimelineJson;
-import com.ning.billing.jaxrs.json.BillCycleDayJson;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
-import com.ning.billing.jaxrs.json.InvoiceJsonSimple;
 import com.ning.billing.jaxrs.json.PaymentJsonSimple;
 import com.ning.billing.jaxrs.json.PaymentMethodJson;
 import com.ning.billing.jaxrs.json.RefundJson;
@@ -64,7 +60,7 @@ public class TestAccount extends TestJaxrsBase {
 
         // Update Account
         final AccountJson newInput = new AccountJson(input.getAccountId(),
-                                                     "zozo", 4, input.getExternalKey(), "rr@google.com", new BillCycleDayJson(18, 18),
+                                                     "zozo", 4, input.getExternalKey(), "rr@google.com", 18,
                                                      "USD", null, "UTC", "bl1", "bh2", "", "", "ca", "San Francisco", "usa", "en", "415-255-2991",
                                                      false, false);
         final AccountJson updatedAccount = updateAccount(input.getAccountId(), newInput);

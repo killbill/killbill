@@ -31,7 +31,6 @@ import com.ning.billing.account.AccountTestSuiteWithEmbeddedDB;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.AccountEmail;
-import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.account.api.DefaultAccountEmail;
 import com.ning.billing.account.api.MutableAccountData;
@@ -199,49 +198,11 @@ public class TestAccountDao extends AccountTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
-    public void testShouldBeAbleToHandleOtherBCDClass() throws Exception {
-        final AccountModelDao account = createTestAccount();
-        accountDao.create(account, internalCallContext);
-
-        final MutableAccountData otherAccount = new DefaultAccount(account).toMutableAccountData();
-        otherAccount.setAddress1(UUID.randomUUID().toString());
-        otherAccount.setEmail(UUID.randomUUID().toString());
-        // Same BCD, but no .equals method
-        otherAccount.setBillCycleDay(new BillCycleDay() {
-            @Override
-            public int getDayOfMonthUTC() {
-                return account.getBillingCycleDayUtc();
-            }
-
-            @Override
-            public int getDayOfMonthLocal() {
-                return account.getBillingCycleDayLocal();
-            }
-        });
-
-        final AccountModelDao newAccount = new AccountModelDao(account.getId(), otherAccount);
-        accountDao.update(newAccount, internalCallContext);
-
-        final AccountModelDao newFetchedAccount = accountDao.getById(account.getId(), internalCallContext);
-        checkAccountsEqual(newFetchedAccount, newAccount);
-        // Verify it is the same BCD
-        Assert.assertEquals(newFetchedAccount.getBillingCycleDayUtc(), account.getBillingCycleDayUtc());
-        Assert.assertEquals(newFetchedAccount.getBillingCycleDayLocal(), account.getBillingCycleDayLocal());
-    }
-
-    @Test(groups = "slow")
-    public void testShouldBeAbleToHandleBCDOfZeroZero() throws Exception {
+    public void testShouldBeAbleToHandleBCDOfZero() throws Exception {
         final AccountModelDao account = createTestAccount(0);
         accountDao.create(account, internalCallContext);
 
-        final MutableAccountData otherAccount = new DefaultAccount(account).toMutableAccountData();
-        // Set BCD to null
-        otherAccount.setBillCycleDay(null);
-
-        final AccountModelDao newAccount = new AccountModelDao(account.getId(), otherAccount);
-        accountDao.update(newAccount, internalCallContext);
-
-        // Same BCD (zero/zero)
+        // Same BCD (zero)
         final AccountModelDao retrievedAccount = accountDao.getById(account.getId(), internalCallContext);
         checkAccountsEqual(retrievedAccount, account);
     }

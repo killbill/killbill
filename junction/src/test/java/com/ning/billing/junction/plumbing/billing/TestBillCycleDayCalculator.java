@@ -26,7 +26,6 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.catalog.api.BillingAlignment;
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogApiException;
@@ -63,60 +62,55 @@ public class TestBillCycleDayCalculator extends JunctionTestSuiteNoDB {
 
         final Account account = Mockito.mock(Account.class);
         Mockito.when(account.getTimeZone()).thenReturn(accountTimeZone);
-        final BillCycleDay billCycleDay = billCycleDayCalculator.calculateBcdForAlignment(BillingAlignment.BUNDLE, bundle, subscription,
+        final Integer billCycleDayLocal = billCycleDayCalculator.calculateBcdForAlignment(BillingAlignment.BUNDLE, bundle, subscription,
                                                                                           account, catalog, null, internalCallContext);
 
-        Assert.assertEquals(billCycleDay.getDayOfMonthUTC(), expectedBCDUTC);
+        Assert.assertEquals(billCycleDayLocal, (Integer) expectedBCDUTC);
     }
 
     @Test(groups = "fast")
     public void testCalculateBCDWithTimeZoneHST() throws Exception {
         final DateTimeZone accountTimeZone = DateTimeZone.forID("HST");
         final DateTime startDateUTC = new DateTime("2012-07-16T21:17:03.000Z", DateTimeZone.UTC);
-        final int bcdUTC = 16;
         final int bcdLocal = 16;
 
-        verifyBCDCalculation(accountTimeZone, startDateUTC, bcdUTC, bcdLocal);
+        verifyBCDCalculation(accountTimeZone, startDateUTC, bcdLocal);
     }
 
     @Test(groups = "fast")
     public void testCalculateBCDWithTimeZoneCEST() throws Exception {
         final DateTimeZone accountTimeZone = DateTimeZone.forID("Europe/Paris");
         final DateTime startDateUTC = new DateTime("2012-07-16T21:17:03.000Z", DateTimeZone.UTC);
-        final int bcdUTC = 16;
         final int bcdLocal = 16;
 
-        verifyBCDCalculation(accountTimeZone, startDateUTC, bcdUTC, bcdLocal);
+        verifyBCDCalculation(accountTimeZone, startDateUTC, bcdLocal);
     }
 
     @Test(groups = "fast")
     public void testCalculateBCDWithTimeZoneUTC() throws Exception {
         final DateTimeZone accountTimeZone = DateTimeZone.UTC;
         final DateTime startDateUTC = new DateTime("2012-07-16T21:17:03.000Z", DateTimeZone.UTC);
-        final int bcdUTC = 16;
         final int bcdLocal = 16;
 
-        verifyBCDCalculation(accountTimeZone, startDateUTC, bcdUTC, bcdLocal);
+        verifyBCDCalculation(accountTimeZone, startDateUTC, bcdLocal);
     }
 
     @Test(groups = "fast")
     public void testCalculateBCDWithTimeZoneEEST() throws Exception {
         final DateTimeZone accountTimeZone = DateTimeZone.forID("+0300");
         final DateTime startDateUTC = new DateTime("2012-07-16T21:17:03.000Z", DateTimeZone.UTC);
-        final int bcdUTC = 16;
         final int bcdLocal = 17;
 
-        verifyBCDCalculation(accountTimeZone, startDateUTC, bcdUTC, bcdLocal);
+        verifyBCDCalculation(accountTimeZone, startDateUTC, bcdLocal);
     }
 
     @Test(groups = "fast")
     public void testCalculateBCDWithTimeZoneJST() throws Exception {
         final DateTimeZone accountTimeZone = DateTimeZone.forID("Asia/Tokyo");
         final DateTime startDateUTC = new DateTime("2012-07-16T21:17:03.000Z", DateTimeZone.UTC);
-        final int bcdUTC = 16;
         final int bcdLocal = 17;
 
-        verifyBCDCalculation(accountTimeZone, startDateUTC, bcdUTC, bcdLocal);
+        verifyBCDCalculation(accountTimeZone, startDateUTC, bcdLocal);
     }
 
     @Test(groups = "fast")
@@ -124,13 +118,12 @@ public class TestBillCycleDayCalculator extends JunctionTestSuiteNoDB {
         // Test to verify the computations don't rely implicitly on UTC
         final DateTimeZone accountTimeZone = DateTimeZone.forID("Asia/Tokyo");
         final DateTime startDate = new DateTime("2012-07-16T21:17:03.000Z", DateTimeZone.forID("HST"));
-        final int bcdUTC = 16;
         final int bcdLocal = 17;
 
-        verifyBCDCalculation(accountTimeZone, startDate, bcdUTC, bcdLocal);
+        verifyBCDCalculation(accountTimeZone, startDate, bcdLocal);
     }
 
-    private void verifyBCDCalculation(final DateTimeZone accountTimeZone, final DateTime startDateUTC, final int bcdUTC, final int bcdLocal) throws AccountApiException, CatalogApiException {
+    private void verifyBCDCalculation(final DateTimeZone accountTimeZone, final DateTime startDateUTC, final int bcdLocal) throws AccountApiException, CatalogApiException {
         final BillCycleDayCalculator billCycleDayCalculator = new BillCycleDayCalculator(Mockito.mock(CatalogService.class), Mockito.mock(EntitlementInternalApi.class));
 
         final Subscription subscription = Mockito.mock(Subscription.class);
@@ -142,8 +135,7 @@ public class TestBillCycleDayCalculator extends JunctionTestSuiteNoDB {
         final Account account = Mockito.mock(Account.class);
         Mockito.when(account.getTimeZone()).thenReturn(accountTimeZone);
 
-        final BillCycleDay bcd = billCycleDayCalculator.calculateBcdFromSubscription(subscription, plan, account, Mockito.mock(Catalog.class), internalCallContext);
-        Assert.assertEquals(bcd.getDayOfMonthUTC(), bcdUTC);
-        Assert.assertEquals(bcd.getDayOfMonthLocal(), bcdLocal);
+        final Integer bcd = billCycleDayCalculator.calculateBcdFromSubscription(subscription, plan, account, Mockito.mock(Catalog.class), internalCallContext);
+        Assert.assertEquals(bcd, (Integer) bcdLocal);
     }
 }
