@@ -26,7 +26,6 @@ import org.testng.annotations.Test;
 import com.ning.billing.account.AccountTestSuiteWithEmbeddedDB;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountData;
-import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.account.api.DefaultMutableAccountData;
 import com.ning.billing.account.api.MigrationAccountData;
@@ -55,7 +54,7 @@ public class TestDefaultAccountUserApi extends AccountTestSuiteWithEmbeddedDB {
         final Account account = accountUserApi.createAccount(new DefaultAccount(createTestAccount()), callContext);
 
         // Update the address and leave other fields null
-        final MutableAccountData mutableAccountData = new DefaultMutableAccountData(null, null, null, 0, null, null, null,
+        final MutableAccountData mutableAccountData = new DefaultMutableAccountData(null, null, null, 0, null, 0, null,
                                                                                     null, null, null, null, null, null,
                                                                                     null, null, null, null, false, false);
         final String newAddress1 = UUID.randomUUID().toString();
@@ -68,8 +67,7 @@ public class TestDefaultAccountUserApi extends AccountTestSuiteWithEmbeddedDB {
         Assert.assertEquals(retrievedAccount.getAddress2(), account.getAddress2());
         Assert.assertEquals(retrievedAccount.getCurrency(), account.getCurrency());
         Assert.assertEquals(retrievedAccount.getExternalKey(), account.getExternalKey());
-        Assert.assertEquals(retrievedAccount.getBillCycleDay().getDayOfMonthLocal(), account.getBillCycleDay().getDayOfMonthLocal());
-        Assert.assertEquals(retrievedAccount.getBillCycleDay().getDayOfMonthUTC(), account.getBillCycleDay().getDayOfMonthUTC());
+        Assert.assertEquals(retrievedAccount.getBillCycleDayLocal(), account.getBillCycleDayLocal());
     }
 
     @Test(groups = "slow", expectedExceptions = IllegalArgumentException.class)
@@ -77,17 +75,7 @@ public class TestDefaultAccountUserApi extends AccountTestSuiteWithEmbeddedDB {
         final Account account = accountUserApi.createAccount(new DefaultAccount(createTestAccount()), callContext);
 
         final MutableAccountData otherAccount = new DefaultAccount(account.getId(), account).toMutableAccountData();
-        otherAccount.setBillCycleDay(new BillCycleDay() {
-            @Override
-            public int getDayOfMonthUTC() {
-                return account.getBillCycleDay().getDayOfMonthUTC() + 2;
-            }
-
-            @Override
-            public int getDayOfMonthLocal() {
-                return account.getBillCycleDay().getDayOfMonthLocal() + 2;
-            }
-        });
+        otherAccount.setBillCycleDayLocal(account.getBillCycleDayLocal() + 2);
 
         accountUserApi.updateAccount(new DefaultAccount(account.getId(), otherAccount), callContext);
     }

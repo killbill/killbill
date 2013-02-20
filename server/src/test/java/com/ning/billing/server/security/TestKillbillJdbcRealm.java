@@ -29,7 +29,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.dbi.MysqlTestingHelper;
-import com.ning.billing.server.ServerTestSuiteWithEmbeddedDB;
+import com.ning.billing.jaxrs.TestJaxrsBase;
 import com.ning.billing.tenant.api.DefaultTenant;
 import com.ning.billing.tenant.dao.DefaultTenantDao;
 import com.ning.billing.tenant.dao.TenantModelDao;
@@ -39,13 +39,17 @@ import com.ning.billing.util.dao.DefaultNonEntityDao;
 import com.jolbox.bonecp.BoneCPConfig;
 import com.jolbox.bonecp.BoneCPDataSource;
 
-public class TestKillbillJdbcRealm extends ServerTestSuiteWithEmbeddedDB {
+public class TestKillbillJdbcRealm extends TestJaxrsBase {
 
     private SecurityManager securityManager;
     private DefaultTenant tenant;
 
+    @Override
     @BeforeMethod(groups = "slow")
-    public void setUp() throws Exception {
+    public void cleanupBeforeMethod() throws Exception {
+
+        super.cleanupBeforeMethod();
+
         // Create the tenant
         final CacheControllerDispatcher controllerDispatcher = new CacheControllerDispatcher();
         final DefaultTenantDao tenantDao = new DefaultTenantDao(getDBI(), clock, controllerDispatcher, new DefaultNonEntityDao(getDBI()));

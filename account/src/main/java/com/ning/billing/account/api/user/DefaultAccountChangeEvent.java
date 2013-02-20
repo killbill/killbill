@@ -155,10 +155,6 @@ public class DefaultAccountChangeEvent extends DefaultBusInternalEvent implement
                           "billCycleDayLocal",
                           String.valueOf(oldData.getBillingCycleDayLocal()), String.valueOf(newData.getBillingCycleDayLocal()));
 
-        addIfValueChanged(tmpChangedFields,
-                          "billCycleDayUTC",
-                          String.valueOf(oldData.getBillingCycleDayUtc()), String.valueOf(newData.getBillingCycleDayUtc()));
-
         addIfValueChanged(tmpChangedFields, "paymentMethodId",
                           (oldData.getPaymentMethodId() != null) ? oldData.getPaymentMethodId().toString() : null,
                           (newData.getPaymentMethodId() != null) ? newData.getPaymentMethodId().toString() : null);

@@ -28,7 +28,6 @@ import org.slf4j.LoggerFactory;
 import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.account.api.MutableAccountData;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
@@ -133,15 +132,15 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
         for (final Subscription subscription : subscriptions) {
             for (final EffectiveSubscriptionInternalEvent transition : entitlementApi.getBillingTransitions(subscription, context)) {
                 try {
-                    final BillCycleDay bcd = bcdCalculator.calculateBcd(bundle, subscription, transition, account, context);
+                    final int bcdLocal = bcdCalculator.calculateBcd(bundle, subscription, transition, account, context);
 
-                    if (account.getBillCycleDay().getDayOfMonthUTC() == 0) {
+                    if (account.getBillCycleDayLocal() == 0) {
                         final MutableAccountData modifiedData = account.toMutableAccountData();
-                        modifiedData.setBillCycleDay(bcd);
+                        modifiedData.setBillCycleDayLocal(bcdLocal);
                         accountApi.updateAccount(account.getExternalKey(), modifiedData, context);
                     }
 
-                    final BillingEvent event = new DefaultBillingEvent(account, transition, subscription, bcd, account.getCurrency(), catalogService.getFullCatalog());
+                    final BillingEvent event = new DefaultBillingEvent(account, transition, subscription, bcdLocal, account.getCurrency(), catalogService.getFullCatalog());
                     result.add(event);
                 } catch (CatalogApiException e) {
                     log.error("Failing to identify catalog components while creating BillingEvent from transition: " +

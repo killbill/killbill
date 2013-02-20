@@ -26,7 +26,6 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.mock.api.MockBillCycleDay;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
@@ -114,7 +113,7 @@ public class TestPaymentHelper {
         Mockito.when(account.getPhone()).thenReturn("123-456-7890");
         Mockito.when(account.getEmail()).thenReturn(email);
         Mockito.when(account.getCurrency()).thenReturn(Currency.USD);
-        Mockito.when(account.getBillCycleDay()).thenReturn(new MockBillCycleDay(1));
+        Mockito.when(account.getBillCycleDayLocal()).thenReturn(1);
         Mockito.when(account.isMigrated()).thenReturn(false);
         Mockito.when(account.isNotifiedForInvoices()).thenReturn(false);
 

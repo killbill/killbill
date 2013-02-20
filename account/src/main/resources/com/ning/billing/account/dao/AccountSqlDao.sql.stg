@@ -11,7 +11,6 @@ tableFields(prefix) ::= <<
 , <prefix>first_name_length
 , <prefix>currency
 , <prefix>billing_cycle_day_local
-, <prefix>billing_cycle_day_utc
 , <prefix>payment_method_id
 , <prefix>time_zone
 , <prefix>locale
@@ -38,7 +37,6 @@ tableValues() ::= <<
 , :firstNameLength
 , :currency
 , :billingCycleDayLocal
-, :billingCycleDayUtc
 , :paymentMethodId
 , :timeZone
 , :locale
@@ -65,7 +63,7 @@ accountRecordIdValueWithComma(prefix) ::= ""
 update() ::= <<
     UPDATE accounts
     SET email = :email, name = :name, first_name_length = :firstNameLength,
-        currency = :currency, billing_cycle_day_local = :billingCycleDayLocal, billing_cycle_day_utc = :billingCycleDayUtc,
+        currency = :currency, billing_cycle_day_local = :billingCycleDayLocal,
         payment_method_id = :paymentMethodId, time_zone = :timeZone, locale = :locale,
         address1 = :address1, address2 = :address2, company_name = :companyName, city = :city, state_or_province = :stateOrProvince,
         country = :country, postal_code = :postalCode, phone = :phone,
