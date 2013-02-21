@@ -83,7 +83,7 @@ public class DefaultAccount extends EntityBase implements Account {
     */
     public DefaultAccount(final UUID id, final String externalKey, final String email,
                           final String name, final Integer firstNameLength,
-                          final Currency currency, final int billCycleDayLocal, final UUID paymentMethodId,
+                          final Currency currency, final Integer billCycleDayLocal, final UUID paymentMethodId,
                           final DateTimeZone timeZone, final String locale,
                           final String address1, final String address2, final String companyName,
                           final String city, final String stateOrProvince, final String country,
@@ -97,7 +97,7 @@ public class DefaultAccount extends EntityBase implements Account {
     public DefaultAccount(final UUID id, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate,
                           final String externalKey, final String email,
                           final String name, final Integer firstNameLength,
-                          final Currency currency, final int billCycleDayLocal, final UUID paymentMethodId,
+                          final Currency currency, final Integer billCycleDayLocal, final UUID paymentMethodId,
                           final DateTimeZone timeZone, final String locale,
                           final String address1, final String address2, final String companyName,
                           final String city, final String stateOrProvince, final String country,
@@ -328,7 +328,7 @@ public class DefaultAccount extends EntityBase implements Account {
 
         final DefaultAccount that = (DefaultAccount) o;
 
-        if (!billCycleDayLocal.equals(that.billCycleDayLocal)) {
+        if (billCycleDayLocal != null ? !billCycleDayLocal.equals(that.billCycleDayLocal) : that.billCycleDayLocal != null) {
             return false;
         }
         if (address1 != null ? !address1.equals(that.address1) : that.address1 != null) {
