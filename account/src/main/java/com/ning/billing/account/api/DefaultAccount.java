@@ -328,7 +328,7 @@ public class DefaultAccount extends EntityBase implements Account {
 
         final DefaultAccount that = (DefaultAccount) o;
 
-        if (!billCycleDayLocal.equals(that.billCycleDayLocal)) {
+        if (billCycleDayLocal != null ? !billCycleDayLocal.equals(that.billCycleDayLocal) : that.billCycleDayLocal != null) {
             return false;
         }
         if (address1 != null ? !address1.equals(that.address1) : that.address1 != null) {
