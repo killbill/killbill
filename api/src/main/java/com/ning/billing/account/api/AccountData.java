@@ -64,7 +64,7 @@ public interface AccountData {
      *
      * @see  com.ning.billing.catalog.api.BillingAlignment
      */
-    public BillCycleDay getBillCycleDay();
+    public Integer getBillCycleDayLocal();
 
     /**
      *

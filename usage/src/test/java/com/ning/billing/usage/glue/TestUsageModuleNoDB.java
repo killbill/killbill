@@ -14,10 +14,16 @@
  * under the License.
  */
 
-package com.ning.billing.usage;
+package com.ning.billing.usage.glue;
 
-import com.ning.billing.KillbillTestSuite;
+import com.ning.billing.GuicyKillbillTestNoDBModule;
 
-public class UsageTestSuite extends KillbillTestSuite {
+public class TestUsageModuleNoDB extends TestUsageModule {
 
+    @Override
+    public void configure() {
+        super.configure();
+
+        install(new GuicyKillbillTestNoDBModule());
+    }
 }

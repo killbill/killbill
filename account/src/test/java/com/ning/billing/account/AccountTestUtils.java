@@ -23,8 +23,6 @@ import org.joda.time.DateTimeZone;
 import org.testng.Assert;
 
 import com.ning.billing.account.api.AccountData;
-import com.ning.billing.account.api.BillCycleDay;
-import com.ning.billing.account.api.DefaultBillCycleDay;
 import com.ning.billing.account.api.DefaultMutableAccountData;
 import com.ning.billing.account.dao.AccountModelDao;
 import com.ning.billing.catalog.api.Currency;
@@ -51,7 +49,6 @@ public abstract class AccountTestUtils {
         Assert.assertEquals(retrievedAccount.getFirstNameLength(), account.getFirstNameLength());
         Assert.assertEquals(retrievedAccount.getCurrency(), account.getCurrency());
         Assert.assertEquals(retrievedAccount.getBillingCycleDayLocal(), account.getBillingCycleDayLocal());
-        Assert.assertEquals(retrievedAccount.getBillingCycleDayUtc(), account.getBillingCycleDayUtc());
         Assert.assertEquals(retrievedAccount.getPaymentMethodId(), account.getPaymentMethodId());
         Assert.assertEquals(retrievedAccount.getTimeZone(), account.getTimeZone());
         Assert.assertEquals(retrievedAccount.getLocale(), account.getLocale());
@@ -96,7 +93,6 @@ public abstract class AccountTestUtils {
         final DateTimeZone timeZone = DateTimeZone.forID("America/Los_Angeles");
         final int firstNameLength = name.length();
         final Currency currency = Currency.MXN;
-        final BillCycleDay billCycleDay = new DefaultBillCycleDay(billCycleDayLocal, billCycleDayUTC);
         final UUID paymentMethodId = UUID.randomUUID();
         final String address1 = UUID.randomUUID().toString();
         final String address2 = UUID.randomUUID().toString();
@@ -107,7 +103,7 @@ public abstract class AccountTestUtils {
         final String postalCode = UUID.randomUUID().toString().substring(0, 4);
 
         return new DefaultMutableAccountData(externalKey, email, name, firstNameLength, currency,
-                                             billCycleDay, paymentMethodId, timeZone,
+                                             billCycleDayLocal, paymentMethodId, timeZone,
                                              locale, address1, address2, companyName, city, stateOrProvince,
                                              country, postalCode, phone, false, true);
     }

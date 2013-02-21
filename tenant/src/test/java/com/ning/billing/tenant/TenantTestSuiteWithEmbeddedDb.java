@@ -16,8 +16,34 @@
 
 package com.ning.billing.tenant;
 
-import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 
-public class TenantTestSuiteWithEmbeddedDb extends KillbillTestSuiteWithEmbeddedDB {
+import com.ning.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
+import com.ning.billing.tenant.dao.DefaultTenantDao;
+import com.ning.billing.tenant.glue.TestTenantModuleWithEmbeddedDB;
 
+import com.google.inject.Guice;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+
+public class TenantTestSuiteWithEmbeddedDb extends GuicyKillbillTestSuiteWithEmbeddedDB {
+
+    @Inject
+    protected DefaultTenantDao tenantDao;
+
+    @BeforeClass(groups = "slow")
+    protected void setup() throws Exception {
+        final Injector injector = Guice.createInjector(new TestTenantModuleWithEmbeddedDB());
+        injector.injectMembers(this);
+    }
+
+    @BeforeMethod(groups = "slow")
+    public void setupTest() {
+    }
+
+    @AfterMethod(groups = "slow")
+    public void cleanupTest() {
+    }
 }

@@ -24,14 +24,10 @@ import org.joda.time.LocalDate;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.analytics.AnalyticsTestSuite;
+import com.ning.billing.analytics.AnalyticsTestSuiteNoDB;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.clock.DefaultClock;
 
-public class TestBusinessInvoice extends AnalyticsTestSuite {
-
-    private final Clock clock = new DefaultClock();
+public class TestBusinessInvoice extends AnalyticsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testEquals() throws Exception {

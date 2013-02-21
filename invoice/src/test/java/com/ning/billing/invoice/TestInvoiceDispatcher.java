@@ -26,8 +26,6 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.mockito.Mockito;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -123,23 +121,23 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
         final MockPlan bicycleTrialEvergreen1USD = MockPlan.createBicycleTrialEvergreen1USD();
         events.add(invoiceUtil.createMockBillingEvent(account, subscription, new DateTime("2012-05-01T00:03:42.000Z"), bicycleTrialEvergreen1USD,
                                                       new MockPlanPhase(bicycleTrialEvergreen1USD, PhaseType.TRIAL), BigDecimal.ZERO, null, account.getCurrency(), BillingPeriod.NO_BILLING_PERIOD,
-                                                      31, 31, BillingModeType.IN_ADVANCE, "CREATE", 1L, SubscriptionTransitionType.CREATE));
+                                                      31, BillingModeType.IN_ADVANCE, "CREATE", 1L, SubscriptionTransitionType.CREATE));
         // Phase change to evergreen
         events.add(invoiceUtil.createMockBillingEvent(account, subscription, new DateTime("2012-05-31T00:03:42.000Z"), bicycleTrialEvergreen1USD,
                                                       new MockPlanPhase(bicycleTrialEvergreen1USD, PhaseType.EVERGREEN), null, new BigDecimal("249.95"), account.getCurrency(), BillingPeriod.MONTHLY,
-                                                      31, 31, BillingModeType.IN_ADVANCE, "PHASE", 2L, SubscriptionTransitionType.PHASE));
+                                                      31, BillingModeType.IN_ADVANCE, "PHASE", 2L, SubscriptionTransitionType.PHASE));
         // Overdue period
         events.add(invoiceUtil.createMockBillingEvent(account, subscription, new DateTime("2012-07-15T00:00:00.000Z"), bicycleTrialEvergreen1USD,
                                                       new MockPlanPhase(bicycleTrialEvergreen1USD, PhaseType.EVERGREEN), null, null, account.getCurrency(), BillingPeriod.NO_BILLING_PERIOD,
-                                                      31, 31, BillingModeType.IN_ADVANCE, "", 0L, SubscriptionTransitionType.START_BILLING_DISABLED));
+                                                      31, BillingModeType.IN_ADVANCE, "", 0L, SubscriptionTransitionType.START_BILLING_DISABLED));
         events.add(invoiceUtil.createMockBillingEvent(account, subscription, new DateTime("2012-07-25T00:00:00.000Z"), bicycleTrialEvergreen1USD,
                                                       new MockPlanPhase(bicycleTrialEvergreen1USD, PhaseType.EVERGREEN), null, new BigDecimal("249.95"), account.getCurrency(), BillingPeriod.MONTHLY,
-                                                      31, 31, BillingModeType.IN_ADVANCE, "", 1L, SubscriptionTransitionType.END_BILLING_DISABLED));
+                                                      31, BillingModeType.IN_ADVANCE, "", 1L, SubscriptionTransitionType.END_BILLING_DISABLED));
         // Upgrade after the overdue period
         final MockPlan jetTrialEvergreen1000USD = MockPlan.createJetTrialEvergreen1000USD();
         events.add(invoiceUtil.createMockBillingEvent(account, subscription, new DateTime("2012-07-25T00:04:00.000Z"), jetTrialEvergreen1000USD,
                                                       new MockPlanPhase(jetTrialEvergreen1000USD, PhaseType.EVERGREEN), null, new BigDecimal("1000"), account.getCurrency(), BillingPeriod.MONTHLY,
-                                                      31, 31, BillingModeType.IN_ADVANCE, "CHANGE", 3L, SubscriptionTransitionType.CHANGE));
+                                                      31, BillingModeType.IN_ADVANCE, "CHANGE", 3L, SubscriptionTransitionType.CHANGE));
 
         Mockito.when(billingApi.getBillingEventsForAccountAndUpdateAccountBCD(Mockito.<UUID>any(), Mockito.<InternalCallContext>any())).thenReturn(events);
         final InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();

@@ -29,7 +29,6 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Test;
 
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
@@ -90,6 +89,7 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
         super.setup();
         entitySqlDaoTransactionalJdbiWrapper = new EntitySqlDaoTransactionalJdbiWrapper(getDBI(), clock, cacheControllerDispatcher, nonEntityDao);
     }
+
     @Override
     @BeforeMethod(groups = "slow")
     public void setupTest() throws Exception {
@@ -341,95 +341,4 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
         Assert.assertTrue(expectedNotificationsFred.get(notificationKeyFred));
         Assert.assertFalse(expectedNotificationsFred.get(notificationKeyBarney));
     }
-
-    @Test(groups = "slow")
-    public void testRemoveNotifications() throws Exception {
-        final UUID key = UUID.randomUUID();
-        final NotificationKey notificationKey = new TestNotificationKey(key.toString());
-        final UUID key2 = UUID.randomUUID();
-        final NotificationKey notificationKey2 = new TestNotificationKey(key2.toString());
-
-        final NotificationQueue queue = queueService.createNotificationQueue("test-svc",
-                                                                             "remove",
-                                                                             new NotificationQueueHandler() {
-                                                                                 @Override
-                                                                                 public void handleReadyNotification(final NotificationKey inputKey, final DateTime eventDateTime, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
-                                                                                     if (inputKey.equals(notificationKey) || inputKey.equals(notificationKey2)) { //ignore stray events from other tests
-                                                                                         log.info("Received notification with key: " + notificationKey);
-                                                                                         eventsReceived++;
-                                                                                     }
-                                                                                 }
-                                                                             });
-        queue.startQueue();
-
-        final DateTime start = clock.getUTCNow().plusHours(1);
-        final int nextReadyTimeIncrementMs = 1000;
-
-        // add 3 events
-
-        entitySqlDaoTransactionalJdbiWrapper.execute(new EntitySqlDaoTransactionWrapper<Void>() {
-            @Override
-            public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                queue.recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory, start.plus(nextReadyTimeIncrementMs), notificationKey, internalCallContext);
-                queue.recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory, start.plus(2 * nextReadyTimeIncrementMs), notificationKey, internalCallContext);
-                queue.recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory, start.plus(3 * nextReadyTimeIncrementMs), notificationKey2, internalCallContext);
-                return null;
-            }
-        });
-
-        queue.removeNotificationsByKey(notificationKey, internalCallContext); // should remove 2 of the 3
-
-        // Move time in the future after the notification effectiveDate
-        ((ClockMock) clock).setDeltaFromReality(4000000 + nextReadyTimeIncrementMs * 3);
-
-        try {
-            await().atMost(10, TimeUnit.SECONDS).until(new Callable<Boolean>() {
-                @Override
-                public Boolean call() throws Exception {
-                    return eventsReceived >= 2;
-                }
-            });
-            Assert.fail("There should only have been only one event left in the queue we got: " + eventsReceived);
-        } catch (Exception e) {
-            // expected behavior
-        }
-        log.info("Received " + eventsReceived + " events");
-        queue.stopQueue();
-    }
-
-    static NotificationQueueConfig getNotificationConfig(final boolean off, final long sleepTime) {
-        return new NotificationQueueConfig() {
-            @Override
-            public boolean isProcessingOff() {
-                return off;
-            }
-
-            @Override
-            public int getPrefetchAmount() {
-                return 10;
-            }
-
-            @Override
-            public long getSleepTimeMs() {
-                return sleepTime;
-            }
-        };
-    }
-
-    /*
-    public static class TestNotificationQueueModule extends AbstractModule {
-
-        @Override
-        protected void configure() {
-            bind(Clock.class).to(ClockMock.class).asEagerSingleton();
-
-            final IDBI dbi = getDBI();
-            bind(IDBI.class).toInstance(dbi);
-            final IDBI otherDbi = getDBI();
-            bind(IDBI.class).annotatedWith(Names.named("global-lock")).toInstance(otherDbi);
-            bind(NotificationQueueService.class).to(DefaultNotificationQueueService.class).asEagerSingleton();
-            bind(NotificationQueueConfig.class).toInstance(getNotificationConfig(false, 100));
-        }
-    }
-    */
 }

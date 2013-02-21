@@ -14,10 +14,16 @@
  * under the License.
  */
 
-package com.ning.billing.tenant;
+package com.ning.billing.usage.glue;
 
-import com.ning.billing.KillbillTestSuite;
+import com.ning.billing.GuicyKillbillTestWithEmbeddedDBModule;
 
-public class TenantTestSuite extends KillbillTestSuite {
+public class TestUsageModuleWithEmbeddedDB extends TestUsageModule {
 
+    @Override
+    public void configure() {
+        super.configure();
+
+        install(new GuicyKillbillTestWithEmbeddedDBModule());
+    }
 }

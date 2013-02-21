@@ -24,12 +24,11 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.mockito.Mockito;
 import org.skife.config.ConfigurationObjectFactory;
-import org.skife.jdbi.v2.DBI;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.ning.billing.meter.MeterTestSuite;
+import com.ning.billing.meter.MeterTestSuiteNoDB;
 import com.ning.billing.meter.timeline.codec.DefaultSampleCoder;
 import com.ning.billing.meter.timeline.codec.SampleCoder;
 import com.ning.billing.meter.timeline.persistent.FileBackedBuffer;
@@ -44,7 +43,7 @@ import com.ning.billing.util.dao.NonEntityDao;
 
 import com.google.common.collect.ImmutableMap;
 
-public class TestInMemoryEventHandler extends MeterTestSuite {
+public class TestInMemoryEventHandler extends MeterTestSuiteNoDB {
 
     private static final UUID HOST_UUID = UUID.randomUUID();
     private static final String EVENT_TYPE = "eventType";

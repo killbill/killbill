@@ -44,27 +44,30 @@ getPendingCountNotifications() ::= <<
     ;
 >>
 
-getNotificationForAccountAndDate() ::= <<
-   select
-       record_id
-     , id
-     , class_name
-     , notification_key
-     , user_token
-     , future_user_token
-     , created_date
-     , creating_owner
-     , effective_date
-     , queue_name
-     , processing_owner
-     , processing_available_date
-     , processing_state
-     , account_record_id
-     , tenant_record_id
-   from notifications
-   where
-   account_record_id = :accountRecordId AND effective_date = :effectiveDate
-   ;
+getFutureNotificationsForAccount() ::= <<
+select
+    record_id
+  , id
+  , class_name
+  , notification_key
+  , user_token
+  , future_user_token
+  , created_date
+  , creating_owner
+  , effective_date
+  , queue_name
+  , processing_owner
+  , processing_available_date
+  , processing_state
+  , account_record_id
+  , tenant_record_id
+from notifications
+where queue_name = :queueName
+and processing_state = 'AVAILABLE'
+and account_record_id = :accountRecordId
+and effective_date >= :now
+order by effective_date, record_id
+;
 >>
 
 removeNotification()  ::= <<

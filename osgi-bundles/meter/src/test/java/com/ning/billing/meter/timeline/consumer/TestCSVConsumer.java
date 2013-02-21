@@ -26,7 +26,7 @@ import org.joda.time.DateTimeZone;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.meter.MeterTestSuite;
+import com.ning.billing.meter.MeterTestSuiteNoDB;
 import com.ning.billing.meter.timeline.chunks.TimelineChunk;
 import com.ning.billing.meter.timeline.codec.DefaultSampleCoder;
 import com.ning.billing.meter.timeline.codec.SampleCoder;
@@ -35,7 +35,7 @@ import com.ning.billing.meter.timeline.samples.ScalarSample;
 import com.ning.billing.meter.timeline.times.DefaultTimelineCoder;
 import com.ning.billing.meter.timeline.times.TimelineCoder;
 
-public class TestCSVConsumer extends MeterTestSuite {
+public class TestCSVConsumer extends MeterTestSuiteNoDB {
 
     private static final int HOST_ID = 1242;
     private static final int SAMPLE_KIND_ID = 12;

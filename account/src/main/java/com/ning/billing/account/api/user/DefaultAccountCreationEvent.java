@@ -21,8 +21,6 @@ import java.util.UUID;
 import org.joda.time.DateTimeZone;
 
 import com.ning.billing.account.api.AccountData;
-import com.ning.billing.account.api.BillCycleDay;
-import com.ning.billing.account.api.DefaultBillCycleDay;
 import com.ning.billing.account.dao.AccountModelDao;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.events.AccountCreationInternalEvent;
@@ -114,7 +112,7 @@ public class DefaultAccountCreationEvent extends DefaultBusInternalEvent impleme
         private final String name;
         private final Integer firstNameLength;
         private final String email;
-        private final DefaultBillCycleDay billCycleDay;
+        private final int billCycleDayLocal;
         private final String currency;
         private final UUID paymentMethodId;
         private final String timeZone;
@@ -135,7 +133,7 @@ public class DefaultAccountCreationEvent extends DefaultBusInternalEvent impleme
                  d.getName(),
                  d.getFirstNameLength(),
                  d.getEmail(),
-                 new DefaultBillCycleDay(d.getBillingCycleDayLocal(), d.getBillingCycleDayUtc()),
+                 d.getBillingCycleDayLocal(),
                  d.getCurrency() != null ? d.getCurrency().name() : null,
                  d.getPaymentMethodId(),
                  d.getTimeZone() != null ? d.getTimeZone().getID() : null,
@@ -157,7 +155,7 @@ public class DefaultAccountCreationEvent extends DefaultBusInternalEvent impleme
                                   @JsonProperty("name") final String name,
                                   @JsonProperty("firstNameLength") final Integer firstNameLength,
                                   @JsonProperty("email") final String email,
-                                  @JsonProperty("billCycleDay") final DefaultBillCycleDay billCycleDay,
+                                  @JsonProperty("billCycleDayLocal") final int billCycleDayLocal,
                                   @JsonProperty("currency") final String currency,
                                   @JsonProperty("paymentMethodId") final UUID paymentMethodId,
                                   @JsonProperty("timeZone") final String timeZone,
@@ -172,12 +170,11 @@ public class DefaultAccountCreationEvent extends DefaultBusInternalEvent impleme
                                   @JsonProperty("phone") final String phone,
                                   @JsonProperty("isMigrated") final boolean isMigrated,
                                   @JsonProperty("isNotifiedForInvoices") final boolean isNotifiedForInvoices) {
-            super();
             this.externalKey = externalKey;
             this.name = name;
             this.firstNameLength = firstNameLength;
             this.email = email;
-            this.billCycleDay = billCycleDay;
+            this.billCycleDayLocal = billCycleDayLocal;
             this.currency = currency;
             this.paymentMethodId = paymentMethodId;
             this.timeZone = timeZone;
@@ -215,8 +212,8 @@ public class DefaultAccountCreationEvent extends DefaultBusInternalEvent impleme
         }
 
         @Override
-        public BillCycleDay getBillCycleDay() {
-            return billCycleDay;
+        public Integer getBillCycleDayLocal() {
+            return billCycleDayLocal;
         }
 
         @Override
@@ -298,180 +295,99 @@ public class DefaultAccountCreationEvent extends DefaultBusInternalEvent impleme
         }
 
         @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = 1;
-            result = prime * result
-                     + ((address1 == null) ? 0 : address1.hashCode());
-            result = prime * result
-                     + ((address2 == null) ? 0 : address2.hashCode());
-            result = prime * result
-                     + ((billCycleDay == null) ? 0 : billCycleDay.hashCode());
-            result = prime * result + ((city == null) ? 0 : city.hashCode());
-            result = prime * result
-                     + ((companyName == null) ? 0 : companyName.hashCode());
-            result = prime * result
-                     + ((country == null) ? 0 : country.hashCode());
-            result = prime * result
-                     + ((currency == null) ? 0 : currency.hashCode());
-            result = prime * result + ((email == null) ? 0 : email.hashCode());
-            result = prime * result
-                     + ((externalKey == null) ? 0 : externalKey.hashCode());
-            result = prime
-                     * result
-                     + ((firstNameLength == null) ? 0 : firstNameLength
-                    .hashCode());
-            result = prime * result
-                     + ((locale == null) ? 0 : locale.hashCode());
-            result = prime * result + ((name == null) ? 0 : name.hashCode());
-            result = prime
-                     * result
-                     + ((paymentMethodId == null) ? 0 : paymentMethodId
-                    .hashCode());
-            result = prime * result + ((phone == null) ? 0 : phone.hashCode());
-            result = prime * result
-                     + ((postalCode == null) ? 0 : postalCode.hashCode());
-            result = prime
-                     * result
-                     + ((stateOrProvince == null) ? 0 : stateOrProvince
-                    .hashCode());
-            result = prime * result
-                     + ((timeZone == null) ? 0 : timeZone.hashCode());
-            return result;
+        public boolean equals(final Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+
+            final DefaultAccountData that = (DefaultAccountData) o;
+
+            if (billCycleDayLocal != that.billCycleDayLocal) {
+                return false;
+            }
+            if (isMigrated != that.isMigrated) {
+                return false;
+            }
+            if (isNotifiedForInvoices != that.isNotifiedForInvoices) {
+                return false;
+            }
+            if (address1 != null ? !address1.equals(that.address1) : that.address1 != null) {
+                return false;
+            }
+            if (address2 != null ? !address2.equals(that.address2) : that.address2 != null) {
+                return false;
+            }
+            if (city != null ? !city.equals(that.city) : that.city != null) {
+                return false;
+            }
+            if (companyName != null ? !companyName.equals(that.companyName) : that.companyName != null) {
+                return false;
+            }
+            if (country != null ? !country.equals(that.country) : that.country != null) {
+                return false;
+            }
+            if (currency != null ? !currency.equals(that.currency) : that.currency != null) {
+                return false;
+            }
+            if (email != null ? !email.equals(that.email) : that.email != null) {
+                return false;
+            }
+            if (externalKey != null ? !externalKey.equals(that.externalKey) : that.externalKey != null) {
+                return false;
+            }
+            if (firstNameLength != null ? !firstNameLength.equals(that.firstNameLength) : that.firstNameLength != null) {
+                return false;
+            }
+            if (locale != null ? !locale.equals(that.locale) : that.locale != null) {
+                return false;
+            }
+            if (name != null ? !name.equals(that.name) : that.name != null) {
+                return false;
+            }
+            if (paymentMethodId != null ? !paymentMethodId.equals(that.paymentMethodId) : that.paymentMethodId != null) {
+                return false;
+            }
+            if (phone != null ? !phone.equals(that.phone) : that.phone != null) {
+                return false;
+            }
+            if (postalCode != null ? !postalCode.equals(that.postalCode) : that.postalCode != null) {
+                return false;
+            }
+            if (stateOrProvince != null ? !stateOrProvince.equals(that.stateOrProvince) : that.stateOrProvince != null) {
+                return false;
+            }
+            if (timeZone != null ? !timeZone.equals(that.timeZone) : that.timeZone != null) {
+                return false;
+            }
+
+            return true;
         }
 
         @Override
-        public boolean equals(final Object obj) {
-            if (this == obj) {
-                return true;
-            }
-            if (obj == null) {
-                return false;
-            }
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
-            final DefaultAccountData other = (DefaultAccountData) obj;
-            if (address1 == null) {
-                if (other.address1 != null) {
-                    return false;
-                }
-            } else if (!address1.equals(other.address1)) {
-                return false;
-            }
-            if (address2 == null) {
-                if (other.address2 != null) {
-                    return false;
-                }
-            } else if (!address2.equals(other.address2)) {
-                return false;
-            }
-            if (billCycleDay == null) {
-                if (other.billCycleDay != null) {
-                    return false;
-                }
-            } else if (!billCycleDay.equals(other.billCycleDay)) {
-                return false;
-            }
-            if (city == null) {
-                if (other.city != null) {
-                    return false;
-                }
-            } else if (!city.equals(other.city)) {
-                return false;
-            }
-            if (companyName == null) {
-                if (other.companyName != null) {
-                    return false;
-                }
-            } else if (!companyName.equals(other.companyName)) {
-                return false;
-            }
-            if (country == null) {
-                if (other.country != null) {
-                    return false;
-                }
-            } else if (!country.equals(other.country)) {
-                return false;
-            }
-            if (currency == null) {
-                if (other.currency != null) {
-                    return false;
-                }
-            } else if (!currency.equals(other.currency)) {
-                return false;
-            }
-            if (email == null) {
-                if (other.email != null) {
-                    return false;
-                }
-            } else if (!email.equals(other.email)) {
-                return false;
-            }
-            if (externalKey == null) {
-                if (other.externalKey != null) {
-                    return false;
-                }
-            } else if (!externalKey.equals(other.externalKey)) {
-                return false;
-            }
-            if (firstNameLength == null) {
-                if (other.firstNameLength != null) {
-                    return false;
-                }
-            } else if (!firstNameLength.equals(other.firstNameLength)) {
-                return false;
-            }
-            if (locale == null) {
-                if (other.locale != null) {
-                    return false;
-                }
-            } else if (!locale.equals(other.locale)) {
-                return false;
-            }
-            if (name == null) {
-                if (other.name != null) {
-                    return false;
-                }
-            } else if (!name.equals(other.name)) {
-                return false;
-            }
-            if (paymentMethodId == null) {
-                if (other.paymentMethodId != null) {
-                    return false;
-                }
-            } else if (!paymentMethodId.equals(other.paymentMethodId)) {
-                return false;
-            }
-            if (phone == null) {
-                if (other.phone != null) {
-                    return false;
-                }
-            } else if (!phone.equals(other.phone)) {
-                return false;
-            }
-            if (postalCode == null) {
-                if (other.postalCode != null) {
-                    return false;
-                }
-            } else if (!postalCode.equals(other.postalCode)) {
-                return false;
-            }
-            if (stateOrProvince == null) {
-                if (other.stateOrProvince != null) {
-                    return false;
-                }
-            } else if (!stateOrProvince.equals(other.stateOrProvince)) {
-                return false;
-            }
-            if (timeZone == null) {
-                if (other.timeZone != null) {
-                    return false;
-                }
-            } else if (!timeZone.equals(other.timeZone)) {
-                return false;
-            }
-            return true;
+        public int hashCode() {
+            int result = externalKey != null ? externalKey.hashCode() : 0;
+            result = 31 * result + (name != null ? name.hashCode() : 0);
+            result = 31 * result + (firstNameLength != null ? firstNameLength.hashCode() : 0);
+            result = 31 * result + (email != null ? email.hashCode() : 0);
+            result = 31 * result + billCycleDayLocal;
+            result = 31 * result + (currency != null ? currency.hashCode() : 0);
+            result = 31 * result + (paymentMethodId != null ? paymentMethodId.hashCode() : 0);
+            result = 31 * result + (timeZone != null ? timeZone.hashCode() : 0);
+            result = 31 * result + (locale != null ? locale.hashCode() : 0);
+            result = 31 * result + (address1 != null ? address1.hashCode() : 0);
+            result = 31 * result + (address2 != null ? address2.hashCode() : 0);
+            result = 31 * result + (companyName != null ? companyName.hashCode() : 0);
+            result = 31 * result + (city != null ? city.hashCode() : 0);
+            result = 31 * result + (stateOrProvince != null ? stateOrProvince.hashCode() : 0);
+            result = 31 * result + (postalCode != null ? postalCode.hashCode() : 0);
+            result = 31 * result + (country != null ? country.hashCode() : 0);
+            result = 31 * result + (phone != null ? phone.hashCode() : 0);
+            result = 31 * result + (isMigrated ? 1 : 0);
+            result = 31 * result + (isNotifiedForInvoices ? 1 : 0);
+            return result;
         }
     }
 }

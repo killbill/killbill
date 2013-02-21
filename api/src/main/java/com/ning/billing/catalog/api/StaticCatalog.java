@@ -57,6 +57,13 @@ public interface StaticCatalog {
     public Product[] getCurrentProducts() throws CatalogApiException;
 
     /**
+     * @return an array of supported {@code Unit}
+     * 
+     * @throws CatalogApiException
+     */
+    public Unit[] getCurrentUnits() throws CatalogApiException;
+
+    /**
      *
      * @return an array of supported {@code Plan}
      *
@@ -137,5 +144,8 @@ public interface StaticCatalog {
 
     public List<Listing> getAvailableBasePlanListings() throws CatalogApiException;
     public List<Listing> getAvailableAddonListings(String baseProductName) throws CatalogApiException;
+
+    boolean compliesWithLimits(String phaseName, String unit, double value) throws CatalogApiException;
+
 
 }

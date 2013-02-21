@@ -24,11 +24,10 @@ import java.util.Map;
 import org.joda.time.DateTime;
 import org.mockito.Mockito;
 import org.skife.config.ConfigurationObjectFactory;
-import org.skife.jdbi.v2.DBI;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.meter.MeterTestSuite;
+import com.ning.billing.meter.MeterTestSuiteNoDB;
 import com.ning.billing.meter.timeline.codec.DefaultSampleCoder;
 import com.ning.billing.meter.timeline.codec.SampleCoder;
 import com.ning.billing.meter.timeline.persistent.TimelineDao;
@@ -44,7 +43,7 @@ import com.ning.billing.util.dao.NonEntityDao;
 
 import com.google.common.collect.ImmutableMap;
 
-public class TestTimelineEventHandler extends MeterTestSuite {
+public class TestTimelineEventHandler extends MeterTestSuiteNoDB {
 
     private static final File basePath = new File(System.getProperty("java.io.tmpdir"), "TestTimelineEventHandler-" + System.currentTimeMillis());
     private static final String EVENT_TYPE = "eventType";

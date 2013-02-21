@@ -53,4 +53,13 @@ public class DefaultAnalyticsService implements AnalyticsService {
             log.error("Unable to register to the EventBus!", e);
         }
     }
+
+    @LifecycleHandlerType(LifecycleHandlerType.LifecycleLevel.UNREGISTER_EVENTS)
+    public void unregisterForNotifications() {
+        try {
+            eventBus.unregister(listener);
+        } catch (InternalBus.EventBusException e) {
+            throw new RuntimeException("Unable to unregister to the EventBus!", e);
+        }
+    }
 }

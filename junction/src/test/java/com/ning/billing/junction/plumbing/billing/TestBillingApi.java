@@ -53,7 +53,6 @@ import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.junction.dao.MockBlockingStateDao;
 import com.ning.billing.mock.MockEffectiveSubscriptionEvent;
 import com.ning.billing.mock.MockSubscription;
-import com.ning.billing.mock.api.MockBillCycleDay;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
@@ -129,7 +128,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
         final Account account = createAccount(10);
 
         final SortedSet<BillingEvent> events = billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), internalCallContext);
-        checkFirstEvent(events, nextPlan, account.getBillCycleDay().getDayOfMonthUTC(), subId, now, nextPhase, SubscriptionTransitionType.CREATE.toString());
+        checkFirstEvent(events, nextPlan, account.getBillCycleDayLocal(), subId, now, nextPhase, SubscriptionTransitionType.CREATE.toString());
     }
 
     @Test(groups = "fast")
@@ -194,9 +193,9 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
         Assert.assertEquals(events.size(), 3);
         final Iterator<BillingEvent> it = events.iterator();
 
-        checkEvent(it.next(), nextPlan, account.getBillCycleDay().getDayOfMonthUTC(), subId, now, nextPhase, SubscriptionTransitionType.CREATE.toString(), nextPhase.getFixedPrice(), nextPhase.getRecurringPrice());
-        checkEvent(it.next(), nextPlan, account.getBillCycleDay().getDayOfMonthUTC(), subId, now.plusDays(1), nextPhase, SubscriptionTransitionType.START_BILLING_DISABLED.toString(), null, null);
-        checkEvent(it.next(), nextPlan, account.getBillCycleDay().getDayOfMonthUTC(), subId, now.plusDays(2), nextPhase, SubscriptionTransitionType.END_BILLING_DISABLED.toString(), nextPhase.getFixedPrice(), nextPhase.getRecurringPrice());
+        checkEvent(it.next(), nextPlan, account.getBillCycleDayLocal(), subId, now, nextPhase, SubscriptionTransitionType.CREATE.toString(), nextPhase.getFixedPrice(), nextPhase.getRecurringPrice());
+        checkEvent(it.next(), nextPlan, account.getBillCycleDayLocal(), subId, now.plusDays(1), nextPhase, SubscriptionTransitionType.START_BILLING_DISABLED.toString(), null, null);
+        checkEvent(it.next(), nextPlan, account.getBillCycleDayLocal(), subId, now.plusDays(2), nextPhase, SubscriptionTransitionType.END_BILLING_DISABLED.toString(), nextPhase.getFixedPrice(), nextPhase.getRecurringPrice());
     }
 
     @Test(groups = "fast")
@@ -252,7 +251,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
             assertNull(event.getRecurringPrice());
         }
 
-        Assert.assertEquals(BCD, event.getBillCycleDay().getDayOfMonthUTC());
+        Assert.assertEquals(BCD, event.getBillCycleDayLocal());
         Assert.assertEquals(id, event.getSubscription().getId());
         Assert.assertEquals(time.getDayOfMonth(), event.getEffectiveDate().getDayOfMonth());
         Assert.assertEquals(nextPhase, event.getPlanPhase());
@@ -266,7 +265,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
 
     private Account createAccount(final int billCycleDay) throws AccountApiException {
         final Account account = Mockito.mock(Account.class);
-        Mockito.when(account.getBillCycleDay()).thenReturn(new MockBillCycleDay(billCycleDay));
+        Mockito.when(account.getBillCycleDayLocal()).thenReturn(billCycleDay);
         Mockito.when(account.getCurrency()).thenReturn(Currency.USD);
         Mockito.when(account.getId()).thenReturn(UUID.randomUUID());
         Mockito.when(account.getTimeZone()).thenReturn(DateTimeZone.UTC);

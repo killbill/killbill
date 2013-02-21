@@ -22,7 +22,6 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.account.api.MutableAccountData;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.junction.api.BlockingState;
@@ -78,8 +77,8 @@ public class BlockingAccount implements Account {
     }
 
     @Override
-    public BillCycleDay getBillCycleDay() {
-        return account.getBillCycleDay();
+    public Integer getBillCycleDayLocal() {
+        return account.getBillCycleDayLocal();
     }
 
     @Override

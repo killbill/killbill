@@ -24,12 +24,11 @@ import java.util.Map;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.mockito.Mockito;
-import org.skife.jdbi.v2.DBI;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.ning.billing.meter.MeterTestSuite;
+import com.ning.billing.meter.MeterTestSuiteNoDB;
 import com.ning.billing.meter.timeline.MockTimelineDao;
 import com.ning.billing.meter.timeline.TimelineSourceEventAccumulator;
 import com.ning.billing.meter.timeline.chunks.TimelineChunk;
@@ -40,7 +39,6 @@ import com.ning.billing.meter.timeline.samples.ScalarSample;
 import com.ning.billing.meter.timeline.sources.SourceSamplesForTimestamp;
 import com.ning.billing.meter.timeline.times.DefaultTimelineCoder;
 import com.ning.billing.meter.timeline.times.TimelineCoder;
-import com.ning.billing.util.cache.CacheController;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.ClockMock;
@@ -49,7 +47,7 @@ import com.ning.billing.util.dao.NonEntityDao;
 import com.google.common.collect.ImmutableMap;
 
 // Lightweight version of TestFileBackedBuffer
-public class TestSamplesReplayer extends MeterTestSuite {
+public class TestSamplesReplayer extends MeterTestSuiteNoDB {
 
     // Total space: 255 * 3 = 765 bytes
     private static final int NB_EVENTS = 3;

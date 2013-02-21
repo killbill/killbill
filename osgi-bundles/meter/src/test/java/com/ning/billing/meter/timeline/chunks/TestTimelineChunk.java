@@ -20,11 +20,11 @@ import org.joda.time.DateTime;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.meter.MeterTestSuite;
+import com.ning.billing.meter.MeterTestSuiteNoDB;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 
-public class TestTimelineChunk extends MeterTestSuite {
+public class TestTimelineChunk extends MeterTestSuiteNoDB {
 
     private final Clock clock = new ClockMock();
 

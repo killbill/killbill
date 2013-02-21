@@ -24,30 +24,15 @@ import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.analytics.dao.BusinessInvoiceSqlDao;
 import com.ning.billing.analytics.model.BusinessInvoiceItemModelDao;
-import com.ning.billing.catalog.MockCatalog;
-import com.ning.billing.catalog.MockCatalogService;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
-import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
-import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
 
-public class TestBusinessInvoiceRecorder extends AnalyticsTestSuite {
-
-    private final AccountInternalApi accountApi = Mockito.mock(AccountInternalApi.class);
-    private final EntitlementInternalApi entitlementApi = Mockito.mock(EntitlementInternalApi.class);
-    private final InvoiceInternalApi invoiceApi = Mockito.mock(InvoiceInternalApi.class);
-    private final BusinessAccountDao bacDao = Mockito.mock(BusinessAccountDao.class);
-    private final BusinessInvoiceSqlDao sqlDao = Mockito.mock(BusinessInvoiceSqlDao.class);
+public class TestBusinessInvoiceRecorder extends AnalyticsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testShouldBeAbleToHandleNullFieldsInInvoiceItem() throws Exception {
-        final BusinessInvoiceDao dao = new BusinessInvoiceDao(accountApi, entitlementApi, invoiceApi, bacDao,
-                                                              sqlDao, new MockCatalogService(new MockCatalog()));
-
         final InvoiceItem invoiceItem = Mockito.mock(InvoiceItem.class);
         Mockito.when(invoiceItem.getAmount()).thenReturn(BigDecimal.TEN);
         Mockito.when(invoiceItem.getCurrency()).thenReturn(Currency.AUD);
@@ -59,7 +44,7 @@ public class TestBusinessInvoiceRecorder extends AnalyticsTestSuite {
         Mockito.when(invoiceItem.getStartDate()).thenReturn(new LocalDate(1985, 9, 10));
         Mockito.when(invoiceItem.getInvoiceItemType()).thenReturn(InvoiceItemType.CREDIT_ADJ);
 
-        final BusinessInvoiceItemModelDao bii = dao.createBusinessInvoiceItem(invoiceItem, internalCallContext);
+        final BusinessInvoiceItemModelDao bii = invoiceDao.createBusinessInvoiceItem(invoiceItem, internalCallContext);
         Assert.assertNotNull(bii);
         Assert.assertEquals(bii.getAmount(), invoiceItem.getAmount());
         Assert.assertEquals(bii.getCurrency(), invoiceItem.getCurrency());

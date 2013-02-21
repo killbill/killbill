@@ -14,9 +14,12 @@
  * under the License.
  */
 
-package com.ning.billing.server;
+package com.ning.billing.usage.glue;
 
-import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
+public class TestUsageModule extends UsageModule {
 
-public abstract class ServerTestSuiteWithEmbeddedDB extends KillbillTestSuiteWithEmbeddedDB {
+    @Override
+    protected void configure() {
+        super.configure();
+    }
 }

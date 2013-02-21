@@ -16,8 +16,29 @@
 
 package com.ning.billing.usage;
 
-import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 
-public class UsageTestSuiteWithEmbeddedDB extends KillbillTestSuiteWithEmbeddedDB {
+import com.ning.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
+import com.ning.billing.usage.glue.TestUsageModuleWithEmbeddedDB;
 
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+
+public class UsageTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWithEmbeddedDB {
+
+    @BeforeClass(groups = "slow")
+    protected void setup() throws Exception {
+        final Injector injector = Guice.createInjector(new TestUsageModuleWithEmbeddedDB());
+        injector.injectMembers(this);
+    }
+
+    @BeforeMethod(groups = "fast")
+    public void setupTest() {
+    }
+
+    @AfterMethod(groups = "fast")
+    public void cleanupTest() {
+    }
 }

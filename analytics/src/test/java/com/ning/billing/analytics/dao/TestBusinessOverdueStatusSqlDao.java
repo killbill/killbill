@@ -20,23 +20,13 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.skife.jdbi.v2.IDBI;
 import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.analytics.AnalyticsTestSuiteWithEmbeddedDB;
 import com.ning.billing.analytics.model.BusinessOverdueStatusModelDao;
 
 public class TestBusinessOverdueStatusSqlDao extends AnalyticsTestSuiteWithEmbeddedDB {
-
-    private BusinessOverdueStatusSqlDao overdueStatusSqlDao;
-
-    @BeforeMethod(groups = "slow")
-    public void setUp() throws Exception {
-        final IDBI dbi = helper.getDBI();
-        overdueStatusSqlDao = dbi.onDemand(BusinessOverdueStatusSqlDao.class);
-    }
 
     @Test(groups = "slow")
     public void testCreate() throws Exception {
