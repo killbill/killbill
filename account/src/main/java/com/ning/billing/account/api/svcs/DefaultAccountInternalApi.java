@@ -59,12 +59,8 @@ public class DefaultAccountInternalApi implements AccountInternalApi {
 
     @Override
     public Account getAccountByRecordId(final Long recordId, final InternalTenantContext context) throws AccountApiException {
-        try {
-            final AccountModelDao account = accountDao.getByRecordId(recordId, context);
-            return new DefaultAccount(account);
-        } catch (NullPointerException e) {
-            return null;
-        }
+        final AccountModelDao accountModelDao = getAccountModelDaoByRecordId(recordId, context);
+        return new DefaultAccount(accountModelDao);
     }
 
     @Override
@@ -115,11 +111,16 @@ public class DefaultAccountInternalApi implements AccountInternalApi {
     }
 
     @Override
-    public UUID getByRecordId(final Long recordId, final InternalCallContext context) throws AccountApiException {
+    public UUID getByRecordId(final Long recordId, final InternalTenantContext context) throws AccountApiException {
+        final AccountModelDao accountModelDao = getAccountModelDaoByRecordId(recordId, context);
+        return accountModelDao.getId();
+    }
+
+    private AccountModelDao getAccountModelDaoByRecordId(final Long recordId, final InternalTenantContext context) throws AccountApiException {
         final AccountModelDao accountModelDao = accountDao.getByRecordId(recordId, context);
         if (accountModelDao == null) {
             throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_RECORD_ID, recordId);
         }
-        return accountModelDao.getId();
+        return accountModelDao;
     }
 }
