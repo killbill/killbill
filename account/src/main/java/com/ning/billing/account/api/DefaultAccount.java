@@ -40,8 +40,8 @@ public class DefaultAccount extends EntityBase implements Account {
     public static final Integer DEFAULT_INTEGER_VALUE = 0;
     public static final Currency DEFAULT_CURRENCY_VALUE = Currency.USD;
     public static final DateTimeZone DEFAULT_TIMEZONE_VALUE = DateTimeZone.UTC;
-    private static final Boolean DEFAULT_MIGRATED_VALUE = true;
-    private static final Boolean DEFAULT_NOTIFIED_FOR_INVOICES_VALUE = false;
+    public static final Boolean DEFAULT_MIGRATED_VALUE = false;
+    public static final Boolean DEFAULT_NOTIFIED_FOR_INVOICES_VALUE = false;
 
     private final String externalKey;
     private final String email;
@@ -83,7 +83,7 @@ public class DefaultAccount extends EntityBase implements Account {
     */
     public DefaultAccount(final UUID id, final String externalKey, final String email,
                           final String name, final Integer firstNameLength,
-                          final Currency currency, final int billCycleDayLocal, final UUID paymentMethodId,
+                          final Currency currency, final Integer billCycleDayLocal, final UUID paymentMethodId,
                           final DateTimeZone timeZone, final String locale,
                           final String address1, final String address2, final String companyName,
                           final String city, final String stateOrProvince, final String country,
@@ -97,7 +97,7 @@ public class DefaultAccount extends EntityBase implements Account {
     public DefaultAccount(final UUID id, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate,
                           final String externalKey, final String email,
                           final String name, final Integer firstNameLength,
-                          final Currency currency, final int billCycleDayLocal, final UUID paymentMethodId,
+                          final Currency currency, final Integer billCycleDayLocal, final UUID paymentMethodId,
                           final DateTimeZone timeZone, final String locale,
                           final String address1, final String address2, final String companyName,
                           final String city, final String stateOrProvince, final String country,
