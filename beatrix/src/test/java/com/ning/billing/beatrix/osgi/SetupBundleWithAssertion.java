@@ -163,7 +163,7 @@ public class SetupBundleWithAssertion {
             @Override
             public File getPluginVersionRoot() {
                 final StringBuilder tmp = new StringBuilder(config.getRootInstallationDir());
-                tmp.append("/")
+                tmp.append("/plugins/")
                    .append(PluginLanguage.JAVA.toString().toLowerCase())
                    .append("/")
                    .append(bundleName)
