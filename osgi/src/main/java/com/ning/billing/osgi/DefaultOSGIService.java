@@ -167,12 +167,27 @@ public class DefaultOSGIService implements OSGIService {
     }
 
     private void installAllJRubyPluginBundles(final BundleContext context, final List<Bundle> installedBundles) throws PluginConfigException, BundleException {
+        final String jrubyBundlePath = findJrubyBundlePath();
+        if (jrubyBundlePath == null) {
+            return;
+        }
+
         final List<PluginRubyConfig> pluginRubyConfigs = pluginFinder.getLatestRubyPlugins();
         for (final PluginRubyConfig cur : pluginRubyConfigs) {
             logger.info("Installing JRuby bundle for plugin {} in {}", cur.getPluginName(), cur.getRubyLoadDir());
-            final Bundle bundle = context.installBundle(osgiConfig.getJrubyBundlePath());
+            final Bundle bundle = context.installBundle("file:" + jrubyBundlePath);
             ((DefaultPluginConfigServiceApi) pluginConfigServiceApi).registerBundle(bundle.getBundleId(), cur);
             installedBundles.add(bundle);
+        }
+    }
+
+    private String findJrubyBundlePath() {
+        final String expectedPath = osgiBundleFinder.getPlatformOSGIBundlesRootDir() + "jruby.jar";
+        if (new File(expectedPath).isFile()) {
+            return expectedPath;
+        } else {
+            logger.warn("Unable to find the JRuby bundle for ruby plugins. If you want to install ruby plugins, copy the jar to " + expectedPath);
+            return null;
         }
     }
 

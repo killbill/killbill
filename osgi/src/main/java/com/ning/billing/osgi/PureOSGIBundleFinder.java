@@ -44,7 +44,7 @@ public class PureOSGIBundleFinder {
     }
 
     public List<String> getLatestBundles() throws PluginConfigException {
-        final String rootDirPath = osgiConfig.getRootInstallationDir() + "/platform/";
+        final String rootDirPath = getPlatformOSGIBundlesRootDir();
         final File rootDir = new File(rootDirPath);
         if (!rootDir.exists() || !rootDir.isDirectory()) {
             logger.warn("Configuration root dir {} is not a valid directory", rootDirPath);
@@ -64,5 +64,9 @@ public class PureOSGIBundleFinder {
         }
 
         return bundles;
+    }
+
+    public String getPlatformOSGIBundlesRootDir() {
+        return osgiConfig.getRootInstallationDir() + "/platform/";
     }
 }

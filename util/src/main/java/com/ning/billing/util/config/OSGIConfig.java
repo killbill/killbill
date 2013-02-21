@@ -73,10 +73,4 @@ public interface OSGIConfig extends KillbillConfig {
              // Let the world know the System bundle exposes the requirement (&(osgi.wiring.package=org.slf4j)(version>=1.7.0)(!(version>=2.0.0)))
              "org.slf4j;version=1.7.2")
     public String getSystemBundleExportPackages();
-
-    // TODO FIXME OSGI
-    @Config("killbill.osgi.jruby.bundle.path")
-    @Default("file:/var/tmp/killbill-osgi-bundles-jruby.jar")
-    public String getJrubyBundlePath();
-
 }
