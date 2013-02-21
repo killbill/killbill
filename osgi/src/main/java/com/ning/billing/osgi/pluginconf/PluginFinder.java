@@ -114,7 +114,7 @@ public class PluginFinder {
     }
 
     private <T extends PluginConfig> void loadPluginsForLanguage(final PluginLanguage pluginLanguage) throws PluginConfigException {
-        final String rootDirPath = osgiConfig.getRootInstallationDir() + "/" + pluginLanguage.toString().toLowerCase();
+        final String rootDirPath = osgiConfig.getRootInstallationDir() + "/plugins/" + pluginLanguage.toString().toLowerCase();
         final File rootDir = new File(rootDirPath);
         if (!rootDir.exists() || !rootDir.isDirectory()) {
             logger.warn("Configuration root dir {} is not a valid directory", rootDirPath);

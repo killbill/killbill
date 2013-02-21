@@ -24,7 +24,6 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
-import org.apache.felix.fileinstall.internal.FileInstall;
 import org.apache.felix.framework.Felix;
 import org.apache.felix.framework.util.FelixConstants;
 import org.osgi.framework.Bundle;
@@ -55,6 +54,7 @@ public class DefaultOSGIService implements OSGIService {
     private static final Logger logger = LoggerFactory.getLogger(DefaultOSGIService.class);
 
     private final OSGIConfig osgiConfig;
+    private final PureOSGIBundleFinder osgiBundleFinder;
     private final PluginFinder pluginFinder;
     private final PluginConfigServiceApi pluginConfigServiceApi;
     private final KillbillActivator killbillActivator;
@@ -62,10 +62,11 @@ public class DefaultOSGIService implements OSGIService {
     private Framework framework;
 
     @Inject
-    public DefaultOSGIService(final OSGIConfig osgiConfig, final PluginFinder pluginFinder,
-                              final PluginConfigServiceApi pluginConfigServiceApi,
+    public DefaultOSGIService(final OSGIConfig osgiConfig, final PureOSGIBundleFinder osgiBundleFinder,
+                              final PluginFinder pluginFinder, final PluginConfigServiceApi pluginConfigServiceApi,
                               final KillbillActivator killbillActivator) {
         this.osgiConfig = osgiConfig;
+        this.osgiBundleFinder = osgiBundleFinder;
         this.pluginFinder = pluginFinder;
         this.pluginConfigServiceApi = pluginConfigServiceApi;
         this.killbillActivator = killbillActivator;
@@ -123,11 +124,11 @@ public class DefaultOSGIService implements OSGIService {
             final BundleContext context = framework.getBundleContext();
 
             // Install all bundles and create service mapping
-            // TODO PIERRE Could we leverage Felix fileinstall plugin to manage Killbill plugins?
 
             final List<Bundle> installedBundles = new LinkedList<Bundle>();
             installAllJavaBundles(context, installedBundles);
-            installAllJRubyBundles(context, installedBundles);
+            installAllJavaPluginBundles(context, installedBundles);
+            installAllJRubyPluginBundles(context, installedBundles);
 
             // Start all the bundles
             for (final Bundle bundle : installedBundles) {
@@ -135,6 +136,7 @@ public class DefaultOSGIService implements OSGIService {
                 try {
                     bundle.start();
                 } catch (BundleException e) {
+                    // TODO PIERRE Don't try to start Fragment bundles
                     logger.warn("Unable to start bundle", e);
                 }
             }
@@ -146,6 +148,15 @@ public class DefaultOSGIService implements OSGIService {
     }
 
     private void installAllJavaBundles(final BundleContext context, final List<Bundle> installedBundles) throws PluginConfigException, BundleException {
+        final List<String> bundleJarPaths = osgiBundleFinder.getLatestBundles();
+        for (final String cur : bundleJarPaths) {
+            logger.info("Installing Java OSGI bundle in {}", cur);
+            final Bundle bundle = context.installBundle("file:" + cur);
+            installedBundles.add(bundle);
+        }
+    }
+
+    private void installAllJavaPluginBundles(final BundleContext context, final List<Bundle> installedBundles) throws PluginConfigException, BundleException {
         final List<PluginJavaConfig> pluginJavaConfigs = pluginFinder.getLatestJavaPlugins();
         for (final PluginJavaConfig cur : pluginJavaConfigs) {
             logger.info("Installing Java bundle for plugin {} in {}", cur.getPluginName(), cur.getBundleJarPath());
@@ -155,7 +166,7 @@ public class DefaultOSGIService implements OSGIService {
         }
     }
 
-    private void installAllJRubyBundles(final BundleContext context, final List<Bundle> installedBundles) throws PluginConfigException, BundleException {
+    private void installAllJRubyPluginBundles(final BundleContext context, final List<Bundle> installedBundles) throws PluginConfigException, BundleException {
         final List<PluginRubyConfig> pluginRubyConfigs = pluginFinder.getLatestRubyPlugins();
         for (final PluginRubyConfig cur : pluginRubyConfigs) {
             logger.info("Installing JRuby bundle for plugin {} in {}", cur.getPluginName(), cur.getRubyLoadDir());
@@ -178,12 +189,11 @@ public class DefaultOSGIService implements OSGIService {
         final Map<Object, Object> felixConfig = new HashMap<Object, Object>();
         felixConfig.putAll(config);
 
-        // Install default bundles in the Framework: Killbill bundle and Felix fileinstall bundle
+        // Install default bundles in the Framework: Killbill bundle only for now
         // Note! Think twice before adding a bundle here as it will run inside the System bundle. This means the bundle
         // context that the bundle will see is the System bundle one, which will break e.g. resources lookup
         felixConfig.put(FelixConstants.SYSTEMBUNDLE_ACTIVATORS_PROP,
-                        ImmutableList.<BundleActivator>of(new FileInstall(),
-                                                          killbillActivator));
+                        ImmutableList.<BundleActivator>of(killbillActivator));
 
         final Framework felix = new Felix(felixConfig);
         felix.init();
