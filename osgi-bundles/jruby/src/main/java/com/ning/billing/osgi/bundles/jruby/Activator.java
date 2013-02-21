@@ -36,15 +36,16 @@ import com.ning.billing.osgi.api.config.PluginRubyConfig;
 public class Activator implements BundleActivator {
 
     private final List<ServiceReference<?>> serviceReferences = new ArrayList<ServiceReference<?>>();
+    private final Logger logger = new Logger();
 
     private OSGIKillbill osgiKillbill;
-    private LogService logger = null;
     private JRubyPlugin plugin = null;
 
     public void start(final BundleContext context) throws Exception {
-        logger = retrieveApi(context, LogService.class);
+        logger.start(context);
+
         osgiKillbill = retrieveApi(context, OSGIKillbill.class);
-        log(LogService.LOG_INFO, "JRuby bundle activated");
+        logger.log(LogService.LOG_INFO, "JRuby bundle activated");
 
         doMagicToMakeJRubyAndFelixHappy();
 
@@ -66,7 +67,7 @@ public class Activator implements BundleActivator {
         killbillServices.put("logger", logger);
         plugin.instantiatePlugin(killbillServices);
 
-        log(LogService.LOG_INFO, "Starting JRuby plugin " + plugin.getPluginMainClass());
+        logger.log(LogService.LOG_INFO, "Starting JRuby plugin " + plugin.getPluginMainClass());
         plugin.startPlugin(context);
     }
 
@@ -92,12 +93,14 @@ public class Activator implements BundleActivator {
     }
 
     public void stop(final BundleContext context) throws Exception {
-        log(LogService.LOG_INFO, "Stopping JRuby plugin " + plugin.getPluginMainClass());
+        logger.log(LogService.LOG_INFO, "Stopping JRuby plugin " + plugin.getPluginMainClass());
         plugin.stopPlugin(context);
 
         for (final ServiceReference apiReference : serviceReferences) {
             context.ungetService(apiReference);
         }
+
+        logger.close();
     }
 
     private Map<String, Object> retrieveKillbillApis(final BundleContext context) {
@@ -144,12 +147,6 @@ public class Activator implements BundleActivator {
             return context.getService(apiReference);
         } else {
             return null;
-        }
-    }
-
-    private void log(final int level, final String message) {
-        if (logger != null) {
-            logger.log(level, message);
         }
     }
 }

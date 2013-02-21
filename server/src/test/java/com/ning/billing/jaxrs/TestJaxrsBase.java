@@ -24,7 +24,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import javax.inject.Inject;
-import javax.servlet.http.HttpServlet;
+import javax.servlet.Servlet;
 
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.joda.time.LocalDate;
@@ -89,7 +89,7 @@ public class TestJaxrsBase extends KillbillClient {
     protected static final int DEFAULT_HTTP_TIMEOUT_SEC = 6000; // 5;
 
     @Inject
-    protected OSGIServiceRegistration<HttpServlet> servletRouter;
+    protected OSGIServiceRegistration<Servlet> servletRouter;
 
     protected static TestKillbillGuiceListener listener;
 

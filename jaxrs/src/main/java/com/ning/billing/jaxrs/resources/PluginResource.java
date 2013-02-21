@@ -18,10 +18,14 @@ package com.ning.billing.jaxrs.resources;
 
 import java.io.IOException;
 
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpServletResponseWrapper;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.HEAD;
@@ -29,7 +33,6 @@ import javax.ws.rs.OPTIONS;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Response;
 
 import com.ning.billing.jaxrs.util.Context;
@@ -43,7 +46,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 @Singleton
-@Path(JaxrsResource.PLUGINS_PATH)
+@Path(JaxrsResource.PLUGINS_PATH + "{subResources:.*}")
 public class PluginResource extends JaxRsResourceBase {
 
     private final HttpServlet osgiServlet;
@@ -60,65 +63,96 @@ public class PluginResource extends JaxRsResourceBase {
     }
 
     @DELETE
-    @Path("/{pluginName:" + STRING_PATTERN + "}/{rest:.+}")
-    public Response doDELETE(@PathParam("pluginName") final String pluginName,
-                             @javax.ws.rs.core.Context final HttpServletRequest request,
-                             @javax.ws.rs.core.Context final HttpServletResponse response) throws ServletException, IOException {
-        return serviceViaOSGIPlugin(pluginName, request, response);
+    public Response doDELETE(@javax.ws.rs.core.Context final HttpServletRequest request,
+                             @javax.ws.rs.core.Context final HttpServletResponse response,
+                             @javax.ws.rs.core.Context final ServletContext servletContext,
+                             @javax.ws.rs.core.Context final ServletConfig servletConfig) throws ServletException, IOException {
+        return serviceViaOSGIPlugin(request, response, servletContext, servletConfig);
     }
 
     @GET
-    @Path("/{pluginName:" + STRING_PATTERN + "}/{rest:.+}")
-    public Response doGET(@PathParam("pluginName") final String pluginName,
-                          @javax.ws.rs.core.Context final HttpServletRequest request,
-                          @javax.ws.rs.core.Context final HttpServletResponse response) throws ServletException, IOException {
-        return serviceViaOSGIPlugin(pluginName, request, response);
+    public Response doGET(@javax.ws.rs.core.Context final HttpServletRequest request,
+                          @javax.ws.rs.core.Context final HttpServletResponse response,
+                          @javax.ws.rs.core.Context final ServletContext servletContext,
+                          @javax.ws.rs.core.Context final ServletConfig servletConfig) throws ServletException, IOException {
+        return serviceViaOSGIPlugin(request, response, servletContext, servletConfig);
     }
 
     @OPTIONS
-    @Path("/{pluginName:" + STRING_PATTERN + "}/{rest:.+}")
-    public Response doOPTIONS(@PathParam("pluginName") final String pluginName,
-                              @javax.ws.rs.core.Context final HttpServletRequest request,
-                              @javax.ws.rs.core.Context final HttpServletResponse response) throws ServletException, IOException {
-        return serviceViaOSGIPlugin(pluginName, request, response);
+    public Response doOPTIONS(@javax.ws.rs.core.Context final HttpServletRequest request,
+                              @javax.ws.rs.core.Context final HttpServletResponse response,
+                              @javax.ws.rs.core.Context final ServletContext servletContext,
+                              @javax.ws.rs.core.Context final ServletConfig servletConfig) throws ServletException, IOException {
+        return serviceViaOSGIPlugin(request, response, servletContext, servletConfig);
     }
 
     @POST
-    @Path("/{pluginName:" + STRING_PATTERN + "}/{rest:.+}")
-    public Response doPOST(@PathParam("pluginName") final String pluginName,
-                           @javax.ws.rs.core.Context final HttpServletRequest request,
-                           @javax.ws.rs.core.Context final HttpServletResponse response) throws ServletException, IOException {
-        return serviceViaOSGIPlugin(pluginName, request, response);
+    public Response doPOST(@javax.ws.rs.core.Context final HttpServletRequest request,
+                           @javax.ws.rs.core.Context final HttpServletResponse response,
+                           @javax.ws.rs.core.Context final ServletContext servletContext,
+                           @javax.ws.rs.core.Context final ServletConfig servletConfig) throws ServletException, IOException {
+        return serviceViaOSGIPlugin(request, response, servletContext, servletConfig);
     }
 
     @PUT
-    @Path("/{pluginName:" + STRING_PATTERN + "}/{rest:.+}")
-    public Response doPUT(@PathParam("pluginName") final String pluginName,
-                          @javax.ws.rs.core.Context final HttpServletRequest request,
-                          @javax.ws.rs.core.Context final HttpServletResponse response) throws ServletException, IOException {
-        return serviceViaOSGIPlugin(pluginName, request, response);
+    public Response doPUT(@javax.ws.rs.core.Context final HttpServletRequest request,
+                          @javax.ws.rs.core.Context final HttpServletResponse response,
+                          @javax.ws.rs.core.Context final ServletContext servletContext,
+                          @javax.ws.rs.core.Context final ServletConfig servletConfig) throws ServletException, IOException {
+        return serviceViaOSGIPlugin(request, response, servletContext, servletConfig);
     }
 
     @HEAD
-    @Path("/{pluginName:" + STRING_PATTERN + "}/{rest:.+}")
-    public Response doHEAD(@PathParam("pluginName") final String pluginName,
-                           @javax.ws.rs.core.Context final HttpServletRequest request,
-                           @javax.ws.rs.core.Context final HttpServletResponse response) throws ServletException, IOException {
-        prepareOSGIRequest(pluginName, request);
-        osgiServlet.service(request, response);
+    public Response doHEAD(@javax.ws.rs.core.Context final HttpServletRequest request,
+                           @javax.ws.rs.core.Context final HttpServletResponse response,
+                           @javax.ws.rs.core.Context final ServletContext servletContext,
+                           @javax.ws.rs.core.Context final ServletConfig servletConfig) throws ServletException, IOException {
+        serviceViaOSGIPlugin(request, response, servletContext, servletConfig);
 
         // Make sure to return 204
         return Response.noContent().build();
     }
 
-    private Response serviceViaOSGIPlugin(final String pluginName, final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
-        prepareOSGIRequest(pluginName, request);
-        osgiServlet.service(request, response);
+    private Response serviceViaOSGIPlugin(final HttpServletRequest request, final HttpServletResponse response,
+                                          final ServletContext servletContext, final ServletConfig servletConfig) throws ServletException, IOException {
+        prepareOSGIRequest(request, servletContext, servletConfig);
+        osgiServlet.service(new OSGIServletRequestWrapper(request), new OSGIServletResponseWrapper(response));
 
         return Response.status(response.getStatus()).build();
     }
 
-    private void prepareOSGIRequest(final String pluginName, final HttpServletRequest request) {
-        request.setAttribute("killbill.osgi.pluginName", pluginName);
+    private void prepareOSGIRequest(final HttpServletRequest request, final ServletContext servletContext, final ServletConfig servletConfig) {
+        request.setAttribute("killbill.osgi.servletContext", servletContext);
+        request.setAttribute("killbill.osgi.servletConfig", servletConfig);
+    }
+
+    // Request wrapper to hide the /plugins prefix to OSGI bundles
+    private static final class OSGIServletRequestWrapper extends HttpServletRequestWrapper {
+
+        public OSGIServletRequestWrapper(final HttpServletRequest request) {
+            super(request);
+        }
+
+        @Override
+        public String getPathInfo() {
+            return super.getPathInfo().replace(JaxrsResource.PLUGINS_PATH, "");
+        }
+
+        @Override
+        public String getContextPath() {
+            return JaxrsResource.PLUGINS_PATH;
+        }
+
+        @Override
+        public String getServletPath() {
+            return super.getServletPath().replace(JaxrsResource.PLUGINS_PATH, "");
+        }
+    }
+
+    private static final class OSGIServletResponseWrapper extends HttpServletResponseWrapper {
+
+        public OSGIServletResponseWrapper(final HttpServletResponse response) {
+            super(response);
+        }
     }
 }

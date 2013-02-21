@@ -24,35 +24,29 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
+import org.apache.felix.fileinstall.internal.FileInstall;
 import org.apache.felix.framework.Felix;
 import org.apache.felix.framework.util.FelixConstants;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
-import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceReference;
 import org.osgi.framework.launch.Framework;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.osgi.logservice.impl.Activator;
 
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
-import com.ning.billing.osgi.api.OSGIPluginProperties;
 import com.ning.billing.osgi.api.OSGIService;
-import com.ning.billing.osgi.api.OSGIServiceRegistration;
 import com.ning.billing.osgi.api.config.PluginConfigServiceApi;
 import com.ning.billing.osgi.api.config.PluginJavaConfig;
 import com.ning.billing.osgi.api.config.PluginRubyConfig;
 import com.ning.billing.osgi.pluginconf.DefaultPluginConfigServiceApi;
 import com.ning.billing.osgi.pluginconf.PluginConfigException;
 import com.ning.billing.osgi.pluginconf.PluginFinder;
-import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 import com.ning.billing.util.config.OSGIConfig;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 public class DefaultOSGIService implements OSGIService {
 
@@ -60,15 +54,12 @@ public class DefaultOSGIService implements OSGIService {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultOSGIService.class);
 
-
     private final OSGIConfig osgiConfig;
     private final PluginFinder pluginFinder;
     private final PluginConfigServiceApi pluginConfigServiceApi;
     private final KillbillActivator killbillActivator;
 
     private Framework framework;
-    private volatile ServiceReference[] paymentApiReferences;
-    private Map<String, PaymentPluginApi> paymentPluginApis;
 
     @Inject
     public DefaultOSGIService(final OSGIConfig osgiConfig, final PluginFinder pluginFinder,
@@ -115,7 +106,6 @@ public class DefaultOSGIService implements OSGIService {
     public void startFramework() {
     }
 
-
     @LifecycleHandlerType(LifecycleLevel.STOP_SERVICE)
     public void stop() {
         try {
@@ -133,6 +123,8 @@ public class DefaultOSGIService implements OSGIService {
             final BundleContext context = framework.getBundleContext();
 
             // Install all bundles and create service mapping
+            // TODO PIERRE Could we leverage Felix fileinstall plugin to manage Killbill plugins?
+
             final List<Bundle> installedBundles = new LinkedList<Bundle>();
             installAllJavaBundles(context, installedBundles);
             installAllJRubyBundles(context, installedBundles);
@@ -186,8 +178,12 @@ public class DefaultOSGIService implements OSGIService {
         final Map<Object, Object> felixConfig = new HashMap<Object, Object>();
         felixConfig.putAll(config);
 
-        // Install default bundles: killbill and slf4j ones
-        felixConfig.put(FelixConstants.SYSTEMBUNDLE_ACTIVATORS_PROP, ImmutableList.<BundleActivator>of(killbillActivator, new Activator()));
+        // Install default bundles in the Framework: Killbill bundle and Felix fileinstall bundle
+        // Note! Think twice before adding a bundle here as it will run inside the System bundle. This means the bundle
+        // context that the bundle will see is the System bundle one, which will break e.g. resources lookup
+        felixConfig.put(FelixConstants.SYSTEMBUNDLE_ACTIVATORS_PROP,
+                        ImmutableList.<BundleActivator>of(new FileInstall(),
+                                                          killbillActivator));
 
         final Framework felix = new Felix(felixConfig);
         felix.init();

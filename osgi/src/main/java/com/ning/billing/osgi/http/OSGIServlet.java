@@ -17,21 +17,26 @@
 package com.ning.billing.osgi.http;
 
 import java.io.IOException;
+import java.util.Vector;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import javax.servlet.Servlet;
+import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
-
-import com.ning.billing.osgi.api.OSGIServiceRegistration;
 
 @Singleton
 public class OSGIServlet extends HttpServlet {
 
+    private final Vector<Servlet> initializedServlets = new Vector<Servlet>();
+    private final Object servletsMonitor = new Object();
+
     @Inject
-    private OSGIServiceRegistration<HttpServlet> servletRouter;
+    private DefaultServletRouter servletRouter;
 
     @Override
     protected void doGet(final HttpServletRequest req, final HttpServletResponse resp) throws ServletException, IOException {
@@ -64,16 +69,57 @@ public class OSGIServlet extends HttpServlet {
     }
 
     private void serviceViaPlugin(final HttpServletRequest req, final HttpServletResponse resp) throws ServletException, IOException {
-        final HttpServlet pluginServlet = getPluginServlet(req);
+        // requestPath is the full path minus the JAX-RS prefix (/plugins)
+        final String requestPath = req.getServletPath() + req.getPathInfo();
+
+        final Servlet pluginServlet = getPluginServlet(requestPath);
         if (pluginServlet != null) {
-            pluginServlet.service(req, resp);
+            initializeServletIfNeeded(req, pluginServlet);
+            final OSGIServletRequestWrapper requestWrapper = new OSGIServletRequestWrapper(req, servletRouter.getPluginPrefixForPath(requestPath));
+            pluginServlet.service(requestWrapper, resp);
         } else {
             resp.sendError(404);
         }
     }
 
-    private HttpServlet getPluginServlet(final HttpServletRequest req) {
-        final String pluginName = (String) req.getAttribute("killbill.osgi.pluginName");
+    // Request wrapper to hide the plugin prefix to OSGI servlets (the plugin prefix serves as a servlet path)
+    private static final class OSGIServletRequestWrapper extends HttpServletRequestWrapper {
+
+        private final String pluginPrefix;
+
+        public OSGIServletRequestWrapper(final HttpServletRequest request, final String pluginPrefix) {
+            super(request);
+            this.pluginPrefix = pluginPrefix;
+        }
+
+        @Override
+        public String getPathInfo() {
+            return super.getPathInfo().replace(pluginPrefix, "");
+        }
+
+        @Override
+        public String getContextPath() {
+            return super.getContextPath() + pluginPrefix;
+        }
+    }
+
+    // Hack to bridge the gap between the web container and the OSGI servlets
+    private void initializeServletIfNeeded(final HttpServletRequest req, final Servlet pluginServlet) throws ServletException {
+        if (!initializedServlets.contains(pluginServlet)) {
+            synchronized (servletsMonitor) {
+                if (!initializedServlets.contains(pluginServlet)) {
+                    final ServletConfig servletConfig = (ServletConfig) req.getAttribute("killbill.osgi.servletConfig");
+                    if (servletConfig != null) {
+                        // TODO PIERRE The servlet will never be destroyed!
+                        pluginServlet.init(servletConfig);
+                        initializedServlets.add(pluginServlet);
+                    }
+                }
+            }
+        }
+    }
+
+    private Servlet getPluginServlet(final String pluginName) {
         if (pluginName != null) {
             return servletRouter.getServiceForPluginName(pluginName);
         } else {

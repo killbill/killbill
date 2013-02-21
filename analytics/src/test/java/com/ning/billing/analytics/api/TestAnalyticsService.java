@@ -176,9 +176,8 @@ public class TestAnalyticsService extends AnalyticsTestSuiteWithEmbeddedDB {
         invoiceCreationNotification = new DefaultInvoiceCreationEvent(invoice.getId(), account.getId(),
                                                                       INVOICE_AMOUNT, ACCOUNT_CURRENCY, null, 1L, 1L);
 
-
-        paymentInfoNotification = new DefaultPaymentInfoEvent(UUID.randomUUID(), account.getId(), invoice.getId(), null, INVOICE_AMOUNT, -1,
-                                                              PaymentStatus.UNKNOWN, null, null, null, clock.getUTCNow(), 1L, 1L);
+        paymentInfoNotification = new DefaultPaymentInfoEvent(account.getId(), invoice.getId(), null, INVOICE_AMOUNT, -1,
+                                                              PaymentStatus.UNKNOWN, null, clock.getUTCNow(), 1L, 1L);
     }
 
     @Test(groups = "slow")
