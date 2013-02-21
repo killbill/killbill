@@ -40,8 +40,8 @@ public class DefaultAccount extends EntityBase implements Account {
     public static final Integer DEFAULT_INTEGER_VALUE = 0;
     public static final Currency DEFAULT_CURRENCY_VALUE = Currency.USD;
     public static final DateTimeZone DEFAULT_TIMEZONE_VALUE = DateTimeZone.UTC;
-    private static final Boolean DEFAULT_MIGRATED_VALUE = true;
-    private static final Boolean DEFAULT_NOTIFIED_FOR_INVOICES_VALUE = false;
+    public static final Boolean DEFAULT_MIGRATED_VALUE = false;
+    public static final Boolean DEFAULT_NOTIFIED_FOR_INVOICES_VALUE = false;
 
     private final String externalKey;
     private final String email;
