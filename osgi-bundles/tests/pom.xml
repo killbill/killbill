@@ -23,13 +23,10 @@
         <version>0.1.56-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
-    <artifactId>killbill-osgi-all-bundles</artifactId>
-    <name>Killbill billing platform: OSGI ALL bundles</name>
+    <artifactId>killbill-osgi-test-bundles</artifactId>
+    <name>Killbill billing platform: OSGI Test bundles</name>
     <packaging>pom</packaging>
     <modules>
-        <module>libs</module>
-        <module>bundles</module>
-        <module>tests</module>
-        <module>defaultbundles</module>
+        <module>test</module>
     </modules>
 </project>

@@ -200,7 +200,7 @@
                         <phase>initialize</phase>
                         <configuration>
                             <tasks>
-                                <copy file="${basedir}/../osgi-bundles/test/target/killbill-osgi-bundles-test-${project.version}-jar-with-dependencies.jar" tofile="${basedir}/src/test/resources/killbill-osgi-bundles-test-${project.version}-jar-with-dependencies.jar"/>
+                                <copy file="${basedir}/../osgi-bundles/tests/test/target/killbill-osgi-bundles-test-${project.version}-jar-with-dependencies.jar" tofile="${basedir}/src/test/resources/killbill-osgi-bundles-test-${project.version}-jar-with-dependencies.jar"/>
                             </tasks>
                         </configuration>
                         <goals>
