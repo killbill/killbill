@@ -33,7 +33,8 @@ import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 public class TestBlockingApi extends JunctionTestSuiteWithEmbeddedDB {
 
     @BeforeMethod(groups = "slow")
-    public void clean() {
+    public void beforeMethod() throws Exception {
+        super.beforeMethod();
         clock.resetDeltaFromReality();
     }
 

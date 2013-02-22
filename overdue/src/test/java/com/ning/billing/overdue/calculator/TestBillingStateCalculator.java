@@ -42,8 +42,10 @@ public class TestBillingStateCalculator extends OverdueTestSuiteNoDB {
 
     protected LocalDate now;
 
+    @Override
     @BeforeMethod(groups = "fast")
-    public void setUp() throws Exception {
+    public void beforeMethod() throws Exception {
+        super.beforeMethod();
         final Account account = Mockito.mock(Account.class);
         Mockito.when(account.getTimeZone()).thenReturn(DateTimeZone.UTC);
         Mockito.when(accountApi.getAccountById(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(account);

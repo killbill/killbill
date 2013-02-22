@@ -51,9 +51,10 @@ public class TestDefaultInvoiceMigrationApi extends InvoiceTestSuiteWithEmbedded
     private static final BigDecimal MIGRATION_INVOICE_AMOUNT = new BigDecimal("100.00");
     private static final Currency MIGRATION_INVOICE_CURRENCY = Currency.USD;
 
+    @Override
     @BeforeMethod(groups = "slow")
-    public void setupTest() throws Exception {
-        super.setupTest();
+    public void beforeMethod() throws Exception {
+        super.beforeMethod();
         date_migrated = clock.getUTCToday().minusYears(1);
         date_regular = clock.getUTCNow();
 

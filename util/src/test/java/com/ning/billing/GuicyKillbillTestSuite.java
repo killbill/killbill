@@ -55,14 +55,14 @@ public class GuicyKillbillTestSuite {
     }
 
     @BeforeMethod(alwaysRun = true)
-    public void startTestSuite(final Method method) throws Exception {
+    public void beforeMethodAlwaysRun(final Method method) throws Exception {
         log.info("***************************************************************************************************");
         log.info("*** Starting test {}:{}", method.getDeclaringClass().getName(), method.getName());
         log.info("***************************************************************************************************");
     }
 
     @AfterMethod(alwaysRun = true)
-    public void endTestSuite(final Method method, final ITestResult result) throws Exception {
+    public void afterMethodAlwaysRun(final Method method, final ITestResult result) throws Exception {
         log.info("***************************************************************************************************");
         log.info("***   Ending test {}:{} {} ({} s.)", new Object[]{method.getDeclaringClass().getName(), method.getName(),
                 result.isSuccess() ? "SUCCESS" : "!!! FAILURE !!!",

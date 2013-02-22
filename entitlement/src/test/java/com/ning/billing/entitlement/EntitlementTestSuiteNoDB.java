@@ -93,14 +93,14 @@ public class EntitlementTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     protected SubscriptionBundle bundle;
 
     @BeforeClass(groups = "fast")
-    public void setup() throws Exception {
+    public void beforeClass() throws Exception {
         DefaultEntitlementTestInitializer.loadSystemPropertiesFromClasspath("/entitlement.properties");
         final Injector g = Guice.createInjector(Stage.PRODUCTION, new TestEngineModuleNoDB());
         g.injectMembers(this);
     }
 
     @BeforeMethod(groups = "fast")
-    public void setupTest() throws Exception {
+    public void beforeMethod() throws Exception {
 
         // CLEANUP ALL DB TABLES OR IN MEMORY STRUCTURES
         ((MockEntitlementDaoMemory) dao).reset();
@@ -113,7 +113,7 @@ public class EntitlementTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     }
 
     @AfterMethod(groups = "fast")
-    public void cleanupTest() throws Exception {
+    public void afterMethod() throws Exception {
         entitlementTestInitializer.stopTestFramework(testListener, busService, entitlementService);
     }
 

@@ -58,11 +58,13 @@ public class TestDefaultAuditUserApi extends AuditLogsTestBase {
 
     @Override
     @BeforeClass(groups = "fast")
-    public void setup() throws Exception {
-        super.setup();
+    public void beforeClass() throws Exception {
+        super.beforeClass();
         auditLogs = ImmutableList.<AuditLog>of(createAuditLog(), createAuditLog(), createAuditLog(), createAuditLog());
         objectIds = ImmutableList.<UUID>of(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
-        super.setup();
+
+//        super.setup();
+
         for (final TableName tableName : TableName.values()) {
             for (final UUID objectId : objectIds) {
                 for (final AuditLog auditLog : auditLogs) {

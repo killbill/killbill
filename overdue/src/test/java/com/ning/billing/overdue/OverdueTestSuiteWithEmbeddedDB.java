@@ -89,13 +89,14 @@ public abstract class OverdueTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     protected TestOverdueHelper testOverdueHelper;
 
     @BeforeClass(groups = "slow")
-    protected void setup() throws Exception {
+    protected void beforeClass() throws Exception {
         final Injector injector = Guice.createInjector(new TestOverdueModuleWithEmbeddedDB());
         injector.injectMembers(this);
     }
 
     @BeforeMethod(groups = "slow")
-    public void setupTest() throws Exception {
+    public void beforeMethod() throws Exception {
+        super.beforeMethod();
         bus.register(listener);
         bus.start();
 
@@ -106,7 +107,7 @@ public abstract class OverdueTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     }
 
     @AfterMethod(groups = "slow")
-    public void cleanupTest() throws Exception {
+    public void afterMethod() throws Exception {
         service.stop();
         bus.stop();
     }

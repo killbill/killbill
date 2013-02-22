@@ -67,7 +67,8 @@ public class TestAnalyticsDao extends AnalyticsTestSuiteWithEmbeddedDB {
     private final Catalog catalog = Mockito.mock(Catalog.class);
 
     @BeforeClass(groups = "slow")
-    public void setupMocks() throws IOException, ClassNotFoundException, SQLException, CatalogApiException {
+    public void beforeClass() throws Exception {
+        super.beforeClass();
         Mockito.when(catalog.findPlan(Mockito.anyString(), Mockito.<DateTime>any())).thenReturn(plan);
         Mockito.when(catalog.findPlan(Mockito.anyString(), Mockito.<DateTime>any(), Mockito.<DateTime>any())).thenReturn(plan);
         Mockito.when(catalog.findPhase(Mockito.anyString(), Mockito.<DateTime>any(), Mockito.<DateTime>any())).thenReturn(phase);

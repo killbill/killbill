@@ -44,7 +44,8 @@ public class TestVersionedCatalog extends CatalogTestSuiteNoDB {
     private VersionedCatalog vc;
 
     @BeforeClass(groups = "fast")
-    public void setUp() throws ServiceException {
+    public void beforeClass() throws Exception {
+        super.beforeClass();
         vc = loader.load(Resources.getResource("versionedCatalog").toString());
     }
 

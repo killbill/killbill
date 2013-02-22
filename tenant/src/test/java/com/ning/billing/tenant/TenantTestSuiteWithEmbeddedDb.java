@@ -34,16 +34,17 @@ public class TenantTestSuiteWithEmbeddedDb extends GuicyKillbillTestSuiteWithEmb
     protected DefaultTenantDao tenantDao;
 
     @BeforeClass(groups = "slow")
-    protected void setup() throws Exception {
+    protected void beforeClass() throws Exception {
         final Injector injector = Guice.createInjector(new TestTenantModuleWithEmbeddedDB());
         injector.injectMembers(this);
     }
 
     @BeforeMethod(groups = "slow")
-    public void setupTest() {
+    public void beforeMethod() throws Exception {
+        super.beforeMethod();
     }
 
     @AfterMethod(groups = "slow")
-    public void cleanupTest() {
+    public void afterMethod() {
     }
 }

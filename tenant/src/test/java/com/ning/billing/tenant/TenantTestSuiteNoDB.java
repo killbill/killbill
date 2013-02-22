@@ -16,9 +16,7 @@
 
 package com.ning.billing.tenant;
 
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
 
 import com.ning.billing.GuicyKillbillTestSuiteNoDB;
 import com.ning.billing.tenant.glue.TestTenantModuleNoDB;
@@ -29,16 +27,8 @@ import com.google.inject.Injector;
 public class TenantTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
     @BeforeClass(groups = "fast")
-    protected void setup() throws Exception {
+    protected void beforeClass() throws Exception {
         final Injector injector = Guice.createInjector(new TestTenantModuleNoDB());
         injector.injectMembers(this);
-    }
-
-    @BeforeMethod(groups = "fast")
-    public void setupTest() {
-    }
-
-    @AfterMethod(groups = "fast")
-    public void cleanupTest() {
     }
 }

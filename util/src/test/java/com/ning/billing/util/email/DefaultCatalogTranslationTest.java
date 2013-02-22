@@ -37,8 +37,8 @@ public class DefaultCatalogTranslationTest extends UtilTestSuiteNoDB {
 
     @Override
     @BeforeClass(groups = "fast")
-    public void setup() throws Exception {
-        super.setup();
+    public void beforeClass() throws Exception {
+        super.beforeClass();
         final ConfigSource configSource = new ConfigSource() {
             private final Map<String, String> properties = ImmutableMap.<String, String>of("killbill.template.invoiceFormatterFactoryClass",
                                                                                            "com.ning.billing.mock.MockInvoiceFormatterFactory");

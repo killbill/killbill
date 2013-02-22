@@ -71,18 +71,20 @@ public abstract class UtilTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
     protected AuditDao auditDao;
 
     @BeforeClass(groups = "slow")
-    public void setup() throws Exception {
+    public void beforeClass() throws Exception {
         final Injector g = Guice.createInjector(Stage.PRODUCTION, new TestUtilModuleWithEmbeddedDB());
         g.injectMembers(this);
     }
 
+    @Override
     @BeforeMethod(groups = "slow")
-    public void setupTest() throws Exception  {
+    public void beforeMethod() throws Exception  {
+        super.beforeMethod();
         eventBus.start();
     }
 
     @AfterMethod(groups = "slow")
-    public void cleanupTest() throws Exception {
+    public void afterMethod() throws Exception {
         eventBus.stop();
     }
 

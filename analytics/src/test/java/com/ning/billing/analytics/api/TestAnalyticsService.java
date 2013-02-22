@@ -93,7 +93,8 @@ public class TestAnalyticsService extends AnalyticsTestSuiteWithEmbeddedDB {
     private PaymentInfoInternalEvent paymentInfoNotification;
 
     @BeforeMethod(groups = "slow")
-    public void createMocks() throws AccountApiException {
+    public void beforeMethod() throws Exception {
+        super.beforeMethod();
         Mockito.when(catalogService.getFullCatalog()).thenReturn(new MockCatalog());
 
         final PaymentMethod paymentMethod = Mockito.mock(PaymentMethod.class);

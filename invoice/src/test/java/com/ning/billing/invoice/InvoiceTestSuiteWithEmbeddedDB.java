@@ -107,16 +107,17 @@ public abstract class InvoiceTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
 
 
     @BeforeClass(groups = "slow")
-    protected void setup() throws Exception {
-
+    protected void beforeClass() throws Exception {
         loadSystemPropertiesFromClasspath("/resource.properties");
 
         final Injector injector = Guice.createInjector(new TestInvoiceModuleWithEmbeddedDb());
         injector.injectMembers(this);
     }
 
+    @Override
     @BeforeMethod(groups = "slow")
-    public void setupTest() throws Exception {
+    public void beforeMethod() throws Exception {
+        super.beforeMethod();
         bus.start();
         restartInvoiceService(invoiceService);
     }
@@ -133,7 +134,7 @@ public abstract class InvoiceTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     }
 
     @AfterMethod(groups = "slow")
-    public void cleanupTest() throws Exception {
+    public void afterMethod() throws Exception {
         bus.stop();
         stopInvoiceService(invoiceService);
     }

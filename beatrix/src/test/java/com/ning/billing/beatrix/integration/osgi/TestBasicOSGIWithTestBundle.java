@@ -65,7 +65,7 @@ public class TestBasicOSGIWithTestBundle extends TestOSGIBase {
     private OSGIServiceRegistration<PaymentPluginApi> paymentPluginApiOSGIServiceRegistration;
 
     @BeforeClass(groups = "slow")
-    public void setup() throws Exception {
+    public void beforeClass() throws Exception {
 
         final String jdbcConnection = getDBTestingHelper().getJdbcConnectionString();
         final String userName = DBTestingHelper.USERNAME;
@@ -76,7 +76,7 @@ public class TestBasicOSGIWithTestBundle extends TestOSGIBase {
         System.setProperty(OSGIDataSourceConfig.DATA_SOURCE_PROP_PREFIX + "jdbc.password", userPwd);
 
         // OSGIDataSourceConfig
-        super.setup();
+        super.beforeClass();
 
         // This is extracted from surefire system configuration-- needs to be added explicitly in IntelliJ for correct running
         final String killbillVersion = System.getProperty("killbill.version");

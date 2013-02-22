@@ -223,7 +223,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     }
 
     @BeforeClass(groups = "slow")
-    public void setup() throws Exception {
+    public void beforeClass() throws Exception {
         final Injector g = Guice.createInjector(Stage.PRODUCTION, new BeatrixIntegrationModule());
         g.injectMembers(this);
         busHandler = new TestApiListener(this);
@@ -235,7 +235,9 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
 
     @BeforeMethod(groups = "slow")
-    public void setupTest() throws Exception {
+    public void beforeMethod() throws Exception {
+
+        super.beforeMethod();
         log.warn("\n");
         log.warn("RESET TEST FRAMEWORK\n\n");
 
@@ -252,7 +254,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     }
 
     @AfterMethod(groups = "slow")
-    public void cleanupTest() throws Exception {
+    public void afterMethod() throws Exception {
         lifecycle.fireShutdownSequencePriorEventUnRegistration();
         busService.getBus().unregister(busHandler);
         lifecycle.fireShutdownSequencePostEventUnRegistration();

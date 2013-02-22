@@ -116,8 +116,11 @@ public class TestBusinessSubscription extends AnalyticsTestSuiteNoDB {
 
     private final Catalog catalog = Mockito.mock(Catalog.class);
 
+
+    @Override
     @BeforeMethod(groups = "fast")
-    public void setUp() throws Exception {
+    public void beforeMethod() throws Exception {
+        super.beforeMethod();
         product = new MockProduct("platinium", "subscription", ProductCategory.BASE);
         plan = new MockPlan("platinum-monthly", product);
         phase = new MockPhase(PhaseType.EVERGREEN, plan, MockDuration.UNLIMITED(), 25.95);

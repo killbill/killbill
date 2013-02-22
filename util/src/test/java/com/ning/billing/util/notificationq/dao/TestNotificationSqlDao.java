@@ -44,8 +44,8 @@ public class TestNotificationSqlDao extends UtilTestSuiteWithEmbeddedDB {
 
     @Override
     @BeforeClass(groups = "slow")
-    public void setup() throws Exception {
-        super.setup();
+    public void beforeClass() throws Exception {
+        super.beforeClass();
         dao = getDBI().onDemand(NotificationSqlDao.class);
     }
 

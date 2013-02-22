@@ -51,8 +51,10 @@ public class TestPlugin extends TestJaxrsBase {
     private final AtomicBoolean requestDELETEMarker = new AtomicBoolean(false);
     private final AtomicBoolean requestOPTIONSMarker = new AtomicBoolean(false);
 
+    @Override
     @BeforeMethod(groups = "slow")
-    public void setUp() throws Exception {
+    public void beforeMethod() throws Exception {
+        super.beforeMethod();
         setupOSGIPlugin();
         resetAllMarkers();
     }

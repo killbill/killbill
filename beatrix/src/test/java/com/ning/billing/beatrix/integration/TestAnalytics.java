@@ -71,8 +71,10 @@ public class TestAnalytics extends TestIntegrationBase {
 
     private Plan subscriptionPlan;
 
+    @Override
     @BeforeMethod(groups = "slow")
-    public void setUpAnalyticsHandler() throws Exception {
+    public void beforeMethod() throws Exception {
+        super.beforeMethod();
         final String configXml = "<overdueConfig>" +
                                  "   <bundleOverdueStates>" +
                                  "       <state name=\"OD3\">" +
@@ -128,8 +130,10 @@ public class TestAnalytics extends TestIntegrationBase {
         account = verifyAccountCreation(initialDate.plusDays(30).getDayOfMonth());
     }
 
+    @Override
     @AfterMethod(groups = "slow")
-    public void tearDownAnalyticsHandler() throws Exception {
+    public void afterMethod() throws Exception {
+        super.afterMethod();
         busService.getBus().unregister(analyticsListener);
         // Reset the payment plugin for other tests
         paymentPlugin.clear();

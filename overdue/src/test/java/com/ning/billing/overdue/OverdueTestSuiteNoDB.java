@@ -84,28 +84,22 @@ public abstract class OverdueTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     protected TestOverdueHelper testOverdueHelper;
 
     @BeforeClass(groups = "fast")
-    protected void setup() throws Exception {
+    protected void beforeClass() throws Exception {
         final Injector injector = Guice.createInjector(new TestOverdueModuleNoDB());
         injector.injectMembers(this);
     }
 
     @BeforeMethod(groups = "fast")
-    public void setupTest() {
+    public void beforeMethod() throws Exception {
         bus.start();
 
         service.registerForBus();
-        try {
             service.initialize();
-        } catch (RuntimeException e) {
-            if (!(e.getCause() instanceof NotificationQueueAlreadyExists)) {
-                throw e;
-            }
-        }
         service.start();
     }
 
     @AfterMethod(groups = "fast")
-    public void cleanupTest() {
+    public void afterMethod() {
         service.stop();
         bus.stop();
     }

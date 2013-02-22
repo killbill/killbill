@@ -70,8 +70,10 @@ public abstract class TestOverdueBase extends TestIntegrationBase {
         }
     };
 
+    @Override
     @BeforeMethod(groups = "slow")
-    public void setupOverdue() throws Exception {
+    public void beforeMethod( ) throws Exception {
+        super.beforeMethod();
         final String configXml = getOverdueConfig();
         final InputStream is = new ByteArrayInputStream(configXml.getBytes());
         final OverdueConfig config = XMLLoader.getObjectFromStreamNoValidation(is, OverdueConfig.class);

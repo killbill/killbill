@@ -43,7 +43,8 @@ public class TestBlockingChecker extends JunctionTestSuiteNoDB {
     private Subscription subscription;
 
     @BeforeMethod(groups = "fast")
-    public void setupTest() {
+    public void beforeMethod() throws Exception {
+        super.beforeMethod();
         final UUID accountId = UUID.randomUUID();
         account = Mockito.mock(Account.class);
         Mockito.when(account.getId()).thenReturn(accountId);

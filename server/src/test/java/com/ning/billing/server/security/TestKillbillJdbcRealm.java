@@ -46,9 +46,9 @@ public class TestKillbillJdbcRealm extends TestJaxrsBase {
 
     @Override
     @BeforeMethod(groups = "slow")
-    public void cleanupBeforeMethod() throws Exception {
+    public void beforeMethod() throws Exception {
 
-        super.cleanupBeforeMethod();
+        super.beforeMethod();
 
         // Create the tenant
         final CacheControllerDispatcher controllerDispatcher = new CacheControllerDispatcher();

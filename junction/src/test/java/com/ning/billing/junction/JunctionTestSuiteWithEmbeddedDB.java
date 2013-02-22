@@ -68,19 +68,20 @@ public abstract class JunctionTestSuiteWithEmbeddedDB extends GuicyKillbillTestS
     @Inject
     protected TagInternalApi tagInternalApi;
 
-    @BeforeClass(groups = "fast")
-    protected void setup() throws Exception {
+    @BeforeClass(groups = "slow")
+    protected void beforeClass() throws Exception {
         final Injector injector = Guice.createInjector(new TestJunctionModuleWithEmbeddedDB());
         injector.injectMembers(this);
     }
 
-    @BeforeMethod(groups = "fast")
-    public void setupTest() {
+    @BeforeMethod(groups = "slow")
+    public void beforeMethod() throws Exception {
+        super.beforeMethod();
         bus.start();
     }
 
-    @AfterMethod(groups = "fast")
-    public void cleanupTest() {
+    @AfterMethod(groups = "slow")
+    public void afterMethod() {
         bus.stop();
     }
 }

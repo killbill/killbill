@@ -73,7 +73,7 @@ public abstract class PaymentTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     protected TestPaymentHelper testHelper;
 
     @BeforeClass(groups = "slow")
-    protected void setup() throws Exception {
+    protected void beforeClass() throws Exception {
 
         loadSystemPropertiesFromClasspath("/resource.properties");
 
@@ -82,12 +82,13 @@ public abstract class PaymentTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     }
 
     @BeforeMethod(groups = "slow")
-    public void setupTest() throws Exception {
+    public void beforeMethod() throws Exception {
+        super.beforeMethod();
         eventBus.start();
     }
 
     @AfterMethod(groups = "slow")
-    public void cleanupTest()throws Exception  {
+    public void afterMethod()throws Exception  {
         eventBus.stop();
     }
 

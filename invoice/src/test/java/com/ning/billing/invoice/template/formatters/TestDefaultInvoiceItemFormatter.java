@@ -44,9 +44,10 @@ public class TestDefaultInvoiceItemFormatter extends InvoiceTestSuiteNoDB {
     private TranslatorConfig config;
     private MustacheTemplateEngine templateEngine;
 
+    @Override
     @BeforeClass(groups = "fast")
-    public void setup() throws Exception {
-        super.setup();
+    public void beforeClass() throws Exception {
+        super.beforeClass();
         config = new ConfigurationObjectFactory(System.getProperties()).build(TranslatorConfig.class);
         templateEngine = new MustacheTemplateEngine();
     }

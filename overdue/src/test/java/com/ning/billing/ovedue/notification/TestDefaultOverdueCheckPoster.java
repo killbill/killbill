@@ -47,8 +47,10 @@ public class TestDefaultOverdueCheckPoster extends OverdueTestSuiteWithEmbeddedD
     private NotificationQueue overdueQueue;
     private DateTime testReferenceTime;
 
+    @Override
     @BeforeMethod(groups = "slow")
-    public void setUp() throws Exception {
+    public void beforeMethod() throws Exception {
+        super.beforeMethod();
         entitySqlDaoTransactionalJdbiWrapper = new EntitySqlDaoTransactionalJdbiWrapper(getDBI(), clock, cacheControllerDispatcher, nonEntityDao);
 
         overdueQueue = notificationQueueService.getNotificationQueue(DefaultOverdueService.OVERDUE_SERVICE_NAME,

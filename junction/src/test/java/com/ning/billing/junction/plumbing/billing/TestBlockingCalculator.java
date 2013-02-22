@@ -70,7 +70,8 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
     private Subscription subscription4;
 
     @BeforeMethod(groups = "fast")
-    public void setUpTest() throws Exception {
+    public void beforeMethod() throws Exception {
+        super.beforeMethod();
         account = Mockito.mock(Account.class);
         subscription1 = Mockito.mock(Subscription.class);
         subscription2 = Mockito.mock(Subscription.class);

@@ -69,9 +69,10 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
     private String planSetName;
 
 
+    @Override
     @BeforeMethod(groups = {"slow"})
-    public void setupBeforeTest() throws Exception {
-
+    public void beforeMethod() throws Exception {
+        super.beforeMethod();
         account = createAccountWithPaymentMethod(getAccountData(25));
         assertNotNull(account);
 

@@ -72,7 +72,7 @@ public abstract class PaymentTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
 
     @BeforeClass(groups = "fast")
-    protected void setup() throws Exception {
+    protected void beforeClass() throws Exception {
 
         loadSystemPropertiesFromClasspath("/resource.properties");
 
@@ -81,12 +81,12 @@ public abstract class PaymentTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     }
 
     @BeforeMethod(groups = "fast")
-    public void setupTest() throws Exception {
+    public void beforeMethod() throws Exception {
         eventBus.start();
     }
 
     @AfterMethod(groups = "fast")
-    public void cleanupTest()throws Exception  {
+    public void afterMethod()throws Exception  {
         eventBus.stop();
     }
 

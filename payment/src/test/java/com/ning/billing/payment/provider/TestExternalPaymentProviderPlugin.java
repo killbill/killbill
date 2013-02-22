@@ -38,8 +38,10 @@ public class TestExternalPaymentProviderPlugin extends PaymentTestSuiteNoDB {
     private final Clock clock = new ClockMock();
     private ExternalPaymentProviderPlugin plugin;
 
+    @Override
     @BeforeMethod(groups = "fast")
-    public void setUp() throws Exception {
+    public void beforeMethod() throws Exception {
+        super.beforeMethod();
         plugin = new ExternalPaymentProviderPlugin(clock);
     }
 

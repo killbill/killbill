@@ -51,14 +51,14 @@ public class TestPaymentApi extends PaymentTestSuiteNoDB {
     private Account account;
 
     @BeforeClass(groups = "fast")
-    public void setup() throws Exception {
-        super.setup();
+    public void beforeClass() throws Exception {
+        super.beforeClass();
         account = testHelper.createTestAccount("yoyo.yahoo.com", false);
     }
 
     @BeforeMethod(groups = "fast")
-    public void setupTest() throws Exception {
-        super.setupTest();
+    public void beforeMethod() throws Exception {
+        super.beforeMethod();
         final PaymentMethodPlugin paymentMethodInfo = new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), true, null);
         testHelper.addTestPaymentMethod(account, paymentMethodInfo);
     }

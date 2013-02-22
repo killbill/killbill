@@ -54,18 +54,18 @@ public class UtilTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     protected AuditUserApi auditUserApi;
 
     @BeforeClass(groups = "fast")
-    public void setup() throws Exception {
+    public void beforeClass() throws Exception {
         final Injector g = Guice.createInjector(Stage.PRODUCTION, new TestUtilModuleNoDB());
         g.injectMembers(this);
     }
 
     @BeforeMethod(groups = "fast")
-    public void setupTest() throws Exception {
+    public void beforeMethod() throws Exception {
         eventBus.start();
     }
 
     @AfterMethod(groups = "fast")
-    public void cleanupTest() throws Exception {
+    public void afterMethod() throws Exception {
         eventBus.stop();
     }
 

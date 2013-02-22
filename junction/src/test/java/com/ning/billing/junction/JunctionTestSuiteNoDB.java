@@ -72,18 +72,18 @@ public abstract class JunctionTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     protected TagInternalApi tagInternalApi;
 
     @BeforeClass(groups = "fast")
-    protected void setup() throws Exception {
+    protected void beforeClass() throws Exception {
         final Injector injector = Guice.createInjector(new TestJunctionModuleNoDB());
         injector.injectMembers(this);
     }
 
     @BeforeMethod(groups = "fast")
-    public void setupTest() {
+    public void beforeMethod() throws Exception {
         bus.start();
     }
 
     @AfterMethod(groups = "fast")
-    public void cleanupTest() {
+    public void afterMethod() {
         bus.stop();
     }
 }

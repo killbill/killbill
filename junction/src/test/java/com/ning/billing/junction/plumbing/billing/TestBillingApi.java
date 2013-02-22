@@ -82,7 +82,8 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
     private MockCatalog catalog;
 
     @BeforeMethod(groups = "fast")
-    public void setupEveryTime() throws EntitlementUserApiException {
+    public void beforeMethod() throws Exception  {
+        super.beforeMethod();
         final SubscriptionBundle bundle = Mockito.mock(SubscriptionBundle.class);
         Mockito.when(bundle.getId()).thenReturn(bunId);
         final List<SubscriptionBundle> bundles = ImmutableList.<SubscriptionBundle>of(bundle);

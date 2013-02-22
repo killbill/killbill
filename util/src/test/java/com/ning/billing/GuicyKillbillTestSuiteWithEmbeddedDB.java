@@ -16,10 +16,6 @@
 
 package com.ning.billing;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.sql.SQLException;
-
 import javax.inject.Inject;
 
 import org.skife.jdbi.v2.IDBI;
@@ -30,8 +26,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
 
 import com.ning.billing.dbi.DBTestingHelper;
-import com.ning.billing.dbi.H2TestingHelper;
-import com.ning.billing.dbi.MysqlTestingHelper;
 
 public class GuicyKillbillTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite {
 
@@ -49,15 +43,14 @@ public class GuicyKillbillTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
     }
 
     @BeforeSuite(groups = {"slow", "mysql"})
-    public void startMysqlBeforeTestSuite() throws IOException, ClassNotFoundException, SQLException, URISyntaxException {
-
+    public void beforeSuite() throws Exception {
         GuicyKillbillTestWithEmbeddedDBModule.getDBTestingHelper().start();
         GuicyKillbillTestWithEmbeddedDBModule.getDBTestingHelper().initDb();
         GuicyKillbillTestWithEmbeddedDBModule.getDBTestingHelper().cleanupAllTables();
     }
 
     @BeforeMethod(groups = {"slow", "mysql"})
-    public void cleanupTablesBetweenMethods() {
+    public void beforeMethod() throws Exception {
         try {
             GuicyKillbillTestWithEmbeddedDBModule.getDBTestingHelper().cleanupAllTables();
         } catch (Exception ignored) {
@@ -65,7 +58,7 @@ public class GuicyKillbillTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
     }
 
     @AfterSuite(groups = {"slow", "mysql"})
-    public void shutdownMysqlAfterTestSuite() throws IOException, ClassNotFoundException, SQLException, URISyntaxException {
+    public void afterSuite() throws Exception {
         if (hasFailed()) {
             log.error("**********************************************************************************************");
             log.error("*** TESTS HAVE FAILED - LEAVING DB RUNNING FOR DEBUGGING - MAKE SURE TO KILL IT ONCE DONE ****");

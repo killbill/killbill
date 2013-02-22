@@ -51,7 +51,8 @@ public class TestPublicBus extends TestIntegrationBase {
 
     @Override
     @BeforeMethod(groups = "slow")
-    public void setupTest() throws Exception {
+    public void beforeMethod() throws Exception {
+        super.beforeMethod();
 
         publicListener = new PublicListener();
 

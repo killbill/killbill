@@ -71,7 +71,8 @@ public class TestOverdueCheckNotifier extends OverdueTestSuiteWithEmbeddedDB {
 
     @Override
     @BeforeMethod(groups = "slow")
-    public void setupTest() throws Exception {
+    public void beforeMethod() throws Exception {
+        //super.beforeMethod();
         // We override the parent method on purpose, because we want to register a different DefaultOverdueCheckNotifier
 
         final Account account = Mockito.mock(Account.class);
@@ -83,16 +84,15 @@ public class TestOverdueCheckNotifier extends OverdueTestSuiteWithEmbeddedDB {
         mockListener = new OverdueListenerMock(internalCallContextFactory);
         notifierForMock = new DefaultOverdueCheckNotifier(notificationQueueService, overdueProperties, mockListener);
 
-        bus.start();
         notifierForMock.initialize();
         notifierForMock.start();
     }
 
     @Override
     @AfterMethod(groups = "slow")
-    public void cleanupTest() throws Exception {
+    public void afterMethod() throws Exception {
         notifierForMock.stop();
-        bus.stop();
+        super.afterMethod();
     }
 
     @Test(groups = "slow")

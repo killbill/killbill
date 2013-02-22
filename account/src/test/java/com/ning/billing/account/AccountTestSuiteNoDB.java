@@ -66,18 +66,18 @@ public abstract class AccountTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     protected NonEntityDao nonEntityDao;
 
     @BeforeClass(groups = "fast")
-    protected void setup() throws Exception {
+    protected void beforeClass() throws Exception {
         final Injector injector = Guice.createInjector(new TestAccountModuleNoDB());
         injector.injectMembers(this);
     }
 
     @BeforeMethod(groups = "fast")
-    public void setupTest() {
+    public void beforeMethod() throws Exception {
         bus.start();
     }
 
     @AfterMethod(groups = "fast")
-    public void cleanupTest() {
+    public void afterMethod() throws Exception {
         bus.stop();
     }
 }

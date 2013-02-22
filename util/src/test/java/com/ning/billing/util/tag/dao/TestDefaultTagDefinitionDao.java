@@ -40,17 +40,17 @@ public class TestDefaultTagDefinitionDao extends UtilTestSuiteWithEmbeddedDB {
 
     @Override
     @BeforeMethod(groups = "slow")
-    public void setupTest() throws Exception {
-        super.setupTest();
+    public void beforeMethod() throws Exception {
+        super.beforeMethod();
         eventsListener = new TestApiListener(null);
         eventBus.register(eventsListener);
     }
 
     @Override
     @AfterMethod(groups = "slow")
-    public void cleanupTest() throws Exception {
+    public void afterMethod() throws Exception {
         eventBus.unregister(eventsListener);
-        super.cleanupTest();
+        super.afterMethod();
     }
 
 

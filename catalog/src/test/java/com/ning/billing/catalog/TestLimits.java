@@ -28,7 +28,8 @@ public class TestLimits extends CatalogTestSuiteNoDB {
     private VersionedCatalog catalog;
     
     @BeforeClass(groups = "fast")
-    public void setUp() throws ServiceException {
+    public void beforeClass() throws Exception {
+        super.beforeClass();
         catalog = loader.load(Resources.getResource("WeaponsHireSmall.xml").toString());
     }
 

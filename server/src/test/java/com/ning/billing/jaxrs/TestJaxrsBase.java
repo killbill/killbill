@@ -200,14 +200,15 @@ public class TestJaxrsBase extends KillbillClient {
     }
 
     @BeforeMethod(groups = "slow")
-    public void cleanupBeforeMethod() throws Exception {
+    public void beforeMethod() throws Exception {
+        super.beforeMethod();
         busHandler.reset();
         clock.reset();
         clock.setDay(new LocalDate(2012, 8, 25));
     }
 
     @BeforeClass(groups = "slow")
-    public void setupClass() throws Exception {
+    public void beforeClass() throws Exception {
         loadConfig();
 
 
@@ -235,7 +236,8 @@ public class TestJaxrsBase extends KillbillClient {
     }
 
     @BeforeSuite(groups = "slow")
-    public void setup() throws Exception {
+    public void beforeSuite() throws Exception {
+        super.beforeSuite();
         loadSystemPropertiesFromClasspath("/killbill.properties");
         loadConfig();
 
@@ -263,7 +265,7 @@ public class TestJaxrsBase extends KillbillClient {
     }
 
     @AfterSuite(groups = "slow")
-    public void tearDown() {
+    public void afterSuite() {
         try {
             server.stop();
         } catch (final Exception ignored) {

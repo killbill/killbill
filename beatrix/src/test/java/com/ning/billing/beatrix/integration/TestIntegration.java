@@ -355,23 +355,23 @@ public class TestIntegration extends TestIntegrationBase {
         final int maxIterations = 100;
         for (int curIteration = 0; curIteration < maxIterations; curIteration++) {
             if (curIteration != 0) {
-                setupTest();
+                beforeMethod();
             }
 
             log.info("################################  ITERATION " + curIteration + "  #########################");
-            cleanupTest();
-            setupTest();
+            afterMethod();
+            beforeMethod();
             testBasePlanCompleteWithBillingDayInPast();
             Thread.sleep(1000);
-            cleanupTest();
-            setupTest();
+            afterMethod();
+            beforeMethod();
             testBasePlanCompleteWithBillingDayAlignedWithTrial();
             Thread.sleep(1000);
-            cleanupTest();
-            setupTest();
+            afterMethod();
+            beforeMethod();
             testBasePlanCompleteWithBillingDayInFuture();
             if (curIteration < maxIterations - 1) {
-                cleanupTest();
+                afterMethod();
                 Thread.sleep(1000);
             }
         }
@@ -383,11 +383,11 @@ public class TestIntegration extends TestIntegrationBase {
         for (int curIteration = 0; curIteration < maxIterations; curIteration++) {
             log.info("################################  ITERATION " + curIteration + "  #########################");
             if (curIteration != 0) {
-                setupTest();
+                beforeMethod();
             }
             testAddonsWithMultipleAlignments();
             if (curIteration < maxIterations - 1) {
-                cleanupTest();
+                afterMethod();
                 Thread.sleep(1000);
             }
         }
