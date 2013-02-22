@@ -66,7 +66,7 @@ abort "Don't run this as root!" if Process.uid == 0
 
 # TODO Pierre versioned schema!
 ohai "Downloading the latest DDL schema from github..."
-ddl = (get "http://killbilling.org/schema")
+ddl = %x[ruby -e "$(#{curl} -skSfL http://killbilling.org/schema)"]
 
 ohai "Creating MySQL database #{KILLBILL_MYSQL_DATABASE} and user #{KILLBILL_MYSQL_USER} with password #{KILLBILL_MYSQL_PASSWORD}... Enter your MySQL root password when prompted"
 system mysql, "-u", "root", "-p", "-e", <<CMD
