@@ -97,3 +97,4 @@ launcher = "#{launcher} -jar #{killbill_war}"
 
 ohai "Installation successful!"
 puts "Now type: #{launcher}"
+puts "You can then verify killbill is running by checking its healthcheck: curl -v http://127.0.0.1:8080/1.0/healthcheck"
