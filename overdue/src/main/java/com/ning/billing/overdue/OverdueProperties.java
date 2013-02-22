@@ -21,10 +21,9 @@ import org.skife.config.Default;
 
 import com.ning.billing.util.config.KillbillConfig;
 
-
 public interface OverdueProperties extends KillbillConfig {
 
     @Config("killbill.overdue.uri")
-    @Default("jar:///com/ning/billing/irs/overdue/Config.xml")
+    @Default("NoOverdueConfig.xml")
     public String getConfigURI();
 }
