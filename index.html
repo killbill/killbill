@@ -3,12 +3,35 @@ layout: front
 ---
 
 <div class="container">
-    <header class="hero-unit">
+    <div class="jumbotron">
         <h1>Kill Bill</h1>
-        <p>Open-Source billing platform <a class="btn btn" href="./about.html">Learn more &raquo;</a></p>
-        <p class="pull-right"><a class="btn btn-primary btn-large" href="./start.html">Getting started &raquo;</a>
-           <a class="btn btn-primary btn-large" href="./man.html">User manual &raquo;</a>
-           <a class="btn btn-primary btn-large" href="./downloads.html">Downloads &raquo;</a></p>
-        <img src="KillBillLogo400x400.png">
-    </header>
+        <h2>The Open-Source Billing Platform</h2>
+        <img src="KillBillLogo400x400.png" style="height: 200px; margin-bottom: 20px;" />
+        <br />
+        <ul class="inline">
+            <li><a class="btn btn-primary btn-large" href="./start.html">Getting started</a></li>
+            <li><a class="btn btn-primary btn-large" href="http://github.com/killbill/killbill">Source</a></li>
+            <li><a class="btn btn-primary btn-large" href="./downloads.html">Downloads</a></li>
+        </ul>
+    </div>
+
+    <div class="marketing">
+        <h1>Subscription Billing made easy</h1>
+        <p class="lead">Adding a payment solution to your website should be easy: capture the credit card information via a third-party payment gateway and issue an API call for a given amount. Recurring billing is similar: do and repeat every month. Want a trial period of 30 days? Delay the initial payment. But now you want to add a second offering with a different price point. And a different trial period length. And support multiple currencies. And create rules to control upgrades and downgrades...</p>
+        <p class="lead">We believe billing should be easy. Killbill is an open-source (Apache License 2.0) billing platform which solves these problems and much more.</p>
+    </div>
+    <div class="row-fluid">
+        <div class="span4">
+            <h2>Authoritative</h2>
+            <p>Killbill has the full billing picture: it knows about accounts, subscriptions, invoices, payments, overdue states, ... You have the whole picture of your business.</p>
+        </div>
+        <div class="span4">
+            <h2>Customizable</h2>
+            <p>Killbill is rules driven, meaning you can configure pretty much everything, from plans and international prices, to invoice layouts and payment failures emails.</p>
+        </div>
+        <div class="span4">
+            <h2>Pluggable</h2>
+            <p>Custom payment gateway? Complex enterprise integration? Extend the functionality of Killbill by writing your own plugin. Plugins can be as easy as a few lines of Ruby or as complex as OSGI bundles.</p>
+        </div>
+    </div>
 </div>
