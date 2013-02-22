@@ -24,7 +24,7 @@ public interface PersistentBusConfig extends PersistentQueueConfig {
 
     @Override
     @Config("killbill.billing.util.persistent.bus.sleep")
-    @Default("500")
+    @Default("3000")
     public long getSleepTimeMs();
 
     @Config("killbill.billing.util.persistent.bus.off")

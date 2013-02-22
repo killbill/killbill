@@ -17,6 +17,7 @@
 package com.ning.billing.invoice.glue;
 
 import org.mockito.Mockito;
+import org.skife.config.ConfigSource;
 
 import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.invoice.TestInvoiceHelper;
@@ -34,6 +35,10 @@ import com.ning.billing.util.svcapi.junction.BillingInternalApi;
 
 public class TestInvoiceModule extends DefaultInvoiceModule {
 
+    public TestInvoiceModule(final ConfigSource configSource) {
+        super(configSource);
+    }
+
     private void installExternalApis() {
         bind(EntitlementInternalApi.class).toInstance(Mockito.mock(EntitlementInternalApi.class));
         bind(AccountInternalApi.class).toInstance(Mockito.mock(AccountInternalApi.class));
@@ -46,12 +51,12 @@ public class TestInvoiceModule extends DefaultInvoiceModule {
 
         install(new MockGlobalLockerModule());
 
-        install(new CatalogModule());
-        install(new CacheModule());
+        install(new CatalogModule(configSource));
+        install(new CacheModule(configSource));
         install(new TemplateModule());
-        install(new EmailModule());
+        install(new EmailModule(configSource));
 
-        install(new NotificationQueueModule());
+        install(new NotificationQueueModule(configSource));
         install(new TagStoreModule());
         install(new CustomFieldModule());
 

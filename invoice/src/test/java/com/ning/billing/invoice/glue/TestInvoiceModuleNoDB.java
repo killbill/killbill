@@ -16,14 +16,19 @@
 
 package com.ning.billing.invoice.glue;
 
+import org.skife.config.ConfigSource;
+
 import com.ning.billing.GuicyKillbillTestNoDBModule;
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.dao.MockInvoiceDao;
 import com.ning.billing.mock.glue.MockNonEntityDaoModule;
 import com.ning.billing.util.bus.InMemoryBusModule;
-import com.ning.billing.util.glue.NonEntityDaoModule;
 
 public class TestInvoiceModuleNoDB extends TestInvoiceModule {
+
+    public TestInvoiceModuleNoDB(final ConfigSource configSource) {
+        super(configSource);
+    }
 
     protected void installInvoiceDao() {
         bind(InvoiceDao.class).to(MockInvoiceDao.class);
@@ -34,6 +39,6 @@ public class TestInvoiceModuleNoDB extends TestInvoiceModule {
         super.configure();
         install(new GuicyKillbillTestNoDBModule());
         install(new MockNonEntityDaoModule());
-        install(new InMemoryBusModule());
+        install(new InMemoryBusModule(configSource));
     }
 }

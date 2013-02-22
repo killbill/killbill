@@ -16,15 +16,18 @@
 
 package com.ning.billing.beatrix.integration.overdue;
 
+import org.skife.config.ConfigSource;
+
 import com.ning.billing.overdue.OverdueService;
 import com.ning.billing.overdue.glue.DefaultOverdueModule;
 
 public class IntegrationTestOverdueModule extends DefaultOverdueModule {
 
+    public IntegrationTestOverdueModule(final ConfigSource configSource) {
+        super(configSource);
+    }
 
     protected void installOverdueService() {
         bind(OverdueService.class).to(MockOverdueService.class);
     }
-
-
 }

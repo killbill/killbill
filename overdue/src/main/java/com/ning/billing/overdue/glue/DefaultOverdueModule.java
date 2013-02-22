@@ -16,6 +16,7 @@
 
 package com.ning.billing.overdue.glue;
 
+import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
 
 import com.ning.billing.glue.OverdueModule;
@@ -37,6 +38,12 @@ import com.google.inject.AbstractModule;
 
 public class DefaultOverdueModule extends AbstractModule implements OverdueModule {
 
+    protected final ConfigSource configSource;
+
+    public DefaultOverdueModule(final ConfigSource configSource) {
+        this.configSource = configSource;
+    }
+
     @Override
     protected void configure() {
         installOverdueUserApi();
@@ -46,7 +53,7 @@ public class DefaultOverdueModule extends AbstractModule implements OverdueModul
         installOverdueWrapperFactory();
         installOverdueEmail();
 
-        final OverdueProperties config = new ConfigurationObjectFactory(System.getProperties()).build(OverdueProperties.class);
+        final OverdueProperties config = new ConfigurationObjectFactory(configSource).build(OverdueProperties.class);
         bind(OverdueProperties.class).toInstance(config);
         //bind(ExtendedOverdueService.class).to(DefaultOverdueService.class).asEagerSingleton();
         bind(OverdueCheckNotifier.class).to(DefaultOverdueCheckNotifier.class).asEagerSingleton();

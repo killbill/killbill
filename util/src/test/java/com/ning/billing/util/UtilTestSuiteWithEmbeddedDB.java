@@ -19,10 +19,8 @@ package com.ning.billing.util;
 import javax.inject.Inject;
 
 import org.testng.annotations.AfterMethod;
-import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.BeforeTest;
 
 import com.ning.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.audit.dao.AuditDao;
@@ -72,7 +70,7 @@ public abstract class UtilTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
 
     @BeforeClass(groups = "slow")
     public void beforeClass() throws Exception {
-        final Injector g = Guice.createInjector(Stage.PRODUCTION, new TestUtilModuleWithEmbeddedDB());
+        final Injector g = Guice.createInjector(Stage.PRODUCTION, new TestUtilModuleWithEmbeddedDB(configSource));
         g.injectMembers(this);
     }
 

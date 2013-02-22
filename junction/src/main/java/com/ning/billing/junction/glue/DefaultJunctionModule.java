@@ -16,7 +16,7 @@
 
 package com.ning.billing.junction.glue;
 
-import org.skife.jdbi.v2.IDBI;
+import org.skife.config.ConfigSource;
 
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
@@ -25,7 +25,6 @@ import com.ning.billing.junction.api.svcs.DefaultInternalBlockingApi;
 import com.ning.billing.junction.block.BlockingChecker;
 import com.ning.billing.junction.block.DefaultBlockingChecker;
 import com.ning.billing.junction.dao.BlockingStateDao;
-import com.ning.billing.junction.dao.BlockingStateSqlDao;
 import com.ning.billing.junction.dao.DefaultBlockingStateDao;
 import com.ning.billing.junction.plumbing.api.BlockingAccountUserApi;
 import com.ning.billing.junction.plumbing.api.BlockingEntitlementUserApi;
@@ -33,13 +32,16 @@ import com.ning.billing.junction.plumbing.billing.BlockingCalculator;
 import com.ning.billing.junction.plumbing.billing.DefaultInternalBillingApi;
 import com.ning.billing.util.svcapi.junction.BillingInternalApi;
 import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
-import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
-import com.google.inject.Provider;
 
 public class DefaultJunctionModule extends AbstractModule implements JunctionModule {
+
+    protected final ConfigSource configSource;
+
+    public DefaultJunctionModule(final ConfigSource configSource) {
+        this.configSource = configSource;
+    }
 
     @Override
     protected void configure() {
@@ -57,7 +59,6 @@ public class DefaultJunctionModule extends AbstractModule implements JunctionMod
 
     public void installBlockingChecker() {
         bind(BlockingChecker.class).to(DefaultBlockingChecker.class).asEagerSingleton();
-
     }
 
     public void installBillingApi() {

@@ -16,10 +16,7 @@
 
 package com.ning.billing.account.glue;
 
-import java.util.Properties;
-
 import org.skife.config.ConfigSource;
-import org.skife.config.SimplePropertyConfigSource;
 
 import com.ning.billing.mock.glue.MockEntitlementModule;
 import com.ning.billing.util.glue.AuditModule;
@@ -30,17 +27,8 @@ import com.ning.billing.util.glue.TagStoreModule;
 
 public class TestAccountModule extends DefaultAccountModule {
 
-    protected final ConfigSource configSource;
-
-    public TestAccountModule() {
-        final Properties properties = new Properties(System.getProperties());
-        // Speed up the bus
-        properties.put("killbill.billing.util.persistent.bus.sleep", "10");
-        properties.put("killbill.billing.util.persistent.bus.nbThreads", "1");
-        configSource = new SimplePropertyConfigSource(properties);
-
-        // Ignore ehcache checks. Unfortunately, ehcache looks at system properties directly...
-        System.setProperty("net.sf.ehcache.skipUpdateCheck", "true");
+    public TestAccountModule(final ConfigSource configSource) {
+        super(configSource);
     }
 
     @Override
@@ -48,7 +36,7 @@ public class TestAccountModule extends DefaultAccountModule {
         super.configure();
 
         install(new AuditModule());
-        install(new CacheModule());
+        install(new CacheModule(configSource));
         install(new CallContextModule());
         install(new CustomFieldModule());
         // Needed for Audit

@@ -70,7 +70,7 @@ public abstract class JunctionTestSuiteWithEmbeddedDB extends GuicyKillbillTestS
 
     @BeforeClass(groups = "slow")
     protected void beforeClass() throws Exception {
-        final Injector injector = Guice.createInjector(new TestJunctionModuleWithEmbeddedDB());
+        final Injector injector = Guice.createInjector(new TestJunctionModuleWithEmbeddedDB(configSource));
         injector.injectMembers(this);
     }
 

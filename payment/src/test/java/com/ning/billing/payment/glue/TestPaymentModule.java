@@ -19,6 +19,7 @@ package com.ning.billing.payment.glue;
 import java.util.UUID;
 
 import org.mockito.Mockito;
+import org.skife.config.ConfigSource;
 
 import com.ning.billing.ObjectType;
 import com.ning.billing.mock.glue.MockAccountModule;
@@ -28,30 +29,22 @@ import com.ning.billing.mock.glue.MockInvoiceModule;
 import com.ning.billing.mock.glue.MockNotificationQueueModule;
 import com.ning.billing.payment.TestPaymentHelper;
 import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
+import com.ning.billing.util.bus.InMemoryBusModule;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.config.PaymentConfig;
-import com.ning.billing.util.email.EmailModule;
-import com.ning.billing.util.email.templates.TemplateModule;
-import com.ning.billing.util.glue.BusModule;
-import com.ning.billing.util.glue.BusModule.BusType;
 import com.ning.billing.util.glue.CacheModule;
-import com.ning.billing.util.glue.CustomFieldModule;
-import com.ning.billing.util.glue.NotificationQueueModule;
-import com.ning.billing.util.glue.TagStoreModule;
 import com.ning.billing.util.svcapi.tag.TagInternalApi;
 import com.ning.billing.util.tag.Tag;
 
 import com.google.common.collect.ImmutableList;
 
-import static org.testng.Assert.assertNotNull;
-
 public class TestPaymentModule extends PaymentModule {
-
 
     private final Clock clock;
 
-    public TestPaymentModule(final Clock clock) {
+    public TestPaymentModule(final ConfigSource configSource, final Clock clock) {
+        super(configSource);
         this.clock = clock;
     }
 
@@ -69,13 +62,13 @@ public class TestPaymentModule extends PaymentModule {
     @Override
     protected void configure() {
         super.configure();
-        install(new BusModule(BusType.MEMORY));
-        install(new MockNotificationQueueModule());
+        install(new InMemoryBusModule(configSource));
+        install(new MockNotificationQueueModule(configSource));
         install(new MockInvoiceModule());
         install(new MockAccountModule());
         install(new MockEntitlementModule());
         install(new MockGlobalLockerModule());
-        install(new CacheModule());
+        install(new CacheModule(configSource));
         installExternalApis();
 
         bind(TestPaymentHelper.class).asEagerSingleton();

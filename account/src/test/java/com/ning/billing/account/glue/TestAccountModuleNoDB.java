@@ -16,6 +16,8 @@
 
 package com.ning.billing.account.glue;
 
+import org.skife.config.ConfigSource;
+
 import com.ning.billing.GuicyKillbillTestNoDBModule;
 import com.ning.billing.account.dao.AccountDao;
 import com.ning.billing.account.dao.MockAccountDao;
@@ -23,6 +25,10 @@ import com.ning.billing.mock.glue.MockNonEntityDaoModule;
 import com.ning.billing.util.bus.InMemoryBusModule;
 
 public class TestAccountModuleNoDB extends TestAccountModule {
+
+    public TestAccountModuleNoDB(final ConfigSource configSource) {
+        super(configSource);
+    }
 
     @Override
     protected void installAccountDao() {

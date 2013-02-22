@@ -17,9 +17,12 @@
 package com.ning.billing;
 
 import java.lang.reflect.Method;
+import java.util.Properties;
 
 import javax.inject.Inject;
 
+import org.skife.config.ConfigSource;
+import org.skife.config.SimplePropertyConfigSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.ITestResult;
@@ -48,7 +51,25 @@ public class GuicyKillbillTestSuite {
     protected ClockMock clock;
 
 
-    private final static ClockMock theStaticClock = new ClockMock();
+    private static final ClockMock theStaticClock = new ClockMock();
+
+    protected final ConfigSource configSource;
+
+    public GuicyKillbillTestSuite() {
+        final Properties properties = new Properties(System.getProperties());
+        properties.put("user.timezone", "UTC");
+
+        // Speed up the notification queue
+        properties.put("killbill.billing.util.notificationq.sleep", "100");
+        // Speed up the bus
+        properties.put("killbill.billing.util.persistent.bus.sleep", "100");
+        properties.put("killbill.billing.util.persistent.bus.nbThreads", "1");
+
+        configSource = new SimplePropertyConfigSource(properties);
+
+        // Ignore ehcache checks. Unfortunately, ehcache looks at system properties directly...
+        System.setProperty("net.sf.ehcache.skipUpdateCheck", "true");
+    }
 
     public static ClockMock getClock() {
         return theStaticClock;

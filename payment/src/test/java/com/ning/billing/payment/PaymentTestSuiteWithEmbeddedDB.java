@@ -77,7 +77,7 @@ public abstract class PaymentTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
 
         loadSystemPropertiesFromClasspath("/resource.properties");
 
-        final Injector injector = Guice.createInjector(new TestPaymentModuleWithEmbeddedDB(getClock()));
+        final Injector injector = Guice.createInjector(new TestPaymentModuleWithEmbeddedDB(configSource, getClock()));
         injector.injectMembers(this);
     }
 

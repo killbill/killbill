@@ -95,7 +95,7 @@ public class EntitlementTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     @BeforeClass(groups = "fast")
     public void beforeClass() throws Exception {
         DefaultEntitlementTestInitializer.loadSystemPropertiesFromClasspath("/entitlement.properties");
-        final Injector g = Guice.createInjector(Stage.PRODUCTION, new TestEngineModuleNoDB());
+        final Injector g = Guice.createInjector(Stage.PRODUCTION, new TestEngineModuleNoDB(configSource));
         g.injectMembers(this);
     }
 
