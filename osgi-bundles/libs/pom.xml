@@ -19,7 +19,7 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.ning.billing</groupId>
-        <artifactId>killbill</artifactId>
+        <artifactId>killbill-osgi-all-bundles</artifactId>
         <version>0.1.56-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
@@ -27,5 +27,6 @@
     <name>Killbill billing platform: OSGI library bundles</name>
     <packaging>pom</packaging>
     <modules>
+      <module>killbill</module>
     </modules>
 </project>

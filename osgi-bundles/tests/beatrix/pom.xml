@@ -20,7 +20,7 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.ning.billing</groupId>
-        <artifactId>killbill-osgi-bundles</artifactId>
+        <artifactId>killbill-osgi-test-bundles</artifactId>
         <version>0.1.56-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
@@ -36,6 +36,18 @@
             <groupId>com.ning.billing</groupId>
             <artifactId>killbill-api</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-osgi-bundles-lib-killbill</artifactId>
+        </dependency>
+
+
+        <!--
+        <dependency>
+            <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-osgi-all-bundles</artifactId>
+        </dependency>
+-->
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
@@ -92,7 +104,7 @@
                     <instructions>
                         <Bundle-Activator>com.ning.billing.osgi.bundles.test.TestActivator</Bundle-Activator>
                         <Import-Package>
-                            *;resolution:=optional
+                            *;resolution:=optional,com.ning.billing.osgi.api
                         </Import-Package>
                     </instructions>
                 </configuration>

@@ -261,12 +261,12 @@
             </dependency>
             <dependency>
                 <groupId>com.ning.billing</groupId>
-                <artifactId>killbill-osgi-bundles</artifactId>
+                <artifactId>killbill-osgi-all-bundles</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.ning.billing</groupId>
-                <artifactId>killbill-osgi-bundles-hello</artifactId>
+                <artifactId>killbill-osgi-bundles-lib-killbill</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
