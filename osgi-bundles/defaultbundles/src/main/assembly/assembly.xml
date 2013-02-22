@@ -13,6 +13,20 @@
             <useProjectAttachments>true</useProjectAttachments>
             <useTransitiveDependencies>false</useTransitiveDependencies>
             <unpack>false</unpack>
+            <excludes>
+                <exclude>com.ning.billing:killbill-osgi-bundles-jruby:jar</exclude>
+            </excludes>
+        </dependencySet>
+        <dependencySet>
+            <outputFileNameMapping>jruby.jar</outputFileNameMapping>
+            <outputDirectory>/</outputDirectory>
+            <useProjectArtifact>false</useProjectArtifact>
+            <useProjectAttachments>true</useProjectAttachments>
+            <useTransitiveDependencies>false</useTransitiveDependencies>
+            <unpack>false</unpack>
+            <includes>
+                <include>com.ning.billing:killbill-osgi-bundles-jruby:jar</include>
+            </includes>
         </dependencySet>
     </dependencySets>
 </assembly>
