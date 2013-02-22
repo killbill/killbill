@@ -119,6 +119,7 @@ public class SetupBundleWithAssertion {
 
     private PluginJavaConfig extractBundleTestResource() {
 
+
         final String resourceName = bundleName + "-" + killbillVersion + "-jar-with-dependencies.jar";
         final URL resourceUrl = Resources.getResource(resourceName);
         if (resourceUrl != null) {

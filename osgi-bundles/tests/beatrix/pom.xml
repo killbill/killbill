@@ -24,8 +24,8 @@
         <version>0.1.56-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
-    <artifactId>killbill-osgi-bundles-test</artifactId>
-    <name>Killbill billing platform: OSGI Test bundle</name>
+    <artifactId>killbill-osgi-bundles-test-beatrix</artifactId>
+    <name>Killbill billing platform: OSGI Beatrix Test bundle</name>
     <packaging>bundle</packaging>
     <dependencies>
         <dependency>

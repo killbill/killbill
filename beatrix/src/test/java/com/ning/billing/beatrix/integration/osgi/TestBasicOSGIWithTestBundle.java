@@ -59,7 +59,7 @@ import static com.jayway.awaitility.Awaitility.await;
  */
 public class TestBasicOSGIWithTestBundle extends TestOSGIBase {
 
-    private final String BUNDLE_TEST_RESOURCE = "killbill-osgi-bundles-test";
+    private final String BUNDLE_TEST_RESOURCE = "killbill-osgi-bundles-test-beatrix";
 
     @Inject
     private OSGIServiceRegistration<PaymentPluginApi> paymentPluginApiOSGIServiceRegistration;

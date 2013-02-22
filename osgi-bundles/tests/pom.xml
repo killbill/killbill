@@ -27,6 +27,6 @@
     <name>Killbill billing platform: OSGI Test bundles</name>
     <packaging>pom</packaging>
     <modules>
-        <module>test</module>
+        <module>beatrix</module>
     </modules>
 </project>
