@@ -138,7 +138,7 @@
                     <instructions>
                         <Bundle-Activator>com.ning.billing.meter.osgi.MeterActivator</Bundle-Activator>
                         <Import-Package>
-                            *;resolution:=optional
+                            *;resolution:=optional,com.ning.billing.osgi.api
                         </Import-Package>
                     </instructions>
                 </configuration>

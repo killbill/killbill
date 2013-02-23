@@ -47,32 +47,23 @@ import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.api.ExportUserApi;
 import com.ning.billing.util.api.TagUserApi;
 
-public class OSGIKillbillTracker implements OSGIKillbill, LogService {
+public class OSGIKillbillTracker extends OSGIKillbillLibraryBase implements OSGIKillbill {
 
 
-    private static final String LOG_SERVICE_NAME = "org.osgi.service.log.LogService";
     private static final String KILLBILL_SERVICE_NAME = "com.ning.billing.osgi.api.OSGIKillbill";
 
-    private final ServiceTracker<LogService, LogService> logTracker;
     private final ServiceTracker<OSGIKillbill, OSGIKillbill> killbillTracker;
 
     public OSGIKillbillTracker(BundleContext context) {
-        logTracker = new ServiceTracker(context, LOG_SERVICE_NAME, null);
-        logTracker.open();
-
         killbillTracker = new ServiceTracker(context, KILLBILL_SERVICE_NAME, null);
         killbillTracker.open();
     }
 
     public void close() {
-        if (logTracker != null) {
-            logTracker.close();
-        }
         if (killbillTracker != null) {
             killbillTracker.close();
         }
     }
-
 
     @Override
     public AccountUserApi getAccountUserApi() {
@@ -295,75 +286,5 @@ public class OSGIKillbillTracker implements OSGIKillbill, LogService {
         });
     }
 
-    @Override
-    public void log(final int level, final String message) {
-        logInternal(level, message, null);
-    }
 
-    @Override
-    public void log(final int level, final String message, final Throwable exception) {
-        logInternal(level, message, exception);
-    }
-
-    @Override
-    public void log(final ServiceReference sr, final int level, final String message) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void log(final ServiceReference sr, final int level, final String message, final Throwable exception) {
-        throw new UnsupportedOperationException();
-    }
-
-
-    private void logInternal(final int level, final String message, @Nullable final Throwable t) {
-
-        withServiceTracker(logTracker, new APICallback<Void, LogService>(LOG_SERVICE_NAME) {
-            @Override
-            public Void executeWithService(final LogService service) {
-                if (t == null) {
-                    service.log(level, message);
-                } else {
-                    service.log(level, message, t);
-                }
-                return null;
-            }
-
-            protected Void executeWithNoService() {
-
-                if (level >= 2) {
-                    System.out.println(message);
-                } else {
-                    System.err.println(message);
-                }
-                if (t != null) {
-                    t.printStackTrace(System.err);
-                }
-                return null;
-            }
-        });
-    }
-
-    private abstract class APICallback<API, T> {
-        
-        private final String serviceName;
-
-        protected APICallback(final String serviceName) {
-            this.serviceName = serviceName;
-        }
-
-        public abstract API executeWithService(T service);
-
-        protected API executeWithNoService() {
-            throw new OSGIServiceNotAvailable(serviceName);
-        }
-    }
-
-    private <API, S, T> API withServiceTracker(ServiceTracker<S, T> t, APICallback<API, T> foo) {
-        T service = t.getService();
-        if (service == null) {
-            return foo.executeWithNoService();
-        }
-        return foo.executeWithService(service);
-    }
 }

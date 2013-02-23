@@ -45,7 +45,7 @@ public abstract class JRubyPlugin {
     private static final String KILLBILL_SERVICES = "java_apis";
     private static final String ACTIVE = "@active";
 
-    protected final Logger logger;
+    protected final LogService logger;
     protected final BundleContext bundleContext;
     protected final String pluginGemName;
     protected final String rubyRequire;
@@ -59,7 +59,7 @@ public abstract class JRubyPlugin {
     private String cachedRequireLine = null;
 
     public JRubyPlugin(final PluginRubyConfig config, final ScriptingContainer container,
-                       final BundleContext bundleContext, final Logger logger) {
+                       final BundleContext bundleContext, final LogService logger) {
         this.logger = logger;
         this.bundleContext = bundleContext;
         this.pluginGemName = config.getPluginName();

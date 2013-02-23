@@ -31,7 +31,7 @@ import com.google.common.eventbus.Subscribe;
 public class JRubyNotificationPlugin extends JRubyPlugin {
 
     public JRubyNotificationPlugin(final PluginRubyConfig config, final ScriptingContainer container,
-                                   final BundleContext bundleContext, final Logger logger) {
+                                   final BundleContext bundleContext, final LogService logger) {
         super(config, container, bundleContext, logger);
     }
 

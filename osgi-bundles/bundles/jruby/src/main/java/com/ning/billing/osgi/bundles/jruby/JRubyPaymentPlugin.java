@@ -27,6 +27,7 @@ import org.jruby.embed.ScriptingContainer;
 import org.jruby.javasupport.JavaEmbedUtils;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.log.LogService;
 
 import com.ning.billing.osgi.api.config.PluginRubyConfig;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
@@ -43,7 +44,7 @@ public class JRubyPaymentPlugin extends JRubyPlugin implements PaymentPluginApi 
     private volatile ServiceRegistration<PaymentPluginApi> paymentInfoPluginRegistration;
 
     public JRubyPaymentPlugin(final PluginRubyConfig config, final ScriptingContainer container,
-                              final BundleContext bundleContext, final Logger logger) {
+                              final BundleContext bundleContext, final LogService logger) {
         super(config, container, bundleContext, logger);
     }
 

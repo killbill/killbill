@@ -35,6 +35,7 @@ import com.ning.billing.osgi.api.OSGIPluginProperties;
 import com.ning.billing.osgi.bundles.test.dao.TestDao;
 import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 import com.ning.billing.util.callcontext.TenantContext;
+import com.ning.killbill.osgi.libs.killbill.OSGIKillbillLogService;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillRegistrar;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillTracker;
 
@@ -50,6 +51,7 @@ import com.google.common.eventbus.Subscribe;
 public class TestActivator implements BundleActivator {
 
     private OSGIKillbillTracker kb;
+    private OSGIKillbillLogService logService;
     private OSGIKillbillRegistrar registrar;
     private TestDao testDao;
 
@@ -60,6 +62,7 @@ public class TestActivator implements BundleActivator {
         System.out.println("TestActivator starting bundle = " + bundleName);
 
         kb = new OSGIKillbillTracker(context);
+        logService = new OSGIKillbillLogService(context);
 
         registrar = new OSGIKillbillRegistrar();
 
@@ -87,7 +90,7 @@ public class TestActivator implements BundleActivator {
     @Subscribe
     public void handleKillbillEvent(final ExtBusEvent killbillEvent) {
 
-        kb.log(LogService.LOG_INFO, "Received external event " + killbillEvent.toString());
+        logService.log(LogService.LOG_INFO, "Received external event " + killbillEvent.toString());
 
         // Only looking at account creation
         if (killbillEvent.getEventType() != ExtBusEventType.ACCOUNT_CREATION) {
@@ -101,13 +104,12 @@ public class TestActivator implements BundleActivator {
             }
         };
 
-
         try {
             Account account = kb.getAccountUserApi().getAccountById(killbillEvent.getAccountId(), tenantContext);
             testDao.insertAccountExternalKey(account.getExternalKey());
 
         } catch (AccountApiException e) {
-            kb.log(LogService.LOG_ERROR, e.getMessage());
+            logService.log(LogService.LOG_ERROR, e.getMessage());
         }
     }
 
