@@ -16,6 +16,7 @@
 
 package com.ning.billing.analytics;
 
+import com.ning.billing.catalog.api.Limit;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 
@@ -58,6 +59,16 @@ public class MockProduct implements Product {
 
     @Override
     public boolean isRetired() {
+        return false;
+    }
+
+    @Override
+    public Limit[] getLimits() {
+        return new Limit[0];
+    }
+
+    @Override
+    public boolean compliesWithLimits(String unit, double value) {
         return false;
     }
 }

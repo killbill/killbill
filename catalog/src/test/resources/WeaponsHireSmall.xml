@@ -30,6 +30,7 @@
     <units>
         <unit name="targets"/>
         <unit name="misfires"/>
+        <unit name="shells"/>
     </units>
 
 	<products>
@@ -38,6 +39,12 @@
 		</product>
 		<product name="Shotgun">
 			<category>BASE</category>
+                <limits>
+                    <limit>
+                        <unit>shells</unit>
+                        <max>300</max>
+                    </limit>
+                </limits>
 		</product>
 		<product name="Laser-Scope">
 			<category>ADD_ON</category>
@@ -161,6 +168,12 @@
 					<price><currency>EUR</currency><value>1499.95</value></price>
 					<price><currency>GBP</currency><value>1699.95</value></price>
 				</recurringPrice>
+                <limits>
+                    <limit>
+                        <unit>shells</unit>
+                        <max>200</max>
+                    </limit>
+                </limits>
 			</finalPhase>
 		</plan>
 		<plan name="laser-scope-monthly">

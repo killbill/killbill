@@ -163,7 +163,7 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
     public boolean compliesWithLimits(String unit, double value) {
         Limit l = findLimit(unit);
         if (l == null) {
-            return true;
+            return getPlan().getProduct().compliesWithLimits(unit, value);
         }
         return l.compliesWith(value);
     }

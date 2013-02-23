@@ -54,6 +54,38 @@ public class TestLimits extends CatalogTestSuiteNoDB {
         Assert.assertTrue(catalog.compliesWithLimits("pistol-monthly-evergreen", "misfires", 3));
         Assert.assertFalse(catalog.compliesWithLimits("pistol-monthly-evergreen", "misfires", 21));
         Assert.assertTrue(catalog.compliesWithLimits("pistol-monthly-evergreen", "misfires", -1));
-
+/*      <product name="Shotgun">
+            <category>BASE</category>
+            <limits>
+                <limit>
+                    <unit>shells</unit>
+                    <max>300</max>
+                </limit>
+            </limits>
+        </product>
+        <plan name="shotgun-annual">
+            <product>Shotgun</product>
+        ...
+            <finalPhase type="EVERGREEN">
+                <limits>
+                    <limit>
+                        <unit>shells</unit>
+                        <max>200</max>
+                    </limit>
+                </limits>
+            </finalPhase>
+        </plan>
+*/
+        Assert.assertTrue(catalog.compliesWithLimits("shotgun-monthly-evergreen", "shells", 100));
+        Assert.assertFalse(catalog.compliesWithLimits("shotgun-monthly-evergreen", "shells", 400));
+        Assert.assertTrue(catalog.compliesWithLimits("shotgun-monthly-evergreen", "shells", 250));
+     
+        Assert.assertTrue(catalog.compliesWithLimits("shotgun-annual-evergreen", "shells", 100));
+        Assert.assertFalse(catalog.compliesWithLimits("shotgun-annual-evergreen", "shells", 400));
+        Assert.assertFalse(catalog.compliesWithLimits("shotgun-annual-evergreen", "shells", 250));
+     
+        
+        
+        
     }
 }

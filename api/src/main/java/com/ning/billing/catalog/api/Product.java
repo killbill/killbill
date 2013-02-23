@@ -16,6 +16,7 @@
 
 package com.ning.billing.catalog.api;
 
+
 /**
  * The interface {@code Product}
  */
@@ -53,9 +54,21 @@ public interface Product {
 
     /**
      * 
-     * @return the name of tha catalog where this {@code Product} has been defined
+     * @return the name of the catalog where this {@code Product} has been defined
      */
     public String getCatalogName();
+
+    /**
+     * 
+     * @return the limits associated with this product
+     */
+    public Limit[] getLimits();
+
+    /**
+     * 
+     * @return whether the given unit-value pair meets the limits of the product
+     */
+    public boolean compliesWithLimits(String unit, double value);
 
 
 }

@@ -26,6 +26,7 @@ import javax.xml.bind.annotation.XmlIDREF;
 import java.net.URI;
 import java.util.Arrays;
 
+import com.ning.billing.catalog.api.Limit;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.util.config.catalog.ValidatingConfig;
@@ -54,6 +55,10 @@ public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implemen
     @XmlIDREF
     @XmlElement(name = "addonProduct", required = true)
     private DefaultProduct[] available = EMPTY_PRODUCT_LIST;
+    
+    @XmlElementWrapper(name = "limits", required = false)
+    @XmlElement(name = "limit", required = true)
+    private DefaultLimit[] limits = new DefaultLimit[0];
 
     //Not included in XML
     private String catalogName;
@@ -114,6 +119,32 @@ public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implemen
         return false;
     }
 
+    @Override
+    public DefaultLimit[] getLimits() {
+        return limits;
+    }
+    
+    
+    protected Limit findLimit(String unit) {
+        for(Limit limit: limits) {
+            if(limit.getUnit().getName().equals(unit) ) {
+                    return limit;
+            }
+        }
+        return null;
+    }
+    
+    @Override
+    public boolean compliesWithLimits(String unit, double value) {
+        Limit l = findLimit(unit);
+        if (l == null) {
+            return true;
+        }
+        return l.compliesWith(value);
+    }
+
+
+    
     @Override
     public void initialize(final StandaloneCatalog catalog, final URI sourceURI) {
         catalogName = catalog.getCatalogName();
