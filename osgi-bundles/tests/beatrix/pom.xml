@@ -29,10 +29,6 @@
     <packaging>bundle</packaging>
     <dependencies>
         <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.ning.billing</groupId>
             <artifactId>killbill-api</artifactId>
         </dependency>
@@ -40,14 +36,6 @@
             <groupId>com.ning.billing</groupId>
             <artifactId>killbill-osgi-bundles-lib-killbill</artifactId>
         </dependency>
-
-
-        <!--
-        <dependency>
-            <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-osgi-all-bundles</artifactId>
-        </dependency>
--->
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>

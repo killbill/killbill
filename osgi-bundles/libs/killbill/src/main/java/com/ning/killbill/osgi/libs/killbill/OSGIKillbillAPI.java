@@ -16,18 +16,12 @@
 
 package com.ning.killbill.osgi.libs.killbill;
 
-import javax.annotation.Nullable;
-import javax.sql.DataSource;
-
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
-import org.osgi.service.log.LogService;
 import org.osgi.util.tracker.ServiceTracker;
 
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.analytics.api.sanity.AnalyticsSanityApi;
 import com.ning.billing.analytics.api.user.AnalyticsUserApi;
-import com.ning.billing.beatrix.bus.api.ExternalBus;
 import com.ning.billing.catalog.api.CatalogUserApi;
 import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi;
 import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
@@ -47,14 +41,14 @@ import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.api.ExportUserApi;
 import com.ning.billing.util.api.TagUserApi;
 
-public class OSGIKillbillTracker extends OSGIKillbillLibraryBase implements OSGIKillbill {
+public class OSGIKillbillAPI extends OSGIKillbillLibraryBase implements OSGIKillbill {
 
 
     private static final String KILLBILL_SERVICE_NAME = "com.ning.billing.osgi.api.OSGIKillbill";
 
     private final ServiceTracker<OSGIKillbill, OSGIKillbill> killbillTracker;
 
-    public OSGIKillbillTracker(BundleContext context) {
+    public OSGIKillbillAPI(BundleContext context) {
         killbillTracker = new ServiceTracker(context, KILLBILL_SERVICE_NAME, null);
         killbillTracker.open();
     }
@@ -257,16 +251,6 @@ public class OSGIKillbillTracker extends OSGIKillbillLibraryBase implements OSGI
     }
 
     @Override
-    public ExternalBus getExternalBus() {
-        return withServiceTracker(killbillTracker, new APICallback<ExternalBus, OSGIKillbill>(KILLBILL_SERVICE_NAME) {
-            @Override
-            public ExternalBus executeWithService(final OSGIKillbill service) {
-                return service.getExternalBus();
-            }
-        });
-    }
-
-    @Override
     public PluginConfigServiceApi getPluginConfigServiceApi() {
         return withServiceTracker(killbillTracker, new APICallback<PluginConfigServiceApi, OSGIKillbill>(KILLBILL_SERVICE_NAME) {
             @Override
@@ -275,16 +259,4 @@ public class OSGIKillbillTracker extends OSGIKillbillLibraryBase implements OSGI
             }
         });
     }
-
-    @Override
-    public DataSource getDataSource() {
-        return withServiceTracker(killbillTracker, new APICallback<DataSource, OSGIKillbill>(KILLBILL_SERVICE_NAME) {
-            @Override
-            public DataSource executeWithService(final OSGIKillbill service) {
-                return service.getDataSource();
-            }
-        });
-    }
-
-
 }

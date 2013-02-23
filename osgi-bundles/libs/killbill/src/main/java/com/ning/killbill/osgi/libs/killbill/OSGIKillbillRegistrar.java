@@ -23,8 +23,6 @@ import java.util.Map;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
-import com.ning.billing.payment.plugin.api.PaymentPluginApi;
-
 public class OSGIKillbillRegistrar {
 
     private final Map<String, ServiceRegistration> serviceRegistrations;
@@ -34,7 +32,7 @@ public class OSGIKillbillRegistrar {
     }
 
     public <S, T extends S> void registerService(final BundleContext context, final Class<S> svcClass, final S service, final Dictionary props) {
-        ServiceRegistration svcRegistration =  context.registerService(svcClass.getName(), service, props);
+        ServiceRegistration svcRegistration = context.registerService(svcClass.getName(), service, props);
         serviceRegistrations.put(svcClass.getName(), svcRegistration);
     }
 

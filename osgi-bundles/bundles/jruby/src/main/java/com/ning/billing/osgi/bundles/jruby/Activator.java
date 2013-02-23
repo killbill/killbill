@@ -28,19 +28,19 @@ import org.osgi.service.log.LogService;
 import com.ning.billing.osgi.api.config.PluginConfig.PluginType;
 import com.ning.billing.osgi.api.config.PluginConfigServiceApi;
 import com.ning.billing.osgi.api.config.PluginRubyConfig;
+import com.ning.killbill.osgi.libs.killbill.OSGIKillbillAPI;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillLogService;
-import com.ning.killbill.osgi.libs.killbill.OSGIKillbillTracker;
 
 public class Activator implements BundleActivator {
 
-    private OSGIKillbillTracker kb;
+    private OSGIKillbillAPI kb;
     private OSGIKillbillLogService logService;
 
     private JRubyPlugin plugin = null;
 
     public void start(final BundleContext context) throws Exception {
 
-        kb = new OSGIKillbillTracker(context);
+        kb = new OSGIKillbillAPI(context);
         logService = new OSGIKillbillLogService(context);
 
         logService.log(LogService.LOG_INFO, "JRuby bundle activated");

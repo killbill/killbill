@@ -18,6 +18,8 @@ package com.ning.billing.osgi.bundles.test;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.Observable;
+import java.util.Observer;
 import java.util.UUID;
 
 import org.osgi.framework.BundleActivator;
@@ -30,16 +32,16 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.beatrix.bus.api.ExtBusEvent;
 import com.ning.billing.beatrix.bus.api.ExtBusEventType;
-import com.ning.billing.beatrix.bus.api.ExternalBus;
 import com.ning.billing.osgi.api.OSGIPluginProperties;
 import com.ning.billing.osgi.bundles.test.dao.TestDao;
 import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 import com.ning.billing.util.callcontext.TenantContext;
+import com.ning.killbill.osgi.libs.killbill.OSGIKillbillAPI;
+import com.ning.killbill.osgi.libs.killbill.OSGIKillbillDataSource;
+import com.ning.killbill.osgi.libs.killbill.OSGIKillbillEventDispatcher;
+import com.ning.killbill.osgi.libs.killbill.OSGIKillbillEventDispatcher.OSGIKillbillEventHandler;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillLogService;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillRegistrar;
-import com.ning.killbill.osgi.libs.killbill.OSGIKillbillTracker;
-
-import com.google.common.eventbus.Subscribe;
 
 /**
  * Test class used by Beatrix OSGI test to verify that:
@@ -48,11 +50,14 @@ import com.google.common.eventbus.Subscribe;
  * - test bundle is able to register a fake PaymentApi service
  * - test bundle can use the DataSource from Killbill and write on disk
  */
-public class TestActivator implements BundleActivator {
+public class TestActivator implements BundleActivator, OSGIKillbillEventHandler {
 
-    private OSGIKillbillTracker kb;
+    private OSGIKillbillAPI api;
     private OSGIKillbillLogService logService;
     private OSGIKillbillRegistrar registrar;
+    private OSGIKillbillDataSource dataSource;
+    private OSGIKillbillEventDispatcher dispatcher;
+
     private TestDao testDao;
 
     @Override
@@ -61,33 +66,41 @@ public class TestActivator implements BundleActivator {
         final String bundleName = context.getBundle().getSymbolicName();
         System.out.println("TestActivator starting bundle = " + bundleName);
 
-        kb = new OSGIKillbillTracker(context);
+        api = new OSGIKillbillAPI(context);
         logService = new OSGIKillbillLogService(context);
-
+        dataSource = new OSGIKillbillDataSource(context);
+        dispatcher = new OSGIKillbillEventDispatcher(context);
+        dispatcher.registerEventHandler(this);
         registrar = new OSGIKillbillRegistrar();
 
-        final IDBI dbi = new DBI(kb.getDataSource());
+        final IDBI dbi = new DBI(dataSource.getDataSource());
         testDao = new TestDao(dbi);
         registerPaymentApi(context, testDao);
-
-        registerForKillbillEvents(context);
-
         testDao.createTable();
-
         testDao.insertStarted();
     }
 
     @Override
     public void stop(final BundleContext context) {
-        if (kb != null) {
-            kb.close();
-            this.kb = null;
-        }
+        api.close();
+        logService.close();
+        dispatcher.unregisterEventHandler(this);
+        dispatcher.close();
+        dataSource.close();
+
         registrar.unregisterAll();
         System.out.println("Good bye world from TestActivator!");
     }
 
-    @Subscribe
+
+    private void registerPaymentApi(final BundleContext context, final TestDao dao) {
+
+        final Dictionary props = new Hashtable();
+        props.put(OSGIPluginProperties.PLUGIN_NAME_PROP, "test");
+        registrar.registerService(context, PaymentPluginApi.class, new TestPaymentPluginApi("test", dao), props);
+    }
+
+    @Override
     public void handleKillbillEvent(final ExtBusEvent killbillEvent) {
 
         logService.log(LogService.LOG_INFO, "Received external event " + killbillEvent.toString());
@@ -105,7 +118,7 @@ public class TestActivator implements BundleActivator {
         };
 
         try {
-            Account account = kb.getAccountUserApi().getAccountById(killbillEvent.getAccountId(), tenantContext);
+            Account account = api.getAccountUserApi().getAccountById(killbillEvent.getAccountId(), tenantContext);
             testDao.insertAccountExternalKey(account.getExternalKey());
 
         } catch (AccountApiException e) {
@@ -113,21 +126,4 @@ public class TestActivator implements BundleActivator {
         }
     }
 
-
-    private void registerForKillbillEvents(final BundleContext context) {
-        try {
-            final ExternalBus externalBus = kb.getExternalBus();
-            externalBus.register(this);
-        } catch (Exception e) {
-            System.err.println("Error in TestActivator: " + e.getLocalizedMessage());
-        } finally {
-        }
-    }
-
-    private void registerPaymentApi(final BundleContext context, final TestDao dao) {
-
-        final Dictionary props = new Hashtable();
-        props.put(OSGIPluginProperties.PLUGIN_NAME_PROP, "test");
-        registrar.registerService(context, PaymentPluginApi.class, new TestPaymentPluginApi("test", dao), props);
-    }
 }

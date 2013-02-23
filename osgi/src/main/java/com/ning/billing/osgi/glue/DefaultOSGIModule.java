@@ -26,6 +26,7 @@ import org.skife.config.ConfigurationObjectFactory;
 import com.ning.billing.osgi.DefaultOSGIKillbill;
 import com.ning.billing.osgi.DefaultOSGIService;
 import com.ning.billing.osgi.KillbillActivator;
+import com.ning.billing.osgi.KillbillEventObservable;
 import com.ning.billing.osgi.PureOSGIBundleFinder;
 import com.ning.billing.osgi.api.OSGIKillbill;
 import com.ning.billing.osgi.api.OSGIService;
@@ -77,6 +78,7 @@ public class DefaultOSGIModule extends AbstractModule {
         bind(PluginConfigServiceApi.class).to(DefaultPluginConfigServiceApi.class).asEagerSingleton();
         bind(OSGIKillbill.class).to(DefaultOSGIKillbill.class).asEagerSingleton();
         bind(OSGIDataSourceProvider.class).asEagerSingleton();
+        bind(KillbillEventObservable.class).asEagerSingleton();
         bind(DataSource.class).annotatedWith(Names.named(OSGI_NAMED)).toProvider(OSGIDataSourceProvider.class).asEagerSingleton();
     }
 }
