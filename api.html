@@ -43,117 +43,149 @@ layout: default
                         <th>Resource</th>
                         <th>Query params</th>
                         <th>Description</th>
-                        <th>Return codes</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
                         <td>GET&nbsp;/1.0/kb/accounts/<code>account_id</code></td>
-                        <td></td>
-                        <td>Retrieve account specified by account_id</td>
-                        <td>200, 204, 400</td>
+                        <td><ul>
+                                <li>accountWithBalance=true|false</li>
+                                <li>accountWithBalanceAndCBA=true|false</li>
+                            </ul></td>
+                        <td>Retrieve account specified by <code>account_id</code></td>
                     </tr>
                     <tr>
                         <td>GET&nbsp;/1.0/kb/accounts/<code>account_id</code>/bundles</td>
-                        <td></td>
-                        <td>Retrieve bundles associated with account specified by account_id</td>
-                        <td>200, 204, 400</td>
-                    </tr>
-                    <tr>
-                        <td>GET&nbsp;/1.0/kb/accounts/<code>account_id</code>/paymentMethods</td>
-                        <td>withPluginInfo</td>
-                        <td>Retrieves the payment methods by account_id</td>
-                        <td>200, 204, 400</td>
+                        <td><ul>
+                                <li>externalKey</li>
+                            </ul></td>
+                        <td>Retrieve bundles associated with account specified by <code>account_id</code></td>
                     </tr>
                     <tr>
                         <td>GET&nbsp;/1.0/kb/accounts</td>
-                        <td>external_key</td>
+                        <td><ul>
+                                <li>external_key</li>
+                                <li>accountWithBalance=true|false</li>
+                                <li>accountWithBalanceAndCBA=true|false</li>
+                            </ul></td>
                         <td>Retrieves account specified by external_key</td>
-                        <td>200, 204, 400</td>
                     </tr>
                     <tr>
                         <td>POST&nbsp;/1.0/kb/accounts</td>
                         <td></td>
                         <td>Create account</td>
-                        <td>201, 400</td>
                     </tr>
                     <tr>
                         <td>PUT&nbsp;/1.0/kb/accounts/<code>account_id</code></td>
                         <td></td>
                         <td>Update account</td>
-                        <td>200, 204, 400</td>
                     </tr>
                     <tr>
                         <td>DELETE&nbsp;/1.0/kb/accounts/<code>account_id</code></td>
                         <td></td>
                         <td>Delete account specified by account_id – cancel all subscriptions</td>
-                        <td>204, 400</td>
                     </tr>
                     <tr>
-                        <td>POST&nbsp;/1.0/kb/accounts/<code>account_id</code>/paymentMethods</td>
-                        <td>isDefault</td>
-                        <td>Creates a new payment method for the account specified account_id</td>
-                        <td>201, 400</td>
-                    </tr>
-                    <tr>
-                        <td>PUT&nbsp;/1.0/kb/accounts/<code>account_id</code>/paymentMethods/payment_method_id/setDefault</td>
-                        <td></td>
-                        <td>Set paymentMethod as default for the account specified account_id</td>
-                        <td>200, 400</td>
-                    </tr>
-                    <tr>
-                        <td>GET&nbsp;/1.0/kb/accounts/<code>account_id</code>/emails</td>
-                        <td></td>
-                        <td></td>
-                        <td>200, 400</td>
-                    </tr>
-                    <tr>
-                        <td>POST&nbsp;/1.0/kb/accounts/<code>account_id</code>/emails</td>
-                        <td></td>
-                        <td>Get the list of emails associated with an account</td>
-                        <td>201, 400</td>
-                    </tr>
-                    <tr>
-                        <td>DELETE&nbsp;/1.0/kb/accounts/<code>account_id</code>/emails/<email></td>
-                        <td></td>
-                        <td>Remove an email associated with an account</td>
-                        <td>200, 400</td>
+                        <td>GET&nbsp;/1.0/kb/accounts/<code>account_id</code>/timeline</td>
+                        <td><ul>
+                                <li>audit=FULL|MINIMAL|NONE</li>
+                            </ul></td>
+                        <td>Retrieve account timeline for specified account_id</td>
                     </tr>
                     <tr>
                         <td>GET&nbsp;/1.0/kb/accounts/<code>account_id</code>/emailNotifications</td>
                         <td></td>
                         <td>Check whether email notifications are turned on for this account</td>
-                        <td>200, 404</td>
                     </tr>
                     <tr>
                         <td>PUT&nbsp;/1.0/kb/accounts/<code>account_id</code>/emailNotifications</td>
                         <td></td>
                         <td>Update email notifications for this account</td>
-                        <td>200, 404</td>
                     </tr>
                     <tr>
-                        <td>GET&nbsp;/1.0/kb/accounts/<code>account_id</code>/timeline</td>
+                        <td>GET&nbsp;/1.0/kb/accounts/<code>account_id</code>/emails</td>
                         <td></td>
-                        <td>Retrieve account timeline for specified account_id</td>
-                        <td>200, 204</td>
+                        <td>Get all emails associated with that account</td>
+                    </tr>
+                    <tr>
+                        <td>POST&nbsp;/1.0/kb/accounts/<code>account_id</code>/emails</td>
+                        <td></td>
+                        <td>Add an email to that account</td>
+                    </tr>
+                    <tr>
+                        <td>DELETE&nbsp;/1.0/kb/accounts/<code>account_id</code>/emails/<code>email</code></td>
+                        <td></td>
+                        <td>Remove an email from that account</td>
+                    </tr>
+                    <tr>
+                        <td>POST&nbsp;/1.0/kb/accounts/<code>account_id</code>/cbaRebalancing</td>
+                        <td></td>
+                        <td>Rebalance this account CBA</td>
+                    </tr>
+                    <tr>
+                        <td>GET&nbsp;/1.0/kb/accounts/<code>account_id</code>/payments</td>
+                        <td></td>
+                        <td>Retrieve all payments that account</td>
+                    </tr>
+                    <tr>
+                        <td>POST&nbsp;/1.0/kb/accounts/<code>account_id</code>/payment_methods</td>
+                        <td><ul>
+                                <li>isDefault=true|false</li>
+                            </ul></td>
+                        <td>Add a payment method</td>
+                    </tr>
+                    <tr>
+                        <td>GET&nbsp;/1.0/kb/accounts/<code>account_id</code>/payment_methods</td>
+                        <td></td>
+                        <td>Retrieve all payment methods for that account</td>
+                    </tr>
+                    <tr>
+                        <td>PUT /1.0/kb/accounts/<code>account_id</code>/payment_methods/<code>payment_method_id</code>/setDefault</td>
+                        <td></td>
+                        <td>Set the default payment method</td>
+                    </tr>
+                    <tr>
+                        <td>GET&nbsp;/1.0/kb/accounts/<code>account_id</code>/refunds</td>
+                        <td></td>
+                        <td>Retrieve the refund information associated to that account</td>
                     </tr>
                     <tr>
                         <td>GET&nbsp;/1.0/kb/accounts/custom_fields/<code>account_id</code></td>
                         <td></td>
-                        <td>Retrieve the custom fields associated with that object</td>
-                        <td>200, 204</td>
+                        <td>Retrieve the custom fields associated with that account</td>
                     </tr>
                     <tr>
-                        <td>PUT&nbsp;/1.0/kb/accounts/custom_fields/<code>account_id</code></td>
+                        <td>POST&nbsp;/1.0/kb/accounts/custom_fields/<code>account_id</code></td>
                         <td></td>
-                        <td>Modify the custom field associated to that object </td>
-                        <td>204, 400</td>
+                        <td>Modify the custom field associated to that account</td>
                     </tr>
                     <tr>
                         <td>DELETE&nbsp;/1.0/kb/accounts/custom_fields/<code>account_id</code></td>
-                        <td>name</td>
+                        <td><ul>
+                                <li>name</li>
+                            </ul></td>
                         <td>Remove the custom field</td>
-                        <td>204, 400</td>
+                    </tr>
+                    <tr>
+                        <td>GET&nbsp;/1.0/kb/accounts/<code>account_id</code>/tags</td>
+                        <td><ul>
+                                <li>audit=FULL|MINIMAL|NONE</li>
+                            </ul></td>
+                        <td>Retrieve all tags for that account</td>
+                    </tr>
+                    <tr>
+                        <td>POST&nbsp;/1.0/kb/accounts/<code>account_id</code>/tags</td>
+                        <td><ul>
+                                <li>taglist</li>
+                            </ul></td>
+                        <td>Attach a list of tags to that account</td>
+                    </tr>
+                    <tr>
+                        <td>DELETE&nbsp;/1.0/kb/accounts/<code>account_id</code>/tags</td>
+                        <td><ul>
+                                <li>taglist</li>
+                            </ul></td>
+                        <td>Remove a set of tags associated with that account</td>
                     </tr>
                 </tbody>
             </table>
@@ -539,12 +571,6 @@ layout: default
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>GET&nbsp;/1.0/kb/accounts/<code>account_id</code>/refunds</td>
-                        <td></td>
-                        <td>Retrieve the refund information associated to that account</td>
-                        <td>200, 404</td>
-                    </tr>
                     <tr>
                         <td>GET&nbsp;/1.0/kb/payments/<code>payment_id</code>/refunds</td>
                         <td></td>
