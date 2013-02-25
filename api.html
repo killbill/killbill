@@ -308,15 +308,30 @@ layout: default
                         <th>Resource</th>
                         <th>Query params</th>
                         <th>Description</th>
-                        <th>Return codes</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
+                        <td>GET&nbsp;/1.0/kb/catalog</td>
                         <td></td>
+                        <td>Retrieve the current catalog</td>
+                    </tr>
+                    <tr>
+                        <td>GET&nbsp;/1.0/kb/catalog/availableAddons</td>
+                        <td><ul>
+                                <li>baseProductName</li>
+                            </ul></td>
+                        <td>Retrieve available addons for the specific base product</td>
+                    </tr>
+                    <tr>
+                        <td>GET&nbsp;/1.0/kb/catalog/availableBasePlans</td>
                         <td></td>
+                        <td>Retrieve available base plans</td>
+                    </tr>
+                    <tr>
+                        <td>GET&nbsp;/1.0/kb/catalog/simpleCatalog</td>
                         <td></td>
-                        <td></td>
+                        <td>Retrieve a simplified version of the current catalog</td>
                     </tr>
                 </tbody>
             </table>
