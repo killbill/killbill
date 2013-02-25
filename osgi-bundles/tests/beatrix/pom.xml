@@ -92,6 +92,7 @@
                     <instructions>
                         <Bundle-Activator>com.ning.billing.osgi.bundles.test.TestActivator</Bundle-Activator>
                         <Import-Package>
+                            <!-- maven-bundle-plugin does not seem to detect that the library is using OSGIKillbill, this is annoying... -->
                             *;resolution:=optional,com.ning.billing.osgi.api
                         </Import-Package>
                     </instructions>

@@ -18,11 +18,8 @@ package com.ning.billing.osgi.bundles.test;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
-import java.util.Observable;
-import java.util.Observer;
 import java.util.UUID;
 
-import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.log.LogService;
 import org.skife.jdbi.v2.DBI;
@@ -36,12 +33,8 @@ import com.ning.billing.osgi.api.OSGIPluginProperties;
 import com.ning.billing.osgi.bundles.test.dao.TestDao;
 import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 import com.ning.billing.util.callcontext.TenantContext;
-import com.ning.killbill.osgi.libs.killbill.OSGIKillbillAPI;
-import com.ning.killbill.osgi.libs.killbill.OSGIKillbillDataSource;
-import com.ning.killbill.osgi.libs.killbill.OSGIKillbillEventDispatcher;
+import com.ning.killbill.osgi.libs.killbill.KillbillActivatorBase;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillEventDispatcher.OSGIKillbillEventHandler;
-import com.ning.killbill.osgi.libs.killbill.OSGIKillbillLogService;
-import com.ning.killbill.osgi.libs.killbill.OSGIKillbillRegistrar;
 
 /**
  * Test class used by Beatrix OSGI test to verify that:
@@ -50,13 +43,7 @@ import com.ning.killbill.osgi.libs.killbill.OSGIKillbillRegistrar;
  * - test bundle is able to register a fake PaymentApi service
  * - test bundle can use the DataSource from Killbill and write on disk
  */
-public class TestActivator implements BundleActivator, OSGIKillbillEventHandler {
-
-    private OSGIKillbillAPI api;
-    private OSGIKillbillLogService logService;
-    private OSGIKillbillRegistrar registrar;
-    private OSGIKillbillDataSource dataSource;
-    private OSGIKillbillEventDispatcher dispatcher;
+public class TestActivator extends KillbillActivatorBase implements OSGIKillbillEventHandler {
 
     private TestDao testDao;
 
@@ -66,32 +53,26 @@ public class TestActivator implements BundleActivator, OSGIKillbillEventHandler 
         final String bundleName = context.getBundle().getSymbolicName();
         System.out.println("TestActivator starting bundle = " + bundleName);
 
-        api = new OSGIKillbillAPI(context);
-        logService = new OSGIKillbillLogService(context);
-        dataSource = new OSGIKillbillDataSource(context);
-        dispatcher = new OSGIKillbillEventDispatcher(context);
-        dispatcher.registerEventHandler(this);
-        registrar = new OSGIKillbillRegistrar();
+        super.start(context);
+
 
         final IDBI dbi = new DBI(dataSource.getDataSource());
         testDao = new TestDao(dbi);
-        registerPaymentApi(context, testDao);
         testDao.createTable();
         testDao.insertStarted();
+        registerPaymentApi(context, testDao);
     }
 
     @Override
     public void stop(final BundleContext context) {
-        api.close();
-        logService.close();
-        dispatcher.unregisterEventHandler(this);
-        dispatcher.close();
-        dataSource.close();
-
-        registrar.unregisterAll();
+        super.stop(context);
         System.out.println("Good bye world from TestActivator!");
     }
 
+    @Override
+    public OSGIKillbillEventHandler getOSGIKillbillEventHandler() {
+        return this;
+    }
 
     private void registerPaymentApi(final BundleContext context, final TestDao dao) {
 
