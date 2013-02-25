@@ -19,7 +19,7 @@ layout: default
             <li><a href="#rest_payment">Payment</a></li>
             <li><a href="#rest_refund">Refund</a></li>
             <li><a href="#rest_subscription">Subscription</a></li>
-            <li><a href="#rest_tag">Tag</a></li>
+            <li><a href="#rest_tag_definition">Tag</a></li>
             <li><a href="#rest_tenant">Tenant</a></li>
         </ul>
     </div>
@@ -730,63 +730,93 @@ layout: default
                         <th>Resource</th>
                         <th>Query params</th>
                         <th>Description</th>
-                        <th>Return codes</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
                         <td>GET&nbsp;/1.0/kb/subscriptions/<code>subscription_id</code></td>
                         <td></td>
-                        <td>Retrieve the current subscription state</td>
-                        <td>200, 204, 400</td>
+                        <td>Retrieve a given subscription</td>
                     </tr>
                     <tr>
                         <td>POST&nbsp;/1.0/kb/subscriptions</td>
-                        <td>requested_date,call_completion,call_timeout_sec</td>
+                        <td><ul>
+                                <li>requestedDate</li>
+                                <li>callCompletion=true|false</li>
+                                <li>callTimeoutSec=3</li>
+                            </ul></td>
                         <td>Create a new subscription</td>
-                        <td>201, 400</td>
                     </tr>
                     <tr>
                         <td>PUT&nbsp;/1.0/kb/subscriptions/<code>subscription_id</code></td>
-                        <td>requested_date,call_completion,call_timeout_sec</td>
-                        <td>Change subscription</td>
-                        <td>200, 204, 400</td>
+                        <td><ul>
+                                <li>requestedDate</li>
+                                <li>callCompletion=true|false</li>
+                                <li>callTimeoutSec=3</li>
+                                <li>policy</li>
+                            </ul></td>
+                        <td>Change plan</td>
                     </tr>
                     <tr>
                         <td>PUT&nbsp;/1.0/kb/subscriptions/<code>subscription_id</code>/uncancel</td>
                         <td></td>
                         <td>Uncancel a future cancelled subscription</td>
-                        <td>200, 204, 400</td>
                     </tr>
                     <tr>
                         <td>DELETE&nbsp;/1.0/kb/subscriptions/<code>subscription_id</code></td>
-                        <td>requested_date,call_completion,call_timeout_sec</td>
-                        <td>Cancel subscription specified by subscription_id</td>
-                        <td>200, 204, 400</td>
+                        <td><ul>
+                                 <li>requestedDate</li>
+                                 <li>callCompletion=true|false</li>
+                                 <li>callTimeoutSec=3</li>
+                                 <li>policy</li>
+                             </ul></td>
+                        <td>Cancel a subscription specified by <code>subscription_id</code></td>
                     </tr>
                     <tr>
-                        <td>GET&nbsp;/1.0/kb/subscriptions/custom_fields/<code>subscription_id</code></td>
+                        <td>GET&nbsp;/1.0/kb/subscriptions/<code>subscription_id</code>/custom_fields</td>
                         <td></td>
-                        <td>Retrieve the custom fields associated with that object</td>
-                        <td>200, 204</td>
+                        <td>Retrieve the custom fields associated with that subscription</td>
                     </tr>
                     <tr>
-                        <td>PUT&nbsp;/1.0/kb/subscriptions/custom_fields<code>subscription_id</code></td>
-                        <td></td>
-                        <td>Modify the custom field associated to that object </td>
-                        <td>204, 400</td>
+                        <td>POST&nbsp;/1.0/kb/subscriptions/<code>subscription_id</code>/custom_fields</td>
+                        <td><ul>
+                                <li>customFieldList</li>
+                            </ul></td>
+                        <td>Create custom fields associated with that subscription</td>
                     </tr>
                     <tr>
-                        <td>DELETE&nbsp;/1.0/kb/subscriptions/custom_fields/<code>subscription_id</code></td>
-                        <td>name</td>
-                        <td>Remove the custom field</td>
-                        <td>204, 400</td>
+                        <td>DELETE&nbsp;/1.0/kb/subscriptions/<code>subscription_id</code>/custom_fields</td>
+                        <td><ul>
+                                <li>customFieldList</li>
+                            </ul></td>
+                        <td>Remove custom fields</td>
+                    </tr>
+                    <tr>
+                        <td>GET&nbsp;/1.0/kb/subscriptions/<code>subscription_id</code>/tags</td>
+                        <td><ul>
+                                <li>audit=FULL|MINIMAL|NONE</li>
+                            </ul></td>
+                        <td>Retrieve all tags for that subscription</td>
+                    </tr>
+                    <tr>
+                        <td>POST&nbsp;/1.0/kb/subscriptions/<code>subscription_id</code>/tags</td>
+                        <td><ul>
+                                <li>taglist</li>
+                            </ul></td>
+                        <td>Attach a list of tags to that subscription</td>
+                    </tr>
+                    <tr>
+                        <td>DELETE&nbsp;/1.0/kb/subscriptions/<code>subscription_id</code>/tags</td>
+                        <td><ul>
+                                <li>taglist</li>
+                            </ul></td>
+                        <td>Remove a set of tags associated with that subscription</td>
                     </tr>
                 </tbody>
             </table>
         </section>
 
-        <section id="rest_tag">
+        <section id="rest_tag_definition">
             <div class="page-header">
                 <h1>Tag</h1>
             </div>
@@ -796,57 +826,28 @@ layout: default
                         <th>Resource</th>
                         <th>Query params</th>
                         <th>Description</th>
-                        <th>Return codes</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td>GET&nbsp;/1.0/kb/tag_definitions</td>
+                        <td>GET&nbsp;/1.0/kb/tagDefinitions</td>
                         <td></td>
                         <td>Retrieve all tag definitions </td>
-                        <td>200, 204</td>
                     </tr>
                     <tr>
-                        <td>POST&nbsp;/1.0/kb/tag_definitions/<code>tag_name</code></td>
+                        <td>GET&nbsp;/1.0/kb/tagDefinitions/<code>tag_definition_id</code></td>
+                        <td></td>
+                        <td>Retrieve a tag definition</td>
+                    </tr>
+                    <tr>
+                        <td>POST&nbsp;/1.0/kb/tagDefinitions</td>
                         <td></td>
                         <td>Create a new tag definition</td>
-                        <td>201, 400</td>
                     </tr>
                     <tr>
-                        <td>DELETE&nbsp;/1.0/kb/tag_definitions/<code>tag_name</code></td>
-                        <td>force_if_used</td>
-                        <td>Remove the tag definition</td>
-                        <td>204, 400</td>
-                    </tr>
-                    <tr>
-                        <td>GET&nbsp;/1.0/kb/&lt;object_type&gt;/tags/&lt;object_id&gt;/tags</td>
+                        <td>DELETE&nbsp;/1.0/kb/tagDefinitions/<code>tag_definition_id</code></td>
                         <td></td>
-                        <td>Retrieve the tags associated with that object</td>
-                        <td>200, 404</td>
-                    </tr>
-                    <tr>
-                        <td>POST&nbsp;/1.0/kb/&lt;object_type&gt;/tags/&lt;object_id&gt;</td>
-                        <td>taglist</td>
-                        <td>Attach a list of tags to that object</td>
-                        <td>201, 400</td>
-                    </tr>
-                    <tr>
-                        <td>DELETE&nbsp;/1.0/kb/&lt;object_type&gt;/tags/&lt;object_id&gt;</td>
-                        <td>taglist</td>
-                        <td>Remove all tags associated with that object</td>
-                        <td>204, 400</td>
-                    </tr>
-                    <tr>
-                        <td>DELETE&nbsp;/1.0/kb/&lt;object_type&gt;/tags/&lt;object_id&gt;</td>
-                        <td></td>
-                        <td>Remove all tags associated with that object</td>
-                        <td>204, 400</td>
-                    </tr>
-                    <tr>
-                        <td>GET&nbsp;/1.0/kb/&lt;object_type&gt;/tags</td>
-                        <td>taglist</td>
-                        <td>Retrieve all objects which have those tag</td>
-                        <td>200, 404</td>
+                        <td>Remove a tag definition</td>
                     </tr>
                 </tbody>
             </table>
@@ -862,15 +863,40 @@ layout: default
                         <th>Resource</th>
                         <th>Query params</th>
                         <th>Description</th>
-                        <th>Return codes</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
+                        <td>GET&nbsp;/1.0/kb/tenants/<code>tenant_id</code></td>
                         <td></td>
+                        <td>Retrieve a tenant</td>
+                    </tr>
+                    <tr>
+                        <td>GET&nbsp;/1.0/kb/tenants</td>
+                        <td><ul>
+                                <li>apiKey</li>
+                            </ul></td>
+                        <td>Retrieve a tenant by api key</td>
+                    </tr>
+                    <tr>
+                        <td>POST&nbsp;/1.0/kb/tenants</code></td>
                         <td></td>
+                        <td>Create a tenant</td>
+                    </tr>
+                    <tr>
+                        <td>POST&nbsp;/1.0/kb/tenants/registerNotificationCallback</td>
                         <td></td>
+                        <td>Register a callback notification</td>
+                    </tr>
+                    <tr>
+                        <td>GET&nbsp;/1.0/kb/tenants/registerNotificationCallback</td>
                         <td></td>
+                        <td>Get all push notifications for tenant</td>
+                    </tr>
+                    <tr>
+                        <td>DELETE&nbsp;/1.0/kb/tenants/registerNotificationCallback</td>
+                        <td></td>
+                        <td>Remove all push notifications for tenant</td>
                     </tr>
                 </tbody>
             </table>
