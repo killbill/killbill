@@ -21,20 +21,20 @@ import org.osgi.framework.BundleContext;
 
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillEventDispatcher.OSGIKillbillEventHandler;
 
-public abstract class KillbillActivatorBase implements BundleActivator, OSGIKillbillEventHandler {
+public abstract class KillbillActivatorBase implements BundleActivator {
 
 
-    protected OSGIKillbillAPI api;
+    protected OSGIKillbillAPI killbillAPI;
     protected OSGIKillbillLogService logService;
     protected OSGIKillbillRegistrar registrar;
     protected OSGIKillbillDataSource dataSource;
     protected OSGIKillbillEventDispatcher dispatcher;
 
     @Override
-    public void start(final BundleContext context) {
+    public void start(final BundleContext context) throws Exception {
 
         // Tracked resource
-        api = new OSGIKillbillAPI(context);
+        killbillAPI = new OSGIKillbillAPI(context);
         logService = new OSGIKillbillLogService(context);
         dataSource = new OSGIKillbillDataSource(context);
         dispatcher = new OSGIKillbillEventDispatcher(context);
@@ -45,15 +45,15 @@ public abstract class KillbillActivatorBase implements BundleActivator, OSGIKill
         // Killbill events
         final OSGIKillbillEventHandler handler = getOSGIKillbillEventHandler();
         if (handler != null) {
-            dispatcher.registerEventHandler(this);
+            dispatcher.registerEventHandler(handler);
         }
     }
 
     @Override
-    public void stop(final BundleContext context) {
+    public void stop(final BundleContext context) throws Exception {
 
         // Close trackers
-        api.close();
+        killbillAPI.close();
         dispatcher.close();
         dataSource.close();
         logService.close();

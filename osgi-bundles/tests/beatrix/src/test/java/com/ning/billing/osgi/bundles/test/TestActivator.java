@@ -48,7 +48,7 @@ public class TestActivator extends KillbillActivatorBase implements OSGIKillbill
     private TestDao testDao;
 
     @Override
-    public void start(final BundleContext context) {
+    public void start(final BundleContext context) throws Exception {
 
         final String bundleName = context.getBundle().getSymbolicName();
         System.out.println("TestActivator starting bundle = " + bundleName);
@@ -64,7 +64,7 @@ public class TestActivator extends KillbillActivatorBase implements OSGIKillbill
     }
 
     @Override
-    public void stop(final BundleContext context) {
+    public void stop(final BundleContext context) throws Exception {
         super.stop(context);
         System.out.println("Good bye world from TestActivator!");
     }
@@ -75,7 +75,6 @@ public class TestActivator extends KillbillActivatorBase implements OSGIKillbill
     }
 
     private void registerPaymentApi(final BundleContext context, final TestDao dao) {
-
         final Dictionary props = new Hashtable();
         props.put(OSGIPluginProperties.PLUGIN_NAME_PROP, "test");
         registrar.registerService(context, PaymentPluginApi.class, new TestPaymentPluginApi("test", dao), props);
@@ -99,12 +98,11 @@ public class TestActivator extends KillbillActivatorBase implements OSGIKillbill
         };
 
         try {
-            Account account = api.getAccountUserApi().getAccountById(killbillEvent.getAccountId(), tenantContext);
+            Account account = killbillAPI.getAccountUserApi().getAccountById(killbillEvent.getAccountId(), tenantContext);
             testDao.insertAccountExternalKey(account.getExternalKey());
 
         } catch (AccountApiException e) {
             logService.log(LogService.LOG_ERROR, e.getMessage());
         }
     }
-
 }
