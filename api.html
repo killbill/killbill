@@ -150,21 +150,23 @@ layout: default
                         <td>Retrieve the refund information associated to that account</td>
                     </tr>
                     <tr>
-                        <td>GET&nbsp;/1.0/kb/accounts/custom_fields/<code>account_id</code></td>
+                        <td>GET&nbsp;/1.0/kb/accounts/<code>account_id</code>/custom_fields</td>
                         <td></td>
                         <td>Retrieve the custom fields associated with that account</td>
                     </tr>
                     <tr>
-                        <td>POST&nbsp;/1.0/kb/accounts/custom_fields/<code>account_id</code></td>
-                        <td></td>
-                        <td>Modify the custom field associated to that account</td>
+                        <td>POST&nbsp;/1.0/kb/accounts/<code>account_id</code>/custom_fields</td>
+                        <td><ul>
+                                <li>customFieldList</li>
+                            </ul></td>
+                        <td>Create custom fields associated with that account</td>
                     </tr>
                     <tr>
-                        <td>DELETE&nbsp;/1.0/kb/accounts/custom_fields/<code>account_id</code></td>
+                        <td>DELETE&nbsp;/1.0/kb/accounts/<code>account_id</code>/custom_fields</td>
                         <td><ul>
-                                <li>name</li>
+                                <li>customFieldList</li>
                             </ul></td>
-                        <td>Remove the custom field</td>
+                        <td>Remove custom fields</td>
                     </tr>
                     <tr>
                         <td>GET&nbsp;/1.0/kb/accounts/<code>account_id</code>/tags</td>
@@ -225,63 +227,72 @@ layout: default
                         <th>Resource</th>
                         <th>Query params</th>
                         <th>Description</th>
-                        <th>Return codes</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
                         <td>GET&nbsp;/1.0/kb/bundles/<code>bundle_id</code></td>
                         <td></td>
-                        <td>Retrieve bundle specified by bundle_id</td>
-                        <td>200, 204, 400</td>
-                    </tr>
-                    <tr>
-                        <td>GET&nbsp;/1.0/kb/bundles/<code>bundle_id</code>/subscriptions</td>
-                        <td></td>
-                        <td>Retrieve subscriptions associated with bundle specified by bundle_id</td>
-                        <td>200, 204, 400</td>
-                    </tr>
-                    <tr>
-                        <td>GET&nbsp;/1.0/kb/bundles</td>
-                        <td>external_key</td>
-                        <td>Retrieve bundle specified by external_key</td>
-                        <td>200, 204, 400</td>
+                        <td>Retrieve bundle specified by <code>bundle_id</code></td>
                     </tr>
                     <tr>
                         <td>POST&nbsp;/1.0/kb/bundles</td>
                         <td></td>
-                        <td>Create bundle</td>
-                        <td>201, 400, 404</td>
+                        <td>Create a bundle</td>
                     </tr>
                     <tr>
-                        <td>GET&nbsp;/1.0/kb/bundles/<code>bundle_id</code>/timeline</td>
+                        <td>GET&nbsp;/1.0/kb/bundles/<code>bundle_id</code>/subscriptions</td>
                         <td></td>
-                        <td>Retrieve bundle timeline for specified bundle_id</td>
-                        <td>200, 404</td>
+                        <td>Retrieve subscriptions associated with the bundle specified by <code>bundle_id</code></td>
                     </tr>
                     <tr>
-                        <td>PUT&nbsp;/1.0/kb/bundles/<code>bundle_id</code>/timeline</td>
-                        <td>dryRun, waitForBillingComplete, billingCompleteTimeout</td>
-                        <td>Repair a specific bundle by providing the set of new/deleted events</td>
-                        <td>201, 400, 408, 409</td>
+                        <td>PUT&nbsp;/1.0/kb/bundles</td>
+                        <td><ul>
+                                <li>requestedDate</li>
+                                <li>transferAddOn=true|false</li>
+                                <li>cancelImmediately=true|false</li>
+                            </ul></td>
+                        <td>Transfer a bundle</td>
                     </tr>
                     <tr>
-                        <td>GET&nbsp;/1.0/kb/bundles/custom_fields/<code>bundle_id</code></td>
+                        <td>GET&nbsp;/1.0/kb/bundles/<code>bundle_id</code>/custom_fields</td>
                         <td></td>
-                        <td>Retrieve the custom fields associated with that object</td>
-                        <td>200, 204</td>
+                        <td>Retrieve the custom fields associated with that bundle</td>
                     </tr>
                     <tr>
-                        <td>PUT&nbsp;/1.0/kb/bundles/custom_fields/<code>bundle_id</code></td>
-                        <td></td>
-                        <td>Modify the custom field associated to that object </td>
-                        <td>204, 400</td>
+                        <td>POST&nbsp;/1.0/kb/bundles/<code>bundle_id</code>/custom_fields</td>
+                        <td><ul>
+                                <li>customFieldList</li>
+                            </ul></td>
+                        <td>Create custom fields associated with that bundle</td>
                     </tr>
                     <tr>
-                        <td>DELETE&nbsp;/1.0/kb/bundles/custom_fields/<code>bundle_id</code></td>
-                        <td>name</td>
-                        <td>Remove the custom field</td>
-                        <td>204, 400</td>
+                        <td>DELETE&nbsp;/1.0/kb/bundles/<code>bundle_id</code>/custom_fields</td>
+                        <td><ul>
+                                <li>customFieldList</li>
+                            </ul></td>
+                        <td>Remove custom fields</td>
+                    </tr>
+                    <tr>
+                        <td>GET&nbsp;/1.0/kb/bundles/<code>bundle_id</code>/tags</td>
+                        <td><ul>
+                                <li>audit=FULL|MINIMAL|NONE</li>
+                            </ul></td>
+                        <td>Retrieve all tags for that bundle</td>
+                    </tr>
+                    <tr>
+                        <td>POST&nbsp;/1.0/kb/bundles/<code>bundle_id</code>/tags</td>
+                        <td><ul>
+                                <li>taglist</li>
+                            </ul></td>
+                        <td>Attach a list of tags to that bundle</td>
+                    </tr>
+                    <tr>
+                        <td>DELETE&nbsp;/1.0/kb/bundles/<code>bundle_id</code>/tags</td>
+                        <td><ul>
+                                <li>taglist</li>
+                            </ul></td>
+                        <td>Remove a set of tags associated with that bundle</td>
                     </tr>
                 </tbody>
             </table>
