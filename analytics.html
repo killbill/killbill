@@ -1,0 +1,674 @@
+---
+layout: default
+---
+
+<div class="row">
+    <div class="span3 bs-docs-sidebar">
+        <ul class="nav nav-list bs-docs-sidenav affix">
+            <li><a href="#analytics_overview">Overview</a></li>
+            <li><a href="#analytics_bac">Accounts</a></li>
+            <li><a href="#analytics_bst">Subscriptions</a></li>
+            <li><a href="#analytics_bin">Invoices</a></li>
+            <li><a href="#analytics_bip">Payments</a></li>
+            <li><a href="#analytics_bos">Overdue statuses</a></li>
+            <li><a href="#analytics_tags">Tags and custom fields</a></li>
+        </ul>
+    </div>
+
+    <div class="span12">
+        <section id="analytics_overview">
+            <div class="page-header">
+                <h1>Overview</h1>
+            </div>
+            <p>Killbill maintains a reporting schema that is kept current in realtime for Analytics purposes. In contrary to other tables in the system, this set of tables is stable and potentially changes only between major revisions of Killbill. These tables are meant to be used as building blocks for reports and dashboards.</p>
+            <p>To distinguish them with Killbill objects, the Analytics objects are prefixed with the term <strong>Business</strong>, e.g. a Killbill account will have a representation in the Analytics subsystem by a Business Account object. For ease of tracking, Analytics objects contain id references to the Killbill ones but we strongly advise against using them for reporting purposes. Instead, use the external keys as much as possible, as they are tied to your business concepts. For instance, to count the number of accounts in the system, run a query using <code>count(distinct account_key)</code>, not <code>count(distinct account_id)</code>.</p>
+            <p>All of this information is also available in Kaui (in the analytics section), on a per account basis.</p>
+        </section>
+
+        <section id="analytics_bac">
+            <div class="page-header">
+                <h1>Accounts</h1>
+            </div>
+            <p>The table <strong>bac</strong> (stands for Business Accounts) maintains information about Killbill accounts. The table doesn't contain historic records (it will contain at most one record per Killbill account).</p>
+            <h2>BAC schema</h2>
+            <table class="table table-striped table-bordered table-condensed">
+                <thead>
+                    <tr>
+                        <th>Column name</th>
+                        <th>Column type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>record_id</td>
+                        <td>int(11) unsigned</td>
+                        <td>Unique identifier for that record, e.g. <code>10</code></td>
+                    </tr>
+                    <tr>
+                        <td>account_id</td>
+                        <td>char(36)</td>
+                        <td>Killbill account id, e.g. <code>b2d69f1e-27cb-4c43-b997-71c28da4a170</code></td>
+                    </tr>
+                    <tr>
+                        <td>account_key</td>
+                        <td>varchar(50)</td>
+                        <td>External key associated with that account</td>
+                    </tr>
+                    <tr>
+                        <td>name</td>
+                        <td>varchar(100)</td>
+                        <td>Name associated with that account, e.g. <code>Jean DuJardin</code></td>
+                    </tr>
+                    <tr>
+                        <td>created_date</td>
+                        <td>bigint(20)</td>
+                        <td>Epoch (in UTC) when the account was created, e.g. <code>1341957285516</code></td>
+                    </tr>
+                    <tr>
+                        <td>updated_date</td>
+                        <td>bigint(20)</td>
+                        <td>Epoch (in UTC) when the account was last updated, e.g. <code>1341957519902</code></td>
+                    </tr>
+                    <tr>
+                        <td>balance</td>
+                        <td>decimal(10,4)</td>
+                        <td>Account balance in the account currency (takes into account invoices balance and credits), e.g. <code>254.4500</code></td>
+                    </tr>
+                    <tr>
+                        <td>last_invoice_date</td>
+                        <td>bigint(20)</td>
+                        <td>Last invoice epoch (in UTC) for that account, e.g. <code>1341957522967</code></td>
+                    </tr>
+                    <tr>
+                        <td>total_invoice_balance</td>
+                        <td>decimal(10,4)</td>
+                        <td>Sum of all invoices balance for that account in the account currency, e.g. <code>299.7500</code></td>
+                    </tr>
+                    <tr>
+                        <td>last_payment_status</td>
+                        <td>varchar(255)</td>
+                        <td>Last payment status, e.g. <code>SUCCESS</code></td>
+                    </tr>
+                    <tr>
+                        <td>payment_method</td>
+                        <td>varchar(100)</td>
+                        <td>Default payment method (if any), e.g. <code>Paypal</code></td>
+                    </tr>
+                    <tr>
+                        <td>credit_card_type</td>
+                        <td>varchar(50)</td>
+                        <td>Default card type, if any, associated with that account, e.g. <code>VISA</code></td>
+                    </tr>
+                    <tr>
+                        <td>billing_address_country</td>
+                        <td>varchar(50)</td>
+                        <td>Billing country for that account, e.g. <code>FR</code></td>
+                    </tr>
+                    <tr>
+                        <td>currency</td>
+                        <td>varchar(50)</td>
+                        <td>Default account currency, e.g. <code>MXN</code></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section id="analytics_bst">
+            <div class="page-header">
+                <h1>Subscriptions</h1>
+            </div>
+            <p>The table <strong>bst</strong> (stands for Business Subscription Transitions) maintains information about Killbill bundles and subscriptions. It describes the history of changes (both past and future) on a per subscription basis.</p>
+            <p><strong>bst</strong> will contain all phase transitions for all subscriptions and can be used to build subscription timelines. A few remarks:
+                <ul>
+                    <li>MIGRATE_BILLING and UNCANCEL subscription events are currently not stored in bst</li>
+                    <li>The total_ordering column helps break ties for events with the same effective date: one can order chronologically the timeline by sorting records by <code>nvl(next_start_date, requested_timestamp), total_ordering</code></li>
+                    <li><strong>prev_</strong> fields will always be NULL for MIGRATE, ADD, RE_ADD, TRANSFER events</li>
+                    <li><strong>next_</strong> fields will always be NULL for CANCEL and SYSTEM_CANCEL events</li>
+                    <li>The <strong>requested_timestamp</strong> field reflects when the transition was requested, the <strong>next_start_date</strong> field reflects the effective transition time</li>
+                    <li>The SYSTEM_CANCEL event is a special kind of event associated with a CANCEL event, used to get the time when a subscription is effectively cancelled. The SYSTEM_CANCEL <strong>requested_timestamp</strong> is the effective time when the subscription is cancelled, which is the effective time of the subscription CANCEL event</li>
+                </ul>
+            </p>
+            <h2>BST schema</h2>
+            <table class="table table-striped table-bordered table-condensed">
+                <thead>
+                    <tr>
+                        <th>Column name</th>
+                        <th>Column type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>record_id</td>
+                        <td>int(11) unsigned</td>
+                        <td>Unique identifier for that record, e.g. <code>4</code></td>
+                    </tr>
+                    <tr>
+                        <td>total_ordering</td>
+                        <td>bigint(20)</td>
+                        <td>Killbill event id (unique in the system), e.g. <code>2</code></td>
+                    </tr>
+                    <tr>
+                        <td>bundle_id</td>
+                        <td>char(36)</td>
+                        <td>Killbill bundle id, e.g. <code>20906750-3d17-4f5b-bb1f-fe14f0e803fb</code></td>
+                    </tr>
+                    <tr>
+                        <td>account_id</td>
+                        <td>char(36)</td>
+                        <td>Killbill account id, e.g. <code>c99df6ef-6571-400b-b62d-c8b75394b9f1</code></td>
+                    </tr>
+                    <tr>
+                        <td>external_key</td>
+                        <td>varchar(50)</td>
+                        <td>Bundle external key</td>
+                    </tr>
+                    <tr>
+                        <td>account_key</td>
+                        <td>varchar(50)</td>
+                        <td>Account external key</td>
+                    </tr>
+                    <tr>
+                        <td>subscription_id</td>
+                        <td>char(36)</td>
+                        <td>Killbill subscription id, e.g. <code>205e11dd-9c88-451e-939a-46704d0bd3c3</code></td>
+                    </tr>
+                    <tr>
+                        <td>requested_timestamp</td>
+                        <td>bigint(20)</td>
+                        <td>Epoch (in UTC) when the subscription change was requested, e.g. <code>1341957064000</code></td>
+                    </tr>
+                    <tr>
+                        <td>event</td>
+                        <td>varchar(50)</td>
+                        <td>Subscription change type, e.g. <code>SYSTEM_CHANGE_BASE</code></td>
+                    </tr>
+                    <tr>
+                        <td>prev_product_name</td>
+                        <td>varchar(50)</td>
+                        <td>Catalog product name previous to the change, e.g. <code>Pistol</code></td>
+                    </tr>
+                    <tr>
+                        <td>prev_product_type</td>
+                        <td>varchar(50)</td>
+                        <td>Previous catalog name, e.g. <code>WeaponsHireSmall</code></td>
+                    </tr>
+                    <tr>
+                        <td>prev_product_category</td>
+                        <td>varchar(50)</td>
+                        <td>Previous catalog product category, e.g. <code>BASE</code></td>
+                    </tr>
+                    <tr>
+                        <td>prev_slug</td>
+                        <td>varchar(50)</td>
+                        <td>Previous slug, i.e. phase identifier, e.g. <code>pistol-monthly-trial</code></td>
+                    </tr>
+                    <tr>
+                        <td>prev_phase</td>
+                        <td>varchar(50)</td>
+                        <td>Previous phase type, e.g. <code>TRIAL</code></td>
+                    </tr>
+                    <tr>
+                        <td>prev_billing_period</td>
+                        <td>varchar(50)</td>
+                        <td>Previous billing period, e.g. <code>MONTHLY</code></td>
+                    </tr>
+                    <tr>
+                        <td>prev_price</td>
+                        <td>decimal(10,4)</td>
+                        <td>Previous price, e.g. <code>2.9500</code></td>
+                    </tr>
+                    <tr>
+                        <td>prev_price_list</td>
+                        <td>varchar(50)</td>
+                        <td>Previous price list, e.g. <code>DEFAULT</code></td>
+                    </tr>
+                    <tr>
+                        <td>prev_mrr</td>
+                        <td>decimal(10,4)</td>
+                        <td>Previous monthly run rate, e.g. <code>19.9500</code></td>
+                    </tr>
+                    <tr>
+                        <td>prev_currency</td>
+                        <td>varchar(50)</td>
+                        <td>Previous currency, e.g. <code>USD</code></td>
+                    </tr>
+                    <tr>
+                        <td>prev_start_date</td>
+                        <td>bigint(20)</td>
+                        <td>Epoch (in UTC) of the previous phase start date, e.g. <code>1341312568000</code></td>
+                    </tr>
+                    <tr>
+                        <td>prev_state</td>
+                        <td>varchar(50)</td>
+                        <td>Previous subscription state, e.g. <code>ACTIVE</code></td>
+                    </tr>
+                    <tr>
+                        <td>next_product_name</td>
+                        <td>varchar(50)</td>
+                        <td>Catalog product name after the change, e.g. <code>Shotgun</code></td>
+                    </tr>
+                    <tr>
+                        <td>next_product_type</td>
+                        <td>varchar(50)</td>
+                        <td>Catalog name after the change, e.g. <code>Firearms</code></td>
+                    </tr>
+                    <tr>
+                        <td>next_product_category</td>
+                        <td>varchar(50)</td>
+                        <td>Next catalog product category, e.g. <code>ADD_ON</code></td>
+                    </tr>
+                    <tr>
+                        <td>next_slug</td>
+                        <td>varchar(50)</td>
+                        <td>Next slug, i.e. phase identifier, e.g. <code>shotgun-monthly-evergreen</code></td>
+                    </tr>
+                    <tr>
+                        <td>next_phase</td>
+                        <td>varchar(50)</td>
+                        <td>Next phase type, e.g. <code>EVERGREEN</code></td>
+                    </tr>
+                    <tr>
+                        <td>next_billing_period</td>
+                        <td>varchar(50)</td>
+                        <td>Next billing period, e.g. <code>MONTHLY</code></td>
+                    </tr>
+                    <tr>
+                        <td>next_price</td>
+                        <td>decimal(10,4)</td>
+                        <td>Next price, e.g. <code>2.9500</code></td>
+                    </tr>
+                    <tr>
+                        <td>next_price_list</td>
+                        <td>varchar(50)</td>
+                        <td>Next price list, e.g. <code>rescue</code></td>
+                    </tr>
+                    <tr>
+                        <td>next_mrr</td>
+                        <td>decimal(10,4)</td>
+                        <td>Next monthly run rate, e.g. <code>2.9500</code></td>
+                    </tr>
+                    <tr>
+                        <td>next_currency</td>
+                        <td>varchar(50)</td>
+                        <td>Next currency, e.g. <code>BRL</code></td>
+                    </tr>
+                    <tr>
+                        <td>next_start_date</td>
+                        <td>bigint(20)</td>
+                        <td>Epoch (in UTC) of the next phase start date, e.g. <code>1343904568000</code></td>
+                    </tr>
+                    <tr>
+                        <td>next_state</td>
+                        <td>varchar(50)</td>
+                        <td>Next subscription state, e.g. <code>ACTIVE</code></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section id="analytics_bin">
+            <div class="page-header">
+                <h1>Invoices and invoice items</h1>
+            </div>
+            <p>The tables <strong>bin</strong> (stands for Business Invoices) and <strong>bii</strong> (stands for Business Invoice Items) maintain information about invoices posted by account. The tables don't contain historic records (they will contain at most one record per Killbill invoice and invoice item).</p>
+            <h2>BIN schema</h2>
+            <table class="table table-striped table-bordered table-condensed">
+                <thead>
+                    <tr>
+                        <th>Column name</th>
+                        <th>Column type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>record_id</td>
+                        <td>int(11) unsigned</td>
+                        <td>Unique identifier for that record, e.g. <code>5</code></td>
+                    </tr>
+                    <tr>
+                        <td>invoice_id</td>
+                        <td>char(36)</td>
+                        <td>Killbill invoice id, e.g. <code>bb85b927-bfc9-48f4-8c72-2693733fabdd</code></td>
+                    </tr>
+                    <tr>
+                        <td>invoice_number</td>
+                        <td>bigint(20)</td>
+                        <td>Invoice number, e.g. <code>401</code></td>
+                    </tr>
+                    <tr>
+                        <td>created_date</td>
+                        <td>bigint(20)</td>
+                        <td>Epoch (in UTC) when the invoice was created, e.g. <code>1341958418930</code></td>
+                    </tr>
+                    <tr>
+                        <td>updated_date</td>
+                        <td>bigint(20)</td>
+                        <td>Epoch (in UTC) when the invoice was last updated (should always be created_date as invoices are immutable), e.g. <code>1341958418930</code></td>
+                    </tr>
+                    <tr>
+                        <td>account_id</td>
+                        <td>char(36)</td>
+                        <td>Killbill account id, e.g. <code>667e6a69-c8c2-4a04-a18e-31049818eb78</code></td>
+                    </tr>
+                    <tr>
+                        <td>account_key</td>
+                        <td>varchar(50)</td>
+                        <td>Account external key</td>
+                    </tr>
+                    <tr>
+                        <td>invoice_date</td>
+                        <td>date</td>
+                        <td>Invoice date in the account timezone, e.g. <code>2012-07-16</code></td>
+                    </tr>
+                    <tr>
+                        <td>target_date</td>
+                        <td>date</td>
+                        <td>Invoice target date (maximum service period end date for the items) in the account timezone, e.g. <code>2012-07-16</code></td>
+                    </tr>
+                    <tr>
+                        <td>currency</td>
+                        <td>char(5)</td>
+                        <td>Invoice currency, e.g. <code>EUR</code></td>
+                    </tr>
+                    <tr>
+                        <td>balance</td>
+                        <td>decimal(10,4)</td>
+                        <td>Invoice balance, e.g. <code>44.8500</code></td>
+                    </tr>
+                    <tr>
+                        <td>amount_paid</td>
+                        <td>decimal(10,4)</td>
+                        <td>Amount paid, e.g. <code>0.0000</code></td>
+                    </tr>
+                    <tr>
+                        <td>amount_charged</td>
+                        <td>decimal(10,4)</td>
+                        <td>Amount charged, e.g. <code>44.8500</code></td>
+                    </tr>
+                    <tr>
+                        <td>amount_credited</td>
+                        <td>decimal(10,4)</td>
+                        <td>Amount credited, e.g. <code>2.1000</code></td>
+                    </tr>
+                </tbody>
+            </table>
+            <h2>BII schema</h2>
+            <table class="table table-striped table-bordered table-condensed">
+                <thead>
+                    <tr>
+                        <th>Column name</th>
+                        <th>Column type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>record_id</td>
+                        <td>int(11) unsigned</td>
+                        <td>Unique identifier for that record, e.g. <code>2</code></td>
+                    </tr>
+                    <tr>
+                        <td>item_id</td>
+                        <td>char(36)</td>
+                        <td>Killbill invoice item id, e.g. <code>1b43978b-68b5-4a05-8d51-18690148bf9e</code></td>
+                    </tr>
+                    <tr>
+                        <td>created_date</td>
+                        <td>bigint(20)</td>
+                        <td>Epoch (in UTC) when the invoice item was created, e.g. <code>1342462966241</code></td>
+                    </tr>
+                    <tr>
+                        <td>updated_date</td>
+                        <td>bigint(20)</td>
+                        <td>Epoch (in UTC) when the invoice item was updated, e.g. <code>1342462966241</code></td>
+                    </tr>
+                    <tr>
+                        <td>invoice_id</td>
+                        <td>char(36)</td>
+                        <td>The invoice this item belongs to, e.g. <code>b72b0ca8-b4e7-4026-a335-5b479136531c</code></td>
+                    </tr>
+                    <tr>
+                        <td>item_type</td>
+                        <td>char(50)</td>
+                        <td>Invoice item type, e.g. <code>FIXED</code></td>
+                    </tr>
+                    <tr>
+                        <td>external_key</td>
+                        <td>varchar(50)</td>
+                        <td>Bundle external key for this item</td>
+                    </tr>
+                    <tr>
+                        <td>product_name</td>
+                        <td>varchar(50)</td>
+                        <td>Product name associated with this item, e.g. <code>Shotgun</code></td>
+                    </tr>
+                    <tr>
+                        <td>product_type</td>
+                        <td>varchar(50)</td>
+                        <td>Catalog name associated with this product, e.g. <code>Firearms</code></td>
+                    </tr>
+                    <tr>
+                        <td>product_category</td>
+                        <td>varchar(50)</td>
+                        <td>Catalog product category for this product, e.g. <code>ADD_ON</code></td>
+                    </tr>
+                    <tr>
+                        <td>slug</td>
+                        <td>varchar(50)</td>
+                        <td>Product slug, i.e. phase identifier, e.g. <code>shotgun-monthly-evergreen</code></td>
+                    </tr>
+                    <tr>
+                        <td>phase</td>
+                        <td>varchar(50)</td>
+                        <td>Phase type for this product, e.g. <code>TRIAL</code></td>
+                    </tr>
+                    <tr>
+                        <td>billing_period</td>
+                        <td>varchar(50)</td>
+                        <td>Billing period for this item, e.g. <code>MONTHLY</code></td>
+                    </tr>
+                    <tr>
+                        <td>start_date</td>
+                        <td>date</td>
+                        <td>Service period start date in the account timezone, e.g. <code>2012-07-16</code></td>
+                    </tr>
+                    <tr>
+                        <td>end_date</td>
+                        <td>date</td>
+                        <td>Service period end date in the account timezone, e.g. <code>2012-07-16</code></td>
+                    </tr>
+                    <tr>
+                        <td>amount</td>
+                        <td>decimal(10,4)</td>
+                        <td>Item price, e.g. <code>0.0000</code></td>
+                    </tr>
+                    <tr>
+                        <td>currency</td>
+                        <td>char(50)</td>
+                        <td>Amount currency, e.g. <code>USD</code></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section id="analytics_bip">
+            <div class="page-header">
+                <h1>Payments</h1>
+            </div>
+            <p>The table <strong>bip</strong> (stands for Business Invoice Payments) maintains information about Killbill payments, refunds and chargebacks. The table doesn't contain historic records (it will contain at most one record per Killbill invoice payment).</p>
+            <h2>BIP schema</h2>
+            <table class="table table-striped table-bordered table-condensed">
+                <thead>
+                    <tr>
+                        <th>Column name</th>
+                        <th>Column type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>record_id</td>
+                        <td>int(11) unsigned</td>
+                        <td>Unique identifier for that record, e.g. <code>1b43978b-68b5-4a05-8d51-18690148bf9e</code></td>
+                    </tr>
+                    <tr>
+                        <td>payment_id</td>
+                        <td>char(36)</td>
+                        <td>Killbill payment id, e.g. <code>1b43978b-68b5-4a05-8d51-18690148bf9e</code></td>
+                    </tr>
+                    <tr>
+                        <td>created_date</td>
+                        <td>bigint(20)</td>
+                        <td>Epoch (in UTC) when the associated invoice payment was created, e.g. <code>1342462966241</code></td>
+                    </tr>
+                    <tr>
+                        <td>updated_date</td>
+                        <td>bigint(20)</td>
+                        <td>Epoch (in UTC) when the associated invoice payment was updated, e.g. <code>1342462966241</code></td>
+                    </tr>
+                    <tr>
+                        <td>account_key</td>
+                        <td>varchar(50)</td>
+                        <td>Account external key</td>
+                    </tr>
+                    <tr>
+                        <td>invoice_id</td>
+                        <td>char(36)</td>
+                        <td>Killbill invoice id, e.g. <code>1b43978b-68b5-4a05-8d51-18690148bf9e</code></td>
+                    </tr>
+                    <tr>
+                        <td>effective_date</td>
+                        <td>bigint(20)</td>
+                        <td>Epoch (in UTC) of the payment effective date, e.g. <code>1342462966241</code></td>
+                    </tr>
+                    <tr>
+                        <td>amount</td>
+                        <td>decimal(10,4)</td>
+                        <td>Payment amount, e.g. <code>12.3400</code></td>
+                    </tr>
+                    <tr>
+                        <td>currency</td>
+                        <td>char(5)</td>
+                        <td>Payment currency, e.g. <code>USD</code></td>
+                    </tr>
+                    <tr>
+                        <td>payment_error</td>
+                        <td>varchar(255)</td>
+                        <td>Gateway specific error message (for payment failures only), e.g. <code>Insufficient funds</code></td>
+                    </tr>
+                    <tr>
+                        <td>processing_status</td>
+                        <td>varchar(5)</td>
+                        <td>Killbill payment status, e.g. <code>PAYMENT_FAILURE_ABORTED</code></td>
+                    </tr>
+                    <tr>
+                        <td>requested_amount</td>
+                        <td>decimal(10,4)</td>
+                        <td>Payment requested amount, e.g. <code>12.3400</code></td>
+                    </tr>
+                    <tr>
+                        <td>plugin_name</td>
+                        <td>varchar(50)</td>
+                        <td>Name of the payment plugin used, e.g. <code>killbill-paypal-express</code></td>
+                    </tr>
+                    <tr>
+                        <td>payment_type</td>
+                        <td>varchar(50)</td>
+                        <td>The only value is Electronic for now</td>
+                    </tr>
+                    <tr>
+                        <td>payment_method</td>
+                        <td>varchar(50)</td>
+                        <td>Killbill payment method id, e.g. <code>1b43978b-68b5-4a05-8d51-18690148bf9e</code></td>
+                    </tr>
+                    <tr>
+                        <td>card_type</td>
+                        <td>varchar(50)</td>
+                        <td>Credit card type extracted from the plugin, if available, e.g. <code>VISA</code></td>
+                    </tr>
+                    <tr>
+                        <td>card_country</td>
+                        <td>varchar(50)</td>
+                        <td>Credit card country extracted from the plugin, if available, e.g. <code>US</code></td>
+                    </tr>
+                    <tr>
+                        <td>invoice_payment_type</td>
+                        <td>varchar(50)</td>
+                        <td>Invoice payment type, e.g. <code>REFUND</code></td>
+                    </tr>
+                    <tr>
+                        <td>linked_invoice_payment_id</td>
+                        <td>char(36)</td>
+                        <td>Associated Killbill invoice payment id (for refunds and chargebacks), e.g. <code>1b43978b-68b5-4a05-8d51-18690148bf9e</code></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section id="analytics_bos">
+             <div class="page-header">
+                 <h1>Overdue statuses</h1>
+             </div>
+
+             <p>The table <strong>bos</strong> (stands for Business Overdue Status) maintains information about Killbill overdue statuses. The table contains historic status for a given bundle.</p>
+             <h2>BOS schema</h2>
+            <table class="table table-striped table-bordered table-condensed">
+                <thead>
+                    <tr>
+                        <th>Column name</th>
+                        <th>Column type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>record_id</td>
+                        <td>int(11) unsigned</td>
+                        <td>Unique identifier for that record</td>
+                    </tr>
+                    <tr>
+                        <td>bundle_id</td>
+                        <td>char(36)</td>
+                        <td>Killbill bundle id, e.g. <code>ce3d45ec-30b7-4489-949c-d80808111993</code></td>
+                    </tr>
+                    <tr>
+                        <td>external_key</td>
+                        <td>varchar(50)</td>
+                        <td>Bundle external key</td>
+                    </tr>
+                    <tr>
+                        <td>account_key</td>
+                        <td>varchar(50)</td>
+                        <td>Account external key</td>
+                    </tr>
+                    <tr>
+                        <td>status</td>
+                        <td>varchar(50)</td>
+                        <td>Overdue status, e.g. <code>PRE_WARNING</code></td>
+                    </tr>
+                    <tr>
+                        <td>start_date</td>
+                        <td>bigint(20)</td>
+                        <td>Epoch of the overdue status start period, e.g. <code>1342396800000</code></td>
+                    </tr>
+                    <tr>
+                        <td>end_date</td>
+                        <td>bigint(20)</td>
+                        <td>Epoch of the overdue status end period, e.g. <code>1342396800000</code></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section id="analytics_tags">
+            <div class="page-header">
+             <h1>Tags and custom fields</h1>
+            </div>
+
+            <p>Information about tags and custom fields are captured in the tables <strong>bac_tags</strong>, <strong>bac_fields</strong>, <strong>bst_tags</strong>, <strong>bst_fields</strong>, <strong>bin_tags</strong>, <strong>bin_fields</strong>, <strong>bip_tags</strong> and <strong>bip_fields</strong>. The tables don't contain historic records (they will contain the current state of tags and custom fields).</p>
+        </section>
+    </div>
+</div>
