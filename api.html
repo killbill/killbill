@@ -433,45 +433,129 @@ layout: default
                         <th>Resource</th>
                         <th>Query params</th>
                         <th>Description</th>
-                        <th>Return codes</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td>GET&nbsp;/1.0/kb/invoices/<code>invoice_id</code></td>
-                        <td></td>
-                        <td>Retrieve the invoice specified with invoice_id</td>
-                        <td>200, 404</td>
+                        <td>GET&nbsp;/1.0/kb/invoices</td>
+                        <td><ul>
+                                <li>accountId</li>
+                                <li>withItems=true|false</li>
+                            </ul></td>
+                        <td>Retrieve all invoices associated with an account</td>
                     </tr>
                     <tr>
-                        <td>GET&nbsp;/1.0/kb/invoices</td>
-                        <td>account_id</td>
-                        <td>Retrieve the invoices associated to that account</td>
-                        <td>200, 404</td>
+                        <td>GET&nbsp;/1.0/kb/invoices/<code>invoice_id</code></td>
+                        <td><ul>
+                                <li>withItems=true|false</li>
+                            </ul></td>
+                        <td>Retrieve the invoice specified by <code>invoice_id</code></td>
+                    </tr>
+                    <tr>
+                        <td>GET&nbsp;/1.0/kb/invoices/<code>invoice_id</code>/html</td>
+                        <td></td>
+                        <td>Retrieve the HTML invoice specified by <code>invoice_id</code></td>
                     </tr>
                     <tr>
                         <td>POST&nbsp;/1.0/kb/invoices</td>
-                        <td>account_id,target_date,dry_run</td>
-                        <td>Create an invoice for that account</td>
-                        <td>201, 400, 404</td>
+                        <td><ul>
+                                <li>accountId</li>
+                                <li>targetDate</li>
+                                <li>dryRun=true|false</li>
+                            </ul></td>
+                        <td>Create a future invoice for that account</td>
                     </tr>
                     <tr>
-                        <td>GET&nbsp;/1.0/kb/invoices/custom_fields/<code>invoice_id</code></td>
+                        <td>DELETE&nbsp;/1.0/kb/invoices/<code>invoice_id</code>/<code>invoice_item_id</code>/cba</td>
+                        <td><ul>
+                                <li>accountId</li>
+                            </ul></td>
+                        <td>Delete a CBA item</td>
+                    </tr>
+                    <tr>
+                        <td>POST&nbsp;/1.0/kb/invoices/<code>invoice_id</code></td>
+                        <td><ul>
+                                <li>requestedDate</li>
+                            </ul></td>
+                        <td>Adjust an invoice</td>
+                    </tr>
+                    <tr>
+                        <td>POST&nbsp;/1.0/kb/invoices/charges</td>
+                        <td><ul>
+                                <li>requestedDate</li>
+                            </ul></td>
+                        <td>Create an external charge</td>
+                    </tr>
+                    <tr>
+                        <td>POST&nbsp;/1.0/kb/invoices/<code>invoice_id</code>/charges</td>
+                        <td><ul>
+                                <li>requestedDate</li>
+                            </ul></td>
+                        <td>Create an external charge for a given invoice</td>
+                    </tr>
+                    <tr>
+                        <td>GET&nbsp;/1.0/kb/invoices/<code>invoice_id</code>/payments</td>
                         <td></td>
-                        <td>Retrieve the custom fields associated with that object</td>
-                        <td>200, 204</td>
+                        <td>Get all payments for a given invoice</td>
                     </tr>
                     <tr>
-                        <td>PUT&nbsp;/1.0/kb/invoices/custom_fields/<code>invoice_id</code></td>
+                        <td>POST&nbsp;/1.0/kb/invoices/payments</td>
+                        <td><ul>
+                                <li>externalPayment=true|false</li>
+                            </ul></td>
+                        <td>Pay all unpaid invoices</td>
+                    </tr>
+                    <tr>
+                        <td>POST&nbsp;/1.0/kb/invoices/<code>invoice_id</code>/payments</td>
+                        <td><ul>
+                                <li>externalPayment=true|false</li>
+                            </ul></td>
+                        <td>Pay a given invoice</td>
+                    </tr>
+                    <tr>
+                        <td>POST&nbsp;/1.0/kb/invoices/<code>invoice_id</code>/emailNotifications</td>
                         <td></td>
-                        <td>Modify the custom field associated to that object </td>
-                        <td>204, 400</td>
+                        <td>Trigger an email notification for a given invoice</td>
                     </tr>
                     <tr>
-                        <td>DELETE&nbsp;/1.0/kb/invoices/custom_fields/<code>invoice_id</code></td>
-                        <td>name</td>
-                        <td>Remove the custom field</td>
-                        <td>204, 400</td>
+                        <td>GET&nbsp;/1.0/kb/invoices/<code>invoice_id</code>/custom_fields</td>
+                        <td></td>
+                        <td>Retrieve the custom fields associated with that invoice</td>
+                    </tr>
+                    <tr>
+                        <td>POST&nbsp;/1.0/kb/invoices/<code>invoice_id</code>/custom_fields</td>
+                        <td><ul>
+                                <li>customFieldList</li>
+                            </ul></td>
+                        <td>Create custom fields associated with that invoice</td>
+                    </tr>
+                    <tr>
+                        <td>DELETE&nbsp;/1.0/kb/invoices/<code>invoice_id</code>/custom_fields</td>
+                        <td><ul>
+                                <li>customFieldList</li>
+                            </ul></td>
+                        <td>Remove custom fields</td>
+                    </tr>
+                    <tr>
+                        <td>GET&nbsp;/1.0/kb/invoices/<code>invoice_id</code>/tags</td>
+                        <td><ul>
+                                <li>audit=FULL|MINIMAL|NONE</li>
+                            </ul></td>
+                        <td>Retrieve all tags for that invoice</td>
+                    </tr>
+                    <tr>
+                        <td>POST&nbsp;/1.0/kb/invoices/<code>invoice_id</code>/tags</td>
+                        <td><ul>
+                                <li>taglist</li>
+                            </ul></td>
+                        <td>Attach a list of tags to that invoice</td>
+                    </tr>
+                    <tr>
+                        <td>DELETE&nbsp;/1.0/kb/invoices/<code>invoice_id</code>/tags</td>
+                        <td><ul>
+                                <li>taglist</li>
+                            </ul></td>
+                        <td>Remove a set of tags associated with that invoice</td>
                     </tr>
                 </tbody>
             </table>
