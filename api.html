@@ -347,27 +347,28 @@ layout: default
                         <th>Resource</th>
                         <th>Query params</th>
                         <th>Description</th>
-                        <th>Return codes</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
+                        <td>GET&nbsp;/1.0/kb/chargebacks/<code>chargeback_id</code></td>
+                        <td></td>
+                        <td>Retrieve the specified chargeback</td>
+                    </tr>
+                    <tr>
                         <td>GET&nbsp;/1.0/kb/chargebacks/accounts/<code>account_id</code></td>
                         <td></td>
-                        <td>Retrieve the chargeback information associated to that account</td>
-                        <td>200, 204</td>
+                        <td>Retrieve all chargebacks associated with that account</td>
                     </tr>
                     <tr>
                         <td>GET&nbsp;/1.0/kb/chargebacks/payments/<code>payment_id</code></td>
                         <td></td>
-                        <td>Retrieve the chargeback information associated to that payment</td>
-                        <td>200, 204</td>
+                        <td>Retrieve all chargebacks associated with that payment</td>
                     </tr>
                     <tr>
-                        <td>POST&nbsp;/1.0/kb/chargebacks/payments/<code>payment_id</code></td>
+                        <td>POST&nbsp;/1.0/kb/chargebacks</td>
                         <td></td>
-                        <td>Create a chargeback against a given payment</td>
-                        <td>201, 400, 404</td>
+                        <td>Create a chargeback</td>
                     </tr>
                 </tbody>
             </table>
@@ -383,15 +384,18 @@ layout: default
                         <th>Resource</th>
                         <th>Query params</th>
                         <th>Description</th>
-                        <th>Return codes</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td>POST&nbsp;/1.0/kb/accounts/<code>account_id</code></td>
+                        <td>GET&nbsp;/1.0/kb/credits/<code>credit_id</code></td>
                         <td></td>
-                        <td>Create a credit for that account</td>
-                        <td>201, 400, 404</td>
+                        <td>Retrieve the specified credit</td>
+                    </tr>
+                    <tr>
+                        <td>POST&nbsp;/1.0/kb/credits</td>
+                        <td></td>
+                        <td>Create a credit for a given account or invoice</td>
                     </tr>
                 </tbody>
             </table>
@@ -407,15 +411,13 @@ layout: default
                         <th>Resource</th>
                         <th>Query params</th>
                         <th>Description</th>
-                        <th>Return codes</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
+                        <td>GET&nbsp;/1.0/kb/export/<code>account_id</code></td>
                         <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
+                        <td>Export all data for a given account</td>
                     </tr>
                 </tbody>
             </table>
