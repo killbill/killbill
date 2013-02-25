@@ -571,15 +571,23 @@ layout: default
                         <th>Resource</th>
                         <th>Query params</th>
                         <th>Description</th>
-                        <th>Return codes</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
+                        <td>GET&nbsp;/1.0/kb/overdue/accounts/<code>account_id</code></td>
                         <td></td>
+                        <td>Retrieve the overdue state associated with an account</td>
+                    </tr>
+                    <tr>
+                        <td>GET&nbsp;/1.0/kb/overdue/bundles/<code>bundle_id</code></td>
                         <td></td>
+                        <td>Retrieve the overdue state associated with a bundle</td>
+                    </tr>
+                    <tr>
+                        <td>GET&nbsp;/1.0/kb/overdue/subscriptions/<code>subscription_id</code></td>
                         <td></td>
-                        <td></td>
+                        <td>Retrieve the overdue state associated with a subscription</td>
                     </tr>
                 </tbody>
             </table>
@@ -600,16 +608,19 @@ layout: default
                 </thead>
                 <tbody>
                     <tr>
+                        <td>GET&nbsp;/1.0/kb/paymentMethods/<code>payment_method_id</code></td>
+                        <td></td>
+                        <td>Retrieve a given payment method</td>
+                    </tr>
+                    <tr>
                         <td>PUT&nbsp;/1.0/kb/paymentMethods/<code>payment_method_id</code></td>
                         <td></td>
-                        <td>Update payment method properties</td>
-                        <td>200, 404</td>
+                        <td>Update a payment method properties</td>
                     </tr>
                     <tr>
                         <td>DELETE&nbsp;/1.0/kb/paymentMethods/<code>payment_method_id</code></td>
                         <td></td>
-                        <td>Delete payment method properties</td>
-                        <td>200, 404</td>
+                        <td>Delete a payment method properties</td>
                     </tr>
                 </tbody>
             </table>
@@ -625,45 +636,63 @@ layout: default
                         <th>Resource</th>
                         <th>Query params</th>
                         <th>Description</th>
-                        <th>Return codes</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td>GET&nbsp;/1.0/kb/invoices/<code>invoice_id</code>/payments</td>
+                        <td>GET&nbsp;/1.0/kb/payments/<code>payment_id</code></td>
                         <td></td>
-                        <td>Retrieve status for payment matching the invoice specified by invoice_id</td>
-                        <td>200, 404</td>
+                        <td>Retrieve a given payment</td>
                     </tr>
                     <tr>
-                        <td>POST&nbsp;/1.0/kb/invoices/<code>invoice_id</code>/payments</td>
-                        <td>externalPayment</td>
-                        <td>Trigger an instant payment to pay the invoice specified by invoice_id</td>
-                        <td>201, 400, 404</td>
-                    </tr>
-                    <tr>
-                        <td>GET&nbsp;/1.0/kb/accounts/<code>account_id</code>/payments</td>
-                        <td>last4CC, nameOnCC</td>
-                        <td>Retrieve payment for that account based on the query params</td>
-                        <td>200, 404</td>
-                    </tr>
-                    <tr>
-                        <td>GET&nbsp;/1.0/kb/payments/custom_fields/<code>payment_id</code></td>
+                        <td>GET&nbsp;/1.0/kb/payments/<code>payment_id</code>/refunds</td>
                         <td></td>
-                        <td>Retrieve the custom fields associated with that object</td>
-                        <td>200, 204</td>
+                        <td>Retrieve all refunds associated with a given payment</td>
                     </tr>
                     <tr>
-                        <td>PUT&nbsp;/1.0/kb/payments/custom_fields/<code>payment_id</code></td>
+                        <td>POST&nbsp;/1.0/kb/payments/<code>payment_id</code>/refunds</td>
                         <td></td>
-                        <td>Modify the custom field associated to that object </td>
-                        <td>204, 400</td>
+                        <td>Create a refund against a given payment</td>
                     </tr>
                     <tr>
-                        <td>DELETE&nbsp;/1.0/kb/payments/custom_fields/<code>payment_id</code></td>
-                        <td>name</td>
-                        <td>Remove the custom field</td>
-                        <td>204, 400</td>
+                        <td>GET&nbsp;/1.0/kb/payments/<code>payment_id</code>/custom_fields</td>
+                        <td></td>
+                        <td>Retrieve the custom fields associated with that payment</td>
+                    </tr>
+                    <tr>
+                        <td>POST&nbsp;/1.0/kb/payments/<code>payment_id</code>/custom_fields</td>
+                        <td><ul>
+                                <li>customFieldList</li>
+                            </ul></td>
+                        <td>Create custom fields associated with that payment</td>
+                    </tr>
+                    <tr>
+                        <td>DELETE&nbsp;/1.0/kb/payments/<code>payment_id</code>/custom_fields</td>
+                        <td><ul>
+                                <li>customFieldList</li>
+                            </ul></td>
+                        <td>Remove custom fields</td>
+                    </tr>
+                    <tr>
+                        <td>GET&nbsp;/1.0/kb/payments/<code>payment_id</code>/tags</td>
+                        <td><ul>
+                                <li>audit=FULL|MINIMAL|NONE</li>
+                            </ul></td>
+                        <td>Retrieve all tags for that payment</td>
+                    </tr>
+                    <tr>
+                        <td>POST&nbsp;/1.0/kb/payments/<code>payment_id</code>/tags</td>
+                        <td><ul>
+                                <li>taglist</li>
+                            </ul></td>
+                        <td>Attach a list of tags to that payment</td>
+                    </tr>
+                    <tr>
+                        <td>DELETE&nbsp;/1.0/kb/payments/<code>payment_id</code>/tags</td>
+                        <td><ul>
+                                <li>taglist</li>
+                            </ul></td>
+                        <td>Remove a set of tags associated with that payment</td>
                     </tr>
                 </tbody>
             </table>
@@ -679,21 +708,13 @@ layout: default
                         <th>Resource</th>
                         <th>Query params</th>
                         <th>Description</th>
-                        <th>Return codes</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td>GET&nbsp;/1.0/kb/payments/<code>payment_id</code>/refunds</td>
+                        <td>GET&nbsp;/1.0/kb/refund/<code>refund_id</code></td>
                         <td></td>
-                        <td>Retrieve the refund information associated to that payment</td>
-                        <td>200, 404</td>
-                    </tr>
-                    <tr>
-                        <td>POST&nbsp;/1.0/kb/payments/<code>payment_id</code>/refunds</td>
-                        <td>refund_amount</td>
-                        <td>Trigger a refund against the specified payment</td>
-                        <td>201, 400, 404</td>
+                        <td>Retrieve all information associated with a given refund</td>
                     </tr>
                 </tbody>
             </table>
