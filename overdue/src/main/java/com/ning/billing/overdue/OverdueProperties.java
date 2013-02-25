@@ -18,6 +18,7 @@ package com.ning.billing.overdue;
 
 import org.skife.config.Config;
 import org.skife.config.Default;
+import org.skife.config.Description;
 
 import com.ning.billing.util.config.KillbillConfig;
 
@@ -25,5 +26,6 @@ public interface OverdueProperties extends KillbillConfig {
 
     @Config("killbill.overdue.uri")
     @Default("NoOverdueConfig.xml")
+    @Description("Overdue configuration location. Either in the classpath or in the filesystem")
     public String getConfigURI();
 }
