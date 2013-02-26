@@ -1,0 +1,14 @@
+To update the catalog xsd:
+
+* rm -rf xsd/killbill-catalog-{version}.xsd if needed
+* java -jar target/killbill-catalog-*-xsd-tool.jar /var/tmp/killbill-catalog-{version}.xsd in the catalog directory of the killbill source tree
+* cp /var/tmp/killbill-catalog-{version}.xsd /path/to/killbill/docs/xsd/killbill-catalog-{version}.xsd
+* Update xsd/index.html if needed
+
+
+To update the overdue xsd:
+
+* rm -rf xsd/killbill-overdue-{version}.xsd if needed
+* java -jar target/killbill-overdue-*-xsd-tool.jar /var/tmp/killbill-overdue-{version}.xsd in the overdue directory of the killbill source tree
+* cp /var/tmp/killbill-overdue-{version}.xsd /path/to/killbill/docs/xsd/killbill-overdue-{version}.xsd
+* Update xsd/index.html if needed
