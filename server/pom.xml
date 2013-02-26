@@ -314,6 +314,9 @@
                         <goals>
                             <goal>createconsole</goal>
                         </goals>
+                        <configuration>
+                            <backgroundImage>${basedir}/src/main/jettyconsole/killbill.png</backgroundImage>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
