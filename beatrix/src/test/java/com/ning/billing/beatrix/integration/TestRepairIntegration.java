@@ -24,7 +24,6 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
 import org.testng.Assert;
-import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
@@ -69,7 +68,7 @@ public class TestRepairIntegration extends TestIntegrationBase {
         final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
 
-        final Account account = createAccountWithPaymentMethod(getAccountData(25));
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(25));
 
         final SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
 

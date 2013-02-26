@@ -154,7 +154,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     @Inject
     protected PaymentApi paymentApi;
 
-    @Named(BeatrixIntegrationModule.PLUGIN_NAME)
+    @Named(BeatrixIntegrationModule.NON_OSGI_PLUGIN_NAME)
     @Inject
     protected MockPaymentProviderPlugin paymentPlugin;
 
@@ -306,7 +306,15 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         return (SubscriptionData) ((BlockingSubscription) sub).getDelegateSubscription();
     }
 
-    protected Account createAccountWithPaymentMethod(final AccountData accountData) throws Exception {
+    protected Account createAccountWithOsgiPaymentMethod(final AccountData accountData) throws Exception {
+        return createAccountWithPaymentMethod(accountData, BeatrixIntegrationModule.OSGI_PLUGIN_NAME);
+    }
+
+    protected Account createAccountWithNonOsgiPaymentMethod(final AccountData accountData) throws Exception {
+        return createAccountWithPaymentMethod(accountData, BeatrixIntegrationModule.NON_OSGI_PLUGIN_NAME);
+    }
+
+    private Account createAccountWithPaymentMethod(final AccountData accountData, final String paymentPluginName) throws Exception {
         final Account account = accountUserApi.createAccount(accountData, callContext);
         assertNotNull(account);
 
@@ -332,7 +340,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             }
         };
 
-        paymentApi.addPaymentMethod(BeatrixIntegrationModule.PLUGIN_NAME, account, true, info, callContext);
+        paymentApi.addPaymentMethod(paymentPluginName, account, true, info, callContext);
         return accountUserApi.getAccountById(account.getId(), callContext);
     }
 

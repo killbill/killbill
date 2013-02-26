@@ -28,5 +28,6 @@
     <packaging>pom</packaging>
     <modules>
         <module>beatrix</module>
+        <module>payment</module>
     </modules>
 </project>

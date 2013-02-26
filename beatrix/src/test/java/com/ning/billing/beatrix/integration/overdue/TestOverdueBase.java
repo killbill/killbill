@@ -79,10 +79,10 @@ public abstract class TestOverdueBase extends TestIntegrationBase {
         final OverdueConfig config = XMLLoader.getObjectFromStreamNoValidation(is, OverdueConfig.class);
         overdueWrapperFactory.setOverdueConfig(config);
 
-        account = createAccountWithPaymentMethod(getAccountData(0));
+        account = createAccountWithNonOsgiPaymentMethod(getAccountData(0));
         assertNotNull(account);
 
-        paymentApi.addPaymentMethod(BeatrixIntegrationModule.PLUGIN_NAME, account, true, paymentMethodPlugin, callContext);
+        paymentApi.addPaymentMethod(BeatrixIntegrationModule.NON_OSGI_PLUGIN_NAME, account, true, paymentMethodPlugin, callContext);
 
         bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
 

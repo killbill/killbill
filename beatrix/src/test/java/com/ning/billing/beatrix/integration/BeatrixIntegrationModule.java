@@ -18,7 +18,6 @@ package com.ning.billing.beatrix.integration;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.Properties;
 import java.util.Set;
 
 import com.ning.billing.GuicyKillbillTestWithEmbeddedDBModule;
@@ -78,7 +77,10 @@ import static org.testng.Assert.assertNotNull;
 
 public class BeatrixIntegrationModule extends AbstractModule {
 
-    public static final String PLUGIN_NAME = "yoyo";
+    public static final String NON_OSGI_PLUGIN_NAME = "yoyo";
+
+    // Same name the osgi-payment-test plugin uses to register its service
+    public static final String OSGI_PLUGIN_NAME = "osgiPaymentPlugin";
 
     @Override
     protected void configure() {
@@ -133,7 +135,7 @@ public class BeatrixIntegrationModule extends AbstractModule {
 
         @Override
         protected void installPaymentProviderPlugins(final PaymentConfig config) {
-            install(new MockPaymentProviderPluginModule(PLUGIN_NAME, TestIntegrationBase.getClock()));
+            install(new MockPaymentProviderPluginModule(NON_OSGI_PLUGIN_NAME, TestIntegrationBase.getClock()));
         }
     }
 

@@ -23,7 +23,6 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
 import org.joda.time.LocalDate;
-import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
@@ -54,7 +53,7 @@ public class TestIntegration extends TestIntegrationBase {
     public void testCancelBPWithAOTheSameDay() throws Exception {
 
         final AccountData accountData = getAccountData(1);
-        final Account account = createAccountWithPaymentMethod(accountData);
+        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
         accountChecker.checkAccount(account.getId(), accountData, callContext);
 
         // We take april as it has 30 days (easier to play with BCD)
@@ -101,7 +100,7 @@ public class TestIntegration extends TestIntegrationBase {
         final DateTime initialCreationDate = new DateTime(2012, 2, 1, 0, 3, 42, 0, testTimeZone);
 
         log.info("Beginning test with BCD of " + billingDay);
-        final Account account = createAccountWithPaymentMethod(getAccountData(billingDay));
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(billingDay));
 
         // set clock to the initial start date
         clock.setTime(initialCreationDate);
@@ -183,7 +182,7 @@ public class TestIntegration extends TestIntegrationBase {
         final DateTime initialCreationDate = new DateTime(2012, 2, 1, 0, 3, 42, 0, testTimeZone);
 
         log.info("Beginning test with BCD of " + billingDay);
-        final Account account = createAccountWithPaymentMethod(getAccountData(billingDay));
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(billingDay));
 
         // set clock to the initial start date
         clock.setTime(initialCreationDate);
@@ -265,7 +264,7 @@ public class TestIntegration extends TestIntegrationBase {
         final DateTime initialCreationDate = new DateTime(2012, 2, 1, 0, 3, 42, 0, testTimeZone);
 
         log.info("Beginning test with BCD of " + billingDay);
-        final Account account = createAccountWithPaymentMethod(getAccountData(billingDay));
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(billingDay));
 
         // set clock to the initial start date
         clock.setTime(initialCreationDate);
@@ -398,7 +397,7 @@ public class TestIntegration extends TestIntegrationBase {
         final DateTime initialDate = new DateTime(2012, 4, 25, 0, 13, 42, 0, testTimeZone);
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
 
-        final Account account = createAccountWithPaymentMethod(getAccountData(25));
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(25));
         assertNotNull(account);
 
         final SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
@@ -477,7 +476,7 @@ public class TestIntegration extends TestIntegrationBase {
 
         log.info("Starting testRepairForInvoicing");
 
-        final Account account = createAccountWithPaymentMethod(getAccountData(1));
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
         final UUID accountId = account.getId();
         assertNotNull(account);
 
@@ -510,7 +509,7 @@ public class TestIntegration extends TestIntegrationBase {
         final int billingDay = 2;
 
         log.info("Beginning test with BCD of " + billingDay);
-        final Account account = createAccountWithPaymentMethod(getAccountData(billingDay));
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(billingDay));
         final UUID accountId = account.getId();
         assertNotNull(account);
 
@@ -582,7 +581,7 @@ public class TestIntegration extends TestIntegrationBase {
         final DateTime initialCreationDate = new DateTime(2012, 2, 1, 0, 3, 42, 0, testTimeZone);
         clock.setDeltaFromReality(initialCreationDate.getMillis() - clock.getUTCNow().getMillis());
 
-        final Account account = createAccountWithPaymentMethod(getAccountData(2));
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(2));
         final UUID accountId = account.getId();
 
         final String productName = "Blowdart";

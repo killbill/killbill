@@ -49,7 +49,7 @@ public class TestEntitlement extends TestIntegrationBase {
     public void testForcePolicy() throws Exception {
         // We take april as it has 30 days (easier to play with BCD)
         final LocalDate today = new LocalDate(2012, 4, 1);
-        final Account account = createAccountWithPaymentMethod(getAccountData(1));
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
 
         // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
         clock.setDeltaFromReality(today.toDateTimeAtCurrentTime(DateTimeZone.UTC).getMillis() - clock.getUTCNow().getMillis());

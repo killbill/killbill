@@ -14,14 +14,13 @@
  * under the License.
  */
 
-package com.ning.billing.beatrix.integration.osgi;
+package com.ning.billing.payment.plugin.api;
 
-import org.testng.annotations.Test;
+public interface PaymentPluginApiWithTestControl extends PaymentPluginApi {
 
-public class TestOSGIIntegration extends TestOSGIBase {
+    public void setPaymentPluginApiExceptionOnNextCalls(PaymentPluginApiException e);
 
-    @Test(groups = "slow")
-    public void testJRubyIntegration() throws Exception {
-        createAccountWithNonOsgiPaymentMethod(getAccountData(1));
-    }
+    public void setPaymentRuntimeExceptionOnNextCalls(RuntimeException e);
+
+    public void resetToNormalbehavior();
 }
