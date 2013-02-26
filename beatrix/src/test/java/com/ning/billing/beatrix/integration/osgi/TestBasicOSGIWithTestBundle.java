@@ -107,7 +107,7 @@ public class TestBasicOSGIWithTestBundle extends TestOSGIBase {
     }
 
     private PaymentPluginApi getTestPluginPaymentApi() {
-        PaymentPluginApi result = paymentPluginApiOSGIServiceRegistration.getServiceForPluginName("test");
+        PaymentPluginApi result = paymentPluginApiOSGIServiceRegistration.getServiceForName("test");
         Assert.assertNotNull(result);
         return result;
     }

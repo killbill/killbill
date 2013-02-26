@@ -31,11 +31,13 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.http.HttpService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.ning.billing.osgi.api.OSGIKillbill;
 import com.ning.billing.osgi.api.OSGIPluginProperties;
+import com.ning.billing.osgi.api.OSGIServiceDescriptor;
 import com.ning.billing.osgi.api.OSGIServiceRegistration;
 import com.ning.billing.osgi.glue.DefaultOSGIModule;
 import com.ning.billing.payment.plugin.api.PaymentPluginApi;
@@ -45,6 +47,9 @@ import com.google.common.collect.ImmutableList;
 
 public class KillbillActivator implements BundleActivator, ServiceListener {
 
+    // TODO : Is that ok for system bundle to use Killbill Logger or do we need to LoggerService like we do for any other bundle
+    private final static Logger logger = LoggerFactory.getLogger(KillbillActivator.class);
+
     private final OSGIKillbill osgiKillbill;
     private final HttpService defaultHttpService;
     private final DataSource dataSource;
@@ -52,7 +57,6 @@ public class KillbillActivator implements BundleActivator, ServiceListener {
     private final OSGIKillbillRegistrar registrar;
 
 
-    private volatile ServiceRegistration osgiKillbillRegistration;
     private final List<OSGIServiceRegistration> allRegistrationHandlers;
 
 
@@ -63,7 +67,6 @@ public class KillbillActivator implements BundleActivator, ServiceListener {
                              final OSGIKillbill osgiKillbill,
                              final HttpService defaultHttpService,
                              final KillbillEventObservable observable,
-
                              final OSGIServiceRegistration<Servlet> servletRouter,
                              final OSGIServiceRegistration<PaymentPluginApi> paymentProviderPluginRegistry) {
         this.osgiKillbill = osgiKillbill;
@@ -77,8 +80,8 @@ public class KillbillActivator implements BundleActivator, ServiceListener {
 
     @Override
     public void start(final BundleContext context) throws Exception {
-        this.context = context;
 
+        this.context = context;
         final Dictionary props = new Hashtable();
         props.put(OSGIPluginProperties.PLUGIN_NAME_PROP, "killbill");
 
@@ -106,19 +109,25 @@ public class KillbillActivator implements BundleActivator, ServiceListener {
             // We are not initialized or uninterested
             return;
         }
+
+        final ServiceReference serviceReference = event.getServiceReference();
+        boolean processedServiceChange = false;
         for (OSGIServiceRegistration cur : allRegistrationHandlers) {
-            if (listenForServiceType(event, cur.getServiceType(), cur)) {
+            if (listenForServiceType(serviceReference, event.getType(), cur.getServiceType(), cur)) {
+                processedServiceChange = true;
                 break;
             }
         }
+        if (!processedServiceChange) {
+            logger.warn("Did not process ServiceEvent for {} ", serviceReference.getBundle().getSymbolicName());
+        }
     }
 
-    private <T> boolean listenForServiceType(final ServiceEvent event, final Class<T> claz, final OSGIServiceRegistration<T> registration) {
+    private <T> boolean listenForServiceType(final ServiceReference serviceReference, final int eventType, final Class<T> claz, final OSGIServiceRegistration<T> registration) {
         // Make sure we can retrieve the plugin name
-        final ServiceReference serviceReference = event.getServiceReference();
-        final String pluginName = (String) serviceReference.getProperty(OSGIPluginProperties.PLUGIN_NAME_PROP);
-        if (pluginName == null) {
-            // TODO STEPH logger ?
+        final String serviceName = (String) serviceReference.getProperty(OSGIPluginProperties.PLUGIN_NAME_PROP);
+        if (serviceName == null) {
+            logger.warn("Ignoring registered OSGI service {} with no {} property", claz.getName(), OSGIPluginProperties.PLUGIN_NAME_PROP);
             return true;
         }
 
@@ -128,17 +137,18 @@ public class KillbillActivator implements BundleActivator, ServiceListener {
             return false;
         }
 
-        switch (event.getType()) {
+        final String serviceInfo = (String) serviceReference.getProperty(OSGIPluginProperties.PLUGIN_SERVICE_INFO);
+        final OSGIServiceDescriptor desc =  new DefaultOSGIServiceDescriptor(serviceReference.getBundle().getSymbolicName(), serviceName, serviceInfo, claz.getName());
+        switch (eventType) {
             case ServiceEvent.REGISTERED:
-                registration.registerService(pluginName, theService);
+                registration.registerService(desc, theService);
                 break;
             case ServiceEvent.UNREGISTERING:
-                registration.unregisterService(pluginName);
+                registration.unregisterService(desc.getServiceName());
                 break;
             default:
                 break;
         }
-
         return true;
     }
 }

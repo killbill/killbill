@@ -179,7 +179,7 @@ public class TestPaymentOSGIWithTestPaymentBundle extends TestOSGIBase {
 
 
     private PaymentPluginApiWithTestControl getTestPluginPaymentApi() {
-        PaymentPluginApiWithTestControl result = (PaymentPluginApiWithTestControl) paymentPluginApiOSGIServiceRegistration.getServiceForPluginName(BeatrixIntegrationModule.OSGI_PLUGIN_NAME);
+        PaymentPluginApiWithTestControl result = (PaymentPluginApiWithTestControl) paymentPluginApiOSGIServiceRegistration.getServiceForName(BeatrixIntegrationModule.OSGI_PLUGIN_NAME);
         Assert.assertNotNull(result);
         return result;
     }

@@ -16,6 +16,7 @@
 
 package com.ning.billing.payment.glue;
 
+import com.ning.billing.osgi.api.OSGIServiceDescriptor;
 import com.ning.billing.osgi.api.OSGIServiceRegistration;
 import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 import com.ning.billing.util.config.PaymentConfig;
@@ -41,7 +42,25 @@ public class DefaultPaymentProviderPluginRegistryProvider implements Provider<OS
         final DefaultPaymentProviderPluginRegistry pluginRegistry = new DefaultPaymentProviderPluginRegistry(paymentConfig);
 
         // Make the external payment provider plugin available by default
-        pluginRegistry.registerService(ExternalPaymentProviderPlugin.PLUGIN_NAME, externalPaymentProviderPlugin);
+        final OSGIServiceDescriptor desc = new OSGIServiceDescriptor() {
+            @Override
+            public String getPluginSymbolicName() {
+                return null;
+            }
+            @Override
+            public String getServiceName() {
+                return ExternalPaymentProviderPlugin.PLUGIN_NAME;
+            }
+            @Override
+            public String getServiceInfo() {
+                return null;
+            }
+            @Override
+            public String getServiceType() {
+                return null;
+            }
+        };
+        pluginRegistry.registerService(desc, externalPaymentProviderPlugin);
 
         return pluginRegistry;
     }

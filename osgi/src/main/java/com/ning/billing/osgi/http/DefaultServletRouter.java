@@ -16,9 +16,9 @@
 
 package com.ning.billing.osgi.http;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import javax.inject.Singleton;
 import javax.servlet.Servlet;
@@ -26,6 +26,7 @@ import javax.servlet.Servlet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ning.billing.osgi.api.OSGIServiceDescriptor;
 import com.ning.billing.osgi.api.OSGIServiceRegistration;
 
 @Singleton
@@ -35,35 +36,60 @@ public class DefaultServletRouter implements OSGIServiceRegistration<Servlet> {
 
     // Internal Servlet routing table: map of plugin prefixes to servlet instances.
     // A plugin prefix can be /foo, /foo/bar, /foo/bar/baz, ... and is mounted on /plugins/<pluginPrefix>
-    private final Map<String, Servlet> pluginServlets = new ConcurrentHashMap<String, Servlet>();
+    private final Map<String, Servlet> pluginPathServlets = new HashMap<String, Servlet>();
+    private final Map<String, OSGIServiceDescriptor> pluginRegistrations = new HashMap<String, OSGIServiceDescriptor>();
 
     @Override
-    public void registerService(final String originalPathPrefix, final Servlet httpServlet) {
+    public void registerService(final OSGIServiceDescriptor desc, final Servlet httpServlet) {
         // Enforce each route to start with /
-        final String pathPrefix;
-        if (originalPathPrefix.charAt(0) != '/') {
-            pathPrefix = "/" + originalPathPrefix;
-        } else {
-            pathPrefix = originalPathPrefix;
-        }
+        final String pathPrefix = sanitizePathPrefix(desc.getServiceInfo());
         logger.info("Registering OSGI servlet at " + pathPrefix);
-        pluginServlets.put(pathPrefix, httpServlet);
+        synchronized (this) {
+            pluginPathServlets.put(pathPrefix, httpServlet);
+            pluginRegistrations.put(desc.getServiceName(), desc);
+        }
+    }
+
+    public void registerServiceFromPath(final String path, final Servlet httpServlet) {
+        pluginPathServlets.put(sanitizePathPrefix(path), httpServlet);
+    }
+
+
+        @Override
+    public void unregisterService(final String serviceName) {
+        synchronized (this) {
+            final OSGIServiceDescriptor desc = pluginRegistrations.get(serviceName);
+            if (desc != null) {
+                final String registeredPath = sanitizePathPrefix(desc.getServiceInfo());
+                pluginPathServlets.remove(registeredPath);
+                pluginRegistrations.remove(desc);
+                logger.info("Unregistering OSGI servlet " + desc.getServiceName() + " at path " + registeredPath);
+            }
+        }
+    }
+
+    public void unregisterServiceFromPath(final String path) {
+        pluginPathServlets.remove(sanitizePathPrefix(path));
+    }
+
+
+    @Override
+    public Servlet getServiceForName(final String serviceName) {
+        final OSGIServiceDescriptor desc = pluginRegistrations.get(serviceName);
+        if (desc == null) {
+            return null;
+        }
+        final String registeredPath = sanitizePathPrefix(desc.getServiceInfo());
+        return pluginPathServlets.get(registeredPath);
+    }
+
+    public Servlet getServiceForPath(final String path) {
+        return getServletForPathPrefix(path);
     }
 
     @Override
-    public void unregisterService(final String pathPrefix) {
-        logger.info("Unregistering OSGI servlet at " + pathPrefix);
-        pluginServlets.remove(pathPrefix);
-    }
-
-    @Override
-    public Servlet getServiceForPluginName(final String pathPrefix) {
-        return getServletForPathPrefix(pathPrefix);
-    }
-
-    @Override
-    public Set<String> getAllServiceForPluginName() {
-        return pluginServlets.keySet();
+    public Set<String> getAllServices() {
+        return pluginPathServlets.keySet();
     }
 
     @Override
@@ -74,7 +100,7 @@ public class DefaultServletRouter implements OSGIServiceRegistration<Servlet> {
     // TODO PIERRE Naive implementation - we should rather switch to e.g. heap tree
     public String getPluginPrefixForPath(final String pathPrefix) {
         String bestMatch = null;
-        for (final String potentialMatch : pluginServlets.keySet()) {
+        for (final String potentialMatch : pluginPathServlets.keySet()) {
             if (pathPrefix.startsWith(potentialMatch) && (bestMatch == null || bestMatch.length() < potentialMatch.length())) {
                 bestMatch = potentialMatch;
             }
@@ -84,6 +110,17 @@ public class DefaultServletRouter implements OSGIServiceRegistration<Servlet> {
 
     private Servlet getServletForPathPrefix(final String pathPrefix) {
         final String bestMatch = getPluginPrefixForPath(pathPrefix);
-        return bestMatch == null ? null : pluginServlets.get(bestMatch);
+        return bestMatch == null ? null : pluginPathServlets.get(bestMatch);
+    }
+
+
+    private static final String sanitizePathPrefix(final String inputPath) {
+        final String pathPrefix;
+        if (inputPath.charAt(0) != '/') {
+            pathPrefix = "/" + inputPath;
+        } else {
+            pathPrefix = inputPath;
+        }
+        return pathPrefix;
     }
 }
