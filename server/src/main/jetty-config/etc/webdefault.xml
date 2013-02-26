@@ -9,6 +9,57 @@
         Default web.xml file.
         This file is applied to a Web application before it's own WEB_INF/web.xml file
     </description>
+
+    <servlet>
+        <servlet-name>default</servlet-name>
+        <servlet-class>org.eclipse.jetty.servlet.DefaultServlet</servlet-class>
+        <init-param>
+            <param-name>aliases</param-name>
+            <param-value>false</param-value>
+        </init-param>
+        <init-param>
+            <param-name>acceptRanges</param-name>
+            <param-value>true</param-value>
+        </init-param>
+        <init-param>
+            <param-name>dirAllowed</param-name>
+            <param-value>false</param-value>
+        </init-param>
+        <init-param>
+            <param-name>welcomeServlets</param-name>
+            <param-value>false</param-value>
+        </init-param>
+        <init-param>
+            <param-name>redirectWelcome</param-name>
+            <param-value>false</param-value>
+        </init-param>
+        <init-param>
+            <param-name>maxCacheSize</param-name>
+            <param-value>256000000</param-value>
+        </init-param>
+        <init-param>
+            <param-name>maxCachedFileSize</param-name>
+            <param-value>200000000</param-value>
+        </init-param>
+        <init-param>
+            <param-name>maxCachedFiles</param-name>
+            <param-value>2048</param-value>
+        </init-param>
+        <init-param>
+            <param-name>gzip</param-name>
+            <param-value>true</param-value>
+        </init-param>
+        <init-param>
+            <param-name>etags</param-name>
+            <param-value>true</param-value>
+        </init-param>
+        <init-param>
+            <param-name>useFileMappedBuffer</param-name>
+            <param-value>true</param-value>
+        </init-param>
+        <load-on-startup>0</load-on-startup>
+    </servlet>
+
     <context-param>
         <param-name>org.mortbay.jetty.webapp.NoTLDJarPattern</param-name>
         <param-value>
