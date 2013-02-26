@@ -1,0 +1,6 @@
+To update javadocs:
+
+* rm -rf javadoc/{version} if needed
+* mvn javadoc:aggregate in the root of the killbill source tree
+* cp -r target/site/apidocs /path/to/killbill/docs/javadoc/{version}
+* Update javadoc/index.html if needed
