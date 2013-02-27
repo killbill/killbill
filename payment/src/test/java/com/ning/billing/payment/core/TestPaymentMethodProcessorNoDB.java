@@ -28,7 +28,7 @@ import com.ning.billing.payment.PaymentTestSuiteNoDB;
 import com.ning.billing.payment.api.PaymentMethod;
 import com.ning.billing.payment.provider.ExternalPaymentProviderPlugin;
 
-public class TestPaymentMethodProcessor extends PaymentTestSuiteNoDB {
+public class TestPaymentMethodProcessorNoDB extends PaymentTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testGetExternalPaymentProviderPlugin() throws Exception {
