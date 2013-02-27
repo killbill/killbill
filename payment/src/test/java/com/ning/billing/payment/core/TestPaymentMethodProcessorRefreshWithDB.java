@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
@@ -31,6 +32,13 @@ import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 import com.ning.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
 
 public class TestPaymentMethodProcessorRefreshWithDB extends PaymentTestSuiteWithEmbeddedDB {
+
+
+    @BeforeMethod(groups = "slow")
+    public void beforeMethod() throws Exception {
+        super.beforeMethod();
+        getPluginApi().resetPaymentMethods(null);
+    }
 
     @Test(groups = "slow")
     public void testRefreshWithNewPaymentMethod() throws Exception {
@@ -54,7 +62,7 @@ public class TestPaymentMethodProcessorRefreshWithDB extends PaymentTestSuiteWit
     @Test(groups = "slow")
     public void testRefreshWithDeletedPaymentMethod() throws Exception {
 
-        final Account account = testHelper.createTestAccount("foo@bar.com", true);
+        final Account account = testHelper.createTestAccount("super@bar.com", true);
         Assert.assertEquals(getPluginApi().getPaymentMethods(account.getId(), true, callContext).size(), 1);
         final UUID firstPmId = account.getPaymentMethodId();
 
