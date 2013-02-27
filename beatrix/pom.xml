@@ -57,10 +57,6 @@
         </dependency>
         <dependency>
             <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-osgi-bundles-test</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.ning.billing</groupId>
             <artifactId>killbill-tenant</artifactId>
         </dependency>
         <dependency>

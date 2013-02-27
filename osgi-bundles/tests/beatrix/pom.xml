@@ -111,7 +111,7 @@
                 <artifactId>maven-shade-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>assemble-killbill-osgi-bundles-test</id>
+                        <id>assemble-killbill-osgi-bundles-test-beatrix</id>
                         <goals>
                             <goal>shade</goal>
                         </goals>
