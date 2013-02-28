@@ -79,7 +79,7 @@ public class KillbillGuiceListener extends SetupServer {
                 .addModule(getModule())
                 // Don't filter all requests through Jersey, only the JAX-RS APIs (otherwise,
                 // things like static resources, favicon, etc. are 404'ed)
-                .setJerseyUriPattern(JaxRsResourceBase.PREFIX + "/.*")
+                .setJerseyUriPattern("(" + JaxRsResourceBase.PREFIX + "|" + JaxRsResourceBase.PLUGINS_PATH + ")" + "/.*")
                 .addJerseyResource("com.ning.billing.jaxrs.mappers")
                 .addJerseyResource("com.ning.billing.jaxrs.resources");
 
