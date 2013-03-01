@@ -16,12 +16,9 @@
 
 package com.ning.billing.osgi.api;
 
-import javax.sql.DataSource;
-
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.analytics.api.sanity.AnalyticsSanityApi;
 import com.ning.billing.analytics.api.user.AnalyticsUserApi;
-import com.ning.billing.beatrix.bus.api.ExternalBus;
 import com.ning.billing.catalog.api.CatalogUserApi;
 import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi;
 import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
@@ -51,32 +48,42 @@ public interface OSGIKillbill {
      * @return the matching API
      */
     public AccountUserApi getAccountUserApi();
+
     public AnalyticsSanityApi getAnalyticsSanityApi();
+
     public AnalyticsUserApi getAnalyticsUserApi();
+
     public CatalogUserApi getCatalogUserApi();
+
     public EntitlementMigrationApi getEntitlementMigrationApi();
+
     public EntitlementTimelineApi getEntitlementTimelineApi();
+
     public EntitlementTransferApi getEntitlementTransferApi();
+
     public EntitlementUserApi getEntitlementUserApi();
+
     public InvoiceMigrationApi getInvoiceMigrationApi();
+
     public InvoicePaymentApi getInvoicePaymentApi();
+
     public InvoiceUserApi getInvoiceUserApi();
+
     public OverdueUserApi getOverdueUserApi();
+
     public PaymentApi getPaymentApi();
+
     public TenantUserApi getTenantUserApi();
+
     public UsageUserApi getUsageUserApi();
+
     public AuditUserApi getAuditUserApi();
+
     public CustomFieldUserApi getCustomFieldUserApi();
+
     public ExportUserApi getExportUserApi();
+
     public TagUserApi getTagUserApi();
-
-    /**
-     * Used by the OSGI bundles to register interest into Killbill events
-     *
-     * @return the externalBus
-     */
-    public ExternalBus getExternalBus();
-
 
     /**
      * Used by the OSGI bundles to discover their configuration
@@ -84,11 +91,4 @@ public interface OSGIKillbill {
      * @return the PluginConfigServiceApi
      */
     public PluginConfigServiceApi getPluginConfigServiceApi();
-
-
-    /**
-     * Used by the OSGI bundles to be able to access their own sql tables
-     * @return the dataSource for the OSGI bundles
-     */
-    public DataSource getDataSource();
 }

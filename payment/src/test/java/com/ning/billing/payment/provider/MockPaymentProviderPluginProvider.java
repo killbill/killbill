@@ -19,6 +19,7 @@ package com.ning.billing.payment.provider;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 
+import com.ning.billing.osgi.api.OSGIServiceDescriptor;
 import com.ning.billing.osgi.api.OSGIServiceRegistration;
 import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 import com.ning.billing.util.clock.Clock;
@@ -44,7 +45,25 @@ public class MockPaymentProviderPluginProvider implements Provider<MockPaymentPr
     public MockPaymentProviderPlugin get() {
         final MockPaymentProviderPlugin plugin = new MockPaymentProviderPlugin(clock);
 
-        registry.registerService(instanceName, plugin);
+        final OSGIServiceDescriptor desc =  new OSGIServiceDescriptor() {
+            @Override
+            public String getPluginSymbolicName() {
+                return null;
+            }
+            @Override
+            public String getServiceName() {
+                return instanceName;
+            }
+            @Override
+            public String getServiceInfo() {
+                return null;
+            }
+            @Override
+            public String getServiceType() {
+                return null;
+            }
+        };
+        registry.registerService(desc, plugin);
         return plugin;
     }
 }

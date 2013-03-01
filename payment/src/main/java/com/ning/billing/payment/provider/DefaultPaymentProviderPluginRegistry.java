@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.ning.billing.osgi.api.OSGIServiceDescriptor;
 import com.ning.billing.osgi.api.OSGIServiceRegistration;
 import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 import com.ning.billing.util.config.PaymentConfig;
@@ -39,17 +40,17 @@ public class DefaultPaymentProviderPluginRegistry implements OSGIServiceRegistra
 
 
     @Override
-    public void registerService(final String pluginName, final PaymentPluginApi service) {
-        pluginsByName.put(pluginName.toLowerCase(), service);
+    public void registerService(final OSGIServiceDescriptor desc, final PaymentPluginApi service) {
+        pluginsByName.put(desc.getServiceName().toLowerCase(), service);
     }
 
     @Override
-    public void unregisterService(final String pluginName) {
-        pluginsByName.remove(pluginName.toLowerCase());
+    public void unregisterService(final String serviceName) {
+        pluginsByName.remove(serviceName.toLowerCase());
     }
 
     @Override
-    public PaymentPluginApi getServiceForPluginName(final String name) {
+    public PaymentPluginApi getServiceForName(final String name) {
         final PaymentPluginApi plugin = pluginsByName.get((Strings.emptyToNull(name) == null ? defaultPlugin : name).toLowerCase());
 
         if (plugin == null) {
@@ -60,7 +61,7 @@ public class DefaultPaymentProviderPluginRegistry implements OSGIServiceRegistra
     }
 
     @Override
-    public Set<String> getAllServiceForPluginName() {
+    public Set<String> getAllServices() {
         return pluginsByName.keySet();
     }
 

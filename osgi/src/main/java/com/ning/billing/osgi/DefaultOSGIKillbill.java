@@ -23,7 +23,6 @@ import javax.sql.DataSource;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.analytics.api.sanity.AnalyticsSanityApi;
 import com.ning.billing.analytics.api.user.AnalyticsUserApi;
-import com.ning.billing.beatrix.bus.api.ExternalBus;
 import com.ning.billing.catalog.api.CatalogUserApi;
 import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi;
 import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
@@ -65,15 +64,10 @@ public class DefaultOSGIKillbill implements OSGIKillbill {
     private final CustomFieldUserApi customFieldUserApi;
     private final ExportUserApi exportUserApi;
     private final TagUserApi tagUserApi;
-
-    private final ExternalBus externalBus;
     private final PluginConfigServiceApi configServiceApi;
 
-    private final DataSource dataSource;
-
     @Inject
-    public DefaultOSGIKillbill(@Named(DefaultOSGIModule.OSGI_NAMED) final DataSource dataSource,
-                               final AccountUserApi accountUserApi,
+    public DefaultOSGIKillbill(final AccountUserApi accountUserApi,
                                final AnalyticsSanityApi analyticsSanityApi,
                                final AnalyticsUserApi analyticsUserApi,
                                final CatalogUserApi catalogUserApi,
@@ -92,9 +86,7 @@ public class DefaultOSGIKillbill implements OSGIKillbill {
                                final CustomFieldUserApi customFieldUserApi,
                                final ExportUserApi exportUserApi,
                                final TagUserApi tagUserApi,
-                               final ExternalBus externalBus,
                                final PluginConfigServiceApi configServiceApi) {
-        this.dataSource = dataSource;
         this.accountUserApi = accountUserApi;
         this.analyticsSanityApi = analyticsSanityApi;
         this.analyticsUserApi = analyticsUserApi;
@@ -114,7 +106,6 @@ public class DefaultOSGIKillbill implements OSGIKillbill {
         this.customFieldUserApi = customFieldUserApi;
         this.exportUserApi = exportUserApi;
         this.tagUserApi = tagUserApi;
-        this.externalBus = externalBus;
         this.configServiceApi = configServiceApi;
     }
 
@@ -214,17 +205,7 @@ public class DefaultOSGIKillbill implements OSGIKillbill {
     }
 
     @Override
-    public ExternalBus getExternalBus() {
-        return externalBus;
-    }
-
-    @Override
     public PluginConfigServiceApi getPluginConfigServiceApi() {
         return configServiceApi;
-    }
-
-    @Override
-    public DataSource getDataSource() {
-        return dataSource;
     }
 }

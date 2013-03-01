@@ -119,9 +119,9 @@ public class OSGIServlet extends HttpServlet {
         }
     }
 
-    private Servlet getPluginServlet(final String pluginName) {
-        if (pluginName != null) {
-            return servletRouter.getServiceForPluginName(pluginName);
+    private Servlet getPluginServlet(final String requestPath) {
+        if (requestPath != null) {
+            return servletRouter.getServiceForPath(requestPath);
         } else {
             return null;
         }

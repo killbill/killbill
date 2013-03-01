@@ -110,7 +110,7 @@ public abstract class ProcessorBase {
             log.error("PaymentMethod dpes not exist", paymentMethodId);
             throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, paymentMethodId);
         }
-        return pluginRegistry.getServiceForPluginName(methodDao.getPluginName());
+        return pluginRegistry.getServiceForName(methodDao.getPluginName());
     }
 
     protected PaymentPluginApi getPaymentProviderPlugin(final String accountKey, final InternalTenantContext context)
@@ -121,7 +121,7 @@ public abstract class ProcessorBase {
             final Account account = accountInternalApi.getAccountByKey(accountKey, context);
             return getPaymentProviderPlugin(account, context);
         }
-        return pluginRegistry.getServiceForPluginName(paymentProviderName);
+        return pluginRegistry.getServiceForName(paymentProviderName);
     }
 
     protected PaymentPluginApi getPaymentProviderPlugin(final Account account, final InternalTenantContext context) throws PaymentApiException {

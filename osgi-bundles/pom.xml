@@ -23,15 +23,13 @@
         <version>0.1.56-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
-    <artifactId>killbill-osgi-bundles</artifactId>
-    <name>Killbill billing platform: OSGI bundles</name>
+    <artifactId>killbill-osgi-all-bundles</artifactId>
+    <name>Killbill billing platform: OSGI ALL bundles</name>
     <packaging>pom</packaging>
     <modules>
-        <module>hello</module>
-        <module>jruby</module>
-        <module>meter</module>
-        <module>test</module>
-        <module>webconsolebranding</module>
+        <module>libs</module>
+        <module>bundles</module>
+        <module>tests</module>
         <module>defaultbundles</module>
     </modules>
 </project>

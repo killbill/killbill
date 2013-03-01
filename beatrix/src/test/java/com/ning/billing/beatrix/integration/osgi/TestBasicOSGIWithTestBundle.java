@@ -59,7 +59,7 @@ import static com.jayway.awaitility.Awaitility.await;
  */
 public class TestBasicOSGIWithTestBundle extends TestOSGIBase {
 
-    private final String BUNDLE_TEST_RESOURCE = "killbill-osgi-bundles-test";
+    private final String BUNDLE_TEST_RESOURCE = "killbill-osgi-bundles-test-beatrix";
 
     @Inject
     private OSGIServiceRegistration<PaymentPluginApi> paymentPluginApiOSGIServiceRegistration;
@@ -93,7 +93,7 @@ public class TestBasicOSGIWithTestBundle extends TestOSGIBase {
         assertTor.assertPluginInitialized();
 
         // Create an account and expect test bundle listen to KB events and write the external name in its table
-        final Account account = createAccountWithPaymentMethod(getAccountData(1));
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
         assertTor.assertPluginReceievdAccountCreationEvent(account.getExternalKey());
 
         // Retrieve the PaymentPluginApi that the test bundle registered
@@ -107,7 +107,7 @@ public class TestBasicOSGIWithTestBundle extends TestOSGIBase {
     }
 
     private PaymentPluginApi getTestPluginPaymentApi() {
-        PaymentPluginApi result = paymentPluginApiOSGIServiceRegistration.getServiceForPluginName("test");
+        PaymentPluginApi result = paymentPluginApiOSGIServiceRegistration.getServiceForName("test");
         Assert.assertNotNull(result);
         return result;
     }

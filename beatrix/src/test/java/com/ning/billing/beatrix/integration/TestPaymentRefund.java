@@ -26,7 +26,6 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
@@ -100,7 +99,7 @@ public class TestPaymentRefund extends TestIntegrationBase {
         final int billingDay = 31;
         initialCreationDate = new DateTime(2012, 2, 1, 0, 3, 42, 0, testTimeZone);
 
-        account = createAccountWithPaymentMethod(getAccountData(billingDay));
+        account = createAccountWithNonOsgiPaymentMethod(getAccountData(billingDay));
 
         // set clock to the initial start date
         clock.setTime(initialCreationDate);

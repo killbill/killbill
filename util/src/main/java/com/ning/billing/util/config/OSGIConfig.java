@@ -62,7 +62,6 @@ public interface OSGIConfig extends KillbillConfig {
              "com.ning.billing.usage.api," +
              "com.ning.billing.util.api," +
              "com.ning.billing.util.callcontext," +
-             "com.google.common.eventbus," +
              // javax.servlet and javax.servlet.http are not exported by default - we
              // need the bundles to see them for them to be able to register their servlets.
              // Note: bundles should mark javax.servlet:servlet-api as provided

@@ -46,7 +46,7 @@ public class DefaultHttpService implements HttpService {
             throw new IllegalArgumentException("Invalid servlet (null)");
         }
 
-        servletRouter.registerService(alias, servlet);
+        servletRouter.registerServiceFromPath(alias, servlet);
     }
 
     @Override
@@ -61,7 +61,7 @@ public class DefaultHttpService implements HttpService {
 
     @Override
     public void unregister(final String alias) {
-        servletRouter.unregisterService(alias);
+        servletRouter.unregisterServiceFromPath(alias);
     }
 
     @Override

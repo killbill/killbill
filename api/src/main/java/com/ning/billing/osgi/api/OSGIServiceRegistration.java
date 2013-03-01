@@ -16,11 +16,9 @@
 
 package com.ning.billing.osgi.api;
 
-import java.util.List;
 import java.util.Set;
 
 /**
- *
  * The purpose is to register within Killbill OSGI services
  * that were exported by specific Killbill plugins
  *
@@ -28,34 +26,25 @@ import java.util.Set;
  */
 public interface OSGIServiceRegistration<T> {
 
-    /**
-     *
-     * @param pluginName the name of plugin
-     * @param service    the instance that should be registered
-     */
-    void registerService(String pluginName, T service);
+    void registerService(OSGIServiceDescriptor desc, T service);
 
     /**
-     *
-     * @param pluginName the name of plugin
+     * @param serviceName the name of the service as it was registered
      */
-    void unregisterService(String pluginName);
+    void unregisterService(String serviceName);
 
     /**
-     *
-     * @param pluginName the name of plugin
+     * @param serviceName the name of the service as it was registered
      * @return the instance that was registered under that name
      */
-    T getServiceForPluginName(String pluginName);
+    T getServiceForName(String serviceName);
 
     /**
-     *
-     * @return the set of all the plugins registered
+     * @return the set of all the service registered
      */
-    Set<String> getAllServiceForPluginName();
+    Set<String> getAllServices();
 
     /**
-     *
      * @return the type of service that is registered under that OSGIServiceRegistration
      */
     Class<T> getServiceType();

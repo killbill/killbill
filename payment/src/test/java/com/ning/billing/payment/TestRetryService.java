@@ -59,7 +59,7 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
         retryService.initialize(DefaultPaymentService.SERVICE_NAME);
         retryService.start();
 
-        mockPaymentProviderPlugin = (MockPaymentProviderPlugin) registry.getServiceForPluginName(null);
+        mockPaymentProviderPlugin = (MockPaymentProviderPlugin) registry.getServiceForName(null);
         mockPaymentProviderPlugin.clear();
     }
 

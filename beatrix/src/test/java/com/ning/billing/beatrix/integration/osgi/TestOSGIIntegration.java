@@ -16,15 +16,12 @@
 
 package com.ning.billing.beatrix.integration.osgi;
 
-import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
-
-import com.ning.billing.beatrix.integration.BeatrixIntegrationModule;
 
 public class TestOSGIIntegration extends TestOSGIBase {
 
     @Test(groups = "slow")
     public void testJRubyIntegration() throws Exception {
-        createAccountWithPaymentMethod(getAccountData(1));
+        createAccountWithNonOsgiPaymentMethod(getAccountData(1));
     }
 }

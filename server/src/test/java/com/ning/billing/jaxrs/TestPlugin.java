@@ -29,6 +29,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.ning.billing.osgi.http.DefaultServletRouter;
 import com.ning.http.client.Response;
 
 public class TestPlugin extends TestJaxrsBase {
@@ -159,7 +160,7 @@ public class TestPlugin extends TestJaxrsBase {
     }
 
     private void setupOSGIPlugin() {
-        servletRouter.registerService(TEST_PLUGIN_NAME, new HttpServlet() {
+        ((DefaultServletRouter) servletRouter).registerServiceFromPath(TEST_PLUGIN_NAME, new HttpServlet() {
             @Override
             protected void doGet(final HttpServletRequest req, final HttpServletResponse resp) throws ServletException, IOException {
                 if (("/" + TEST_PLUGIN_VALID_GET_PATH).equals(req.getPathInfo())) {

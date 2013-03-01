@@ -19,12 +19,10 @@ package com.ning.billing.beatrix.integration.overdue;
 import java.math.BigDecimal;
 
 import org.joda.time.LocalDate;
-import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.api.TestApiListener.NextEvent;
-import com.ning.billing.beatrix.integration.BeatrixIntegrationModule;
 import com.ning.billing.beatrix.integration.TestIntegrationBase;
 import com.ning.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -45,7 +43,7 @@ public class TestBillingAlignment extends TestIntegrationBase {
     @Test(groups = "slow", enabled = false)
     public void testTransitonAccountBAToSubscriptionBA() throws Exception {
 
-        final Account account = createAccountWithPaymentMethod(getAccountData(1));
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
 
         // We take april as it has 30 days (easier to play with BCD)
         // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
