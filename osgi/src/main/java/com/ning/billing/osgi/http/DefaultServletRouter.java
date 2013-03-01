@@ -42,36 +42,64 @@ public class DefaultServletRouter implements OSGIServiceRegistration<Servlet> {
     @Override
     public void registerService(final OSGIServiceDescriptor desc, final Servlet httpServlet) {
         // Enforce each route to start with /
-        final String pathPrefix = sanitizePathPrefix(desc.getServiceInfo());
+        final String pathPrefix = getPathPrefixFromDescriptor(desc);
+        if (pathPrefix == null) {
+            logger.warn("Skipping registration of OSGI servlet for service {} (service info is not specified)", desc.getServiceName());
+            return;
+        }
+
         logger.info("Registering OSGI servlet at " + pathPrefix);
         synchronized (this) {
-            pluginPathServlets.put(pathPrefix, httpServlet);
-            pluginRegistrations.put(desc.getServiceName(), desc);
+            registerServletInternal(pathPrefix, httpServlet);
+            registerServiceInternal(desc);
         }
     }
 
     public void registerServiceFromPath(final String path, final Servlet httpServlet) {
-        pluginPathServlets.put(sanitizePathPrefix(path), httpServlet);
+        final String pathPrefix = sanitizePathPrefix(path);
+        registerServletInternal(pathPrefix, httpServlet);
     }
 
+    private void registerServletInternal(final String pathPrefix, final Servlet httpServlet) {
+        pluginPathServlets.put(pathPrefix, httpServlet);
+    }
 
-        @Override
+    private void registerServiceInternal(final OSGIServiceDescriptor desc) {
+        pluginRegistrations.put(desc.getServiceName(), desc);
+    }
+
+    @Override
     public void unregisterService(final String serviceName) {
         synchronized (this) {
             final OSGIServiceDescriptor desc = pluginRegistrations.get(serviceName);
             if (desc != null) {
-                final String registeredPath = sanitizePathPrefix(desc.getServiceInfo());
-                pluginPathServlets.remove(registeredPath);
-                pluginRegistrations.remove(desc);
-                logger.info("Unregistering OSGI servlet " + desc.getServiceName() + " at path " + registeredPath);
+                final String pathPrefix = getPathPrefixFromDescriptor(desc);
+                if (pathPrefix == null) {
+                    logger.warn("Skipping unregistration of OSGI servlet for service {} (service info is not specified)", desc.getServiceName());
+                    return;
+                }
+
+                logger.info("Unregistering OSGI servlet " + desc.getServiceName() + " at path " + pathPrefix);
+                synchronized (this) {
+                    unRegisterServletInternal(pathPrefix);
+                    unRegisterServiceInternal(desc);
+                }
             }
         }
     }
 
     public void unregisterServiceFromPath(final String path) {
-        pluginPathServlets.remove(sanitizePathPrefix(path));
+        final String pathPrefix = sanitizePathPrefix(path);
+        unRegisterServletInternal(pathPrefix);
     }
 
+    private Servlet unRegisterServletInternal(final String pathPrefix) {
+        return pluginPathServlets.remove(pathPrefix);
+    }
+
+    private OSGIServiceDescriptor unRegisterServiceInternal(final OSGIServiceDescriptor desc) {
+        return pluginRegistrations.remove(desc.getServiceName());
+    }
 
     @Override
     public Servlet getServiceForName(final String serviceName) {
@@ -79,8 +107,12 @@ public class DefaultServletRouter implements OSGIServiceRegistration<Servlet> {
         if (desc == null) {
             return null;
         }
-        final String registeredPath = sanitizePathPrefix(desc.getServiceInfo());
+        final String registeredPath = getPathPrefixFromDescriptor(desc);
         return pluginPathServlets.get(registeredPath);
+    }
+
+    private String getPathPrefixFromDescriptor(final OSGIServiceDescriptor desc) {
+        return sanitizePathPrefix(desc.getServiceInfo());
     }
 
     public Servlet getServiceForPath(final String path) {
@@ -113,8 +145,11 @@ public class DefaultServletRouter implements OSGIServiceRegistration<Servlet> {
         return bestMatch == null ? null : pluginPathServlets.get(bestMatch);
     }
 
+    private static String sanitizePathPrefix(final String inputPath) {
+        if (inputPath == null) {
+            return null;
+        }
 
-    private static final String sanitizePathPrefix(final String inputPath) {
         final String pathPrefix;
         if (inputPath.charAt(0) != '/') {
             pathPrefix = "/" + inputPath;
