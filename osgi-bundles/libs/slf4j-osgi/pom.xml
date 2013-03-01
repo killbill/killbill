@@ -19,15 +19,31 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.ning.billing</groupId>
-        <artifactId>killbill-osgi-all-bundles</artifactId>
+        <artifactId>killbill-osgi-lib-bundles</artifactId>
         <version>0.1.56-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
-    <artifactId>killbill-osgi-lib-bundles</artifactId>
-    <name>Killbill billing platform: OSGI library bundles</name>
-    <packaging>pom</packaging>
-    <modules>
-      <module>killbill</module>
-      <module>slf4j-osgi</module>
-    </modules>
+    <artifactId>killbill-osgi-bundles-lib-slf4j-osgi</artifactId>
+    <name>Killbill billing platform: OSGI slf4j-osgi Library</name>
+    <dependencies>
+        <dependency>
+            <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-osgi-bundles-lib-killbill</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.core</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.compendium</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
 </project>

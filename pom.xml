@@ -271,6 +271,11 @@
             </dependency>
             <dependency>
                 <groupId>com.ning.billing</groupId>
+                <artifactId>killbill-osgi-bundles-lib-slf4j-osgi</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.ning.billing</groupId>
                 <artifactId>killbill-osgi-bundles-webconsolebranding</artifactId>
                 <version>${project.version}</version>
             </dependency>
