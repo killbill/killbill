@@ -618,7 +618,7 @@
                 <plugin>
                     <groupId>org.apache.rat</groupId>
                     <artifactId>apache-rat-plugin</artifactId>
-                    <version>0.7</version>
+                    <version>0.8</version>
                     <executions>
                         <execution>
                             <phase>verify</phase>
@@ -626,9 +626,34 @@
                                 <goal>check</goal>
                             </goals>
                             <configuration>
+                                <licenseFamilies>
+                                    <licenseFamily implementation="org.apache.rat.license.Apache20LicenseFamily"></licenseFamily>
+                                    <!-- Hack, rat 0.9 will have org.apache.rat.analysis.license.MITLicense -->
+                                    <licenseFamily implementation="org.apache.rat.license.SimpleLicenseFamily">
+                                        <familyName>The MIT License</familyName>
+                                    </licenseFamily>
+                                </licenseFamilies>
                                 <useEclipseDefaultExcludes>true</useEclipseDefaultExcludes>
                                 <useIdeaDefaultExcludes>true</useIdeaDefaultExcludes>
                                 <useMavenDefaultExcludes>true</useMavenDefaultExcludes>
+                                <licenses>
+                                    <!-- For server/src/main/webapp/javascripts/html5.js -->
+                                    <license implementation="org.apache.rat.analysis.license.SimplePatternBasedLicense">
+                                        <licenseFamilyCategory>MIT</licenseFamilyCategory>
+                                        <licenseFamilyName>The MIT License</licenseFamilyName>
+                                        <patterns>
+                                            <pattern>MIT/GPL2 Licensed</pattern>
+                                        </patterns>
+                                    </license>
+                                    <!-- For server/src/main/webapp/javascripts/jquery.min.js -->
+                                    <license implementation="org.apache.rat.analysis.license.SimplePatternBasedLicense">
+                                        <licenseFamilyCategory>MIT</licenseFamilyCategory>
+                                        <licenseFamilyName>The MIT License</licenseFamilyName>
+                                        <patterns>
+                                            <pattern>jquery.org/license</pattern>
+                                        </patterns>
+                                    </license>
+                                </licenses>
                                 <excludes>
                                     <!-- For some reason, useIdeaDefaultExcludes
                                         doesn't pick up .idea directory -->
@@ -647,7 +672,7 @@
                                     <exclude>release-script</exclude>
                                     <exclude>doc/**</exclude>
                                     <exclude>src/site/**</exclude>
-                                    <exclude>*.log</exclude>
+                                    <exclude>**/*.log</exclude>
                                     <exclude>README.*</exclude>
                                     <exclude>TODO</exclude>
                                     <exclude>logs/**</exclude>
