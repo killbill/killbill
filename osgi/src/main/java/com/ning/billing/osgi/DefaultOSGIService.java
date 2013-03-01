@@ -152,8 +152,7 @@ public class DefaultOSGIService implements OSGIService {
                 for (final File f : files) {
                     if (f.isDirectory()) {
                         deleteDirectory(f, true);
-                    }
-                    if (!f.delete()) {
+                    } else if (!f.delete()) {
                         logger.warn("Unable to delete {}", f.getAbsolutePath());
                     }
                 }
@@ -162,6 +161,8 @@ public class DefaultOSGIService implements OSGIService {
             if (deleteParent) {
                 if (!path.delete()) {
                     logger.warn("Unable to delete {}", path.getAbsolutePath());
+                } else {
+                    logger.info("Deleted recursively {}", path.getAbsolutePath());
                 }
             }
         }
