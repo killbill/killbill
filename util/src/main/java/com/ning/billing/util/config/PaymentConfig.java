@@ -24,7 +24,8 @@ import org.skife.config.Default;
 
 public interface PaymentConfig extends KillbillConfig {
     @Config("killbill.payment.provider.default")
-    @Default("noop")
+    // See ExternalPaymentProviderPlugin.PLUGIN_NAME
+    @Default("__external_payment__")
     public String getDefaultPaymentProvider();
 
     @Config("killbill.payment.retry.days")
