@@ -53,24 +53,39 @@ public abstract class KillbillActivatorBase implements BundleActivator {
     public void stop(final BundleContext context) throws Exception {
 
         // Close trackers
-        killbillAPI.close();
-        dispatcher.close();
-        dataSource.close();
-        logService.close();
+        if (killbillAPI != null) {
+            killbillAPI.close();
+            killbillAPI = null;
+        }
+        if (dispatcher != null) {
+            dispatcher.close();
+            dispatcher = null;
+        }
+        if (dataSource != null) {
+            dataSource.close();
+            dataSource = null;
+        }
+        if (logService != null) {
+            logService.close();
+            logService = null;
+        }
 
         try {
             // Remove Killbill event handler
             final OSGIKillbillEventHandler handler = getOSGIKillbillEventHandler();
-            if (handler != null) {
+            if (handler != null && dispatcher != null) {
                 dispatcher.unregisterEventHandler(handler);
+                dispatcher = null;
             }
         } catch (OSGIServiceNotAvailable ignore) {
             // If the system bundle shut down prior to that bundle, we can' unregister our Observer, which is fine.
         }
 
-        // Unregistaer all servies from that bundle
-        registrar.unregisterAll();
-        System.out.println("Good bye world from TestActivator!");
+        // Unregister all servies from that bundle
+        if (registrar != null) {
+            registrar.unregisterAll();
+            registrar = null;
+        }
     }
 
 

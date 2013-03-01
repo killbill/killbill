@@ -48,6 +48,7 @@ public interface OSGIConfig extends KillbillConfig {
              "com.ning.billing.entitlement.api.transfer," +
              "com.ning.billing.entitlement.api.user," +
              "com.ning.billing.invoice.api," +
+             "com.ning.billing," +
              "com.ning.billing.osgi.api," +
              "com.ning.billing.osgi.api.config," +
              "com.ning.billing.overdue," +

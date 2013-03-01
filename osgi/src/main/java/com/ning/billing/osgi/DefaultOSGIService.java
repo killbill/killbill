@@ -112,6 +112,7 @@ public class DefaultOSGIService implements OSGIService {
         try {
             framework.stop();
             framework.waitForStop(0);
+
         } catch (BundleException e) {
             logger.error("Failed to Stop Killbill OSGIService " + e.getMessage());
         } catch (InterruptedException e) {

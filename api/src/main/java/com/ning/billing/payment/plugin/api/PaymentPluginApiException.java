@@ -24,6 +24,12 @@ public class PaymentPluginApiException extends Exception {
     private final String errorType;
     private final String errorMessage;
 
+    public PaymentPluginApiException(final String msg, final Throwable e) {
+        super(msg, e);
+        errorMessage = msg;
+        errorType = e.getMessage();
+    }
+
     public PaymentPluginApiException(final String errorType, final String errorMessage) {
         this.errorMessage = errorMessage;
         this.errorType = errorType;
@@ -46,8 +52,12 @@ public class PaymentPluginApiException extends Exception {
     public String toString() {
         final StringBuilder sb = new StringBuilder();
         sb.append("PaymentPluginApiException");
-        sb.append("{errorMessage='").append(errorMessage).append('\'');
-        sb.append(", errorType='").append(errorType).append('\'');
+        if (errorMessage != null) {
+            sb.append("{errorMessage='").append(errorMessage).append('\'');
+        }
+        if (errorType != null) {
+            sb.append(", errorType='").append(errorType).append('\'');
+        }
         sb.append('}');
         return sb.toString();
     }

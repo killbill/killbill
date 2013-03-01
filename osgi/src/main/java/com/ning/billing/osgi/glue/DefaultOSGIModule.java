@@ -27,10 +27,13 @@ import com.ning.billing.osgi.DefaultOSGIKillbill;
 import com.ning.billing.osgi.DefaultOSGIService;
 import com.ning.billing.osgi.KillbillActivator;
 import com.ning.billing.osgi.KillbillEventObservable;
+import com.ning.billing.osgi.LiveTracker;
 import com.ning.billing.osgi.PureOSGIBundleFinder;
+import com.ning.billing.osgi.api.DefaultOSGIUserApi;
 import com.ning.billing.osgi.api.OSGIKillbill;
 import com.ning.billing.osgi.api.OSGIService;
 import com.ning.billing.osgi.api.OSGIServiceRegistration;
+import com.ning.billing.osgi.api.OSGIUserApi;
 import com.ning.billing.osgi.api.config.PluginConfigServiceApi;
 import com.ning.billing.osgi.http.DefaultHttpService;
 import com.ning.billing.osgi.http.DefaultServletRouter;
@@ -72,6 +75,8 @@ public class DefaultOSGIModule extends AbstractModule {
 
         bind(OSGIService.class).to(DefaultOSGIService.class).asEagerSingleton();
 
+        bind(OSGIUserApi.class).to(DefaultOSGIUserApi.class).asEagerSingleton();
+        bind(LiveTracker.class).to(KillbillActivator.class).asEagerSingleton();
         bind(KillbillActivator.class).asEagerSingleton();
         bind(PureOSGIBundleFinder.class).asEagerSingleton();
         bind(PluginFinder.class).asEagerSingleton();
