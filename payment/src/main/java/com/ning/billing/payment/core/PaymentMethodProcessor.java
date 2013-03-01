@@ -77,7 +77,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
         return pluginRegistry.getAllServices();
     }
 
-    public UUID addPaymentMethod(final String pluginName, final Account account,
+    public UUID addPaymentMethod(final String unSanitizedPluginName, final Account account,
                                  final boolean setDefault, final PaymentMethodPlugin paymentMethodProps, final InternalCallContext context)
             throws PaymentApiException {
 
@@ -88,8 +88,11 @@ public class PaymentMethodProcessor extends ProcessorBase {
                 PaymentMethod pm = null;
                 PaymentPluginApi pluginApi = null;
                 try {
-                    pluginApi = pluginRegistry.getServiceForName(pluginName);
-                    pm = new DefaultPaymentMethod(account.getId(), pluginName, paymentMethodProps);
+                    pluginApi = pluginRegistry.getServiceForName(unSanitizedPluginName);
+                    // Don't use the unSanitizedPluginName here but rely on the plugin instead to get its name
+                    // For example, unSanitizedPluginName could be null but we want to store the default plugin name
+                    // returned by the registry
+                    pm = new DefaultPaymentMethod(account.getId(), pluginApi.getName(), paymentMethodProps);
                     pluginApi.addPaymentMethod(account.getId(), pm.getId(), paymentMethodProps, setDefault, context.toCallContext());
                     final PaymentMethodModelDao pmModel = new PaymentMethodModelDao(pm.getId(), pm.getCreatedDate(), pm.getUpdatedDate(),
                                                                                     pm.getAccountId(), pm.getPluginName(), pm.isActive());
