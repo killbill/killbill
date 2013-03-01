@@ -30,7 +30,7 @@ public class DefaultOSGIUserApi implements OSGIUserApi {
     }
 
     @Override
-    public <S> S getService(final Class<S> serviceClass) throws LiveTrackerException {
-        return liveTracker.getRegisteredOSGIService(serviceClass);
+    public <S> S getService(final String serviceClassName) throws LiveTrackerException {
+        return liveTracker.getRegisteredOSGIService(serviceClassName );
     }
 }
