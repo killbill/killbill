@@ -190,7 +190,8 @@ public class KillbillActivator implements BundleActivator, ServiceListener, Live
         // Make sure we can retrieve the plugin name
         final String serviceName = (String) serviceReference.getProperty(OSGIPluginProperties.PLUGIN_NAME_PROP);
         if (serviceName == null) {
-            logger.warn("Ignoring registered OSGI service {} with no {} property", claz.getName(), OSGIPluginProperties.PLUGIN_NAME_PROP);
+            // Quite common for non Killbill bundles
+            logger.debug("Ignoring registered OSGI service {} with no {} property", claz.getName(), OSGIPluginProperties.PLUGIN_NAME_PROP);
             return true;
         }
 
