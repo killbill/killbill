@@ -73,7 +73,7 @@ public class PaymentMethodJson {
         return new PaymentMethodJson(in.getId().toString(), account.getId().toString(), isDefault, in.getPluginName(), detail);
     }
 
-    public PaymentMethod toPaymentMethod() {
+    public PaymentMethod toPaymentMethod(final String accountId) {
         return new PaymentMethod() {
             @Override
             public Boolean isActive() {
@@ -102,7 +102,7 @@ public class PaymentMethodJson {
 
             @Override
             public UUID getAccountId() {
-                return accountId != null ? UUID.fromString(accountId) : null;
+                return UUID.fromString(accountId);
             }
 
             @Override

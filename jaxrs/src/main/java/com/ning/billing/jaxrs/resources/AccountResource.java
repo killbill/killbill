@@ -375,6 +375,7 @@ public class AccountResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response createPaymentMethod(final PaymentMethodJson json,
+                                        @PathParam("accountId") final String accountId,
                                         @QueryParam(QUERY_PAYMENT_METHOD_IS_DEFAULT) @DefaultValue("false") final Boolean isDefault,
                                         @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                         @HeaderParam(HDR_REASON) final String reason,
@@ -383,7 +384,7 @@ public class AccountResource extends JaxRsResourceBase {
                                         @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
-        final PaymentMethod data = json.toPaymentMethod();
+        final PaymentMethod data = json.toPaymentMethod(accountId);
         final Account account = accountApi.getAccountById(data.getAccountId(), callContext);
 
         final UUID paymentMethodId = paymentApi.addPaymentMethod(data.getPluginName(), account, isDefault, data.getPluginDetail(), callContext);
