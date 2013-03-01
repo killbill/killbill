@@ -18,17 +18,13 @@ package com.ning.billing.osgi;
 
 import java.io.File;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 
 import javax.inject.Inject;
 
 import org.apache.felix.framework.Felix;
 import org.apache.felix.framework.util.FelixConstants;
-import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.launch.Framework;
 import org.slf4j.Logger;
@@ -38,10 +34,6 @@ import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
 import com.ning.billing.osgi.api.OSGIService;
 import com.ning.billing.osgi.api.config.PluginConfigServiceApi;
-import com.ning.billing.osgi.api.config.PluginJavaConfig;
-import com.ning.billing.osgi.api.config.PluginRubyConfig;
-import com.ning.billing.osgi.pluginconf.DefaultPluginConfigServiceApi;
-import com.ning.billing.osgi.pluginconf.PluginConfigException;
 import com.ning.billing.osgi.pluginconf.PluginFinder;
 import com.ning.billing.util.config.OSGIConfig;
 
@@ -54,10 +46,8 @@ public class DefaultOSGIService implements OSGIService {
     private static final Logger logger = LoggerFactory.getLogger(DefaultOSGIService.class);
 
     private final OSGIConfig osgiConfig;
-    private final PureOSGIBundleFinder osgiBundleFinder;
-    private final PluginFinder pluginFinder;
-    private final PluginConfigServiceApi pluginConfigServiceApi;
     private final KillbillActivator killbillActivator;
+    private final FileInstall fileInstall;
 
     private Framework framework;
 
@@ -66,10 +56,8 @@ public class DefaultOSGIService implements OSGIService {
                               final PluginFinder pluginFinder, final PluginConfigServiceApi pluginConfigServiceApi,
                               final KillbillActivator killbillActivator) {
         this.osgiConfig = osgiConfig;
-        this.osgiBundleFinder = osgiBundleFinder;
-        this.pluginFinder = pluginFinder;
-        this.pluginConfigServiceApi = pluginConfigServiceApi;
         this.killbillActivator = killbillActivator;
+        this.fileInstall = new FileInstall(osgiBundleFinder, pluginFinder, pluginConfigServiceApi);
         this.framework = null;
     }
 
@@ -89,7 +77,7 @@ public class DefaultOSGIService implements OSGIService {
             framework.start();
 
             // This will call the start() method for the bundles
-            installAndStartBundles(framework);
+            fileInstall.installAndStartBundles(framework);
         } catch (BundleException e) {
             logger.error("Failed to initialize Killbill OSGIService", e);
         }
@@ -117,78 +105,6 @@ public class DefaultOSGIService implements OSGIService {
             logger.error("Failed to Stop Killbill OSGIService " + e.getMessage());
         } catch (InterruptedException e) {
             logger.error("Failed to Stop Killbill OSGIService " + e.getMessage());
-        }
-    }
-
-    private void installAndStartBundles(final Framework framework) {
-        try {
-            final BundleContext context = framework.getBundleContext();
-
-            // Install all bundles and create service mapping
-
-            final List<Bundle> installedBundles = new LinkedList<Bundle>();
-            installAllJavaBundles(context, installedBundles);
-            installAllJavaPluginBundles(context, installedBundles);
-            installAllJRubyPluginBundles(context, installedBundles);
-
-            // Start all the bundles
-            for (final Bundle bundle : installedBundles) {
-                logger.info("Starting bundle {}", bundle.getLocation());
-                try {
-                    bundle.start();
-                } catch (BundleException e) {
-                    // TODO PIERRE Don't try to start Fragment bundles
-                    logger.warn("Unable to start bundle", e);
-                }
-            }
-        } catch (PluginConfigException e) {
-            logger.error("Error while parsing plugin configurations", e);
-        } catch (BundleException e) {
-            logger.error("Error while parsing plugin configurations", e);
-        }
-    }
-
-    private void installAllJavaBundles(final BundleContext context, final List<Bundle> installedBundles) throws PluginConfigException, BundleException {
-        final List<String> bundleJarPaths = osgiBundleFinder.getLatestBundles();
-        for (final String cur : bundleJarPaths) {
-            logger.info("Installing Java OSGI bundle in {}", cur);
-            final Bundle bundle = context.installBundle("file:" + cur);
-            installedBundles.add(bundle);
-        }
-    }
-
-    private void installAllJavaPluginBundles(final BundleContext context, final List<Bundle> installedBundles) throws PluginConfigException, BundleException {
-        final List<PluginJavaConfig> pluginJavaConfigs = pluginFinder.getLatestJavaPlugins();
-        for (final PluginJavaConfig cur : pluginJavaConfigs) {
-            logger.info("Installing Java bundle for plugin {} in {}", cur.getPluginName(), cur.getBundleJarPath());
-            final Bundle bundle = context.installBundle("file:" + cur.getBundleJarPath());
-            ((DefaultPluginConfigServiceApi) pluginConfigServiceApi).registerBundle(bundle.getBundleId(), cur);
-            installedBundles.add(bundle);
-        }
-    }
-
-    private void installAllJRubyPluginBundles(final BundleContext context, final List<Bundle> installedBundles) throws PluginConfigException, BundleException {
-        final String jrubyBundlePath = findJrubyBundlePath();
-        if (jrubyBundlePath == null) {
-            return;
-        }
-
-        final List<PluginRubyConfig> pluginRubyConfigs = pluginFinder.getLatestRubyPlugins();
-        for (final PluginRubyConfig cur : pluginRubyConfigs) {
-            logger.info("Installing JRuby bundle for plugin {} in {}", cur.getPluginName(), cur.getRubyLoadDir());
-            final Bundle bundle = context.installBundle("file:" + jrubyBundlePath);
-            ((DefaultPluginConfigServiceApi) pluginConfigServiceApi).registerBundle(bundle.getBundleId(), cur);
-            installedBundles.add(bundle);
-        }
-    }
-
-    private String findJrubyBundlePath() {
-        final String expectedPath = osgiBundleFinder.getPlatformOSGIBundlesRootDir() + "jruby.jar";
-        if (new File(expectedPath).isFile()) {
-            return expectedPath;
-        } else {
-            logger.warn("Unable to find the JRuby bundle for ruby plugins. If you want to install ruby plugins, copy the jar to " + expectedPath);
-            return null;
         }
     }
 
