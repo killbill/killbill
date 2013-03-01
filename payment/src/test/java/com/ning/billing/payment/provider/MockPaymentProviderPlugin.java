@@ -17,30 +17,28 @@
 package com.ning.billing.payment.provider;
 
 import java.math.BigDecimal;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.LinkedListMultimap;
-import com.google.common.collect.Multimap;
-import com.google.inject.Inject;
-
 import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.payment.plugin.api.NoOpPaymentPluginApi;
 import com.ning.billing.payment.plugin.api.PaymentInfoPlugin;
 import com.ning.billing.payment.plugin.api.PaymentInfoPlugin.PaymentPluginStatus;
 import com.ning.billing.payment.plugin.api.PaymentMethodInfoPlugin;
-import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 import com.ning.billing.payment.plugin.api.PaymentPluginApiException;
 import com.ning.billing.payment.plugin.api.RefundInfoPlugin;
 import com.ning.billing.payment.plugin.api.RefundInfoPlugin.RefundPluginStatus;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.clock.Clock;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.LinkedListMultimap;
+import com.google.common.collect.Multimap;
+import com.google.inject.Inject;
 
 /**
  * This MockPaymentProviderPlugin only works for a single accounts as we don't specify the accountId
@@ -117,9 +115,9 @@ public class MockPaymentProviderPlugin implements NoOpPaymentPluginApi {
 
 
     @Override
-    public void addPaymentMethod(final UUID kbPaymentMethodId, final PaymentMethodPlugin paymentMethodProps, final boolean setDefault, final CallContext context) throws PaymentPluginApiException {
-        // both AccountId and externalPaymentMethodId are set to random values
-        final PaymentMethodInfoPlugin realWithID = new DefaultPaymentMethodInfoPlugin(UUID.randomUUID(), kbPaymentMethodId, setDefault, UUID.randomUUID().toString());
+    public void addPaymentMethod(final UUID kbAccountId, final UUID kbPaymentMethodId, final PaymentMethodPlugin paymentMethodProps, final boolean setDefault, final CallContext context) throws PaymentPluginApiException {
+        // externalPaymentMethodId is set to a random value
+        final PaymentMethodInfoPlugin realWithID = new DefaultPaymentMethodInfoPlugin(kbAccountId, kbPaymentMethodId, setDefault, UUID.randomUUID().toString());
         paymentMethods.put(kbPaymentMethodId.toString(), realWithID);
     }
 

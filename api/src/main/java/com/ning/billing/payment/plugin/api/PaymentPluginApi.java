@@ -72,12 +72,16 @@ public interface PaymentPluginApi {
     /**
      * Add a payment method for a Killbill account in the gateway. Optional.
      *
+     * Note: the payment method doesn't exist yet in Killbill when receiving the call in
+     * the plugin (kbPaymentMethodId is a placeholder).
+     *
+     * @param kbAccountId        killbill accountId
      * @param paymentMethodProps payment method details
      * @param setDefault         set it as the default payment method in the gateway
      * @param context            call context
      * @throws PaymentPluginApiException
      */
-    public void addPaymentMethod(UUID kbPaymentMethodId, PaymentMethodPlugin paymentMethodProps, boolean setDefault, CallContext context)
+    public void addPaymentMethod(UUID kbAccountId, UUID kbPaymentMethodId, PaymentMethodPlugin paymentMethodProps, boolean setDefault, CallContext context)
             throws PaymentPluginApiException;
 
     /**

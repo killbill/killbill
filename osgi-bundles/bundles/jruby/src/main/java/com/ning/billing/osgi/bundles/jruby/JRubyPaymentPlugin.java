@@ -112,7 +112,7 @@ public class JRubyPaymentPlugin extends JRubyPlugin implements PaymentPluginApi 
     }
 
     @Override
-    public void addPaymentMethod(final UUID kbPaymentMethodId, final PaymentMethodPlugin paymentMethodProps, final boolean setDefault, final CallContext context) throws PaymentPluginApiException {
+    public void addPaymentMethod(final UUID kbAccountId, final UUID kbPaymentMethodId, final PaymentMethodPlugin paymentMethodProps, final boolean setDefault, final CallContext context) throws PaymentPluginApiException {
         checkValidPaymentPlugin();
         checkPluginIsRunning();
 

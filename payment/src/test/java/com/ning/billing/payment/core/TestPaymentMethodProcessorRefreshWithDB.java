@@ -49,7 +49,7 @@ public class TestPaymentMethodProcessorRefreshWithDB extends PaymentTestSuiteWit
 
         // Add new payment in plugin directly
         final UUID newPmId = UUID.randomUUID();
-        getPluginApi().addPaymentMethod(newPmId, null, false, callContext);
+        getPluginApi().addPaymentMethod(account.getId(), newPmId, null, false, callContext);
 
         // Verify that the refresh does indeed show 2 PMs
         final List<PaymentMethod> methods = paymentMethodProcessor.refreshPaymentMethods(TestPaymentHelper.PLUGIN_TEST_NAME, account, internalCallContext);

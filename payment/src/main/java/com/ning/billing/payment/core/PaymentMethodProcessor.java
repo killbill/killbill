@@ -90,7 +90,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                 try {
                     pluginApi = pluginRegistry.getServiceForName(pluginName);
                     pm = new DefaultPaymentMethod(account.getId(), pluginName, paymentMethodProps);
-                    pluginApi.addPaymentMethod(pm.getId(), paymentMethodProps, setDefault, context.toCallContext());
+                    pluginApi.addPaymentMethod(account.getId(), pm.getId(), paymentMethodProps, setDefault, context.toCallContext());
                     final PaymentMethodModelDao pmModel = new PaymentMethodModelDao(pm.getId(), pm.getCreatedDate(), pm.getUpdatedDate(),
                                                                                     pm.getAccountId(), pm.getPluginName(), pm.isActive());
                     paymentDao.insertPaymentMethod(pmModel, context);

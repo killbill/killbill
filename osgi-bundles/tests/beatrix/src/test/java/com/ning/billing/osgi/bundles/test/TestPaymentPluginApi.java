@@ -22,7 +22,6 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.account.api.Account;
 import com.ning.billing.osgi.bundles.test.dao.TestDao;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.payment.plugin.api.PaymentInfoPlugin;
@@ -90,7 +89,7 @@ public class TestPaymentPluginApi implements PaymentPluginApi {
     }
 
     @Override
-    public void addPaymentMethod(final UUID kbPaymentMethodId, final PaymentMethodPlugin paymentMethodProps, final boolean setDefault, final CallContext context) throws PaymentPluginApiException {
+    public void addPaymentMethod(final UUID kbAccountId, final UUID kbPaymentMethodId, final PaymentMethodPlugin paymentMethodProps, final boolean setDefault, final CallContext context) throws PaymentPluginApiException {
     }
 
     @Override
