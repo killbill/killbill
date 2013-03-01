@@ -31,7 +31,7 @@ public class OSGIKillbillRegistrar {
         this.serviceRegistrations = new HashMap<String, ServiceRegistration>();
     }
 
-    public <S, T extends S> void registerService(final BundleContext context, final Class<S> svcClass, final S service, final Dictionary props) {
+    public <S> void registerService(final BundleContext context, final Class<S> svcClass, final S service, final Dictionary props) {
         ServiceRegistration svcRegistration = context.registerService(svcClass.getName(), service, props);
         serviceRegistrations.put(svcClass.getName(), svcRegistration);
     }
