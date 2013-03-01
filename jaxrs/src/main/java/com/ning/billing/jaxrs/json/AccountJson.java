@@ -26,6 +26,7 @@ import com.ning.billing.catalog.api.Currency;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Objects;
 
 public class AccountJson extends AccountJsonSimple {
 
@@ -94,12 +95,12 @@ public class AccountJson extends AccountJsonSimple {
 
             @Override
             public Boolean isMigrated() {
-                return isMigrated;
+                return Objects.firstNonNull(isMigrated, false);
             }
 
             @Override
             public Boolean isNotifiedForInvoices() {
-                return isNotifiedForInvoices;
+                return Objects.firstNonNull(isNotifiedForInvoices, false);
             }
 
             @Override
@@ -119,7 +120,13 @@ public class AccountJson extends AccountJsonSimple {
 
             @Override
             public Integer getFirstNameLength() {
-                return length;
+                if (length == null && name == null) {
+                    return 0;
+                } else if (length == null) {
+                    return name.length();
+                } else {
+                    return length;
+                }
             }
 
             @Override
