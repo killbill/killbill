@@ -286,6 +286,11 @@
             </dependency>
             <dependency>
                 <groupId>com.ning.billing</groupId>
+                <artifactId>killbill-osgi-bundles-logger</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.ning.billing</groupId>
                 <artifactId>killbill-osgi-bundles-test-beatrix</artifactId>
                 <version>${project.version}</version>
             </dependency>

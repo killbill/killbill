@@ -34,6 +34,10 @@
         </dependency>
         <dependency>
             <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-osgi-bundles-logger</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing</groupId>
             <artifactId>killbill-osgi-bundles-webconsolebranding</artifactId>
         </dependency>
         <dependency>
@@ -125,10 +129,6 @@
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.webconsole</artifactId>
             <version>3.1.8</version>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>osgi-over-slf4j</artifactId>
         </dependency>
     </dependencies>
     <build>

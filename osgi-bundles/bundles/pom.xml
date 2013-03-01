@@ -28,6 +28,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>jruby</module>
+        <module>logger</module>
         <module>meter</module>
         <module>webconsolebranding</module>
     </modules>
