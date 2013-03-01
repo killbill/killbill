@@ -132,19 +132,19 @@ public class KillbillActivator implements BundleActivator, ServiceListener, Live
     }
 
     @Override
-    public <S> S getRegisteredOSGIService(final Class<S> serviceType) throws LiveTrackerException {
+    public <S> S getRegisteredOSGIService(final String serviceClassName) throws LiveTrackerException {
         try {
-            ServiceTracker tracker = liveTrackers.get(serviceType.getName());
+            ServiceTracker tracker = liveTrackers.get(serviceClassName);
             if (tracker == null) {
-                throw new LiveTrackerException("No live tracker for service " + serviceType.getName());
+                throw new LiveTrackerException("No live tracker for service " + serviceClassName);
             }
             S result = (S) tracker.getService();
             if (result == null) {
-                throw new LiveTrackerException("Live tracker found a null service for " + serviceType.getName());
+                throw new LiveTrackerException("Live tracker found a null service for " + serviceClassName);
             }
             return result;
         } catch (ClassCastException e) {
-            throw new LiveTrackerException("Live tracker got ClassCastException for " + serviceType.getName(), e);
+            throw new LiveTrackerException("Live tracker got ClassCastException for " + serviceClassName, e);
         }
     }
 
