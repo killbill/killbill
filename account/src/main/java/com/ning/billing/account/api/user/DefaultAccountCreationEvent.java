@@ -218,7 +218,7 @@ public class DefaultAccountCreationEvent extends DefaultBusInternalEvent impleme
 
         @Override
         public Currency getCurrency() {
-            return Currency.valueOf(currency);
+            return currency == null ? null : Currency.valueOf(currency);
         }
 
         @JsonIgnore
