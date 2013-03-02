@@ -189,7 +189,8 @@ public class PaymentMethodProcessor extends ProcessorBase {
                 }
 
                 try {
-                    if (account.getPaymentMethodId().equals(paymentMethodId)) {
+                    // Note: account.getPaymentMethodId() may be null
+                    if (paymentMethodId.equals(account.getPaymentMethodId())) {
                         if (!deleteDefaultPaymentMethodWithAutoPayOff) {
                             throw new PaymentApiException(ErrorCode.PAYMENT_DEL_DEFAULT_PAYMENT_METHOD, account.getId());
                         } else {
