@@ -16,10 +16,6 @@
 
 package com.ning.billing.payment;
 
-import java.io.IOException;
-import java.net.URL;
-import java.util.Properties;
-
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -42,8 +38,6 @@ import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-
-import static org.testng.Assert.assertNotNull;
 
 public abstract class PaymentTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWithEmbeddedDB {
 
@@ -74,9 +68,6 @@ public abstract class PaymentTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
 
     @BeforeClass(groups = "slow")
     protected void beforeClass() throws Exception {
-
-        loadSystemPropertiesFromClasspath("/resource.properties");
-
         final Injector injector = Guice.createInjector(new TestPaymentModuleWithEmbeddedDB(getClock()));
         injector.injectMembers(this);
     }
@@ -88,21 +79,7 @@ public abstract class PaymentTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     }
 
     @AfterMethod(groups = "slow")
-    public void afterMethod()throws Exception  {
+    public void afterMethod() throws Exception {
         eventBus.stop();
-    }
-
-
-
-    private void loadSystemPropertiesFromClasspath(final String resource) {
-        final URL url = PaymentTestSuiteWithEmbeddedDB.class.getResource(resource);
-        assertNotNull(url);
-
-        try {
-            final Properties properties = System.getProperties();
-            properties.load(url.openStream());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 }

@@ -35,9 +35,9 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.payment.MockRecurringInvoiceItem;
 import com.ning.billing.payment.PaymentTestSuiteNoDB;
-import com.ning.billing.payment.TestPaymentHelper;
 import com.ning.billing.payment.api.Payment.PaymentAttempt;
 import com.ning.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
+import com.ning.billing.payment.provider.MockPaymentProviderPlugin;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -151,7 +151,7 @@ public class TestPaymentApi extends PaymentTestSuiteNoDB {
         assertEquals(initDefaultMethod.getId(), account.getPaymentMethodId());
 
         final PaymentMethodPlugin newPaymenrMethod = new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), true, null);
-        final UUID newPaymentMethodId = paymentApi.addPaymentMethod(TestPaymentHelper.PLUGIN_TEST_NAME, account, true, newPaymenrMethod, callContext);
+        final UUID newPaymentMethodId = paymentApi.addPaymentMethod(MockPaymentProviderPlugin.PLUGIN_NAME, account, true, newPaymenrMethod, callContext);
         Mockito.when(account.getPaymentMethodId()).thenReturn(newPaymentMethodId);
 
         methods = paymentApi.getPaymentMethods(account, callContext);

@@ -16,10 +16,6 @@
 
 package com.ning.billing.payment;
 
-import java.io.IOException;
-import java.net.URL;
-import java.util.Properties;
-
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -41,8 +37,6 @@ import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-
-import static org.testng.Assert.assertNotNull;
 
 public abstract class PaymentTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
@@ -69,13 +63,8 @@ public abstract class PaymentTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     @Inject
     protected TestPaymentHelper testHelper;
 
-
-
     @BeforeClass(groups = "fast")
     protected void beforeClass() throws Exception {
-
-        loadSystemPropertiesFromClasspath("/resource.properties");
-
         final Injector injector = Guice.createInjector(new TestPaymentModuleNoDB(getClock()));
         injector.injectMembers(this);
     }
@@ -86,27 +75,7 @@ public abstract class PaymentTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     }
 
     @AfterMethod(groups = "fast")
-    public void afterMethod()throws Exception  {
+    public void afterMethod() throws Exception {
         eventBus.stop();
     }
-
-
-
-    private void loadSystemPropertiesFromClasspath(final String resource) {
-        final URL url = PaymentTestSuiteNoDB.class.getResource(resource);
-        assertNotNull(url);
-
-        try {
-            final Properties properties = System.getProperties();
-            properties.load(url.openStream());
-
-            properties.setProperty("killbill.payment.provider.default", TestPaymentHelper.PLUGIN_TEST_NAME);
-            properties.setProperty("killbill.payment.engine.events.off", "false");
-
-            //configSource = new SimplePropertyConfigSource(properties);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
 }

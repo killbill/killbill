@@ -29,6 +29,7 @@ import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
+import com.ning.billing.payment.provider.MockPaymentProviderPlugin;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
@@ -42,8 +43,6 @@ import com.ning.billing.util.svcsapi.bus.InternalBus.EventBusException;
 import com.google.inject.Inject;
 
 public class TestPaymentHelper {
-
-    public static final String PLUGIN_TEST_NAME = "my-mock";
 
     protected final AccountInternalApi AccountApi;
     protected final InvoiceInternalApi invoiceApi;
@@ -128,7 +127,7 @@ public class TestPaymentHelper {
     }
 
     public void addTestPaymentMethod(final Account account, final PaymentMethodPlugin paymentMethodInfo) throws Exception {
-        final UUID paymentMethodId = paymentApi.addPaymentMethod(PLUGIN_TEST_NAME, account, true, paymentMethodInfo, context);
+        final UUID paymentMethodId = paymentApi.addPaymentMethod(MockPaymentProviderPlugin.PLUGIN_NAME, account, true, paymentMethodInfo, context);
         Mockito.when(account.getPaymentMethodId()).thenReturn(paymentMethodId);
     }
 }

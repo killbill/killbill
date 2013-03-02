@@ -46,7 +46,7 @@ import com.google.inject.Inject;
  */
 public class MockPaymentProviderPlugin implements NoOpPaymentPluginApi {
 
-    private static final String PLUGIN_NAME = "__NO_OP__";
+    public static final String PLUGIN_NAME = "__NO_OP__";
 
     private final AtomicBoolean makeNextInvoiceFailWithError = new AtomicBoolean(false);
     private final AtomicBoolean makeNextInvoiceFailWithException = new AtomicBoolean(false);

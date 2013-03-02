@@ -25,11 +25,11 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.payment.PaymentTestSuiteWithEmbeddedDB;
-import com.ning.billing.payment.TestPaymentHelper;
 import com.ning.billing.payment.api.PaymentMethod;
 import com.ning.billing.payment.dao.PaymentMethodModelDao;
 import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 import com.ning.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
+import com.ning.billing.payment.provider.MockPaymentProviderPlugin;
 
 public class TestPaymentMethodProcessorRefreshWithDB extends PaymentTestSuiteWithEmbeddedDB {
 
@@ -52,7 +52,7 @@ public class TestPaymentMethodProcessorRefreshWithDB extends PaymentTestSuiteWit
         getPluginApi().addPaymentMethod(account.getId(), newPmId, null, false, callContext);
 
         // Verify that the refresh does indeed show 2 PMs
-        final List<PaymentMethod> methods = paymentMethodProcessor.refreshPaymentMethods(TestPaymentHelper.PLUGIN_TEST_NAME, account, internalCallContext);
+        final List<PaymentMethod> methods = paymentMethodProcessor.refreshPaymentMethods(MockPaymentProviderPlugin.PLUGIN_NAME, account, internalCallContext);
         Assert.assertEquals(methods.size(), 2);
         checkPaymentMethodExistsWithStatus(methods, existingPMId, true);
         checkPaymentMethodExistsWithStatus(methods, newPmId, true);
@@ -66,7 +66,7 @@ public class TestPaymentMethodProcessorRefreshWithDB extends PaymentTestSuiteWit
         Assert.assertEquals(getPluginApi().getPaymentMethods(account.getId(), true, callContext).size(), 1);
         final UUID firstPmId = account.getPaymentMethodId();
 
-        final UUID secondPmId = paymentApi.addPaymentMethod(TestPaymentHelper.PLUGIN_TEST_NAME, account, true, new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), false, null), callContext);
+        final UUID secondPmId = paymentApi.addPaymentMethod(MockPaymentProviderPlugin.PLUGIN_NAME, account, true, new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), false, null), callContext);
         Assert.assertEquals(getPluginApi().getPaymentMethods(account.getId(), true, callContext).size(), 2);
         Assert.assertEquals(paymentApi.getPaymentMethods(account, callContext).size(), 2);
 
@@ -76,7 +76,7 @@ public class TestPaymentMethodProcessorRefreshWithDB extends PaymentTestSuiteWit
         Assert.assertEquals(paymentApi.getPaymentMethods(account, callContext).size(), 2);
 
         // Verify that the refresh sees that PM as being deleted now
-        final List<PaymentMethod> methods = paymentMethodProcessor.refreshPaymentMethods(TestPaymentHelper.PLUGIN_TEST_NAME, account, internalCallContext);
+        final List<PaymentMethod> methods = paymentMethodProcessor.refreshPaymentMethods(MockPaymentProviderPlugin.PLUGIN_NAME, account, internalCallContext);
         Assert.assertEquals(methods.size(), 1);
         checkPaymentMethodExistsWithStatus(methods, firstPmId, true);
 
@@ -100,7 +100,7 @@ public class TestPaymentMethodProcessorRefreshWithDB extends PaymentTestSuiteWit
 
 
     private PaymentPluginApi getPluginApi() {
-        final PaymentPluginApi pluginApi = registry.getServiceForName(TestPaymentHelper.PLUGIN_TEST_NAME);
+        final PaymentPluginApi pluginApi = registry.getServiceForName(MockPaymentProviderPlugin.PLUGIN_NAME);
         Assert.assertNotNull(pluginApi);
         return pluginApi;
     }
