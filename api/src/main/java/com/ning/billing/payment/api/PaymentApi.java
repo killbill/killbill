@@ -117,10 +117,7 @@ public interface PaymentApi {
     public List<PaymentMethod> getPaymentMethods(Account account, TenantContext context)
             throws PaymentApiException;
 
-    public PaymentMethod getPaymentMethodById(UUID paymentMethodId, TenantContext context)
-            throws PaymentApiException;
-
-    public PaymentMethod getPaymentMethod(Account account, UUID paymentMethodId, TenantContext context)
+    public PaymentMethod getPaymentMethodById(UUID paymentMethodId, final boolean withPluginInfo, TenantContext context)
             throws PaymentApiException;
 
     public void deletedPaymentMethod(Account account, UUID paymentMethodId, boolean deleteDefaultPaymentMethodWithAutoPayOff, CallContext context)

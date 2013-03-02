@@ -95,6 +95,18 @@ public interface PaymentPluginApi {
             throws PaymentPluginApiException;
 
     /**
+     * Get payment method details for a given payment method. Optional.
+     *
+     * @param kbAccountId       killbill account id
+     * @param kbPaymentMethodId killbill payment method id.
+     * @param context           call context
+     * @return PaymentMethodPlugin info for the payment method
+     * @throws PaymentPluginApiException
+     */
+    public PaymentMethodPlugin getPaymentMethodDetail(UUID kbAccountId, UUID kbPaymentMethodId, TenantContext context)
+            throws PaymentPluginApiException;
+
+    /**
      * Set a payment method as default in the gateway. Optional.
      *
      * @param kbPaymentMethodId      killbill payment method id

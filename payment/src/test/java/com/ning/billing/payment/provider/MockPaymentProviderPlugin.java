@@ -23,6 +23,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.ning.billing.payment.api.DefaultPaymentMethodPlugin;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.payment.plugin.api.NoOpPaymentPluginApi;
 import com.ning.billing.payment.plugin.api.PaymentInfoPlugin;
@@ -55,7 +56,8 @@ public class MockPaymentProviderPlugin implements NoOpPaymentPluginApi {
     private final Map<String, PaymentInfoPlugin> payments = new ConcurrentHashMap<String, PaymentInfoPlugin>();
     // Note: we can't use HashMultiMap as we care about storing duplicate key/value pairs
     private final Multimap<String, RefundInfoPlugin> refunds = LinkedListMultimap.<String, RefundInfoPlugin>create();
-    private final Map<String, PaymentMethodInfoPlugin> paymentMethods = new ConcurrentHashMap<String, PaymentMethodInfoPlugin>();
+    private final Map<String, PaymentMethodPlugin> paymentMethods = new ConcurrentHashMap<String, PaymentMethodPlugin>();
+    private final Map<String, PaymentMethodInfoPlugin> paymentMethodsInfo = new ConcurrentHashMap<String, PaymentMethodInfoPlugin>();
 
     private final Clock clock;
 
@@ -117,13 +119,22 @@ public class MockPaymentProviderPlugin implements NoOpPaymentPluginApi {
     @Override
     public void addPaymentMethod(final UUID kbAccountId, final UUID kbPaymentMethodId, final PaymentMethodPlugin paymentMethodProps, final boolean setDefault, final CallContext context) throws PaymentPluginApiException {
         // externalPaymentMethodId is set to a random value
-        final PaymentMethodInfoPlugin realWithID = new DefaultPaymentMethodInfoPlugin(kbAccountId, kbPaymentMethodId, setDefault, UUID.randomUUID().toString());
+        final PaymentMethodPlugin realWithID = new DefaultPaymentMethodPlugin(paymentMethodProps, UUID.randomUUID().toString());
         paymentMethods.put(kbPaymentMethodId.toString(), realWithID);
+
+        final PaymentMethodInfoPlugin realInfoWithID = new DefaultPaymentMethodInfoPlugin(kbAccountId, kbPaymentMethodId, setDefault, UUID.randomUUID().toString());
+        paymentMethodsInfo.put(kbPaymentMethodId.toString(), realInfoWithID);
     }
 
     @Override
     public void deletePaymentMethod(final UUID kbPaymentMethodId, final CallContext context) throws PaymentPluginApiException {
         paymentMethods.remove(kbPaymentMethodId.toString());
+        paymentMethodsInfo.remove(kbPaymentMethodId.toString());
+    }
+
+    @Override
+    public PaymentMethodPlugin getPaymentMethodDetail(final UUID kbAccountId, final UUID kbPaymentMethodId, final TenantContext context) throws PaymentPluginApiException {
+        return paymentMethods.get(kbPaymentMethodId.toString());
     }
 
     @Override
@@ -132,15 +143,15 @@ public class MockPaymentProviderPlugin implements NoOpPaymentPluginApi {
 
     @Override
     public List<PaymentMethodInfoPlugin> getPaymentMethods(final UUID kbAccountId, final boolean refreshFromGateway, final CallContext context) {
-        return ImmutableList.<PaymentMethodInfoPlugin>copyOf(paymentMethods.values());
+        return ImmutableList.<PaymentMethodInfoPlugin>copyOf(paymentMethodsInfo.values());
     }
 
     @Override
     public void resetPaymentMethods(final List<PaymentMethodInfoPlugin> input) {
-        paymentMethods.clear();
+        paymentMethodsInfo.clear();
         if (input != null) {
-            for (PaymentMethodInfoPlugin cur : input) {
-                paymentMethods.put(cur.getPaymentMethodId().toString(), cur);
+            for (final PaymentMethodInfoPlugin cur : input) {
+                paymentMethodsInfo.put(cur.getPaymentMethodId().toString(), cur);
             }
         }
     }

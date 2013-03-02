@@ -30,7 +30,7 @@ public interface PaymentInternalApi {
     public Payment getPayment(UUID paymentId, InternalTenantContext context)
             throws PaymentApiException;
 
-    public PaymentMethod getPaymentMethod(Account account, UUID paymentMethodId, InternalTenantContext context)
+    public PaymentMethod getPaymentMethodById(UUID paymentMethodId, InternalTenantContext context)
             throws PaymentApiException;
 
     public List<Payment> getAccountPayments(UUID accountId, InternalTenantContext context)

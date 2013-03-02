@@ -97,6 +97,11 @@ public class TestPaymentPluginApi implements PaymentPluginApi {
     }
 
     @Override
+    public PaymentMethodPlugin getPaymentMethodDetail(final UUID kbAccountId, final UUID kbPaymentMethodId, final TenantContext context) throws PaymentPluginApiException {
+        return null;
+    }
+
+    @Override
     public void setDefaultPaymentMethod(final UUID kbPaymentMethodId, final CallContext context) throws PaymentPluginApiException {
     }
 

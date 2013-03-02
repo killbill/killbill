@@ -118,27 +118,29 @@ public class PaymentMethodProcessor extends ProcessorBase {
         if (paymentMethodModels.size() == 0) {
             return Collections.emptyList();
         }
-        return getPaymentMethodInternal(paymentMethodModels, account.getId(), account.getExternalKey(), context);
+        return getPaymentMethodInternal(paymentMethodModels);
     }
 
-    public PaymentMethod getPaymentMethodById(final UUID paymentMethodId, final InternalTenantContext context)
+    public PaymentMethod getPaymentMethodById(final UUID paymentMethodId, final boolean withPluginInfo, final InternalTenantContext context)
             throws PaymentApiException {
         final PaymentMethodModelDao paymentMethodModel = paymentDao.getPaymentMethod(paymentMethodId, context);
         if (paymentMethodModel == null) {
             throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, paymentMethodId);
         }
-        return new DefaultPaymentMethod(paymentMethodModel, null);
-    }
 
-    public PaymentMethod getPaymentMethod(final Account account, final UUID paymentMethodId, final InternalTenantContext context)
-            throws PaymentApiException {
-        final PaymentMethodModelDao paymentMethodModel = paymentDao.getPaymentMethod(paymentMethodId, context);
-        if (paymentMethodModel == null) {
-            throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, paymentMethodId);
+        final PaymentMethodPlugin paymentMethodPlugin;
+        if (withPluginInfo) {
+            try {
+                final PaymentPluginApi pluginApi = pluginRegistry.getServiceForName(paymentMethodModel.getPluginName());
+                paymentMethodPlugin = pluginApi.getPaymentMethodDetail(paymentMethodModel.getAccountId(), paymentMethodId, context.toTenantContext());
+            } catch (PaymentPluginApiException e) {
+                throw new PaymentApiException(ErrorCode.PAYMENT_GET_PAYMENT_METHODS, paymentMethodModel.getAccountId(), paymentMethodId);
+            }
+        } else {
+            paymentMethodPlugin = null;
         }
-        final List<PaymentMethod> result = getPaymentMethodInternal(Collections.singletonList(paymentMethodModel), account.getId(),
-                                                                    account.getExternalKey(), context);
-        return (result.size() == 0) ? null : result.get(0);
+
+        return new DefaultPaymentMethod(paymentMethodModel, paymentMethodPlugin);
     }
 
     public PaymentMethod getExternalPaymentMethod(final Account account, final InternalTenantContext context) throws PaymentApiException {
@@ -163,8 +165,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
         return (ExternalPaymentProviderPlugin) pluginRegistry.getServiceForName(ExternalPaymentProviderPlugin.PLUGIN_NAME);
     }
 
-    private List<PaymentMethod> getPaymentMethodInternal(final List<PaymentMethodModelDao> paymentMethodModels, final UUID accountId,
-                                                         final String accountKey, final InternalTenantContext context)
+    private List<PaymentMethod> getPaymentMethodInternal(final List<PaymentMethodModelDao> paymentMethodModels)
             throws PaymentApiException {
 
         final List<PaymentMethod> result = new ArrayList<PaymentMethod>(paymentMethodModels.size());

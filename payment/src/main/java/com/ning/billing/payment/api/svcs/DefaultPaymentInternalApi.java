@@ -52,8 +52,8 @@ public class DefaultPaymentInternalApi implements PaymentInternalApi {
     }
 
     @Override
-    public PaymentMethod getPaymentMethod(final Account account, final UUID paymentMethodId, final InternalTenantContext context) throws PaymentApiException {
-        return methodProcessor.getPaymentMethod(account, paymentMethodId, context);
+    public PaymentMethod getPaymentMethodById(final UUID paymentMethodId, final InternalTenantContext context) throws PaymentApiException {
+        return methodProcessor.getPaymentMethodById(paymentMethodId, false, context);
     }
 
     @Override

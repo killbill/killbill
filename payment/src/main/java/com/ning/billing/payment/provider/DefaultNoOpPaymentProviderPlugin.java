@@ -139,6 +139,16 @@ public class DefaultNoOpPaymentProviderPlugin implements NoOpPaymentPluginApi {
     }
 
     @Override
+    public PaymentMethodPlugin getPaymentMethodDetail(final UUID kbAccountId, final UUID kbPaymentMethodId, final TenantContext context) throws PaymentPluginApiException {
+        final List<PaymentMethodPlugin> paymentMethodPlugins = paymentMethods.get(kbPaymentMethodId.toString());
+        if (paymentMethodPlugins == null || paymentMethodPlugins.size() == 0) {
+            return null;
+        } else {
+            return paymentMethodPlugins.get(0);
+        }
+    }
+
+    @Override
     public void setDefaultPaymentMethod(final UUID kbPaymentMethodId, final CallContext context) throws PaymentPluginApiException {
     }
 
