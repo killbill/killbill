@@ -51,6 +51,7 @@ import com.ning.billing.util.svcapi.tag.TagInternalApi;
 import com.ning.billing.util.svcsapi.bus.InternalBus;
 
 import com.google.common.base.Function;
+import com.google.common.base.Objects;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -77,7 +78,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
         return pluginRegistry.getAllServices();
     }
 
-    public UUID addPaymentMethod(final String unSanitizedPluginName, final Account account,
+    public UUID addPaymentMethod(final String paymentPluginServiceName, final Account account,
                                  final boolean setDefault, final PaymentMethodPlugin paymentMethodProps, final InternalCallContext context)
             throws PaymentApiException {
 
@@ -88,11 +89,11 @@ public class PaymentMethodProcessor extends ProcessorBase {
                 PaymentMethod pm = null;
                 PaymentPluginApi pluginApi = null;
                 try {
-                    pluginApi = pluginRegistry.getServiceForName(unSanitizedPluginName);
-                    // Don't use the unSanitizedPluginName here but rely on the plugin instead to get its name
-                    // For example, unSanitizedPluginName could be null but we want to store the default plugin name
-                    // returned by the registry
-                    pm = new DefaultPaymentMethod(account.getId(), pluginApi.getName(), paymentMethodProps);
+                    pluginApi = pluginRegistry.getServiceForName(paymentPluginServiceName);
+                    // TODO PIERRE Should we really use the plugin instance name here?
+                    // We default to the plugin name when paymentPluginServiceName is null (i.e. for the default plugin name)
+                    final String pluginName = Objects.firstNonNull(paymentPluginServiceName, pluginApi.getName());
+                    pm = new DefaultPaymentMethod(account.getId(), pluginName, paymentMethodProps);
                     pluginApi.addPaymentMethod(account.getId(), pm.getId(), paymentMethodProps, setDefault, context.toCallContext());
                     final PaymentMethodModelDao pmModel = new PaymentMethodModelDao(pm.getId(), pm.getCreatedDate(), pm.getUpdatedDate(),
                                                                                     pm.getAccountId(), pm.getPluginName(), pm.isActive());
