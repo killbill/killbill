@@ -26,10 +26,13 @@ import org.testng.annotations.Test;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.payment.PaymentTestSuiteWithEmbeddedDB;
 import com.ning.billing.payment.api.PaymentMethod;
+import com.ning.billing.payment.api.PaymentMethodPlugin.PaymentMethodKVInfo;
 import com.ning.billing.payment.dao.PaymentMethodModelDao;
 import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 import com.ning.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
 import com.ning.billing.payment.provider.MockPaymentProviderPlugin;
+
+import com.google.common.collect.ImmutableList;
 
 public class TestPaymentMethodProcessorRefreshWithDB extends PaymentTestSuiteWithEmbeddedDB {
 
@@ -49,7 +52,7 @@ public class TestPaymentMethodProcessorRefreshWithDB extends PaymentTestSuiteWit
 
         // Add new payment in plugin directly
         final UUID newPmId = UUID.randomUUID();
-        getPluginApi().addPaymentMethod(account.getId(), newPmId, null, false, callContext);
+        getPluginApi().addPaymentMethod(account.getId(), newPmId, new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), false, ImmutableList.<PaymentMethodKVInfo>of()), false, callContext);
 
         // Verify that the refresh does indeed show 2 PMs
         final List<PaymentMethod> methods = paymentMethodProcessor.refreshPaymentMethods(MockPaymentProviderPlugin.PLUGIN_NAME, account, internalCallContext);
