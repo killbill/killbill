@@ -30,6 +30,8 @@ import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 
+import com.google.common.collect.ImmutableList;
+
 public class MockPaymentDao implements PaymentDao {
 
     private final Map<UUID, PaymentModelDao> payments = new HashMap<UUID, PaymentModelDao>();
@@ -161,7 +163,7 @@ public class MockPaymentDao implements PaymentDao {
 
     @Override
     public List<PaymentMethodModelDao> refreshPaymentMethods(final UUID accountId, final List<PaymentMethodModelDao> paymentMethods, final InternalCallContext context) {
-        return null;
+        return ImmutableList.<PaymentMethodModelDao>of();
     }
 
     @Override
