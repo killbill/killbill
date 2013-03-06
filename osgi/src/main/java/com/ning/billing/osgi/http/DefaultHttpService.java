@@ -28,6 +28,8 @@ import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.HttpService;
 import org.osgi.service.http.NamespaceException;
 
+import com.ning.billing.osgi.ContextClassLoaderHelper;
+
 @Singleton
 public class DefaultHttpService implements HttpService {
 
@@ -40,13 +42,15 @@ public class DefaultHttpService implements HttpService {
 
     @Override
     public void registerServlet(final String alias, final Servlet servlet, final Dictionary initparams, final HttpContext httpContext) throws ServletException, NamespaceException {
+
         if (alias == null) {
             throw new IllegalArgumentException("Invalid alias (null)");
         } else if (servlet == null) {
             throw new IllegalArgumentException("Invalid servlet (null)");
         }
+        final Servlet wrappedServlet = ContextClassLoaderHelper.getWrappedServiceWithCorrectContextClassLoader(servlet);
 
-        servletRouter.registerServiceFromPath(alias, servlet);
+        servletRouter.registerServiceFromPath(alias, wrappedServlet);
     }
 
     @Override

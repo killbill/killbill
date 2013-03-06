@@ -16,21 +16,6 @@
 
 package com.ning.billing.osgi.api;
 
-import javax.inject.Inject;
-
-import com.ning.billing.osgi.LiveTracker;
-
 public class DefaultOSGIUserApi implements OSGIUserApi {
 
-    private final LiveTracker liveTracker;
-
-    @Inject
-    public DefaultOSGIUserApi(LiveTracker liveTracker) {
-        this.liveTracker = liveTracker;
-    }
-
-    @Override
-    public <S> S getService(final String serviceClassName) throws LiveTrackerException {
-        return liveTracker.getRegisteredOSGIService(serviceClassName );
-    }
 }

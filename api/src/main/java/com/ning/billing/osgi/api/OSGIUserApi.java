@@ -17,6 +17,4 @@
 package com.ning.billing.osgi.api;
 
 public interface OSGIUserApi {
-
-    public <S> S getService(final String serviceClassName) throws LiveTrackerException;
 }

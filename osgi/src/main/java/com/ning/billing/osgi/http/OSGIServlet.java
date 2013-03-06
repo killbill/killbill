@@ -79,18 +79,7 @@ public class OSGIServlet extends HttpServlet {
         if (pluginServlet != null) {
             initializeServletIfNeeded(req, pluginServlet);
             final OSGIServletRequestWrapper requestWrapper = new OSGIServletRequestWrapper(req, servletRouter.getPluginPrefixForPath(requestPath));
-
-            //
-            // Before entering into the plugin we want to set context classloader to the Bundle classloader (pluginServlet is set with such a context)
-            // in case some libraries are using contextClassLoader.
-            //
-            final ClassLoader prevContextClassLoader = Thread.currentThread().getContextClassLoader();
-            Thread.currentThread().setContextClassLoader(pluginServlet.getClass().getClassLoader());
-            try {
-                pluginServlet.service(requestWrapper, resp);
-            } finally {
-                Thread.currentThread().setContextClassLoader(prevContextClassLoader);
-            }
+            pluginServlet.service(requestWrapper, resp);
         } else {
             resp.sendError(404);
         }
