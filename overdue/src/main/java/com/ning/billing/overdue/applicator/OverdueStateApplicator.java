@@ -30,8 +30,8 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.api.ActionPolicy;
+import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
@@ -235,7 +235,10 @@ public class OverdueStateApplicator<T extends Blockable> {
             result.add((Subscription) blockable);
         } else if (blockable instanceof SubscriptionBundle) {
             for (final Subscription cur : entitlementUserApi.getSubscriptionsForBundle(blockable.getId(), context)) {
-                computeSubscriptionsToCancel((T) cur, result, context);
+                // Entitlement is smart enough and will cancel the associated add-ons
+                if (!ProductCategory.ADD_ON.equals(cur.getCategory())) {
+                    computeSubscriptionsToCancel((T) cur, result, context);
+                }
             }
         } else if (blockable instanceof Account) {
             for (final SubscriptionBundle cur : entitlementUserApi.getBundlesForAccount(blockable.getId(), context)) {
