@@ -55,14 +55,12 @@ public class JRubyPaymentPlugin extends JRubyPlugin implements PaymentPluginApi 
 
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put("name", pluginMainClass);
-
         paymentInfoPluginRegistration = (ServiceRegistration<PaymentPluginApi>) context.registerService(PaymentPluginApi.class.getName(), this, props);
     }
 
     @Override
     public void stopPlugin(final BundleContext context) {
         paymentInfoPluginRegistration.unregister();
-
         super.stopPlugin(context);
     }
 

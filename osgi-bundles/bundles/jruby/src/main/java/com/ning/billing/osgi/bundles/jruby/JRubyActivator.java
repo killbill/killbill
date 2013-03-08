@@ -21,28 +21,22 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.jruby.embed.ScriptingContainer;
-import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.log.LogService;
 
 import com.ning.billing.osgi.api.config.PluginConfig.PluginType;
 import com.ning.billing.osgi.api.config.PluginConfigServiceApi;
 import com.ning.billing.osgi.api.config.PluginRubyConfig;
-import com.ning.killbill.osgi.libs.killbill.OSGIKillbillAPI;
-import com.ning.killbill.osgi.libs.killbill.OSGIKillbillLogService;
+import com.ning.killbill.osgi.libs.killbill.KillbillActivatorBase;
+import com.ning.killbill.osgi.libs.killbill.OSGIKillbillEventDispatcher.OSGIKillbillEventHandler;
 
-public class Activator implements BundleActivator {
-
-    private OSGIKillbillAPI kb;
-    private OSGIKillbillLogService logService;
+public class JRubyActivator extends KillbillActivatorBase {
 
     private JRubyPlugin plugin = null;
 
     public void start(final BundleContext context) throws Exception {
 
-        kb = new OSGIKillbillAPI(context);
-        logService = new OSGIKillbillLogService(context);
-
+        super.start(context);
         logService.log(LogService.LOG_INFO, "JRuby bundle activated");
 
         doMagicToMakeJRubyAndFelixHappy();
@@ -54,6 +48,7 @@ public class Activator implements BundleActivator {
         final ScriptingContainer scriptingContainer = setupScriptingContainer(rubyConfig);
         if (PluginType.NOTIFICATION.equals(rubyConfig.getPluginType())) {
             plugin = new JRubyNotificationPlugin(rubyConfig, scriptingContainer, context, logService);
+            dispatcher.registerEventHandler((OSGIKillbillEventHandler) plugin);
         } else if (PluginType.PAYMENT.equals(rubyConfig.getPluginType())) {
             plugin = new JRubyPaymentPlugin(rubyConfig, scriptingContainer, context, logService);
         }
@@ -67,10 +62,11 @@ public class Activator implements BundleActivator {
 
         logService.log(LogService.LOG_INFO, "Starting JRuby plugin " + plugin.getPluginMainClass());
         plugin.startPlugin(context);
+
     }
 
     private PluginRubyConfig retrievePluginRubyConfig(final BundleContext context) {
-        final PluginConfigServiceApi pluginConfigServiceApi = kb.getPluginConfigServiceApi();
+        final PluginConfigServiceApi pluginConfigServiceApi = killbillAPI.getPluginConfigServiceApi();
         return pluginConfigServiceApi.getPluginRubyConfig(context.getBundle().getBundleId());
     }
 
@@ -92,34 +88,40 @@ public class Activator implements BundleActivator {
 
     public void stop(final BundleContext context) throws Exception {
         plugin.stopPlugin(context);
-        kb.close();
+        killbillAPI.close();
         logService.close();
+    }
+
+    // We make the explicit registration in the start method by hand as this would be called too early
+    // (see OSGIKillbillEventDispatcher)
+    @Override
+    public OSGIKillbillEventHandler getOSGIKillbillEventHandler() {
+        return null;
     }
 
     private Map<String, Object> retrieveKillbillApis(final BundleContext context) {
         final Map<String, Object> killbillUserApis = new HashMap<String, Object>();
 
         // See killbill/plugin.rb for the naming convention magic
-        killbillUserApis.put("account_user_api", kb.getAccountUserApi());
-        killbillUserApis.put("analytics_sanity_api", kb.getAnalyticsSanityApi());
-        killbillUserApis.put("analytics_user_api", kb.getAnalyticsUserApi());
-        killbillUserApis.put("catalog_user_api", kb.getCatalogUserApi());
-        killbillUserApis.put("entitlement_migration_api", kb.getEntitlementMigrationApi());
-        killbillUserApis.put("entitlement_timeline_api", kb.getEntitlementMigrationApi());
-        killbillUserApis.put("entitlement_transfer_api", kb.getEntitlementTransferApi());
-        killbillUserApis.put("entitlement_user_api", kb.getEntitlementUserApi());
-        killbillUserApis.put("invoice_migration_api", kb.getInvoiceMigrationApi());
-        killbillUserApis.put("invoice_payment_api", kb.getInvoicePaymentApi());
-        killbillUserApis.put("invoice_user_api", kb.getInvoiceUserApi());
-        killbillUserApis.put("overdue_user_api", kb.getOverdueUserApi());
-        killbillUserApis.put("payment_api", kb.getPaymentApi());
-        killbillUserApis.put("tenant_user_api", kb.getTagUserApi());
-        killbillUserApis.put("usage_user_api", kb.getUsageUserApi());
-        killbillUserApis.put("audit_user_api", kb.getAuditUserApi());
-        killbillUserApis.put("custom_field_user_api", kb.getCustomFieldUserApi());
-        killbillUserApis.put("export_user_api", kb.getExportUserApi());
-        killbillUserApis.put("tag_user_api", kb.getTagUserApi());
-
+        killbillUserApis.put("account_user_api", killbillAPI.getAccountUserApi());
+        killbillUserApis.put("analytics_sanity_api", killbillAPI.getAnalyticsSanityApi());
+        killbillUserApis.put("analytics_user_api", killbillAPI.getAnalyticsUserApi());
+        killbillUserApis.put("catalog_user_api", killbillAPI.getCatalogUserApi());
+        killbillUserApis.put("entitlement_migration_api", killbillAPI.getEntitlementMigrationApi());
+        killbillUserApis.put("entitlement_timeline_api", killbillAPI.getEntitlementMigrationApi());
+        killbillUserApis.put("entitlement_transfer_api", killbillAPI.getEntitlementTransferApi());
+        killbillUserApis.put("entitlement_user_api", killbillAPI.getEntitlementUserApi());
+        killbillUserApis.put("invoice_migration_api", killbillAPI.getInvoiceMigrationApi());
+        killbillUserApis.put("invoice_payment_api", killbillAPI.getInvoicePaymentApi());
+        killbillUserApis.put("invoice_user_api", killbillAPI.getInvoiceUserApi());
+        killbillUserApis.put("overdue_user_api", killbillAPI.getOverdueUserApi());
+        killbillUserApis.put("payment_api", killbillAPI.getPaymentApi());
+        killbillUserApis.put("tenant_user_api", killbillAPI.getTagUserApi());
+        killbillUserApis.put("usage_user_api", killbillAPI.getUsageUserApi());
+        killbillUserApis.put("audit_user_api", killbillAPI.getAuditUserApi());
+        killbillUserApis.put("custom_field_user_api", killbillAPI.getCustomFieldUserApi());
+        killbillUserApis.put("export_user_api", killbillAPI.getExportUserApi());
+        killbillUserApis.put("tag_user_api", killbillAPI.getTagUserApi());
         return killbillUserApis;
     }
 }

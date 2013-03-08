@@ -79,7 +79,7 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Bundle-Activator>com.ning.billing.osgi.bundles.jruby.Activator</Bundle-Activator>
+                        <Bundle-Activator>com.ning.billing.osgi.bundles.jruby.JRubyActivator</Bundle-Activator>
                         <Export-Package></Export-Package>
                         <Private-Package>com.ning.billing.osgi.bundles.jruby.*</Private-Package>
                         <!-- Optional resolution because exported by the Felix system bundle -->

@@ -19,16 +19,13 @@ package com.ning.billing.osgi.bundles.jruby;
 import org.jruby.embed.ScriptingContainer;
 import org.jruby.javasupport.JavaEmbedUtils;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
 import org.osgi.service.log.LogService;
 
 import com.ning.billing.beatrix.bus.api.ExtBusEvent;
-import com.ning.billing.beatrix.bus.api.ExternalBus;
 import com.ning.billing.osgi.api.config.PluginRubyConfig;
+import com.ning.killbill.osgi.libs.killbill.OSGIKillbillEventDispatcher.OSGIKillbillEventHandler;
 
-import com.google.common.eventbus.Subscribe;
-
-public class JRubyNotificationPlugin extends JRubyPlugin {
+public class JRubyNotificationPlugin extends JRubyPlugin implements OSGIKillbillEventHandler {
 
     public JRubyNotificationPlugin(final PluginRubyConfig config, final ScriptingContainer container,
                                    final BundleContext bundleContext, final LogService logger) {
@@ -38,26 +35,12 @@ public class JRubyNotificationPlugin extends JRubyPlugin {
     @Override
     public void startPlugin(final BundleContext context) {
         super.startPlugin(context);
-
-        @SuppressWarnings("unchecked")
-        final ServiceReference<ExternalBus> externalBusReference = (ServiceReference<ExternalBus>) context.getServiceReference(ExternalBus.class.getName());
-        try {
-            final ExternalBus externalBus = context.getService(externalBusReference);
-            externalBus.register(this);
-        } catch (Exception e) {
-            logger.log(LogService.LOG_WARNING, "Error registering notification plugin service", e);
-        } finally {
-            if (externalBusReference != null) {
-                context.ungetService(externalBusReference);
-            }
-        }
     }
 
-    @Subscribe
-    public void onEvent(final ExtBusEvent event) {
+    @Override
+    public void handleKillbillEvent(final ExtBusEvent killbillEvent) {
         checkValidNotificationPlugin();
         checkPluginIsRunning();
-
-        pluginInstance.callMethod("on_event", JavaEmbedUtils.javaToRuby(getRuntime(), event));
+        pluginInstance.callMethod("on_event", JavaEmbedUtils.javaToRuby(getRuntime(), killbillEvent));
     }
 }
