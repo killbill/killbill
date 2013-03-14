@@ -43,9 +43,10 @@ public class MockNotificationQueueService extends NotificationQueueServiceBase {
     public int doProcessEvents() {
 
         int result = 0;
-
-        for (NotificationQueue cur : queues.values()) {
-            result += doProcessEventsForQueue((MockNotificationQueue) cur);
+        synchronized (queues) {
+            for (NotificationQueue cur : queues.values()) {
+                result += doProcessEventsForQueue((MockNotificationQueue) cur);
+            }
         }
         return result;
     }
