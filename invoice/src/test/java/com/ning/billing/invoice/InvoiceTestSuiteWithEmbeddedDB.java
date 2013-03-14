@@ -16,11 +16,11 @@
 
 package com.ning.billing.invoice;
 
-import java.io.IOException;
 import java.net.URL;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -53,12 +53,9 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
-import static org.testng.Assert.assertNotNull;
-
 public abstract class InvoiceTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWithEmbeddedDB {
 
     private static final Logger log = LoggerFactory.getLogger(InvoiceTestSuiteWithEmbeddedDB.class);
-
 
     protected static final Currency accountCurrency = Currency.USD;
 
@@ -105,6 +102,12 @@ public abstract class InvoiceTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     @Inject
     protected TestInvoiceNotificationQListener testInvoiceNotificationQListener;
 
+    private void loadSystemPropertiesFromClasspath(final String resource) {
+        final URL url = InvoiceTestSuiteNoDB.class.getResource(resource);
+        Assert.assertNotNull(url);
+
+        configSource.merge(url);
+    }
 
     @BeforeClass(groups = "slow")
     protected void beforeClass() throws Exception {
@@ -137,15 +140,5 @@ public abstract class InvoiceTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     public void afterMethod() throws Exception {
         bus.stop();
         stopInvoiceService(invoiceService);
-    }
-
-    private static void loadSystemPropertiesFromClasspath(final String resource) {
-        final URL url = InvoiceTestSuiteWithEmbeddedDB.class.getResource(resource);
-        assertNotNull(url);
-        try {
-            System.getProperties().load(url.openStream());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 }

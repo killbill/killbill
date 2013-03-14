@@ -152,16 +152,4 @@ public class DefaultEntitlementTestInitializer implements EntitlementTestInitial
     private void stopEntitlementService(final EntitlementService entitlementService) throws Exception {
         ((Engine) entitlementService).stop();
     }
-
-
-    public static void loadSystemPropertiesFromClasspath(final String resource) {
-        final URL url = EntitlementTestSuiteNoDB.class.getResource(resource);
-        assertNotNull(url);
-
-        try {
-            System.getProperties().load(url.openStream());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
 }
