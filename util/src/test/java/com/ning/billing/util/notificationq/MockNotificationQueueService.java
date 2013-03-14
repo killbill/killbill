@@ -17,6 +17,8 @@
 package com.ning.billing.util.notificationq;
 
 import java.util.ArrayList;
+import java.util.ConcurrentModificationException;
+import java.util.Iterator;
 import java.util.List;
 
 import com.ning.billing.util.clock.Clock;
@@ -42,13 +44,24 @@ public class MockNotificationQueueService extends NotificationQueueServiceBase {
     @Override
     public int doProcessEvents() {
 
-        int result = 0;
-        synchronized (queues) {
-            for (NotificationQueue cur : queues.values()) {
-                result += doProcessEventsForQueue((MockNotificationQueue) cur);
+        int retry = 2;
+        do {
+            try {
+                int result = 0;
+                Iterator<String> it = queues.keySet().iterator();
+                while (it.hasNext()) {
+                    final String queueName = it.next();
+                    final NotificationQueue cur = queues.get(queueName);
+                    if (cur != null) {
+                        result += doProcessEventsForQueue((MockNotificationQueue) cur);
+                    }
+                }
+                return result;
+            } catch (ConcurrentModificationException e) {
+                retry--;
             }
-        }
-        return result;
+        } while (retry > 0);
+        return 0;
     }
 
     private int doProcessEventsForQueue(final MockNotificationQueue queue) {
