@@ -147,6 +147,7 @@ public class BusinessInvoicePaymentDao {
         } else {
             invoicePaymentType = null;
             linkedInvoicePaymentId = null;
+            // TODO PIERRE
             createdDate = clock.getUTCNow();
             updatedDate = createdDate;
         }

@@ -18,6 +18,7 @@ package com.ning.billing.util.notificationq;
 
 import org.skife.config.Config;
 import org.skife.config.Default;
+import org.skife.config.Description;
 
 import com.ning.billing.util.config.PersistentQueueConfig;
 
@@ -25,16 +26,18 @@ public interface NotificationQueueConfig extends PersistentQueueConfig {
 
     @Config("killbill.billing.util.notificationq.prefetch")
     @Default("7")
+    @Description("Number of notifications to fetch from the database at once")
     public int getPrefetchAmount();
 
     @Override
     @Config("killbill.billing.util.notificationq.sleep")
-    @Default("500")
+    @Default("3000")
+    @Description("Time in milliseconds to sleep between runs")
     public long getSleepTimeMs();
 
+    @Override
     @Config("killbill.billing.util.notificationq.notification.off")
     @Default("false")
-    @Override
+    @Description("Whether to turn off the notification queue")
     public boolean isProcessingOff();
-
 }

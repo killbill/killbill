@@ -23,34 +23,40 @@ import org.skife.config.Description;
 import com.ning.billing.invoice.api.formatters.InvoiceFormatterFactory;
 
 public interface TranslatorConfig {
+
     // Common
 
     @Config("killbill.default.locale")
     @Default("en_US")
+    @Description("Default Killbill locale")
     public String getDefaultLocale();
 
     // Catalog
 
     @Config("killbill.catalog.bundlePath")
     @Default("com/ning/billing/util/template/translation/CatalogTranslation")
+    @Description("Path to the catalog translation bundle")
     String getCatalogBundlePath();
 
     // Invoices
 
     @Config("killbill.template.bundlePath")
     @Default("com/ning/billing/util/template/translation/InvoiceTranslation")
+    @Description("Path to the invoice template translation bundle")
     public String getInvoiceTemplateBundlePath();
 
     @Config("killbill.template.name")
     @Default("com/ning/billing/util/email/templates/HtmlInvoiceTemplate.mustache")
+    @Description("Path to the HTML invoice template")
     String getTemplateName();
 
     @Config("killbill.manualPayTemplate.name")
     @Default("com/ning/billing/util/email/templates/HtmlInvoiceTemplate.mustache")
-    @Description("Invoice template for accounts with MANUAL_PAY tag")
+    @Description("Path to the invoice template for accounts with MANUAL_PAY tag")
     String getManualPayTemplateName();
 
     @Config("killbill.template.invoiceFormatterFactoryClass")
     @Default("com.ning.billing.invoice.template.formatters.DefaultInvoiceFormatterFactory")
+    @Description("Invoice formatter class")
     Class<? extends InvoiceFormatterFactory> getInvoiceFormatterFactoryClass();
 }

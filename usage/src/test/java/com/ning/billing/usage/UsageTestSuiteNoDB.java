@@ -30,7 +30,7 @@ public class UsageTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
     @BeforeClass(groups = "fast")
     protected void beforeClass() throws Exception {
-        final Injector injector = Guice.createInjector(new TestUsageModuleNoDB());
+        final Injector injector = Guice.createInjector(new TestUsageModuleNoDB(configSource));
         injector.injectMembers(this);
     }
 

@@ -16,10 +16,16 @@
 
 package com.ning.billing.tenant.glue;
 
+import org.skife.config.ConfigSource;
+
 import com.ning.billing.GuicyKillbillTestNoDBModule;
 import com.ning.billing.mock.glue.MockNonEntityDaoModule;
 
 public class TestTenantModuleNoDB extends TestTenantModule {
+
+    public TestTenantModuleNoDB(final ConfigSource configSource) {
+        super(configSource);
+    }
 
     @Override
     public void configure() {

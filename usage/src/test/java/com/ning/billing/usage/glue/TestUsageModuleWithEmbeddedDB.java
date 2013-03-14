@@ -16,9 +16,15 @@
 
 package com.ning.billing.usage.glue;
 
+import org.skife.config.ConfigSource;
+
 import com.ning.billing.GuicyKillbillTestWithEmbeddedDBModule;
 
 public class TestUsageModuleWithEmbeddedDB extends TestUsageModule {
+
+    public TestUsageModuleWithEmbeddedDB(final ConfigSource configSource) {
+        super(configSource);
+    }
 
     @Override
     public void configure() {

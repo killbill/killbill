@@ -16,10 +16,7 @@
 
 package com.ning.billing.junction.glue;
 
-import java.util.Properties;
-
 import org.skife.config.ConfigSource;
-import org.skife.config.SimplePropertyConfigSource;
 
 import com.ning.billing.catalog.MockCatalogModule;
 import com.ning.billing.mock.glue.MockAccountModule;
@@ -29,24 +26,15 @@ import com.ning.billing.util.glue.CallContextModule;
 
 public class TestJunctionModule extends DefaultJunctionModule {
 
-    protected final ConfigSource configSource;
-
-    public TestJunctionModule() {
-        final Properties properties = new Properties(System.getProperties());
-        // Speed up the bus
-        properties.put("killbill.billing.util.persistent.bus.sleep", "10");
-        properties.put("killbill.billing.util.persistent.bus.nbThreads", "1");
-        configSource = new SimplePropertyConfigSource(properties);
-
-        // Ignore ehcache checks. Unfortunately, ehcache looks at system properties directly...
-        System.setProperty("net.sf.ehcache.skipUpdateCheck", "true");
+    public TestJunctionModule(final ConfigSource configSource) {
+        super(configSource);
     }
 
     @Override
     protected void configure() {
         super.configure();
 
-        install(new CacheModule());
+        install(new CacheModule(configSource));
         install(new CallContextModule());
         install(new MockAccountModule());
         install(new MockCatalogModule());

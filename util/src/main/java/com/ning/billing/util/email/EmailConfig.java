@@ -19,39 +19,49 @@ package com.ning.billing.util.email;
 import org.skife.config.Config;
 import org.skife.config.Default;
 import org.skife.config.DefaultNull;
+import org.skife.config.Description;
 
 import com.ning.billing.util.config.KillbillConfig;
 
 public interface EmailConfig extends KillbillConfig {
+
     @Config("killbill.mail.smtp.host")
     @DefaultNull
+    @Description("MTA host used for email notifications")
     public String getSmtpServerName();
 
     @Config("killbill.mail.smtp.port")
     @DefaultNull
+    @Description("MTA port used for email notifications")
     public int getSmtpPort();
 
     @Config("killbill.mail.smtp.auth")
     @Default("false")
+    @Description("Whether to authenticate against the MTA")
     public boolean useSmtpAuth();
 
     @Config("killbill.mail.smtp.user")
     @DefaultNull
+    @Description("Username to use to authenticate against the MTA")
     public String getSmtpUserName();
 
     @Config("killbill.mail.smtp.password")
     @DefaultNull
+    @Description("Password to use to authenticate against the MTA")
     public String getSmtpPassword();
 
     @Config("killbill.mail.from")
     @Default("support@example.com")
+    @Description("Default From: field for email notifications")
     String getDefaultFrom();
 
     @Config("killbill.mail.useSSL")
     @Default("false")
+    @Description("Whether to use secure SMTP")
     boolean useSSL();
 
     @Config("killbill.mail.invoiceEmailSubject")
     @Default("Your invoice")
+    @Description("Default Subject: field for invoice notifications")
     String getInvoiceEmailSubject();
 }

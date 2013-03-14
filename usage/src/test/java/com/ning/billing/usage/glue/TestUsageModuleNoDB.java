@@ -16,9 +16,15 @@
 
 package com.ning.billing.usage.glue;
 
+import org.skife.config.ConfigSource;
+
 import com.ning.billing.GuicyKillbillTestNoDBModule;
 
 public class TestUsageModuleNoDB extends TestUsageModule {
+
+    public TestUsageModuleNoDB(final ConfigSource configSource) {
+        super(configSource);
+    }
 
     @Override
     public void configure() {

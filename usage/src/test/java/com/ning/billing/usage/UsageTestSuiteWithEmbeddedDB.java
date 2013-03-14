@@ -30,7 +30,7 @@ public class UsageTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWithEmbe
 
     @BeforeClass(groups = "slow")
     protected void beforeClass() throws Exception {
-        final Injector injector = Guice.createInjector(new TestUsageModuleWithEmbeddedDB());
+        final Injector injector = Guice.createInjector(new TestUsageModuleWithEmbeddedDB(configSource));
         injector.injectMembers(this);
     }
 

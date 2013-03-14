@@ -16,6 +16,8 @@
 
 package com.ning.billing.overdue.glue;
 
+import org.skife.config.ConfigSource;
+
 import com.ning.billing.GuicyKillbillTestWithEmbeddedDBModule;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.NonEntityDaoModule;
@@ -23,13 +25,17 @@ import com.ning.billing.util.glue.NotificationQueueModule;
 
 public class TestOverdueModuleWithEmbeddedDB extends TestOverdueModule {
 
+    public TestOverdueModuleWithEmbeddedDB(final ConfigSource configSource) {
+        super(configSource);
+    }
+
     @Override
     public void configure() {
         super.configure();
 
         install(new GuicyKillbillTestWithEmbeddedDBModule());
         install(new NonEntityDaoModule());
-        install(new NotificationQueueModule());
+        install(new NotificationQueueModule(configSource));
         install(new BusModule(configSource));
     }
 }

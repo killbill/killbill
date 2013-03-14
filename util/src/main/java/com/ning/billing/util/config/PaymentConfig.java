@@ -20,16 +20,19 @@ import java.util.List;
 
 import org.skife.config.Config;
 import org.skife.config.Default;
-
+import org.skife.config.Description;
 
 public interface PaymentConfig extends KillbillConfig {
+
     @Config("killbill.payment.provider.default")
     // See ExternalPaymentProviderPlugin.PLUGIN_NAME
     @Default("__external_payment__")
+    @Description("Default payment provider to use")
     public String getDefaultPaymentProvider();
 
     @Config("killbill.payment.retry.days")
     @Default("8,8,8")
+    @Description("Interval in days between payment retries")
     public List<Integer> getPaymentRetryDays();
 
     @Config("killbill.payment.failure.retry.start.sec")
@@ -42,9 +45,11 @@ public interface PaymentConfig extends KillbillConfig {
 
     @Config("killbill.payment.failure.retry.max.attempts")
     @Default("8")
+    @Description("Maximum number of retries for failed payments")
     public int getPluginFailureRetryMaxAttempts();
 
     @Config("killbill.payment.off")
     @Default("false")
+    @Description("Whether the payment subsystem is off")
     public boolean isPaymentOff();
 }

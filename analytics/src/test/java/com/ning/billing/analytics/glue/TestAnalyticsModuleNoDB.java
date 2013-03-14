@@ -17,6 +17,7 @@
 package com.ning.billing.analytics.glue;
 
 import org.mockito.Mockito;
+import org.skife.config.ConfigSource;
 
 import com.ning.billing.GuicyKillbillTestNoDBModule;
 import com.ning.billing.analytics.MockBusinessSubscriptionTransitionSqlDao;
@@ -38,6 +39,10 @@ import com.ning.billing.mock.glue.MockNonEntityDaoModule;
 import com.ning.billing.util.bus.InMemoryBusModule;
 
 public class TestAnalyticsModuleNoDB extends TestAnalyticsModule {
+
+    public TestAnalyticsModuleNoDB(final ConfigSource configSource) {
+        super(configSource);
+    }
 
     @Override
     protected void installAnalyticsSqlDao() {

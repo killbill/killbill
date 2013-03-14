@@ -16,6 +16,7 @@
 
 package com.ning.billing.util.glue;
 
+import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
 
 import com.ning.billing.util.notificationq.DefaultNotificationQueueService;
@@ -26,9 +27,14 @@ import com.google.inject.AbstractModule;
 
 public class NotificationQueueModule extends AbstractModule {
 
+    protected final ConfigSource configSource;
+
+    public NotificationQueueModule(final ConfigSource configSource) {
+        this.configSource = configSource;
+    }
 
     protected void configureNotificationQueueConfig() {
-        final NotificationQueueConfig config = new ConfigurationObjectFactory(System.getProperties()).build(NotificationQueueConfig.class);
+        final NotificationQueueConfig config = new ConfigurationObjectFactory(configSource).build(NotificationQueueConfig.class);
         bind(NotificationQueueConfig.class).toInstance(config);
     }
     @Override

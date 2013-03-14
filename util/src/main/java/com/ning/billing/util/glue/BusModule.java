@@ -18,7 +18,6 @@ package com.ning.billing.util.glue;
 
 import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
-import org.skife.config.SimplePropertyConfigSource;
 
 import com.ning.billing.util.bus.DefaultBusService;
 import com.ning.billing.util.bus.InMemoryInternalBus;
@@ -34,19 +33,11 @@ public class BusModule extends AbstractModule {
     private final BusType type;
     private final ConfigSource configSource;
 
-    public BusModule() {
-        this(BusType.PERSISTENT);
-    }
-
     public BusModule(final ConfigSource configSource) {
         this(BusType.PERSISTENT, configSource);
     }
 
-    public BusModule(final BusType type) {
-        this(type, new SimplePropertyConfigSource(System.getProperties()));
-    }
-
-    public BusModule(final BusType type, final ConfigSource configSource) {
+    protected BusModule(final BusType type, final ConfigSource configSource) {
         this.type = type;
         this.configSource = configSource;
     }

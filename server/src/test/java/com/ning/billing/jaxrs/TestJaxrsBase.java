@@ -28,7 +28,9 @@ import javax.servlet.Servlet;
 
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.joda.time.LocalDate;
+import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
+import org.skife.config.SimplePropertyConfigSource;
 import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -125,6 +127,10 @@ public class TestJaxrsBase extends KillbillClient {
 
     public static class InvoiceModuleWithMockSender extends DefaultInvoiceModule {
 
+        public InvoiceModuleWithMockSender(final ConfigSource configSource) {
+            super(configSource);
+        }
+
         @Override
         protected void installInvoiceNotifier() {
             bind(InvoiceNotifier.class).to(NullInvoiceNotifier.class).asEagerSingleton();
@@ -152,6 +158,10 @@ public class TestJaxrsBase extends KillbillClient {
 
         private static final class PaymentMockModule extends PaymentModule {
 
+            public PaymentMockModule(final ConfigSource configSource) {
+                super(configSource);
+            }
+
             @Override
             protected void installPaymentProviderPlugins(final PaymentConfig config) {
                 install(new MockPaymentProviderPluginModule(PLUGIN_NAME, getClock()));
@@ -160,6 +170,7 @@ public class TestJaxrsBase extends KillbillClient {
 
         @Override
         protected void installKillbillModules() {
+            final ConfigSource configSource = new SimplePropertyConfigSource(System.getProperties());
 
             /*
              * For a lack of getting module override working, copy all install modules from parent class...
@@ -171,30 +182,30 @@ public class TestJaxrsBase extends KillbillClient {
             install(new GuicyKillbillTestWithEmbeddedDBModule());
 
 
-            install(new EmailModule());
-            install(new CacheModule());
+            install(new EmailModule(configSource));
+            install(new CacheModule(configSource));
             install(new NonEntityDaoModule());
             install(new TestGlobalLockerModule(helper));
             install(new CustomFieldModule());
             install(new TagStoreModule());
             install(new AuditModule());
-            install(new CatalogModule());
-            install(new BusModule());
-            install(new NotificationQueueModule());
+            install(new CatalogModule(configSource));
+            install(new BusModule(configSource));
+            install(new NotificationQueueModule(configSource));
             install(new CallContextModule());
-            install(new DefaultAccountModule());
-            install(new InvoiceModuleWithMockSender());
+            install(new DefaultAccountModule(configSource));
+            install(new InvoiceModuleWithMockSender(configSource));
             install(new TemplateModule());
-            install(new DefaultEntitlementModule());
-            install(new AnalyticsModule());
-            install(new PaymentMockModule());
+            install(new DefaultEntitlementModule(configSource));
+            install(new AnalyticsModule(configSource));
+            install(new PaymentMockModule(configSource));
             install(new BeatrixModule());
-            install(new DefaultJunctionModule());
-            install(new DefaultOverdueModule());
-            install(new TenantModule());
+            install(new DefaultJunctionModule(configSource));
+            install(new DefaultOverdueModule(configSource));
+            install(new TenantModule(configSource));
             install(new ExportModule());
-            install(new DefaultOSGIModule());
-            install(new UsageModule());
+            install(new DefaultOSGIModule(configSource));
+            install(new UsageModule(configSource));
             installClock();
         }
     }

@@ -16,6 +16,8 @@
 
 package com.ning.billing.overdue.glue;
 
+import org.skife.config.ConfigSource;
+
 import com.ning.billing.GuicyKillbillTestNoDBModule;
 import com.ning.billing.mock.glue.MockNonEntityDaoModule;
 import com.ning.billing.mock.glue.MockNotificationQueueModule;
@@ -23,13 +25,17 @@ import com.ning.billing.util.bus.InMemoryBusModule;
 
 public class TestOverdueModuleNoDB extends TestOverdueModule {
 
+    public TestOverdueModuleNoDB(final ConfigSource configSource) {
+        super(configSource);
+    }
+
     @Override
     public void configure() {
         super.configure();
 
         install(new GuicyKillbillTestNoDBModule());
         install(new MockNonEntityDaoModule());
-        install(new MockNotificationQueueModule());
+        install(new MockNotificationQueueModule(configSource));
         install(new InMemoryBusModule(configSource));
     }
 }

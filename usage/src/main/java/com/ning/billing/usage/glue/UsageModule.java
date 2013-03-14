@@ -16,6 +16,8 @@
 
 package com.ning.billing.usage.glue;
 
+import org.skife.config.ConfigSource;
+
 import com.ning.billing.usage.api.UsageUserApi;
 import com.ning.billing.usage.api.user.DefaultUsageUserApi;
 import com.ning.billing.usage.dao.DefaultRolledUpUsageDao;
@@ -24,6 +26,12 @@ import com.ning.billing.usage.dao.RolledUpUsageDao;
 import com.google.inject.AbstractModule;
 
 public class UsageModule extends AbstractModule {
+
+    protected final ConfigSource configSource;
+
+    public UsageModule(final ConfigSource configSource) {
+        this.configSource = configSource;
+    }
 
     protected void installRolledUpUsageDao() {
         bind(RolledUpUsageDao.class).to(DefaultRolledUpUsageDao.class).asEagerSingleton();

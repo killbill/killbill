@@ -16,5 +16,11 @@
 
 package com.ning.billing.catalog.glue;
 
+import org.skife.config.ConfigSource;
+
 public class TestCatalogModuleNoDB extends TestCatalogModule {
+
+    public TestCatalogModuleNoDB(final ConfigSource configSource) {
+        super(configSource);
+    }
 }
