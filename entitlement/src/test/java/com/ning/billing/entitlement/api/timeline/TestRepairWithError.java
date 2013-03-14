@@ -52,9 +52,10 @@ public class TestRepairWithError extends EntitlementTestSuiteNoDB {
     private TestWithException test;
     private Subscription baseSubscription;
 
+    @Override
     @BeforeMethod(alwaysRun = true)
-    public void setupTest() throws Exception {
-        super.setupTest();
+    public void beforeMethod() throws Exception {
+        super.beforeMethod();
         test = new TestWithException();
         final DateTime startDate = clock.getUTCNow();
         baseSubscription = testUtil.createSubscription(bundle, baseProduct, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, startDate);

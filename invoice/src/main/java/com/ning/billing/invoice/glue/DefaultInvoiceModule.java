@@ -16,6 +16,7 @@
 
 package com.ning.billing.invoice.glue;
 
+import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
 
 import com.ning.billing.glue.InvoiceModule;
@@ -52,6 +53,12 @@ public class DefaultInvoiceModule extends AbstractModule implements InvoiceModul
 
     InvoiceConfig config;
 
+    protected final ConfigSource configSource;
+
+    public DefaultInvoiceModule(final ConfigSource configSource) {
+        this.configSource = configSource;
+    }
+
     protected void installInvoiceDao() {
         bind(InvoiceDao.class).to(DefaultInvoiceDao.class).asEagerSingleton();
     }
@@ -72,7 +79,7 @@ public class DefaultInvoiceModule extends AbstractModule implements InvoiceModul
     }
 
     protected void installConfig() {
-        config = new ConfigurationObjectFactory(System.getProperties()).build(InvoiceConfig.class);
+        config = new ConfigurationObjectFactory(configSource).build(InvoiceConfig.class);
         bind(InvoiceConfig.class).toInstance(config);
     }
 
@@ -88,7 +95,7 @@ public class DefaultInvoiceModule extends AbstractModule implements InvoiceModul
     protected void installNotifiers() {
         bind(NextBillingDateNotifier.class).to(DefaultNextBillingDateNotifier.class).asEagerSingleton();
         bind(NextBillingDatePoster.class).to(DefaultNextBillingDatePoster.class).asEagerSingleton();
-        final TranslatorConfig config = new ConfigurationObjectFactory(System.getProperties()).build(TranslatorConfig.class);
+        final TranslatorConfig config = new ConfigurationObjectFactory(configSource).build(TranslatorConfig.class);
         bind(TranslatorConfig.class).toInstance(config);
         bind(InvoiceFormatterFactory.class).to(config.getInvoiceFormatterFactoryClass()).asEagerSingleton();
     }

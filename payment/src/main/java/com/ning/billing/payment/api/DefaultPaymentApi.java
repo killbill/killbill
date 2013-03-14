@@ -144,12 +144,6 @@ public class DefaultPaymentApi implements PaymentApi {
     }
 
     @Override
-    public String initializeAccountPlugin(final String pluginName, final Account account, final CallContext context)
-            throws PaymentApiException {
-        return methodProcessor.initializeAccountPlugin(pluginName, account, internalCallContextFactory.createInternalCallContext(account.getId(), context));
-    }
-
-    @Override
     public UUID addPaymentMethod(final String pluginName, final Account account,
                                  final boolean setDefault, final PaymentMethodPlugin paymentMethodInfo, final CallContext context)
             throws PaymentApiException {
@@ -158,34 +152,15 @@ public class DefaultPaymentApi implements PaymentApi {
     }
 
     @Override
-    public List<PaymentMethod> refreshPaymentMethods(final String pluginName,
-                                                     final Account account, final CallContext context)
+    public List<PaymentMethod> getPaymentMethods(final Account account, final TenantContext context)
             throws PaymentApiException {
-        return methodProcessor.refreshPaymentMethods(pluginName, account, internalCallContextFactory.createInternalCallContext(account.getId(), context));
+        return methodProcessor.getPaymentMethods(account, internalCallContextFactory.createInternalTenantContext(context));
     }
 
     @Override
-    public List<PaymentMethod> getPaymentMethods(final Account account, final boolean withPluginDetail, final TenantContext context)
+    public PaymentMethod getPaymentMethodById(final UUID paymentMethodId, final boolean withPluginInfo, final TenantContext context)
             throws PaymentApiException {
-        return methodProcessor.getPaymentMethods(account, withPluginDetail, internalCallContextFactory.createInternalTenantContext(context));
-    }
-
-    @Override
-    public PaymentMethod getPaymentMethodById(final UUID paymentMethodId, final TenantContext context)
-            throws PaymentApiException {
-        return methodProcessor.getPaymentMethodById(paymentMethodId, internalCallContextFactory.createInternalTenantContext(context));
-    }
-
-    @Override
-    public PaymentMethod getPaymentMethod(final Account account, final UUID paymentMethod, final boolean withPluginDetail, final TenantContext context)
-            throws PaymentApiException {
-        return methodProcessor.getPaymentMethod(account, paymentMethod, withPluginDetail, internalCallContextFactory.createInternalTenantContext(context));
-    }
-
-    @Override
-    public void updatePaymentMethod(final Account account, final UUID paymentMethodId, final PaymentMethodPlugin paymentMethodInfo, final CallContext context)
-            throws PaymentApiException {
-        methodProcessor.updatePaymentMethod(account, paymentMethodId, paymentMethodInfo, internalCallContextFactory.createInternalCallContext(account.getId(), context));
+        return methodProcessor.getPaymentMethodById(paymentMethodId, withPluginInfo, internalCallContextFactory.createInternalTenantContext(context));
     }
 
     @Override
@@ -198,5 +173,11 @@ public class DefaultPaymentApi implements PaymentApi {
     public void setDefaultPaymentMethod(final Account account, final UUID paymentMethodId, final CallContext context)
             throws PaymentApiException {
         methodProcessor.setDefaultPaymentMethod(account, paymentMethodId, internalCallContextFactory.createInternalCallContext(account.getId(), context));
+    }
+
+    @Override
+    public List<PaymentMethod> refreshPaymentMethods(final String pluginName, final Account account, final CallContext context)
+            throws PaymentApiException {
+        return methodProcessor.refreshPaymentMethods(pluginName, account, internalCallContextFactory.createInternalCallContext(account.getId(), context));
     }
 }

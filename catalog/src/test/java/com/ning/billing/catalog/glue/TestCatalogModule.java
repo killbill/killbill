@@ -16,9 +16,15 @@
 
 package com.ning.billing.catalog.glue;
 
+import org.skife.config.ConfigSource;
+
 import com.ning.billing.GuicyKillbillTestNoDBModule;
 
 public class TestCatalogModule extends CatalogModule {
+
+    public TestCatalogModule(final ConfigSource configSource) {
+        super(configSource);
+    }
 
     @Override
     public void configure() {

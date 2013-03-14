@@ -40,4 +40,5 @@ public class ExternalPaymentProviderPlugin extends DefaultNoOpPaymentProviderPlu
     public String getName() {
         return PLUGIN_NAME;
     }
+
 }

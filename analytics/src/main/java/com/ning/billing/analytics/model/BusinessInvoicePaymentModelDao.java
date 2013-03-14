@@ -48,7 +48,7 @@ public class BusinessInvoicePaymentModelDao extends EntityBase {
     private final String invoicePaymentType;
     private final UUID linkedInvoicePaymentId;
 
-    public BusinessInvoicePaymentModelDao(final String accountKey, final BigDecimal amount, final String extFirstPaymentRefId, final String extSecondPaymentRefId,
+    public BusinessInvoicePaymentModelDao(final String accountKey, final BigDecimal amount,
                                           final String cardCountry, final String cardType, final DateTime createdDate,
                                           final Currency currency, final DateTime effectiveDate, final UUID invoiceId,
                                           final String paymentError, final UUID paymentId, final String paymentMethod,
@@ -58,8 +58,9 @@ public class BusinessInvoicePaymentModelDao extends EntityBase {
         super(paymentId, createdDate, updatedDate);
         this.accountKey = accountKey;
         this.amount = amount;
-        this.extFirstPaymentRefId = extFirstPaymentRefId;
-        this.extSecondPaymentRefId = extSecondPaymentRefId;
+        // TODO For backward compatibility
+        this.extFirstPaymentRefId = null;
+        this.extSecondPaymentRefId = null;
         this.cardCountry = cardCountry;
         this.cardType = cardType;
         this.currency = currency;

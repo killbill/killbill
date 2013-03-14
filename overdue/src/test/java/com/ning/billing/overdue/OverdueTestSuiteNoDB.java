@@ -32,7 +32,6 @@ import com.ning.billing.overdue.service.DefaultOverdueService;
 import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.notificationq.NotificationQueueService;
-import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
@@ -84,28 +83,22 @@ public abstract class OverdueTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     protected TestOverdueHelper testOverdueHelper;
 
     @BeforeClass(groups = "fast")
-    protected void setup() throws Exception {
-        final Injector injector = Guice.createInjector(new TestOverdueModuleNoDB());
+    protected void beforeClass() throws Exception {
+        final Injector injector = Guice.createInjector(new TestOverdueModuleNoDB(configSource));
         injector.injectMembers(this);
     }
 
     @BeforeMethod(groups = "fast")
-    public void setupTest() {
+    public void beforeMethod() throws Exception {
         bus.start();
 
         service.registerForBus();
-        try {
             service.initialize();
-        } catch (RuntimeException e) {
-            if (!(e.getCause() instanceof NotificationQueueAlreadyExists)) {
-                throw e;
-            }
-        }
         service.start();
     }
 
     @AfterMethod(groups = "fast")
-    public void cleanupTest() {
+    public void afterMethod() {
         service.stop();
         bus.stop();
     }

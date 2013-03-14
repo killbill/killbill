@@ -22,7 +22,6 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import com.ning.billing.ObjectType;
@@ -69,10 +68,11 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
     private String planSetName;
 
 
+    @Override
     @BeforeMethod(groups = {"slow"})
-    public void setupBeforeTest() throws Exception {
-
-        account = createAccountWithPaymentMethod(getAccountData(25));
+    public void beforeMethod() throws Exception {
+        super.beforeMethod();
+        account = createAccountWithNonOsgiPaymentMethod(getAccountData(25));
         assertNotNull(account);
 
         bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever", callContext);

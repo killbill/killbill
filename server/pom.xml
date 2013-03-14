@@ -15,7 +15,8 @@
   ~ under the License.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.ning.billing</groupId>
@@ -117,7 +118,6 @@
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.ning.jetty</groupId>
@@ -217,7 +217,6 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>11.0.2</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -316,13 +315,15 @@
                         <goals>
                             <goal>createconsole</goal>
                         </goals>
+                        <configuration>
+                            <backgroundImage>${basedir}/src/main/jettyconsole/killbill.png</backgroundImage>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>1.4</version>
                 <executions>
                     <execution>
                         <id>assemble-killbill</id>
@@ -344,98 +345,9 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>com.ning.maven.plugins</groupId>
-                <artifactId>maven-dependency-versions-check-plugin</artifactId>
-                <version>2.0.2</version>
-                <configuration>
-                    <failBuildInCaseOfConflict>true</failBuildInCaseOfConflict>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
                 <!-- To make eclipse happy -->
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
-                <version>2.5</version>
-            </plugin>
-            <plugin>
-                <groupId>com.ning.maven.plugins</groupId>
-                <artifactId>maven-duplicate-finder-plugin</artifactId>
-                <version>1.0.2</version>
-                <configuration>
-                    <failBuildInCaseOfConflict>false</failBuildInCaseOfConflict>
-                    <!-- That's for Jetty -->
-                    <ignoredResources>
-                        <ignoredResource>about.html</ignoredResource>
-                    </ignoredResources>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.3.2</version>
-                <configuration>
-                    <source>1.6</source>
-                    <target>1.6</target>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <version>2.3</version>
-                <executions>
-                    <execution>
-                        <id>analyze</id>
-                        <goals>
-                            <goal>analyze-only</goal>
-                        </goals>
-                        <configuration>
-                            <ignoreNonCompile>true</ignoreNonCompile>
-                            <failOnWarning>false</failOnWarning>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-release-plugin</artifactId>
-                <version>2.2.1</version>
-                <configuration>
-                    <mavenExecutorId>forked-path</mavenExecutorId>
-                </configuration>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.apache.maven.scm</groupId>
-                        <artifactId>maven-scm-provider-gitexe</artifactId>
-                        <version>1.4</version>
-                    </dependency>
-                    <dependency>
-                        <groupId>org.codehaus.plexus</groupId>
-                        <artifactId>plexus-utils</artifactId>
-                        <version>1.5.9</version>
-                    </dependency>
-                </dependencies>
-            </plugin>
-            <plugin>
-                <!-- TODO: fix for http://jira.codehaus.org/browse/MSITE-286? -->
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-site-plugin</artifactId>
-                <version>3.0</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -450,13 +362,6 @@
                 <artifactId>jetty-maven-plugin</artifactId>
                 <version>${jetty.version}</version>
                 <dependencies>
-                    <dependency><!-- For LogLevelCounterAppender -->
-                        <groupId>com.ning.jetty</groupId>
-                        <artifactId>ning-service-skeleton-log4j</artifactId>
-                        <version>${skeleton.version}</version>
-                        <classifier>selfcontained</classifier>
-                        <scope>runtime</scope>
-                    </dependency>
                     <!-- Needed to redirect Jetty logs to slf4j -->
                     <dependency>
                         <groupId>org.slf4j</groupId>
@@ -473,15 +378,34 @@
                         <artifactId>logback-classic</artifactId>
                         <version>${logback.version}</version>
                     </dependency>
+                    <dependency>
+                        <groupId>org.eclipse.jetty</groupId>
+                        <artifactId>jetty-deploy</artifactId>
+                        <version>${jetty.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.eclipse.jetty</groupId>
+                        <artifactId>jetty-jmx</artifactId>
+                        <version>${jetty.version}</version>
+                    </dependency>
                 </dependencies>
                 <configuration>
-                    <scanIntervalSeconds>60</scanIntervalSeconds>
+                    <jettyXml>${basedir}/src/main/jetty-config/ning-jetty-conf.xml</jettyXml>
+                    <contextXml>${basedir}/src/main/jetty-config/contexts/root.xml</contextXml>
                     <systemProperties>
+                        <systemProperty>
+                            <!-- See root.xml -->
+                            <name>xn.jetty.webapps.defaultsDescriptor</name>
+                            <value>${basedir}/src/main/jetty-config/etc/webdefault.xml</value>
+                        </systemProperty>
                         <systemProperty>
                             <name>logback.configurationFile</name>
                             <value>file:${basedir}/src/main/resources/logback.xml</value>
                         </systemProperty>
                     </systemProperties>
+                    <scanIntervalSeconds>0</scanIntervalSeconds>
+                    <stopPort>9966</stopPort>
+                    <stopKey>foo</stopKey>
                 </configuration>
             </plugin>
         </plugins>

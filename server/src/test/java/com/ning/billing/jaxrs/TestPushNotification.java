@@ -51,8 +51,10 @@ public class TestPushNotification extends TestJaxrsBase {
     private volatile boolean callbackCompletedWithError;
 
 
+    @Override
     @BeforeMethod(groups = "slow")
-    public void startServer() throws Exception {
+    public void beforeMethod() throws Exception {
+        super.beforeMethod();
         callbackServer = new CallbackServer(this, SERVER_PORT, CALLBACK_ENDPPOINT);
         callbackCompleted = false;
         callbackCompletedWithError = false;
@@ -60,7 +62,7 @@ public class TestPushNotification extends TestJaxrsBase {
     }
 
     @AfterMethod(groups = "slow")
-    public void stopServer() throws Exception {
+    public void afterMethod() throws Exception {
         callbackServer.stopServer();
     }
 

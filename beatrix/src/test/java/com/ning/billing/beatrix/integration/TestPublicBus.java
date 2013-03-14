@@ -22,7 +22,6 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
@@ -51,7 +50,8 @@ public class TestPublicBus extends TestIntegrationBase {
 
     @Override
     @BeforeMethod(groups = "slow")
-    public void setupTest() throws Exception {
+    public void beforeMethod() throws Exception {
+        super.beforeMethod();
 
         publicListener = new PublicListener();
 
@@ -77,7 +77,7 @@ public class TestPublicBus extends TestIntegrationBase {
         final int billingDay = 2;
 
         log.info("Beginning test with BCD of " + billingDay);
-        final Account account = createAccountWithPaymentMethod(getAccountData(billingDay));
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(billingDay));
         final UUID accountId = account.getId();
         assertNotNull(account);
 

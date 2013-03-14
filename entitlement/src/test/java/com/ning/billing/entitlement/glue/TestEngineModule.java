@@ -17,6 +17,7 @@
 package com.ning.billing.entitlement.glue;
 
 import org.mockito.Mockito;
+import org.skife.config.ConfigSource;
 
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.api.TestApiListener;
@@ -33,6 +34,9 @@ import com.ning.billing.util.glue.CallContextModule;
 
 public class TestEngineModule extends DefaultEntitlementModule {
 
+    public TestEngineModule(final ConfigSource configSource) {
+        super(configSource);
+    }
 
     @Override
     public void installEntitlementUserApi() {
@@ -42,9 +46,9 @@ public class TestEngineModule extends DefaultEntitlementModule {
     @Override
     protected void configure() {
         super.configure();
-        install(new CatalogModule());
+        install(new CatalogModule(configSource));
         install(new CallContextModule());
-        install(new CacheModule());
+        install(new CacheModule(configSource));
 
         bind(AccountUserApi.class).toInstance(Mockito.mock(AccountUserApi.class));
 

@@ -21,7 +21,6 @@ import java.util.Collection;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import com.ning.billing.api.TestApiListener.NextEvent;
@@ -255,7 +254,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkChangePlanWithOverdueState(baseSubscription, true);
 
         // Add a payment method and set it as default
-        paymentApi.addPaymentMethod(BeatrixIntegrationModule.PLUGIN_NAME, account, true, paymentMethodPlugin, callContext);
+        paymentApi.addPaymentMethod(BeatrixIntegrationModule.NON_OSGI_PLUGIN_NAME, account, true, paymentMethodPlugin, callContext);
 
         // Pay all invoices
         final Collection<Invoice> invoices = invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext);

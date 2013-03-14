@@ -66,18 +66,19 @@ public abstract class AccountTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     protected NonEntityDao nonEntityDao;
 
     @BeforeClass(groups = "slow")
-    protected void setup() throws Exception {
-        final Injector injector = Guice.createInjector(new TestAccountModuleWithEmbeddedDB());
+    protected void beforeClass() throws Exception {
+        final Injector injector = Guice.createInjector(new TestAccountModuleWithEmbeddedDB(configSource));
         injector.injectMembers(this);
     }
 
     @BeforeMethod(groups = "slow")
-    public void setupTest() {
+    public void beforeMethod() throws Exception {
+        super.beforeMethod();
         bus.start();
     }
 
     @AfterMethod(groups = "slow")
-    public void cleanupTest() {
+    public void afterMethod() throws Exception {
         bus.stop();
     }
 }

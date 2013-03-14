@@ -361,8 +361,6 @@ public class AccountResource extends JaxRsResourceBase {
     @Path("/{accountId:\\w+-\\w+-\\w+-\\w+-\\w+}/" + PAYMENTS)
     @Produces(APPLICATION_JSON)
     public Response getPayments(@PathParam("accountId") final String accountId,
-                                @QueryParam(QUERY_PAYMENT_LAST4_CC) final String last4CC,
-                                @QueryParam(QUERY_PAYMENT_NAME_ON_CC) final String nameOnCC,
                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
         final List<Payment> payments = paymentApi.getAccountPayments(UUID.fromString(accountId), context.createContext(request));
         final List<PaymentJsonSimple> result = new ArrayList<PaymentJsonSimple>(payments.size());
@@ -377,6 +375,7 @@ public class AccountResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response createPaymentMethod(final PaymentMethodJson json,
+                                        @PathParam("accountId") final String accountId,
                                         @QueryParam(QUERY_PAYMENT_METHOD_IS_DEFAULT) @DefaultValue("false") final Boolean isDefault,
                                         @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                         @HeaderParam(HDR_REASON) final String reason,
@@ -385,7 +384,7 @@ public class AccountResource extends JaxRsResourceBase {
                                         @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
-        final PaymentMethod data = json.toPaymentMethod();
+        final PaymentMethod data = json.toPaymentMethod(accountId);
         final Account account = accountApi.getAccountById(data.getAccountId(), callContext);
 
         final UUID paymentMethodId = paymentApi.addPaymentMethod(data.getPluginName(), account, isDefault, data.getPluginDetail(), callContext);
@@ -396,14 +395,11 @@ public class AccountResource extends JaxRsResourceBase {
     @Path("/{accountId:" + UUID_PATTERN + "}/" + PAYMENT_METHODS)
     @Produces(APPLICATION_JSON)
     public Response getPaymentMethods(@PathParam("accountId") final String accountId,
-                                      @QueryParam(QUERY_PAYMENT_METHOD_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
-                                      @QueryParam(QUERY_PAYMENT_LAST4_CC) final String last4CC,
-                                      @QueryParam(QUERY_PAYMENT_NAME_ON_CC) final String nameOnCC,
                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException {
         final TenantContext tenantContext = context.createContext(request);
 
         final Account account = accountApi.getAccountById(UUID.fromString(accountId), tenantContext);
-        final List<PaymentMethod> methods = paymentApi.getPaymentMethods(account, withPluginInfo, tenantContext);
+        final List<PaymentMethod> methods = paymentApi.getPaymentMethods(account, tenantContext);
         final List<PaymentMethodJson> json = new ArrayList<PaymentMethodJson>(Collections2.transform(methods, new Function<PaymentMethod, PaymentMethodJson>() {
             @Override
             public PaymentMethodJson apply(final PaymentMethod input) {

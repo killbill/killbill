@@ -16,6 +16,8 @@
 
 package com.ning.billing.osgi.api.config;
 
+import java.io.File;
+
 public interface PluginConfig {
 
     public enum PluginType {
@@ -36,6 +38,11 @@ public interface PluginConfig {
     public String getVersion();
 
     public String getPluginVersionnedName();
+
+    /**
+     * @return root directory of the deployed plugin
+     */
+    public File getPluginVersionRoot();
 
     public PluginLanguage getPluginLanguage();
 }

@@ -16,6 +16,8 @@
 
 package com.ning.billing.analytics.setup;
 
+import org.skife.config.ConfigSource;
+
 import com.ning.billing.analytics.AnalyticsListener;
 import com.ning.billing.analytics.BusinessAccountDao;
 import com.ning.billing.analytics.BusinessSubscriptionTransitionDao;
@@ -49,6 +51,12 @@ import com.ning.billing.analytics.dao.DefaultAnalyticsSanityDao;
 import com.google.inject.AbstractModule;
 
 public class AnalyticsModule extends AbstractModule {
+
+    protected final ConfigSource configSource;
+
+    public AnalyticsModule(final ConfigSource configSource) {
+        this.configSource = configSource;
+    }
 
     @Override
     protected void configure() {

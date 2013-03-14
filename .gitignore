@@ -18,3 +18,4 @@ logs/
 catalog/src/test/resources/CatalogSchema.xsd
 */test-output/
 */src/test/resources/*.jar
+server/load

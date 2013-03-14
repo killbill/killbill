@@ -51,22 +51,22 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
 
     @Override
     @BeforeMethod(groups = "fast")
-    public void setupTest() throws Exception {
-        super.setupTest();
+    public void beforeMethod() throws Exception {
+        super.beforeMethod();
         pluginRetryService.initialize(DefaultPaymentService.SERVICE_NAME);
         pluginRetryService.start();
 
         retryService.initialize(DefaultPaymentService.SERVICE_NAME);
         retryService.start();
 
-        mockPaymentProviderPlugin = (MockPaymentProviderPlugin) registry.getPlugin(null);
+        mockPaymentProviderPlugin = (MockPaymentProviderPlugin) registry.getServiceForName(null);
         mockPaymentProviderPlugin.clear();
     }
 
     @Override
     @AfterMethod(groups = "fast")
-    public void cleanupTest() throws Exception {
-        super.cleanupTest();
+    public void afterMethod() throws Exception {
+        super.afterMethod();
         retryService.stop();
         pluginRetryService.stop();
     }

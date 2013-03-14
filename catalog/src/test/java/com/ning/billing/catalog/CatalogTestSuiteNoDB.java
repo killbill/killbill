@@ -32,8 +32,8 @@ public abstract class CatalogTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     protected VersionedCatalogLoader loader;
 
     @BeforeClass(groups = "fast")
-    protected void setup() throws Exception {
-        final Injector injector = Guice.createInjector(new TestCatalogModuleNoDB());
+    protected void beforeClass() throws Exception {
+        final Injector injector = Guice.createInjector(new TestCatalogModuleNoDB(configSource));
         injector.injectMembers(this);
     }
 }

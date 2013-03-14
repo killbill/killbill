@@ -16,13 +16,14 @@
 
 package com.ning.billing.entitlement.glue;
 
+import org.skife.config.ConfigSource;
+
 import com.ning.billing.GuicyKillbillTestWithEmbeddedDBModule;
 import com.ning.billing.entitlement.api.timeline.RepairEntitlementLifecycleDao;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.engine.dao.MockEntitlementDaoSql;
 import com.ning.billing.entitlement.engine.dao.RepairEntitlementDao;
 import com.ning.billing.util.glue.BusModule;
-import com.ning.billing.util.glue.BusModule.BusType;
 import com.ning.billing.util.glue.CustomFieldModule;
 import com.ning.billing.util.glue.NonEntityDaoModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
@@ -30,6 +31,11 @@ import com.ning.billing.util.glue.NotificationQueueModule;
 import com.google.inject.name.Names;
 
 public class TestEngineModuleWithEmbeddedDB extends TestEngineModule {
+
+    public TestEngineModuleWithEmbeddedDB(final ConfigSource configSource) {
+        super(configSource);
+    }
+
     @Override
     protected void installEntitlementDao() {
         bind(EntitlementDao.class).to(MockEntitlementDaoSql.class).asEagerSingleton();
@@ -47,9 +53,9 @@ public class TestEngineModuleWithEmbeddedDB extends TestEngineModule {
 
         //installDBI();
 
-        install(new NotificationQueueModule());
+        install(new NotificationQueueModule(configSource));
         install(new CustomFieldModule());
-        install(new BusModule(BusType.PERSISTENT));
+        install(new BusModule(configSource));
         super.configure();
     }
 }

@@ -72,8 +72,7 @@ public class BusinessInvoicePaymentDao {
         this.accountDao = accountDao;
     }
 
-    public void invoicePaymentPosted(final UUID accountId, @Nullable final UUID paymentId, @Nullable final String extFirstPaymentRefId,
-                                     @Nullable final String extSecondPaymentRefId, final String message, final InternalCallContext context) {
+    public void invoicePaymentPosted(final UUID accountId, @Nullable final UUID paymentId, final String message, final InternalCallContext context) {
         // Payment attempt with no default payment method. Ignore.
         if (paymentId == null) {
             return;
@@ -97,7 +96,7 @@ public class BusinessInvoicePaymentDao {
 
         PaymentMethod paymentMethod = null;
         try {
-            paymentMethod = paymentApi.getPaymentMethod(account, payment.getPaymentMethodId(), true, context);
+            paymentMethod = paymentApi.getPaymentMethodById(payment.getPaymentMethodId(), context);
         } catch (PaymentApiException e) {
             log.info("For payment {}: payment method {} does not exist", paymentId, payment.getPaymentMethodId());
         }
@@ -114,11 +113,11 @@ public class BusinessInvoicePaymentDao {
                      invoicePayment != null ? invoicePayment.getInvoiceId() : "unknown", paymentId);
         }
 
-        createPayment(account, invoice, invoicePayment, payment, paymentMethod, extFirstPaymentRefId, extSecondPaymentRefId, message, context);
+        createPayment(account, invoice, invoicePayment, payment, paymentMethod, message, context);
     }
 
     private void createPayment(final Account account, @Nullable final Invoice invoice, @Nullable final InvoicePayment invoicePayment, final Payment payment,
-                               @Nullable final PaymentMethod paymentMethod, final String extFirstPaymentRefId, final String extSecondPaymentRefId,
+                               @Nullable final PaymentMethod paymentMethod,
                                final String message, final InternalCallContext context) {
         // paymentMethod may be null if the payment method has been deleted
         final String cardCountry;
@@ -148,6 +147,7 @@ public class BusinessInvoicePaymentDao {
         } else {
             invoicePaymentType = null;
             linkedInvoicePaymentId = null;
+            // TODO PIERRE
             createdDate = clock.getUTCNow();
             updatedDate = createdDate;
         }
@@ -155,8 +155,6 @@ public class BusinessInvoicePaymentDao {
         final BusinessInvoicePaymentModelDao businessInvoicePayment = new BusinessInvoicePaymentModelDao(
                 account.getExternalKey(),
                 payment.getAmount(),
-                extFirstPaymentRefId,
-                extSecondPaymentRefId,
                 cardCountry,
                 cardType,
                 createdDate,

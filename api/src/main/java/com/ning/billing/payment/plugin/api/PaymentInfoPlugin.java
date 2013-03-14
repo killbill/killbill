@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.payment.plugin.api;
 
 import java.math.BigDecimal;
@@ -27,19 +28,33 @@ public interface PaymentInfoPlugin {
         ERROR
     }
 
+    /**
+     * @return payment amount
+     */
     public BigDecimal getAmount();
 
+    /**
+     * @return date when the payment was created
+     */
     public DateTime getCreatedDate();
 
+    /**
+     * @return date when the payment is effective
+     */
     public DateTime getEffectiveDate();
 
+    /**
+     * @return payment status in the gateway
+     */
     public PaymentPluginStatus getStatus();
 
+    /**
+     * @return gateway error, if any
+     */
     public String getGatewayError();
 
+    /**
+     * @return gateway error code, if any
+     */
     public String getGatewayErrorCode();
-
-    public String getExtFirstReferenceId();
-
-    public String getExtSecondReferenceId();
 }

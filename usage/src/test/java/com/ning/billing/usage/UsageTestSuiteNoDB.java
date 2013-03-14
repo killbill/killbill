@@ -29,16 +29,16 @@ import com.google.inject.Injector;
 public class UsageTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
     @BeforeClass(groups = "fast")
-    protected void setup() throws Exception {
-        final Injector injector = Guice.createInjector(new TestUsageModuleNoDB());
+    protected void beforeClass() throws Exception {
+        final Injector injector = Guice.createInjector(new TestUsageModuleNoDB(configSource));
         injector.injectMembers(this);
     }
 
     @BeforeMethod(groups = "fast")
-    public void setupTest() {
+    public void beforeMethod() {
     }
 
     @AfterMethod(groups = "fast")
-    public void cleanupTest() {
+    public void afterMethod() {
     }
 }

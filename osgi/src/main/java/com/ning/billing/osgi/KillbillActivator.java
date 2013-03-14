@@ -16,262 +16,140 @@
 
 package com.ning.billing.osgi;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.util.ArrayList;
+import java.util.Dictionary;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Observable;
+
 import javax.inject.Inject;
+import javax.inject.Named;
+import javax.servlet.Servlet;
+import javax.sql.DataSource;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
+import org.osgi.framework.ServiceEvent;
+import org.osgi.framework.ServiceListener;
+import org.osgi.framework.ServiceReference;
+import org.osgi.service.http.HttpService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.ning.billing.account.api.AccountUserApi;
-import com.ning.billing.analytics.api.sanity.AnalyticsSanityApi;
-import com.ning.billing.analytics.api.user.AnalyticsUserApi;
-import com.ning.billing.beatrix.bus.api.ExternalBus;
-import com.ning.billing.catalog.api.CatalogUserApi;
-import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi;
-import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
-import com.ning.billing.entitlement.api.transfer.EntitlementTransferApi;
-import com.ning.billing.entitlement.api.user.EntitlementUserApi;
-import com.ning.billing.invoice.api.InvoiceMigrationApi;
-import com.ning.billing.invoice.api.InvoicePaymentApi;
-import com.ning.billing.invoice.api.InvoiceUserApi;
-import com.ning.billing.osgi.api.config.PluginConfigServiceApi;
-import com.ning.billing.overdue.OverdueUserApi;
-import com.ning.billing.payment.api.PaymentApi;
-import com.ning.billing.tenant.api.TenantUserApi;
-import com.ning.billing.usage.api.UsageUserApi;
-import com.ning.billing.util.api.AuditUserApi;
-import com.ning.billing.util.api.CustomFieldUserApi;
-import com.ning.billing.util.api.ExportUserApi;
-import com.ning.billing.util.api.TagUserApi;
+import com.ning.billing.osgi.api.OSGIKillbill;
+import com.ning.billing.osgi.api.OSGIPluginProperties;
+import com.ning.billing.osgi.api.OSGIServiceDescriptor;
+import com.ning.billing.osgi.api.OSGIServiceRegistration;
+import com.ning.billing.osgi.glue.DefaultOSGIModule;
+import com.ning.billing.payment.plugin.api.PaymentPluginApi;
+import com.ning.killbill.osgi.libs.killbill.OSGIKillbillRegistrar;
 
-public class KillbillActivator implements BundleActivator {
+import com.google.common.collect.ImmutableList;
 
-    private final AccountUserApi accountUserApi;
-    private final AnalyticsSanityApi analyticsSanityApi;
-    private final AnalyticsUserApi analyticsUserApi;
-    private final CatalogUserApi catalogUserApi;
-    private final EntitlementMigrationApi entitlementMigrationApi;
-    private final EntitlementTimelineApi entitlementTimelineApi;
-    private final EntitlementTransferApi entitlementTransferApi;
-    private final EntitlementUserApi entitlementUserApi;
-    private final InvoiceMigrationApi invoiceMigrationApi;
-    private final InvoicePaymentApi invoicePaymentApi;
-    private final InvoiceUserApi invoiceUserApi;
-    private final OverdueUserApi overdueUserApi;
-    private final PaymentApi paymentApi;
-    private final TenantUserApi tenantUserApi;
-    private final UsageUserApi usageUserApi;
-    private final AuditUserApi auditUserApi;
-    private final CustomFieldUserApi customFieldUserApi;
-    private final ExportUserApi exportUserApi;
-    private final TagUserApi tagUserApi;
+public class KillbillActivator implements BundleActivator, ServiceListener {
 
-    private final ExternalBus externalBus;
-    private final PluginConfigServiceApi configServiceApi;
+    // TODO : Is that ok for system bundle to use Killbill Logger or do we need to LoggerService like we do for any other bundle
+    private final static Logger logger = LoggerFactory.getLogger(KillbillActivator.class);
 
-    private volatile ServiceRegistration accountUserApiRegistration = null;
-    private volatile ServiceRegistration analyticsSanityApiRegistration = null;
-    private volatile ServiceRegistration analyticsUserApiRegistration = null;
-    private volatile ServiceRegistration catalogUserApiRegistration = null;
-    private volatile ServiceRegistration entitlementMigrationApiRegistration = null;
-    private volatile ServiceRegistration entitlementTimelineApiRegistration = null;
-    private volatile ServiceRegistration entitlementTransferApiRegistration = null;
-    private volatile ServiceRegistration entitlementUserApiRegistration = null;
-    private volatile ServiceRegistration invoiceMigrationApiRegistration = null;
-    private volatile ServiceRegistration invoicePaymentApiRegistration = null;
-    private volatile ServiceRegistration invoiceUserApiRegistration = null;
-    private volatile ServiceRegistration meterUserApiRegistration = null;
-    private volatile ServiceRegistration overdueUserApiRegistration = null;
-    private volatile ServiceRegistration paymentApiRegistration = null;
-    private volatile ServiceRegistration tenantUserApiRegistration = null;
-    private volatile ServiceRegistration usageUserApiRegistration = null;
-    private volatile ServiceRegistration auditUserApiRegistration = null;
-    private volatile ServiceRegistration customFieldUserApiRegistration = null;
-    private volatile ServiceRegistration exportUserApiRegistration = null;
-    private volatile ServiceRegistration tagUserApiRegistration = null;
+    private final OSGIKillbill osgiKillbill;
+    private final HttpService defaultHttpService;
+    private final DataSource dataSource;
+    private final KillbillEventObservable observable;
+    private final OSGIKillbillRegistrar registrar;
 
-    private volatile ServiceRegistration externalBusRegistration = null;
-    private volatile ServiceRegistration configServiceApiRegistration = null;
+    private final List<OSGIServiceRegistration> allRegistrationHandlers;
+
+
+    private BundleContext context = null;
 
     @Inject
-    public KillbillActivator(final AccountUserApi accountUserApi,
-                             final AnalyticsSanityApi analyticsSanityApi,
-                             final AnalyticsUserApi analyticsUserApi,
-                             final CatalogUserApi catalogUserApi,
-                             final EntitlementMigrationApi entitlementMigrationApi,
-                             final EntitlementTimelineApi entitlementTimelineApi,
-                             final EntitlementTransferApi entitlementTransferApi,
-                             final EntitlementUserApi entitlementUserApi,
-                             final InvoiceMigrationApi invoiceMigrationApi,
-                             final InvoicePaymentApi invoicePaymentApi,
-                             final InvoiceUserApi invoiceUserApi,
-                             final OverdueUserApi overdueUserApi,
-                             final PaymentApi paymentApi,
-                             final TenantUserApi tenantUserApi,
-                             final UsageUserApi usageUserApi,
-                             final AuditUserApi auditUserApi,
-                             final CustomFieldUserApi customFieldUserApi,
-                             final ExportUserApi exportUserApi,
-                             final TagUserApi tagUserApi,
-                             final ExternalBus externalBus,
-                             final PluginConfigServiceApi configServiceApi) {
-        this.accountUserApi = accountUserApi;
-        this.analyticsSanityApi = analyticsSanityApi;
-        this.analyticsUserApi = analyticsUserApi;
-        this.catalogUserApi = catalogUserApi;
-        this.entitlementMigrationApi = entitlementMigrationApi;
-        this.entitlementTimelineApi = entitlementTimelineApi;
-        this.entitlementTransferApi = entitlementTransferApi;
-        this.entitlementUserApi = entitlementUserApi;
-        this.invoiceMigrationApi = invoiceMigrationApi;
-        this.invoicePaymentApi = invoicePaymentApi;
-        this.invoiceUserApi = invoiceUserApi;
-        this.overdueUserApi = overdueUserApi;
-        this.paymentApi = paymentApi;
-        this.tenantUserApi = tenantUserApi;
-        this.usageUserApi = usageUserApi;
-        this.auditUserApi = auditUserApi;
-        this.customFieldUserApi = customFieldUserApi;
-        this.exportUserApi = exportUserApi;
-        this.tagUserApi = tagUserApi;
-        this.externalBus = externalBus;
-        this.configServiceApi = configServiceApi;
+    public KillbillActivator(@Named(DefaultOSGIModule.OSGI_NAMED) final DataSource dataSource,
+                             final OSGIKillbill osgiKillbill,
+                             final HttpService defaultHttpService,
+                             final KillbillEventObservable observable,
+                             final OSGIServiceRegistration<Servlet> servletRouter,
+                             final OSGIServiceRegistration<PaymentPluginApi> paymentProviderPluginRegistry) {
+        this.osgiKillbill = osgiKillbill;
+        this.defaultHttpService = defaultHttpService;
+        this.dataSource = dataSource;
+        this.observable = observable;
+        this.registrar = new OSGIKillbillRegistrar();
+        this.allRegistrationHandlers = ImmutableList.<OSGIServiceRegistration>of(servletRouter, paymentProviderPluginRegistry);
     }
 
     @Override
     public void start(final BundleContext context) throws Exception {
-        registerServices(context);
-    }
 
-    private void registerServices(final BundleContext context) {
-        accountUserApiRegistration = context.registerService(AccountUserApi.class.getName(), accountUserApi, null);
-        analyticsSanityApiRegistration = context.registerService(AnalyticsSanityApi.class.getName(), analyticsSanityApi, null);
-        analyticsUserApiRegistration = context.registerService(AnalyticsUserApi.class.getName(), analyticsUserApi, null);
-        catalogUserApiRegistration = context.registerService(CatalogUserApi.class.getName(), catalogUserApi, null);
-        entitlementMigrationApiRegistration = context.registerService(EntitlementMigrationApi.class.getName(), entitlementMigrationApi, null);
-        entitlementTimelineApiRegistration = context.registerService(EntitlementTimelineApi.class.getName(), entitlementTimelineApi, null);
-        entitlementTransferApiRegistration = context.registerService(EntitlementTransferApi.class.getName(), entitlementTransferApi, null);
-        entitlementUserApiRegistration = context.registerService(EntitlementUserApi.class.getName(), entitlementUserApi, null);
-        invoiceMigrationApiRegistration = context.registerService(InvoiceMigrationApi.class.getName(), invoiceMigrationApi, null);
-        invoicePaymentApiRegistration = context.registerService(InvoicePaymentApi.class.getName(), invoicePaymentApi, null);
-        invoiceUserApiRegistration = context.registerService(InvoiceUserApi.class.getName(), invoiceUserApi, null);
-        overdueUserApiRegistration = context.registerService(OverdueUserApi.class.getName(), overdueUserApi, null);
-        paymentApiRegistration = context.registerService(PaymentApi.class.getName(), paymentApi, null);
-        tenantUserApiRegistration = context.registerService(TenantUserApi.class.getName(), tenantUserApi, null);
-        usageUserApiRegistration = context.registerService(UsageUserApi.class.getName(), usageUserApi, null);
-        auditUserApiRegistration = context.registerService(AuditUserApi.class.getName(), auditUserApi, null);
-        customFieldUserApiRegistration = context.registerService(CustomFieldUserApi.class.getName(), customFieldUserApi, null);
-        exportUserApiRegistration = context.registerService(ExportUserApi.class.getName(), exportUserApi, null);
-        tagUserApiRegistration = context.registerService(TagUserApi.class.getName(), tagUserApi, null);
+        this.context = context;
+        final Dictionary props = new Hashtable();
+        props.put(OSGIPluginProperties.PLUGIN_NAME_PROP, "killbill");
 
-        externalBusRegistration = context.registerService(ExternalBus.class.getName(), externalBus, null);
-        configServiceApiRegistration = context.registerService(PluginConfigServiceApi.class.getName(), configServiceApi, null);
+        observable.register();
+
+        registrar.registerService(context, OSGIKillbill.class, osgiKillbill, props);
+        registrar.registerService(context, HttpService.class, defaultHttpService, props);
+        registrar.registerService(context, Observable.class, observable, props);
+        registrar.registerService(context, DataSource.class, dataSource, props);
+
+        context.addServiceListener(this);
     }
 
     @Override
     public void stop(final BundleContext context) throws Exception {
-        if (accountUserApiRegistration != null) {
-            accountUserApiRegistration.unregister();
-            accountUserApiRegistration = null;
-        }
-        if (analyticsSanityApiRegistration != null) {
-            analyticsSanityApiRegistration.unregister();
-            analyticsSanityApiRegistration = null;
-        }
-        if (analyticsUserApiRegistration != null) {
-            analyticsUserApiRegistration.unregister();
-            analyticsUserApiRegistration = null;
-        }
-        if (catalogUserApiRegistration != null) {
-            catalogUserApiRegistration.unregister();
-            catalogUserApiRegistration = null;
-        }
-        if (entitlementMigrationApiRegistration != null) {
-            entitlementMigrationApiRegistration.unregister();
-            entitlementMigrationApiRegistration = null;
-        }
-        if (entitlementTimelineApiRegistration != null) {
-            entitlementTimelineApiRegistration.unregister();
-            entitlementTimelineApiRegistration = null;
-        }
-        if (entitlementTransferApiRegistration != null) {
-            entitlementTransferApiRegistration.unregister();
-            entitlementTransferApiRegistration = null;
-        }
-        if (entitlementUserApiRegistration != null) {
-            entitlementUserApiRegistration.unregister();
-            entitlementUserApiRegistration = null;
-        }
-        if (invoiceMigrationApiRegistration != null) {
-            invoiceMigrationApiRegistration.unregister();
-            invoiceMigrationApiRegistration = null;
-        }
-        if (invoicePaymentApiRegistration != null) {
-            invoicePaymentApiRegistration.unregister();
-            invoicePaymentApiRegistration = null;
-        }
-        if (invoiceUserApiRegistration != null) {
-            invoiceUserApiRegistration.unregister();
-            invoiceUserApiRegistration = null;
-        }
-        if (meterUserApiRegistration != null) {
-            meterUserApiRegistration.unregister();
-            meterUserApiRegistration = null;
-        }
-        if (overdueUserApiRegistration != null) {
-            overdueUserApiRegistration.unregister();
-            overdueUserApiRegistration = null;
-        }
-        if (paymentApiRegistration != null) {
-            paymentApiRegistration.unregister();
-            paymentApiRegistration = null;
-        }
-        if (tenantUserApiRegistration != null) {
-            tenantUserApiRegistration.unregister();
-            tenantUserApiRegistration = null;
-        }
-        if (usageUserApiRegistration != null) {
-            usageUserApiRegistration.unregister();
-            usageUserApiRegistration = null;
-        }
-        if (auditUserApiRegistration != null) {
-            auditUserApiRegistration.unregister();
-            auditUserApiRegistration = null;
-        }
-        if (customFieldUserApiRegistration != null) {
-            customFieldUserApiRegistration.unregister();
-            customFieldUserApiRegistration = null;
-        }
-        if (exportUserApiRegistration != null) {
-            exportUserApiRegistration.unregister();
-            exportUserApiRegistration = null;
-        }
-        if (tagUserApiRegistration != null) {
-            tagUserApiRegistration.unregister();
-            tagUserApiRegistration = null;
-        }
-        if (externalBusRegistration != null) {
-            externalBusRegistration.unregister();
-            externalBusRegistration = null;
+        this.context = null;
+        context.removeServiceListener(this);
+        observable.unregister();
+        registrar.unregisterAll();
+    }
+
+    @Override
+    public void serviceChanged(final ServiceEvent event) {
+        if (context == null || (event.getType() != ServiceEvent.REGISTERED && event.getType() != ServiceEvent.UNREGISTERING)) {
+            // We are not initialized or uninterested
+            return;
         }
 
-        if (configServiceApiRegistration != null) {
-            configServiceApiRegistration.unregister();
-            configServiceApiRegistration = null;
+        final ServiceReference serviceReference = event.getServiceReference();
+        for (OSGIServiceRegistration cur : allRegistrationHandlers) {
+            if (listenForServiceType(serviceReference, event.getType(), cur.getServiceType(), cur)) {
+                break;
+            }
         }
     }
 
-    //    public PaymentPluginApi getPaymentPluginApiForPlugin(final String pluginName) {
-    //        try {
-    //            final ServiceReference<PaymentPluginApi>[] paymentApiReferences = (ServiceReference<PaymentPluginApi>[]) context.getServiceReferences(PaymentPluginApi.class.getName(), "(name=hello)");
-    //            final PaymentPluginApi pluginApi = context.getService(paymentApiReferences[0]);
-    //            return pluginApi;
-    //        } catch (InvalidSyntaxException e) {
-    //            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-    //        } finally {
-    //            //context.ungetService(paymentApiReferences[0]);
-    //            // STEPH TODO leak reference here
-    //        }
-    //        return null;
-    //    }
+    private <T> boolean listenForServiceType(final ServiceReference serviceReference, final int eventType, final Class<T> claz, final OSGIServiceRegistration<T> registration) {
+        // Make sure we can retrieve the plugin name
+        final String serviceName = (String) serviceReference.getProperty(OSGIPluginProperties.PLUGIN_NAME_PROP);
+        if (serviceName == null) {
+            // Quite common for non Killbill bundles
+            logger.debug("Ignoring registered OSGI service {} with no {} property", claz.getName(), OSGIPluginProperties.PLUGIN_NAME_PROP);
+            return true;
+        }
+
+        final Object theServiceObject = context.getService(serviceReference);
+        // Is that for us? We look for a subclass here for greater flexibility (e.g. HttpServlet for a Servlet service)
+        if (theServiceObject == null || !claz.isAssignableFrom(theServiceObject.getClass())) {
+            return false;
+        }
+        final T theService = (T) theServiceObject;
+
+        final String serviceInfo = (String) serviceReference.getProperty(OSGIPluginProperties.PLUGIN_SERVICE_INFO);
+        final OSGIServiceDescriptor desc = new DefaultOSGIServiceDescriptor(serviceReference.getBundle().getSymbolicName(), serviceName, serviceInfo, claz.getName());
+        switch (eventType) {
+            case ServiceEvent.REGISTERED:
+                final T wrappedService = ContextClassLoaderHelper.getWrappedServiceWithCorrectContextClassLoader(theService);
+                registration.registerService(desc, wrappedService);
+                break;
+            case ServiceEvent.UNREGISTERING:
+                registration.unregisterService(desc.getServiceName());
+                break;
+            default:
+                break;
+        }
+        return true;
+    }
 }

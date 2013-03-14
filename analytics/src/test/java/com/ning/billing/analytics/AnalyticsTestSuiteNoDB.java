@@ -122,18 +122,18 @@ public abstract class AnalyticsTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB 
     protected BusinessTagDao tagDao;
 
     @BeforeClass(groups = "fast")
-    protected void setup() throws Exception {
-        final Injector injector = Guice.createInjector(new TestAnalyticsModuleNoDB());
+    protected void beforeClass() throws Exception {
+        final Injector injector = Guice.createInjector(new TestAnalyticsModuleNoDB(configSource));
         injector.injectMembers(this);
     }
 
     @BeforeMethod(groups = "fast")
-    public void setupTest() {
+    public void beforeMethod() throws Exception {
         bus.start();
     }
 
     @AfterMethod(groups = "fast")
-    public void cleanupTest() {
+    public void afterMethod() throws Exception {
         bus.stop();
     }
 }

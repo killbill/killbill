@@ -46,9 +46,10 @@ public class TestHtmlInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
     private HtmlInvoiceGenerator g;
 
+    @Override
     @BeforeClass(groups = "fast")
-    public void setup() throws Exception {
-        super.setup();
+    public void beforeClass() throws Exception {
+        super.beforeClass();
         final TranslatorConfig config = new ConfigurationObjectFactory(System.getProperties()).build(TranslatorConfig.class);
         final TemplateEngine templateEngine = new MustacheTemplateEngine();
         final InvoiceFormatterFactory factory = new DefaultInvoiceFormatterFactory();

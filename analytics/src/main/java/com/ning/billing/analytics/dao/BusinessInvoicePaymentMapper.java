@@ -61,7 +61,7 @@ public class BusinessInvoicePaymentMapper implements ResultSetMapper<BusinessInv
             linkedInvoicePaymentId = null;
         }
 
-        return new BusinessInvoicePaymentModelDao(accountKey, amount, extFirstPaymentRefId, extSecondPaymentRefId, cardCountry, cardType, createdDate, currency,
+        return new BusinessInvoicePaymentModelDao(accountKey, amount, cardCountry, cardType, createdDate, currency,
                                                   effectiveDate, invoiceId, paymentError, paymentId, paymentMethod, paymentType,
                                                   pluginName, processingStatus, requestedAmount, updatedDate, invoicePaymentType,
                                                   linkedInvoicePaymentId);

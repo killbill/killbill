@@ -30,6 +30,8 @@ import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 
+import com.google.common.collect.ImmutableList;
+
 public class MockPaymentDao implements PaymentDao {
 
     private final Map<UUID, PaymentModelDao> payments = new HashMap<UUID, PaymentModelDao>();
@@ -55,7 +57,7 @@ public class MockPaymentDao implements PaymentDao {
 
     @Override
     public void updateStatusForPaymentWithAttempt(final UUID paymentId, final PaymentStatus paymentStatus, final String gatewayErrorCode,
-                                                  final String gatewayErrorMsg, final String extFirstPaymentRefId, final String extSecondPaymentRefId,
+                                                  final String gatewayErrorMsg,
                                                   final UUID attemptId, final InternalCallContext context) {
         synchronized (this) {
             final PaymentModelDao entry = payments.remove(paymentId);
@@ -127,11 +129,6 @@ public class MockPaymentDao implements PaymentDao {
     }
 
     @Override
-    public List<PaymentMethodModelDao> refreshPaymentMethods(final UUID accountId, final List<PaymentMethodModelDao> newPaymentMethods, final InternalCallContext context) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public PaymentMethodModelDao getPaymentMethod(final UUID paymentMethodId, final InternalTenantContext context) {
         for (final PaymentMethodModelDao cur : paymentMethods) {
             if (cur.getId().equals(paymentMethodId)) {
@@ -162,6 +159,11 @@ public class MockPaymentDao implements PaymentDao {
                 break;
             }
         }
+    }
+
+    @Override
+    public List<PaymentMethodModelDao> refreshPaymentMethods(final UUID accountId, final List<PaymentMethodModelDao> paymentMethods, final InternalCallContext context) {
+        return ImmutableList.<PaymentMethodModelDao>of();
     }
 
     @Override

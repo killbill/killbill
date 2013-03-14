@@ -16,6 +16,8 @@
 
 package com.ning.billing.util.glue;
 
+import org.skife.config.ConfigSource;
+
 import com.ning.billing.GuicyKillbillTestNoDBModule;
 import com.ning.billing.mock.glue.MockGlobalLockerModule;
 import com.ning.billing.mock.glue.MockNonEntityDaoModule;
@@ -28,6 +30,9 @@ import com.ning.billing.util.bus.InMemoryBusModule;
 
 public class TestUtilModuleNoDB extends TestUtilModule {
 
+    public TestUtilModuleNoDB(final ConfigSource configSource) {
+        super(configSource);
+    }
 
     private void installAuditMock() {
         bind(AuditDao.class).toInstance(new MockAuditDao());
@@ -41,8 +46,8 @@ public class TestUtilModuleNoDB extends TestUtilModule {
 
         install(new MockNonEntityDaoModule());
         install(new MockGlobalLockerModule());
-        install(new InMemoryBusModule());
-        install(new MockNotificationQueueModule());
+        install(new InMemoryBusModule(configSource));
+        install(new MockNotificationQueueModule(configSource));
 
         installAuditMock();
     }

@@ -16,7 +16,13 @@
 
 package com.ning.billing.usage.glue;
 
+import org.skife.config.ConfigSource;
+
 public class TestUsageModule extends UsageModule {
+
+    public TestUsageModule(final ConfigSource configSource) {
+        super(configSource);
+    }
 
     @Override
     protected void configure() {

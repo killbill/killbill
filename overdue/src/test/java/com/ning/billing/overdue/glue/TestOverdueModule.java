@@ -16,10 +16,7 @@
 
 package com.ning.billing.overdue.glue;
 
-import java.util.Properties;
-
 import org.skife.config.ConfigSource;
-import org.skife.config.SimplePropertyConfigSource;
 
 import com.ning.billing.mock.glue.MockAccountModule;
 import com.ning.billing.mock.glue.MockEntitlementModule;
@@ -36,17 +33,8 @@ import com.ning.billing.util.glue.CustomFieldModule;
 
 public class TestOverdueModule extends DefaultOverdueModule {
 
-    protected final ConfigSource configSource;
-
-    public TestOverdueModule() {
-        final Properties properties = new Properties(System.getProperties());
-        // Speed up the bus
-        properties.put("killbill.billing.util.persistent.bus.sleep", "10");
-        properties.put("killbill.billing.util.persistent.bus.nbThreads", "1");
-        configSource = new SimplePropertyConfigSource(properties);
-
-        // Ignore ehcache checks. Unfortunately, ehcache looks at system properties directly...
-        System.setProperty("net.sf.ehcache.skipUpdateCheck", "true");
+    public TestOverdueModule(final ConfigSource configSource) {
+        super(configSource);
     }
 
     @Override
@@ -54,10 +42,10 @@ public class TestOverdueModule extends DefaultOverdueModule {
         super.configure();
 
         install(new AuditModule());
-        install(new CacheModule());
+        install(new CacheModule(configSource));
         install(new CallContextModule());
         install(new CustomFieldModule());
-        install(new EmailModule());
+        install(new EmailModule(configSource));
         install(new MockAccountModule());
         install(new MockEntitlementModule());
         install(new MockInvoiceModule());

@@ -16,11 +16,8 @@
 
 package com.ning.billing.catalog.glue;
 
-import java.util.Properties;
-
 import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
-import org.skife.config.SimplePropertyConfigSource;
 
 import com.ning.billing.catalog.DefaultCatalogService;
 import com.ning.billing.catalog.api.CatalogService;
@@ -34,15 +31,7 @@ import com.google.inject.AbstractModule;
 
 public class CatalogModule extends AbstractModule {
 
-    final ConfigSource configSource;
-
-    public CatalogModule() {
-        this(System.getProperties());
-    }
-
-    public CatalogModule(final Properties properties) {
-        this(new SimplePropertyConfigSource(properties));
-    }
+    protected final ConfigSource configSource;
 
     public CatalogModule(final ConfigSource configSource) {
         this.configSource = configSource;

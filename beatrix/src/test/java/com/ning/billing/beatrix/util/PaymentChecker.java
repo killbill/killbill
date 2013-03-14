@@ -53,7 +53,11 @@ public class PaymentChecker {
         final List<Payment> payments = paymentApi.getAccountPayments(accountId, context);
         Assert.assertEquals(payments.size(), paymentOrderingNumber);
         final Payment payment = payments.get(paymentOrderingNumber - 1);
-        checkPayment(accountId, payment, context, expected);
+        if (payment.getPaymentStatus() == PaymentStatus.UNKNOWN) {
+            checkPaymentNoAuditForRuntimeException(accountId, payment, context, expected);
+        } else {
+            checkPayment(accountId, payment, context, expected);
+        }
         return payment;
     }
 
@@ -64,6 +68,14 @@ public class PaymentChecker {
         Assert.assertEquals(payment.getInvoiceId(), expected.getInvoiceId());
         Assert.assertEquals(payment.getCurrency(), expected.getCurrency());
         auditChecker.checkPaymentCreated(payment, context);
+    }
+
+    private void checkPaymentNoAuditForRuntimeException(final UUID accountId, final Payment payment, final CallContext context, final ExpectedPaymentCheck expected) {
+        Assert.assertEquals(payment.getAccountId(), accountId);
+        Assert.assertTrue(payment.getAmount().compareTo(expected.getAmount()) == 0);
+        Assert.assertEquals(payment.getPaymentStatus(),expected.getStatus());
+        Assert.assertEquals(payment.getInvoiceId(), expected.getInvoiceId());
+        Assert.assertEquals(payment.getCurrency(), expected.getCurrency());
     }
 
     public static class ExpectedPaymentCheck {

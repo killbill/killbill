@@ -29,16 +29,16 @@ import com.google.inject.Injector;
 public class UsageTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWithEmbeddedDB {
 
     @BeforeClass(groups = "slow")
-    protected void setup() throws Exception {
-        final Injector injector = Guice.createInjector(new TestUsageModuleWithEmbeddedDB());
+    protected void beforeClass() throws Exception {
+        final Injector injector = Guice.createInjector(new TestUsageModuleWithEmbeddedDB(configSource));
         injector.injectMembers(this);
     }
 
     @BeforeMethod(groups = "fast")
-    public void setupTest() {
+    public void beforeMethod() throws Exception {
     }
 
     @AfterMethod(groups = "fast")
-    public void cleanupTest() {
+    public void afterMethod() {
     }
 }

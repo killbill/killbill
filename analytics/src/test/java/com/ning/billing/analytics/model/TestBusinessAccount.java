@@ -32,7 +32,8 @@ public class TestBusinessAccount extends AnalyticsTestSuiteNoDB {
     private BusinessAccountModelDao account;
 
     @BeforeMethod(groups = "fast")
-    public void setUp() throws Exception {
+    public void beforeMethod() throws Exception {
+        super.beforeMethod();
         account = new BusinessAccountModelDao(UUID.randomUUID(), "pierre", UUID.randomUUID().toString(), BigDecimal.ONE, clock.getUTCToday(),
                                               BigDecimal.TEN, "ERROR_NOT_ENOUGH_FUNDS", "CreditCard", "Visa", "", UUID.randomUUID().toString(),
                                               clock.getUTCNow(), clock.getUTCNow());

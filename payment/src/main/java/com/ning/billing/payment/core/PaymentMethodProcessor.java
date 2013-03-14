@@ -29,19 +29,20 @@ import org.slf4j.LoggerFactory;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.osgi.api.OSGIServiceRegistration;
 import com.ning.billing.payment.api.DefaultPaymentMethod;
-import com.ning.billing.payment.api.DefaultPaymentMethodPlugin;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.PaymentMethod;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.payment.api.PaymentMethodPlugin.PaymentMethodKVInfo;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.dao.PaymentMethodModelDao;
+import com.ning.billing.payment.plugin.api.PaymentMethodInfoPlugin;
 import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 import com.ning.billing.payment.plugin.api.PaymentPluginApiException;
 import com.ning.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
+import com.ning.billing.payment.provider.DefaultPaymentMethodInfoPlugin;
 import com.ning.billing.payment.provider.ExternalPaymentProviderPlugin;
-import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.globallocker.GlobalLocker;
@@ -50,6 +51,7 @@ import com.ning.billing.util.svcapi.tag.TagInternalApi;
 import com.ning.billing.util.svcsapi.bus.InternalBus;
 
 import com.google.common.base.Function;
+import com.google.common.base.Objects;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -62,7 +64,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
     private static final Logger log = LoggerFactory.getLogger(PaymentMethodProcessor.class);
 
     @Inject
-    public PaymentMethodProcessor(final PaymentProviderPluginRegistry pluginRegistry,
+    public PaymentMethodProcessor(final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry,
                                   final AccountInternalApi accountInternalApi,
                                   final InternalBus eventBus,
                                   final PaymentDao paymentDao,
@@ -73,29 +75,10 @@ public class PaymentMethodProcessor extends ProcessorBase {
     }
 
     public Set<String> getAvailablePlugins() {
-        return pluginRegistry.getRegisteredPluginNames();
+        return pluginRegistry.getAllServices();
     }
 
-    public String initializeAccountPlugin(final String pluginName, final Account account, final InternalCallContext context) throws PaymentApiException {
-
-        return new WithAccountLock<String>().processAccountWithLock(locker, account.getExternalKey(), new WithAccountLockCallback<String>() {
-
-            @Override
-            public String doOperation() throws PaymentApiException {
-                PaymentPluginApi pluginApi = null;
-                try {
-                    // STEPH do we want to really have a default or fail?? probably fail
-                    pluginApi = pluginRegistry.getPlugin(pluginName);
-                    return pluginApi.createPaymentProviderAccount(account, context.toCallContext());
-                } catch (PaymentPluginApiException e) {
-                    throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_ACCOUNT_INIT,
-                                                  account.getId(), pluginApi != null ? pluginApi.getName() : null, e.getErrorMessage());
-                }
-            }
-        });
-    }
-
-    public UUID addPaymentMethod(final String pluginName, final Account account,
+    public UUID addPaymentMethod(final String paymentPluginServiceName, final Account account,
                                  final boolean setDefault, final PaymentMethodPlugin paymentMethodProps, final InternalCallContext context)
             throws PaymentApiException {
 
@@ -106,11 +89,14 @@ public class PaymentMethodProcessor extends ProcessorBase {
                 PaymentMethod pm = null;
                 PaymentPluginApi pluginApi = null;
                 try {
-                    pluginApi = pluginRegistry.getPlugin(pluginName);
+                    pluginApi = pluginRegistry.getServiceForName(paymentPluginServiceName);
+                    // TODO PIERRE Should we really use the plugin instance name here?
+                    // We default to the plugin name when paymentPluginServiceName is null (i.e. for the default plugin name)
+                    final String pluginName = Objects.firstNonNull(paymentPluginServiceName, pluginApi.getName());
                     pm = new DefaultPaymentMethod(account.getId(), pluginName, paymentMethodProps);
-                    final String externalId = pluginApi.addPaymentMethod(account.getExternalKey(), paymentMethodProps, setDefault, context.toCallContext());
+                    pluginApi.addPaymentMethod(account.getId(), pm.getId(), paymentMethodProps, setDefault, context.toCallContext());
                     final PaymentMethodModelDao pmModel = new PaymentMethodModelDao(pm.getId(), pm.getCreatedDate(), pm.getUpdatedDate(),
-                                                                                    pm.getAccountId(), pm.getPluginName(), pm.isActive(), externalId);
+                                                                                    pm.getAccountId(), pm.getPluginName(), pm.isActive());
                     paymentDao.insertPaymentMethod(pmModel, context);
 
                     if (setDefault) {
@@ -127,79 +113,39 @@ public class PaymentMethodProcessor extends ProcessorBase {
         });
     }
 
-    public List<PaymentMethod> refreshPaymentMethods(final String pluginName, final Account account, final InternalCallContext context)
-            throws PaymentApiException {
-        // Don't hold the account lock while fetching the payment methods
-        final PaymentPluginApi pluginApi = pluginRegistry.getPlugin(pluginName);
-        final List<PaymentMethodPlugin> pluginPms;
-        try {
-            pluginPms = pluginApi.getPaymentMethodDetails(account.getExternalKey(), context.toCallContext());
-            // The method should never return null by convention, but let's not trust the plugin...
-            if (pluginPms == null) {
-                return ImmutableList.<PaymentMethod>of();
-            }
-        } catch (PaymentPluginApiException e) {
-            // STEPH all errors should also take a pluginName
-            throw new PaymentApiException(ErrorCode.PAYMENT_REFRESH_PAYMENT_METHOD, account.getId(), e.getErrorMessage());
-        }
-
-        return new WithAccountLock<List<PaymentMethod>>().processAccountWithLock(locker, account.getExternalKey(), new WithAccountLockCallback<List<PaymentMethod>>() {
-
-            @Override
-            public List<PaymentMethod> doOperation() throws PaymentApiException {
-                final List<PaymentMethodModelDao> finalPaymentMethods = new ArrayList<PaymentMethodModelDao>();
-                for (final PaymentMethodPlugin cur : pluginPms) {
-                    final PaymentMethod input = new DefaultPaymentMethod(account.getId(), pluginName, cur);
-                    final PaymentMethodModelDao pmModel = new PaymentMethodModelDao(input.getId(), input.getCreatedDate(), input.getUpdatedDate(),
-                                                                                    input.getAccountId(), input.getPluginName(), input.isActive(),
-                                                                                    input.getPluginDetail().getExternalPaymentMethodId());
-                    finalPaymentMethods.add(pmModel);
-                }
-
-                final List<PaymentMethodModelDao> refreshedPaymentMethods = paymentDao.refreshPaymentMethods(account.getId(),
-                                                                                                             finalPaymentMethods,
-                                                                                                             context);
-                return ImmutableList.<PaymentMethod>copyOf(Collections2.transform(refreshedPaymentMethods, new Function<PaymentMethodModelDao, PaymentMethod>() {
-                    @Override
-                    public PaymentMethod apply(final PaymentMethodModelDao input) {
-                        return new DefaultPaymentMethod(input, getPaymentMethodDetail(pluginPms, input.getExternalId()));
-                    }
-                }));
-            }
-        });
-    }
-
-    public List<PaymentMethod> getPaymentMethods(final Account account, final boolean withPluginDetail, final InternalTenantContext context) throws PaymentApiException {
+    public List<PaymentMethod> getPaymentMethods(final Account account, final InternalTenantContext context) throws PaymentApiException {
 
         final List<PaymentMethodModelDao> paymentMethodModels = paymentDao.getPaymentMethods(account.getId(), context);
         if (paymentMethodModels.size() == 0) {
             return Collections.emptyList();
         }
-        return getPaymentMethodInternal(paymentMethodModels, account.getId(), account.getExternalKey(), withPluginDetail, context);
+        return getPaymentMethodInternal(paymentMethodModels);
     }
 
-    public PaymentMethod getPaymentMethodById(final UUID paymentMethodId, final InternalTenantContext context)
+    public PaymentMethod getPaymentMethodById(final UUID paymentMethodId, final boolean withPluginInfo, final InternalTenantContext context)
             throws PaymentApiException {
         final PaymentMethodModelDao paymentMethodModel = paymentDao.getPaymentMethod(paymentMethodId, context);
         if (paymentMethodModel == null) {
             throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, paymentMethodId);
         }
-        return new DefaultPaymentMethod(paymentMethodModel, null);
-    }
 
-    public PaymentMethod getPaymentMethod(final Account account, final UUID paymentMethodId, final boolean withPluginDetail, final InternalTenantContext context)
-            throws PaymentApiException {
-        final PaymentMethodModelDao paymentMethodModel = paymentDao.getPaymentMethod(paymentMethodId, context);
-        if (paymentMethodModel == null) {
-            throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, paymentMethodId);
+        final PaymentMethodPlugin paymentMethodPlugin;
+        if (withPluginInfo) {
+            try {
+                final PaymentPluginApi pluginApi = pluginRegistry.getServiceForName(paymentMethodModel.getPluginName());
+                paymentMethodPlugin = pluginApi.getPaymentMethodDetail(paymentMethodModel.getAccountId(), paymentMethodId, context.toTenantContext());
+            } catch (PaymentPluginApiException e) {
+                throw new PaymentApiException(ErrorCode.PAYMENT_GET_PAYMENT_METHODS, paymentMethodModel.getAccountId(), paymentMethodId);
+            }
+        } else {
+            paymentMethodPlugin = null;
         }
-        final List<PaymentMethod> result = getPaymentMethodInternal(Collections.singletonList(paymentMethodModel), account.getId(),
-                                                                    account.getExternalKey(), withPluginDetail, context);
-        return (result.size() == 0) ? null : result.get(0);
+
+        return new DefaultPaymentMethod(paymentMethodModel, paymentMethodPlugin);
     }
 
     public PaymentMethod getExternalPaymentMethod(final Account account, final InternalTenantContext context) throws PaymentApiException {
-        final List<PaymentMethod> paymentMethods = getPaymentMethods(account, false, context);
+        final List<PaymentMethod> paymentMethods = getPaymentMethods(account, context);
         for (final PaymentMethod paymentMethod : paymentMethods) {
             if (ExternalPaymentProviderPlugin.PLUGIN_NAME.equals(paymentMethod.getPluginName())) {
                 return paymentMethod;
@@ -217,68 +163,18 @@ public class PaymentMethodProcessor extends ProcessorBase {
             addPaymentMethod(ExternalPaymentProviderPlugin.PLUGIN_NAME, account, false, props, context);
         }
 
-        return (ExternalPaymentProviderPlugin) pluginRegistry.getPlugin(ExternalPaymentProviderPlugin.PLUGIN_NAME);
+        return (ExternalPaymentProviderPlugin) pluginRegistry.getServiceForName(ExternalPaymentProviderPlugin.PLUGIN_NAME);
     }
 
-    private List<PaymentMethod> getPaymentMethodInternal(final List<PaymentMethodModelDao> paymentMethodModels, final UUID accountId,
-                                                         final String accountKey, final boolean withPluginDetail, final InternalTenantContext context)
+    private List<PaymentMethod> getPaymentMethodInternal(final List<PaymentMethodModelDao> paymentMethodModels)
             throws PaymentApiException {
 
         final List<PaymentMethod> result = new ArrayList<PaymentMethod>(paymentMethodModels.size());
-        PaymentPluginApi pluginApi = null;
-        try {
-            List<PaymentMethodPlugin> pluginDetails = null;
-            for (final PaymentMethodModelDao cur : paymentMethodModels) {
-
-                if (withPluginDetail) {
-                    pluginApi = pluginRegistry.getPlugin(cur.getPluginName());
-                    pluginDetails = pluginApi.getPaymentMethodDetails(accountKey, context.toTenantContext());
-                }
-
-                final PaymentMethod pm = new DefaultPaymentMethod(cur, getPaymentMethodDetail(pluginDetails, cur.getExternalId()));
-                result.add(pm);
-            }
-        } catch (PaymentPluginApiException e) {
-            throw new PaymentApiException(ErrorCode.PAYMENT_GET_PAYMENT_METHODS, accountId, e.getErrorMessage());
+        for (final PaymentMethodModelDao cur : paymentMethodModels) {
+            final PaymentMethod pm = new DefaultPaymentMethod(cur, null);
+            result.add(pm);
         }
         return result;
-    }
-
-    private PaymentMethodPlugin getPaymentMethodDetail(final List<PaymentMethodPlugin> pluginDetails, final String externalId) {
-        if (pluginDetails == null) {
-            return null;
-        }
-        for (final PaymentMethodPlugin cur : pluginDetails) {
-            if (cur.getExternalPaymentMethodId().equals(externalId)) {
-                return cur;
-            }
-        }
-        return null;
-    }
-
-    public void updatePaymentMethod(final Account account, final UUID paymentMethodId,
-                                    final PaymentMethodPlugin paymentMethodProps, final InternalCallContext context)
-            throws PaymentApiException {
-
-        new WithAccountLock<Void>().processAccountWithLock(locker, account.getExternalKey(), new WithAccountLockCallback<Void>() {
-
-            @Override
-            public Void doOperation() throws PaymentApiException {
-                final PaymentMethodModelDao paymentMethodModel = paymentDao.getPaymentMethod(paymentMethodId, context);
-                if (paymentMethodModel == null) {
-                    throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, paymentMethodId);
-                }
-
-                try {
-                    final PaymentMethodPlugin inputWithId = new DefaultPaymentMethodPlugin(paymentMethodProps, paymentMethodModel.getExternalId());
-                    final PaymentPluginApi pluginApi = getPluginApi(paymentMethodId, account.getId(), context);
-                    pluginApi.updatePaymentMethod(account.getExternalKey(), inputWithId, context.toCallContext());
-                    return null;
-                } catch (PaymentPluginApiException e) {
-                    throw new PaymentApiException(ErrorCode.PAYMENT_UPD_PAYMENT_METHOD, account.getId(), e.getErrorMessage());
-                }
-            }
-        });
     }
 
     public void deletedPaymentMethod(final Account account, final UUID paymentMethodId,
@@ -295,7 +191,8 @@ public class PaymentMethodProcessor extends ProcessorBase {
                 }
 
                 try {
-                    if (account.getPaymentMethodId().equals(paymentMethodId)) {
+                    // Note: account.getPaymentMethodId() may be null
+                    if (paymentMethodId.equals(account.getPaymentMethodId())) {
                         if (!deleteDefaultPaymentMethodWithAutoPayOff) {
                             throw new PaymentApiException(ErrorCode.PAYMENT_DEL_DEFAULT_PAYMENT_METHOD, account.getId());
                         } else {
@@ -307,8 +204,8 @@ public class PaymentMethodProcessor extends ProcessorBase {
                             accountInternalApi.removePaymentMethod(account.getId(), context);
                         }
                     }
-                    final PaymentPluginApi pluginApi = getPluginApi(paymentMethodId, account.getId(), context);
-                    pluginApi.deletePaymentMethod(account.getExternalKey(), paymentMethodModel.getExternalId(), context.toCallContext());
+                    final PaymentPluginApi pluginApi = getPluginApi(paymentMethodId, context);
+                    pluginApi.deletePaymentMethod(paymentMethodId, context.toCallContext());
                     paymentDao.deletedPaymentMethod(paymentMethodId, context);
                     return null;
                 } catch (PaymentPluginApiException e) {
@@ -333,9 +230,9 @@ public class PaymentMethodProcessor extends ProcessorBase {
                 }
 
                 try {
-                    final PaymentPluginApi pluginApi = getPluginApi(paymentMethodId, account.getId(), context);
+                    final PaymentPluginApi pluginApi = getPluginApi(paymentMethodId, context);
 
-                    pluginApi.setDefaultPaymentMethod(account.getExternalKey(), paymentMethodModel.getExternalId(), context.toCallContext());
+                    pluginApi.setDefaultPaymentMethod(paymentMethodId, context.toCallContext());
                     accountInternalApi.updatePaymentMethod(account.getId(), paymentMethodId, context);
                     return null;
                 } catch (PaymentPluginApiException e) {
@@ -347,12 +244,94 @@ public class PaymentMethodProcessor extends ProcessorBase {
         });
     }
 
-    private PaymentPluginApi getPluginApi(final UUID paymentMethodId, final UUID accountId, final InternalTenantContext context)
+    private PaymentPluginApi getPluginApi(final UUID paymentMethodId, final InternalTenantContext context)
             throws PaymentApiException {
         final PaymentMethodModelDao paymentMethod = paymentDao.getPaymentMethod(paymentMethodId, context);
         if (paymentMethod == null) {
             throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, paymentMethodId);
         }
-        return pluginRegistry.getPlugin(paymentMethod.getPluginName());
+        return pluginRegistry.getServiceForName(paymentMethod.getPluginName());
+    }
+
+    /**
+     * This refreshed the payment methods from the plugin for cases when adding payment method does not flow through KB because of PCI compliance
+     * issues. The logic below is not optimal because there is no atomicity in the step but the goos news is that this is idempotent so can always be
+     * replayed if necessary-- partial failure scenario.
+     *
+     * @param pluginName
+     * @param account
+     * @param context
+     * @return the list of payment methods -- should be identical between KB, the plugin view-- if it keeps a state-- and the gateway.
+     * @throws PaymentApiException
+     */
+    public List<PaymentMethod> refreshPaymentMethods(final String pluginName, final Account account, final InternalCallContext context) throws PaymentApiException {
+
+
+        // Don't hold the account lock while fetching the payment methods from the gateway as those could change anyway
+        final PaymentPluginApi pluginApi = pluginRegistry.getServiceForName(pluginName);
+        final List<PaymentMethodInfoPlugin> pluginPms;
+        try {
+            pluginPms = pluginApi.getPaymentMethods(account.getId(), true, context.toCallContext());
+            // The method should never return null by convention, but let's not trust the plugin...
+            if (pluginPms == null) {
+                log.warn("No payment methods defined on the account {} for plugin {}", account.getId(), pluginName);
+                return ImmutableList.<PaymentMethod>of();
+            }
+        } catch (PaymentPluginApiException e) {
+            throw new PaymentApiException(ErrorCode.PAYMENT_REFRESH_PAYMENT_METHOD, account.getId(), e.getErrorMessage());
+        }
+
+        return new WithAccountLock<List<PaymentMethod>>().processAccountWithLock(locker, account.getExternalKey(), new WithAccountLockCallback<List<PaymentMethod>>() {
+
+            @Override
+            public List<PaymentMethod> doOperation() throws PaymentApiException {
+
+                UUID defaultPaymentMethodId = null;
+
+                final List<PaymentMethodInfoPlugin> pluginPmsWithId = new ArrayList<PaymentMethodInfoPlugin>();
+                final List<PaymentMethodModelDao> finalPaymentMethods = new ArrayList<PaymentMethodModelDao>();
+                for (final PaymentMethodInfoPlugin cur : pluginPms) {
+
+                    // If the kbPaymentId is NULL, the plugin does not know about it, so we create a new UUID
+                    final UUID paymentMethodId = cur.getPaymentMethodId() != null ? cur.getPaymentMethodId() : UUID.randomUUID();
+                    final PaymentMethod input = new DefaultPaymentMethod(paymentMethodId, account.getId(), pluginName);
+                    final PaymentMethodModelDao pmModel = new PaymentMethodModelDao(input.getId(), input.getCreatedDate(), input.getUpdatedDate(),
+                                                                                    input.getAccountId(), input.getPluginName(), input.isActive());
+                    finalPaymentMethods.add(pmModel);
+
+                    pluginPmsWithId.add(new DefaultPaymentMethodInfoPlugin(cur, paymentMethodId));
+
+                    if (cur.isDefault()) {
+                        defaultPaymentMethodId = paymentMethodId;
+                    }
+                }
+
+                final List<PaymentMethodModelDao> refreshedPaymentMethods = paymentDao.refreshPaymentMethods(account.getId(),
+                                                                                                             finalPaymentMethods,
+                                                                                                             context);
+                try {
+                    pluginApi.resetPaymentMethods(pluginPmsWithId);
+                } catch (PaymentPluginApiException e) {
+                    throw new PaymentApiException(ErrorCode.PAYMENT_REFRESH_PAYMENT_METHOD, account.getId(), e.getErrorMessage());
+                }
+
+                try {
+                    if (defaultPaymentMethodId != null) {
+                        accountInternalApi.updatePaymentMethod(account.getId(), defaultPaymentMethodId, context);
+                    } else {
+                        accountInternalApi.removePaymentMethod(account.getId(), context);
+                    }
+                } catch (AccountApiException e) {
+                    throw new PaymentApiException(e);
+                }
+
+                return ImmutableList.<PaymentMethod>copyOf(Collections2.transform(refreshedPaymentMethods, new Function<PaymentMethodModelDao, PaymentMethod>() {
+                    @Override
+                    public PaymentMethod apply(final PaymentMethodModelDao input) {
+                        return new DefaultPaymentMethod(input, null);
+                    }
+                }));
+            }
+        });
     }
 }

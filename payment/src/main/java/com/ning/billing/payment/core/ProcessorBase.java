@@ -17,7 +17,6 @@
 package com.ning.billing.payment.core;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -31,11 +30,11 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.osgi.api.OSGIServiceRegistration;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.dao.PaymentMethodModelDao;
 import com.ning.billing.payment.plugin.api.PaymentPluginApi;
-import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
@@ -58,7 +57,7 @@ public abstract class ProcessorBase {
 
     private static final int NB_LOCK_TRY = 5;
 
-    protected final PaymentProviderPluginRegistry pluginRegistry;
+    protected final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry;
     protected final AccountInternalApi accountInternalApi;
     protected final InternalBus eventBus;
     protected final GlobalLocker locker;
@@ -68,7 +67,7 @@ public abstract class ProcessorBase {
 
     private static final Logger log = LoggerFactory.getLogger(ProcessorBase.class);
 
-    public ProcessorBase(final PaymentProviderPluginRegistry pluginRegistry,
+    public ProcessorBase(final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry,
                          final AccountInternalApi accountInternalApi,
                          final InternalBus eventBus,
                          final PaymentDao paymentDao,
@@ -111,7 +110,7 @@ public abstract class ProcessorBase {
             log.error("PaymentMethod dpes not exist", paymentMethodId);
             throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, paymentMethodId);
         }
-        return pluginRegistry.getPlugin(methodDao.getPluginName());
+        return pluginRegistry.getServiceForName(methodDao.getPluginName());
     }
 
     protected PaymentPluginApi getPaymentProviderPlugin(final String accountKey, final InternalTenantContext context)
@@ -122,7 +121,7 @@ public abstract class ProcessorBase {
             final Account account = accountInternalApi.getAccountByKey(accountKey, context);
             return getPaymentProviderPlugin(account, context);
         }
-        return pluginRegistry.getPlugin(paymentProviderName);
+        return pluginRegistry.getServiceForName(paymentProviderName);
     }
 
     protected PaymentPluginApi getPaymentProviderPlugin(final Account account, final InternalTenantContext context) throws PaymentApiException {

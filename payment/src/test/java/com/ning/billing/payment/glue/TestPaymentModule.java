@@ -16,9 +16,15 @@
 
 package com.ning.billing.payment.glue;
 
+import java.io.IOException;
+import java.net.URL;
+import java.util.Properties;
 import java.util.UUID;
 
 import org.mockito.Mockito;
+import org.skife.config.ConfigSource;
+import org.skife.config.SimplePropertyConfigSource;
+import org.testng.Assert;
 
 import com.ning.billing.ObjectType;
 import com.ning.billing.mock.glue.MockAccountModule;
@@ -26,38 +32,52 @@ import com.ning.billing.mock.glue.MockEntitlementModule;
 import com.ning.billing.mock.glue.MockGlobalLockerModule;
 import com.ning.billing.mock.glue.MockInvoiceModule;
 import com.ning.billing.mock.glue.MockNotificationQueueModule;
+import com.ning.billing.payment.PaymentTestSuiteNoDB;
 import com.ning.billing.payment.TestPaymentHelper;
+import com.ning.billing.payment.provider.MockPaymentProviderPlugin;
 import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
+import com.ning.billing.util.bus.InMemoryBusModule;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.config.PaymentConfig;
-import com.ning.billing.util.email.EmailModule;
-import com.ning.billing.util.email.templates.TemplateModule;
-import com.ning.billing.util.glue.BusModule;
-import com.ning.billing.util.glue.BusModule.BusType;
 import com.ning.billing.util.glue.CacheModule;
-import com.ning.billing.util.glue.CustomFieldModule;
-import com.ning.billing.util.glue.NotificationQueueModule;
-import com.ning.billing.util.glue.TagStoreModule;
 import com.ning.billing.util.svcapi.tag.TagInternalApi;
 import com.ning.billing.util.tag.Tag;
 
 import com.google.common.collect.ImmutableList;
 
-import static org.testng.Assert.assertNotNull;
-
 public class TestPaymentModule extends PaymentModule {
 
+    protected final ConfigSource configSource;
 
     private final Clock clock;
 
-    public TestPaymentModule(final Clock clock) {
+    public TestPaymentModule(final ConfigSource configSource, final Clock clock) {
+        super(configSource);
         this.clock = clock;
+        this.configSource = loadSystemPropertiesFromClasspath("/resource.properties");
+    }
+
+    private ConfigSource loadSystemPropertiesFromClasspath(final String resource) {
+        final URL url = PaymentTestSuiteNoDB.class.getResource(resource);
+        Assert.assertNotNull(url);
+
+        try {
+            final Properties properties = System.getProperties();
+            properties.load(url.openStream());
+
+            properties.setProperty("killbill.payment.provider.default", MockPaymentProviderPlugin.PLUGIN_NAME);
+            properties.setProperty("killbill.payment.engine.events.off", "false");
+
+            return new SimplePropertyConfigSource(properties);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
     protected void installPaymentProviderPlugins(final PaymentConfig config) {
-        install(new MockPaymentProviderPluginModule(TestPaymentHelper.PLUGIN_TEST_NAME, clock));
+        install(new MockPaymentProviderPluginModule(MockPaymentProviderPlugin.PLUGIN_NAME, clock));
     }
 
     private void installExternalApis() {
@@ -69,13 +89,13 @@ public class TestPaymentModule extends PaymentModule {
     @Override
     protected void configure() {
         super.configure();
-        install(new BusModule(BusType.MEMORY));
-        install(new MockNotificationQueueModule());
+        install(new InMemoryBusModule(configSource));
+        install(new MockNotificationQueueModule(configSource));
         install(new MockInvoiceModule());
         install(new MockAccountModule());
         install(new MockEntitlementModule());
         install(new MockGlobalLockerModule());
-        install(new CacheModule());
+        install(new CacheModule(configSource));
         installExternalApis();
 
         bind(TestPaymentHelper.class).asEagerSingleton();

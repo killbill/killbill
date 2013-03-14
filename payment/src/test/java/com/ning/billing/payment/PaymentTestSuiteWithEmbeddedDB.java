@@ -16,21 +16,18 @@
 
 package com.ning.billing.payment;
 
-import java.io.IOException;
-import java.net.URL;
-import java.util.Properties;
-
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
 import com.ning.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
+import com.ning.billing.osgi.api.OSGIServiceRegistration;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.core.PaymentMethodProcessor;
 import com.ning.billing.payment.core.PaymentProcessor;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.glue.TestPaymentModuleWithEmbeddedDB;
-import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
+import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 import com.ning.billing.payment.retry.FailedPaymentRetryService;
 import com.ning.billing.payment.retry.PluginFailureRetryService;
 import com.ning.billing.util.config.PaymentConfig;
@@ -41,8 +38,6 @@ import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-
-import static org.testng.Assert.assertNotNull;
 
 public abstract class PaymentTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWithEmbeddedDB {
 
@@ -55,7 +50,7 @@ public abstract class PaymentTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     @Inject
     protected InvoiceInternalApi invoiceApi;
     @Inject
-    protected PaymentProviderPluginRegistry registry;
+    protected OSGIServiceRegistration<PaymentPluginApi> registry;
     @Inject
     protected FailedPaymentRetryService retryService;
     @Inject
@@ -72,35 +67,19 @@ public abstract class PaymentTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     protected TestPaymentHelper testHelper;
 
     @BeforeClass(groups = "slow")
-    protected void setup() throws Exception {
-
-        loadSystemPropertiesFromClasspath("/resource.properties");
-
-        final Injector injector = Guice.createInjector(new TestPaymentModuleWithEmbeddedDB(getClock()));
+    protected void beforeClass() throws Exception {
+        final Injector injector = Guice.createInjector(new TestPaymentModuleWithEmbeddedDB(configSource, getClock()));
         injector.injectMembers(this);
     }
 
     @BeforeMethod(groups = "slow")
-    public void setupTest() throws Exception {
+    public void beforeMethod() throws Exception {
+        super.beforeMethod();
         eventBus.start();
     }
 
     @AfterMethod(groups = "slow")
-    public void cleanupTest()throws Exception  {
+    public void afterMethod() throws Exception {
         eventBus.stop();
-    }
-
-
-
-    private void loadSystemPropertiesFromClasspath(final String resource) {
-        final URL url = PaymentTestSuiteWithEmbeddedDB.class.getResource(resource);
-        assertNotNull(url);
-
-        try {
-            final Properties properties = System.getProperties();
-            properties.load(url.openStream());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 }

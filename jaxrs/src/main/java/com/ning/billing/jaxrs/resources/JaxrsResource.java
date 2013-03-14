@@ -60,8 +60,6 @@ public interface JaxrsResource {
     public static final String QUERY_INVOICE_WITH_ITEMS = "withItems";
 
     public static final String QUERY_PAYMENT_EXTERNAL = "externalPayment";
-    public static final String QUERY_PAYMENT_LAST4_CC = "last4CC";
-    public static final String QUERY_PAYMENT_NAME_ON_CC = "nameOnCC";
     public static final String QUERY_PAYMENT_WITH_REFUNDS_AND_CHARGEBACKS = "withRefundsAndChargebacks";
 
     public static final String QUERY_TAGS = "tagList";
@@ -132,6 +130,10 @@ public interface JaxrsResource {
 
     public static final String EXPORT = "export";
     public static final String EXPORT_PATH = PREFIX + "/" + EXPORT;
+
+    public static final String PLUGINS = "plugins";
+    // No PREFIX here!
+    public static final String PLUGINS_PATH = "/" + PLUGINS;
 
     public static final String CBA_REBALANCING = "cbaRebalancing";
 }

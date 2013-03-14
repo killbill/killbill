@@ -41,7 +41,6 @@ import com.ning.billing.util.config.OSGIConfig;
 
 public class PluginFinder {
 
-    private static final String INSTALATION_PROPERTIES = "killbill.properties";
 
     private final Logger logger = LoggerFactory.getLogger(PluginFinder.class);
 
@@ -115,7 +114,7 @@ public class PluginFinder {
     }
 
     private <T extends PluginConfig> void loadPluginsForLanguage(final PluginLanguage pluginLanguage) throws PluginConfigException {
-        final String rootDirPath = osgiConfig.getRootInstallationDir() + "/" + pluginLanguage.toString().toLowerCase();
+        final String rootDirPath = osgiConfig.getRootInstallationDir() + "/plugins/" + pluginLanguage.toString().toLowerCase();
         final File rootDir = new File(rootDirPath);
         if (!rootDir.exists() || !rootDir.isDirectory()) {
             logger.warn("Configuration root dir {} is not a valid directory", rootDirPath);
@@ -168,7 +167,7 @@ public class PluginFinder {
             }
 
             for (final File cur : files) {
-                if (cur.isFile() && cur.getName().equals(INSTALATION_PROPERTIES)) {
+                if (cur.isFile() && cur.getName().equals(osgiConfig.getOSGIKillbillPropertyName())) {
                     props = readPluginConfigurationFile(cur);
                 }
                 if (props != null) {

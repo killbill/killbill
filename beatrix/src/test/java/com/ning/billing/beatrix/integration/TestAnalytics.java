@@ -27,7 +27,6 @@ import org.joda.time.LocalDate;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import com.ning.billing.ObjectType;
@@ -71,8 +70,10 @@ public class TestAnalytics extends TestIntegrationBase {
 
     private Plan subscriptionPlan;
 
+    @Override
     @BeforeMethod(groups = "slow")
-    public void setUpAnalyticsHandler() throws Exception {
+    public void beforeMethod() throws Exception {
+        super.beforeMethod();
         final String configXml = "<overdueConfig>" +
                                  "   <bundleOverdueStates>" +
                                  "       <state name=\"OD3\">" +
@@ -128,8 +129,10 @@ public class TestAnalytics extends TestIntegrationBase {
         account = verifyAccountCreation(initialDate.plusDays(30).getDayOfMonth());
     }
 
+    @Override
     @AfterMethod(groups = "slow")
-    public void tearDownAnalyticsHandler() throws Exception {
+    public void afterMethod() throws Exception {
+        super.afterMethod();
         busService.getBus().unregister(analyticsListener);
         // Reset the payment plugin for other tests
         paymentPlugin.clear();
@@ -247,7 +250,7 @@ public class TestAnalytics extends TestIntegrationBase {
         Assert.assertNull(invoicePaymentsForAccount.get(0).getExtFirstPaymentRefId());
         Assert.assertNull(invoicePaymentsForAccount.get(0).getExtSecondPaymentRefId());
         Assert.assertEquals(invoicePaymentsForAccount.get(0).getProcessingStatus(), PaymentStatus.PAYMENT_FAILURE.toString());
-        Assert.assertEquals(invoicePaymentsForAccount.get(0).getPluginName(), BeatrixIntegrationModule.PLUGIN_NAME);
+        Assert.assertEquals(invoicePaymentsForAccount.get(0).getPluginName(), BeatrixIntegrationModule.NON_OSGI_PLUGIN_NAME);
 
         // Verify the account object has been updated
         Assert.assertEquals(analyticsUserApi.getAccountByKey(account.getExternalKey(), callContext).getBalance(),
@@ -336,7 +339,7 @@ public class TestAnalytics extends TestIntegrationBase {
         Assert.assertNull(analyticsUserApi.getAccountByKey(accountData.getExternalKey(), callContext));
 
         // Create an account
-        final Account account = createAccountWithPaymentMethod(accountData);
+        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
         Assert.assertNotNull(account);
 
         waitALittle();

@@ -16,59 +16,50 @@
 
 package com.ning.billing.payment.glue;
 
-import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
 import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
-import org.skife.config.SimplePropertyConfigSource;
 
-import com.ning.billing.payment.bus.PaymentTagHandler;
-import com.ning.billing.payment.dao.DefaultPaymentDao;
-import com.ning.billing.util.config.PaymentConfig;
+import com.ning.billing.osgi.api.OSGIServiceRegistration;
 import com.ning.billing.payment.api.DefaultPaymentApi;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentService;
 import com.ning.billing.payment.api.svcs.DefaultPaymentInternalApi;
 import com.ning.billing.payment.bus.InvoiceHandler;
+import com.ning.billing.payment.bus.PaymentTagHandler;
 import com.ning.billing.payment.core.PaymentMethodProcessor;
 import com.ning.billing.payment.core.PaymentProcessor;
 import com.ning.billing.payment.core.RefundProcessor;
+import com.ning.billing.payment.dao.DefaultPaymentDao;
 import com.ning.billing.payment.dao.PaymentDao;
-import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
+import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 import com.ning.billing.payment.retry.AutoPayRetryService;
 import com.ning.billing.payment.retry.AutoPayRetryService.AutoPayRetryServiceScheduler;
 import com.ning.billing.payment.retry.FailedPaymentRetryService;
 import com.ning.billing.payment.retry.FailedPaymentRetryService.FailedPaymentRetryServiceScheduler;
 import com.ning.billing.payment.retry.PluginFailureRetryService;
 import com.ning.billing.payment.retry.PluginFailureRetryService.PluginFailureRetryServiceScheduler;
+import com.ning.billing.util.config.PaymentConfig;
 import com.ning.billing.util.svcapi.payment.PaymentInternalApi;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.AbstractModule;
+import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
 
 public class PaymentModule extends AbstractModule {
+
     private static final int PLUGIN_NB_THREADS = 3;
     private static final String PLUGIN_THREAD_PREFIX = "Plugin-th-";
 
     public static final String PLUGIN_EXECUTOR_NAMED = "PluginExecutor";
 
-    @VisibleForTesting
     protected ConfigSource configSource;
-
-    public PaymentModule() {
-        this(System.getProperties());
-    }
 
     public PaymentModule(final ConfigSource configSource) {
         this.configSource = configSource;
-    }
-
-    public PaymentModule(final Properties properties) {
-        this(new SimplePropertyConfigSource(properties));
     }
 
     protected void installPaymentDao() {
@@ -109,7 +100,7 @@ public class PaymentModule extends AbstractModule {
         final PaymentConfig paymentConfig = factory.build(PaymentConfig.class);
 
         bind(PaymentConfig.class).toInstance(paymentConfig);
-        bind(PaymentProviderPluginRegistry.class).toProvider(DefaultPaymentProviderPluginRegistryProvider.class).asEagerSingleton();
+        bind(new TypeLiteral<OSGIServiceRegistration<PaymentPluginApi>>() {}).toProvider(DefaultPaymentProviderPluginRegistryProvider.class).asEagerSingleton();
 
         bind(PaymentInternalApi.class).to(DefaultPaymentInternalApi.class).asEagerSingleton();
         bind(PaymentApi.class).to(DefaultPaymentApi.class).asEagerSingleton();

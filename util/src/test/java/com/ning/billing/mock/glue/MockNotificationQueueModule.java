@@ -16,18 +16,23 @@
 
 package com.ning.billing.mock.glue;
 
+import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
 
+import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.notificationq.MockNotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueConfig;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 
-import com.google.inject.AbstractModule;
+public class MockNotificationQueueModule extends NotificationQueueModule {
 
-public class MockNotificationQueueModule extends AbstractModule {
+    public MockNotificationQueueModule(final ConfigSource configSource) {
+        super(configSource);
+    }
 
+    @Override
     protected void configureNotificationQueueConfig() {
-        final NotificationQueueConfig config = new ConfigurationObjectFactory(System.getProperties()).build(NotificationQueueConfig.class);
+        final NotificationQueueConfig config = new ConfigurationObjectFactory(configSource).build(NotificationQueueConfig.class);
         bind(NotificationQueueConfig.class).toInstance(config);
     }
     @Override

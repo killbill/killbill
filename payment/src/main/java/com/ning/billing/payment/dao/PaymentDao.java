@@ -32,7 +32,7 @@ public interface PaymentDao {
     public PaymentAttemptModelDao insertNewAttemptForPayment(UUID paymentId, PaymentAttemptModelDao attempt, InternalCallContext context);
 
     public void updateStatusForPaymentWithAttempt(UUID paymentId, PaymentStatus paymentStatus, String gatewayErrorCode,
-                                                  String gatewayErrorMsg, String extFirstPaymentRefId, String extSecondPaymentRefId,
+                                                  String gatewayErrorMsg,
                                                   UUID attemptId, InternalCallContext context);
 
     public PaymentAttemptModelDao getPaymentAttempt(UUID attemptId, InternalTenantContext context);
@@ -59,8 +59,6 @@ public interface PaymentDao {
 
     public PaymentMethodModelDao insertPaymentMethod(PaymentMethodModelDao paymentMethod, InternalCallContext context);
 
-    public List<PaymentMethodModelDao> refreshPaymentMethods(UUID accountId, List<PaymentMethodModelDao> paymentMethods, InternalCallContext context);
-
     public PaymentMethodModelDao getPaymentMethod(UUID paymentMethodId, InternalTenantContext context);
 
     public PaymentMethodModelDao getPaymentMethodIncludedDeleted(UUID paymentMethodId, InternalTenantContext context);
@@ -68,6 +66,8 @@ public interface PaymentDao {
     public List<PaymentMethodModelDao> getPaymentMethods(UUID accountId, InternalTenantContext context);
 
     public void deletedPaymentMethod(UUID paymentMethodId, InternalCallContext context);
+
+    public List<PaymentMethodModelDao> refreshPaymentMethods(final UUID accountId, final List<PaymentMethodModelDao> paymentMethods, final InternalCallContext context);
 
     public void undeletedPaymentMethod(UUID paymentMethodId, InternalCallContext context);
 }

@@ -16,6 +16,8 @@
 
 package com.ning.billing.account.glue;
 
+import org.skife.config.ConfigSource;
+
 import com.ning.billing.account.api.AccountService;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.api.DefaultAccountService;
@@ -30,6 +32,12 @@ import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.google.inject.AbstractModule;
 
 public class DefaultAccountModule extends AbstractModule implements AccountModule {
+
+    protected final ConfigSource configSource;
+
+    public DefaultAccountModule(final ConfigSource configSource) {
+        this.configSource = configSource;
+    }
 
     private void installConfig() {
     }

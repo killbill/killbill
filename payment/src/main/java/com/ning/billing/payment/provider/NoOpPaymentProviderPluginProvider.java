@@ -18,6 +18,10 @@ package com.ning.billing.payment.provider;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+
+import com.ning.billing.osgi.api.OSGIServiceDescriptor;
+import com.ning.billing.osgi.api.OSGIServiceRegistration;
+import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 import com.ning.billing.util.clock.Clock;
 
 public class NoOpPaymentProviderPluginProvider implements Provider<DefaultNoOpPaymentProviderPlugin> {
@@ -25,7 +29,7 @@ public class NoOpPaymentProviderPluginProvider implements Provider<DefaultNoOpPa
     private final String instanceName;
 
     private Clock clock;
-    private PaymentProviderPluginRegistry registry;
+    private OSGIServiceRegistration<PaymentPluginApi> registry;
 
     public NoOpPaymentProviderPluginProvider(final String instanceName) {
         this.instanceName = instanceName;
@@ -33,16 +37,34 @@ public class NoOpPaymentProviderPluginProvider implements Provider<DefaultNoOpPa
     }
 
     @Inject
-    public void setPaymentProviderPluginRegistry(final PaymentProviderPluginRegistry registry, final Clock clock) {
+    public void setPaymentProviderPluginRegistry(final OSGIServiceRegistration<PaymentPluginApi> registry, final Clock clock) {
         this.clock = clock;
         this.registry = registry;
     }
 
     @Override
     public DefaultNoOpPaymentProviderPlugin get() {
-        final DefaultNoOpPaymentProviderPlugin plugin = new DefaultNoOpPaymentProviderPlugin(clock);
 
-        registry.register(plugin, instanceName);
+        final DefaultNoOpPaymentProviderPlugin plugin = new DefaultNoOpPaymentProviderPlugin(clock);
+        final OSGIServiceDescriptor desc = new OSGIServiceDescriptor() {
+            @Override
+            public String getPluginSymbolicName() {
+                return null;
+            }
+            @Override
+            public String getServiceName() {
+                return instanceName;
+            }
+            @Override
+            public String getServiceInfo() {
+                return null;
+            }
+            @Override
+            public String getServiceType() {
+                return null;
+            }
+        };
+        registry.registerService(desc, plugin);
         return plugin;
     }
 }

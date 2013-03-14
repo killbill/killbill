@@ -45,9 +45,10 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
     private UUID accountId;
     private UUID invoiceId;
 
+    @Override
     @BeforeMethod(groups = "slow")
-    public void setupTest() throws Exception {
-        super.setupTest();
+    public void beforeMethod() throws Exception {
+        super.beforeMethod();
         final Account account = invoiceUtil.createAccount();
         accountId = account.getId();
         invoiceId = invoiceUtil.generateRegularInvoice(account, clock.getUTCNow());

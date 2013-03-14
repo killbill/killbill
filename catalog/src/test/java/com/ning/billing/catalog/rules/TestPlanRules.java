@@ -17,6 +17,7 @@
 package com.ning.billing.catalog.rules;
 
 import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
@@ -39,8 +40,8 @@ public class TestPlanRules extends CatalogTestSuiteNoDB {
 
     private MockCatalog cat = null;
 
-    @BeforeTest(groups = "fast")
-    public void setupTest() {
+    @BeforeMethod(groups = "fast")
+    public void beforeMethod() {
         cat = new MockCatalog();
 
         final DefaultPriceList priceList2 = cat.getPriceLists().getChildPriceLists()[0];

@@ -45,6 +45,7 @@ import com.ning.billing.api.TestListenerStatus;
 import com.ning.billing.beatrix.BeatrixTestSuiteWithEmbeddedDB;
 import com.ning.billing.beatrix.bus.api.ExternalBus;
 import com.ning.billing.beatrix.lifecycle.Lifecycle;
+import com.ning.billing.beatrix.osgi.SetupBundleWithAssertion;
 import com.ning.billing.beatrix.util.AccountChecker;
 import com.ning.billing.beatrix.util.EntitlementChecker;
 import com.ning.billing.beatrix.util.InvoiceChecker;
@@ -79,6 +80,7 @@ import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.payment.provider.MockPaymentProviderPlugin;
 import com.ning.billing.util.api.TagUserApi;
+import com.ning.billing.util.config.OSGIConfig;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
 import com.ning.billing.util.svcsapi.bus.BusService;
@@ -152,7 +154,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     @Inject
     protected PaymentApi paymentApi;
 
-    @Named(BeatrixIntegrationModule.PLUGIN_NAME)
+    @Named(BeatrixIntegrationModule.NON_OSGI_PLUGIN_NAME)
     @Inject
     protected MockPaymentProviderPlugin paymentPlugin;
 
@@ -192,6 +194,10 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     @Inject
     protected AccountInternalApi accountInternalApi;
 
+    @Inject
+    protected OSGIConfig osgiConfig;
+
+
     protected TestApiListener busHandler;
 
     private boolean isListenerFailed;
@@ -217,16 +223,21 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     }
 
     @BeforeClass(groups = "slow")
-    public void setup() throws Exception {
-        final Injector g = Guice.createInjector(Stage.PRODUCTION, new BeatrixIntegrationModule());
+    public void beforeClass() throws Exception {
+        final Injector g = Guice.createInjector(Stage.PRODUCTION, new BeatrixIntegrationModule(configSource));
         g.injectMembers(this);
         busHandler = new TestApiListener(this);
+
+        SetupBundleWithAssertion setupTest = new SetupBundleWithAssertion("whatever", osgiConfig, "whatever");
+        setupTest.cleanBundleInstallDir();
 
     }
 
 
     @BeforeMethod(groups = "slow")
-    public void setupTest() throws Exception {
+    public void beforeMethod() throws Exception {
+
+        super.beforeMethod();
         log.warn("\n");
         log.warn("RESET TEST FRAMEWORK\n\n");
 
@@ -243,7 +254,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     }
 
     @AfterMethod(groups = "slow")
-    public void cleanupTest() throws Exception {
+    public void afterMethod() throws Exception {
         lifecycle.fireShutdownSequencePriorEventUnRegistration();
         busService.getBus().unregister(busHandler);
         lifecycle.fireShutdownSequencePostEventUnRegistration();
@@ -295,7 +306,15 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         return (SubscriptionData) ((BlockingSubscription) sub).getDelegateSubscription();
     }
 
-    protected Account createAccountWithPaymentMethod(final AccountData accountData) throws Exception {
+    protected Account createAccountWithOsgiPaymentMethod(final AccountData accountData) throws Exception {
+        return createAccountWithPaymentMethod(accountData, BeatrixIntegrationModule.OSGI_PLUGIN_NAME);
+    }
+
+    protected Account createAccountWithNonOsgiPaymentMethod(final AccountData accountData) throws Exception {
+        return createAccountWithPaymentMethod(accountData, BeatrixIntegrationModule.NON_OSGI_PLUGIN_NAME);
+    }
+
+    private Account createAccountWithPaymentMethod(final AccountData accountData, final String paymentPluginName) throws Exception {
         final Account account = accountUserApi.createAccount(accountData, callContext);
         assertNotNull(account);
 
@@ -321,7 +340,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             }
         };
 
-        paymentApi.addPaymentMethod(BeatrixIntegrationModule.PLUGIN_NAME, account, true, info, callContext);
+        paymentApi.addPaymentMethod(paymentPluginName, account, true, info, callContext);
         return accountUserApi.getAccountById(account.getId(), callContext);
     }
 

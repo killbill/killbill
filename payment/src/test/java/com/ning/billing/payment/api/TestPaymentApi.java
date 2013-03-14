@@ -35,9 +35,9 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.payment.MockRecurringInvoiceItem;
 import com.ning.billing.payment.PaymentTestSuiteNoDB;
-import com.ning.billing.payment.TestPaymentHelper;
 import com.ning.billing.payment.api.Payment.PaymentAttempt;
 import com.ning.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
+import com.ning.billing.payment.provider.MockPaymentProviderPlugin;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -51,14 +51,14 @@ public class TestPaymentApi extends PaymentTestSuiteNoDB {
     private Account account;
 
     @BeforeClass(groups = "fast")
-    public void setup() throws Exception {
-        super.setup();
+    public void beforeClass() throws Exception {
+        super.beforeClass();
         account = testHelper.createTestAccount("yoyo.yahoo.com", false);
     }
 
     @BeforeMethod(groups = "fast")
-    public void setupTest() throws Exception {
-        super.setupTest();
+    public void beforeMethod() throws Exception {
+        super.beforeMethod();
         final PaymentMethodPlugin paymentMethodInfo = new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), true, null);
         testHelper.addTestPaymentMethod(account, paymentMethodInfo);
     }
@@ -144,17 +144,17 @@ public class TestPaymentApi extends PaymentTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testPaymentMethods() throws Exception {
-        List<PaymentMethod> methods = paymentApi.getPaymentMethods(account, false, callContext);
+        List<PaymentMethod> methods = paymentApi.getPaymentMethods(account, callContext);
         assertEquals(methods.size(), 1);
 
         final PaymentMethod initDefaultMethod = methods.get(0);
         assertEquals(initDefaultMethod.getId(), account.getPaymentMethodId());
 
         final PaymentMethodPlugin newPaymenrMethod = new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), true, null);
-        final UUID newPaymentMethodId = paymentApi.addPaymentMethod(TestPaymentHelper.PLUGIN_TEST_NAME, account, true, newPaymenrMethod, callContext);
+        final UUID newPaymentMethodId = paymentApi.addPaymentMethod(MockPaymentProviderPlugin.PLUGIN_NAME, account, true, newPaymenrMethod, callContext);
         Mockito.when(account.getPaymentMethodId()).thenReturn(newPaymentMethodId);
 
-        methods = paymentApi.getPaymentMethods(account, false, callContext);
+        methods = paymentApi.getPaymentMethods(account, callContext);
         assertEquals(methods.size(), 2);
 
         assertEquals(newPaymentMethodId, account.getPaymentMethodId());
@@ -168,13 +168,13 @@ public class TestPaymentApi extends PaymentTestSuiteNoDB {
         assertTrue(failed);
 
         paymentApi.deletedPaymentMethod(account, initDefaultMethod.getId(), true,  callContext);
-        methods = paymentApi.getPaymentMethods(account, false, callContext);
+        methods = paymentApi.getPaymentMethods(account, callContext);
         assertEquals(methods.size(), 1);
 
         // NOW retry with default payment method with special flag
         paymentApi.deletedPaymentMethod(account, newPaymentMethodId, true, callContext);
 
-        methods = paymentApi.getPaymentMethods(account, false, callContext);
+        methods = paymentApi.getPaymentMethods(account, callContext);
         assertEquals(methods.size(), 0);
     }
 }

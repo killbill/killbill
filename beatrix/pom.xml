@@ -64,6 +64,14 @@
             <artifactId>killbill-usage</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-osgi-bundles-test-beatrix</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-osgi-bundles-test-payment</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
         </dependency>
@@ -75,6 +83,10 @@
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
         </dependency>
         <dependency>
             <groupId>org.skife.config</groupId>
@@ -173,12 +185,20 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.4</version>
                 <executions>
                     <execution>
+                        <id>copy</id>
+                        <phase>initialize</phase>
+                        <configuration>
+                            <tasks>
+                                <copy file="${basedir}/../osgi-bundles/tests/beatrix/target/killbill-osgi-bundles-test-beatrix-${project.version}-jar-with-dependencies.jar" tofile="${basedir}/src/test/resources/killbill-osgi-bundles-test-beatrix-${project.version}-jar-with-dependencies.jar"/>
+                                <copy file="${basedir}/../osgi-bundles/tests/payment/target/killbill-osgi-bundles-test-payment-${project.version}-jar-with-dependencies.jar" tofile="${basedir}/src/test/resources/killbill-osgi-bundles-test-payment-${project.version}-jar-with-dependencies.jar"/>
+                            </tasks>
+                        </configuration>
                         <goals>
-                            <goal>test-jar</goal>
+                            <goal>run</goal>
                         </goals>
                     </execution>
                 </executions>

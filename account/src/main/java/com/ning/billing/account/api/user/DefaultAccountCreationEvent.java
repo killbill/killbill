@@ -112,7 +112,7 @@ public class DefaultAccountCreationEvent extends DefaultBusInternalEvent impleme
         private final String name;
         private final Integer firstNameLength;
         private final String email;
-        private final int billCycleDayLocal;
+        private final Integer billCycleDayLocal;
         private final String currency;
         private final UUID paymentMethodId;
         private final String timeZone;
@@ -125,8 +125,8 @@ public class DefaultAccountCreationEvent extends DefaultBusInternalEvent impleme
         private final String postalCode;
         private final String country;
         private final String phone;
-        private final boolean isMigrated;
-        private final boolean isNotifiedForInvoices;
+        private final Boolean isMigrated;
+        private final Boolean isNotifiedForInvoices;
 
         public DefaultAccountData(final AccountModelDao d) {
             this(d.getExternalKey() != null ? d.getExternalKey() : null,
@@ -155,7 +155,7 @@ public class DefaultAccountCreationEvent extends DefaultBusInternalEvent impleme
                                   @JsonProperty("name") final String name,
                                   @JsonProperty("firstNameLength") final Integer firstNameLength,
                                   @JsonProperty("email") final String email,
-                                  @JsonProperty("billCycleDayLocal") final int billCycleDayLocal,
+                                  @JsonProperty("billCycleDayLocal") final Integer billCycleDayLocal,
                                   @JsonProperty("currency") final String currency,
                                   @JsonProperty("paymentMethodId") final UUID paymentMethodId,
                                   @JsonProperty("timeZone") final String timeZone,
@@ -168,8 +168,8 @@ public class DefaultAccountCreationEvent extends DefaultBusInternalEvent impleme
                                   @JsonProperty("postalCode") final String postalCode,
                                   @JsonProperty("country") final String country,
                                   @JsonProperty("phone") final String phone,
-                                  @JsonProperty("isMigrated") final boolean isMigrated,
-                                  @JsonProperty("isNotifiedForInvoices") final boolean isNotifiedForInvoices) {
+                                  @JsonProperty("isMigrated") final Boolean isMigrated,
+                                  @JsonProperty("isNotifiedForInvoices") final Boolean isNotifiedForInvoices) {
             this.externalKey = externalKey;
             this.name = name;
             this.firstNameLength = firstNameLength;
@@ -218,7 +218,7 @@ public class DefaultAccountCreationEvent extends DefaultBusInternalEvent impleme
 
         @Override
         public Currency getCurrency() {
-            return Currency.valueOf(currency);
+            return currency == null ? null : Currency.valueOf(currency);
         }
 
         @JsonIgnore
@@ -294,6 +294,16 @@ public class DefaultAccountCreationEvent extends DefaultBusInternalEvent impleme
             return isNotifiedForInvoices;
         }
 
+        // These two getters are for Jackson serialization only
+
+        public Boolean getIsMigrated() {
+            return isMigrated;
+        }
+
+        public Boolean getIsNotifiedForInvoices() {
+            return isNotifiedForInvoices;
+        }
+
         @Override
         public boolean equals(final Object o) {
             if (this == o) {
@@ -305,13 +315,13 @@ public class DefaultAccountCreationEvent extends DefaultBusInternalEvent impleme
 
             final DefaultAccountData that = (DefaultAccountData) o;
 
-            if (billCycleDayLocal != that.billCycleDayLocal) {
+            if (billCycleDayLocal != null ? !billCycleDayLocal.equals(that.billCycleDayLocal) : that.billCycleDayLocal != null) {
                 return false;
             }
-            if (isMigrated != that.isMigrated) {
+            if (isMigrated != null ? !isMigrated.equals(that.isMigrated) : that.isMigrated != null) {
                 return false;
             }
-            if (isNotifiedForInvoices != that.isNotifiedForInvoices) {
+            if (isNotifiedForInvoices != null ? !isNotifiedForInvoices.equals(that.isNotifiedForInvoices) : that.isNotifiedForInvoices != null) {
                 return false;
             }
             if (address1 != null ? !address1.equals(that.address1) : that.address1 != null) {
@@ -372,7 +382,7 @@ public class DefaultAccountCreationEvent extends DefaultBusInternalEvent impleme
             result = 31 * result + (name != null ? name.hashCode() : 0);
             result = 31 * result + (firstNameLength != null ? firstNameLength.hashCode() : 0);
             result = 31 * result + (email != null ? email.hashCode() : 0);
-            result = 31 * result + billCycleDayLocal;
+            result = 31 * result + (billCycleDayLocal != null ? billCycleDayLocal.hashCode() : 0);
             result = 31 * result + (currency != null ? currency.hashCode() : 0);
             result = 31 * result + (paymentMethodId != null ? paymentMethodId.hashCode() : 0);
             result = 31 * result + (timeZone != null ? timeZone.hashCode() : 0);
@@ -385,8 +395,8 @@ public class DefaultAccountCreationEvent extends DefaultBusInternalEvent impleme
             result = 31 * result + (postalCode != null ? postalCode.hashCode() : 0);
             result = 31 * result + (country != null ? country.hashCode() : 0);
             result = 31 * result + (phone != null ? phone.hashCode() : 0);
-            result = 31 * result + (isMigrated ? 1 : 0);
-            result = 31 * result + (isNotifiedForInvoices ? 1 : 0);
+            result = 31 * result + (isMigrated != null ? isMigrated.hashCode() : 0);
+            result = 31 * result + (isNotifiedForInvoices != null ? isNotifiedForInvoices.hashCode() : 0);
             return result;
         }
     }

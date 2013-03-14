@@ -28,9 +28,11 @@ PROPERTIES="$SERVER/src/main/resources/killbill-server.properties"
 DEBUG_OPTS_ECLIPSE=" -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=12345 "
 DEBUG_OPTS_ECLIPSE_WAIT=" -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=12345 "
 
-OPTS_ECLIPSE=" -Xmx2048m  -XX:+UseConcMarkSweepGC -XX:MaxPermSize=128m  "
+# Default JVM settings if unset
+MAVEN_OPTS=${MAVEN_OPTS-"-Xms512m -Xmx1024m -XX:MaxPermSize=512m -XX:MaxDirectMemorySize=512m -XX:+UseConcMarkSweepGC"}
 
-LOG="$SERVER/src/main/resources/log4j.xml"
+LOG="$SERVER/src/main/resources/logback.xml"
+LOG_DIR="$SERVER/logs"
 
 # From Argument Options
 PORT=8080
@@ -42,16 +44,16 @@ WAIT_DEBUGGER=
 function usage() {
     echo -n "./start-server "
     echo -n " -s (start server)"
-    echo -n " -d (debugger turned on)"    
+    echo -n " -d (debugger turned on)"
     echo -n " -w (along with -d, wait for debugger before starting)"
     echo -n " -p <port_number> default 8080"
-    echo -n "-h this message"        
+    echo -n "-h this message"
     exit 1
 }
 
 function build_properties() {
     local opts=
-    local prop= 
+    local prop=
     for prop in `cat  $PROPERTIES | grep =`; do
         local k=`echo $prop | awk '  BEGIN {FS="="} { print $1 }'`
         local v=`echo $prop | awk 'BEGIN {FS="="} { print $2 }'`
@@ -61,10 +63,12 @@ function build_properties() {
 }
 
 function start() {
-    local opts=`build_properties`
-    local start_cmd="mvn $opts -Dlog4j.configuration=file://$LOG -Dning.jmx.http.port=$PORT -Dxn.host.external.port=$PORT -DjettyPort=$PORT -Dxn.server.port=$PORT jetty:run"    
+    mkdir -p $LOG_DIR
 
-    local debug_opts_eclipse= 
+    local opts=`build_properties`
+    local start_cmd="mvn $opts -Dlogback.configurationFile=$LOG -Dning.jmx.http.port=$PORT -Dxn.host.external.port=$PORT -DjettyPort=$PORT -Dxn.server.port=$PORT jetty:run"
+
+    local debug_opts_eclipse=
     if [ ! -z $DEBUG ]; then
         if  [ ! -z $WAIT_DEBUGGER ]; then
             debug_opts_eclipse=$DEBUG_OPTS_ECLIPSE_WAIT
@@ -72,8 +76,8 @@ function start() {
             debug_opts_eclipse=$DEBUG_OPTS_ECLIPSE
         fi
     fi
-    export MAVEN_OPTS=" -Duser.timezone=UTC $OPTS_ECLIPSE $debug_opts_eclipse"
-    
+    export MAVEN_OPTS="$MAVEN_OPTS -Duser.timezone=UTC $debug_opts_eclipse"
+
     echo "Starting IRS MAVEN_OPTS = $MAVEN_OPTS"
     echo "$start_cmd"
     cd $SERVER

@@ -25,7 +25,7 @@ import com.ning.billing.util.config.catalog.XMLSchemaGenerator;
 public class CreateCatalogSchema {
 
     /**
-     * @param args
+     * @param args output file path
      */
     public static void main(final String[] args) throws Exception {
         if (args.length != 1) {
@@ -37,7 +37,5 @@ public class CreateCatalogSchema {
         final Writer w = new FileWriter(f);
         w.write(XMLSchemaGenerator.xmlSchemaAsString(StandaloneCatalog.class));
         w.close();
-
     }
-
 }

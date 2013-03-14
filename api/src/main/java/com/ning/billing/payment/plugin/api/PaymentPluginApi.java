@@ -20,45 +20,123 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
-import com.ning.billing.account.api.Account;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TenantContext;
 
 public interface PaymentPluginApi {
 
+    /**
+     * @return plugin name
+     */
     public String getName();
 
-    public PaymentInfoPlugin processPayment(String externalAccountKey, UUID paymentId, BigDecimal amount, CallContext context)
+    /**
+     * Charge a specific amount in the Gateway. Required.
+     *
+     * @param kbPaymentId            killbill payment id (for reference)
+     * @param kbPaymentMethodId      killbill payment method id
+     * @param amount                 amount to charge
+     * @param context                call context
+     * @return information about the payment in the gateway
+     * @throws PaymentPluginApiException
+     */
+    public PaymentInfoPlugin processPayment(UUID kbPaymentId, UUID kbPaymentMethodId, BigDecimal amount, CallContext context)
             throws PaymentPluginApiException;
 
-    public PaymentInfoPlugin getPaymentInfo(UUID paymentId, TenantContext context)
+    /**
+     * Retrieve information about a given payment. Optional (not all gateways will support it).
+     *
+     *
+     * @param kbPaymentId      killbill payment id (for reference)
+     * @param context          call context
+     * @return information about the payment in the gateway
+     * @throws PaymentPluginApiException
+     */
+    public PaymentInfoPlugin getPaymentInfo(UUID kbPaymentId, TenantContext context)
             throws PaymentPluginApiException;
 
-    public void processRefund(final Account account, final UUID paymentId, BigDecimal refundAmount, CallContext context)
+    /**
+     * Process a refund against a given payment. Required.
+     *
+     *
+     * @param kbPaymentId      killbill payment id (for reference)
+     * @param refundAmount     call context
+     * @param context          call context
+     * @return information about the refund in the gateway
+     * @throws PaymentPluginApiException
+     */
+    public RefundInfoPlugin processRefund(UUID kbPaymentId, BigDecimal refundAmount, CallContext context)
             throws PaymentPluginApiException;
 
-    public int getNbRefundForPaymentAmount(final Account account, final UUID paymentId, final BigDecimal refundAmount, TenantContext context)
+    /**
+     * Add a payment method for a Killbill account in the gateway. Optional.
+     *
+     * Note: the payment method doesn't exist yet in Killbill when receiving the call in
+     * the plugin (kbPaymentMethodId is a placeholder).
+     *
+     * @param kbAccountId        killbill accountId
+     * @param paymentMethodProps payment method details
+     * @param setDefault         set it as the default payment method in the gateway
+     * @param context            call context
+     * @throws PaymentPluginApiException
+     */
+    public void addPaymentMethod(UUID kbAccountId, UUID kbPaymentMethodId, PaymentMethodPlugin paymentMethodProps, boolean setDefault, CallContext context)
             throws PaymentPluginApiException;
 
-    public String createPaymentProviderAccount(Account account, CallContext context)
+    /**
+     * Delete a payment method in the gateway. Optional.
+     *
+     * @param kbPaymentMethodId      killbill payment method id
+     * @param context                call context
+     * @throws PaymentPluginApiException
+     */
+    public void deletePaymentMethod(UUID kbPaymentMethodId, CallContext context)
             throws PaymentPluginApiException;
 
-    public List<PaymentMethodPlugin> getPaymentMethodDetails(String accountKey, TenantContext context)
+    /**
+     * Get payment method details for a given payment method. Optional.
+     *
+     * @param kbAccountId       killbill account id
+     * @param kbPaymentMethodId killbill payment method id.
+     * @param context           call context
+     * @return PaymentMethodPlugin info for the payment method
+     * @throws PaymentPluginApiException
+     */
+    public PaymentMethodPlugin getPaymentMethodDetail(UUID kbAccountId, UUID kbPaymentMethodId, TenantContext context)
             throws PaymentPluginApiException;
 
-    public PaymentMethodPlugin getPaymentMethodDetail(String accountKey, String externalPaymentMethodId, TenantContext context)
+    /**
+     * Set a payment method as default in the gateway. Optional.
+     *
+     * @param kbPaymentMethodId      killbill payment method id
+     * @param context                call context
+     * @throws PaymentPluginApiException
+     */
+    public void setDefaultPaymentMethod(UUID kbPaymentMethodId, CallContext context)
             throws PaymentPluginApiException;
 
-    public String addPaymentMethod(String accountKey, PaymentMethodPlugin paymentMethodProps, boolean setDefault, CallContext context)
+    /**
+     *
+     * This is used to see the view of paymentMethods kept by the plugin or the view of
+     * existing payment method on the gateway.
+     *
+     * Sometimes payment methods have to be added directly to the gateway for PCI compliance issues
+     * and so Killbill needs to refresh its state.
+     *
+     * @param kbAccountId           killbill accountId
+     * @param refreshFromGateway    fetch the list of existing  payment methods from gateway-- if supported
+     * @param context               call context
+     * @return
+     */
+    public List<PaymentMethodInfoPlugin> getPaymentMethods(UUID kbAccountId, boolean refreshFromGateway, CallContext context)
             throws PaymentPluginApiException;
 
-    public void updatePaymentMethod(String accountKey, PaymentMethodPlugin paymentMethodProps, CallContext context)
-            throws PaymentPluginApiException;
-
-    public void deletePaymentMethod(String accountKey, String externalPaymentMethodId, CallContext context)
-            throws PaymentPluginApiException;
-
-    public void setDefaultPaymentMethod(String accountKey, String externalPaymentId, CallContext context)
+    /**
+     * This is used after Killbill decided to refresh its state from the gateway
+     *
+     * @param paymentMethods        the list of payment methods
+     */
+    public void resetPaymentMethods(List<PaymentMethodInfoPlugin> paymentMethods)
             throws PaymentPluginApiException;
 }

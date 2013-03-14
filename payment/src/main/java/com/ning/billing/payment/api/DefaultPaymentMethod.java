@@ -45,6 +45,10 @@ public class DefaultPaymentMethod extends EntityBase implements PaymentMethod {
         this(UUID.randomUUID(), null, null, accountId, true, pluginName, pluginDetail);
     }
 
+    public DefaultPaymentMethod(final UUID paymentMethodId, final UUID accountId, final String pluginName) {
+        this(paymentMethodId, null, null, accountId, true, pluginName, null);
+    }
+
     public DefaultPaymentMethod(final PaymentMethodModelDao input, final PaymentMethodPlugin pluginDetail) {
         this(input.getId(), input.getCreatedDate(), input.getUpdatedDate(), input.getAccountId(), input.isActive(), input.getPluginName(), pluginDetail);
     }

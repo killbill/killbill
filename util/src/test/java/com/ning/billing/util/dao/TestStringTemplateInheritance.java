@@ -36,16 +36,16 @@ public class TestStringTemplateInheritance extends UtilTestSuiteNoDB {
 
     @Override
     @BeforeMethod(groups = "fast")
-    public void setupTest() throws Exception {
-        super.setupTest();
+    public void beforeMethod() throws Exception {
+        super.beforeMethod();
         entityStream = this.getClass().getResourceAsStream("/com/ning/billing/util/entity/dao/EntitySqlDao.sql.stg");
         kombuchaStream = this.getClass().getResourceAsStream("/com/ning/billing/util/dao/Kombucha.sql.stg");
     }
 
     @Override
     @AfterMethod(groups = "fast")
-    public void cleanupTest() throws Exception {
-        super.cleanupTest();
+    public void afterMethod() throws Exception {
+        super.afterMethod();
         if (entityStream != null) {
             entityStream.close();
         }

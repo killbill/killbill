@@ -52,8 +52,8 @@ public class DefaultPaymentInternalApi implements PaymentInternalApi {
     }
 
     @Override
-    public PaymentMethod getPaymentMethod(final Account account, final UUID paymentMethodId, final boolean withPluginDetail, final InternalTenantContext context) throws PaymentApiException {
-        return methodProcessor.getPaymentMethod(account, paymentMethodId, withPluginDetail, context);
+    public PaymentMethod getPaymentMethodById(final UUID paymentMethodId, final InternalTenantContext context) throws PaymentApiException {
+        return methodProcessor.getPaymentMethodById(paymentMethodId, false, context);
     }
 
     @Override
@@ -62,7 +62,7 @@ public class DefaultPaymentInternalApi implements PaymentInternalApi {
     }
 
     @Override
-    public List<PaymentMethod> getPaymentMethods(final Account account, final boolean withPluginDetail, final InternalTenantContext context) throws PaymentApiException {
-        return methodProcessor.getPaymentMethods(account, withPluginDetail, context);
+    public List<PaymentMethod> getPaymentMethods(final Account account, final InternalTenantContext context) throws PaymentApiException {
+        return methodProcessor.getPaymentMethods(account, context);
     }
 }

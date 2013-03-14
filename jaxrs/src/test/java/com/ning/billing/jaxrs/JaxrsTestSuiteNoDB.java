@@ -32,7 +32,7 @@ public abstract class JaxrsTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     protected ObjectMapper mapper;
 
     @BeforeClass(groups = "fast")
-    protected void setup() throws Exception {
+    protected void beforeClass() throws Exception {
         final Injector injector = Guice.createInjector(new TestJaxrsModuleNoDB());
         injector.injectMembers(this);
     }

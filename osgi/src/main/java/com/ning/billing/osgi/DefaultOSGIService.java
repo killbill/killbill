@@ -18,31 +18,22 @@ package com.ning.billing.osgi;
 
 import java.io.File;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 
 import javax.inject.Inject;
 
 import org.apache.felix.framework.Felix;
 import org.apache.felix.framework.util.FelixConstants;
-import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.launch.Framework;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.osgi.logservice.impl.Activator;
 
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
 import com.ning.billing.osgi.api.OSGIService;
 import com.ning.billing.osgi.api.config.PluginConfigServiceApi;
-import com.ning.billing.osgi.api.config.PluginJavaConfig;
-import com.ning.billing.osgi.api.config.PluginRubyConfig;
-import com.ning.billing.osgi.pluginconf.DefaultPluginConfigServiceApi;
-import com.ning.billing.osgi.pluginconf.PluginConfigException;
 import com.ning.billing.osgi.pluginconf.PluginFinder;
 import com.ning.billing.util.config.OSGIConfig;
 
@@ -54,20 +45,19 @@ public class DefaultOSGIService implements OSGIService {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultOSGIService.class);
 
+    private final OSGIConfig osgiConfig;
+    private final KillbillActivator killbillActivator;
+    private final FileInstall fileInstall;
+
     private Framework framework;
 
-    private final OSGIConfig osgiConfig;
-    private final PluginFinder pluginFinder;
-    private final PluginConfigServiceApi pluginConfigServiceApi;
-    private final KillbillActivator killbillActivator;
-
     @Inject
-    public DefaultOSGIService(final OSGIConfig osgiConfig, final PluginFinder pluginFinder,
-                              final PluginConfigServiceApi pluginConfigServiceApi, final KillbillActivator killbillActivator) {
+    public DefaultOSGIService(final OSGIConfig osgiConfig, final PureOSGIBundleFinder osgiBundleFinder,
+                              final PluginFinder pluginFinder, final PluginConfigServiceApi pluginConfigServiceApi,
+                              final KillbillActivator killbillActivator) {
         this.osgiConfig = osgiConfig;
-        this.pluginFinder = pluginFinder;
-        this.pluginConfigServiceApi = pluginConfigServiceApi;
         this.killbillActivator = killbillActivator;
+        this.fileInstall = new FileInstall(osgiBundleFinder, pluginFinder, pluginConfigServiceApi);
         this.framework = null;
     }
 
@@ -87,22 +77,22 @@ public class DefaultOSGIService implements OSGIService {
             framework.start();
 
             // This will call the start() method for the bundles
-            installAndStartBundles(framework);
+            fileInstall.installAndStartBundles(framework);
         } catch (BundleException e) {
             logger.error("Failed to initialize Killbill OSGIService", e);
         }
     }
 
-    @LifecycleHandlerType(LifecycleLevel.START_SERVICE)
-    public void startFramework() {
-    }
-
     @LifecycleHandlerType(LifecycleHandlerType.LifecycleLevel.REGISTER_EVENTS)
-    public void registerForExternalEvents() {
+    public void registerForExternalEvents() throws Exception {
     }
 
     @LifecycleHandlerType(LifecycleHandlerType.LifecycleLevel.UNREGISTER_EVENTS)
     public void unregisterForExternalEvents() {
+    }
+
+    @LifecycleHandlerType(LifecycleLevel.START_SERVICE)
+    public void startFramework() {
     }
 
     @LifecycleHandlerType(LifecycleLevel.STOP_SERVICE)
@@ -110,49 +100,11 @@ public class DefaultOSGIService implements OSGIService {
         try {
             framework.stop();
             framework.waitForStop(0);
+
         } catch (BundleException e) {
             logger.error("Failed to Stop Killbill OSGIService " + e.getMessage());
         } catch (InterruptedException e) {
             logger.error("Failed to Stop Killbill OSGIService " + e.getMessage());
-        }
-    }
-
-    private void installAndStartBundles(final Framework framework) throws BundleException {
-        try {
-            final BundleContext context = framework.getBundleContext();
-
-            // Install all bundles and create service mapping
-            final List<Bundle> installedBundles = new LinkedList<Bundle>();
-            installAllJavaBundles(context, installedBundles);
-            installAllJRubyBundles(context, installedBundles);
-
-            // Start all the bundles
-            for (final Bundle bundle : installedBundles) {
-                logger.info("Starting bundle {}", bundle.getLocation());
-                bundle.start();
-            }
-        } catch (PluginConfigException e) {
-            logger.error("Error while parsing plugin configurations", e);
-        }
-    }
-
-    private void installAllJavaBundles(final BundleContext context, final List<Bundle> installedBundles) throws PluginConfigException, BundleException {
-        final List<PluginJavaConfig> pluginJavaConfigs = pluginFinder.getLatestJavaPlugins();
-        for (final PluginJavaConfig cur : pluginJavaConfigs) {
-            logger.info("Installing Java bundle for plugin {} in {}", cur.getPluginName(), cur.getBundleJarPath());
-            final Bundle bundle = context.installBundle("file:" + cur.getBundleJarPath());
-            ((DefaultPluginConfigServiceApi) pluginConfigServiceApi).registerBundle(bundle.getBundleId(), cur);
-            installedBundles.add(bundle);
-        }
-    }
-
-    private void installAllJRubyBundles(final BundleContext context, final List<Bundle> installedBundles) throws PluginConfigException, BundleException {
-        final List<PluginRubyConfig> pluginRubyConfigs = pluginFinder.getLatestRubyPlugins();
-        for (final PluginRubyConfig cur : pluginRubyConfigs) {
-            logger.info("Installing JRuby bundle for plugin {} in {}", cur.getPluginName(), cur.getRubyLoadDir());
-            final Bundle bundle = context.installBundle(osgiConfig.getJrubyBundlePath());
-            ((DefaultPluginConfigServiceApi) pluginConfigServiceApi).registerBundle(bundle.getBundleId(), cur);
-            installedBundles.add(bundle);
         }
     }
 
@@ -169,8 +121,11 @@ public class DefaultOSGIService implements OSGIService {
         final Map<Object, Object> felixConfig = new HashMap<Object, Object>();
         felixConfig.putAll(config);
 
-        // Install default bundles: killbill and slf4j ones
-        felixConfig.put(FelixConstants.SYSTEMBUNDLE_ACTIVATORS_PROP, ImmutableList.<BundleActivator>of(killbillActivator, new Activator()));
+        // Install default bundles in the Framework: Killbill bundle only for now
+        // Note! Think twice before adding a bundle here as it will run inside the System bundle. This means the bundle
+        // context that the bundle will see is the System bundle one, which will break e.g. resources lookup
+        felixConfig.put(FelixConstants.SYSTEMBUNDLE_ACTIVATORS_PROP,
+                        ImmutableList.<BundleActivator>of(killbillActivator));
 
         final Framework felix = new Felix(felixConfig);
         felix.init();
@@ -178,7 +133,7 @@ public class DefaultOSGIService implements OSGIService {
     }
 
     private void pruneOSGICache() {
-        final String path = osgiConfig.getOSGIBundleRootDir() + "/" + osgiConfig.getOSGIBundleCacheName();
+        final String path = osgiConfig.getOSGIBundleRootDir();
         deleteUnderDirectory(new File(path));
     }
 
@@ -197,8 +152,7 @@ public class DefaultOSGIService implements OSGIService {
                 for (final File f : files) {
                     if (f.isDirectory()) {
                         deleteDirectory(f, true);
-                    }
-                    if (!f.delete()) {
+                    } else if (!f.delete()) {
                         logger.warn("Unable to delete {}", f.getAbsolutePath());
                     }
                 }
@@ -207,6 +161,8 @@ public class DefaultOSGIService implements OSGIService {
             if (deleteParent) {
                 if (!path.delete()) {
                     logger.warn("Unable to delete {}", path.getAbsolutePath());
+                } else {
+                    logger.info("Deleted recursively {}", path.getAbsolutePath());
                 }
             }
         }

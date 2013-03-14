@@ -56,8 +56,10 @@ public class TestDefaultEntitlementTransferApi extends EntitlementTestSuiteNoDB 
 
     private DefaultEntitlementTransferApi transferApi;
 
+    @Override
     @BeforeMethod(groups = "fast")
-    public void setUp() throws Exception {
+    public void beforeMethod() throws Exception {
+        super.beforeMethod();
         final NonEntityDao nonEntityDao = Mockito.mock(NonEntityDao.class);
         final EntitlementDao dao = Mockito.mock(EntitlementDao.class);
         final CatalogService catalogService = new MockCatalogService(new MockCatalog());

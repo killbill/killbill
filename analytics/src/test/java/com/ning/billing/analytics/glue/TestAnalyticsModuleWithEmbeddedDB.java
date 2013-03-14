@@ -16,11 +16,17 @@
 
 package com.ning.billing.analytics.glue;
 
+import org.skife.config.ConfigSource;
+
 import com.ning.billing.GuicyKillbillTestWithEmbeddedDBModule;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.NonEntityDaoModule;
 
 public class TestAnalyticsModuleWithEmbeddedDB extends TestAnalyticsModule {
+
+    public TestAnalyticsModuleWithEmbeddedDB(final ConfigSource configSource) {
+        super(configSource);
+    }
 
     @Override
     public void configure() {

@@ -83,7 +83,6 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
     protected TestApiListener testListener;
     @Inject
     protected TestListenerStatus testListenerStatus;
-
     @Inject
     protected EntitlementTestInitializer entitlementTestInitializer;
 
@@ -92,14 +91,16 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
     protected SubscriptionBundle bundle;
 
     @BeforeClass(groups = "slow")
-    public void setup() throws Exception {
+    public void beforeClass() throws Exception {
         DefaultEntitlementTestInitializer.loadSystemPropertiesFromClasspath("/entitlement.properties");
-        final Injector g = Guice.createInjector(Stage.PRODUCTION, new TestEngineModuleWithEmbeddedDB());
+        final Injector g = Guice.createInjector(Stage.PRODUCTION, new TestEngineModuleWithEmbeddedDB(configSource));
         g.injectMembers(this);
     }
 
+    @Override
     @BeforeMethod(groups = "slow")
-    public void setupTest() throws Exception {
+    public void beforeMethod() throws Exception {
+        super.beforeMethod();
         entitlementTestInitializer.startTestFamework(testListener, testListenerStatus, clock, busService, entitlementService);
 
         this.catalog = entitlementTestInitializer.initCatalog(catalogService);
@@ -108,7 +109,7 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
     }
 
     @AfterMethod(groups = "slow")
-    public void cleanupTest() throws Exception {
+    public void afterMethod() throws Exception {
         entitlementTestInitializer.stopTestFramework(testListener, busService, entitlementService);
     }
 

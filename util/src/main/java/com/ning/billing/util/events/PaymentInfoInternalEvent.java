@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.util.events;
 
 import java.math.BigDecimal;
@@ -37,8 +38,4 @@ public interface PaymentInfoInternalEvent extends BusInternalEvent {
     public Integer getPaymentNumber();
 
     public PaymentStatus getStatus();
-
-    public String getExtFirstPaymentRefId();
-
-    public String getExtSecondPaymentRefId();
 }

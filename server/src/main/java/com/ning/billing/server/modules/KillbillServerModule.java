@@ -16,6 +16,8 @@
 
 package com.ning.billing.server.modules;
 
+import org.skife.config.ConfigSource;
+import org.skife.config.SimplePropertyConfigSource;
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.IDBI;
 
@@ -31,18 +33,21 @@ import com.ning.billing.jaxrs.resources.CatalogResource;
 import com.ning.billing.jaxrs.resources.InvoiceResource;
 import com.ning.billing.jaxrs.resources.PaymentMethodResource;
 import com.ning.billing.jaxrs.resources.PaymentResource;
+import com.ning.billing.jaxrs.resources.PluginResource;
 import com.ning.billing.jaxrs.resources.RefundResource;
 import com.ning.billing.jaxrs.resources.SubscriptionResource;
 import com.ning.billing.jaxrs.resources.TagResource;
 import com.ning.billing.jaxrs.resources.TenantResource;
 import com.ning.billing.jaxrs.util.KillbillEventHandler;
 import com.ning.billing.junction.glue.DefaultJunctionModule;
+import com.ning.billing.osgi.glue.DefaultOSGIModule;
 import com.ning.billing.overdue.glue.DefaultOverdueModule;
 import com.ning.billing.payment.glue.PaymentModule;
 import com.ning.billing.server.DefaultServerService;
 import com.ning.billing.server.ServerService;
 import com.ning.billing.server.notifications.PushNotificationListener;
 import com.ning.billing.tenant.glue.TenantModule;
+import com.ning.billing.usage.glue.UsageModule;
 import com.ning.billing.util.email.EmailModule;
 import com.ning.billing.util.email.templates.TemplateModule;
 import com.ning.billing.util.glue.AuditModule;
@@ -93,6 +98,7 @@ public class KillbillServerModule extends AbstractModule {
         bind(CatalogResource.class).asEagerSingleton();
         bind(PaymentMethodResource.class).asEagerSingleton();
         bind(PaymentResource.class).asEagerSingleton();
+        bind(PluginResource.class).asEagerSingleton();
         bind(RefundResource.class).asEagerSingleton();
         bind(TenantResource.class).asEagerSingleton();
         bind(KillbillEventHandler.class).asEagerSingleton();
@@ -103,28 +109,33 @@ public class KillbillServerModule extends AbstractModule {
     }
 
     protected void installKillbillModules() {
-        install(new EmailModule());
-        install(new CacheModule());
+        final ConfigSource configSource = new SimplePropertyConfigSource(System.getProperties());
+
+        install(new EmailModule(configSource));
+        install(new CacheModule(configSource));
         install(new GlobalLockerModule());
         install(new CustomFieldModule());
         install(new AuditModule());
-        install(new CatalogModule());
-        install(new BusModule());
-        install(new NotificationQueueModule());
+        install(new CatalogModule(configSource));
+        install(new BusModule(configSource));
+        install(new NotificationQueueModule(configSource));
         install(new CallContextModule());
-        install(new DefaultAccountModule());
-        install(new DefaultInvoiceModule());
+        install(new DefaultAccountModule(configSource));
+        install(new DefaultInvoiceModule(configSource));
         install(new TemplateModule());
-        install(new DefaultEntitlementModule());
-        install(new AnalyticsModule());
-        install(new PaymentModule());
+        install(new DefaultEntitlementModule(configSource));
+        install(new AnalyticsModule(configSource));
+        install(new PaymentModule(configSource));
         install(new BeatrixModule());
-        install(new DefaultJunctionModule());
-        install(new DefaultOverdueModule());
-        install(new TenantModule());
+        install(new DefaultJunctionModule(configSource));
+        install(new DefaultOverdueModule(configSource));
+        install(new TenantModule(configSource));
         install(new ExportModule());
         install(new TagStoreModule());
         install(new NonEntityDaoModule());
+        install(new DefaultOSGIModule(configSource));
+        install(new UsageModule(configSource));
+
         installClock();
     }
 }

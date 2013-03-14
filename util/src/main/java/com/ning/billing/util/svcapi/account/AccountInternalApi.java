@@ -41,5 +41,5 @@ public interface AccountInternalApi {
 
     public void updatePaymentMethod(UUID accountId, UUID paymentMethodId, InternalCallContext context) throws AccountApiException;
 
-    public UUID getByRecordId(Long recordId, InternalCallContext context) throws AccountApiException;
+    public UUID getByRecordId(Long recordId, InternalTenantContext context) throws AccountApiException;
 }

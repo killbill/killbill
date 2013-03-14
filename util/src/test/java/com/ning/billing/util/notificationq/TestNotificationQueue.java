@@ -85,15 +85,15 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
 
     @Override
     @BeforeClass(groups = "slow")
-    public void setup() throws Exception {
-        super.setup();
+    public void beforeClass() throws Exception {
+        super.beforeClass();
         entitySqlDaoTransactionalJdbiWrapper = new EntitySqlDaoTransactionalJdbiWrapper(getDBI(), clock, cacheControllerDispatcher, nonEntityDao);
     }
 
     @Override
     @BeforeMethod(groups = "slow")
-    public void setupTest() throws Exception {
-        super.setupTest();
+    public void beforeMethod() throws Exception {
+        super.beforeMethod();
 
         // Reset time to real value
         clock.resetDeltaFromReality();

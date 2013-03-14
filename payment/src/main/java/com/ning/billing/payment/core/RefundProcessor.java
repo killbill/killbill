@@ -37,6 +37,7 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.osgi.api.OSGIServiceRegistration;
 import com.ning.billing.payment.api.DefaultRefund;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.Refund;
@@ -46,7 +47,6 @@ import com.ning.billing.payment.dao.RefundModelDao;
 import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
 import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 import com.ning.billing.payment.plugin.api.PaymentPluginApiException;
-import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
@@ -75,7 +75,7 @@ public class RefundProcessor extends ProcessorBase {
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
-    public RefundProcessor(final PaymentProviderPluginRegistry pluginRegistry,
+    public RefundProcessor(final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry,
                            final AccountInternalApi accountApi,
                            final InvoiceInternalApi invoiceApi,
                            final InternalBus eventBus,
@@ -113,58 +113,17 @@ public class RefundProcessor extends ProcessorBase {
                 final BigDecimal refundAmount = computeRefundAmount(paymentId, specifiedRefundAmount, invoiceItemIdsWithAmounts, context);
 
                 try {
-
                     final PaymentModelDao payment = paymentDao.getPayment(paymentId, context);
                     if (payment == null) {
                         throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_SUCCESS_PAYMENT, paymentId);
                     }
 
-                    //
-                    // We are looking for multiple things:
-                    // 1. Compute totalAmountRefunded based on all Refund entries that made it to the plugin.
-                    // 2. If we find a CREATED entry (that did not make it to the plugin) with the same amount, we reuse the entry
-                    // 3. Compute foundPluginCompletedRefunds, number of refund entries for that amount that made it to the plugin
-                    //
-                    int foundPluginCompletedRefunds = 0;
-                    RefundModelDao refundInfo = null;
-                    BigDecimal totalAmountRefunded = BigDecimal.ZERO;
-                    final List<RefundModelDao> existingRefunds = paymentDao.getRefundsForPayment(paymentId, context);
-                    for (final RefundModelDao cur : existingRefunds) {
-
-                        final BigDecimal existingPositiveAmount = cur.getAmount();
-                        if (existingPositiveAmount.compareTo(refundAmount) == 0) {
-                            if (cur.getRefundStatus() == RefundStatus.CREATED) {
-                                if (refundInfo == null) {
-                                    refundInfo = cur;
-                                }
-                            } else {
-                                foundPluginCompletedRefunds++;
-                            }
-                        }
-                        if (cur.getRefundStatus() != RefundStatus.CREATED) {
-                            totalAmountRefunded = totalAmountRefunded.add(existingPositiveAmount);
-                        }
-                    }
-
-                    if (payment.getAmount().subtract(totalAmountRefunded).compareTo(refundAmount) < 0) {
-                        throw new PaymentApiException(ErrorCode.PAYMENT_REFUND_AMOUNT_TOO_LARGE);
-                    }
-
-                    if (refundInfo == null) {
-                        refundInfo = new RefundModelDao(account.getId(), paymentId, refundAmount, account.getCurrency(), isAdjusted);
-                        paymentDao.insertRefund(refundInfo, context);
-                    }
+                    final RefundModelDao refundInfo = new RefundModelDao(account.getId(), paymentId, refundAmount, account.getCurrency(), isAdjusted);
+                    paymentDao.insertRefund(refundInfo, context);
 
                     final PaymentPluginApi plugin = getPaymentProviderPlugin(payment.getPaymentMethodId(), context);
-                    final int nbExistingRefunds = plugin.getNbRefundForPaymentAmount(account, paymentId, refundAmount, context.toCallContext());
-                    log.debug(String.format("found %d pluginRefunds for paymentId %s and amount %s", nbExistingRefunds, paymentId, refundAmount));
+                    plugin.processRefund(paymentId, refundAmount, context.toCallContext());
 
-                    if (nbExistingRefunds > foundPluginCompletedRefunds) {
-                        log.info("Found existing plugin refund for paymentId {}, skip plugin", paymentId);
-                    } else {
-                        // If there is no such existing refund we create it
-                        plugin.processRefund(account, paymentId, refundAmount, context.toCallContext());
-                    }
                     paymentDao.updateRefundStatus(refundInfo.getId(), RefundStatus.PLUGIN_COMPLETED, context);
 
                     invoiceApi.createRefund(paymentId, refundAmount, isAdjusted, invoiceItemIdsWithAmounts, refundInfo.getId(), context);

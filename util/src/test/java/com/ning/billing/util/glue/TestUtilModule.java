@@ -17,12 +17,19 @@
 package com.ning.billing.util.glue;
 
 import org.mockito.Mockito;
+import org.skife.config.ConfigSource;
 
 import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
 
 import com.google.inject.AbstractModule;
 
 public class TestUtilModule extends AbstractModule {
+
+    protected final ConfigSource configSource;
+
+    public TestUtilModule(final ConfigSource configSource) {
+        this.configSource = configSource;
+    }
 
     // TODO STEPH this is bad-- because DefaultAuditUserApi is using entitlementTimeline API
     public void installHack() {
@@ -32,7 +39,7 @@ public class TestUtilModule extends AbstractModule {
     @Override
     protected void configure() {
         //install(new CallContextModule());
-        install(new CacheModule());
+        install(new CacheModule(configSource));
 
         installHack();
     }

@@ -57,8 +57,10 @@ public class TestPlanAligner extends EntitlementTestSuiteNoDB {
     private DefaultCatalogService catalogService;
     private PlanAligner planAligner;
 
+    @Override
     @BeforeClass(groups = "fast")
-    public void setUp() throws Exception {
+    public void beforeClass() throws Exception {
+        super.beforeClass();
         final VersionedCatalogLoader versionedCatalogLoader = new VersionedCatalogLoader(clock);
         final CatalogConfig config = new ConfigurationObjectFactory(new ConfigSource() {
             final Map<String, String> properties = ImmutableMap.<String, String>of("killbill.catalog.uri", "file:src/test/resources/testInput.xml");

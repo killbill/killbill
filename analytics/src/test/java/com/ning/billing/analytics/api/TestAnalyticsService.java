@@ -93,7 +93,8 @@ public class TestAnalyticsService extends AnalyticsTestSuiteWithEmbeddedDB {
     private PaymentInfoInternalEvent paymentInfoNotification;
 
     @BeforeMethod(groups = "slow")
-    public void createMocks() throws AccountApiException {
+    public void beforeMethod() throws Exception {
+        super.beforeMethod();
         Mockito.when(catalogService.getFullCatalog()).thenReturn(new MockCatalog());
 
         final PaymentMethod paymentMethod = Mockito.mock(PaymentMethod.class);
@@ -177,7 +178,7 @@ public class TestAnalyticsService extends AnalyticsTestSuiteWithEmbeddedDB {
                                                                       INVOICE_AMOUNT, ACCOUNT_CURRENCY, null, 1L, 1L);
 
         paymentInfoNotification = new DefaultPaymentInfoEvent(account.getId(), invoice.getId(), null, INVOICE_AMOUNT, -1,
-                                                              PaymentStatus.UNKNOWN, null, null, null, clock.getUTCNow(), 1L, 1L);
+                                                              PaymentStatus.UNKNOWN, null, clock.getUTCNow(), 1L, 1L);
     }
 
     @Test(groups = "slow")

@@ -26,7 +26,6 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
@@ -59,16 +58,18 @@ public class TestPaymentRefund extends TestIntegrationBase {
     private DateTime initialCreationDate;
     private int invoiceItemCount;
 
+    @Override
     @BeforeMethod(groups = "slow")
-    public void setupTest() throws Exception {
-        super.setupTest();
+    public void beforeMethod() throws Exception {
+        super.beforeMethod();
         invoiceItemCount = 1;
         setupRefundTest();
     }
 
     @Test(groups = "slow")
     public void testRefundWithNoAdjustments() throws Exception {
-        refundPaymentAndCheckForCompletion(account, payment);
+        // Although we don't adjust the invoice, the invoicing system sends an event because invoice balance changes and overdue system-- in particular-- needs to know about it.
+        refundPaymentAndCheckForCompletion(account, payment, NextEvent.INVOICE_ADJUSTMENT);
         refundChecker.checkRefund(payment.getId(), callContext, new ExpectedRefundCheck(payment.getId(), false, new BigDecimal("233.83"), Currency.USD, initialCreationDate.toLocalDate()));
     }
 
@@ -98,7 +99,7 @@ public class TestPaymentRefund extends TestIntegrationBase {
         final int billingDay = 31;
         initialCreationDate = new DateTime(2012, 2, 1, 0, 3, 42, 0, testTimeZone);
 
-        account = createAccountWithPaymentMethod(getAccountData(billingDay));
+        account = createAccountWithNonOsgiPaymentMethod(getAccountData(billingDay));
 
         // set clock to the initial start date
         clock.setTime(initialCreationDate);

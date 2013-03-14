@@ -16,11 +16,8 @@
 
 package com.ning.billing.analytics.glue;
 
-import java.util.Properties;
-
 import org.mockito.Mockito;
 import org.skife.config.ConfigSource;
-import org.skife.config.SimplePropertyConfigSource;
 
 import com.ning.billing.analytics.setup.AnalyticsModule;
 import com.ning.billing.catalog.MockCatalogModule;
@@ -42,17 +39,8 @@ import com.ning.billing.util.glue.TagStoreModule;
 
 public class TestAnalyticsModule extends AnalyticsModule {
 
-    protected final ConfigSource configSource;
-
-    public TestAnalyticsModule() {
-        final Properties properties = new Properties(System.getProperties());
-        // Speed up the bus
-        properties.put("killbill.billing.util.persistent.bus.sleep", "10");
-        properties.put("killbill.billing.util.persistent.bus.nbThreads", "1");
-        configSource = new SimplePropertyConfigSource(properties);
-
-        // Ignore ehcache checks. Unfortunately, ehcache looks at system properties directly...
-        System.setProperty("net.sf.ehcache.skipUpdateCheck", "true");
+    public TestAnalyticsModule(final ConfigSource configSource) {
+        super(configSource);
     }
 
     @Override
@@ -60,7 +48,7 @@ public class TestAnalyticsModule extends AnalyticsModule {
         super.configure();
 
         install(new AuditModule());
-        install(new CacheModule());
+        install(new CacheModule(configSource));
         install(new CallContextModule());
         install(new CustomFieldModule());
         install(new MockAccountModule());
@@ -71,7 +59,7 @@ public class TestAnalyticsModule extends AnalyticsModule {
         install(new MockOverdueModule());
         install(new MockPaymentModule());
         install(new MockGlobalLockerModule());
-        install(new NotificationQueueModule());
+        install(new NotificationQueueModule(configSource));
         install(new TagStoreModule());
 
         bind(InvoiceDao.class).toInstance(Mockito.mock(InvoiceDao.class));

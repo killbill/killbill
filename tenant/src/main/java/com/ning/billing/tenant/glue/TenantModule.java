@@ -16,6 +16,8 @@
 
 package com.ning.billing.tenant.glue;
 
+import org.skife.config.ConfigSource;
+
 import com.ning.billing.tenant.api.DefaultTenantService;
 import com.ning.billing.tenant.api.TenantService;
 import com.ning.billing.tenant.api.TenantUserApi;
@@ -26,6 +28,12 @@ import com.ning.billing.tenant.dao.TenantDao;
 import com.google.inject.AbstractModule;
 
 public class TenantModule extends AbstractModule {
+
+    protected final ConfigSource configSource;
+
+    public TenantModule(final ConfigSource configSource) {
+        this.configSource = configSource;
+    }
 
     private void installConfig() {
     }

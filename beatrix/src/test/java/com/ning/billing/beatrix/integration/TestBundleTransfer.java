@@ -47,7 +47,7 @@ public class TestBundleTransfer extends TestIntegrationBase {
     @Test(groups = "slow")
     public void testBundleTransferWithBPAnnualOnly() throws Exception {
 
-        final Account account = createAccountWithPaymentMethod(getAccountData(3));
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(3));
 
         // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
 
@@ -84,7 +84,7 @@ public class TestBundleTransfer extends TestIntegrationBase {
         assertListenerStatus();
 
         // BUNDLE TRANSFER
-        final Account newAccount = createAccountWithPaymentMethod(getAccountData(17));
+        final Account newAccount = createAccountWithNonOsgiPaymentMethod(getAccountData(17));
 
         busHandler.pushExpectedEvent(NextEvent.TRANSFER);
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
@@ -107,7 +107,7 @@ public class TestBundleTransfer extends TestIntegrationBase {
     @Test(groups = "slow")
     public void testBundleTransferWithBPMonthlyOnly() throws Exception {
 
-        final Account account = createAccountWithPaymentMethod(getAccountData(0));
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(0));
 
         // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
 
@@ -144,7 +144,7 @@ public class TestBundleTransfer extends TestIntegrationBase {
         assertListenerStatus();
 
         // BUNDLE TRANSFER
-        final Account newAccount = createAccountWithPaymentMethod(getAccountData(0));
+        final Account newAccount = createAccountWithNonOsgiPaymentMethod(getAccountData(0));
 
         busHandler.pushExpectedEvent(NextEvent.TRANSFER);
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
@@ -174,7 +174,7 @@ public class TestBundleTransfer extends TestIntegrationBase {
     @Test(groups = "slow")
     public void testBundleTransferWithBPMonthlyOnlyWIthCancellationImm() throws Exception {
 
-        final Account account = createAccountWithPaymentMethod(getAccountData(9));
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(9));
 
         // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
 
@@ -211,7 +211,7 @@ public class TestBundleTransfer extends TestIntegrationBase {
         assertListenerStatus();
 
         // BUNDLE TRANSFER
-        final Account newAccount = createAccountWithPaymentMethod(getAccountData(15));
+        final Account newAccount = createAccountWithNonOsgiPaymentMethod(getAccountData(15));
 
         busHandler.pushExpectedEvent(NextEvent.CANCEL);
         busHandler.pushExpectedEvent(NextEvent.TRANSFER);

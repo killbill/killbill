@@ -29,7 +29,8 @@ public class EmailSenderTest extends UtilTestSuiteNoDB {
     private EmailConfig config;
 
     @BeforeClass
-    public void setup() {
+    public void beforeClass() throws Exception {
+        super.beforeClass();
         config = new ConfigurationObjectFactory(System.getProperties()).build(EmailConfig.class);
     }
 
