@@ -16,11 +16,11 @@
 
 package com.ning.billing.invoice;
 
-import java.io.IOException;
 import java.net.URL;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -47,8 +47,6 @@ import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-
-import static org.testng.Assert.assertNotNull;
 
 public abstract class InvoiceTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
@@ -89,10 +87,15 @@ public abstract class InvoiceTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     @Inject
     protected TestInvoiceHelper invoiceUtil;
 
+    private void loadSystemPropertiesFromClasspath(final String resource) {
+        final URL url = InvoiceTestSuiteNoDB.class.getResource(resource);
+        Assert.assertNotNull(url);
+
+        configSource.merge(url);
+    }
 
     @BeforeClass(groups = "fast")
     protected void beforeClass() throws Exception {
-
         loadSystemPropertiesFromClasspath("/resource.properties");
 
         final Injector injector = Guice.createInjector(new TestInvoiceModuleNoDB(configSource));
@@ -107,15 +110,5 @@ public abstract class InvoiceTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     @AfterMethod(groups = "fast")
     public void afterMethod() {
         bus.stop();
-    }
-
-    private static void loadSystemPropertiesFromClasspath(final String resource) {
-        final URL url = InvoiceTestSuiteNoDB.class.getResource(resource);
-        assertNotNull(url);
-        try {
-            System.getProperties().load(url.openStream());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 }

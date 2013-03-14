@@ -16,10 +16,13 @@
 
 package com.ning.billing.entitlement;
 
+import java.net.URL;
+
 import javax.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -92,9 +95,17 @@ public class EntitlementTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     protected AccountData accountData;
     protected SubscriptionBundle bundle;
 
+    private void loadSystemPropertiesFromClasspath(final String resource) {
+        final URL url = DefaultEntitlementTestInitializer.class.getResource(resource);
+        Assert.assertNotNull(url);
+
+        configSource.merge(url);
+    }
+
     @BeforeClass(groups = "fast")
     public void beforeClass() throws Exception {
-        DefaultEntitlementTestInitializer.loadSystemPropertiesFromClasspath("/entitlement.properties");
+        loadSystemPropertiesFromClasspath("/entitlement.properties");
+
         final Injector g = Guice.createInjector(Stage.PRODUCTION, new TestEngineModuleNoDB(configSource));
         g.injectMembers(this);
     }
