@@ -20,7 +20,7 @@
     <parent>
         <groupId>com.ning.billing</groupId>
         <artifactId>killbill</artifactId>
-        <version>0.1.56-SNAPSHOT</version>
+        <version>0.1.56</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>killbill-beatrix</artifactId>
@@ -193,8 +193,8 @@
                         <phase>initialize</phase>
                         <configuration>
                             <tasks>
-                                <copy file="${basedir}/../osgi-bundles/tests/beatrix/target/killbill-osgi-bundles-test-beatrix-${project.version}-jar-with-dependencies.jar" tofile="${basedir}/src/test/resources/killbill-osgi-bundles-test-beatrix-${project.version}-jar-with-dependencies.jar"/>
-                                <copy file="${basedir}/../osgi-bundles/tests/payment/target/killbill-osgi-bundles-test-payment-${project.version}-jar-with-dependencies.jar" tofile="${basedir}/src/test/resources/killbill-osgi-bundles-test-payment-${project.version}-jar-with-dependencies.jar"/>
+                                <copy file="${basedir}/../osgi-bundles/tests/beatrix/target/killbill-osgi-bundles-test-beatrix-${project.version}-jar-with-dependencies.jar" tofile="${basedir}/src/test/resources/killbill-osgi-bundles-test-beatrix-${project.version}-jar-with-dependencies.jar" />
+                                <copy file="${basedir}/../osgi-bundles/tests/payment/target/killbill-osgi-bundles-test-payment-${project.version}-jar-with-dependencies.jar" tofile="${basedir}/src/test/resources/killbill-osgi-bundles-test-payment-${project.version}-jar-with-dependencies.jar" />
                             </tasks>
                         </configuration>
                         <goals>
