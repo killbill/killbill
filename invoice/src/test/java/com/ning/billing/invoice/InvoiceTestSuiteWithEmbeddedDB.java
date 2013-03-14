@@ -110,7 +110,7 @@ public abstract class InvoiceTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     protected void beforeClass() throws Exception {
         loadSystemPropertiesFromClasspath("/resource.properties");
 
-        final Injector injector = Guice.createInjector(new TestInvoiceModuleWithEmbeddedDb());
+        final Injector injector = Guice.createInjector(new TestInvoiceModuleWithEmbeddedDb(configSource));
         injector.injectMembers(this);
     }
 

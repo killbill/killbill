@@ -16,6 +16,8 @@
 
 package com.ning.billing.server.modules;
 
+import org.skife.config.ConfigSource;
+import org.skife.config.SimplePropertyConfigSource;
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.IDBI;
 
@@ -107,30 +109,32 @@ public class KillbillServerModule extends AbstractModule {
     }
 
     protected void installKillbillModules() {
-        install(new EmailModule());
-        install(new CacheModule());
+        final ConfigSource configSource = new SimplePropertyConfigSource(System.getProperties());
+
+        install(new EmailModule(configSource));
+        install(new CacheModule(configSource));
         install(new GlobalLockerModule());
         install(new CustomFieldModule());
         install(new AuditModule());
-        install(new CatalogModule());
-        install(new BusModule());
-        install(new NotificationQueueModule());
+        install(new CatalogModule(configSource));
+        install(new BusModule(configSource));
+        install(new NotificationQueueModule(configSource));
         install(new CallContextModule());
-        install(new DefaultAccountModule());
-        install(new DefaultInvoiceModule());
+        install(new DefaultAccountModule(configSource));
+        install(new DefaultInvoiceModule(configSource));
         install(new TemplateModule());
-        install(new DefaultEntitlementModule());
-        install(new AnalyticsModule());
-        install(new PaymentModule());
+        install(new DefaultEntitlementModule(configSource));
+        install(new AnalyticsModule(configSource));
+        install(new PaymentModule(configSource));
         install(new BeatrixModule());
-        install(new DefaultJunctionModule());
-        install(new DefaultOverdueModule());
-        install(new TenantModule());
+        install(new DefaultJunctionModule(configSource));
+        install(new DefaultOverdueModule(configSource));
+        install(new TenantModule(configSource));
         install(new ExportModule());
         install(new TagStoreModule());
         install(new NonEntityDaoModule());
-        install(new DefaultOSGIModule());
-        install(new UsageModule());
+        install(new DefaultOSGIModule(configSource));
+        install(new UsageModule(configSource));
 
         installClock();
     }

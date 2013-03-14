@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Set;
 
+import org.skife.config.ConfigSource;
+
 import com.ning.billing.GuicyKillbillTestWithEmbeddedDBModule;
 import com.ning.billing.account.api.AccountService;
 import com.ning.billing.account.glue.DefaultAccountModule;
@@ -82,6 +84,12 @@ public class BeatrixIntegrationModule extends AbstractModule {
     // Same name the osgi-payment-test plugin uses to register its service
     public static final String OSGI_PLUGIN_NAME = "osgiPaymentPlugin";
 
+    private final ConfigSource configSource;
+
+    public BeatrixIntegrationModule(final ConfigSource configSource) {
+        this.configSource = configSource;
+    }
+
     @Override
     protected void configure() {
 
@@ -92,27 +100,27 @@ public class BeatrixIntegrationModule extends AbstractModule {
         install(new GuicyKillbillTestWithEmbeddedDBModule());
 
         install(new GlobalLockerModule());
-        install(new CacheModule());
-        install(new EmailModule());
+        install(new CacheModule(configSource));
+        install(new EmailModule(configSource));
         install(new CallContextModule());
-        install(new BusModule());
-        install(new NotificationQueueModule());
+        install(new BusModule(configSource));
+        install(new NotificationQueueModule(configSource));
         install(new TagStoreModule());
         install(new CustomFieldModule());
-        install(new DefaultAccountModule());
-        install(new AnalyticsModule());
-        install(new CatalogModule());
-        install(new DefaultEntitlementModule());
-        install(new DefaultInvoiceModule());
+        install(new DefaultAccountModule(configSource));
+        install(new AnalyticsModule(configSource));
+        install(new CatalogModule(configSource));
+        install(new DefaultEntitlementModule(configSource));
+        install(new DefaultInvoiceModule(configSource));
         install(new TemplateModule());
-        install(new PaymentPluginMockModule());
-        install(new DefaultJunctionModule());
-        install(new IntegrationTestOverdueModule());
+        install(new PaymentPluginMockModule(configSource));
+        install(new DefaultJunctionModule(configSource));
+        install(new IntegrationTestOverdueModule(configSource));
         install(new AuditModule());
-        install(new UsageModule());
-        install(new TenantModule());
+        install(new UsageModule(configSource));
+        install(new TenantModule(configSource));
         install(new ExportModule());
-        install(new DefaultOSGIModule());
+        install(new DefaultOSGIModule(configSource));
         install(new NonEntityDaoModule());
 
         bind(AccountChecker.class).asEagerSingleton();
@@ -132,6 +140,10 @@ public class BeatrixIntegrationModule extends AbstractModule {
     }
 
     private static final class PaymentPluginMockModule extends PaymentModule {
+
+        public PaymentPluginMockModule(final ConfigSource configSource) {
+            super(configSource);
+        }
 
         @Override
         protected void installPaymentProviderPlugins(final PaymentConfig config) {

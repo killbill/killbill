@@ -16,6 +16,7 @@
 
 package com.ning.billing.entitlement.glue;
 
+import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
 
 import com.ning.billing.entitlement.engine.dao.DefaultEntitlementDao;
@@ -51,8 +52,14 @@ public class DefaultEntitlementModule extends AbstractModule implements Entitlem
 
     public static final String REPAIR_NAMED = "repair";
 
+    protected final ConfigSource configSource;
+
+    public DefaultEntitlementModule(final ConfigSource configSource) {
+        this.configSource = configSource;
+    }
+
     protected void installConfig() {
-        final EntitlementConfig config = new ConfigurationObjectFactory(System.getProperties()).build(EntitlementConfig.class);
+        final EntitlementConfig config = new ConfigurationObjectFactory(configSource).build(EntitlementConfig.class);
         bind(EntitlementConfig.class).toInstance(config);
     }
 

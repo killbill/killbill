@@ -16,9 +16,15 @@
 
 package com.ning.billing.util.glue;
 
+import org.skife.config.ConfigSource;
+
 import com.ning.billing.GuicyKillbillTestWithEmbeddedDBModule;
 
 public class TestUtilModuleWithEmbeddedDB extends TestUtilModule {
+
+    public TestUtilModuleWithEmbeddedDB(final ConfigSource configSource) {
+        super(configSource);
+    }
 
     @Override
     protected void configure() {
@@ -28,8 +34,8 @@ public class TestUtilModuleWithEmbeddedDB extends TestUtilModule {
         install(new AuditModule());
         install(new TagStoreModule());
         install(new CustomFieldModule());
-        install(new BusModule());
-        install(new NotificationQueueModule());
+        install(new BusModule(configSource));
+        install(new NotificationQueueModule(configSource));
         install(new NonEntityDaoModule());
         install(new GlobalLockerModule());
     }

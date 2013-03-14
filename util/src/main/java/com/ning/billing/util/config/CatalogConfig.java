@@ -18,10 +18,12 @@ package com.ning.billing.util.config;
 
 import org.skife.config.Config;
 import org.skife.config.Default;
+import org.skife.config.Description;
 
 public interface CatalogConfig extends KillbillConfig {
-    @Config("killbill.catalog.uri")
-    @Default("jar:///com/ning/billing/irs/catalog/Catalog.xml")
-    String getCatalogURI();
 
+    @Config("killbill.catalog.uri")
+    @Default("SpyCarBasic.xml")
+    @Description("Catalog location. Either in the classpath or in the filesystem")
+    String getCatalogURI();
 }

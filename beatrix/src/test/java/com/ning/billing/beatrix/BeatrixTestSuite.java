@@ -16,7 +16,7 @@
 
 package com.ning.billing.beatrix;
 
-import com.ning.billing.KillbillTestSuite;
+import com.ning.billing.GuicyKillbillTestSuite;
 
-public abstract class BeatrixTestSuite extends KillbillTestSuite {
+public abstract class BeatrixTestSuite extends GuicyKillbillTestSuite {
 }

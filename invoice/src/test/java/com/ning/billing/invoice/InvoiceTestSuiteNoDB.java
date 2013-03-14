@@ -95,7 +95,7 @@ public abstract class InvoiceTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
         loadSystemPropertiesFromClasspath("/resource.properties");
 
-        final Injector injector = Guice.createInjector(new TestInvoiceModuleNoDB());
+        final Injector injector = Guice.createInjector(new TestInvoiceModuleNoDB(configSource));
         injector.injectMembers(this);
     }
 

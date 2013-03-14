@@ -18,11 +18,13 @@ package com.ning.billing.util.config;
 
 import org.skife.config.Config;
 import org.skife.config.Default;
+import org.skife.config.Description;
 
 public interface CacheConfig extends KillbillConfig {
 
     @Config("killbill.cache.config.location")
     @Default("/ehcache.xml")
+    @Description("Path to Ehcache XML configuration")
     public String getCacheConfigLocation();
 
 }

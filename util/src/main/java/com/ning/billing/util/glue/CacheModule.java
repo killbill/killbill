@@ -20,7 +20,6 @@ import java.util.UUID;
 
 import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
-import org.skife.config.SimplePropertyConfigSource;
 
 import com.ning.billing.util.cache.AccountRecordIdCacheLoader;
 import com.ning.billing.util.cache.Cachable;
@@ -46,10 +45,6 @@ public class CacheModule extends AbstractModule {
     public static final Named TENANT_RECORD_ID_CACHE_NAMED = Names.named(Cachable.TENANT_RECORD_ID_CACHE_NAME);
 
     private final ConfigSource configSource;
-
-    public CacheModule() {
-        this(new SimplePropertyConfigSource(System.getProperties()));
-    }
 
     public CacheModule(final ConfigSource configSource) {
         this.configSource = configSource;

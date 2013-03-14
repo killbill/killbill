@@ -55,7 +55,7 @@ public class UtilTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
     @BeforeClass(groups = "fast")
     public void beforeClass() throws Exception {
-        final Injector g = Guice.createInjector(Stage.PRODUCTION, new TestUtilModuleNoDB());
+        final Injector g = Guice.createInjector(Stage.PRODUCTION, new TestUtilModuleNoDB(configSource));
         g.injectMembers(this);
     }
 

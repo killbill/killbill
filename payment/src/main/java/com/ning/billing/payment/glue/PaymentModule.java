@@ -16,14 +16,12 @@
 
 package com.ning.billing.payment.glue;
 
-import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
 import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
-import org.skife.config.SimplePropertyConfigSource;
 
 import com.ning.billing.osgi.api.OSGIServiceRegistration;
 import com.ning.billing.payment.api.DefaultPaymentApi;
@@ -47,7 +45,6 @@ import com.ning.billing.payment.retry.PluginFailureRetryService.PluginFailureRet
 import com.ning.billing.util.config.PaymentConfig;
 import com.ning.billing.util.svcapi.payment.PaymentInternalApi;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
@@ -59,19 +56,10 @@ public class PaymentModule extends AbstractModule {
 
     public static final String PLUGIN_EXECUTOR_NAMED = "PluginExecutor";
 
-    @VisibleForTesting
     protected ConfigSource configSource;
-
-    public PaymentModule() {
-        this(System.getProperties());
-    }
 
     public PaymentModule(final ConfigSource configSource) {
         this.configSource = configSource;
-    }
-
-    public PaymentModule(final Properties properties) {
-        this(new SimplePropertyConfigSource(properties));
     }
 
     protected void installPaymentDao() {

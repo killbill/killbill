@@ -18,23 +18,28 @@ package com.ning.billing.util.config;
 
 import org.skife.config.Config;
 import org.skife.config.Default;
+import org.skife.config.Description;
 
 public interface OSGIConfig extends KillbillConfig {
 
     @Config("killbill.osgi.bundle.property.name")
     @Default("killbill.properties")
+    @Description("Name of the properties file for OSGI plugins")
     public String getOSGIKillbillPropertyName();
 
     @Config("killbill.osgi.root.dir")
     @Default("/var/tmp/felix")
+    @Description("Bundles cache area for the OSGI framework")
     public String getOSGIBundleRootDir();
 
     @Config("killbill.osgi.bundle.cache.name")
     @Default("osgi-cache")
+    @Description("Bundles cache name")
     public String getOSGIBundleCacheName();
 
     @Config("killbill.osgi.bundle.install.dir")
     @Default("/var/tmp/bundles")
+    @Description("Bundles install directory")
     public String getRootInstallationDir();
 
     @Config("killbill.osgi.system.bundle.export.packages")
@@ -72,5 +77,6 @@ public interface OSGIConfig extends KillbillConfig {
              "org.osgi.service.event;version=1.2.0," +
              // Let the world know the System bundle exposes the requirement (&(osgi.wiring.package=org.slf4j)(version>=1.7.0)(!(version>=2.0.0)))
              "org.slf4j;version=1.7.2")
+    @Description("Packages to export from the system bundle")
     public String getSystemBundleExportPackages();
 }

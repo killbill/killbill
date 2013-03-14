@@ -16,12 +16,18 @@
 
 package com.ning.billing.junction.glue;
 
+import org.skife.config.ConfigSource;
+
 import com.ning.billing.GuicyKillbillTestWithEmbeddedDBModule;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.NonEntityDaoModule;
 import com.ning.billing.util.glue.TagStoreModule;
 
 public class TestJunctionModuleWithEmbeddedDB extends TestJunctionModule {
+
+    public TestJunctionModuleWithEmbeddedDB(final ConfigSource configSource) {
+        super(configSource);
+    }
 
     @Override
     protected void configure() {

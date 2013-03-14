@@ -15,7 +15,8 @@
   ~ under the License.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.ning.billing</groupId>
@@ -121,12 +122,27 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
+                <artifactId>maven-shade-plugin</artifactId>
                 <executions>
                     <execution>
+                        <id>assemble-xsd-tool-overdue</id>
                         <goals>
-                            <goal>test-jar</goal>
+                            <goal>shade</goal>
                         </goals>
+                        <phase>package</phase>
+                        <configuration>
+                            <createSourcesJar>false</createSourcesJar>
+                            <shadedArtifactAttached>true</shadedArtifactAttached>
+                            <shadedClassifierName>xsd-tool</shadedClassifierName>
+                            <transformers>
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <manifestEntries>
+                                        <Main-Class>com.ning.billing.overdue.CreateOverdueConfigSchema</Main-Class>
+                                    </manifestEntries>
+                                </transformer>
+                            </transformers>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>

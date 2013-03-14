@@ -21,6 +21,7 @@ import javax.servlet.http.HttpServlet;
 import javax.sql.DataSource;
 
 import org.osgi.service.http.HttpService;
+import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
 
 import com.ning.billing.osgi.DefaultOSGIKillbill;
@@ -49,11 +50,17 @@ public class DefaultOSGIModule extends AbstractModule {
 
     public static final String OSGI_NAMED = "osgi";
 
+    protected final ConfigSource configSource;
+
+    public DefaultOSGIModule(final ConfigSource configSource) {
+        this.configSource = configSource;
+    }
+
     protected void installConfig() {
-        final OSGIConfig config = new ConfigurationObjectFactory(System.getProperties()).build(OSGIConfig.class);
+        final OSGIConfig config = new ConfigurationObjectFactory(configSource).build(OSGIConfig.class);
         bind(OSGIConfig.class).toInstance(config);
 
-        final OSGIDataSourceConfig osgiDataSourceConfig = new ConfigurationObjectFactory(System.getProperties()).build(OSGIDataSourceConfig.class);
+        final OSGIDataSourceConfig osgiDataSourceConfig = new ConfigurationObjectFactory(configSource).build(OSGIDataSourceConfig.class);
         bind(OSGIDataSourceConfig.class).toInstance(osgiDataSourceConfig);
     }
 

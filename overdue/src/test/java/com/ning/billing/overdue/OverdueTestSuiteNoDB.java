@@ -32,7 +32,6 @@ import com.ning.billing.overdue.service.DefaultOverdueService;
 import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.notificationq.NotificationQueueService;
-import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
@@ -85,7 +84,7 @@ public abstract class OverdueTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
     @BeforeClass(groups = "fast")
     protected void beforeClass() throws Exception {
-        final Injector injector = Guice.createInjector(new TestOverdueModuleNoDB());
+        final Injector injector = Guice.createInjector(new TestOverdueModuleNoDB(configSource));
         injector.injectMembers(this);
     }
 

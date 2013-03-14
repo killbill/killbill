@@ -16,6 +16,7 @@
 
 package com.ning.billing.entitlement.glue;
 
+import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
 
 import com.ning.billing.GuicyKillbillTestNoDBModule;
@@ -24,8 +25,7 @@ import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.engine.dao.MockEntitlementDaoMemory;
 import com.ning.billing.entitlement.engine.dao.RepairEntitlementDao;
 import com.ning.billing.mock.glue.MockNonEntityDaoModule;
-import com.ning.billing.util.glue.BusModule;
-import com.ning.billing.util.glue.BusModule.BusType;
+import com.ning.billing.util.bus.InMemoryBusModule;
 import com.ning.billing.util.notificationq.MockNotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueConfig;
 import com.ning.billing.util.notificationq.NotificationQueueService;
@@ -33,6 +33,10 @@ import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.google.inject.name.Names;
 
 public class TestEngineModuleNoDB extends TestEngineModule {
+
+    public TestEngineModuleNoDB(final ConfigSource configSource) {
+        super(configSource);
+    }
 
     @Override
     protected void installEntitlementDao() {
@@ -48,7 +52,7 @@ public class TestEngineModuleNoDB extends TestEngineModule {
     }
 
     protected void configureNotificationQueueConfig() {
-        final NotificationQueueConfig config = new ConfigurationObjectFactory(System.getProperties()).build(NotificationQueueConfig.class);
+        final NotificationQueueConfig config = new ConfigurationObjectFactory(configSource).build(NotificationQueueConfig.class);
         bind(NotificationQueueConfig.class).toInstance(config);
     }
 
@@ -59,7 +63,7 @@ public class TestEngineModuleNoDB extends TestEngineModule {
 
         super.configure();
 
-        install(new BusModule(BusType.MEMORY));
+        install(new InMemoryBusModule(configSource));
         installNotificationQueue();
 
         install(new MockNonEntityDaoModule());

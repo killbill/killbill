@@ -224,7 +224,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
     @BeforeClass(groups = "slow")
     public void beforeClass() throws Exception {
-        final Injector g = Guice.createInjector(Stage.PRODUCTION, new BeatrixIntegrationModule());
+        final Injector g = Guice.createInjector(Stage.PRODUCTION, new BeatrixIntegrationModule(configSource));
         g.injectMembers(this);
         busHandler = new TestApiListener(this);
 

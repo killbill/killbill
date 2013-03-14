@@ -68,7 +68,7 @@ public abstract class PaymentTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
 
     @BeforeClass(groups = "slow")
     protected void beforeClass() throws Exception {
-        final Injector injector = Guice.createInjector(new TestPaymentModuleWithEmbeddedDB(getClock()));
+        final Injector injector = Guice.createInjector(new TestPaymentModuleWithEmbeddedDB(configSource, getClock()));
         injector.injectMembers(this);
     }
 

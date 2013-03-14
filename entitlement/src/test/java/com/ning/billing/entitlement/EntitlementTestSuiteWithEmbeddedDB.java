@@ -93,7 +93,7 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
     @BeforeClass(groups = "slow")
     public void beforeClass() throws Exception {
         DefaultEntitlementTestInitializer.loadSystemPropertiesFromClasspath("/entitlement.properties");
-        final Injector g = Guice.createInjector(Stage.PRODUCTION, new TestEngineModuleWithEmbeddedDB());
+        final Injector g = Guice.createInjector(Stage.PRODUCTION, new TestEngineModuleWithEmbeddedDB(configSource));
         g.injectMembers(this);
     }
 
