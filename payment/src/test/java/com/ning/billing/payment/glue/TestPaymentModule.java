@@ -16,15 +16,10 @@
 
 package com.ning.billing.payment.glue;
 
-import java.io.IOException;
-import java.net.URL;
-import java.util.Properties;
 import java.util.UUID;
 
 import org.mockito.Mockito;
 import org.skife.config.ConfigSource;
-import org.skife.config.SimplePropertyConfigSource;
-import org.testng.Assert;
 
 import com.ning.billing.ObjectType;
 import com.ning.billing.mock.glue.MockAccountModule;
@@ -32,7 +27,6 @@ import com.ning.billing.mock.glue.MockEntitlementModule;
 import com.ning.billing.mock.glue.MockGlobalLockerModule;
 import com.ning.billing.mock.glue.MockInvoiceModule;
 import com.ning.billing.mock.glue.MockNotificationQueueModule;
-import com.ning.billing.payment.PaymentTestSuiteNoDB;
 import com.ning.billing.payment.TestPaymentHelper;
 import com.ning.billing.payment.provider.MockPaymentProviderPlugin;
 import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
@@ -48,31 +42,11 @@ import com.google.common.collect.ImmutableList;
 
 public class TestPaymentModule extends PaymentModule {
 
-    protected final ConfigSource configSource;
-
     private final Clock clock;
 
     public TestPaymentModule(final ConfigSource configSource, final Clock clock) {
         super(configSource);
         this.clock = clock;
-        this.configSource = loadSystemPropertiesFromClasspath("/resource.properties");
-    }
-
-    private ConfigSource loadSystemPropertiesFromClasspath(final String resource) {
-        final URL url = PaymentTestSuiteNoDB.class.getResource(resource);
-        Assert.assertNotNull(url);
-
-        try {
-            final Properties properties = System.getProperties();
-            properties.load(url.openStream());
-
-            properties.setProperty("killbill.payment.provider.default", MockPaymentProviderPlugin.PLUGIN_NAME);
-            properties.setProperty("killbill.payment.engine.events.off", "false");
-
-            return new SimplePropertyConfigSource(properties);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     @Override

@@ -16,6 +16,9 @@
 
 package com.ning.billing.payment;
 
+import java.net.URL;
+
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -27,6 +30,7 @@ import com.ning.billing.payment.core.PaymentMethodProcessor;
 import com.ning.billing.payment.core.PaymentProcessor;
 import com.ning.billing.payment.glue.TestPaymentModuleNoDB;
 import com.ning.billing.payment.plugin.api.PaymentPluginApi;
+import com.ning.billing.payment.provider.MockPaymentProviderPlugin;
 import com.ning.billing.payment.retry.FailedPaymentRetryService;
 import com.ning.billing.payment.retry.PluginFailureRetryService;
 import com.ning.billing.util.config.PaymentConfig;
@@ -63,8 +67,19 @@ public abstract class PaymentTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     @Inject
     protected TestPaymentHelper testHelper;
 
+    private void loadSystemPropertiesFromClasspath(final String resource) {
+        final URL url = PaymentTestSuiteNoDB.class.getResource(resource);
+        Assert.assertNotNull(url);
+
+        configSource.merge(url);
+        configSource.setProperty("killbill.payment.provider.default", MockPaymentProviderPlugin.PLUGIN_NAME);
+        configSource.setProperty("killbill.payment.engine.events.off", "false");
+    }
+
     @BeforeClass(groups = "fast")
     protected void beforeClass() throws Exception {
+        loadSystemPropertiesFromClasspath("/resource.properties");
+
         final Injector injector = Guice.createInjector(new TestPaymentModuleNoDB(configSource, getClock()));
         injector.injectMembers(this);
     }
