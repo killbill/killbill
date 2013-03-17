@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<!-- saved from url=(0033)http://killbilling.org/about.html -->
+<html lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <title>Kill Bill, Features</title>
+    <!--[if lt IE 9]>
+        <script src="http://html5shim.googlecode.com/svn/trunk/html5.js" type="text/javascript"></script>
+        <![endif]-->
+    <link rel="stylesheet" type="text/css"
+      href="./Features_files/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css"
+      href="./Features_files/prettify.css">
+    <link rel="stylesheet" type="text/css"
+      href="./Features_files/killbill.css">
+    <script type="text/javascript" async="" src="./Features_files/ga.js"></script>
+    <script src="./Features_files/jquery.min.js"></script>
+    <script src="./Features_files/prettify.js"></script>
+    <script src="./Features_files/bootstrap.min.js"></script>
+    <script type="text/javascript">
+            var _gaq = _gaq || [];
+            _gaq.push(['_setAccount', 'UA-32705710-1']);
+            _gaq.push(['_trackPageview']);
+            (function() {
+                var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+                ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+                var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+                })();
+        </script>
+  </head>
+  <body onload="prettyPrint();" data-spy="scroll"
+    data-target=".bs-docs-sidebar">
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container"> <a class="brand"
+            href="http://killbilling.org/index.html">Killbill</a>
+          <div class="nav-collapse collapse">
+            <ul class="nav">
+              <li><a href="./Features_files/Features.html">About</a></li>
+              <li><a href="http://killbilling.org/start.html">Getting
+                  started</a></li>
+              <li class="dropdown"> <a class="dropdown-toggle"
+                  data-toggle="dropdown"
+                  href="http://killbilling.org/about.html#">User Manual</a>
+                <ul class="dropdown-menu" role="menu"
+                  aria-labelledby="dLabel">
+                  <li><a tabindex="-1"
+                      href="http://killbilling.org/catalog.html">Catalog</a></li>
+                  <li><a tabindex="-1"
+                      href="http://killbilling.org/invoicing.html">Invoicing</a></li>
+                  <li><a tabindex="-1"
+                      href="http://killbilling.org/configuration.html">Configuration</a></li>
+                  <li><a tabindex="-1"
+                      href="http://killbilling.org/api.html">REST API</a></li>
+                  <li><a tabindex="-1"
+                      href="http://killbilling.org/analytics.html">Analytics</a></li>
+                </ul>
+              </li>
+              <li class="dropdown"> <a class="dropdown-toggle"
+                  data-toggle="dropdown"
+                  href="http://killbilling.org/about.html#">References</a>
+                <ul class="dropdown-menu" role="menu"
+                  aria-labelledby="dLabel">
+                  <li><a tabindex="-1"
+                      href="http://killbilling.org/javadoc/index.html">Javadoc</a></li>
+                  <li><a tabindex="-1"
+                      href="http://killbilling.org/xsd/index.html">XML
+                      Schema Definitions</a></li>
+                </ul>
+              </li>
+              <li><a href="http://killbilling.org/downloads.html">Downloads</a></li>
+            </ul>
+            <ul class="nav pull-right">
+              <li><a
+                  href="http://groups.google.com/group/killbilling-users"
+                  target="_blank">User Mailing-List</a></li>
+              <li><a
+                  href="http://groups.google.com/group/killbilling-dev"
+                  target="_blank">Dev Mailing-List</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="span3 bs-docs-sidebar">
+        <ul class="nav nav-list bs-docs-sidenav affix">
+          <li class="active"><a
+              href="http://killbilling.org/about.html#what_is_killbill">What
+
+
+
+              is Killbill?</a></li>
+          <li class=""><a
+              href="http://killbilling.org/about.html#overview">Abstractions</a></li>
+          <li class=""><a
+              href="http://killbilling.org/about.html#features">Features</a></li>
+          <li class=""><a
+              href="http://killbilling.org/about.html#requirements">Requirements</a></li>
+          <li><a href="http://killbilling.org/about.html#dependencies">Dependencies</a></li>
+          <li class=""><a href="http://killbilling.org/about.html#state">State
+
+
+
+              of the project</a></li>
+        </ul>
+      </div>
+      <div class="span12">
+        <section id="what_is_killbill">
+          <div class="page-header">
+            <h1>How Does It Work?</h1>
+          </div>
+          <div style="text-align: center;"><img style=" width: 600px;
+              height: 413px;" alt="Functions of Kill Bill"
+              src="Features_files/KillBillFunctions.png"><br>
+          </div>
+          <p>Kill Bill sits at the center of your business. It
+            understands your catalog and manages customer purchases and
+            plan changes (upgrades, downgrades and cancellations). It
+            knows what plans a customer has subscribed to and can
+            provide that information to other systems, including your
+            product. It creates invoices on a regular basis, triggers
+            payments against your payment providers (PayPal, Credit Card
+            Gateway etc.) and can produce finance reports and business
+            analytics.<br>
+          </p>
+          All subscription management services provide these basic
+          functions. What makes Kill Bill different is that we provide
+          you with the flexibility to truly customize the system to your
+          needs. We believe that it is critically important that the
+          billing system owns all the business logic to manage how plan
+          changes take place or which add-ons are available to a given
+          plan, or even to manage the custom business logic&nbsp; around
+          promotions or dunnings that sets you apart from your
+          competition. To support these advanced features Kill Bill has
+          flexible rules that can express a wide variety of plan changes
+          and cancellation behaviors, but for when that's not enough,
+          you can add your own custom logic to Kill Bill in the form of
+          Plugin code that can customize the system behavior to meet
+          your specific needs.</section>
+        <section id="features">
+          <div class="page-header">
+            <h1>Features</h1>
+          </div>
+          <h3> <span style="font-weight: bold;"></span></h3>
+          <h3>Core Features</h3>
+          Kill Bill is a fully fledged subscription billing system. This
+          section outlines the features that it shares with many
+          comparable products on the market.<br>
+          <br>
+          <span style="font-weight: bold;">Subscription Management:</span>
+          Kill Bill can<br>
+          <ul>
+            <li>create and cancel subscriptions associated with a
+              billing plan</li>
+            <li>upgrade and downgrade between plans</li>
+            <li>charge customers on a fixed or recurring basis with
+              support for multiple billing periods (monthly, quarterly,
+              annual etc.)</li>
+          </ul>
+          <span style="font-weight: bold;">Invoices and Proration:</span>
+          Kill Bill generates invoices, when they are required and can
+          prorate off cycle charges onto a single recurring bill cycle.
+          For example, if you have a customer who is billed on the 15th
+          of every month and they buy a product on the 1st of January,
+          Kill Bill can correctly charge them for the partial month 1st
+          - 15th January and then continue to bill them every 15th of
+          the month with the new subscription combined with the others.
+          Invoices can be automatically emailed to customers.<br>
+          <br>
+          <span style="font-weight: bold;">Payments: </span>Kill Bill
+          triggers payments with your payment providers as soon as an
+          invoice has been generated. Payment failure notices can be
+          automatically mailed out to customers (also see Overdue
+          Enforcement in the Advanced sections). Kill Bill interfaces
+          with payment providers via plugin API's that make it easy to
+          add new payment providers if you need to interface with
+          providers that we do not already support. [Note: plugins for
+          Litle and PayPal are currently under development]<br>
+          <br>
+          <span style="font-weight: bold;">Reporting and
+            Analytics:&nbsp; </span>Kill Bill supports finance
+          reporting (revenue recognition, aging etc.) and business
+          dashboards for monitoring acquisition, monthly recurring
+          revenue and churn. The reports and analytics can be driven off
+          a separate database so that they do not impact production
+          performance. [Note: reports and dashboards are currently under
+          development]<br>
+          <br>
+          <h3>Advanced Features<br>
+          </h3>
+          This section outlines some of the advance features that make
+          Kill Bill a little different - and by different we mean
+          better.<br>
+          <br>
+          <span style="font-weight: bold;">Multi-phase plans: </span>Do
+          you need a plan that offers a 30 day trial followed by&nbsp; a
+          6 month discount period and then transitions to a full price
+          evergreen subscription? No problem. Kill Bill supports the
+          configuration of plans with multiple phases, each phase can
+          specify its own pricing and even billing term.<span
+            style="font-weight: bold;"></span><br>
+          <span style="font-weight: bold;"> <br>
+            <span style="font-weight: bold;">Plan change rules: </span></span>Do
+
+          you need to have trials cancel immediately but have paid plans
+          cancel at the end of their term? Maybe you want upgrades to
+          take place immediately but downgrades to happen at the end of
+          term? All of this is business logic that should live in the
+          billing system not in applications. Kill Bill natively
+          supports powerful change rules that ensure that plan changes
+          and cancellations happen according to your policies. <br>
+          <br>
+          <span style="font-weight: bold;">Product tiers and add-ons:</span>
+          So, you want three tiers of product with some add-ons only
+          available to the top tier customers. Kill Bill has native
+          support for tiered products and add-ons, allowing you to
+          specify which add-ons are available on which product tiers and
+          if the customer downgrades automatically cancel add-ons that
+          are no longer available. Of course, Kill Bill can tell you
+          what it's going to do before you do it so your users can
+          confirm.<br>
+          <span style="font-weight: bold;"><span style="font-weight:
+              bold;"> <br>
+              <span style="font-weight: bold;">Price lists: </span></span></span>You
+
+          want to offer a special set of prices to customers coming in
+          through one of your partners. They get a 30% price for six
+          months. But what happens if they upgrade during those six
+          months? Maybe you want them to stay in the same price list and
+          get 30% off the new plan, but only for the remainder of the
+          discount period. With Kill Bill you can arrange plans into
+          Price Lists and provide Plan Change rules to specify exactly
+          he behavior you need.<br>
+          <span style="font-weight: bold;"><span style="font-weight:
+              bold;"><span style="font-weight: bold;"> <br>
+                Overdue Enforcement:</span></span></span> Kill Bill
+          allows you to write rules<span style="font-weight: bold;"><span
+              style="font-weight: bold;"><span style="font-weight:
+                bold;"> </span></span></span>to specify what happens
+          when a customer payment fails. You can choose to take
+          different actions based on the payment failure type, the
+          customer's plan, the time since the last unpaid invoice etc.
+          This allows you to build multi-phased enforcement where the
+          customer can receive warnings and have features gradually
+          removed until they are finally shut down.<br>
+          <span style="font-weight: bold;"><span style="font-weight:
+              bold;"><span style="font-weight: bold;"><br>
+                Internationalization: </span></span></span>Kill Bill
+          understands the internationalization of currency
+          representation, so that it provides the correct decimal
+          separator, number of decimal places and rounding rules for
+          each locale. All customer interactions, emails, invoices etc.
+          are fully internationalized so you can create invoice and
+          email templates to match the locales of your customers. [Note:
+          this feature is currently incomplete]<br>
+          <span style="font-weight: bold;"><span style="font-weight:
+              bold;"><span style="font-weight: bold;"> <br>
+                Time zones: </span></span></span>You have a customer in
+          Japan that buys a product on March 3rd. However, your
+          California based billing provider sends her invoices that
+          start her subscription on March 2nd because it was still March
+          2nd in California when the purchase was made. This can be very
+          confusing to customers. Kill Bill does time zones right. Your
+          customer accounts have a time zone associated with them and
+          your customers are invoiced in that time zone.<br>
+          <span style="font-weight: bold;"><span style="font-weight:
+              bold;"><br>
+              <span style="font-weight: bold;"> Event based: </span></span></span>Most
+
+          cloud based providers have offline billing and payment runs
+          that introduce a delay of sometimes up to 48 hours between
+          when a customer signs up and when their card is charged. Kill
+          Bill runs as an event based system, as soon a subscription is
+          created that triggers an event, which triggers the creation of
+          an invoice, and in turn, triggers a payment. The customer's
+          card will be charged within seconds of signing up which is
+          better for you and less confusing for them.<br>
+          <span style="font-weight: bold;"><span style="font-weight:
+              bold;"><span style="font-weight: bold;"> <br>
+                Coupons:</span></span></span> Need a way to let some of
+          your customers access that special discount price list? Kill
+          Bill lets you create and manage coupons. Each coupon has an
+          expiry date (can be unlimited) and a maximum number of uses
+          (can also be unlimited) and gets mapped to a specific price
+          list. [Note: this feature is under development]<span
+            style="font-weight: bold;"><span style="font-weight: bold;"><span
+                style="font-weight: bold;"><br>
+                <br>
+              </span></span></span><span style="font-weight: bold;"><span
+              style="font-weight: bold;"><span style="font-weight:
+                bold;"></span></span></span>
+          <h3>Plugins</h3>
+          In today's world the ability to rapidly test and roll out
+          promotions, alternate pricing models<span style="font-weight:
+            bold;"></span> and custom billing features is critical to
+          your companies ability to compete. With conventional
+          cloud-based subscription solutions you are limited to the
+          capabilities that they offer. Before Kill Bill the only way to
+          have complete control over your billing behavior was by
+          building your own billing system from scratch and few
+          companies have the skills or resources to do that. Kill Bill
+          resolves this dilemma by providing the first Billing Platform.
+          Our plugin architecture allows you to add custom logic that
+          can be triggered by events in the system. Which means that the
+          only logic that you need to build are the customizations.<br>
+          <br>
+          Our plugin system uses the <a
+href="Kill%20Bill%20sits%20at%20the%20center%20of%20your%20business.%20It%20understands%20your%20catalog%20and%20manages%20customer%20purchases%20and%20plan%20changes%20%28upgrades,%20downgrades%20and%20cancellations%29.%20It%20knows%20what%20plans%20a%20customer%20has%20subscribed%20to%20and%20can%20provide%20that%20information%20to%20other%20systems,%20including%20your%20product.%20It%20creates%20invoices%20on%20a%20regular%20basis,%20triggers%20payments%20against%20your%20payment%20providers%20%28Paypal,%20Credit%20Card%20Gateway%20etc.%29%20and%20can%20produce%20finance%20reports%20and%20business%20analytics.">OSGi
+
+            standard</a> and today we support plugins written in either
+          Java or Ruby [Scala under development].<br>
+          <h2></h2>
+          <h2></h2>
+        </section>
+      </div>
+    </div>
+  </body>
+</html>

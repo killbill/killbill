@@ -4,7 +4,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta charset="utf-8">
-    <title>Kill Bill, About</title>
+    <title>Kill Bill, Features</title>
     <!--[if lt IE 9]>
         <script src="http://html5shim.googlecode.com/svn/trunk/html5.js" type="text/javascript"></script>
         <![endif]-->
@@ -90,7 +90,6 @@
               href="http://killbilling.org/about.html#what_is_killbill">What
 
 
-
               is Killbill?</a></li>
           <li class=""><a
               href="http://killbilling.org/about.html#overview">Abstractions</a></li>
@@ -102,55 +101,100 @@
           <li class=""><a href="http://killbilling.org/about.html#state">State
 
 
-
               of the project</a></li>
         </ul>
       </div>
       <div class="span12">
         <section id="requirements">
           <div class="page-header">
-            <h1>About</h1>
+            <h1>Requirements</h1>
           </div>
-          In April 2010, Ning made an unusual decision to switch from a
-          free advertising funded business model to a fully paid
-          subscription model. In three months we had to build the
-          capability to manage what turned out to be around 100,000
-          subscriptions. We naturally employed the services of a cloud
-          based billing provider and managed to meet the deadline.
-          However, over the following year we continued to develop our
-          system and were continually frustrated by small gaps in our
-          billing partner's functionality. They didn't have a concept of
-          free trials, nor did they support discounts or add-ons. So, we
-          set about incrementally wrapping their solution with layers of
-          our own business logic to meet our needs. The result was a
-          complex and error prone integration. We were trying to use
-          their core functionality in ways that they hadn't intended. It
-          was hard to test and full of special little rules that broke
-          as soon as you tried to add something new. Ultimately it
-          became so difficult to maintain that we decided we could no
-          longer add functionality and instead we needed to stop, step
-          back and start from scratch. This is how Kill Bill was born.<br>
-          <br>
-          Kill Bill is a billing solution that was designed from the
-          outset to fix these shortcomings. It can be configured to
-          implement a wide range of business rules natively and provides
-          a plugin architecture to allow custom business logic to be
-          added.<br>
-          <br>
-          Kill Bill was been built by:<br>
-          <div style="margin-left: 40px;">Stephane Brossier<br>
-            Alena Dudzinskaya<br>
-            Jeff Certain<br>
-            Pierre-Alexandre Meyer<br>
-            Kevin Postlewaite<br>
-            Federico Romano<br>
-            Martin Westhead<br>
+          <h2>Runtime</h2>
+          <div class="row">
+            <div class="span">
+              <ul>
+                <li>Java JRE: killbill has been tested against OpenJDK6
+                  (1.6.0_23), OpenJDK7 (1.7.0_147-icedtea) and Oracle
+                  JDK7 (Oracle JDK7)</li>
+                <li>Container (optional): killbill has been tested
+                  against Jetty 7.5.1 (Servlet ~3.0), Jetty 8.1.3
+                  (Servlet 3.0) and Tomcat 7.0 (Servlet 3.0). JBoss AS
+                  7.1 (Java EE 6, full profile) support is experimental.</li>
+                <li>MySQL database: 5.5 or later recommended</li>
+                <li>Killbill should not have any other system
+                  dependency, although it was only tested under Ubuntu
+                  10.0.4, Ubuntu 12.0.4 and Mac OSX 10.6.8</li>
+              </ul>
+            </div>
           </div>
-          <br>
-          <br>
+          <h2>Compile</h2>
+          <div class="row">
+            <div class="span">
+              <ul>
+                <li>Java SDK: killbill has been compiled and tested
+                  against OpenJDK6 (1.6.0_23), OpenJDK7
+                  (1.7.0_147-icedtea) and Oracle JDK7 (Oracle JDK7)</li>
+                <li>Maven: 3.0.3 or later preferred, but 2.2.1 (and
+                  later) is also supported</li>
+              </ul>
+            </div>
+          </div>
         </section>
+        <section id="dependencies">
+          <div class="page-header">
+            <h1>Dependencies</h1>
+          </div>
+          <h2>Library</h2>
+          <p>Note: Killbill uses maven and Maven Central to handle
+            dependencies management.</p>
+          <div class="row">
+            <div class="span12">
+              <ul>
+                <li><a href="https://github.com/brianm/config-magic/"
+                    target="_blank">config-magic</a></li>
+                <li><a href="http://code.google.com/p/guava-libraries"
+                    target="_blank">Guava</a>, several of Google's core
+                  libraries</li>
+                <li><a href="http://wiki.fasterxml.com/JacksonHome"
+                    target="_blank">Jackson</a>, a Java library for
+                  processing JSON data format</li>
+                <li><a href="http://www.jdbi.org/" target="_blank">jdbi</a>,
+                  a SQL convenience library for Java</li>
+                <li><a href="http://jcp.org/en/jsr/detail?id=330"
+                    target="_blank">JSR-330</a>, Dependency Injection
+                  for Java (Killbill currently still has an explicit
+                  dependency on Google Guice, but shouldn't require it)</li>
+                <li><a href="https://github.com/ning/mogwee-executors/"
+                    target="_blank">mogwee-executors</a></li>
+                <li><a href="http://www.slf4j.org/" target="_blank">slf4j</a>,
+                  a Simple Logging Facade for Java</li>
+                <li><a href="https://github.com/samskivert/jmustache"
+                    target="_blank">jmustache</a>, a Java implementation
+                  of the Mustache templating language</li>
+                <li>org.apache.commons:commons-email</li>
+                <li><a href="http://joda.sourceforge.net/"
+                    target="_blank">Joda-Time</a>, library for advanced
+                  date and time in Java</li>
+                <li>org.antlr:stringtemplate</li>
+              </ul>
+            </div>
+          </div>
+          <h2>Container</h2>
+          <div class="row">
+            <div class="span12">
+              <ul>
+                <li><a href="http://jcp.org/en/jsr/detail?id=311"
+                    target="_blank">JSR 311</a> JAX-RS: The Java API for
+                  RESTful Web Services </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+        <section id="state"><br>
+        </section>
+        <h2></h2>
+        <h2></h2>
       </div>
     </div>
-    \
   </body>
 </html>
