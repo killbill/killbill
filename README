@@ -1,0 +1,8 @@
+In order to test the chnages for the doc, one can use Kekyll to visualize the chnages locally:
+# Install the gem if not already present
+> gem install jekyll
+# Start the server
+# jekyll --server --auto
+
+Then check result on http://127.0.0.1:4000/
+

@@ -71,9 +71,27 @@
 </xs:sequence>
 </xs:complexType>
 </xs:element>
+<xs:element minOccurs="0" name="limits">
+<xs:complexType>
+<xs:sequence>
+<xs:element maxOccurs="unbounded" name="limit" type="defaultLimit"/>
+</xs:sequence>
+</xs:complexType>
+</xs:element>
 </xs:sequence>
 <xs:attribute name="name" type="xs:ID" use="required"/>
 <xs:attribute name="retired" type="xs:boolean"/>
+</xs:extension>
+</xs:complexContent>
+</xs:complexType>
+<xs:complexType name="defaultLimit">
+<xs:complexContent>
+<xs:extension base="validatingConfig">
+<xs:sequence>
+<xs:element name="unit" type="xs:IDREF"/>
+<xs:element minOccurs="0" name="max" type="xs:double"/>
+<xs:element minOccurs="0" name="min" type="xs:double"/>
+</xs:sequence>
 </xs:extension>
 </xs:complexContent>
 </xs:complexType>
@@ -236,17 +254,6 @@
 <xs:sequence>
 <xs:element name="currency" type="currency"/>
 <xs:element name="value" nillable="true" type="xs:decimal"/>
-</xs:sequence>
-</xs:extension>
-</xs:complexContent>
-</xs:complexType>
-<xs:complexType name="defaultLimit">
-<xs:complexContent>
-<xs:extension base="validatingConfig">
-<xs:sequence>
-<xs:element name="unit" type="xs:IDREF"/>
-<xs:element minOccurs="0" name="max" type="xs:double"/>
-<xs:element minOccurs="0" name="min" type="xs:double"/>
 </xs:sequence>
 </xs:extension>
 </xs:complexContent>
