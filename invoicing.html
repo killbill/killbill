@@ -15,7 +15,7 @@ layout: default
                 <h1>Overview</h1>
             </div>
 
-            <p>Killbill works by triggers (as opposed to batch-oriented systems). Invoices are generated automatically, when:
+            <p>Kill Bill works by triggers (as opposed to batch-oriented systems). Invoices are generated automatically, when:
                 <ul>
                     <li>there is a change for a subscription (creation, change of plan, cancellation, etc.)</li>
                     <li>on a recurring phase of a subscription, the system detects a recurring charge is due (e.g. monthly recurring subscriptions)</li>
@@ -23,7 +23,7 @@ layout: default
                 </ul>
             </p>
 
-            <p>After an invoice has been generated, its balance is positive or zero. If it's positive, the customer needs to pay its balance. Each time an invoice would become negative, the system automatically inserts a special item, called credit balance adjustment (CBA), to bring back the balance to zero. That credit is automatically added to the account and used on future invoices. If the invoice is paid, a payment is added against that payment. If that invoice is adjusted later on, a CBA item will be automatically generated and appear on the invoice. Killbill invoices are not static, although the items are, i.e. one can add items to past invoices.</p>
+            <p>After an invoice has been generated, its balance is positive or zero. If it's positive, the customer needs to pay its balance. Each time an invoice would become negative, the system automatically inserts a special item, called credit balance adjustment (CBA), to bring back the balance to zero. That credit is automatically added to the account and used on future invoices. If the invoice is paid, a payment is added against that payment. If that invoice is adjusted later on, a CBA item will be automatically generated and appear on the invoice. Kill Bill invoices are not static, although the items are, i.e. one can add items to past invoices.</p>
 
             <p>The various types of invoice items are:
                 <ul>
