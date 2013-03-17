@@ -20,8 +20,8 @@ layout: default
             <div class="page-header">
                 <h1>Overview</h1>
             </div>
-            <p>Killbill maintains a reporting schema that is kept current in realtime for Analytics purposes. In contrary to other tables in the system, this set of tables is stable and potentially changes only between major revisions of Killbill. These tables are meant to be used as building blocks for reports and dashboards.</p>
-            <p>To distinguish them with Killbill objects, the Analytics objects are prefixed with the term <strong>Business</strong>, e.g. a Killbill account will have a representation in the Analytics subsystem by a Business Account object. For ease of tracking, Analytics objects contain id references to the Killbill ones but we strongly advise against using them for reporting purposes. Instead, use the external keys as much as possible, as they are tied to your business concepts. For instance, to count the number of accounts in the system, run a query using <code>count(distinct account_key)</code>, not <code>count(distinct account_id)</code>.</p>
+            <p>Kill Bill maintains a reporting schema that is kept current in realtime for Analytics purposes. In contrary to other tables in the system, this set of tables is stable and potentially changes only between major revisions of Kill Bill. These tables are meant to be used as building blocks for reports and dashboards.</p>
+            <p>To distinguish them with Kill Bill objects, the Analytics objects are prefixed with the term <strong>Business</strong>, e.g. a Kill Bill account will have a representation in the Analytics subsystem by a Business Account object. For ease of tracking, Analytics objects contain id references to the Kill Bill ones but we strongly advise against using them for reporting purposes. Instead, use the external keys as much as possible, as they are tied to your business concepts. For instance, to count the number of accounts in the system, run a query using <code>count(distinct account_key)</code>, not <code>count(distinct account_id)</code>.</p>
             <p>All of this information is also available in Kaui (in the analytics section), on a per account basis.</p>
         </section>
 
@@ -29,7 +29,7 @@ layout: default
             <div class="page-header">
                 <h1>Accounts</h1>
             </div>
-            <p>The table <strong>bac</strong> (stands for Business Accounts) maintains information about Killbill accounts. The table doesn't contain historic records (it will contain at most one record per Killbill account).</p>
+            <p>The table <strong>bac</strong> (stands for Business Accounts) maintains information about Kill Bill accounts. The table doesn't contain historic records (it will contain at most one record per Kill Bill account).</p>
             <h2>BAC schema</h2>
             <table class="table table-striped table-bordered table-condensed">
                 <thead>
@@ -48,7 +48,7 @@ layout: default
                     <tr>
                         <td>account_id</td>
                         <td>char(36)</td>
-                        <td>Killbill account id, e.g. <code>b2d69f1e-27cb-4c43-b997-71c28da4a170</code></td>
+                        <td>Kill Bill account id, e.g. <code>b2d69f1e-27cb-4c43-b997-71c28da4a170</code></td>
                     </tr>
                     <tr>
                         <td>account_key</td>
@@ -118,7 +118,7 @@ layout: default
             <div class="page-header">
                 <h1>Subscriptions</h1>
             </div>
-            <p>The table <strong>bst</strong> (stands for Business Subscription Transitions) maintains information about Killbill bundles and subscriptions. It describes the history of changes (both past and future) on a per subscription basis.</p>
+            <p>The table <strong>bst</strong> (stands for Business Subscription Transitions) maintains information about Kill Bill bundles and subscriptions. It describes the history of changes (both past and future) on a per subscription basis.</p>
             <p><strong>bst</strong> will contain all phase transitions for all subscriptions and can be used to build subscription timelines. A few remarks:
                 <ul>
                     <li>MIGRATE_BILLING and UNCANCEL subscription events are currently not stored in bst</li>
@@ -147,17 +147,17 @@ layout: default
                     <tr>
                         <td>total_ordering</td>
                         <td>bigint(20)</td>
-                        <td>Killbill event id (unique in the system), e.g. <code>2</code></td>
+                        <td>Kill Bill event id (unique in the system), e.g. <code>2</code></td>
                     </tr>
                     <tr>
                         <td>bundle_id</td>
                         <td>char(36)</td>
-                        <td>Killbill bundle id, e.g. <code>20906750-3d17-4f5b-bb1f-fe14f0e803fb</code></td>
+                        <td>Kill Bill bundle id, e.g. <code>20906750-3d17-4f5b-bb1f-fe14f0e803fb</code></td>
                     </tr>
                     <tr>
                         <td>account_id</td>
                         <td>char(36)</td>
-                        <td>Killbill account id, e.g. <code>c99df6ef-6571-400b-b62d-c8b75394b9f1</code></td>
+                        <td>Kill Bill account id, e.g. <code>c99df6ef-6571-400b-b62d-c8b75394b9f1</code></td>
                     </tr>
                     <tr>
                         <td>external_key</td>
@@ -172,7 +172,7 @@ layout: default
                     <tr>
                         <td>subscription_id</td>
                         <td>char(36)</td>
-                        <td>Killbill subscription id, e.g. <code>205e11dd-9c88-451e-939a-46704d0bd3c3</code></td>
+                        <td>Kill Bill subscription id, e.g. <code>205e11dd-9c88-451e-939a-46704d0bd3c3</code></td>
                     </tr>
                     <tr>
                         <td>requested_timestamp</td>
@@ -312,7 +312,7 @@ layout: default
             <div class="page-header">
                 <h1>Invoices and invoice items</h1>
             </div>
-            <p>The tables <strong>bin</strong> (stands for Business Invoices) and <strong>bii</strong> (stands for Business Invoice Items) maintain information about invoices posted by account. The tables don't contain historic records (they will contain at most one record per Killbill invoice and invoice item).</p>
+            <p>The tables <strong>bin</strong> (stands for Business Invoices) and <strong>bii</strong> (stands for Business Invoice Items) maintain information about invoices posted by account. The tables don't contain historic records (they will contain at most one record per Kill Bill invoice and invoice item).</p>
             <h2>BIN schema</h2>
             <table class="table table-striped table-bordered table-condensed">
                 <thead>
@@ -331,7 +331,7 @@ layout: default
                     <tr>
                         <td>invoice_id</td>
                         <td>char(36)</td>
-                        <td>Killbill invoice id, e.g. <code>bb85b927-bfc9-48f4-8c72-2693733fabdd</code></td>
+                        <td>Kill Bill invoice id, e.g. <code>bb85b927-bfc9-48f4-8c72-2693733fabdd</code></td>
                     </tr>
                     <tr>
                         <td>invoice_number</td>
@@ -351,7 +351,7 @@ layout: default
                     <tr>
                         <td>account_id</td>
                         <td>char(36)</td>
-                        <td>Killbill account id, e.g. <code>667e6a69-c8c2-4a04-a18e-31049818eb78</code></td>
+                        <td>Kill Bill account id, e.g. <code>667e6a69-c8c2-4a04-a18e-31049818eb78</code></td>
                     </tr>
                     <tr>
                         <td>account_key</td>
@@ -413,7 +413,7 @@ layout: default
                     <tr>
                         <td>item_id</td>
                         <td>char(36)</td>
-                        <td>Killbill invoice item id, e.g. <code>1b43978b-68b5-4a05-8d51-18690148bf9e</code></td>
+                        <td>Kill Bill invoice item id, e.g. <code>1b43978b-68b5-4a05-8d51-18690148bf9e</code></td>
                     </tr>
                     <tr>
                         <td>created_date</td>
@@ -498,7 +498,7 @@ layout: default
             <div class="page-header">
                 <h1>Payments</h1>
             </div>
-            <p>The table <strong>bip</strong> (stands for Business Invoice Payments) maintains information about Killbill payments, refunds and chargebacks. The table doesn't contain historic records (it will contain at most one record per Killbill invoice payment).</p>
+            <p>The table <strong>bip</strong> (stands for Business Invoice Payments) maintains information about Kill Bill payments, refunds and chargebacks. The table doesn't contain historic records (it will contain at most one record per Kill Bill invoice payment).</p>
             <h2>BIP schema</h2>
             <table class="table table-striped table-bordered table-condensed">
                 <thead>
@@ -517,7 +517,7 @@ layout: default
                     <tr>
                         <td>payment_id</td>
                         <td>char(36)</td>
-                        <td>Killbill payment id, e.g. <code>1b43978b-68b5-4a05-8d51-18690148bf9e</code></td>
+                        <td>Kill Bill payment id, e.g. <code>1b43978b-68b5-4a05-8d51-18690148bf9e</code></td>
                     </tr>
                     <tr>
                         <td>created_date</td>
@@ -537,7 +537,7 @@ layout: default
                     <tr>
                         <td>invoice_id</td>
                         <td>char(36)</td>
-                        <td>Killbill invoice id, e.g. <code>1b43978b-68b5-4a05-8d51-18690148bf9e</code></td>
+                        <td>Kill Bill invoice id, e.g. <code>1b43978b-68b5-4a05-8d51-18690148bf9e</code></td>
                     </tr>
                     <tr>
                         <td>effective_date</td>
@@ -562,7 +562,7 @@ layout: default
                     <tr>
                         <td>processing_status</td>
                         <td>varchar(5)</td>
-                        <td>Killbill payment status, e.g. <code>PAYMENT_FAILURE_ABORTED</code></td>
+                        <td>Kill Bill payment status, e.g. <code>PAYMENT_FAILURE_ABORTED</code></td>
                     </tr>
                     <tr>
                         <td>requested_amount</td>
@@ -582,7 +582,7 @@ layout: default
                     <tr>
                         <td>payment_method</td>
                         <td>varchar(50)</td>
-                        <td>Killbill payment method id, e.g. <code>1b43978b-68b5-4a05-8d51-18690148bf9e</code></td>
+                        <td>Kill Bill payment method id, e.g. <code>1b43978b-68b5-4a05-8d51-18690148bf9e</code></td>
                     </tr>
                     <tr>
                         <td>card_type</td>
@@ -602,7 +602,7 @@ layout: default
                     <tr>
                         <td>linked_invoice_payment_id</td>
                         <td>char(36)</td>
-                        <td>Associated Killbill invoice payment id (for refunds and chargebacks), e.g. <code>1b43978b-68b5-4a05-8d51-18690148bf9e</code></td>
+                        <td>Associated Kill Bill invoice payment id (for refunds and chargebacks), e.g. <code>1b43978b-68b5-4a05-8d51-18690148bf9e</code></td>
                     </tr>
                 </tbody>
             </table>
@@ -613,7 +613,7 @@ layout: default
                  <h1>Overdue statuses</h1>
              </div>
 
-             <p>The table <strong>bos</strong> (stands for Business Overdue Status) maintains information about Killbill overdue statuses. The table contains historic status for a given bundle.</p>
+             <p>The table <strong>bos</strong> (stands for Business Overdue Status) maintains information about Kill Bill overdue statuses. The table contains historic status for a given bundle.</p>
              <h2>BOS schema</h2>
             <table class="table table-striped table-bordered table-condensed">
                 <thead>
@@ -632,7 +632,7 @@ layout: default
                     <tr>
                         <td>bundle_id</td>
                         <td>char(36)</td>
-                        <td>Killbill bundle id, e.g. <code>ce3d45ec-30b7-4489-949c-d80808111993</code></td>
+                        <td>Kill Bill bundle id, e.g. <code>ce3d45ec-30b7-4489-949c-d80808111993</code></td>
                     </tr>
                     <tr>
                         <td>external_key</td>
