@@ -764,6 +764,7 @@
                 <version>2.2.1</version>
                 <configuration>
                     <mavenExecutorId>forked-path</mavenExecutorId>
+                    <autoVersionSubmodules>true</autoVersionSubmodules>
                 </configuration>
                 <dependencies>
                     <dependency>
