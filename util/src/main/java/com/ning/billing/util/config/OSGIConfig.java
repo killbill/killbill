@@ -68,6 +68,9 @@ public interface OSGIConfig extends KillbillConfig {
              // Note: bundles should mark javax.servlet:servlet-api as provided
              "javax.servlet;version=3.0," +
              "javax.servlet.http;version=3.0," +
+             // Since we are using joda in our APIs we need to export it
+             "org.joda.time;org.joda.time.format;version=2.1," +
+
              "org.osgi.service.log;version=1.3," +
              // Let the world know the System bundle exposes (via org.osgi.compendium) the requirement (osgi.wiring.package=org.osgi.service.http)
              "org.osgi.service.http," +
