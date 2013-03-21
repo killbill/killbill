@@ -71,12 +71,12 @@ public class TestPaymentMethodProcessorRefreshWithDB extends PaymentTestSuiteWit
 
         final UUID secondPmId = paymentApi.addPaymentMethod(MockPaymentProviderPlugin.PLUGIN_NAME, account, true, new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), false, null), callContext);
         Assert.assertEquals(getPluginApi().getPaymentMethods(account.getId(), true, callContext).size(), 2);
-        Assert.assertEquals(paymentApi.getPaymentMethods(account, callContext).size(), 2);
+        Assert.assertEquals(paymentApi.getPaymentMethods(account, false, callContext).size(), 2);
 
         // Remove second PM from plugin
         getPluginApi().deletePaymentMethod(secondPmId, callContext);
         Assert.assertEquals(getPluginApi().getPaymentMethods(account.getId(), true, callContext).size(), 1);
-        Assert.assertEquals(paymentApi.getPaymentMethods(account, callContext).size(), 2);
+        Assert.assertEquals(paymentApi.getPaymentMethods(account, false, callContext).size(), 2);
 
         // Verify that the refresh sees that PM as being deleted now
         final List<PaymentMethod> methods = paymentMethodProcessor.refreshPaymentMethods(MockPaymentProviderPlugin.PLUGIN_NAME, account, internalCallContext);

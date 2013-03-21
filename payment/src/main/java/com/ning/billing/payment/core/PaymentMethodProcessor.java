@@ -113,13 +113,13 @@ public class PaymentMethodProcessor extends ProcessorBase {
         });
     }
 
-    public List<PaymentMethod> getPaymentMethods(final Account account, final InternalTenantContext context) throws PaymentApiException {
+    public List<PaymentMethod> getPaymentMethods(final Account account, final boolean withPluginInfo, final InternalTenantContext context) throws PaymentApiException {
 
         final List<PaymentMethodModelDao> paymentMethodModels = paymentDao.getPaymentMethods(account.getId(), context);
         if (paymentMethodModels.size() == 0) {
             return Collections.emptyList();
         }
-        return getPaymentMethodInternal(paymentMethodModels);
+        return getPaymentMethodInternal(paymentMethodModels, withPluginInfo, context);
     }
 
     public PaymentMethod getPaymentMethodById(final UUID paymentMethodId, final boolean withPluginInfo, final InternalTenantContext context)
@@ -129,23 +129,27 @@ public class PaymentMethodProcessor extends ProcessorBase {
             throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, paymentMethodId);
         }
 
+        return buildDefaultPaymentMethod(paymentMethodModel, withPluginInfo, context);
+    }
+
+    private PaymentMethod buildDefaultPaymentMethod(final PaymentMethodModelDao paymentMethodModelDao, final boolean withPluginInfo, final InternalTenantContext context) throws PaymentApiException {
         final PaymentMethodPlugin paymentMethodPlugin;
         if (withPluginInfo) {
             try {
-                final PaymentPluginApi pluginApi = pluginRegistry.getServiceForName(paymentMethodModel.getPluginName());
-                paymentMethodPlugin = pluginApi.getPaymentMethodDetail(paymentMethodModel.getAccountId(), paymentMethodId, context.toTenantContext());
+                final PaymentPluginApi pluginApi = pluginRegistry.getServiceForName(paymentMethodModelDao.getPluginName());
+                paymentMethodPlugin = pluginApi.getPaymentMethodDetail(paymentMethodModelDao.getAccountId(), paymentMethodModelDao.getId(), context.toTenantContext());
             } catch (PaymentPluginApiException e) {
-                throw new PaymentApiException(ErrorCode.PAYMENT_GET_PAYMENT_METHODS, paymentMethodModel.getAccountId(), paymentMethodId);
+                throw new PaymentApiException(ErrorCode.PAYMENT_GET_PAYMENT_METHODS, paymentMethodModelDao.getAccountId(), paymentMethodModelDao.getId());
             }
         } else {
             paymentMethodPlugin = null;
         }
 
-        return new DefaultPaymentMethod(paymentMethodModel, paymentMethodPlugin);
+        return new DefaultPaymentMethod(paymentMethodModelDao, paymentMethodPlugin);
     }
 
     public PaymentMethod getExternalPaymentMethod(final Account account, final InternalTenantContext context) throws PaymentApiException {
-        final List<PaymentMethod> paymentMethods = getPaymentMethods(account, context);
+        final List<PaymentMethod> paymentMethods = getPaymentMethods(account, false, context);
         for (final PaymentMethod paymentMethod : paymentMethods) {
             if (ExternalPaymentProviderPlugin.PLUGIN_NAME.equals(paymentMethod.getPluginName())) {
                 return paymentMethod;
@@ -166,12 +170,12 @@ public class PaymentMethodProcessor extends ProcessorBase {
         return (ExternalPaymentProviderPlugin) pluginRegistry.getServiceForName(ExternalPaymentProviderPlugin.PLUGIN_NAME);
     }
 
-    private List<PaymentMethod> getPaymentMethodInternal(final List<PaymentMethodModelDao> paymentMethodModels)
+    private List<PaymentMethod> getPaymentMethodInternal(final List<PaymentMethodModelDao> paymentMethodModels, final boolean withPluginInfo, final InternalTenantContext context)
             throws PaymentApiException {
 
         final List<PaymentMethod> result = new ArrayList<PaymentMethod>(paymentMethodModels.size());
-        for (final PaymentMethodModelDao cur : paymentMethodModels) {
-            final PaymentMethod pm = new DefaultPaymentMethod(cur, null);
+        for (final PaymentMethodModelDao paymentMethodModel : paymentMethodModels) {
+            final PaymentMethod pm = buildDefaultPaymentMethod(paymentMethodModel, withPluginInfo, context);
             result.add(pm);
         }
         return result;

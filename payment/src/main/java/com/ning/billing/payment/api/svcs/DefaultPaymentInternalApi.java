@@ -63,6 +63,6 @@ public class DefaultPaymentInternalApi implements PaymentInternalApi {
 
     @Override
     public List<PaymentMethod> getPaymentMethods(final Account account, final InternalTenantContext context) throws PaymentApiException {
-        return methodProcessor.getPaymentMethods(account, context);
+        return methodProcessor.getPaymentMethods(account, false, context);
     }
 }
