@@ -108,7 +108,7 @@ public class JRubyActivator extends KillbillActivatorBase {
         killbillUserApis.put("analytics_user_api", killbillAPI.getAnalyticsUserApi());
         killbillUserApis.put("catalog_user_api", killbillAPI.getCatalogUserApi());
         killbillUserApis.put("entitlement_migration_api", killbillAPI.getEntitlementMigrationApi());
-        killbillUserApis.put("entitlement_timeline_api", killbillAPI.getEntitlementMigrationApi());
+        killbillUserApis.put("entitlement_timeline_api", killbillAPI.getEntitlementTimelineApi());
         killbillUserApis.put("entitlement_transfer_api", killbillAPI.getEntitlementTransferApi());
         killbillUserApis.put("entitlement_user_api", killbillAPI.getEntitlementUserApi());
         killbillUserApis.put("invoice_migration_api", killbillAPI.getInvoiceMigrationApi());
@@ -116,7 +116,7 @@ public class JRubyActivator extends KillbillActivatorBase {
         killbillUserApis.put("invoice_user_api", killbillAPI.getInvoiceUserApi());
         killbillUserApis.put("overdue_user_api", killbillAPI.getOverdueUserApi());
         killbillUserApis.put("payment_api", killbillAPI.getPaymentApi());
-        killbillUserApis.put("tenant_user_api", killbillAPI.getTagUserApi());
+        killbillUserApis.put("tenant_user_api", killbillAPI.getTenantUserApi());
         killbillUserApis.put("usage_user_api", killbillAPI.getUsageUserApi());
         killbillUserApis.put("audit_user_api", killbillAPI.getAuditUserApi());
         killbillUserApis.put("custom_field_user_api", killbillAPI.getCustomFieldUserApi());
