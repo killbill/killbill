@@ -17,6 +17,7 @@
 package com.ning.billing.beatrix.integration;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -318,7 +319,15 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         final Account account = accountUserApi.createAccount(accountData, callContext);
         assertNotNull(account);
 
-        final PaymentMethodPlugin info = new PaymentMethodPlugin() {
+        final PaymentMethodPlugin info = createPaymentMethodPlugin();
+
+        paymentApi.addPaymentMethod(paymentPluginName, account, true, info, callContext);
+        return accountUserApi.getAccountById(account.getId(), callContext);
+    }
+
+
+    protected PaymentMethodPlugin createPaymentMethodPlugin() {
+        return new PaymentMethodPlugin() {
             @Override
             public boolean isDefaultPaymentMethod() {
                 return false;
@@ -331,7 +340,10 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
             @Override
             public List<PaymentMethodKVInfo> getProperties() {
-                return null;
+                PaymentMethodKVInfo prop = new PaymentMethodKVInfo("whatever", "cool", Boolean.TRUE);
+                List<PaymentMethodKVInfo> res = new ArrayList<PaymentMethodKVInfo>();
+                res.add(prop);
+                return res;
             }
 
             @Override
@@ -339,9 +351,6 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
                 return UUID.randomUUID().toString();
             }
         };
-
-        paymentApi.addPaymentMethod(paymentPluginName, account, true, info, callContext);
-        return accountUserApi.getAccountById(account.getId(), callContext);
     }
 
     protected AccountData getAccountData(final int billingDay) {

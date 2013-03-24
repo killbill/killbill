@@ -93,7 +93,7 @@ public abstract class JRubyPlugin {
         // Don't put any code here!
 
         // Start the plugin
-        pluginInstance = (RubyObject) container.runScriptlet("Killbill::Plugin::JPlugin.new(" + KILLBILL_PLUGIN_CLASS_NAME + "," + KILLBILL_SERVICES + ")");
+        pluginInstance = (RubyObject) container.runScriptlet("Killbill::Plugin::JPayment.new(" + KILLBILL_PLUGIN_CLASS_NAME + "," + KILLBILL_SERVICES + ")");
     }
 
     public void startPlugin(final BundleContext context) {
