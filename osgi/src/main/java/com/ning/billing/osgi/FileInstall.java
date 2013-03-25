@@ -135,6 +135,7 @@ public class FileInstall {
             logger.info("Skipping fragment bundle {}", bundle.getLocation());
         } else {
             logger.info("Starting bundle {}", bundle.getLocation());
+            final ClassLoader previousClassLoader = Thread.currentThread().getContextClassLoader();
             try {
                 bundle.start();
                 return true;

@@ -37,44 +37,42 @@ public class JRubyActivator extends KillbillActivatorBase {
     public void start(final BundleContext context) throws Exception {
 
         super.start(context);
-        logService.log(LogService.LOG_INFO, "JRuby bundle activated");
 
-        doMagicToMakeJRubyAndFelixHappy();
+        withContextClassLoader(new PluginCall() {
+            @Override
+            public void doCall() {
 
-        // Retrieve the plugin config
-        final PluginRubyConfig rubyConfig = retrievePluginRubyConfig(context);
+                logService.log(LogService.LOG_INFO, "JRuby bundle activated");
 
-        // Setup JRuby
-        final ScriptingContainer scriptingContainer = setupScriptingContainer(rubyConfig);
-        if (PluginType.NOTIFICATION.equals(rubyConfig.getPluginType())) {
-            plugin = new JRubyNotificationPlugin(rubyConfig, scriptingContainer, context, logService);
-            dispatcher.registerEventHandler((OSGIKillbillEventHandler) plugin);
-        } else if (PluginType.PAYMENT.equals(rubyConfig.getPluginType())) {
-            plugin = new JRubyPaymentPlugin(rubyConfig, scriptingContainer, context, logService);
-        }
+                // Retrieve the plugin config
+                final PluginRubyConfig rubyConfig = retrievePluginRubyConfig(context);
 
-        // Validate and instantiate the plugin
+                // Setup JRuby
+                final ScriptingContainer scriptingContainer = setupScriptingContainer(rubyConfig);
+                if (PluginType.NOTIFICATION.equals(rubyConfig.getPluginType())) {
+                    plugin = new JRubyNotificationPlugin(rubyConfig, scriptingContainer, context, logService);
+                    dispatcher.registerEventHandler((OSGIKillbillEventHandler) plugin);
+                } else if (PluginType.PAYMENT.equals(rubyConfig.getPluginType())) {
+                    plugin = new JRubyPaymentPlugin(rubyConfig, scriptingContainer, context, logService);
+                }
 
-        final Map<String, Object> killbillServices = retrieveKillbillApis(context);
-        killbillServices.put("root", rubyConfig.getPluginVersionRoot().getAbsolutePath());
-        killbillServices.put("logger", logService);
-        plugin.instantiatePlugin(killbillServices);
+                // Validate and instantiate the plugin
 
-        logService.log(LogService.LOG_INFO, "Starting JRuby plugin " + plugin.getPluginMainClass());
-        plugin.startPlugin(context);
+                final Map<String, Object> killbillServices = retrieveKillbillApis(context);
+                killbillServices.put("root", rubyConfig.getPluginVersionRoot().getAbsolutePath());
+                killbillServices.put("logger", logService);
+                plugin.instantiatePlugin(killbillServices);
 
+                logService.log(LogService.LOG_INFO, "Starting JRuby plugin " + plugin.getPluginMainClass());
+                plugin.startPlugin(context);
+
+            }
+        }, this.getClass().getClassLoader());
     }
 
     private PluginRubyConfig retrievePluginRubyConfig(final BundleContext context) {
         final PluginConfigServiceApi pluginConfigServiceApi = killbillAPI.getPluginConfigServiceApi();
         return pluginConfigServiceApi.getPluginRubyConfig(context.getBundle().getBundleId());
-    }
-
-    // JRuby/Felix specifics, it works out of the box on Equinox.
-    // Other OSGI frameworks are untested.
-    private void doMagicToMakeJRubyAndFelixHappy() {
-        // Tell JRuby to use the correct class loader
-        Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
     }
 
     private ScriptingContainer setupScriptingContainer(final PluginRubyConfig rubyConfig) {
@@ -87,9 +85,15 @@ public class JRubyActivator extends KillbillActivatorBase {
     }
 
     public void stop(final BundleContext context) throws Exception {
-        plugin.stopPlugin(context);
-        killbillAPI.close();
-        logService.close();
+
+        withContextClassLoader(new PluginCall() {
+            @Override
+            public void doCall() {
+                plugin.stopPlugin(context);
+                killbillAPI.close();
+                logService.close();
+            }
+        }, this.getClass().getClassLoader());
     }
 
     // We make the explicit registration in the start method by hand as this would be called too early
@@ -123,5 +127,23 @@ public class JRubyActivator extends KillbillActivatorBase {
         killbillUserApis.put("export_user_api", killbillAPI.getExportUserApi());
         killbillUserApis.put("tag_user_api", killbillAPI.getTagUserApi());
         return killbillUserApis;
+    }
+
+
+    private static interface PluginCall {
+        public void doCall();
+    }
+
+    // JRuby/Felix specifics, it works out of the box on Equinox.
+    // Other OSGI frameworks are untested.
+    private void withContextClassLoader(final PluginCall call, final ClassLoader pluginClassLoader) {
+        final ClassLoader enteringContextClassLoader = Thread.currentThread().getContextClassLoader();
+        try {
+            Thread.currentThread().setContextClassLoader(pluginClassLoader);
+            call.doCall();
+        } finally {
+            // We want to make sure that calling thread gets back its original context class loader when it returns
+            Thread.currentThread().setContextClassLoader(enteringContextClassLoader);
+        }
     }
 }

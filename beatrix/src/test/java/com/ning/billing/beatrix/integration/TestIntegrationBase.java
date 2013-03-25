@@ -240,7 +240,8 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
         super.beforeMethod();
 
-        Thread.currentThread().setContextClassLoader(null);
+        log.info("beforeMethod context classLoader = " + (Thread.currentThread().getContextClassLoader() != null ? Thread.currentThread().getContextClassLoader().toString() : "null"));
+        //Thread.currentThread().setContextClassLoader(null);
 
         log.warn("\n");
         log.warn("RESET TEST FRAMEWORK\n\n");
@@ -262,6 +263,8 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         lifecycle.fireShutdownSequencePriorEventUnRegistration();
         busService.getBus().unregister(busHandler);
         lifecycle.fireShutdownSequencePostEventUnRegistration();
+
+        log.info("afterMethod context classLoader = " + (Thread.currentThread().getContextClassLoader() != null ? Thread.currentThread().getContextClassLoader().toString() : "null"));
 
         log.warn("DONE WITH TEST\n");
     }
