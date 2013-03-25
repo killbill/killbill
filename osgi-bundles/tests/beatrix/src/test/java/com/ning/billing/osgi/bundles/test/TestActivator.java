@@ -51,7 +51,7 @@ public class TestActivator extends KillbillActivatorBase implements OSGIKillbill
     public void start(final BundleContext context) throws Exception {
 
         final String bundleName = context.getBundle().getSymbolicName();
-        System.out.println("TestActivator starting bundle = " + bundleName);
+        logService.log(LogService.LOG_INFO, "TestActivator starting bundle = " + bundleName);
 
         super.start(context);
 

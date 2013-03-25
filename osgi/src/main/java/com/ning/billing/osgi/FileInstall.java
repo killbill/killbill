@@ -105,11 +105,6 @@ public class FileInstall {
         }
 
         final List<PluginRubyConfig> pluginRubyConfigs = pluginFinder.getLatestRubyPlugins();
-        if (pluginRubyConfigs.size() > 0 && jrubyBundlePath == null) {
-            logger.warn("Unable to find the JRuby bundle for ruby plugins");
-            return;
-        }
-
         for (final PluginRubyConfig cur : pluginRubyConfigs) {
             logger.info("Installing JRuby bundle for plugin {} from {}", cur.getPluginName(), cur.getRubyLoadDir());
             final Bundle bundle = context.installBundle("file:" + jrubyBundlePath);
@@ -135,7 +130,6 @@ public class FileInstall {
             logger.info("Skipping fragment bundle {}", bundle.getLocation());
         } else {
             logger.info("Starting bundle {}", bundle.getLocation());
-            final ClassLoader previousClassLoader = Thread.currentThread().getContextClassLoader();
             try {
                 bundle.start();
                 return true;
