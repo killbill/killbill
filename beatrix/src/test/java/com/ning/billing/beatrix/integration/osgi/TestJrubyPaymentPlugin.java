@@ -57,7 +57,7 @@ public class TestJrubyPaymentPlugin extends TestOSGIBase {
         final String killbillVersion = System.getProperty("killbill.version");
 
         SetupBundleWithAssertion setupTest = new SetupBundleWithAssertion(BUNDLE_TEST_RESOURCE, osgiConfig, killbillVersion);
-        //setupTest.setupJrubyBundle();
+        setupTest.setupJrubyBundle();
 
     }
 

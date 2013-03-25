@@ -239,6 +239,9 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     public void beforeMethod() throws Exception {
 
         super.beforeMethod();
+
+        Thread.currentThread().setContextClassLoader(null);
+
         log.warn("\n");
         log.warn("RESET TEST FRAMEWORK\n\n");
 

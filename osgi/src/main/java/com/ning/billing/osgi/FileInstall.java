@@ -105,6 +105,11 @@ public class FileInstall {
         }
 
         final List<PluginRubyConfig> pluginRubyConfigs = pluginFinder.getLatestRubyPlugins();
+        if (pluginRubyConfigs.size() > 0 && jrubyBundlePath == null) {
+            logger.warn("Unable to find the JRuby bundle for ruby plugins");
+            return;
+        }
+
         for (final PluginRubyConfig cur : pluginRubyConfigs) {
             logger.info("Installing JRuby bundle for plugin {} from {}", cur.getPluginName(), cur.getRubyLoadDir());
             final Bundle bundle = context.installBundle("file:" + jrubyBundlePath);
@@ -118,7 +123,6 @@ public class FileInstall {
         if (new File(expectedPath).isFile()) {
             return expectedPath;
         } else {
-            logger.warn("Unable to find the JRuby bundle for ruby plugins. If you want to install ruby plugins, copy the jar to " + expectedPath);
             return null;
         }
     }

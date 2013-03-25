@@ -20,6 +20,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.ning.billing.osgi.api.OSGIServiceDescriptor;
 import com.ning.billing.osgi.api.OSGIServiceRegistration;
 import com.ning.billing.payment.plugin.api.PaymentPluginApi;
@@ -29,6 +32,8 @@ import com.google.common.base.Strings;
 import com.google.inject.Inject;
 
 public class DefaultPaymentProviderPluginRegistry implements OSGIServiceRegistration<PaymentPluginApi> {
+
+    private final static Logger log = LoggerFactory.getLogger(DefaultPaymentProviderPluginRegistry.class);
 
     private final String defaultPlugin;
     private final Map<String, PaymentPluginApi> pluginsByName = new ConcurrentHashMap<String, PaymentPluginApi>();
@@ -41,11 +46,13 @@ public class DefaultPaymentProviderPluginRegistry implements OSGIServiceRegistra
 
     @Override
     public void registerService(final OSGIServiceDescriptor desc, final PaymentPluginApi service) {
+        log.info("DefaultPaymentProviderPluginRegistry registering service " + desc.getServiceName().toLowerCase());
         pluginsByName.put(desc.getServiceName().toLowerCase(), service);
     }
 
     @Override
     public void unregisterService(final String serviceName) {
+        log.info("DefaultPaymentProviderPluginRegistry unregistering service " + serviceName.toLowerCase());
         pluginsByName.remove(serviceName.toLowerCase());
     }
 
