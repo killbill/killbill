@@ -49,12 +49,10 @@ public class TestActivator extends KillbillActivatorBase implements OSGIKillbill
 
     @Override
     public void start(final BundleContext context) throws Exception {
+        super.start(context);
 
         final String bundleName = context.getBundle().getSymbolicName();
         logService.log(LogService.LOG_INFO, "TestActivator starting bundle = " + bundleName);
-
-        super.start(context);
-
 
         final IDBI dbi = new DBI(dataSource.getDataSource());
         testDao = new TestDao(dbi);
