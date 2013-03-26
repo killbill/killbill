@@ -22,6 +22,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.osgi.bundles.test.dao.TestDao;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.payment.plugin.api.PaymentInfoPlugin;
@@ -48,7 +49,7 @@ public class TestPaymentPluginApi implements PaymentPluginApi {
     }
 
     @Override
-    public PaymentInfoPlugin processPayment(final UUID kbPaymentId, final UUID kbPaymentMethodId, final BigDecimal amount, final CallContext context) throws PaymentPluginApiException {
+    public PaymentInfoPlugin processPayment(final UUID kbAccountId, final UUID kbPaymentId, final UUID kbPaymentMethodId, final BigDecimal amount, final Currency currency, final CallContext context) throws PaymentPluginApiException {
         testDao.insertProcessedPayment(kbPaymentId, kbPaymentMethodId, amount);
         return new PaymentInfoPlugin() {
             @Override
@@ -79,12 +80,12 @@ public class TestPaymentPluginApi implements PaymentPluginApi {
     }
 
     @Override
-    public PaymentInfoPlugin getPaymentInfo(final UUID kbPaymentId, final TenantContext context) throws PaymentPluginApiException {
+    public PaymentInfoPlugin getPaymentInfo(final UUID kbAccountId, final UUID kbPaymentId, final TenantContext context) throws PaymentPluginApiException {
         return null;
     }
 
     @Override
-    public RefundInfoPlugin processRefund(final UUID kbPaymentId, final BigDecimal refundAmount, final CallContext context) throws PaymentPluginApiException {
+    public RefundInfoPlugin processRefund(final UUID kbAccountId, final UUID kbPaymentId, final BigDecimal refundAmount, final Currency currency, final CallContext context) throws PaymentPluginApiException {
         return null;
     }
 
@@ -93,7 +94,7 @@ public class TestPaymentPluginApi implements PaymentPluginApi {
     }
 
     @Override
-    public void deletePaymentMethod(final UUID kbPaymentMethodId, final CallContext context) throws PaymentPluginApiException {
+    public void deletePaymentMethod(final UUID kbAccountId, final UUID kbPaymentMethodId, final CallContext context) throws PaymentPluginApiException {
     }
 
     @Override
@@ -102,7 +103,7 @@ public class TestPaymentPluginApi implements PaymentPluginApi {
     }
 
     @Override
-    public void setDefaultPaymentMethod(final UUID kbPaymentMethodId, final CallContext context) throws PaymentPluginApiException {
+    public void setDefaultPaymentMethod(final UUID kbAccountId, final UUID kbPaymentMethodId, final CallContext context) throws PaymentPluginApiException {
     }
 
     @Override
@@ -111,7 +112,7 @@ public class TestPaymentPluginApi implements PaymentPluginApi {
     }
 
     @Override
-    public void resetPaymentMethods(final List<PaymentMethodInfoPlugin> paymentMethods) throws PaymentPluginApiException {
+    public void resetPaymentMethods(final UUID kbAccountId, final List<PaymentMethodInfoPlugin> paymentMethods) throws PaymentPluginApiException {
     }
 
 

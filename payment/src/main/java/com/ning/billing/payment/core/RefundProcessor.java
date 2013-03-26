@@ -122,7 +122,7 @@ public class RefundProcessor extends ProcessorBase {
                     paymentDao.insertRefund(refundInfo, context);
 
                     final PaymentPluginApi plugin = getPaymentProviderPlugin(payment.getPaymentMethodId(), context);
-                    plugin.processRefund(paymentId, refundAmount, context.toCallContext());
+                    plugin.processRefund(account.getId(), paymentId, refundAmount, account.getCurrency(), context.toCallContext());
 
                     paymentDao.updateRefundStatus(refundInfo.getId(), RefundStatus.PLUGIN_COMPLETED, context);
 

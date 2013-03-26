@@ -39,6 +39,7 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.beatrix.osgi.SetupBundleWithAssertion;
+import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.dbi.DBTestingHelper;
 import com.ning.billing.osgi.api.OSGIServiceRegistration;
 import com.ning.billing.osgi.glue.OSGIDataSourceConfig;
@@ -102,7 +103,7 @@ public class TestBasicOSGIWithTestBundle extends TestOSGIBase {
         // Make a payment and expect test bundle to correcly write in its table the input values
         final UUID paymentId = UUID.randomUUID();
         final BigDecimal paymentAmount = new BigDecimal("14.32");
-        final PaymentInfoPlugin r = paymentPluginApi.processPayment(paymentId, account.getPaymentMethodId(), paymentAmount, callContext);
+        final PaymentInfoPlugin r = paymentPluginApi.processPayment(account.getId(), paymentId, account.getPaymentMethodId(), paymentAmount, Currency.USD, callContext);
         assertTor.assertPluginCreatedPayment(paymentId, account.getPaymentMethodId(), paymentAmount);
     }
 

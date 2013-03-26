@@ -424,7 +424,7 @@ public class PaymentProcessor extends ProcessorBase {
         PaymentStatus paymentStatus;
         try {
 
-            final PaymentInfoPlugin paymentPluginInfo = plugin.processPayment(paymentInput.getId(), paymentInput.getPaymentMethodId(), attemptInput.getRequestedAmount(), context.toCallContext());
+            final PaymentInfoPlugin paymentPluginInfo = plugin.processPayment(account.getId(), paymentInput.getId(), paymentInput.getPaymentMethodId(), attemptInput.getRequestedAmount(), account.getCurrency(), context.toCallContext());
             switch (paymentPluginInfo.getStatus()) {
                 case PROCESSED:
                     // Update Payment/PaymentAttempt status

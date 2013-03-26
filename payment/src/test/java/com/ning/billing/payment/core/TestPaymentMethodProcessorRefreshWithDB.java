@@ -40,7 +40,7 @@ public class TestPaymentMethodProcessorRefreshWithDB extends PaymentTestSuiteWit
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
         super.beforeMethod();
-        getPluginApi().resetPaymentMethods(null);
+        getPluginApi().resetPaymentMethods(null, null);
     }
 
     @Test(groups = "slow")
@@ -74,7 +74,7 @@ public class TestPaymentMethodProcessorRefreshWithDB extends PaymentTestSuiteWit
         Assert.assertEquals(paymentApi.getPaymentMethods(account, false, callContext).size(), 2);
 
         // Remove second PM from plugin
-        getPluginApi().deletePaymentMethod(secondPmId, callContext);
+        getPluginApi().deletePaymentMethod(account.getId(), secondPmId, callContext);
         Assert.assertEquals(getPluginApi().getPaymentMethods(account.getId(), true, callContext).size(), 1);
         Assert.assertEquals(paymentApi.getPaymentMethods(account, false, callContext).size(), 2);
 

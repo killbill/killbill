@@ -29,6 +29,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import com.ning.billing.beatrix.osgi.SetupBundleWithAssertion;
+import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.osgi.api.OSGIServiceRegistration;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.payment.plugin.api.PaymentInfoPlugin;
@@ -67,7 +68,7 @@ public class TestJrubyPaymentPlugin extends TestOSGIBase {
         PaymentPluginApi api = getTestPluginPaymentApi();
 
         final DateTime beforeCall = new DateTime().toDateTime(DateTimeZone.UTC).minusSeconds(1);
-        PaymentInfoPlugin res = api.processPayment(UUID.randomUUID(), UUID.randomUUID(), BigDecimal.TEN, callContext);
+        PaymentInfoPlugin res = api.processPayment(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), BigDecimal.TEN, Currency.USD,  callContext);
         final DateTime afterCall = new DateTime().toDateTime(DateTimeZone.UTC).plusSeconds(1);
 
 
@@ -90,7 +91,7 @@ public class TestJrubyPaymentPlugin extends TestOSGIBase {
         PaymentPluginApi api = getTestPluginPaymentApi();
 
         final DateTime beforeCall = new DateTime().toDateTime(DateTimeZone.UTC).minusSeconds(1);
-        PaymentInfoPlugin res = api.getPaymentInfo(UUID.randomUUID(), callContext);
+        PaymentInfoPlugin res = api.getPaymentInfo(UUID.randomUUID(), UUID.randomUUID(), callContext);
         final DateTime afterCall = new DateTime().toDateTime(DateTimeZone.UTC).plusSeconds(1);
 
 
@@ -114,7 +115,7 @@ public class TestJrubyPaymentPlugin extends TestOSGIBase {
         PaymentPluginApi api = getTestPluginPaymentApi();
 
         final DateTime beforeCall = new DateTime().toDateTime(DateTimeZone.UTC).minusSeconds(1);
-        RefundInfoPlugin res = api.processRefund(UUID.randomUUID(), BigDecimal.TEN, callContext);
+        RefundInfoPlugin res = api.processRefund(UUID.randomUUID(), UUID.randomUUID(), BigDecimal.TEN, Currency.USD, callContext);
         final DateTime afterCall = new DateTime().toDateTime(DateTimeZone.UTC).plusSeconds(1);
 
 
@@ -147,7 +148,7 @@ public class TestJrubyPaymentPlugin extends TestOSGIBase {
     public void testDeletePaymentMethod() throws Exception {
 
         PaymentPluginApi api = getTestPluginPaymentApi();
-        api.deletePaymentMethod(UUID.randomUUID(), callContext);
+        api.deletePaymentMethod(UUID.randomUUID(), UUID.randomUUID(), callContext);
     }
 
     @Test(groups = "slow", enabled = true)
@@ -166,7 +167,7 @@ public class TestJrubyPaymentPlugin extends TestOSGIBase {
 
         PaymentPluginApi api = getTestPluginPaymentApi();
         final PaymentMethodPlugin info = createPaymentMethodPlugin();
-        api.setDefaultPaymentMethod(UUID.randomUUID(), callContext);
+        api.setDefaultPaymentMethod(UUID.randomUUID(), UUID.randomUUID(), callContext);
     }
 
     @Test(groups = "slow", enabled = true)

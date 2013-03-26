@@ -77,7 +77,7 @@ public class TestPaymentOSGIWithTestPaymentBundle extends TestOSGIBase {
     @Test(groups = "slow")
     public void testBasicProcessPaymentOK() throws Exception {
         final PaymentPluginApiWithTestControl paymentPluginApi = getTestPluginPaymentApi();
-        paymentPluginApi.processPayment(UUID.randomUUID(), UUID.randomUUID(), BigDecimal.TEN, callContext);
+        paymentPluginApi.processPayment(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), BigDecimal.TEN, Currency.USD, callContext);
     }
 
     @Test(groups = "slow")
@@ -89,7 +89,7 @@ public class TestPaymentOSGIWithTestPaymentBundle extends TestOSGIBase {
             final PaymentPluginApiException e = new PaymentPluginApiException("test-error", "foo");
 
             paymentPluginApi.setPaymentPluginApiExceptionOnNextCalls(e);
-            paymentPluginApi.processPayment(UUID.randomUUID(), UUID.randomUUID(), BigDecimal.TEN, callContext);
+            paymentPluginApi.processPayment(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), BigDecimal.TEN, Currency.USD, callContext);
             Assert.fail("Expected to fail with " + e.toString());
         } catch (PaymentPluginApiException e) {
             gotException = true;
@@ -106,7 +106,7 @@ public class TestPaymentOSGIWithTestPaymentBundle extends TestOSGIBase {
             final RuntimeException e = new RuntimeException("test-error");
 
             paymentPluginApi.setPaymentRuntimeExceptionOnNextCalls(e);
-            paymentPluginApi.processPayment(UUID.randomUUID(), UUID.randomUUID(), BigDecimal.TEN, callContext);
+            paymentPluginApi.processPayment(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), BigDecimal.TEN, Currency.USD, callContext);
             Assert.fail("Expected to fail with " + e.toString());
         } catch (RuntimeException e) {
             gotException = true;
