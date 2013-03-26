@@ -34,8 +34,6 @@ import com.ning.billing.payment.plugin.api.PaymentPluginApiException;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 
-import sun.util.resources.CurrencyNames_el_CY;
-
 public class TestExternalPaymentProviderPlugin extends PaymentTestSuiteNoDB {
 
     private final Clock clock = new ClockMock();
