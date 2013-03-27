@@ -16,15 +16,12 @@
 
 package com.ning.billing.osgi;
 
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
-import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Observable;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -52,7 +49,9 @@ import com.google.common.collect.ImmutableList;
 
 public class KillbillActivator implements BundleActivator, ServiceListener {
 
-    // TODO : Is that ok for system bundle to use Killbill Logger or do we need to LoggerService like we do for any other bundle
+    final static int PLUGIN_NAME_MAX_LENGTH = 40;
+    final static Pattern PLUGIN_NAME_PATTERN = Pattern.compile("\\p{Lower}(?:\\p{Lower}|\\d|-|_)*");
+
     private final static Logger logger = LoggerFactory.getLogger(KillbillActivator.class);
 
     private final OSGIKillbill osgiKillbill;
@@ -124,7 +123,7 @@ public class KillbillActivator implements BundleActivator, ServiceListener {
     private <T> boolean listenForServiceType(final ServiceReference serviceReference, final int eventType, final Class<T> claz, final OSGIServiceRegistration<T> registration) {
         // Make sure we can retrieve the plugin name
         final String serviceName = (String) serviceReference.getProperty(OSGIPluginProperties.PLUGIN_NAME_PROP);
-        if (serviceName == null) {
+        if (serviceName == null || !checkSanityPluginRegistrationName(serviceName)) {
             // Quite common for non Killbill bundles
             logger.debug("Ignoring registered OSGI service {} with no {} property", claz.getName(), OSGIPluginProperties.PLUGIN_NAME_PROP);
             return true;
@@ -137,18 +136,31 @@ public class KillbillActivator implements BundleActivator, ServiceListener {
         }
         final T theService = (T) theServiceObject;
 
-        final String serviceInfo = (String) serviceReference.getProperty(OSGIPluginProperties.PLUGIN_SERVICE_INFO);
-        final OSGIServiceDescriptor desc = new DefaultOSGIServiceDescriptor(serviceReference.getBundle().getSymbolicName(), serviceName, serviceInfo, claz.getName());
+        final OSGIServiceDescriptor desc = new DefaultOSGIServiceDescriptor(serviceReference.getBundle().getSymbolicName(), serviceName);
         switch (eventType) {
             case ServiceEvent.REGISTERED:
                 final T wrappedService = ContextClassLoaderHelper.getWrappedServiceWithCorrectContextClassLoader(theService);
                 registration.registerService(desc, wrappedService);
                 break;
             case ServiceEvent.UNREGISTERING:
-                registration.unregisterService(desc.getServiceName());
+                registration.unregisterService(desc.getRegistrationName());
                 break;
             default:
                 break;
+        }
+        return true;
+    }
+
+
+    private final boolean checkSanityPluginRegistrationName(final String pluginName) {
+        final Matcher m = PLUGIN_NAME_PATTERN.matcher(pluginName);
+        if (!m.matches()) {
+            logger.warn("Invalid plugin name {} : should be of the form {}", pluginName, PLUGIN_NAME_PATTERN.toString());
+            return false;
+        }
+        if (pluginName.length() > PLUGIN_NAME_MAX_LENGTH) {
+            logger.warn("Invalid plugin name {} : too long, should be less than {}", pluginName, PLUGIN_NAME_MAX_LENGTH);
+            return false;
         }
         return true;
     }

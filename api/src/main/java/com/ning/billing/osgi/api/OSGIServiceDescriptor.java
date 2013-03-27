@@ -27,17 +27,6 @@ public interface OSGIServiceDescriptor {
      *
      * @return the unique of that service-- plugin should rely on namespace to enforce the uniqueness
      */
-    public String getServiceName();
+    public String getRegistrationName();
 
-    /**
-     *
-     * @return additional service info that can be interpreted by the OSGIServiceRegistration system
-     */
-    public String getServiceInfo();
-
-    /**
-     *
-     * @return the type of the service being registered
-     */
-    public String getServiceType();
 }

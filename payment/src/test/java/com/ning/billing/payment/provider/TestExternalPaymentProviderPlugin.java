@@ -46,10 +46,6 @@ public class TestExternalPaymentProviderPlugin extends PaymentTestSuiteNoDB {
         plugin = new ExternalPaymentProviderPlugin(clock);
     }
 
-    @Test(groups = "fast")
-    public void testGetName() throws Exception {
-        Assert.assertEquals(plugin.getName(), ExternalPaymentProviderPlugin.PLUGIN_NAME);
-    }
 
     @Test(groups = "fast")
     public void testProcessPayment() throws Exception {

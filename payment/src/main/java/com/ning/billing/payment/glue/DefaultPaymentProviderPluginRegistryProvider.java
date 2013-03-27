@@ -48,16 +48,8 @@ public class DefaultPaymentProviderPluginRegistryProvider implements Provider<OS
                 return null;
             }
             @Override
-            public String getServiceName() {
+            public String getRegistrationName() {
                 return ExternalPaymentProviderPlugin.PLUGIN_NAME;
-            }
-            @Override
-            public String getServiceInfo() {
-                return null;
-            }
-            @Override
-            public String getServiceType() {
-                return null;
             }
         };
         pluginRegistry.registerService(desc, externalPaymentProviderPlugin);

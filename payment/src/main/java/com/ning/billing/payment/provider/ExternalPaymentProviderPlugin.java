@@ -35,10 +35,4 @@ public class ExternalPaymentProviderPlugin extends DefaultNoOpPaymentProviderPlu
     public ExternalPaymentProviderPlugin(final Clock clock) {
         super(clock);
     }
-
-    @Override
-    public String getName() {
-        return PLUGIN_NAME;
-    }
-
 }

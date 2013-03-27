@@ -52,16 +52,8 @@ public class NoOpPaymentProviderPluginProvider implements Provider<DefaultNoOpPa
                 return null;
             }
             @Override
-            public String getServiceName() {
+            public String getRegistrationName() {
                 return instanceName;
-            }
-            @Override
-            public String getServiceInfo() {
-                return null;
-            }
-            @Override
-            public String getServiceType() {
-                return null;
             }
         };
         registry.registerService(desc, plugin);

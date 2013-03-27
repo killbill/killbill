@@ -23,15 +23,6 @@ package com.ning.billing.osgi.api;
 public interface OSGIPluginProperties {
 
     /** Name of the plugin when it registers itself */
-    // TODO We should make sure that this mataches the 'symbolic name' of the plugin, or if not how those two play together
     public static final String PLUGIN_NAME_PROP = "killbill.pluginName";
-
-    /** Name of the instnace of the plugin; if 2 instances of the same plugin register */
-    public static final String PLUGIN_INSTANCE_PROP = "killbill.pluginInstance";
-
-    /** Used to export an additional configuration string for that service
-     *  For instance for Servlet services this is used to specify the path of the servlet.
-     */
-    public static final String PLUGIN_SERVICE_INFO = "killbill.pluginServiceInfo";
 
 }

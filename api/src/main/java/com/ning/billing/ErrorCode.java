@@ -267,6 +267,7 @@ public enum ErrorCode {
     PAYMENT_REFUND_AMOUNT_TOO_LARGE(7025, "Refund amount if larger than payment"),
     PAYMENT_REFUND_AMOUNT_NEGATIVE_OR_NULL(7026, "Refund amount needs to be strictly positive"),
     PAYMENT_BAD_ACCOUNT(7027, "Account %s has payments left in an unknwon state"),
+    PAYMENT_NO_SUCH_PAYMENT_PLUGIN(7028, "Payment plugin %s is not registered"),
 
     PAYMENT_PLUGIN_TIMEOUT(7100, "Plugin timeout for account %s and invoice %s"),
     PAYMENT_PLUGIN_ACCOUNT_INIT(7101, "Account initialization for account %s and plugin % s failed: %s"),

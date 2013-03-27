@@ -44,7 +44,7 @@ public class DefaultServletRouter implements OSGIServiceRegistration<Servlet> {
         // Enforce each route to start with /
         final String pathPrefix = getPathPrefixFromDescriptor(desc);
         if (pathPrefix == null) {
-            logger.warn("Skipping registration of OSGI servlet for service {} (service info is not specified)", desc.getServiceName());
+            logger.warn("Skipping registration of OSGI servlet for service {} (service info is not specified)", desc.getRegistrationName());
             return;
         }
 
@@ -65,7 +65,7 @@ public class DefaultServletRouter implements OSGIServiceRegistration<Servlet> {
     }
 
     private void registerServiceInternal(final OSGIServiceDescriptor desc) {
-        pluginRegistrations.put(desc.getServiceName(), desc);
+        pluginRegistrations.put(desc.getRegistrationName(), desc);
     }
 
     @Override
@@ -75,11 +75,11 @@ public class DefaultServletRouter implements OSGIServiceRegistration<Servlet> {
             if (desc != null) {
                 final String pathPrefix = getPathPrefixFromDescriptor(desc);
                 if (pathPrefix == null) {
-                    logger.warn("Skipping unregistration of OSGI servlet for service {} (service info is not specified)", desc.getServiceName());
+                    logger.warn("Skipping unregistration of OSGI servlet for service {} (service info is not specified)", desc.getRegistrationName());
                     return;
                 }
 
-                logger.info("Unregistering OSGI servlet " + desc.getServiceName() + " at path " + pathPrefix);
+                logger.info("Unregistering OSGI servlet " + desc.getRegistrationName() + " at path " + pathPrefix);
                 synchronized (this) {
                     unRegisterServletInternal(pathPrefix);
                     unRegisterServiceInternal(desc);
@@ -98,7 +98,7 @@ public class DefaultServletRouter implements OSGIServiceRegistration<Servlet> {
     }
 
     private OSGIServiceDescriptor unRegisterServiceInternal(final OSGIServiceDescriptor desc) {
-        return pluginRegistrations.remove(desc.getServiceName());
+        return pluginRegistrations.remove(desc.getRegistrationName());
     }
 
     @Override
@@ -112,7 +112,7 @@ public class DefaultServletRouter implements OSGIServiceRegistration<Servlet> {
     }
 
     private String getPathPrefixFromDescriptor(final OSGIServiceDescriptor desc) {
-        return sanitizePathPrefix(desc.getServiceInfo());
+        return sanitizePathPrefix(desc.getRegistrationName());
     }
 
     public Servlet getServiceForPath(final String path) {

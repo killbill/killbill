@@ -22,14 +22,10 @@ public class DefaultOSGIServiceDescriptor implements OSGIServiceDescriptor {
 
     private final String pluginSymbolicName;
     private final String serviceName;
-    private final String serviceInfo;
-    private final String serviceType;
 
-    public DefaultOSGIServiceDescriptor(final String pluginSymbolicName, final String serviceName, final String serviceInfo, final String serviceType) {
+    public DefaultOSGIServiceDescriptor(final String pluginSymbolicName, final String serviceName) {
         this.pluginSymbolicName = pluginSymbolicName;
         this.serviceName = serviceName;
-        this.serviceInfo = serviceInfo;
-        this.serviceType = serviceType;
     }
 
     @Override
@@ -38,17 +34,7 @@ public class DefaultOSGIServiceDescriptor implements OSGIServiceDescriptor {
     }
 
     @Override
-    public String getServiceName() {
+    public String getRegistrationName() {
         return serviceName;
-    }
-
-    @Override
-    public String getServiceInfo() {
-        return serviceInfo;
-    }
-
-    @Override
-    public String getServiceType() {
-        return serviceType;
     }
 }

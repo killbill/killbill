@@ -90,10 +90,10 @@ public class PaymentMethodProcessor extends ProcessorBase {
                 PaymentPluginApi pluginApi = null;
                 try {
                     pluginApi = pluginRegistry.getServiceForName(paymentPluginServiceName);
-                    // TODO PIERRE Should we really use the plugin instance name here?
-                    // We default to the plugin name when paymentPluginServiceName is null (i.e. for the default plugin name)
-                    final String pluginName = Objects.firstNonNull(paymentPluginServiceName, pluginApi.getName());
-                    pm = new DefaultPaymentMethod(account.getId(), pluginName, paymentMethodProps);
+                    if (pluginApi == null) {
+                        throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_PLUGIN, paymentPluginServiceName);
+                    }
+                    pm = new DefaultPaymentMethod(account.getId(), paymentPluginServiceName, paymentMethodProps);
                     pluginApi.addPaymentMethod(account.getId(), pm.getId(), paymentMethodProps, setDefault, context.toCallContext());
                     final PaymentMethodModelDao pmModel = new PaymentMethodModelDao(pm.getId(), pm.getCreatedDate(), pm.getUpdatedDate(),
                                                                                     pm.getAccountId(), pm.getPluginName(), pm.isActive());

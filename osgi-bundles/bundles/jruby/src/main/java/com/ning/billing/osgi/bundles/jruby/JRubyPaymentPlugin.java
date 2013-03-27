@@ -68,11 +68,6 @@ public class JRubyPaymentPlugin extends JRubyPlugin implements PaymentPluginApi 
         super.stopPlugin(context);
     }
 
-    @Override
-    public String getName() {
-        return pluginMainClass;
-    }
-
 
     @Override
     public PaymentInfoPlugin processPayment(final UUID kbAccountId, final UUID kbPaymentId, final UUID kbPaymentMethodId, final BigDecimal amount, final Currency currency,  final CallContext context) throws PaymentPluginApiException {

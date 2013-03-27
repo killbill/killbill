@@ -28,11 +28,6 @@ import com.ning.billing.util.callcontext.TenantContext;
 public interface PaymentPluginApi {
 
     /**
-     * @return plugin name
-     */
-    public String getName();
-
-    /**
      * Charge a specific amount in the Gateway. Required.
      *
      * @param kbAccountId        killbill accountId

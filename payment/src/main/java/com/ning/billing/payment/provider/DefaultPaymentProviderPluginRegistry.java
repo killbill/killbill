@@ -28,7 +28,6 @@ import com.ning.billing.osgi.api.OSGIServiceRegistration;
 import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 import com.ning.billing.util.config.PaymentConfig;
 
-import com.google.common.base.Strings;
 import com.google.inject.Inject;
 
 public class DefaultPaymentProviderPluginRegistry implements OSGIServiceRegistration<PaymentPluginApi> {
@@ -46,24 +45,22 @@ public class DefaultPaymentProviderPluginRegistry implements OSGIServiceRegistra
 
     @Override
     public void registerService(final OSGIServiceDescriptor desc, final PaymentPluginApi service) {
-        log.info("DefaultPaymentProviderPluginRegistry registering service " + desc.getServiceName().toLowerCase());
-        pluginsByName.put(desc.getServiceName().toLowerCase(), service);
+        log.info("DefaultPaymentProviderPluginRegistry registering service " + desc.getRegistrationName());
+        pluginsByName.put(desc.getRegistrationName(), service);
     }
 
     @Override
     public void unregisterService(final String serviceName) {
-        log.info("DefaultPaymentProviderPluginRegistry unregistering service " + serviceName.toLowerCase());
-        pluginsByName.remove(serviceName.toLowerCase());
+        log.info("DefaultPaymentProviderPluginRegistry unregistering service " + serviceName);
+        pluginsByName.remove(serviceName);
     }
 
     @Override
     public PaymentPluginApi getServiceForName(final String name) {
-        final PaymentPluginApi plugin = pluginsByName.get((Strings.emptyToNull(name) == null ? defaultPlugin : name).toLowerCase());
-
-        if (plugin == null) {
-            throw new IllegalArgumentException("No payment provider plugin is configured for " + name);
+        if (name == null) {
+            throw new IllegalArgumentException("Null payment plugin APi name");
         }
-
+        final PaymentPluginApi plugin = pluginsByName.get(name);
         return plugin;
     }
 

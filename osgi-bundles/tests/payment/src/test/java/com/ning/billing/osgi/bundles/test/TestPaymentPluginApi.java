@@ -45,11 +45,6 @@ public class TestPaymentPluginApi implements PaymentPluginApiWithTestControl {
     }
 
     @Override
-    public String getName() {
-        return name;
-    }
-
-    @Override
     public PaymentInfoPlugin processPayment(final UUID accountId, final UUID kbPaymentId, final UUID kbPaymentMethodId, final BigDecimal amount, final Currency currency, final CallContext context) throws PaymentPluginApiException {
         return withRuntimeCheckForExceptions(new PaymentInfoPlugin() {
             @Override
