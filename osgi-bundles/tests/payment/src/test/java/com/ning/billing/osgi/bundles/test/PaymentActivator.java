@@ -57,7 +57,7 @@ public class PaymentActivator extends KillbillActivatorBase {
 
         final Dictionary props = new Hashtable();
         // Same name the beatrix tests expect when using that payment plugin
-        props.put(OSGIPluginProperties.PLUGIN_NAME_PROP, "osgiPaymentPlugin");
+        props.put(OSGIPluginProperties.PLUGIN_NAME_PROP, "osgi-payment-plugin");
         registrar.registerService(context, PaymentPluginApiWithTestControl.class, new TestPaymentPluginApi("test"), props);
     }
 }

@@ -23,7 +23,7 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.GuicyKillbillTestSuiteNoDB;
 
-public class KillbillActivatorTest extends GuicyKillbillTestSuiteNoDB {
+public class TestKillbillActivator extends GuicyKillbillTestSuiteNoDB {
 
     @Test(groups= "fast")
     public void testPluginNamePatternGood() {
@@ -40,6 +40,9 @@ public class KillbillActivatorTest extends GuicyKillbillTestSuiteNoDB {
         Assert.assertTrue(m.matches());
 
         m = KillbillActivator.PLUGIN_NAME_PATTERN.matcher("xyz_1");
+        Assert.assertTrue(m.matches());
+
+        m = KillbillActivator.PLUGIN_NAME_PATTERN.matcher("osgi-payment-plugin");
         Assert.assertTrue(m.matches());
     }
 

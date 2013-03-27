@@ -82,7 +82,7 @@ public class BeatrixIntegrationModule extends AbstractModule {
     public static final String NON_OSGI_PLUGIN_NAME = "yoyo";
 
     // Same name the osgi-payment-test plugin uses to register its service
-    public static final String OSGI_PLUGIN_NAME = "osgiPaymentPlugin";
+    public static final String OSGI_PLUGIN_NAME = "osgi-payment-plugin";
 
     private final ConfigSource configSource;
 
