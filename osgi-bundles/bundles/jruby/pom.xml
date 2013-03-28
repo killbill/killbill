@@ -128,7 +128,7 @@
                         <phase>package</phase>
                         <configuration>
                             <createSourcesJar>true</createSourcesJar>
-                            <shadedArtifactAttached>true</shadedArtifactAttached>
+                            <shadedArtifactAttached>false</shadedArtifactAttached>
                             <shadedClassifierName>jar-with-dependencies</shadedClassifierName>
                             <filters>
                                 <filter>
