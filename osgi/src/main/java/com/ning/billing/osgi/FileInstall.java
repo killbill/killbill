@@ -16,15 +16,30 @@
 
 package com.ning.billing.osgi;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.jar.Attributes;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
+import java.util.jar.JarInputStream;
+import java.util.jar.JarOutputStream;
+import java.util.jar.Manifest;
 
 import javax.annotation.Nullable;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
+import org.osgi.framework.Constants;
 import org.osgi.framework.launch.Framework;
 import org.osgi.framework.wiring.BundleRevision;
 import org.slf4j.Logger;
@@ -36,6 +51,8 @@ import com.ning.billing.osgi.api.config.PluginRubyConfig;
 import com.ning.billing.osgi.pluginconf.DefaultPluginConfigServiceApi;
 import com.ning.billing.osgi.pluginconf.PluginConfigException;
 import com.ning.billing.osgi.pluginconf.PluginFinder;
+
+import com.google.common.io.ByteStreams;
 
 // TODO Pierre Should we leverage org.apache.felix.fileinstall.internal.FileInstall?
 public class FileInstall {
@@ -105,12 +122,61 @@ public class FileInstall {
         }
 
         final List<PluginRubyConfig> pluginRubyConfigs = pluginFinder.getLatestRubyPlugins();
+        int i = 0;
         for (final PluginRubyConfig cur : pluginRubyConfigs) {
-            logger.info("Installing JRuby bundle for plugin {} from {}", cur.getPluginName(), cur.getRubyLoadDir());
-            final Bundle bundle = context.installBundle("file:" + jrubyBundlePath);
-            ((DefaultPluginConfigServiceApi) pluginConfigServiceApi).registerBundle(bundle.getBundleId(), cur);
-            installedBundles.add(bundle);
+
+            final String uniqueJrubyBundlePath = "jruby-" + cur.getPluginName();
+
+            InputStream tweakedInputStream = null;
+            try {
+                logger.info("Installing JRuby bundle for plugin {} ", uniqueJrubyBundlePath);
+                tweakedInputStream = tweakRubyManifestToBeUnique(jrubyBundlePath, ++i);
+                final Bundle bundle = context.installBundle(uniqueJrubyBundlePath, tweakedInputStream);
+                ((DefaultPluginConfigServiceApi) pluginConfigServiceApi).registerBundle(bundle.getBundleId(), cur);
+                installedBundles.add(bundle);
+            } catch (IOException e) {
+                logger.warn("Failed to open file {}", jrubyBundlePath);
+            } finally {
+                if (tweakedInputStream != null) {
+                    try {
+                        tweakedInputStream.close();
+                    } catch (IOException ignore) {
+                    }
+                }
+            }
         }
+    }
+
+
+    private InputStream tweakRubyManifestToBeUnique(final String rubyJar, int index) throws IOException {
+
+        final Attributes.Name attrName = new Attributes.Name(Constants.BUNDLE_SYMBOLICNAME);
+        final JarInputStream in = new JarInputStream(new FileInputStream(new File(rubyJar)));
+        final Manifest manifest = in.getManifest();
+
+
+        final Object currentValue = manifest.getMainAttributes().get(attrName);
+        manifest.getMainAttributes().put(attrName, currentValue.toString() + "-" + index);
+
+        final ByteArrayOutputStream out = new ByteArrayOutputStream();
+        final JarOutputStream jarOut = new JarOutputStream(out, manifest);
+        try {
+            JarEntry e = in.getNextJarEntry();
+            while (e != null) {
+                if (!e.getName().equals(JarFile.MANIFEST_NAME)) {
+                    jarOut.putNextEntry(e);
+                    ByteStreams.copy(in, jarOut);
+                }
+                e = in.getNextJarEntry();
+            }
+
+        } finally {
+            if (jarOut != null) {
+                jarOut.close();
+            }
+        }
+
+        return new ByteArrayInputStream(out.toByteArray());
     }
 
     private String findJrubyBundlePath() {
