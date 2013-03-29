@@ -1,0 +1,229 @@
+group BusinessSubscriptionTransition;
+
+CHECK_TENANT() ::= "tenant_record_id = :tenantRecordId"
+AND_CHECK_TENANT() ::= "AND <CHECK_TENANT()>"
+
+getSubscriptionsCreatedOverTime(product_type, slug) ::= <<
+  select
+    date(from_unixtime(requested_timestamp / 1000)) day
+  , count(record_id) count
+  from bst
+  where event in ('ADD_ADD_ON', 'ADD_BASE', 'ADD_STANDALONE')
+  and next_product_type = :product_type
+  and next_slug = :slug
+  <AND_CHECK_TENANT()>
+  group by 1
+  order by 1
+  ;
+>>
+
+getTransitionsByKey(external_key) ::= <<
+  select
+    total_ordering
+  , bundle_id
+  , external_key
+  , account_id
+  , account_key
+  , subscription_id
+  , requested_timestamp
+  , event
+  , prev_product_name
+  , prev_product_type
+  , prev_product_category
+  , prev_slug
+  , prev_phase
+  , prev_billing_period
+  , prev_price
+  , prev_price_list
+  , prev_mrr
+  , prev_currency
+  , prev_start_date
+  , prev_state
+  , next_product_name
+  , next_product_type
+  , next_product_category
+  , next_slug
+  , next_phase
+  , next_billing_period
+  , next_price
+  , next_price_list
+  , next_mrr
+  , next_currency
+  , next_start_date
+  , next_state
+  , tenant_record_id
+  from bst
+  where external_key=:external_key
+  <AND_CHECK_TENANT()>
+  order by requested_timestamp asc
+  ;
+>>
+
+getTransitionForSubscription(subscription_id) ::= <<
+  select
+    total_ordering
+  , bundle_id
+  , external_key
+  , account_id
+  , account_key
+  , subscription_id
+  , requested_timestamp
+  , event
+  , prev_product_name
+  , prev_product_type
+  , prev_product_category
+  , prev_slug
+  , prev_phase
+  , prev_billing_period
+  , prev_price
+  , prev_price_list
+  , prev_mrr
+  , prev_currency
+  , prev_start_date
+  , prev_state
+  , next_product_name
+  , next_product_type
+  , next_product_category
+  , next_slug
+  , next_phase
+  , next_billing_period
+  , next_price
+  , next_price_list
+  , next_mrr
+  , next_currency
+  , next_start_date
+  , next_state
+  , tenant_record_id
+  from bst
+  where subscription_id = :subscription_id
+  <AND_CHECK_TENANT()>
+  order by requested_timestamp asc
+  ;
+>>
+
+getTransitionsForAccount(account_id) ::= <<
+  select
+    total_ordering
+  , bundle_id
+  , external_key
+  , account_id
+  , account_key
+  , subscription_id
+  , requested_timestamp
+  , event
+  , prev_product_name
+  , prev_product_type
+  , prev_product_category
+  , prev_slug
+  , prev_phase
+  , prev_billing_period
+  , prev_price
+  , prev_price_list
+  , prev_mrr
+  , prev_currency
+  , prev_start_date
+  , prev_state
+  , next_product_name
+  , next_product_type
+  , next_product_category
+  , next_slug
+  , next_phase
+  , next_billing_period
+  , next_price
+  , next_price_list
+  , next_mrr
+  , next_currency
+  , next_start_date
+  , next_state
+  , tenant_record_id
+  from bst
+  where account_key = :account_key
+  <AND_CHECK_TENANT()>
+  order by requested_timestamp asc
+  ;
+>>
+
+createTransition() ::= <<
+  insert into bst(
+    total_ordering
+  , bundle_id
+  , external_key
+  , account_id
+  , account_key
+  , subscription_id
+  , requested_timestamp
+  , event
+  , prev_product_name
+  , prev_product_type
+  , prev_product_category
+  , prev_slug
+  , prev_phase
+  , prev_billing_period
+  , prev_price
+  , prev_price_list
+  , prev_mrr
+  , prev_currency
+  , prev_start_date
+  , prev_state
+  , next_product_name
+  , next_product_type
+  , next_product_category
+  , next_slug
+  , next_phase
+  , next_billing_period
+  , next_price
+  , next_price_list
+  , next_mrr
+  , next_currency
+  , next_start_date
+  , next_state
+  , account_record_id
+  , tenant_record_id
+  ) values (
+    :total_ordering
+  , :bundle_id
+  , :external_key
+  , :account_id
+  , :account_key
+  , :subscription_id
+  , :requested_timestamp
+  , :event
+  , :prev_product_name
+  , :prev_product_type
+  , :prev_product_category
+  , :prev_slug
+  , :prev_phase
+  , :prev_billing_period
+  , :prev_price
+  , :prev_price_list
+  , :prev_mrr
+  , :prev_currency
+  , :prev_start_date
+  , :prev_state
+  , :next_product_name
+  , :next_product_type
+  , :next_product_category
+  , :next_slug
+  , :next_phase
+  , :next_billing_period
+  , :next_price
+  , :next_price_list
+  , :next_mrr
+  , :next_currency
+  , :next_start_date
+  , :next_state
+  , :accountRecordId
+  , :tenantRecordId
+  );
+>>
+
+deleteTransitionsForBundle(bundle_id) ::= <<
+  delete from bst
+  where bundle_id=:bundle_id
+  <AND_CHECK_TENANT()>
+  ;
+>>
+
+test() ::= <<
+select 1 from bst where <CHECK_TENANT()> limit 1;
+>>

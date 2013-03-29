@@ -1,0 +1,37 @@
+group BusinessInvoiceTag;
+
+CHECK_TENANT() ::= "tenant_record_id = :tenantRecordId"
+AND_CHECK_TENANT() ::= "AND <CHECK_TENANT()>"
+
+getTagsForInvoice(invoice_id) ::=<<
+select
+  invoice_id
+, name
+, tenant_record_id
+from bin_tags
+where invoice_id = :invoice_id
+<AND_CHECK_TENANT()>
+;
+>>
+
+addTag(invoice_id, name) ::=<<
+insert into bin_tags (
+  invoice_id
+, name
+, account_record_id
+, tenant_record_id
+) values (
+  :invoice_id
+, :name
+, :accountRecordId
+, :tenantRecordId
+);
+>>
+
+removeTag(invoice_id, name) ::= <<
+delete from bin_tags where invoice_id = :invoice_id and name = :name <AND_CHECK_TENANT()>;
+>>
+
+test() ::= <<
+select 1 from bin_tags where <CHECK_TENANT()> limit 1;
+>>
