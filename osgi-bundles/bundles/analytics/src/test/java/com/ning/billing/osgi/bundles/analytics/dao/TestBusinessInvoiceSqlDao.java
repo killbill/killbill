@@ -26,7 +26,7 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.osgi.bundles.analytics.AnalyticsTestSuiteWithEmbeddedDB;
-import com.ning.billing.osgi.bundles.analytics.model.BusinessInvoiceModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceModelDao;
 
 public class TestBusinessInvoiceSqlDao extends AnalyticsTestSuiteWithEmbeddedDB {
 

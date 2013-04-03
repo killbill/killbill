@@ -2,7 +2,7 @@
  * Copyright 2010-2013 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
- * (the "License"); you may not use this file except in compliance with the
+ * (the "License"){} you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
  *    http://www.apache.org/licenses/LICENSE-2.0
@@ -14,39 +14,45 @@
  * under the License.
  */
 
-package com.ning.billing.osgi.bundles.analytics.dao;
+package com.ning.billing.osgi.bundles.analytics.dao
 
 import java.util.List;
 
-import com.ning.billing.analytics.api.TimeSeriesData;
-import com.ning.billing.osgi.bundles.analytics.model.BusinessAccountModelDao;
-import com.ning.billing.osgi.bundles.analytics.model.BusinessAccountTagModelDao;
-import com.ning.billing.osgi.bundles.analytics.model.BusinessInvoiceItemModelDao;
-import com.ning.billing.osgi.bundles.analytics.model.BusinessInvoiceModelDao;
-import com.ning.billing.osgi.bundles.analytics.model.BusinessInvoicePaymentModelDao;
-import com.ning.billing.osgi.bundles.analytics.model.BusinessOverdueStatusModelDao;
-import com.ning.billing.osgi.bundles.analytics.model.BusinessSubscriptionTransitionModelDao;
-import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessAccountModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessAccountTagModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceItemModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoicePaymentModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessOverdueStatusModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessSubscriptionTransitionModelDao;
+import com.ning.billing.util.callcontext.TenantContext;
+import com.ning.killbill.osgi.libs.killbill.OSGIKillbillAPI;
+import com.ning.killbill.osgi.libs.killbill.OSGIKillbillDataSource;
+import com.ning.killbill.osgi.libs.killbill.OSGIKillbillLogService;
 
-public interface AnalyticsDao {
+public class AnalyticsDao extends BusinessAnalyticsDaoBase {
 
-    TimeSeriesData getAccountsCreatedOverTime(InternalTenantContext context);
+    public AnalyticsDao(final OSGIKillbillLogService logService,
+                        final OSGIKillbillAPI osgiKillbillAPI,
+                        final OSGIKillbillDataSource osgiKillbillDataSource) {
+        super(logService, osgiKillbillAPI, osgiKillbillDataSource);
+    }
 
-    TimeSeriesData getSubscriptionsCreatedOverTime(String productType, String slug, InternalTenantContext context);
+    public BusinessAccountModelDao getAccountByKey(final String accountExternalKey, final TenantContext context) {
+    }
 
-    BusinessAccountModelDao getAccountByKey(String accountKey, InternalTenantContext context);
+    public List<BusinessSubscriptionTransitionModelDao> getSubscriptionTransitionsByBundleExternalKey(final String bundleExternalKey, final TenantContext context) {
+    }
 
-    List<BusinessSubscriptionTransitionModelDao> getTransitionsByKey(String externalKey, InternalTenantContext context);
+    public List<BusinessSubscriptionTransitionModelDao> getTransitionsForAccount(String accountKey, TenantContext context) {}
 
-    List<BusinessSubscriptionTransitionModelDao> getTransitionsForAccount(String accountKey, InternalTenantContext context);
+    public List<BusinessInvoiceModelDao> getInvoicesByAccountKey(String accountExternalKey, TenantContext context) {}
 
-    List<BusinessInvoiceModelDao> getInvoicesByKey(String accountKey, InternalTenantContext context);
+    public List<BusinessInvoiceItemModelDao> getInvoiceItemsForAccountKey(String accountExternalKey, TenantContext context) {}
 
-    List<BusinessInvoiceItemModelDao> getInvoiceItemsForInvoice(String invoiceId, InternalTenantContext context);
+    public List<BusinessInvoicePaymentModelDao> getInvoicePaymentsForAccountByKey(String accountExternalKey, TenantContext context) {}
 
-    List<BusinessInvoicePaymentModelDao> getInvoicePaymentsForAccountByKey(String accountKey, InternalTenantContext context);
+    public List<BusinessOverdueStatusModelDao> getOverdueStatusesForBundleByExternalKey(String bundleExternalKey, TenantContext context) {}
 
-    List<BusinessOverdueStatusModelDao> getOverdueStatusesForBundleByKey(String externalKey, InternalTenantContext context);
-
-    List<BusinessAccountTagModelDao> getTagsForAccount(String accountKey, InternalTenantContext context);
+    public List<BusinessAccountTagModelDao> getTagsForAccount(String accountKey, TenantContext context) {}
 }

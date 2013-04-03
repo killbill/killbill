@@ -26,6 +26,7 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.osgi.bundles.analytics.AnalyticsTestSuiteNoDB;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoicePaymentModelDao;
 
 public class TestBusinessInvoicePayment extends AnalyticsTestSuiteNoDB {
 

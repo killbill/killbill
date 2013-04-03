@@ -23,7 +23,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.osgi.bundles.analytics.AnalyticsTestSuiteWithEmbeddedDB;
-import com.ning.billing.osgi.bundles.analytics.model.BusinessInvoiceTagModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceTagModelDao;
 
 public class TestBusinessInvoiceTagSqlDao extends AnalyticsTestSuiteWithEmbeddedDB {
 

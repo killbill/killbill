@@ -21,7 +21,7 @@ import java.math.BigDecimal;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 
-import com.ning.billing.osgi.bundles.analytics.model.BusinessAccountModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessAccountModelDao;
 
 public class BusinessAccount extends BusinessEntityBase {
 

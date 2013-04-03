@@ -24,8 +24,8 @@ import java.util.UUID;
 
 import org.joda.time.LocalDate;
 
-import com.ning.billing.osgi.bundles.analytics.model.BusinessInvoiceItemBaseModelDao;
-import com.ning.billing.osgi.bundles.analytics.model.BusinessInvoiceModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceItemBaseModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceModelDao;
 
 public class BusinessInvoice extends BusinessEntityBase {
 

@@ -22,6 +22,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.osgi.bundles.analytics.AnalyticsTestSuiteNoDB;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceFieldModelDao;
 
 public class TestBusinessInvoiceField extends AnalyticsTestSuiteNoDB {
 

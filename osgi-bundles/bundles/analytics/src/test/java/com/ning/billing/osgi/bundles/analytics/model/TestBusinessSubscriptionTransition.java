@@ -38,6 +38,9 @@ import com.ning.billing.osgi.bundles.analytics.AnalyticsTestSuiteNoDB;
 import com.ning.billing.osgi.bundles.analytics.MockDuration;
 import com.ning.billing.osgi.bundles.analytics.MockPhase;
 import com.ning.billing.osgi.bundles.analytics.MockProduct;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessSubscription;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessSubscriptionEvent;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessSubscriptionTransitionModelDao;
 
 import static com.ning.billing.catalog.api.Currency.USD;
 

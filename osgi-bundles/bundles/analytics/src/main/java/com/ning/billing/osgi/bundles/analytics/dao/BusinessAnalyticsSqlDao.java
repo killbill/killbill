@@ -18,12 +18,14 @@ package com.ning.billing.osgi.bundles.analytics.dao;
 
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
+import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.UseStringTemplate3StatementLocator;
 
-import com.ning.billing.osgi.bundles.analytics.model.BusinessModelDaoBase;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessModelDaoBase;
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.TenantContext;
 
 @UseStringTemplate3StatementLocator
 public interface BusinessAnalyticsSqlDao extends Transactional<BusinessAnalyticsSqlDao> {
@@ -38,4 +40,9 @@ public interface BusinessAnalyticsSqlDao extends Transactional<BusinessAnalytics
                                         @Bind("accountRecordId") final Long accountRecordId,
                                         @Bind("tenantRecordId") final Long tenantRecordId,
                                         @BindBean final CallContext callContext);
+
+    @SqlQuery
+    public Iterable findByAccountRecordId(@Bind("tableName") final String tableName,
+                                          @Bind("accountRecordId") final Long accountRecordId,
+                                          @BindBean final TenantContext callContext);
 }

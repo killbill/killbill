@@ -24,7 +24,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.osgi.bundles.analytics.AnalyticsTestSuiteWithEmbeddedDB;
-import com.ning.billing.osgi.bundles.analytics.model.BusinessOverdueStatusModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessOverdueStatusModelDao;
 
 public class TestBusinessOverdueStatusSqlDao extends AnalyticsTestSuiteWithEmbeddedDB {
 

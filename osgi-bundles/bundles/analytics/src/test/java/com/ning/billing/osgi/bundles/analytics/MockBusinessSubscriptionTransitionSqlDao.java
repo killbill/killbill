@@ -29,7 +29,7 @@ import org.testng.Assert;
 import com.ning.billing.osgi.bundles.analytics.dao.BusinessSubscriptionTransitionBinder;
 import com.ning.billing.osgi.bundles.analytics.dao.BusinessSubscriptionTransitionSqlDao;
 import com.ning.billing.osgi.bundles.analytics.dao.TimeSeriesTuple;
-import com.ning.billing.osgi.bundles.analytics.model.BusinessSubscriptionTransitionModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessSubscriptionTransitionModelDao;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.InternalTenantContextBinder;

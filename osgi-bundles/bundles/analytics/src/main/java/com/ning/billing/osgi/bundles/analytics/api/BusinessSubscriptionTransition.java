@@ -21,7 +21,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.osgi.bundles.analytics.model.BusinessSubscriptionTransitionModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessSubscriptionTransitionModelDao;
 
 public class BusinessSubscriptionTransition extends BusinessEntityBase {
 

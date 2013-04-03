@@ -43,20 +43,29 @@ import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.api.InvoiceUserApi;
+import com.ning.billing.junction.api.BlockingState;
+import com.ning.billing.junction.api.JunctionApi;
 import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.PaymentMethod;
 import com.ning.billing.util.api.AuditLevel;
 import com.ning.billing.util.api.AuditUserApi;
+import com.ning.billing.util.api.CustomFieldUserApi;
+import com.ning.billing.util.api.TagDefinitionApiException;
+import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.audit.AuditLog;
 import com.ning.billing.util.audit.AuditLogsForAccount;
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TenantContext;
+import com.ning.billing.util.customfield.CustomField;
+import com.ning.billing.util.tag.Tag;
+import com.ning.billing.util.tag.TagDefinition;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillAPI;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillLogService;
 
+// Wrapper around Kill Bill APIs
 public abstract class BusinessAnalyticsBase {
 
     protected final OSGIKillbillLogService logService;
@@ -127,6 +136,42 @@ public abstract class BusinessAnalyticsBase {
             logService.log(LogService.LOG_WARNING, "Error retrieving subscription for id " + subscriptionId, e);
             throw new AnalyticsRefreshException(e);
         }
+    }
+
+    protected AuditLog getSubscriptionEventCreationAuditLog(final UUID subscriptionEventId, final TenantContext context) throws AnalyticsRefreshException {
+        final List<AuditLog> auditLogsForSubscriptionEvent = getAuditUserApi().getAuditLogs(subscriptionEventId, ObjectType.SUBSCRIPTION_EVENT, AuditLevel.MINIMAL, context);
+        for (final AuditLog auditLog : auditLogsForSubscriptionEvent) {
+            if (auditLog.getChangeType().equals(ChangeType.INSERT)) {
+                return auditLog;
+            }
+        }
+
+        throw new AnalyticsRefreshException("Unable to find Subscription event creation audit log for id " + subscriptionEventId);
+    }
+
+    //
+    // OVERDUE
+    //
+
+    protected List<BlockingState> getBlockingHistory(final UUID overdueableId, final TenantContext context) throws AnalyticsRefreshException {
+        final JunctionApi junctionUserApi = getJunctionUserApi();
+        return junctionUserApi.getBlockingHistory(overdueableId, context);
+    }
+
+    //
+    // BLOCKING STATES
+    //
+
+    protected AuditLog getBlockingStateCreationAuditLog(final UUID blockingStateId, final TenantContext context) throws AnalyticsRefreshException {
+        // TODO
+        final List<AuditLog> auditLogsForBlockingState = getAuditUserApi().getAuditLogs(blockingStateId, null, AuditLevel.MINIMAL, context);
+        for (final AuditLog auditLog : auditLogsForBlockingState) {
+            if (auditLog.getChangeType().equals(ChangeType.INSERT)) {
+                return auditLog;
+            }
+        }
+
+        throw new AnalyticsRefreshException("Unable to find Blocking state creation audit log for id " + blockingStateId);
     }
 
     //
@@ -284,6 +329,59 @@ public abstract class BusinessAnalyticsBase {
     }
 
     //
+    // FIELD
+    //
+
+    protected Collection<CustomField> getFieldsForAccountAndObjectType(final UUID accountId, final ObjectType objectType, final TenantContext context) throws AnalyticsRefreshException {
+        final CustomFieldUserApi tagUserApi = getCustomFieldUserApi();
+        // TODO
+        return tagUserApi.getCustomFieldsForAccount(accountId, objectType, context);
+    }
+
+    protected AuditLog getFieldCreationAuditLog(final UUID fieldId, final TenantContext context) throws AnalyticsRefreshException {
+        final List<AuditLog> auditLogsForTag = getAuditUserApi().getAuditLogs(fieldId, ObjectType.CUSTOM_FIELD, AuditLevel.MINIMAL, context);
+        for (final AuditLog auditLog : auditLogsForTag) {
+            if (auditLog.getChangeType().equals(ChangeType.INSERT)) {
+                return auditLog;
+            }
+        }
+
+        throw new AnalyticsRefreshException("Unable to find Field creation audit log for id " + fieldId);
+    }
+
+    //
+    // TAG
+    //
+
+    protected Collection<Tag> getTagsForAccountAndObjectType(final UUID accountId, final ObjectType objectType, final TenantContext context) throws AnalyticsRefreshException {
+        final TagUserApi tagUserApi = getTagUserApi();
+        // TODO
+        return tagUserApi.getTagsForAccount(accountId, objectType, context);
+    }
+
+    protected TagDefinition getTagDefinition(final UUID tagDefinitionId, final TenantContext context) throws AnalyticsRefreshException {
+        final TagUserApi tagUserApi = getTagUserApi();
+
+        try {
+            return tagUserApi.getTagDefinition(tagDefinitionId, context);
+        } catch (TagDefinitionApiException e) {
+            logService.log(LogService.LOG_WARNING, "Error retrieving tag definition for id " + tagDefinitionId, e);
+            throw new AnalyticsRefreshException(e);
+        }
+    }
+
+    protected AuditLog getTagCreationAuditLog(final UUID tagId, final TenantContext context) throws AnalyticsRefreshException {
+        final List<AuditLog> auditLogsForTag = getAuditUserApi().getAuditLogs(tagId, ObjectType.TAG, AuditLevel.MINIMAL, context);
+        for (final AuditLog auditLog : auditLogsForTag) {
+            if (auditLog.getChangeType().equals(ChangeType.INSERT)) {
+                return auditLog;
+            }
+        }
+
+        throw new AnalyticsRefreshException("Unable to find Tag creation audit log for id " + tagId);
+    }
+
+    //
     // APIs
     //
 
@@ -309,6 +407,14 @@ public abstract class BusinessAnalyticsBase {
             throw new AnalyticsRefreshException("Error retrieving entitlementUserApi");
         }
         return entitlementUserApi;
+    }
+
+    private JunctionApi getJunctionUserApi() throws AnalyticsRefreshException {
+        final JunctionApi junctionApi = osgiKillbillAPI.getJunctionApi();
+        if (junctionApi == null) {
+            throw new AnalyticsRefreshException("Error retrieving junctionApi");
+        }
+        return junctionApi;
     }
 
     private InvoiceUserApi getInvoiceUserApi() throws AnalyticsRefreshException {
@@ -341,5 +447,21 @@ public abstract class BusinessAnalyticsBase {
             throw new AnalyticsRefreshException("Error retrieving invoicePaymentApi");
         }
         return invoicePaymentApi;
+    }
+
+    private CustomFieldUserApi getCustomFieldUserApi() throws AnalyticsRefreshException {
+        final CustomFieldUserApi fieldUserApi = osgiKillbillAPI.getCustomFieldUserApi();
+        if (fieldUserApi == null) {
+            throw new AnalyticsRefreshException("Error retrieving fieldUserApi");
+        }
+        return fieldUserApi;
+    }
+
+    private TagUserApi getTagUserApi() throws AnalyticsRefreshException {
+        final TagUserApi tagUserApi = osgiKillbillAPI.getTagUserApi();
+        if (tagUserApi == null) {
+            throw new AnalyticsRefreshException("Error retrieving tagUserApi");
+        }
+        return tagUserApi;
     }
 }

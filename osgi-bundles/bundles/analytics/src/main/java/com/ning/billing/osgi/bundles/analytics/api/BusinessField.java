@@ -17,10 +17,10 @@
 package com.ning.billing.osgi.bundles.analytics.api;
 
 import com.ning.billing.ObjectType;
-import com.ning.billing.osgi.bundles.analytics.model.BusinessAccountFieldModelDao;
-import com.ning.billing.osgi.bundles.analytics.model.BusinessFieldModelDao;
-import com.ning.billing.osgi.bundles.analytics.model.BusinessInvoiceFieldModelDao;
-import com.ning.billing.osgi.bundles.analytics.model.BusinessInvoicePaymentFieldModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessAccountFieldModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessFieldModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceFieldModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoicePaymentFieldModelDao;
 
 public class BusinessField extends BusinessEntityBase {
 

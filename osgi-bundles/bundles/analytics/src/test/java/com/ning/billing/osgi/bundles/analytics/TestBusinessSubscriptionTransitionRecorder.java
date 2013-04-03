@@ -29,7 +29,7 @@ import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.osgi.bundles.analytics.model.BusinessSubscriptionTransitionModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessSubscriptionTransitionModelDao;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 

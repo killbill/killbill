@@ -24,6 +24,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.osgi.bundles.analytics.AnalyticsTestSuiteNoDB;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessOverdueStatusModelDao;
 
 public class TestBusinessOverdueStatus extends AnalyticsTestSuiteNoDB {
 

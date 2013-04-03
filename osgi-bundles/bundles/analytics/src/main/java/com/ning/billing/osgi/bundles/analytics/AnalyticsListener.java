@@ -27,19 +27,25 @@ import com.ning.billing.beatrix.bus.api.ExtBusEvent;
 import com.ning.billing.commons.locker.GlobalLock;
 import com.ning.billing.commons.locker.GlobalLocker;
 import com.ning.billing.commons.locker.mysql.MySqlGlobalLocker;
+import com.ning.billing.osgi.bundles.analytics.dao.BusinessAccountDao;
+import com.ning.billing.osgi.bundles.analytics.dao.BusinessInvoiceDao;
+import com.ning.billing.osgi.bundles.analytics.dao.BusinessInvoicePaymentDao;
+import com.ning.billing.osgi.bundles.analytics.dao.BusinessOverdueStatusDao;
+import com.ning.billing.osgi.bundles.analytics.dao.BusinessSubscriptionTransitionDao;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallOrigin;
-import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillAPI;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillDataSource;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillEventDispatcher.OSGIKillbillEventHandler;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillLogService;
 
-public class AnalyticsListener extends BusinessAnalyticsBase implements OSGIKillbillEventHandler {
+public class AnalyticsListener implements OSGIKillbillEventHandler {
 
-    private static final int NB_LOCK_TRY = 5;
+    private static final String ANALYTICS_NB_LOCK_TRY_PROPERTY = "killbill.osgi.analytics.lock.count";
+    private static final int NB_LOCK_TRY = Integer.parseInt(System.getProperty(ANALYTICS_NB_LOCK_TRY_PROPERTY, "5"));
 
+    private final LogService logService;
     private final BusinessAccountDao bacDao;
     private final BusinessSubscriptionTransitionDao bstDao;
     private final BusinessInvoiceDao binDao;
@@ -47,8 +53,10 @@ public class AnalyticsListener extends BusinessAnalyticsBase implements OSGIKill
     private final BusinessOverdueStatusDao bosDao;
     private final GlobalLocker locker;
 
-    public AnalyticsListener(final OSGIKillbillLogService logService, final OSGIKillbillAPI osgiKillbillAPI, final OSGIKillbillDataSource osgiKillbillDataSource) {
-        super(logService, osgiKillbillAPI);
+    public AnalyticsListener(final OSGIKillbillLogService logService,
+                             final OSGIKillbillAPI osgiKillbillAPI,
+                             final OSGIKillbillDataSource osgiKillbillDataSource) {
+        this.logService = logService;
 
         this.bacDao = new BusinessAccountDao(logService, osgiKillbillAPI, osgiKillbillDataSource);
         this.bstDao = new BusinessSubscriptionTransitionDao(logService, osgiKillbillAPI, osgiKillbillDataSource);
@@ -106,11 +114,10 @@ public class AnalyticsListener extends BusinessAnalyticsBase implements OSGIKill
     }
 
     private void handleSubscriptionEvent(final ExtBusEvent killbillEvent, final CallContext callContext) throws AnalyticsRefreshException {
-        final UUID bundleId = getBundleIdFromEvent(killbillEvent, callContext);
         updateWithAccountLock(killbillEvent, new Callable<Void>() {
             @Override
             public Void call() throws Exception {
-                bstDao.update(bundleId, callContext);
+                bstDao.update(killbillEvent.getAccountId(), callContext);
                 return null;
             }
         });
@@ -127,11 +134,10 @@ public class AnalyticsListener extends BusinessAnalyticsBase implements OSGIKill
     }
 
     private void handlePaymentEvent(final ExtBusEvent killbillEvent, final CallContext callContext) throws AnalyticsRefreshException {
-        final UUID paymentId = getPaymentIdFromEvent(killbillEvent, callContext);
         updateWithAccountLock(killbillEvent, new Callable<Void>() {
             @Override
             public Void call() throws Exception {
-                bipDao.update(killbillEvent.getAccountId(), paymentId, callContext);
+                bipDao.update(killbillEvent.getAccountId(), callContext);
                 return null;
             }
         });
@@ -145,26 +151,6 @@ public class AnalyticsListener extends BusinessAnalyticsBase implements OSGIKill
                 return null;
             }
         });
-    }
-
-    private UUID getBundleIdFromEvent(final ExtBusEvent killbillEvent, final TenantContext tenantContext) throws AnalyticsRefreshException {
-        switch (killbillEvent.getObjectType()) {
-            case BUNDLE:
-                return killbillEvent.getObjectId();
-            case SUBSCRIPTION:
-                return getSubscription(killbillEvent.getObjectId(), tenantContext).getBundleId();
-            default:
-                return null;
-        }
-    }
-
-    private UUID getPaymentIdFromEvent(final ExtBusEvent killbillEvent, final TenantContext tenantContext) {
-        switch (killbillEvent.getObjectType()) {
-            case PAYMENT:
-                return killbillEvent.getObjectId();
-            default:
-                return null;
-        }
     }
 
     private static final class AnalyticsCallContext implements CallContext {

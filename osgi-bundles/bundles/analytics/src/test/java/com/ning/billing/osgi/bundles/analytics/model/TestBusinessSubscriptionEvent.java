@@ -35,6 +35,7 @@ import com.ning.billing.osgi.bundles.analytics.AnalyticsTestSuiteNoDB;
 import com.ning.billing.osgi.bundles.analytics.MockDuration;
 import com.ning.billing.osgi.bundles.analytics.MockPhase;
 import com.ning.billing.osgi.bundles.analytics.MockProduct;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessSubscriptionEvent;
 
 public class TestBusinessSubscriptionEvent extends AnalyticsTestSuiteNoDB {
 

@@ -23,7 +23,7 @@ import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.osgi.bundles.analytics.model.BusinessInvoicePaymentBaseModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoicePaymentBaseModelDao;
 
 public class BusinessInvoicePayment extends BusinessEntityBase {
 

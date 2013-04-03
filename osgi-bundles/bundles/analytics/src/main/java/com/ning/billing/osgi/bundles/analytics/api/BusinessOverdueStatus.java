@@ -19,7 +19,7 @@ package com.ning.billing.osgi.bundles.analytics.api;
 import org.joda.time.DateTime;
 
 import com.ning.billing.ObjectType;
-import com.ning.billing.osgi.bundles.analytics.model.BusinessOverdueStatusModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessOverdueStatusModelDao;
 
 public class BusinessOverdueStatus extends BusinessEntityBase {
 
