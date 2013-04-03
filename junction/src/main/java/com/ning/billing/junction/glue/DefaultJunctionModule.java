@@ -21,6 +21,8 @@ import org.skife.config.ConfigSource;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.glue.JunctionModule;
+import com.ning.billing.junction.api.DefaultJunctionApi;
+import com.ning.billing.junction.api.JunctionApi;
 import com.ning.billing.junction.api.svcs.DefaultInternalBlockingApi;
 import com.ning.billing.junction.block.BlockingChecker;
 import com.ning.billing.junction.block.DefaultBlockingChecker;
@@ -51,6 +53,7 @@ public class DefaultJunctionModule extends AbstractModule implements JunctionMod
         installBillingApi();
         installEntitlementUserApi();
         installBlockingChecker();
+        installJunctionApi();
 
         // Internal
         installBlockingCalculator();
@@ -83,5 +86,10 @@ public class DefaultJunctionModule extends AbstractModule implements JunctionMod
 
     public void installBlockingCalculator() {
         bind(BlockingCalculator.class).asEagerSingleton();
+    }
+
+    @Override
+    public void installJunctionApi() {
+        bind(JunctionApi.class).to(DefaultJunctionApi.class).asEagerSingleton();
     }
 }

@@ -14,19 +14,22 @@
  * under the License.
  */
 
-package com.ning.billing.glue;
+package com.ning.billing.junction.api;
 
+import java.util.List;
+import java.util.UUID;
 
-public interface JunctionModule {
+import com.ning.billing.util.callcontext.TenantContext;
 
-    public void installBillingApi();
+public interface JunctionApi {
 
-    public void installAccountUserApi();
-
-    public void installBlockingApi();
-
-    public void installEntitlementUserApi();
-
-    public void installJunctionApi();
-
+    /**
+     *
+     * @param overdueableId the uuid of the object potentially in an overduabke state
+     * @param context       the context associated to that call
+     * @return              a list of all the blocking states for that object
+     */
+    public List<BlockingState> getBlockingHistory(UUID overdueableId, TenantContext context);
 }
+
+
