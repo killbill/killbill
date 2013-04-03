@@ -226,4 +226,9 @@ public class MockSubscription implements Subscription {
         // TODO Auto-generated method stub
         return null;
     }
+
+    @Override
+    public List<SubscriptionTransition> getAllTransitions() {
+        return null;
+    }
 }

@@ -83,7 +83,7 @@ public class SubscriptionData extends EntityBase implements Subscription {
     // so the user holding that subscription object get the correct state when
     // the call completes
     //
-    private LinkedList<SubscriptionTransitionData> transitions;
+    private LinkedList<SubscriptionTransition> transitions;
 
     // Low level events are ONLY used for Repair APIs
     protected List<EntitlementEvent> events;
@@ -123,7 +123,7 @@ public class SubscriptionData extends EntityBase implements Subscription {
         this.activeVersion = internalSubscription.getActiveVersion();
         this.chargedThroughDate = internalSubscription.getChargedThroughDate();
         this.paidThroughDate = internalSubscription.getPaidThroughDate();
-        this.transitions = new LinkedList<SubscriptionTransitionData>(internalSubscription.getAllTransitions());
+        this.transitions = new LinkedList<SubscriptionTransition>(internalSubscription.getAllTransitions());
         this.events = internalSubscription.getEvents();
     }
 
@@ -148,7 +148,7 @@ public class SubscriptionData extends EntityBase implements Subscription {
         if (transitions == null) {
             return null;
         }
-        final SubscriptionTransitionData initialTransition = transitions.get(0);
+        final SubscriptionTransitionData initialTransition = (SubscriptionTransitionData) transitions.get(0);
         switch (initialTransition.getApiEventType()) {
         case MIGRATE_BILLING:
         case MIGRATE_ENTITLEMENT:
@@ -197,7 +197,7 @@ public class SubscriptionData extends EntityBase implements Subscription {
                 clock, transitions, Order.ASC_FROM_PAST, Kind.ENTITLEMENT,
                 Visibility.ALL, TimeLimit.FUTURE_ONLY);
         while (it.hasNext()) {
-            final SubscriptionTransitionData cur = it.next();
+            final SubscriptionTransition cur = it.next();
             if (cur.getTransitionType() == SubscriptionTransitionType.CANCEL) {
                 return cur.getEffectiveTransitionTime();
             }
@@ -336,6 +336,19 @@ public class SubscriptionData extends EntityBase implements Subscription {
     }
 
     @Override
+    public List<SubscriptionTransition> getAllTransitions() {
+        if (transitions == null) {
+            return Collections.emptyList();
+        }
+        final List<SubscriptionTransition> result = new ArrayList<SubscriptionTransition>();
+        final SubscriptionTransitionDataIterator it = new SubscriptionTransitionDataIterator(clock, transitions, Order.ASC_FROM_PAST, Kind.ALL, Visibility.ALL, TimeLimit.ALL);
+        while (it.hasNext()) {
+            result.add(it.next());
+        }
+        return result;
+    }
+
+    @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
@@ -371,9 +384,9 @@ public class SubscriptionData extends EntityBase implements Subscription {
         if (transitions == null || event == null) {
             return null;
         }
-        for (final SubscriptionTransitionData cur : transitions) {
-            if (cur.getId().equals(event.getId())) {
-                final SubscriptionTransitionData withSeq = new SubscriptionTransitionData(cur, seqId);
+        for (final SubscriptionTransition cur : transitions) {
+            if (((SubscriptionTransitionData) cur).getId().equals(event.getId())) {
+                final SubscriptionTransitionData withSeq = new SubscriptionTransitionData((SubscriptionTransitionData)cur, seqId);
                 return withSeq;
             }
         }
@@ -388,26 +401,26 @@ public class SubscriptionData extends EntityBase implements Subscription {
         final SubscriptionTransitionDataIterator it = new SubscriptionTransitionDataIterator(
                 clock, transitions, Order.DESC_FROM_FUTURE, Kind.ENTITLEMENT,
                 Visibility.FROM_DISK_ONLY, TimeLimit.ALL);
-        return it.hasNext() ? it.next().getTotalOrdering() : -1L;
+        return it.hasNext() ? ((SubscriptionTransitionData)it.next()).getTotalOrdering() : -1L;
     }
 
     public long getActiveVersion() {
         return activeVersion;
     }
 
-    public List<SubscriptionTransitionData> getBillingTransitions() {
+    public List<SubscriptionTransition> getBillingTransitions() {
 
         if (transitions == null) {
             return Collections.emptyList();
         }
-        final List<SubscriptionTransitionData> result = new ArrayList<SubscriptionTransitionData>();
+        final List<SubscriptionTransition> result = new ArrayList<SubscriptionTransition>();
         final SubscriptionTransitionDataIterator it = new SubscriptionTransitionDataIterator(
                 clock, transitions, Order.ASC_FROM_PAST, Kind.BILLING,
                 Visibility.ALL, TimeLimit.ALL);
         // Remove anything prior to first CREATE or MIGRATE_BILLING
         boolean foundInitialEvent = false;
         while (it.hasNext()) {
-            final SubscriptionTransitionData curTransition = it.next();
+            final SubscriptionTransitionData curTransition = (SubscriptionTransitionData) it.next();
             if (!foundInitialEvent) {
                 foundInitialEvent = curTransition.getEventType() == EventType.API_USER &&
                                     (curTransition.getApiEventType() == ApiEventType.CREATE ||
@@ -422,18 +435,6 @@ public class SubscriptionData extends EntityBase implements Subscription {
     }
 
 
-    public List<SubscriptionTransitionData> getAllTransitions() {
-        if (transitions == null) {
-            return Collections.emptyList();
-        }
-        final List<SubscriptionTransitionData> result = new ArrayList<SubscriptionTransitionData>();
-        final SubscriptionTransitionDataIterator it = new SubscriptionTransitionDataIterator(clock, transitions, Order.ASC_FROM_PAST, Kind.ALL, Visibility.ALL, TimeLimit.ALL);
-        while (it.hasNext()) {
-            result.add(it.next());
-        }
-        return result;
-    }
-
     public SubscriptionTransitionData getInitialTransitionForCurrentPlan() {
         if (transitions == null) {
             throw new EntitlementError(String.format("No transitions for subscription %s", getId()));
@@ -447,7 +448,7 @@ public class SubscriptionData extends EntityBase implements Subscription {
                 TimeLimit.PAST_OR_PRESENT_ONLY);
 
         while (it.hasNext()) {
-            final SubscriptionTransitionData cur = it.next();
+            final SubscriptionTransitionData cur = (SubscriptionTransitionData) it.next();
             if (cur.getTransitionType() == SubscriptionTransitionType.CREATE
                     || cur.getTransitionType() == SubscriptionTransitionType.RE_CREATE
                     || cur.getTransitionType() == SubscriptionTransitionType.TRANSFER
@@ -493,7 +494,7 @@ public class SubscriptionData extends EntityBase implements Subscription {
                 clock, transitions, Order.DESC_FROM_FUTURE, Kind.ENTITLEMENT,
                 Visibility.ALL, TimeLimit.PAST_OR_PRESENT_ONLY);
         while (it.hasNext()) {
-            final SubscriptionTransitionData cur = it.next();
+            final SubscriptionTransitionData cur = (SubscriptionTransitionData) it.next();
 
             if (cur.getTransitionType() == SubscriptionTransitionType.PHASE
                     || cur.getTransitionType() == SubscriptionTransitionType.TRANSFER
@@ -525,7 +526,7 @@ public class SubscriptionData extends EntityBase implements Subscription {
         SubscriptionState previousState = null;
         PriceList previousPriceList = null;
 
-        transitions = new LinkedList<SubscriptionTransitionData>();
+        transitions = new LinkedList<SubscriptionTransition>();
         Plan previousPlan = null;
         PlanPhase previousPhase = null;
 

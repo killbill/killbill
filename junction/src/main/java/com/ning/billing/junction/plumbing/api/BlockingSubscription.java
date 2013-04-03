@@ -16,6 +16,7 @@
 
 package com.ning.billing.junction.plumbing.api;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -218,6 +219,11 @@ public class BlockingSubscription implements Subscription {
     @Override
     public SubscriptionTransition getPreviousTransition() {
         return subscription.getPreviousTransition();
+    }
+
+    @Override
+    public List<SubscriptionTransition> getAllTransitions() {
+        return subscription.getAllTransitions();
     }
 
     public Subscription getDelegateSubscription() {

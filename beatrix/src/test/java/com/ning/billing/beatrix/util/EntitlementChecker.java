@@ -31,6 +31,7 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
+import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
 import com.ning.billing.junction.plumbing.api.BlockingSubscription;
 import com.ning.billing.util.callcontext.CallContext;
@@ -68,15 +69,15 @@ public class EntitlementChecker {
         Assert.assertNotNull(subscription);
         auditChecker.checkSubscriptionCreated(subscription.getBundleId(), subscriptionId, context);
 
-        List<SubscriptionTransitionData> subscriptionEvents = getSubscriptionEvents(subscription);
+        List<SubscriptionTransition> subscriptionEvents = getSubscriptionEvents(subscription);
         Assert.assertTrue(subscriptionEvents.size() >= 1);
-        auditChecker.checkSubscriptionEventCreated(subscription.getBundleId(), subscriptionEvents.get(0).getId(), context);
+        auditChecker.checkSubscriptionEventCreated(subscription.getBundleId(), ((SubscriptionTransitionData) subscriptionEvents.get(0)).getId(), context);
 
         auditChecker.checkBundleCreated(subscription.getBundleId(), context);
         return subscription;
     }
 
-    private List<SubscriptionTransitionData> getSubscriptionEvents(final Subscription subscription) {
+    private List<SubscriptionTransition> getSubscriptionEvents(final Subscription subscription) {
         return ((SubscriptionData) ((BlockingSubscription) subscription).getDelegateSubscription()).getAllTransitions();
     }
 

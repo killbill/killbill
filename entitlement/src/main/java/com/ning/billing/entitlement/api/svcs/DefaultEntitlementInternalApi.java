@@ -38,6 +38,7 @@ import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
+import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.util.callcontext.InternalCallContext;
@@ -124,23 +125,23 @@ public class DefaultEntitlementInternalApi extends EntitlementApiBase implements
 
     @Override
     public List<EffectiveSubscriptionInternalEvent> getAllTransitions(final Subscription subscription, final InternalTenantContext context) {
-        final List<SubscriptionTransitionData> transitions = ((SubscriptionData) subscription).getAllTransitions();
+        final List<SubscriptionTransition> transitions = ((SubscriptionData) subscription).getAllTransitions();
         return convertEffectiveSubscriptionInternalEventFromSubscriptionTransitions(subscription, context, transitions);
     }
 
     @Override
     public List<EffectiveSubscriptionInternalEvent> getBillingTransitions(final Subscription subscription, final InternalTenantContext context) {
-        final List<SubscriptionTransitionData> transitions = ((SubscriptionData) subscription).getBillingTransitions();
+        final List<SubscriptionTransition> transitions = ((SubscriptionData) subscription).getBillingTransitions();
         return convertEffectiveSubscriptionInternalEventFromSubscriptionTransitions(subscription, context, transitions);
     }
 
     private List<EffectiveSubscriptionInternalEvent> convertEffectiveSubscriptionInternalEventFromSubscriptionTransitions(final Subscription subscription,
-                                                                                                                          final InternalTenantContext context, final List<SubscriptionTransitionData> transitions) {
-        return ImmutableList.<EffectiveSubscriptionInternalEvent>copyOf(Collections2.transform(transitions, new Function<SubscriptionTransitionData, EffectiveSubscriptionInternalEvent>() {
+                                                                                                                          final InternalTenantContext context, final List<SubscriptionTransition> transitions) {
+        return ImmutableList.<EffectiveSubscriptionInternalEvent>copyOf(Collections2.transform(transitions, new Function<SubscriptionTransition, EffectiveSubscriptionInternalEvent>() {
             @Override
             @Nullable
-            public EffectiveSubscriptionInternalEvent apply(@Nullable SubscriptionTransitionData input) {
-                return new DefaultEffectiveSubscriptionEvent(input, ((SubscriptionData) subscription).getAlignStartDate(), null, context.getAccountRecordId(), context.getTenantRecordId());
+            public EffectiveSubscriptionInternalEvent apply(@Nullable SubscriptionTransition input) {
+                return new DefaultEffectiveSubscriptionEvent((SubscriptionTransitionData) input, ((SubscriptionData) subscription).getAlignStartDate(), null, context.getAccountRecordId(), context.getTenantRecordId());
             }
         }));
     }
