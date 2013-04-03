@@ -5,7 +5,6 @@ drop table if exists bst;
 create table bst (
   record_id int(11) unsigned not null auto_increment
 , subscription_event_record_id int(11) unsigned default null
-, total_ordering bigint default 0
 , bundle_id char(36) not null
 , bundle_external_key varchar(50) not null
 , subscription_id char(36) not null

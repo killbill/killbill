@@ -22,15 +22,16 @@ import org.joda.time.DateTime;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.util.events.SubscriptionInternalEvent;
+import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 
 /**
  * Describe a state change between two BusinessSubscription
  */
 public class BusinessSubscriptionTransitionModelDao extends BusinessModelDaoBase {
 
+    private static final String SUBSCRIPTION_TABLE_NAME = "bst";
+
     private final Long subscriptionEventRecordId;
-    private final Long totalOrdering;
     private final UUID bundleId;
     private final String bundleExternalKey;
     private final UUID subscriptionId;
@@ -40,7 +41,6 @@ public class BusinessSubscriptionTransitionModelDao extends BusinessModelDaoBase
     private final BusinessSubscription nextSubscription;
 
     public BusinessSubscriptionTransitionModelDao(final Long subscriptionEventRecordId,
-                                                  final Long totalOrdering,
                                                   final UUID bundleId,
                                                   final String bundleExternalKey,
                                                   final UUID subscriptionId,
@@ -67,7 +67,6 @@ public class BusinessSubscriptionTransitionModelDao extends BusinessModelDaoBase
               accountRecordId,
               tenantRecordId);
         this.subscriptionEventRecordId = subscriptionEventRecordId;
-        this.totalOrdering = totalOrdering;
         this.bundleId = bundleId;
         this.bundleExternalKey = bundleExternalKey;
         this.subscriptionId = subscriptionId;
@@ -79,7 +78,7 @@ public class BusinessSubscriptionTransitionModelDao extends BusinessModelDaoBase
 
     public BusinessSubscriptionTransitionModelDao(final Account account,
                                                   final SubscriptionBundle bundle,
-                                                  final SubscriptionInternalEvent subscriptionEvent,
+                                                  final SubscriptionTransition transition,
                                                   final DateTime requestedTimestamp,
                                                   final BusinessSubscriptionEvent event,
                                                   final BusinessSubscription previousSubscription,
@@ -88,10 +87,9 @@ public class BusinessSubscriptionTransitionModelDao extends BusinessModelDaoBase
                                                   final String createdReasonCode,
                                                   final String createdComments) {
         this(null /* TODO */,
-             subscriptionEvent.getTotalOrdering(),
              bundle.getId(),
              bundle.getExternalKey(),
-             subscriptionEvent.getSubscriptionId(),
+             transition.getSubscriptionId(),
              requestedTimestamp,
              event,
              previousSubscription,
@@ -106,5 +104,114 @@ public class BusinessSubscriptionTransitionModelDao extends BusinessModelDaoBase
              // TODO
              null,
              null);
+    }
+
+    @Override
+    public String getTableName() {
+        return SUBSCRIPTION_TABLE_NAME;
+    }
+
+    public Long getSubscriptionEventRecordId() {
+        return subscriptionEventRecordId;
+    }
+
+    public UUID getBundleId() {
+        return bundleId;
+    }
+
+    public String getBundleExternalKey() {
+        return bundleExternalKey;
+    }
+
+    public UUID getSubscriptionId() {
+        return subscriptionId;
+    }
+
+    public DateTime getRequestedTimestamp() {
+        return requestedTimestamp;
+    }
+
+    public BusinessSubscriptionEvent getEvent() {
+        return event;
+    }
+
+    public BusinessSubscription getPreviousSubscription() {
+        return previousSubscription;
+    }
+
+    public BusinessSubscription getNextSubscription() {
+        return nextSubscription;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append("BusinessSubscriptionTransitionModelDao");
+        sb.append("{subscriptionEventRecordId=").append(subscriptionEventRecordId);
+        sb.append(", bundleId=").append(bundleId);
+        sb.append(", bundleExternalKey='").append(bundleExternalKey).append('\'');
+        sb.append(", subscriptionId=").append(subscriptionId);
+        sb.append(", requestedTimestamp=").append(requestedTimestamp);
+        sb.append(", event=").append(event);
+        sb.append(", previousSubscription=").append(previousSubscription);
+        sb.append(", nextSubscription=").append(nextSubscription);
+        sb.append('}');
+        return sb.toString();
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+
+        final BusinessSubscriptionTransitionModelDao that = (BusinessSubscriptionTransitionModelDao) o;
+
+        if (bundleExternalKey != null ? !bundleExternalKey.equals(that.bundleExternalKey) : that.bundleExternalKey != null) {
+            return false;
+        }
+        if (bundleId != null ? !bundleId.equals(that.bundleId) : that.bundleId != null) {
+            return false;
+        }
+        if (event != null ? !event.equals(that.event) : that.event != null) {
+            return false;
+        }
+        if (nextSubscription != null ? !nextSubscription.equals(that.nextSubscription) : that.nextSubscription != null) {
+            return false;
+        }
+        if (previousSubscription != null ? !previousSubscription.equals(that.previousSubscription) : that.previousSubscription != null) {
+            return false;
+        }
+        if (requestedTimestamp != null ? !requestedTimestamp.equals(that.requestedTimestamp) : that.requestedTimestamp != null) {
+            return false;
+        }
+        if (subscriptionEventRecordId != null ? !subscriptionEventRecordId.equals(that.subscriptionEventRecordId) : that.subscriptionEventRecordId != null) {
+            return false;
+        }
+        if (subscriptionId != null ? !subscriptionId.equals(that.subscriptionId) : that.subscriptionId != null) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (subscriptionEventRecordId != null ? subscriptionEventRecordId.hashCode() : 0);
+        result = 31 * result + (bundleId != null ? bundleId.hashCode() : 0);
+        result = 31 * result + (bundleExternalKey != null ? bundleExternalKey.hashCode() : 0);
+        result = 31 * result + (subscriptionId != null ? subscriptionId.hashCode() : 0);
+        result = 31 * result + (requestedTimestamp != null ? requestedTimestamp.hashCode() : 0);
+        result = 31 * result + (event != null ? event.hashCode() : 0);
+        result = 31 * result + (previousSubscription != null ? previousSubscription.hashCode() : 0);
+        result = 31 * result + (nextSubscription != null ? nextSubscription.hashCode() : 0);
+        return result;
     }
 }

@@ -19,17 +19,19 @@ package com.ning.billing.osgi.bundles.analytics.model;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.catalog.api.Duration;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.osgi.bundles.analytics.utils.Rounder;
 
 import static com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
@@ -56,128 +58,12 @@ public class BusinessSubscription {
     private final DateTime startDate;
     private final DateTime endDate;
 
-    public BusinessSubscription(final String productName,
-                                final String productType,
-                                final ProductCategory productCategory,
-                                final String slug,
-                                final String phase,
-                                final String billingPeriod,
-                                final BigDecimal price,
-                                final String priceList,
-                                final BigDecimal mrr,
-                                final String currency,
-                                final SubscriptionState state,
-                                final Boolean businessActive,
-                                final DateTime startDate,
-                                final DateTime endDate) {
-        this.productName = productName;
-        this.productType = productType;
-        this.productCategory = productCategory;
-        this.slug = slug;
-        this.phase = phase;
-        this.billingPeriod = billingPeriod;
-        this.price = price;
-        this.priceList = priceList;
-        this.mrr = mrr;
-        this.currency = currency;
-        this.state = state;
-        this.businessActive = businessActive;
-        this.startDate = startDate;
-        this.endDate = endDate;
-    }
+    public BusinessSubscription(@Nullable final Plan currentPlan, @Nullable final PlanPhase currentPhase, @Nullable final PriceList priceList,
+                                final Currency currency, final DateTime startDate, final SubscriptionState state) {
+        // TODO
+        businessActive = true;
 
-    /**
-     * For unit tests only.
-     * <p/>
-     * You can't really use this constructor in real life because the start date is likely not the one you want (you likely
-     * want the phase start date).
-     *
-     * @param subscription Subscription to use as a model
-     * @param currency     ACCOUNT currency
-     * @param catalog      Catalog to use
-     */
-    BusinessSubscription(final Subscription subscription, final Currency currency, final Catalog catalog) {
-        this(subscription.getCurrentPriceList() == null ? null : subscription.getCurrentPriceList().getName(),
-             subscription.getCurrentPlan().getName(), subscription.getCurrentPhase().getName(), currency,
-             subscription.getStartDate(), subscription.getState(), catalog);
-    }
-
-    public BusinessSubscription(final String priceList, final String currentPlan, final String currentPhase, final Currency currency,
-                                final DateTime startDate, final SubscriptionState state, final Catalog catalog) {
-        Plan thePlan = null;
-        PlanPhase thePhase = null;
-        try {
-            thePlan = (currentPlan != null) ? catalog.findPlan(currentPlan, new DateTime(), startDate) : null;
-            thePhase = (currentPhase != null) ? catalog.findPhase(currentPhase, new DateTime(), startDate) : null;
-        } catch (CatalogApiException ignored) {
-        }
-
-        this.priceList = priceList;
-
-        // Record plan information
-        if (currentPlan != null && thePlan != null && thePlan.getProduct() != null) {
-            final Product product = thePlan.getProduct();
-            productName = product.getName();
-            productCategory = product.getCategory();
-            // TODO - we should keep the product type
-            productType = product.getCatalogName();
-        } else {
-            productName = null;
-            productCategory = null;
-            productType = null;
-        }
-
-        // Record phase information
-        if (currentPhase != null && thePhase != null) {
-            slug = thePhase.getName();
-
-            if (thePhase.getPhaseType() != null) {
-                phase = thePhase.getPhaseType().toString();
-            } else {
-                phase = null;
-            }
-
-            if (thePhase.getBillingPeriod() != null) {
-                billingPeriod = thePhase.getBillingPeriod().toString();
-            } else {
-                billingPeriod = null;
-            }
-
-            if (thePhase.getRecurringPrice() != null) {
-                //TODO check if this is the right way to handle exception
-                BigDecimal tmpPrice;
-                try {
-                    tmpPrice = thePhase.getRecurringPrice().getPrice(USD);
-                } catch (CatalogApiException e) {
-                    tmpPrice = new BigDecimal(0);
-                }
-                price = tmpPrice;
-                mrr = getMrrFromBillingPeriod(thePhase.getBillingPeriod(), price);
-            } else {
-                price = BigDecimal.ZERO;
-                mrr = BigDecimal.ZERO;
-            }
-        } else {
-            slug = null;
-            phase = null;
-            billingPeriod = null;
-            price = BigDecimal.ZERO;
-            mrr = BigDecimal.ZERO;
-        }
-
-        if (currency != null) {
-            this.currency = currency.toString();
-        } else {
-            this.currency = null;
-        }
-
-        this.startDate = startDate;
-        this.state = state;
-    }
-
-    public BusinessSubscription(final String priceList, final Plan currentPlan, final PlanPhase currentPhase, final Currency currency,
-                                final DateTime startDate, final SubscriptionState state) {
-        this.priceList = priceList;
+        this.priceList = priceList == null ? null : priceList.getName();
 
         // Record plan information
         if (currentPlan != null && currentPlan.getProduct() != null) {
@@ -209,15 +95,19 @@ public class BusinessSubscription {
             }
 
             if (currentPhase.getRecurringPrice() != null) {
-                //TODO check if this is the right way to handle exception
                 BigDecimal tmpPrice;
                 try {
                     tmpPrice = currentPhase.getRecurringPrice().getPrice(USD);
                 } catch (CatalogApiException e) {
-                    tmpPrice = new BigDecimal(0);
+                    tmpPrice = null;
                 }
+
                 price = tmpPrice;
-                mrr = getMrrFromBillingPeriod(currentPhase.getBillingPeriod(), price);
+                if (tmpPrice != null) {
+                    mrr = getMrrFromBillingPeriod(currentPhase.getBillingPeriod(), price);
+                } else {
+                    mrr = null;
+                }
             } else {
                 price = BigDecimal.ZERO;
                 mrr = BigDecimal.ZERO;
@@ -237,6 +127,12 @@ public class BusinessSubscription {
         }
 
         this.startDate = startDate;
+        if (currentPhase != null) {
+            final Duration duration = currentPhase.getDuration();
+            this.endDate = duration == null ? null : startDate.plus(duration.toJodaPeriod());
+        } else {
+            this.endDate = null;
+        }
         this.state = state;
     }
 
@@ -288,8 +184,16 @@ public class BusinessSubscription {
         return slug;
     }
 
+    public Boolean getBusinessActive() {
+        return businessActive;
+    }
+
     public DateTime getStartDate() {
         return startDate;
+    }
+
+    public DateTime getEndDate() {
+        return endDate;
     }
 
     public SubscriptionState getState() {
@@ -308,18 +212,20 @@ public class BusinessSubscription {
     public String toString() {
         final StringBuilder sb = new StringBuilder();
         sb.append("BusinessSubscription");
-        sb.append("{billingPeriod='").append(billingPeriod).append('\'');
-        sb.append(", productName='").append(productName).append('\'');
+        sb.append("{productName='").append(productName).append('\'');
         sb.append(", productType='").append(productType).append('\'');
         sb.append(", productCategory=").append(productCategory);
         sb.append(", slug='").append(slug).append('\'');
         sb.append(", phase='").append(phase).append('\'');
+        sb.append(", billingPeriod='").append(billingPeriod).append('\'');
         sb.append(", price=").append(price);
-        sb.append(", priceList=").append(priceList);
+        sb.append(", priceList='").append(priceList).append('\'');
         sb.append(", mrr=").append(mrr);
         sb.append(", currency='").append(currency).append('\'');
-        sb.append(", startDate=").append(startDate);
         sb.append(", state=").append(state);
+        sb.append(", businessActive=").append(businessActive);
+        sb.append(", startDate=").append(startDate);
+        sb.append(", endDate=").append(endDate);
         sb.append('}');
         return sb.toString();
     }
@@ -338,22 +244,28 @@ public class BusinessSubscription {
         if (billingPeriod != null ? !billingPeriod.equals(that.billingPeriod) : that.billingPeriod != null) {
             return false;
         }
+        if (businessActive != null ? !businessActive.equals(that.businessActive) : that.businessActive != null) {
+            return false;
+        }
         if (currency != null ? !currency.equals(that.currency) : that.currency != null) {
             return false;
         }
-        if (mrr != null ? !(Rounder.round(mrr) == Rounder.round(that.mrr)) : that.mrr != null) {
+        if (endDate != null ? !endDate.equals(that.endDate) : that.endDate != null) {
+            return false;
+        }
+        if (mrr != null ? !mrr.equals(that.mrr) : that.mrr != null) {
             return false;
         }
         if (phase != null ? !phase.equals(that.phase) : that.phase != null) {
             return false;
         }
-        if (price != null ? !(Rounder.round(price) == Rounder.round(that.price)) : that.price != null) {
+        if (price != null ? !price.equals(that.price) : that.price != null) {
             return false;
         }
         if (priceList != null ? !priceList.equals(that.priceList) : that.priceList != null) {
             return false;
         }
-        if (productCategory != null ? !productCategory.equals(that.productCategory) : that.productCategory != null) {
+        if (productCategory != that.productCategory) {
             return false;
         }
         if (productName != null ? !productName.equals(that.productName) : that.productName != null) {
@@ -382,13 +294,15 @@ public class BusinessSubscription {
         result = 31 * result + (productCategory != null ? productCategory.hashCode() : 0);
         result = 31 * result + (slug != null ? slug.hashCode() : 0);
         result = 31 * result + (phase != null ? phase.hashCode() : 0);
+        result = 31 * result + (billingPeriod != null ? billingPeriod.hashCode() : 0);
         result = 31 * result + (price != null ? price.hashCode() : 0);
         result = 31 * result + (priceList != null ? priceList.hashCode() : 0);
         result = 31 * result + (mrr != null ? mrr.hashCode() : 0);
         result = 31 * result + (currency != null ? currency.hashCode() : 0);
-        result = 31 * result + (startDate != null ? startDate.hashCode() : 0);
         result = 31 * result + (state != null ? state.hashCode() : 0);
-        result = 31 * result + (billingPeriod != null ? billingPeriod.hashCode() : 0);
+        result = 31 * result + (businessActive != null ? businessActive.hashCode() : 0);
+        result = 31 * result + (startDate != null ? startDate.hashCode() : 0);
+        result = 31 * result + (endDate != null ? endDate.hashCode() : 0);
         return result;
     }
 }

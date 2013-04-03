@@ -18,15 +18,10 @@ package com.ning.billing.osgi.bundles.analytics.model;
 
 import javax.annotation.Nullable;
 
-import org.joda.time.DateTime;
-
-import com.ning.billing.catalog.api.Catalog;
-import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
-
-import static com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
+import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 
 /**
  * Describe an event associated with a transition between two BusinessSubscription
@@ -80,46 +75,61 @@ public class BusinessSubscriptionEvent {
         return eventType;
     }
 
-    public static BusinessSubscriptionEvent subscriptionMigrated(final String plan, final Catalog catalog, final DateTime eventTime, final DateTime subscriptionCreationDate) {
-        return eventFromType(EventType.MIGRATE, plan, catalog, eventTime, subscriptionCreationDate);
-    }
-
-    public static BusinessSubscriptionEvent subscriptionCreated(final String plan, final Catalog catalog, final DateTime eventTime, final DateTime subscriptionCreationDate) {
-        return eventFromType(EventType.ADD, plan, catalog, eventTime, subscriptionCreationDate);
-    }
-
-    public static BusinessSubscriptionEvent subscriptionCancelled(final String plan, final Catalog catalog, final DateTime eventTime, final DateTime subscriptionCreationDate) {
-        return eventFromType(EventType.CANCEL, plan, catalog, eventTime, subscriptionCreationDate);
-    }
-
-    public static BusinessSubscriptionEvent subscriptionChanged(final String plan, final Catalog catalog, final DateTime eventTime, final DateTime subscriptionCreationDate) {
-        return eventFromType(EventType.CHANGE, plan, catalog, eventTime, subscriptionCreationDate);
-    }
-
-    public static BusinessSubscriptionEvent subscriptionRecreated(final String plan, final Catalog catalog, final DateTime eventTime, final DateTime subscriptionCreationDate) {
-        return eventFromType(EventType.RE_ADD, plan, catalog, eventTime, subscriptionCreationDate);
-    }
-
-    public static BusinessSubscriptionEvent subscriptionTransfered(final String plan, final Catalog catalog, final DateTime eventTime, final DateTime subscriptionCreationDate) {
-        return eventFromType(EventType.TRANSFER, plan, catalog, eventTime, subscriptionCreationDate);
-    }
-
-    public static BusinessSubscriptionEvent subscriptionPhaseChanged(final String plan, final SubscriptionState state, final Catalog catalog, final DateTime eventTime, final DateTime subscriptionCreationDate) {
-        if (state != null && state.equals(SubscriptionState.CANCELLED)) {
-            return eventFromType(EventType.SYSTEM_CANCEL, plan, catalog, eventTime, subscriptionCreationDate);
-        } else {
-            return eventFromType(EventType.SYSTEM_CHANGE, plan, catalog, eventTime, subscriptionCreationDate);
+    public static BusinessSubscriptionEvent fromTransition(final SubscriptionTransition transition) {
+        switch (transition.getTransitionType()) {
+            // A subscription enters either through migration or as newly created subscription
+            case MIGRATE_ENTITLEMENT:
+                return subscriptionMigrated(transition.getNextPlan());
+            case CREATE:
+                return subscriptionCreated(transition.getNextPlan());
+            case RE_CREATE:
+                return subscriptionRecreated(transition.getNextPlan());
+            case TRANSFER:
+                return subscriptionTransfered(transition.getNextPlan());
+            case CANCEL:
+                return subscriptionCancelled(transition.getNextPlan());
+            case CHANGE:
+                return subscriptionChanged(transition.getNextPlan());
+            case PHASE:
+                return subscriptionPhaseChanged(transition.getNextPlan());
+            // TODO - should we really ignore these?
+            case MIGRATE_BILLING:
+            case UNCANCEL:
+            default:
+                return null;
         }
     }
 
-    private static BusinessSubscriptionEvent eventFromType(final EventType eventType, final String plan, final Catalog catalog, final DateTime eventTime, final DateTime subscriptionCreationDate) {
-        Plan thePlan = null;
-        try {
-            thePlan = catalog.findPlan(plan, eventTime, subscriptionCreationDate);
-        } catch (CatalogApiException ignored) {
-        }
+    private static BusinessSubscriptionEvent subscriptionMigrated(final Plan plan) {
+        return eventFromType(EventType.MIGRATE, plan);
+    }
 
-        final ProductCategory category = getTypeFromSubscription(thePlan);
+    private static BusinessSubscriptionEvent subscriptionCreated(final Plan plan) {
+        return eventFromType(EventType.ADD, plan);
+    }
+
+    private static BusinessSubscriptionEvent subscriptionCancelled(final Plan plan) {
+        return eventFromType(EventType.CANCEL, plan);
+    }
+
+    private static BusinessSubscriptionEvent subscriptionChanged(final Plan plan) {
+        return eventFromType(EventType.CHANGE, plan);
+    }
+
+    private static BusinessSubscriptionEvent subscriptionRecreated(final Plan plan) {
+        return eventFromType(EventType.RE_ADD, plan);
+    }
+
+    private static BusinessSubscriptionEvent subscriptionTransfered(final Plan plan) {
+        return eventFromType(EventType.TRANSFER, plan);
+    }
+
+    private static BusinessSubscriptionEvent subscriptionPhaseChanged(final Plan plan) {
+        return eventFromType(EventType.SYSTEM_CHANGE, plan);
+    }
+
+    private static BusinessSubscriptionEvent eventFromType(final EventType eventType, final Plan plan) {
+        final ProductCategory category = getTypeFromSubscription(plan);
         return new BusinessSubscriptionEvent(eventType, category);
     }
 

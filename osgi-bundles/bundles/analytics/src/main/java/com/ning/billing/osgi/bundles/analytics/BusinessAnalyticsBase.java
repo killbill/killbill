@@ -113,6 +113,11 @@ public abstract class BusinessAnalyticsBase {
         return entitlementUserApi.getSubscriptionsForBundle(bundleId, context);
     }
 
+    protected List<SubscriptionBundle> getSubscriptionBundlesForAccount(final UUID accountId, final TenantContext context) throws AnalyticsRefreshException {
+        final EntitlementUserApi entitlementUserApi = getEntitlementUserApi();
+        return entitlementUserApi.getBundlesForAccount(accountId, context);
+    }
+
     protected Subscription getSubscription(final UUID subscriptionId, final TenantContext context) throws AnalyticsRefreshException {
         final EntitlementUserApi entitlementUserApi = getEntitlementUserApi();
 
