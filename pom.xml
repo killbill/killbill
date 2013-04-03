@@ -42,6 +42,7 @@
     </scm>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <killbill-commons.version>0.1.0-SNAPSHOT</killbill-commons.version>
         <slf4j.version>1.7.2</slf4j.version>
         <ehcache.version>2.6.2</ehcache.version>
     </properties>
@@ -307,6 +308,21 @@
                 <groupId>com.ning.billing</groupId>
                 <artifactId>killbill-osgi-bundles-meter</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.ning.billing.commons</groupId>
+                <artifactId>killbill-embeddeddb</artifactId>
+                <version>${killbill-commons.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.ning.billing.commons</groupId>
+                <artifactId>killbill-jdbi</artifactId>
+                <version>${killbill-commons.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.ning.billing.commons</groupId>
+                <artifactId>killbill-locker</artifactId>
+                <version>${killbill-commons.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jolbox</groupId>

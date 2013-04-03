@@ -16,36 +16,31 @@
 
 package com.ning.billing.osgi.bundles.analytics.model;
 
-import javax.annotation.Nullable;
-
 import com.ning.billing.account.api.Account;
-import com.ning.billing.catalog.api.Plan;
-import com.ning.billing.catalog.api.PlanPhase;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.invoice.api.InvoicePayment;
+import com.ning.billing.payment.api.Payment;
+import com.ning.billing.payment.api.PaymentMethod;
 import com.ning.billing.util.audit.AuditLog;
 
-public class BusinessInvoiceItemModelDao extends BusinessInvoiceItemBaseModelDao {
+public class BusinessInvoicePaymentChargebackModelDao extends BusinessInvoicePaymentBaseModelDao {
 
-    public BusinessInvoiceItemModelDao(final Account account,
-                                       final Invoice invoice,
-                                       final InvoiceItem invoiceItem,
-                                       @Nullable final SubscriptionBundle bundle,
-                                       @Nullable final Plan plan,
-                                       @Nullable final PlanPhase planPhase,
-                                       final AuditLog creationAuditLog) {
+    public BusinessInvoicePaymentChargebackModelDao(final Account account,
+                                                    final Invoice invoice,
+                                                    final InvoicePayment invoicePayment,
+                                                    final Payment payment,
+                                                    final PaymentMethod paymentMethod,
+                                                    final AuditLog creationAuditLog) {
         super(account,
               invoice,
-              invoiceItem,
-              bundle,
-              plan,
-              planPhase,
+              invoicePayment,
+              payment,
+              paymentMethod,
               creationAuditLog);
     }
 
     @Override
     public String getTableName() {
-        return INVOICE_ITEMS_TABLE_NAME;
+        return INVOICE_PAYMENT_CHARGEBACKS_TABLE_NAME;
     }
 }

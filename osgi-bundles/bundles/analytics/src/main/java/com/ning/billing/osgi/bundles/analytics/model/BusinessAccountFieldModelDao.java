@@ -18,70 +18,40 @@ package com.ning.billing.osgi.bundles.analytics.model;
 
 import java.util.UUID;
 
+import org.joda.time.DateTime;
+
 public class BusinessAccountFieldModelDao extends BusinessFieldModelDao {
 
-    private final UUID accountId;
-    private final String accountKey;
+    private static final String ACCOUNT_FIELDS_TABLE_NAME = "bac_fields";
 
-    public BusinessAccountFieldModelDao(final UUID accountId, final String accountKey, final String name, final String value) {
-        super(accountId, name, value);
-        this.accountId = accountId;
-        this.accountKey = accountKey;
-    }
-
-    public UUID getAccountId() {
-        return accountId;
-    }
-
-    public String getAccountKey() {
-        return accountKey;
-    }
-
-    @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder();
-        sb.append("BusinessAccountFieldModelDao");
-        sb.append("{accountId='").append(accountId).append('\'');
-        sb.append(", accountKey='").append(accountKey).append('\'');
-        sb.append(", name='").append(getName()).append('\'');
-        sb.append(", value='").append(getValue()).append('\'');
-        sb.append('}');
-        return sb.toString();
-    }
-
-    @Override
-    public boolean equals(final Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-
-        final BusinessAccountFieldModelDao that = (BusinessAccountFieldModelDao) o;
-
-        if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
-            return false;
-        }
-        if (accountKey != null ? !accountKey.equals(that.accountKey) : that.accountKey != null) {
-            return false;
-        }
-        if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) {
-            return false;
-        }
-        if (getValue() != null ? !getValue().equals(that.getValue()) : that.getValue() != null) {
-            return false;
-        }
-
-        return true;
+    public BusinessAccountFieldModelDao(final Long customFieldRecordId,
+                                        final String name,
+                                        final String value,
+                                        final DateTime createdDate,
+                                        final String createdBy,
+                                        final String createdReasonCode,
+                                        final String createdComments,
+                                        final UUID accountId,
+                                        final String accountName,
+                                        final String accountExternalKey,
+                                        final Long accountRecordId,
+                                        final Long tenantRecordId) {
+        super(customFieldRecordId,
+              name,
+              value,
+              createdDate,
+              createdBy,
+              createdReasonCode,
+              createdComments,
+              accountId,
+              accountName,
+              accountExternalKey,
+              accountRecordId,
+              tenantRecordId);
     }
 
     @Override
-    public int hashCode() {
-        int result = accountId != null ? accountId.hashCode() : 0;
-        result = 31 * result + (accountKey != null ? accountKey.hashCode() : 0);
-        result = 31 * result + (getName() != null ? getName().hashCode() : 0);
-        result = 31 * result + (getValue() != null ? getValue().hashCode() : 0);
-        return result;
+    public String getTableName() {
+        return ACCOUNT_FIELDS_TABLE_NAME;
     }
 }

@@ -28,7 +28,6 @@ import com.ning.billing.mock.glue.MockInvoiceModule;
 import com.ning.billing.mock.glue.MockJunctionModule;
 import com.ning.billing.mock.glue.MockOverdueModule;
 import com.ning.billing.mock.glue.MockPaymentModule;
-import com.ning.billing.osgi.bundles.analytics.setup.AnalyticsModule;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.util.glue.AuditModule;
 import com.ning.billing.util.glue.CacheModule;

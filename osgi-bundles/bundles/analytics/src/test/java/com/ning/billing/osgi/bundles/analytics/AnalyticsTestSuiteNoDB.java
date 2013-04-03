@@ -27,7 +27,6 @@ import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.invoice.dao.InvoiceDao;
-import com.ning.billing.osgi.bundles.analytics.api.DefaultAnalyticsService;
 import com.ning.billing.osgi.bundles.analytics.dao.BusinessAccountFieldSqlDao;
 import com.ning.billing.osgi.bundles.analytics.dao.BusinessAccountSqlDao;
 import com.ning.billing.osgi.bundles.analytics.dao.BusinessAccountTagSqlDao;

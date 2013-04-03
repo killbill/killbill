@@ -19,83 +19,54 @@ package com.ning.billing.osgi.bundles.analytics;
 import java.util.List;
 import java.util.UUID;
 
-import javax.inject.Inject;
-
 import org.joda.time.DateTime;
+import org.osgi.service.log.LogService;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.BlockingState;
-import com.ning.billing.osgi.bundles.analytics.dao.BusinessOverdueStatusSqlDao;
+import com.ning.billing.osgi.bundles.analytics.dao.BusinessAnalyticsSqlDao;
 import com.ning.billing.osgi.bundles.analytics.model.BusinessOverdueStatusModelDao;
-import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
-import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.killbill.osgi.libs.killbill.OSGIKillbillAPI;
+import com.ning.killbill.osgi.libs.killbill.OSGIKillbillDataSource;
+import com.ning.killbill.osgi.libs.killbill.OSGIKillbillLogService;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
-public class BusinessOverdueStatusDao {
+public class BusinessOverdueStatusDao extends BusinessAnalyticsDaoBase {
 
-    private static final Logger log = LoggerFactory.getLogger(BusinessOverdueStatusDao.class);
-
-    private final BusinessOverdueStatusSqlDao overdueStatusSqlDao;
-
-    private final AccountInternalApi accountApi;
-    private final EntitlementInternalApi entitlementApi;
-    private final BlockingInternalApi blockingApi;
-
-    @Inject
-    public BusinessOverdueStatusDao(final BusinessOverdueStatusSqlDao overdueStatusSqlDao, final AccountInternalApi accountApi,
-                                    final EntitlementInternalApi entitlementApi, final BlockingInternalApi blockingApi) {
-
-        this.overdueStatusSqlDao = overdueStatusSqlDao;
-        this.accountApi = accountApi;
-        this.entitlementApi = entitlementApi;
-        this.blockingApi = blockingApi;
+    public BusinessOverdueStatusDao(final OSGIKillbillLogService logService,
+                                    final OSGIKillbillAPI osgiKillbillAPI,
+                                    final OSGIKillbillDataSource osgiKillbillDataSource) {
+        super(logService, osgiKillbillAPI, osgiKillbillDataSource);
     }
 
-    public void overdueStatusChanged(final Blockable.Type objectType, final UUID objectId, final InternalCallContext context) {
-        if (Blockable.Type.SUBSCRIPTION_BUNDLE.equals(objectType)) {
+    public void update(final ObjectType objectType, final UUID objectId, final CallContext context) throws AnalyticsRefreshException {
+        if (ObjectType.BUNDLE.equals(objectType)) {
             overdueStatusChangedForBundle(objectId, context);
         } else {
-            log.info("Ignoring overdue status change for object id {} (type {})", objectId.toString(), objectType.toString());
+            logService.log(LogService.LOG_WARNING, String.format("Ignoring overdue status change for object id %s (type %s)", objectId.toString(), objectType.toString()));
         }
     }
 
-    private void overdueStatusChangedForBundle(final UUID bundleId, final InternalCallContext context) {
-        final SubscriptionBundle bundle;
-        try {
-            bundle = entitlementApi.getBundleFromId(bundleId, context);
-        } catch (EntitlementUserApiException e) {
-            log.warn("Ignoring update for bundle {}: bundle does not exist", bundleId);
-            return;
-        }
+    private void overdueStatusChangedForBundle(final UUID bundleId, final CallContext context) throws AnalyticsRefreshException {
+        final SubscriptionBundle bundle = getSubscriptionBundle(bundleId, context);
 
-        final Account account;
-        try {
-            account = accountApi.getAccountById(bundle.getAccountId(), context);
-        } catch (AccountApiException e) {
-            log.warn("Ignoring update for bundle {}: account {} does not exist", bundleId, bundle.getAccountId());
-            return;
-        }
-
+        final Account account = getAccount(bundle.getAccountId(), context);
         final String accountKey = account.getExternalKey();
         final String externalKey = bundle.getExternalKey();
 
-        overdueStatusSqlDao.inTransaction(new Transaction<Void, BusinessOverdueStatusSqlDao>() {
+        sqlDao.inTransaction(new Transaction<Void, BusinessAnalyticsSqlDao>() {
             @Override
-            public Void inTransaction(final BusinessOverdueStatusSqlDao transactional, final TransactionStatus status) throws Exception {
-                log.info("Started rebuilding overdue statuses for bundle id {}", bundleId);
-                transactional.deleteOverdueStatusesForBundle(bundleId.toString(), context);
+            public Void inTransaction(final BusinessAnalyticsSqlDao transactional, final TransactionStatus status) throws Exception {
+                // TODO pave for all bundles for that account
+                transactional.deleteByAccountRecordId(bundleId.toString(), context);
+
                 final List<BlockingState> blockingHistory = blockingApi.getBlockingHistory(bundleId, context);
                 if (blockingHistory != null && blockingHistory.size() > 0) {
                     final List<BlockingState> overdueStates = ImmutableList.<BlockingState>copyOf(blockingHistory);
@@ -105,14 +76,12 @@ public class BusinessOverdueStatusDao {
                     for (final BlockingState state : overdueStatesReversed) {
                         final BusinessOverdueStatusModelDao overdueStatus = new BusinessOverdueStatusModelDao(accountKey, bundleId, previousStartDate,
                                                                                                               externalKey, state.getTimestamp(), state.getStateName());
-                        log.info("Adding overdue state {}", overdueStatus);
-                        overdueStatusSqlDao.createOverdueStatus(overdueStatus, context);
+                        transactional.createOverdueStatus(overdueStatus, context);
 
                         previousStartDate = state.getTimestamp();
                     }
                 }
 
-                log.info("Finished rebuilding overdue statuses for bundle id {}", bundleId);
                 return null;
             }
         });

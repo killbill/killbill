@@ -16,9 +16,9 @@
 
 package com.ning.billing.osgi.bundles.analytics.model;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogApiException;
@@ -32,8 +32,6 @@ import static com.ning.billing.entitlement.api.user.Subscription.SubscriptionSta
  * Describe an event associated with a transition between two BusinessSubscription
  */
 public class BusinessSubscriptionEvent {
-
-    private static final Logger log = LoggerFactory.getLogger(BusinessSubscriptionEvent.class);
 
     private static final String MISC = "MISC";
 
@@ -69,8 +67,7 @@ public class BusinessSubscriptionEvent {
         throw new IllegalArgumentException("Unable to parse event string: " + eventString);
     }
 
-    // Public for internal reasons
-    public BusinessSubscriptionEvent(final EventType eventType, final ProductCategory category) {
+    private BusinessSubscriptionEvent(final EventType eventType, final ProductCategory category) {
         this.eventType = eventType;
         this.category = category;
     }
@@ -119,16 +116,14 @@ public class BusinessSubscriptionEvent {
         Plan thePlan = null;
         try {
             thePlan = catalog.findPlan(plan, eventTime, subscriptionCreationDate);
-        } catch (CatalogApiException e) {
-            log.error(String.format("Failed to retrieve PLan from catalog for %s", plan));
-
+        } catch (CatalogApiException ignored) {
         }
+
         final ProductCategory category = getTypeFromSubscription(thePlan);
         return new BusinessSubscriptionEvent(eventType, category);
     }
 
-    private static ProductCategory getTypeFromSubscription(final Plan plan) {
-
+    private static ProductCategory getTypeFromSubscription(@Nullable final Plan plan) {
         if (plan != null && plan.getProduct() != null) {
             final Product product = plan.getProduct();
             if (product.getCatalogName() != null && product.getCategory() != null) {

@@ -18,13 +18,41 @@ package com.ning.billing.osgi.bundles.analytics.model;
 
 import java.util.UUID;
 
+import org.joda.time.DateTime;
+
 public class BusinessInvoiceTagModelDao extends BusinessTagModelDao {
+
+    private static final String INVOICE_TAGS_TABLE_NAME = "bin_tags";
 
     private final UUID invoiceId;
 
-    public BusinessInvoiceTagModelDao(final UUID invoiceId, final String name) {
-        super(name);
+    public BusinessInvoiceTagModelDao(final UUID invoiceId,
+                                      final String name,
+                                      final DateTime createdDate,
+                                      final String createdBy,
+                                      final String createdReasonCode,
+                                      final String createdComments,
+                                      final UUID accountId,
+                                      final String accountName,
+                                      final String accountExternalKey,
+                                      final Long accountRecordId,
+                                      final Long tenantRecordId) {
+        super(name,
+              createdDate,
+              createdBy,
+              createdReasonCode,
+              createdComments,
+              accountId,
+              accountName,
+              accountExternalKey,
+              accountRecordId,
+              tenantRecordId);
         this.invoiceId = invoiceId;
+    }
+
+    @Override
+    public String getTableName() {
+        return INVOICE_TAGS_TABLE_NAME;
     }
 
     public UUID getInvoiceId() {
@@ -35,8 +63,7 @@ public class BusinessInvoiceTagModelDao extends BusinessTagModelDao {
     public String toString() {
         final StringBuilder sb = new StringBuilder();
         sb.append("BusinessInvoiceTagModelDao");
-        sb.append("{paymentId='").append(invoiceId).append('\'');
-        sb.append(", name='").append(getName()).append('\'');
+        sb.append("{invoiceId=").append(invoiceId);
         sb.append('}');
         return sb.toString();
     }
@@ -49,13 +76,13 @@ public class BusinessInvoiceTagModelDao extends BusinessTagModelDao {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
+        if (!super.equals(o)) {
+            return false;
+        }
 
         final BusinessInvoiceTagModelDao that = (BusinessInvoiceTagModelDao) o;
 
         if (invoiceId != null ? !invoiceId.equals(that.invoiceId) : that.invoiceId != null) {
-            return false;
-        }
-        if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) {
             return false;
         }
 
@@ -64,8 +91,8 @@ public class BusinessInvoiceTagModelDao extends BusinessTagModelDao {
 
     @Override
     public int hashCode() {
-        int result = invoiceId != null ? invoiceId.hashCode() : 0;
-        result = 31 * result + (getName() != null ? getName().hashCode() : 0);
+        int result = super.hashCode();
+        result = 31 * result + (invoiceId != null ? invoiceId.hashCode() : 0);
         return result;
     }
 }

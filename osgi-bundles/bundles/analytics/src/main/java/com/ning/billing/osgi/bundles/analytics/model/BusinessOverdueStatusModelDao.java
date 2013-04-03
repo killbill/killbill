@@ -18,65 +18,90 @@ package com.ning.billing.osgi.bundles.analytics.model;
 
 import java.util.UUID;
 
-import javax.annotation.Nullable;
-
 import org.joda.time.DateTime;
 
-import com.ning.billing.util.entity.EntityBase;
+public class BusinessOverdueStatusModelDao extends BusinessModelDaoBase {
 
-public class BusinessOverdueStatusModelDao extends EntityBase {
+    private static final String OVERDUE_STATUS_TABLE_NAME = "bos";
 
-    private final String accountKey;
+    private final Long blockingStateRecordId;
     private final UUID bundleId;
-    private final String externalKey;
+    private final String bundleExternalKey;
     private final String status;
     private final DateTime startDate;
     private final DateTime endDate;
 
-    public BusinessOverdueStatusModelDao(final String accountKey, final UUID bundleId, @Nullable final DateTime endDate,
-                                         final String externalKey, final DateTime startDate, final String status) {
-        this.accountKey = accountKey;
+    public BusinessOverdueStatusModelDao(final Long blockingStateRecordId,
+                                         final UUID bundleId,
+                                         final String bundleExternalKey,
+                                         final String status,
+                                         final DateTime startDate,
+                                         final DateTime endDate,
+                                         final DateTime createdDate,
+                                         final String createdBy,
+                                         final String createdReasonCode,
+                                         final String createdComments,
+                                         final UUID accountId,
+                                         final String accountName,
+                                         final String accountExternalKey,
+                                         final Long accountRecordId,
+                                         final Long tenantRecordId) {
+        super(createdDate,
+              createdBy,
+              createdReasonCode,
+              createdComments,
+              accountId,
+              accountName,
+              accountExternalKey,
+              accountRecordId,
+              tenantRecordId);
+        this.blockingStateRecordId = blockingStateRecordId;
         this.bundleId = bundleId;
-        this.endDate = endDate;
-        this.externalKey = externalKey;
-        this.startDate = startDate;
+        this.bundleExternalKey = bundleExternalKey;
         this.status = status;
+        this.startDate = startDate;
+        this.endDate = endDate;
     }
 
-    public String getAccountKey() {
-        return accountKey;
+    @Override
+    public String getTableName() {
+        return OVERDUE_STATUS_TABLE_NAME;
+    }
+
+    public Long getBlockingStateRecordId() {
+        return blockingStateRecordId;
     }
 
     public UUID getBundleId() {
         return bundleId;
     }
 
-    public DateTime getEndDate() {
-        return endDate;
-    }
-
-    public String getExternalKey() {
-        return externalKey;
-    }
-
-    public DateTime getStartDate() {
-        return startDate;
+    public String getBundleExternalKey() {
+        return bundleExternalKey;
     }
 
     public String getStatus() {
         return status;
     }
 
+    public DateTime getStartDate() {
+        return startDate;
+    }
+
+    public DateTime getEndDate() {
+        return endDate;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
         sb.append("BusinessOverdueStatusModelDao");
-        sb.append("{accountKey=").append(accountKey);
-        sb.append(", bundleId='").append(bundleId).append('\'');
-        sb.append(", endDate='").append(endDate).append('\'');
-        sb.append(", externalKey='").append(externalKey).append('\'');
+        sb.append("{blockingStateRecordId=").append(blockingStateRecordId);
+        sb.append(", bundleId=").append(bundleId);
+        sb.append(", bundleExternalKey='").append(bundleExternalKey).append('\'');
         sb.append(", status='").append(status).append('\'');
         sb.append(", startDate=").append(startDate);
+        sb.append(", endDate=").append(endDate);
         sb.append('}');
         return sb.toString();
     }
@@ -89,19 +114,22 @@ public class BusinessOverdueStatusModelDao extends EntityBase {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
+        if (!super.equals(o)) {
+            return false;
+        }
 
         final BusinessOverdueStatusModelDao that = (BusinessOverdueStatusModelDao) o;
 
-        if (accountKey != null ? !accountKey.equals(that.accountKey) : that.accountKey != null) {
+        if (blockingStateRecordId != null ? !blockingStateRecordId.equals(that.blockingStateRecordId) : that.blockingStateRecordId != null) {
+            return false;
+        }
+        if (bundleExternalKey != null ? !bundleExternalKey.equals(that.bundleExternalKey) : that.bundleExternalKey != null) {
             return false;
         }
         if (bundleId != null ? !bundleId.equals(that.bundleId) : that.bundleId != null) {
             return false;
         }
         if (endDate != null ? !endDate.equals(that.endDate) : that.endDate != null) {
-            return false;
-        }
-        if (externalKey != null ? !externalKey.equals(that.externalKey) : that.externalKey != null) {
             return false;
         }
         if (startDate != null ? !startDate.equals(that.startDate) : that.startDate != null) {
@@ -116,9 +144,10 @@ public class BusinessOverdueStatusModelDao extends EntityBase {
 
     @Override
     public int hashCode() {
-        int result = accountKey != null ? accountKey.hashCode() : 0;
+        int result = super.hashCode();
+        result = 31 * result + (blockingStateRecordId != null ? blockingStateRecordId.hashCode() : 0);
         result = 31 * result + (bundleId != null ? bundleId.hashCode() : 0);
-        result = 31 * result + (externalKey != null ? externalKey.hashCode() : 0);
+        result = 31 * result + (bundleExternalKey != null ? bundleExternalKey.hashCode() : 0);
         result = 31 * result + (status != null ? status.hashCode() : 0);
         result = 31 * result + (startDate != null ? startDate.hashCode() : 0);
         result = 31 * result + (endDate != null ? endDate.hashCode() : 0);

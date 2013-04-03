@@ -23,7 +23,6 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.osgi.bundles.analytics.AnalyticsTestSuiteWithEmbeddedDB;
-import com.ning.billing.osgi.bundles.analytics.model.BusinessSubscriptionTransitionFieldModelDao;
 
 public class TestBusinessSubscriptionTransitionFieldSqlDao extends AnalyticsTestSuiteWithEmbeddedDB {
 

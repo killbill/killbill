@@ -26,26 +26,26 @@ import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.util.audit.AuditLog;
 
-public class BusinessInvoiceItemModelDao extends BusinessInvoiceItemBaseModelDao {
+public class BusinessInvoiceItemCreditModelDao extends BusinessInvoiceItemBaseModelDao {
 
-    public BusinessInvoiceItemModelDao(final Account account,
-                                       final Invoice invoice,
-                                       final InvoiceItem invoiceItem,
-                                       @Nullable final SubscriptionBundle bundle,
-                                       @Nullable final Plan plan,
-                                       @Nullable final PlanPhase planPhase,
-                                       final AuditLog creationAuditLog) {
+    public BusinessInvoiceItemCreditModelDao(final Account account,
+                                             final Invoice invoice,
+                                             final InvoiceItem invoiceItem,
+                                             @Nullable final SubscriptionBundle bundle,
+                                             @Nullable final Plan plan,
+                                             @Nullable final PlanPhase planPhase,
+                                             final AuditLog creationAuditLogs) {
         super(account,
               invoice,
               invoiceItem,
               bundle,
               plan,
               planPhase,
-              creationAuditLog);
+              creationAuditLogs);
     }
 
     @Override
     public String getTableName() {
-        return INVOICE_ITEMS_TABLE_NAME;
+        return ACCOUNT_CREDITS_TABLE_NAME;
     }
 }

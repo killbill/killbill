@@ -18,26 +18,56 @@ package com.ning.billing.osgi.bundles.analytics.model;
 
 import java.util.UUID;
 
+import org.joda.time.DateTime;
+
 public class BusinessInvoicePaymentFieldModelDao extends BusinessFieldModelDao {
 
-    private final UUID paymentId;
+    private static final String INVOICE_PAYMENT_FIELDS_TABLE_NAME = "bip_fields";
 
-    public BusinessInvoicePaymentFieldModelDao(final UUID paymentId, final String name, final String value) {
-        super(paymentId, name, value);
-        this.paymentId = paymentId;
+    private final UUID invoicePaymentId;
+
+    public BusinessInvoicePaymentFieldModelDao(final Long customFieldRecordId,
+                                               final UUID invoicePaymentId,
+                                               final String name,
+                                               final String value,
+                                               final DateTime createdDate,
+                                               final String createdBy,
+                                               final String createdReasonCode,
+                                               final String createdComments,
+                                               final UUID accountId,
+                                               final String accountName,
+                                               final String accountExternalKey,
+                                               final Long accountRecordId,
+                                               final Long tenantRecordId) {
+        super(customFieldRecordId,
+              name,
+              value,
+              createdDate,
+              createdBy,
+              createdReasonCode,
+              createdComments,
+              accountId,
+              accountName,
+              accountExternalKey,
+              accountRecordId,
+              tenantRecordId);
+        this.invoicePaymentId = invoicePaymentId;
     }
 
-    public UUID getPaymentId() {
-        return paymentId;
+    @Override
+    public String getTableName() {
+        return INVOICE_PAYMENT_FIELDS_TABLE_NAME;
+    }
+
+    public UUID getInvoicePaymentId() {
+        return invoicePaymentId;
     }
 
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
-        sb.append("BusinessPaymentField");
-        sb.append("{paymentId='").append(paymentId).append('\'');
-        sb.append(", name='").append(getName()).append('\'');
-        sb.append(", value='").append(getValue()).append('\'');
+        sb.append("BusinessInvoicePaymentFieldModelDao");
+        sb.append("{invoicePaymentId=").append(invoicePaymentId);
         sb.append('}');
         return sb.toString();
     }
@@ -50,16 +80,13 @@ public class BusinessInvoicePaymentFieldModelDao extends BusinessFieldModelDao {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
+        if (!super.equals(o)) {
+            return false;
+        }
 
         final BusinessInvoicePaymentFieldModelDao that = (BusinessInvoicePaymentFieldModelDao) o;
 
-        if (paymentId != null ? !paymentId.equals(that.paymentId) : that.paymentId != null) {
-            return false;
-        }
-        if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) {
-            return false;
-        }
-        if (getValue() != null ? !getValue().equals(that.getValue()) : that.getValue() != null) {
+        if (invoicePaymentId != null ? !invoicePaymentId.equals(that.invoicePaymentId) : that.invoicePaymentId != null) {
             return false;
         }
 
@@ -68,9 +95,8 @@ public class BusinessInvoicePaymentFieldModelDao extends BusinessFieldModelDao {
 
     @Override
     public int hashCode() {
-        int result = paymentId != null ? paymentId.hashCode() : 0;
-        result = 31 * result + (getName() != null ? getName().hashCode() : 0);
-        result = 31 * result + (getValue() != null ? getValue().hashCode() : 0);
+        int result = super.hashCode();
+        result = 31 * result + (invoicePaymentId != null ? invoicePaymentId.hashCode() : 0);
         return result;
     }
 }

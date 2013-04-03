@@ -18,10 +18,7 @@ package com.ning.billing.osgi.bundles.analytics.dao;
 
 import java.util.List;
 
-import javax.inject.Inject;
-
 import com.ning.billing.analytics.api.TimeSeriesData;
-import com.ning.billing.osgi.bundles.analytics.api.DefaultTimeSeriesData;
 import com.ning.billing.osgi.bundles.analytics.model.BusinessAccountModelDao;
 import com.ning.billing.osgi.bundles.analytics.model.BusinessAccountTagModelDao;
 import com.ning.billing.osgi.bundles.analytics.model.BusinessInvoiceItemModelDao;
@@ -33,78 +30,53 @@ import com.ning.billing.util.callcontext.InternalTenantContext;
 
 public class DefaultAnalyticsDao implements AnalyticsDao {
 
-    private final BusinessAccountSqlDao accountSqlDao;
-    private final BusinessSubscriptionTransitionSqlDao subscriptionTransitionSqlDao;
-    private final BusinessInvoiceSqlDao invoiceSqlDao;
-    private final BusinessInvoiceItemSqlDao invoiceItemSqlDao;
-    private final BusinessAccountTagSqlDao accountTagSqlDao;
-    private final BusinessOverdueStatusSqlDao overdueStatusSqlDao;
-    private final BusinessInvoicePaymentSqlDao invoicePaymentSqlDao;
-
-    @Inject
-    public DefaultAnalyticsDao(final BusinessAccountSqlDao accountSqlDao,
-                               final BusinessSubscriptionTransitionSqlDao subscriptionTransitionSqlDao,
-                               final BusinessInvoiceSqlDao invoiceSqlDao,
-                               final BusinessInvoiceItemSqlDao invoiceItemSqlDao,
-                               final BusinessAccountTagSqlDao accountTagSqlDao,
-                               final BusinessOverdueStatusSqlDao overdueStatusSqlDao,
-                               final BusinessInvoicePaymentSqlDao invoicePaymentSqlDao) {
-        this.accountSqlDao = accountSqlDao;
-        this.subscriptionTransitionSqlDao = subscriptionTransitionSqlDao;
-        this.invoiceSqlDao = invoiceSqlDao;
-        this.invoiceItemSqlDao = invoiceItemSqlDao;
-        this.accountTagSqlDao = accountTagSqlDao;
-        this.overdueStatusSqlDao = overdueStatusSqlDao;
-        this.invoicePaymentSqlDao = invoicePaymentSqlDao;
-    }
-
     @Override
     public TimeSeriesData getAccountsCreatedOverTime(final InternalTenantContext context) {
-        return new DefaultTimeSeriesData(accountSqlDao.getAccountsCreatedOverTime(context));
+        return null;
     }
 
     @Override
     public TimeSeriesData getSubscriptionsCreatedOverTime(final String productType, final String slug, final InternalTenantContext context) {
-        return new DefaultTimeSeriesData(subscriptionTransitionSqlDao.getSubscriptionsCreatedOverTime(productType, slug, context));
+        return null;
     }
 
     @Override
     public BusinessAccountModelDao getAccountByKey(final String accountKey, final InternalTenantContext context) {
-        return accountSqlDao.getAccountByKey(accountKey, context);
+        return null;
     }
 
     @Override
     public List<BusinessSubscriptionTransitionModelDao> getTransitionsByKey(final String externalKey, final InternalTenantContext context) {
-        return subscriptionTransitionSqlDao.getTransitionsByKey(externalKey, context);
+        return null;
     }
 
     @Override
     public List<BusinessSubscriptionTransitionModelDao> getTransitionsForAccount(final String accountKey, final InternalTenantContext context) {
-        return subscriptionTransitionSqlDao.getTransitionsForAccount(accountKey, context);
+        return null;
     }
 
     @Override
     public List<BusinessInvoiceModelDao> getInvoicesByKey(final String accountKey, final InternalTenantContext context) {
-        return invoiceSqlDao.getInvoicesForAccountByKey(accountKey, context);
-    }
-
-    @Override
-    public List<BusinessAccountTagModelDao> getTagsForAccount(final String accountKey, final InternalTenantContext context) {
-        return accountTagSqlDao.getTagsForAccountByKey(accountKey, context);
+        return null;
     }
 
     @Override
     public List<BusinessInvoiceItemModelDao> getInvoiceItemsForInvoice(final String invoiceId, final InternalTenantContext context) {
-        return invoiceItemSqlDao.getInvoiceItemsForInvoice(invoiceId, context);
-    }
-
-    @Override
-    public List<BusinessOverdueStatusModelDao> getOverdueStatusesForBundleByKey(final String externalKey, final InternalTenantContext context) {
-        return overdueStatusSqlDao.getOverdueStatusesForBundleByKey(externalKey, context);
+        return null;
     }
 
     @Override
     public List<BusinessInvoicePaymentModelDao> getInvoicePaymentsForAccountByKey(final String accountKey, final InternalTenantContext context) {
-        return invoicePaymentSqlDao.getInvoicePaymentsForAccountByKey(accountKey, context);
+        return null;
+    }
+
+    @Override
+    public List<BusinessOverdueStatusModelDao> getOverdueStatusesForBundleByKey(final String externalKey, final InternalTenantContext context) {
+        return null;
+    }
+
+    @Override
+    public List<BusinessAccountTagModelDao> getTagsForAccount(final String accountKey, final InternalTenantContext context) {
+        return null;
     }
 }

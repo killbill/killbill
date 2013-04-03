@@ -17,17 +17,14 @@
 package com.ning.billing.osgi.bundles.analytics;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
 import java.util.UUID;
 
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
@@ -37,59 +34,29 @@ import com.ning.billing.osgi.bundles.analytics.dao.BusinessSubscriptionTransitio
 import com.ning.billing.osgi.bundles.analytics.model.BusinessSubscription;
 import com.ning.billing.osgi.bundles.analytics.model.BusinessSubscriptionEvent;
 import com.ning.billing.osgi.bundles.analytics.model.BusinessSubscriptionTransitionModelDao;
-import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 import com.ning.billing.util.events.SubscriptionInternalEvent;
-import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
+import com.ning.killbill.osgi.libs.killbill.OSGIKillbillAPI;
+import com.ning.killbill.osgi.libs.killbill.OSGIKillbillDataSource;
+import com.ning.killbill.osgi.libs.killbill.OSGIKillbillLogService;
 
-import com.google.inject.Inject;
+public class BusinessSubscriptionTransitionDao extends BusinessAnalyticsDaoBase {
 
-public class BusinessSubscriptionTransitionDao {
-
-    private static final Logger log = LoggerFactory.getLogger(BusinessSubscriptionTransitionDao.class);
-
-    private final BusinessSubscriptionTransitionSqlDao sqlDao;
-    private final EntitlementInternalApi entitlementApi;
-    private final AccountInternalApi accountApi;
-    private final CatalogService catalogService;
-
-    @Inject
-    public BusinessSubscriptionTransitionDao(final BusinessSubscriptionTransitionSqlDao sqlDao,
-                                             final CatalogService catalogService,
-                                             final EntitlementInternalApi entitlementApi,
-                                             final AccountInternalApi accountApi) {
-        this.sqlDao = sqlDao;
-        this.catalogService = catalogService;
-        this.entitlementApi = entitlementApi;
-        this.accountApi = accountApi;
+    public BusinessSubscriptionTransitionDao(final OSGIKillbillLogService logService, final OSGIKillbillAPI osgiKillbillAPI,
+                                             final OSGIKillbillDataSource osgiKillbillDataSource) {
+        super(logService, osgiKillbillAPI, osgiKillbillDataSource);
     }
 
-    public void rebuildTransitionsForBundle(final UUID bundleId, final InternalCallContext context) {
-        final SubscriptionBundle bundle;
-        try {
-            bundle = entitlementApi.getBundleFromId(bundleId, context);
-        } catch (EntitlementUserApiException e) {
-            log.warn("Ignoring update for bundle {}: bundle does not exist", bundleId);
-            return;
-        }
-
-        final Account account;
-        try {
-            account = accountApi.getAccountById(bundle.getAccountId(), context);
-        } catch (AccountApiException e) {
-            log.warn("Ignoring update for bundle {}: account {} does not exist", bundleId, bundle.getAccountId());
-            return;
-        }
-
-        final List<Subscription> subscriptions = entitlementApi.getSubscriptionsForBundle(bundleId, context);
-
+    public void update(final UUID bundleId, final CallContext context) throws AnalyticsRefreshException {
+        final SubscriptionBundle bundle = getSubscriptionBundle(bundleId, context);
+        final Collection<Subscription> subscriptions = getSubscriptionsForBundle(bundleId, context);
+        final Account account = getAccount(bundle.getAccountId(), context);
         final Currency currency = account.getCurrency();
 
         sqlDao.inTransaction(new Transaction<Void, BusinessSubscriptionTransitionSqlDao>() {
             @Override
             public Void inTransaction(final BusinessSubscriptionTransitionSqlDao transactional, final TransactionStatus status) throws Exception {
-                log.info("Started rebuilding transitions for bundle id {}", bundleId);
                 transactional.deleteTransitionsForBundle(bundleId.toString(), context);
 
                 final ArrayList<BusinessSubscriptionTransitionModelDao> transitions = new ArrayList<BusinessSubscriptionTransitionModelDao>();
@@ -118,7 +85,6 @@ public class BusinessSubscriptionTransitionDao {
 
                         transactional.createTransition(transition, context);
                         transitions.add(transition);
-                        log.info("Adding transition {}", transition);
 
                         // We need to manually add the system cancel event
                         if (SubscriptionTransitionType.CANCEL.equals(event.getTransitionType())) {
@@ -138,12 +104,10 @@ public class BusinessSubscriptionTransitionDao {
                             );
                             transactional.createTransition(systemCancelTransition, context);
                             transitions.add(systemCancelTransition);
-                            log.info("Adding transition {}", systemCancelTransition);
                         }
                     }
                 }
 
-                log.info("Finished rebuilding transitions for bundle id {}", bundleId);
                 return null;
             }
         });

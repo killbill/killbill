@@ -26,15 +26,15 @@ import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.util.audit.AuditLog;
 
-public class BusinessInvoiceItemModelDao extends BusinessInvoiceItemBaseModelDao {
+public class BusinessInvoiceItemAdjustmentModelDao extends BusinessInvoiceItemBaseModelDao {
 
-    public BusinessInvoiceItemModelDao(final Account account,
-                                       final Invoice invoice,
-                                       final InvoiceItem invoiceItem,
-                                       @Nullable final SubscriptionBundle bundle,
-                                       @Nullable final Plan plan,
-                                       @Nullable final PlanPhase planPhase,
-                                       final AuditLog creationAuditLog) {
+    public BusinessInvoiceItemAdjustmentModelDao(final Account account,
+                                                 final Invoice invoice,
+                                                 final InvoiceItem invoiceItem,
+                                                 @Nullable final SubscriptionBundle bundle,
+                                                 @Nullable final Plan plan,
+                                                 @Nullable final PlanPhase planPhase,
+                                                 final AuditLog creationAuditLog) {
         super(account,
               invoice,
               invoiceItem,
@@ -46,6 +46,6 @@ public class BusinessInvoiceItemModelDao extends BusinessInvoiceItemBaseModelDao
 
     @Override
     public String getTableName() {
-        return INVOICE_ITEMS_TABLE_NAME;
+        return INVOICE_ITEM_ADJUSTMENTS_TABLE_NAME;
     }
 }

@@ -33,10 +33,6 @@
             <artifactId>guava</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.google.inject</groupId>
-            <artifactId>guice</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.ning.billing</groupId>
             <artifactId>killbill-api</artifactId>
             <scope>provided</scope>
@@ -48,6 +44,18 @@
         <dependency>
             <groupId>com.ning.billing</groupId>
             <artifactId>killbill-util</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing.commons</groupId>
+            <artifactId>killbill-embeddeddb</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing.commons</groupId>
+            <artifactId>killbill-jdbi</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing.commons</groupId>
+            <artifactId>killbill-locker</artifactId>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>

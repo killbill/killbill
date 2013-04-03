@@ -75,7 +75,7 @@ public class TestBusinessSubscriptionTransitionRecorder extends AnalyticsTestSui
 
         Mockito.when(entitlementInternalApi.getSubscriptionsForBundle(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(ImmutableList.<Subscription>of(subscription));
 
-        subscriptionTransitionDao.rebuildTransitionsForBundle(bundle.getId(), internalCallContext);
+        subscriptionTransitionDao.update(bundle.getId(), internalCallContext);
 
         Assert.assertEquals(subscriptionTransitionSqlDao.getTransitionsByKey(externalKey.toString(), internalCallContext).size(), 1);
         final BusinessSubscriptionTransitionModelDao transition = subscriptionTransitionSqlDao.getTransitionsByKey(externalKey.toString(), internalCallContext).get(0);

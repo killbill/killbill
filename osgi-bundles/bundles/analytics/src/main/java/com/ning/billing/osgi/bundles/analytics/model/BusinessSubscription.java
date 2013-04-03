@@ -20,8 +20,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 import org.joda.time.DateTime;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Catalog;
@@ -41,8 +39,6 @@ import static com.ning.billing.entitlement.api.user.Subscription.SubscriptionSta
  */
 public class BusinessSubscription {
 
-    private static final Logger log = LoggerFactory.getLogger(BusinessSubscription.class);
-
     private static final Currency USD = Currency.valueOf("USD");
 
     private final String productName;
@@ -55,12 +51,25 @@ public class BusinessSubscription {
     private final String priceList;
     private final BigDecimal mrr;
     private final String currency;
-    private final DateTime startDate;
     private final SubscriptionState state;
+    private final Boolean businessActive;
+    private final DateTime startDate;
+    private final DateTime endDate;
 
-    public BusinessSubscription(final String productName, final String productType, final ProductCategory productCategory,
-                                final String slug, final String phase, final String billingPeriod, final BigDecimal price,
-                                final String priceList, final BigDecimal mrr, final String currency, final DateTime startDate, final SubscriptionState state) {
+    public BusinessSubscription(final String productName,
+                                final String productType,
+                                final ProductCategory productCategory,
+                                final String slug,
+                                final String phase,
+                                final String billingPeriod,
+                                final BigDecimal price,
+                                final String priceList,
+                                final BigDecimal mrr,
+                                final String currency,
+                                final SubscriptionState state,
+                                final Boolean businessActive,
+                                final DateTime startDate,
+                                final DateTime endDate) {
         this.productName = productName;
         this.productType = productType;
         this.productCategory = productCategory;
@@ -71,8 +80,10 @@ public class BusinessSubscription {
         this.priceList = priceList;
         this.mrr = mrr;
         this.currency = currency;
-        this.startDate = startDate;
         this.state = state;
+        this.businessActive = businessActive;
+        this.startDate = startDate;
+        this.endDate = endDate;
     }
 
     /**
@@ -98,8 +109,7 @@ public class BusinessSubscription {
         try {
             thePlan = (currentPlan != null) ? catalog.findPlan(currentPlan, new DateTime(), startDate) : null;
             thePhase = (currentPhase != null) ? catalog.findPhase(currentPhase, new DateTime(), startDate) : null;
-        } catch (CatalogApiException e) {
-            log.error("Failed to retrieve Plan from catalog for plan {}, phase {}", currentPlan, currentPhase);
+        } catch (CatalogApiException ignored) {
         }
 
         this.priceList = priceList;

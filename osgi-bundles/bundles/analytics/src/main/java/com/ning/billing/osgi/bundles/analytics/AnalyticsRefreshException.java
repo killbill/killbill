@@ -16,24 +16,18 @@
 
 package com.ning.billing.osgi.bundles.analytics;
 
-import org.osgi.framework.BundleContext;
+import com.ning.billing.BillingExceptionBase;
 
-import com.ning.killbill.osgi.libs.killbill.KillbillActivatorBase;
-import com.ning.killbill.osgi.libs.killbill.OSGIKillbillEventDispatcher.OSGIKillbillEventHandler;
+public class AnalyticsRefreshException extends Exception {
 
-public class AnalyticsActivator extends KillbillActivatorBase {
-
-    private OSGIKillbillEventHandler analyticsListener;
-
-    @Override
-    public void start(final BundleContext context) throws Exception {
-        super.start(context);
-
-        analyticsListener = new AnalyticsListener(logService, killbillAPI, dataSource);
+    public AnalyticsRefreshException() {
     }
 
-    @Override
-    public OSGIKillbillEventHandler getOSGIKillbillEventHandler() {
-        return analyticsListener;
+    public AnalyticsRefreshException(final BillingExceptionBase e) {
+        super(e);
+    }
+
+    public AnalyticsRefreshException(final String message) {
+        super(message);
     }
 }
