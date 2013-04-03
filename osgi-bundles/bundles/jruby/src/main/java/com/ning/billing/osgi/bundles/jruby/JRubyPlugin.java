@@ -195,7 +195,8 @@ public abstract class JRubyPlugin {
             builder.append("begin\n")
                    .append("require '").append(pluginGemName).append("'\n")
                    .append("rescue LoadError\n")
-                   .append("warn \"WARN: unable to require ").append(pluginGemName).append("\"\n")
+                   // Could be useful for debugging
+                   //.append("warn \"WARN: unable to require ").append(pluginGemName).append("\"\n")
                    .append("end\n");
             // Load the extra require file, if specified
             if (rubyRequire != null) {
