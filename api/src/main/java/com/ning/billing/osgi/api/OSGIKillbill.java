@@ -36,6 +36,7 @@ import com.ning.billing.usage.api.UsageUserApi;
 import com.ning.billing.util.api.AuditUserApi;
 import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.api.ExportUserApi;
+import com.ning.billing.util.api.RecordIdApi;
 import com.ning.billing.util.api.TagUserApi;
 
 /**
@@ -88,6 +89,7 @@ public interface OSGIKillbill {
 
     public JunctionApi getJunctionApi();
 
+    public RecordIdApi getRecordIdApi();
     /**
      * Used by the OSGI bundles to discover their configuration
      *

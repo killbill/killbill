@@ -40,6 +40,7 @@ import com.ning.billing.usage.api.UsageUserApi;
 import com.ning.billing.util.api.AuditUserApi;
 import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.api.ExportUserApi;
+import com.ning.billing.util.api.RecordIdApi;
 import com.ning.billing.util.api.TagUserApi;
 
 public class OSGIKillbillAPI extends OSGIKillbillLibraryBase implements OSGIKillbill {
@@ -257,6 +258,16 @@ public class OSGIKillbillAPI extends OSGIKillbillLibraryBase implements OSGIKill
             @Override
             public JunctionApi executeWithService(final OSGIKillbill service) {
                 return service.getJunctionApi();
+            }
+        });
+    }
+
+    @Override
+    public RecordIdApi getRecordIdApi() {
+        return withServiceTracker(killbillTracker, new APICallback<RecordIdApi, OSGIKillbill>(KILLBILL_SERVICE_NAME) {
+            @Override
+            public RecordIdApi executeWithService(final OSGIKillbill service) {
+                return service.getRecordIdApi();
             }
         });
     }
