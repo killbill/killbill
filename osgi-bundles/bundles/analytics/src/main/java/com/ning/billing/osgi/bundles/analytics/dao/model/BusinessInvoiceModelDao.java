@@ -96,7 +96,7 @@ public class BusinessInvoiceModelDao extends BusinessModelDaoBase {
              invoice.getBalance(),
              invoice.getPaidAmount(),
              invoice.getChargedAmount(),
-             null /* TODO */,
+             invoice.getOriginalChargedAmount(),
              invoice.getCreditAdjAmount(),
              invoice.getCreatedDate(),
              creationAuditLog.getUserName(),

@@ -83,8 +83,7 @@ public class BusinessSubscriptionTransitionDao extends BusinessAnalyticsDaoBase 
         for (final SubscriptionBundle bundle : bundles) {
             final Collection<Subscription> subscriptions = getSubscriptionsForBundle(bundle.getId(), context);
             for (final Subscription subscription : subscriptions) {
-                // TODO
-                final List<SubscriptionTransition> transitions = new LinkedList<SubscriptionTransition>();
+                final List<SubscriptionTransition> transitions = subscription.getAllTransitions();
 
                 BusinessSubscriptionTransitionModelDao prevBst = null;
 
