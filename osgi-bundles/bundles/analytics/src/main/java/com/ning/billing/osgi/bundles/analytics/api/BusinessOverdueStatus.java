@@ -23,8 +23,7 @@ import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessOverdueStatusMo
 
 public class BusinessOverdueStatus extends BusinessEntityBase {
 
-    private final ObjectType objectType;
-    private final String accountKey;
+    private final String objectType;
     private final String status;
     private final DateTime startDate;
     private final DateTime endDate;
@@ -39,20 +38,15 @@ public class BusinessOverdueStatus extends BusinessEntityBase {
               businessOverdueStatusModelDao.getAccountExternalKey());
 
         // TODO For now
-        this.objectType = ObjectType.BUNDLE;
+        this.objectType = ObjectType.BUNDLE.toString();
 
-        this.accountKey = businessOverdueStatusModelDao.getAccountExternalKey();
         this.status = businessOverdueStatusModelDao.getStatus();
         this.startDate = businessOverdueStatusModelDao.getStartDate();
         this.endDate = businessOverdueStatusModelDao.getEndDate();
     }
 
-    public ObjectType getObjectType() {
+    public String getObjectType() {
         return objectType;
-    }
-
-    public String getAccountKey() {
-        return accountKey;
     }
 
     public String getStatus() {
@@ -71,7 +65,6 @@ public class BusinessOverdueStatus extends BusinessEntityBase {
         final StringBuilder sb = new StringBuilder();
         sb.append("BusinessOverdueStatus");
         sb.append("{objectType=").append(objectType);
-        sb.append(", accountKey='").append(accountKey).append('\'');
         sb.append(", status='").append(status).append('\'');
         sb.append(", startDate=").append(startDate);
         sb.append(", endDate=").append(endDate);
@@ -89,9 +82,6 @@ public class BusinessOverdueStatus extends BusinessEntityBase {
 
         final BusinessOverdueStatus that = (BusinessOverdueStatus) o;
 
-        if (accountKey != null ? !accountKey.equals(that.accountKey) : that.accountKey != null) {
-            return false;
-        }
         if (endDate != null ? !endDate.equals(that.endDate) : that.endDate != null) {
             return false;
         }
@@ -110,7 +100,6 @@ public class BusinessOverdueStatus extends BusinessEntityBase {
 
     public int hashCode() {
         int result = objectType != null ? objectType.hashCode() : 0;
-        result = 31 * result + (accountKey != null ? accountKey.hashCode() : 0);
         result = 31 * result + (status != null ? status.hashCode() : 0);
         result = 31 * result + (startDate != null ? startDate.hashCode() : 0);
         result = 31 * result + (endDate != null ? endDate.hashCode() : 0);

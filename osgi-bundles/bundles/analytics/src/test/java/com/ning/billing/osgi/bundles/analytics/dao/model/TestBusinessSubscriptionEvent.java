@@ -16,51 +16,13 @@
 
 package com.ning.billing.osgi.bundles.analytics.dao.model;
 
-import org.joda.time.DateTime;
-import org.mockito.Mockito;
 import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.ning.billing.catalog.api.Catalog;
-import com.ning.billing.catalog.api.PhaseType;
-import com.ning.billing.catalog.api.Plan;
-import com.ning.billing.catalog.api.PlanPhase;
-import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.mock.MockPlan;
-import com.ning.billing.mock.MockSubscription;
 import com.ning.billing.osgi.bundles.analytics.AnalyticsTestSuiteNoDB;
-import com.ning.billing.osgi.bundles.analytics.MockDuration;
-import com.ning.billing.osgi.bundles.analytics.MockPhase;
-import com.ning.billing.osgi.bundles.analytics.MockProduct;
-import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessSubscriptionEvent;
 
 public class TestBusinessSubscriptionEvent extends AnalyticsTestSuiteNoDB {
-
-    private Product product;
-    private Plan plan;
-    private PlanPhase phase;
-    private Subscription subscription;
-
-    private final Catalog catalog = Mockito.mock(Catalog.class);
-
-    @Override
-    @BeforeMethod(groups = "fast")
-    public void beforeMethod() throws Exception {
-        super.beforeMethod();
-        product = new MockProduct("platinium", "subscription", ProductCategory.BASE);
-        plan = new MockPlan("platinum-monthly", product);
-        phase = new MockPhase(PhaseType.EVERGREEN, plan, MockDuration.UNLIMITED(), 25.95);
-
-        Mockito.when(catalog.findPlan(Mockito.anyString(), Mockito.<DateTime>any())).thenReturn(plan);
-        Mockito.when(catalog.findPlan(Mockito.anyString(), Mockito.<DateTime>any(), Mockito.<DateTime>any())).thenReturn(plan);
-        Mockito.when(catalog.findPhase(Mockito.anyString(), Mockito.<DateTime>any(), Mockito.<DateTime>any())).thenReturn(phase);
-        Mockito.when(catalogService.getFullCatalog()).thenReturn(catalog);
-
-        subscription = new MockSubscription(Subscription.SubscriptionState.ACTIVE, plan, phase);
-    }
 
     @Test(groups = "fast")
     public void testValueOf() throws Exception {
@@ -81,45 +43,9 @@ public class TestBusinessSubscriptionEvent extends AnalyticsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testFromSubscription() throws Exception {
-        BusinessSubscriptionEvent event;
-
-        final DateTime now = new DateTime();
-
-        event = BusinessSubscriptionEvent.subscriptionCreated(subscription.getCurrentPlan().getName(), catalog, now, now);
+        final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.fromTransition(subscriptionTransition);
         Assert.assertEquals(event.getEventType(), BusinessSubscriptionEvent.EventType.ADD);
-        Assert.assertEquals(event.getCategory(), product.getCategory());
+        Assert.assertEquals(event.getCategory(), subscriptionTransition.getNextPlan().getProduct().getCategory());
         Assert.assertEquals(event.toString(), "ADD_BASE");
-
-        event = BusinessSubscriptionEvent.subscriptionCancelled(subscription.getCurrentPlan().getName(), catalog, now, now);
-        Assert.assertEquals(event.getEventType(), BusinessSubscriptionEvent.EventType.CANCEL);
-        Assert.assertEquals(event.getCategory(), product.getCategory());
-        Assert.assertEquals(event.toString(), "CANCEL_BASE");
-
-        event = BusinessSubscriptionEvent.subscriptionChanged(subscription.getCurrentPlan().getName(), catalog, now, now);
-        Assert.assertEquals(event.getEventType(), BusinessSubscriptionEvent.EventType.CHANGE);
-        Assert.assertEquals(event.getCategory(), product.getCategory());
-        Assert.assertEquals(event.toString(), "CHANGE_BASE");
-
-        event = BusinessSubscriptionEvent.subscriptionPhaseChanged(subscription.getCurrentPlan().getName(), subscription.getState(), catalog, now, now);
-        // The subscription is still active, it's a system change
-        Assert.assertEquals(event.getEventType(), BusinessSubscriptionEvent.EventType.SYSTEM_CHANGE);
-        Assert.assertEquals(event.getCategory(), product.getCategory());
-        Assert.assertEquals(event.toString(), "SYSTEM_CHANGE_BASE");
-
-        subscription = new MockSubscription(Subscription.SubscriptionState.CANCELLED, plan, phase);
-        event = BusinessSubscriptionEvent.subscriptionPhaseChanged(subscription.getCurrentPlan().getName(), subscription.getState(), catalog, now, now);
-        // The subscription is cancelled, it's a system cancellation
-        Assert.assertEquals(event.getEventType(), BusinessSubscriptionEvent.EventType.SYSTEM_CANCEL);
-        Assert.assertEquals(event.getCategory(), product.getCategory());
-        Assert.assertEquals(event.toString(), "SYSTEM_CANCEL_BASE");
-    }
-
-    @Test(groups = "fast")
-    public void testEquals() throws Exception {
-        final DateTime now = new DateTime();
-        final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionChanged(subscription.getCurrentPlan().getName(), catalog, now, now);
-        Assert.assertSame(event, event);
-        Assert.assertEquals(event, event);
-        Assert.assertTrue(event.equals(event));
     }
 }

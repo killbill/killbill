@@ -25,7 +25,6 @@ import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
@@ -57,7 +56,7 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
     private final BigDecimal invoiceOriginalAmountCharged;
     private final BigDecimal invoiceAmountCredited;
     private final String itemType;
-    private final Boolean recognizable;
+    private final Boolean revenueRecognizable;
     private final String bundleExternalKey;
     private final String productName;
     private final String productType;
@@ -68,7 +67,7 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
     private final LocalDate startDate;
     private final LocalDate endDate;
     private final BigDecimal amount;
-    private final Currency currency;
+    private final String currency;
     private final UUID linkedItemId;
 
     public static BusinessInvoiceItemBaseModelDao create(final Account account,
@@ -109,7 +108,7 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
                                             final BigDecimal invoiceOriginalAmountCharged,
                                             final BigDecimal invoiceAmountCredited,
                                             final String itemType,
-                                            final Boolean recognizable,
+                                            final Boolean revenueRecognizable,
                                             final String bundleExternalKey,
                                             final String productName,
                                             final String productType,
@@ -120,7 +119,7 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
                                             final LocalDate startDate,
                                             final LocalDate endDate,
                                             final BigDecimal amount,
-                                            final Currency currency,
+                                            final String currency,
                                             final UUID linkedItemId,
                                             final DateTime createdDate,
                                             final String createdBy,
@@ -154,7 +153,7 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
         this.invoiceOriginalAmountCharged = invoiceOriginalAmountCharged;
         this.invoiceAmountCredited = invoiceAmountCredited;
         this.itemType = itemType;
-        this.recognizable = recognizable;
+        this.revenueRecognizable = revenueRecognizable;
         this.bundleExternalKey = bundleExternalKey;
         this.productName = productName;
         this.productType = productType;
@@ -202,7 +201,7 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
              /* Populate end date for fixed items for convenience (null in invoice_items table) */
              (invoiceItem.getEndDate() == null && planPhase != null) ? invoiceItem.getStartDate().plus(planPhase.getDuration().toJodaPeriod()) : invoiceItem.getEndDate(),
              invoiceItem.getAmount(),
-             invoiceItem.getCurrency(),
+             invoiceItem.getCurrency() == null ? null : invoiceItem.getCurrency().toString(),
              invoiceItem.getLinkedItemId(),
              invoiceItem.getCreatedDate(),
              creationAuditLog.getUserName(),
@@ -272,8 +271,8 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
         return itemType;
     }
 
-    public Boolean getRecognizable() {
-        return recognizable;
+    public Boolean getRevenueRecognizable() {
+        return revenueRecognizable;
     }
 
     public String getBundleExternalKey() {
@@ -316,7 +315,7 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
         return amount;
     }
 
-    public Currency getCurrency() {
+    public String getCurrency() {
         return currency;
     }
 
@@ -342,7 +341,7 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
         sb.append(", invoiceOriginalAmountCharged=").append(invoiceOriginalAmountCharged);
         sb.append(", invoiceAmountCredited=").append(invoiceAmountCredited);
         sb.append(", itemType='").append(itemType).append('\'');
-        sb.append(", recognizable=").append(recognizable);
+        sb.append(", revenueRecognizable=").append(revenueRecognizable);
         sb.append(", bundleExternalKey='").append(bundleExternalKey).append('\'');
         sb.append(", productName='").append(productName).append('\'');
         sb.append(", productType='").append(productType).append('\'');
@@ -445,7 +444,7 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
         if (productType != null ? !productType.equals(that.productType) : that.productType != null) {
             return false;
         }
-        if (recognizable != null ? !recognizable.equals(that.recognizable) : that.recognizable != null) {
+        if (revenueRecognizable != null ? !revenueRecognizable.equals(that.revenueRecognizable) : that.revenueRecognizable != null) {
             return false;
         }
         if (slug != null ? !slug.equals(that.slug) : that.slug != null) {
@@ -475,7 +474,7 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
         result = 31 * result + (invoiceOriginalAmountCharged != null ? invoiceOriginalAmountCharged.hashCode() : 0);
         result = 31 * result + (invoiceAmountCredited != null ? invoiceAmountCredited.hashCode() : 0);
         result = 31 * result + (itemType != null ? itemType.hashCode() : 0);
-        result = 31 * result + (recognizable != null ? recognizable.hashCode() : 0);
+        result = 31 * result + (revenueRecognizable != null ? revenueRecognizable.hashCode() : 0);
         result = 31 * result + (bundleExternalKey != null ? bundleExternalKey.hashCode() : 0);
         result = 31 * result + (productName != null ? productName.hashCode() : 0);
         result = 31 * result + (productType != null ? productType.hashCode() : 0);

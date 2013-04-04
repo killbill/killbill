@@ -141,6 +141,7 @@ create table bia (
 , invoice_original_amount_charged numeric(10, 4) default 0
 , invoice_amount_credited numeric(10, 4) default 0
 , item_type char(50) not null
+, revenue_recognizable bool default true
 , bundle_external_key varchar(50) default null
 , product_name varchar(50) default null
 , product_type varchar(50) default null
@@ -186,6 +187,7 @@ create table bii (
 , invoice_original_amount_charged numeric(10, 4) default 0
 , invoice_amount_credited numeric(10, 4) default 0
 , item_type char(50) not null
+, revenue_recognizable bool default true
 , bundle_external_key varchar(50) default null
 , product_name varchar(50) default null
 , product_type varchar(50) default null
@@ -231,6 +233,7 @@ create table biia (
 , invoice_original_amount_charged numeric(10, 4) default 0
 , invoice_amount_credited numeric(10, 4) default 0
 , item_type char(50) not null
+, revenue_recognizable bool default true
 , bundle_external_key varchar(50) default null
 , product_name varchar(50) default null
 , product_type varchar(50) default null
@@ -276,7 +279,7 @@ create table biic (
 , invoice_original_amount_charged numeric(10, 4) default 0
 , invoice_amount_credited numeric(10, 4) default 0
 , item_type char(50) not null
-, recognizable bool default true
+, revenue_recognizable bool default true
 , bundle_external_key varchar(50) default null
 , product_name varchar(50) default null
 , product_type varchar(50) default null

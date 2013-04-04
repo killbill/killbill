@@ -28,7 +28,7 @@ public class BusinessField extends BusinessEntityBase {
     private final String name;
     private final String value;
 
-    BusinessField(final ObjectType objectType, final BusinessFieldModelDao businessFieldModelDao) {
+    private BusinessField(final ObjectType objectType, final BusinessFieldModelDao businessFieldModelDao) {
         super(businessFieldModelDao.getCreatedDate(),
               businessFieldModelDao.getCreatedBy(),
               businessFieldModelDao.getCreatedReasonCode(),
@@ -41,16 +41,16 @@ public class BusinessField extends BusinessEntityBase {
         this.value = businessFieldModelDao.getValue();
     }
 
-    public BusinessField(final BusinessAccountFieldModelDao businessAccountFieldModelDao) {
-        this(ObjectType.ACCOUNT, businessAccountFieldModelDao);
-    }
-
-    public BusinessField(final BusinessInvoiceFieldModelDao businessInvoiceFieldModelDao) {
-        this(ObjectType.INVOICE, businessInvoiceFieldModelDao);
-    }
-
-    public BusinessField(final BusinessInvoicePaymentFieldModelDao businessInvoicePaymentFieldModelDao) {
-        this(ObjectType.PAYMENT, businessInvoicePaymentFieldModelDao);
+    public static BusinessField create(final BusinessFieldModelDao businessFieldModelDao) {
+        if (businessFieldModelDao instanceof BusinessAccountFieldModelDao) {
+            return new BusinessField(ObjectType.ACCOUNT, businessFieldModelDao);
+        } else if (businessFieldModelDao instanceof BusinessInvoiceFieldModelDao) {
+            return new BusinessField(ObjectType.INVOICE, businessFieldModelDao);
+        } else if (businessFieldModelDao instanceof BusinessInvoicePaymentFieldModelDao) {
+            return new BusinessField(ObjectType.INVOICE_PAYMENT, businessFieldModelDao);
+        } else {
+            return null;
+        }
     }
 
     public ObjectType getObjectType() {

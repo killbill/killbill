@@ -22,29 +22,33 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.osgi.bundles.analytics.AnalyticsTestSuiteWithEmbeddedDB;
-import com.ning.billing.osgi.bundles.analytics.api.BusinessAccount;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessAccountModelDao;
 
-public class TestAnalyticsDao extends AnalyticsTestSuiteWithEmbeddedDB {
+public class TestBusinessAnalyticsSqlDao extends AnalyticsTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
-    public void testDao() throws Exception {
-        final AnalyticsDao analyticsDao = new AnalyticsDao(logService, killbillAPI, killbillDataSource);
-        Assert.assertNull(analyticsDao.getAccountById(account.getId(), callContext));
-
+    public void testSqlDao() throws Exception {
         final BusinessAccountModelDao accountModelDao = new BusinessAccountModelDao(account,
                                                                                     BigDecimal.ONE,
                                                                                     invoice,
                                                                                     payment,
                                                                                     auditLog);
 
+        Assert.assertNull(analyticsSqlDao.getAccountByAccountRecordId(accountModelDao.getAccountRecordId(),
+                                                                      accountModelDao.getTenantRecordId(),
+                                                                      callContext));
+
         analyticsSqlDao.create(accountModelDao.getTableName(), accountModelDao, callContext);
-        Assert.assertEquals(analyticsDao.getAccountById(account.getId(), callContext), new BusinessAccount(accountModelDao));
+        Assert.assertEquals(analyticsSqlDao.getAccountByAccountRecordId(accountModelDao.getAccountRecordId(),
+                                                                        accountModelDao.getTenantRecordId(),
+                                                                        callContext), accountModelDao);
 
         analyticsSqlDao.deleteByAccountRecordId(accountModelDao.getTableName(),
                                                 accountModelDao.getAccountRecordId(),
                                                 accountModelDao.getTenantRecordId(),
                                                 callContext);
-        Assert.assertNull(analyticsDao.getAccountById(account.getId(), callContext));
+        Assert.assertNull(analyticsSqlDao.getAccountByAccountRecordId(accountModelDao.getAccountRecordId(),
+                                                                      accountModelDao.getTenantRecordId(),
+                                                                      callContext));
     }
 }

@@ -24,10 +24,10 @@ import com.ning.billing.osgi.bundles.analytics.AnalyticsTestSuiteNoDB;
 public class TestBusinessAccountTagModelDao extends AnalyticsTestSuiteNoDB {
 
     @Test(groups = "fast")
-    public void testEquals() throws Exception {
-        final BusinessAccountTagModelDao accountTag = new BusinessAccountTagModelDao(account, tag, tagDefinition, auditLog);
-        verifyBusinessModelDaoBase(accountTag);
-        //Assert.assertEquals(accountTag.getTagRecordId(), /* TODO */);
-        Assert.assertEquals(accountTag.getName(), tagDefinition.getName());
+    public void testConstructor() throws Exception {
+        final BusinessAccountTagModelDao tagModelDao = new BusinessAccountTagModelDao(account, tag, tagDefinition, auditLog);
+        verifyBusinessModelDaoBase(tagModelDao);
+        //Assert.assertEquals(tagModelDao.getTagRecordId(), /* TODO */);
+        Assert.assertEquals(tagModelDao.getName(), tagDefinition.getName());
     }
 }

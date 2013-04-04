@@ -19,28 +19,14 @@ package com.ning.billing.osgi.bundles.analytics.dao.model;
 import java.math.BigDecimal;
 
 import org.joda.time.DateTime;
-import org.mockito.Mockito;
+import org.joda.time.DateTimeZone;
 import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.Catalog;
-import com.ning.billing.catalog.api.PhaseType;
-import com.ning.billing.catalog.api.Plan;
-import com.ning.billing.catalog.api.PlanPhase;
-import com.ning.billing.catalog.api.Product;
-import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.mock.MockPlan;
-import com.ning.billing.mock.MockSubscription;
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.osgi.bundles.analytics.AnalyticsTestSuiteNoDB;
-import com.ning.billing.osgi.bundles.analytics.MockDuration;
-import com.ning.billing.osgi.bundles.analytics.MockPhase;
-import com.ning.billing.osgi.bundles.analytics.MockProduct;
-import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessSubscription;
-
-import static com.ning.billing.catalog.api.Currency.USD;
 
 public class TestBusinessSubscription extends AnalyticsTestSuiteNoDB {
 
@@ -109,31 +95,6 @@ public class TestBusinessSubscription extends AnalyticsTestSuiteNoDB {
             {BillingPeriod.ANNUAL, 2299.0000, 191.5833},
             {BillingPeriod.ANNUAL, 5499.0000, 458.2500}};
 
-    private Product product;
-    private Plan plan;
-    private PlanPhase phase;
-    private Subscription isubscription;
-    private BusinessSubscription subscription;
-
-    private final Catalog catalog = Mockito.mock(Catalog.class);
-
-    @Override
-    @BeforeMethod(groups = "fast")
-    public void beforeMethod() throws Exception {
-        super.beforeMethod();
-        product = new MockProduct("platinium", "subscription", ProductCategory.BASE);
-        plan = new MockPlan("platinum-monthly", product);
-        phase = new MockPhase(PhaseType.EVERGREEN, plan, MockDuration.UNLIMITED(), 25.95);
-
-        Mockito.when(catalog.findPlan(Mockito.anyString(), Mockito.<DateTime>any())).thenReturn(plan);
-        Mockito.when(catalog.findPlan(Mockito.anyString(), Mockito.<DateTime>any(), Mockito.<DateTime>any())).thenReturn(plan);
-        Mockito.when(catalog.findPhase(Mockito.anyString(), Mockito.<DateTime>any(), Mockito.<DateTime>any())).thenReturn(phase);
-        Mockito.when(catalogService.getFullCatalog()).thenReturn(catalog);
-
-        isubscription = new MockSubscription(Subscription.SubscriptionState.ACTIVE, plan, phase);
-        subscription = new BusinessSubscription(isubscription, USD, catalog);
-    }
-
     @Test(groups = "fast")
     public void testMrrComputation() throws Exception {
         int i = 0;
@@ -149,25 +110,51 @@ public class TestBusinessSubscription extends AnalyticsTestSuiteNoDB {
     }
 
     @Test(groups = "fast")
-    public void testConstructor() throws Exception {
-        Assert.assertEquals(subscription.getRoundedMrr(), 0.0);
-        Assert.assertEquals(subscription.getSlug(), phase.getName());
-        Assert.assertEquals(subscription.getPhase(), phase.getPhaseType().toString());
-        Assert.assertEquals(subscription.getBillingPeriod(), phase.getBillingPeriod());
-        Assert.assertEquals(subscription.getPrice(), phase.getRecurringPrice().getPrice(null));
-        Assert.assertEquals(subscription.getProductCategory(), product.getCategory());
-        Assert.assertEquals(subscription.getProductName(), product.getName());
-        Assert.assertEquals(subscription.getProductType(), product.getCatalogName());
-        Assert.assertEquals(subscription.getStartDate(), isubscription.getStartDate());
+    public void testConstructorWithNulls() throws Exception {
+        final DateTime startDate = new DateTime(2019, 7, 4, 29, 3, 11, DateTimeZone.UTC);
+        final BusinessSubscription businessSubscription = new BusinessSubscription(null,
+                                                                                   null,
+                                                                                   null,
+                                                                                   Currency.GBP,
+                                                                                   startDate,
+                                                                                   SubscriptionState.ACTIVE);
+        Assert.assertNull(businessSubscription.getProductName());
+        Assert.assertNull(businessSubscription.getProductType());
+        Assert.assertNull(businessSubscription.getProductCategory());
+        Assert.assertNull(businessSubscription.getSlug());
+        Assert.assertNull(businessSubscription.getPhase());
+        Assert.assertNull(businessSubscription.getBillingPeriod());
+        Assert.assertNull(businessSubscription.getPrice());
+        Assert.assertNull(businessSubscription.getPriceList(), priceList.getName());
+        Assert.assertEquals(businessSubscription.getCurrency(), Currency.GBP.toString());
+        Assert.assertEquals(businessSubscription.getState(), SubscriptionState.ACTIVE);
+        //Assert.assertEquals(businessSubscription.getBusinessActive(), /* TODO */);
+        Assert.assertEquals(businessSubscription.getStartDate(), startDate);
+        Assert.assertNull(businessSubscription.getEndDate());
+
     }
 
     @Test(groups = "fast")
-    public void testEquals() throws Exception {
-        Assert.assertSame(subscription, subscription);
-        Assert.assertEquals(subscription, subscription);
-        Assert.assertTrue(subscription.equals(subscription));
-
-        final Subscription otherSubscription = new MockSubscription(Subscription.SubscriptionState.CANCELLED, plan, phase);
-        Assert.assertTrue(!subscription.equals(new BusinessSubscription(otherSubscription, USD, catalog)));
+    public void testConstructorWithoutNulls() throws Exception {
+        final DateTime startDate = new DateTime(2019, 7, 4, 29, 3, 11, DateTimeZone.UTC);
+        final BusinessSubscription businessSubscription = new BusinessSubscription(plan,
+                                                                                   phase,
+                                                                                   priceList,
+                                                                                   Currency.GBP,
+                                                                                   startDate,
+                                                                                   SubscriptionState.ACTIVE);
+        Assert.assertEquals(businessSubscription.getProductName(), plan.getProduct().getName());
+        Assert.assertEquals(businessSubscription.getProductType(), plan.getProduct().getCatalogName());
+        Assert.assertEquals(businessSubscription.getProductCategory(), plan.getProduct().getCategory().toString());
+        Assert.assertEquals(businessSubscription.getSlug(), phase.getName());
+        Assert.assertEquals(businessSubscription.getPhase(), phase.getPhaseType().toString());
+        Assert.assertEquals(businessSubscription.getBillingPeriod(), phase.getBillingPeriod().toString());
+        Assert.assertEquals(businessSubscription.getPrice(), phase.getRecurringPrice());
+        Assert.assertEquals(businessSubscription.getPriceList(), priceList.getName());
+        Assert.assertEquals(businessSubscription.getCurrency(), Currency.GBP.toString());
+        Assert.assertEquals(businessSubscription.getState(), SubscriptionState.ACTIVE);
+        //Assert.assertEquals(businessSubscription.getBusinessActive(), /* TODO */);
+        Assert.assertEquals(businessSubscription.getStartDate(), startDate);
+        Assert.assertNull(businessSubscription.getEndDate());
     }
 }

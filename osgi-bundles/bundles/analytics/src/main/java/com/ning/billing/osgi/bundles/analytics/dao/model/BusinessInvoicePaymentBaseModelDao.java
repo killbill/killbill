@@ -23,7 +23,6 @@ import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.InvoicePayment.InvoicePaymentType;
@@ -56,7 +55,7 @@ public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDa
     private final Long paymentNumber;
     private final UUID linkedInvoicePaymentId;
     private final BigDecimal amount;
-    private final Currency currency;
+    private final String currency;
 
     public static BusinessInvoicePaymentBaseModelDao create(final Account account,
                                                             final Invoice invoice,
@@ -90,7 +89,7 @@ public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDa
                                                final Long paymentNumber,
                                                final UUID linkedInvoicePaymentId,
                                                final BigDecimal amount,
-                                               final Currency currency,
+                                               final String currency,
                                                final DateTime createdDate,
                                                final String createdBy,
                                                final String createdReasonCode,
@@ -152,7 +151,7 @@ public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDa
              null /* TODO */,
              invoicePayment.getLinkedInvoicePaymentId(),
              invoicePayment.getAmount(),
-             invoicePayment.getCurrency(),
+             invoicePayment.getCurrency() == null ? null : invoicePayment.getCurrency().toString(),
              invoicePayment.getCreatedDate(),
              creationAuditLog.getUserName(),
              creationAuditLog.getReasonCode(),
@@ -233,7 +232,7 @@ public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDa
         return amount;
     }
 
-    public Currency getCurrency() {
+    public String getCurrency() {
         return currency;
     }
 

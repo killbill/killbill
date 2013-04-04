@@ -16,5 +16,71 @@
 
 package com.ning.billing.osgi.bundles.analytics;
 
+import java.io.IOException;
+
+import javax.sql.DataSource;
+
+import org.mockito.Mockito;
+import org.osgi.framework.BundleContext;
+import org.skife.jdbi.v2.DBI;
+import org.testng.Assert;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
+
+import com.ning.billing.commons.embeddeddb.h2.H2EmbeddedDB;
+import com.ning.billing.osgi.bundles.analytics.dao.BusinessAnalyticsSqlDao;
+import com.ning.billing.util.io.IOUtils;
+import com.ning.killbill.osgi.libs.killbill.OSGIKillbillDataSource;
+
+import com.google.common.io.Resources;
+
 public abstract class AnalyticsTestSuiteWithEmbeddedDB extends AnalyticsTestSuiteNoDB {
+
+    protected H2EmbeddedDB embeddedDB;
+    protected DBI dbi;
+    protected BusinessAnalyticsSqlDao analyticsSqlDao;
+
+    @BeforeClass(groups = "slow")
+    public void setUpClass() throws Exception {
+        embeddedDB = new H2EmbeddedDB();
+        embeddedDB.initialize();
+        embeddedDB.start();
+    }
+
+    @BeforeMethod(groups = "slow")
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
+
+        killbillDataSource = new AnalyticsOSGIKillbillDataSource();
+
+        final String ddl = IOUtils.toString(Resources.getResource("com/ning/billing/osgi/bundles/analytics").openStream());
+        embeddedDB.executeScript(ddl);
+
+        dbi = new DBI(embeddedDB.getDataSource());
+        analyticsSqlDao = dbi.onDemand(BusinessAnalyticsSqlDao.class);
+    }
+
+    @AfterClass(groups = "slow")
+    public void tearDown() throws Exception {
+        embeddedDB.stop();
+    }
+
+    private final class AnalyticsOSGIKillbillDataSource extends OSGIKillbillDataSource {
+
+        public AnalyticsOSGIKillbillDataSource() {
+            super(Mockito.mock(BundleContext.class));
+        }
+
+        @Override
+        public DataSource getDataSource() {
+            try {
+                return embeddedDB.getDataSource();
+            } catch (IOException e) {
+                Assert.fail(e.toString(), e);
+                return null;
+            }
+        }
+    }
 }

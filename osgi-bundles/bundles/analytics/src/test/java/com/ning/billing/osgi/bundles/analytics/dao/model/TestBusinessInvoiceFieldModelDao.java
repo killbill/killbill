@@ -21,14 +21,17 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.osgi.bundles.analytics.AnalyticsTestSuiteNoDB;
 
-public class TestBusinessAccountFieldModelDao extends AnalyticsTestSuiteNoDB {
+public class TestBusinessInvoiceFieldModelDao extends AnalyticsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testConstructor() throws Exception {
-        final BusinessAccountFieldModelDao accountFieldModelDao = new BusinessAccountFieldModelDao(account, customField, auditLog);
-        verifyBusinessModelDaoBase(accountFieldModelDao);
-        //Assert.assertEquals(accountFieldModelDao.getCustomFieldRecordId(), /* TODO */);
-        Assert.assertEquals(accountFieldModelDao.getName(), customField.getFieldName());
-        Assert.assertEquals(accountFieldModelDao.getValue(), customField.getFieldValue());
+        final BusinessInvoiceFieldModelDao invoiceFieldModelDao = new BusinessInvoiceFieldModelDao(account,
+                                                                                                   customField,
+                                                                                                   auditLog);
+        verifyBusinessModelDaoBase(invoiceFieldModelDao);
+        //Assert.assertEquals(invoiceFieldModelDao.getCustomFieldRecordId(), /* TODO */);
+        Assert.assertEquals(invoiceFieldModelDao.getInvoiceId(), customField.getObjectId());
+        Assert.assertEquals(invoiceFieldModelDao.getName(), customField.getFieldName());
+        Assert.assertEquals(invoiceFieldModelDao.getValue(), customField.getFieldValue());
     }
 }

@@ -27,7 +27,7 @@ public class BusinessTag extends BusinessEntityBase {
     private final ObjectType objectType;
     private final String name;
 
-    BusinessTag(final ObjectType objectType, final BusinessTagModelDao businessTagModelDao) {
+    private BusinessTag(final ObjectType objectType, final BusinessTagModelDao businessTagModelDao) {
         super(businessTagModelDao.getCreatedDate(),
               businessTagModelDao.getCreatedBy(),
               businessTagModelDao.getCreatedReasonCode(),
@@ -39,16 +39,16 @@ public class BusinessTag extends BusinessEntityBase {
         this.name = businessTagModelDao.getName();
     }
 
-    public BusinessTag(final BusinessAccountTagModelDao businessAccountTagModelDao) {
-        this(ObjectType.ACCOUNT, businessAccountTagModelDao);
-    }
-
-    public BusinessTag(final BusinessInvoiceTagModelDao businessInvoiceTagModelDao) {
-        this(ObjectType.INVOICE, businessInvoiceTagModelDao);
-    }
-
-    public BusinessTag(final BusinessInvoicePaymentTagModelDao businessInvoicePaymentTagModelDao) {
-        this(ObjectType.PAYMENT, businessInvoicePaymentTagModelDao);
+    public static BusinessTag create(final BusinessTagModelDao businessTagModelDao) {
+        if (businessTagModelDao instanceof BusinessAccountTagModelDao) {
+            return new BusinessTag(ObjectType.ACCOUNT, businessTagModelDao);
+        } else if (businessTagModelDao instanceof BusinessInvoiceTagModelDao) {
+            return new BusinessTag(ObjectType.INVOICE, businessTagModelDao);
+        } else if (businessTagModelDao instanceof BusinessInvoicePaymentTagModelDao) {
+            return new BusinessTag(ObjectType.INVOICE_PAYMENT, businessTagModelDao);
+        } else {
+            return null;
+        }
     }
 
     public ObjectType getObjectType() {

@@ -31,7 +31,6 @@ import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.Product;
-import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.osgi.bundles.analytics.utils.Rounder;
 
 import static com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
@@ -45,7 +44,7 @@ public class BusinessSubscription {
 
     private final String productName;
     private final String productType;
-    private final ProductCategory productCategory;
+    private final String productCategory;
     private final String slug;
     private final String phase;
     private final String billingPeriod;
@@ -53,13 +52,17 @@ public class BusinessSubscription {
     private final String priceList;
     private final BigDecimal mrr;
     private final String currency;
-    private final SubscriptionState state;
+    private final String state;
     private final Boolean businessActive;
     private final DateTime startDate;
     private final DateTime endDate;
 
-    public BusinessSubscription(@Nullable final Plan currentPlan, @Nullable final PlanPhase currentPhase, @Nullable final PriceList priceList,
-                                final Currency currency, final DateTime startDate, final SubscriptionState state) {
+    public BusinessSubscription(@Nullable final Plan currentPlan,
+                                @Nullable final PlanPhase currentPhase,
+                                @Nullable final PriceList priceList,
+                                final Currency currency,
+                                final DateTime startDate,
+                                final SubscriptionState state) {
         // TODO
         businessActive = true;
 
@@ -69,7 +72,7 @@ public class BusinessSubscription {
         if (currentPlan != null && currentPlan.getProduct() != null) {
             final Product product = currentPlan.getProduct();
             productName = product.getName();
-            productCategory = product.getCategory();
+            productCategory = product.getCategory().toString();
             // TODO - we should keep the product type
             productType = product.getCatalogName();
         } else {
@@ -133,7 +136,7 @@ public class BusinessSubscription {
         } else {
             this.endDate = null;
         }
-        this.state = state;
+        this.state = state == null ? null : state.toString();
     }
 
     public String getBillingPeriod() {
@@ -168,7 +171,7 @@ public class BusinessSubscription {
         return Rounder.round(price);
     }
 
-    public ProductCategory getProductCategory() {
+    public String getProductCategory() {
         return productCategory;
     }
 
@@ -196,7 +199,7 @@ public class BusinessSubscription {
         return endDate;
     }
 
-    public SubscriptionState getState() {
+    public String getState() {
         return state;
     }
 

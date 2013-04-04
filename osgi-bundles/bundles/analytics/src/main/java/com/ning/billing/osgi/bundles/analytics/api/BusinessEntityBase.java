@@ -41,4 +41,95 @@ public abstract class BusinessEntityBase {
         this.accountName = accountName;
         this.accountExternalKey = accountExternalKey;
     }
+
+    public DateTime getCreatedDate() {
+        return createdDate;
+    }
+
+    public String getCreatedBy() {
+        return createdBy;
+    }
+
+    public String getCreatedReasonCode() {
+        return createdReasonCode;
+    }
+
+    public String getCreatedComments() {
+        return createdComments;
+    }
+
+    public UUID getAccountId() {
+        return accountId;
+    }
+
+    public String getAccountName() {
+        return accountName;
+    }
+
+    public String getAccountExternalKey() {
+        return accountExternalKey;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append("BusinessEntityBase");
+        sb.append("{createdDate=").append(createdDate);
+        sb.append(", createdBy='").append(createdBy).append('\'');
+        sb.append(", createdReasonCode='").append(createdReasonCode).append('\'');
+        sb.append(", createdComments='").append(createdComments).append('\'');
+        sb.append(", accountId=").append(accountId);
+        sb.append(", accountName='").append(accountName).append('\'');
+        sb.append(", accountExternalKey='").append(accountExternalKey).append('\'');
+        sb.append('}');
+        return sb.toString();
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        final BusinessEntityBase that = (BusinessEntityBase) o;
+
+        if (accountExternalKey != null ? !accountExternalKey.equals(that.accountExternalKey) : that.accountExternalKey != null) {
+            return false;
+        }
+        if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
+            return false;
+        }
+        if (accountName != null ? !accountName.equals(that.accountName) : that.accountName != null) {
+            return false;
+        }
+        if (createdBy != null ? !createdBy.equals(that.createdBy) : that.createdBy != null) {
+            return false;
+        }
+        if (createdComments != null ? !createdComments.equals(that.createdComments) : that.createdComments != null) {
+            return false;
+        }
+        if (createdDate != null ? !createdDate.equals(that.createdDate) : that.createdDate != null) {
+            return false;
+        }
+        if (createdReasonCode != null ? !createdReasonCode.equals(that.createdReasonCode) : that.createdReasonCode != null) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = createdDate != null ? createdDate.hashCode() : 0;
+        result = 31 * result + (createdBy != null ? createdBy.hashCode() : 0);
+        result = 31 * result + (createdReasonCode != null ? createdReasonCode.hashCode() : 0);
+        result = 31 * result + (createdComments != null ? createdComments.hashCode() : 0);
+        result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
+        result = 31 * result + (accountName != null ? accountName.hashCode() : 0);
+        result = 31 * result + (accountExternalKey != null ? accountExternalKey.hashCode() : 0);
+        return result;
+    }
 }
