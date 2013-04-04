@@ -23,15 +23,15 @@ import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.util.clock.Clock;
 
-public class SubscriptionTransitionDataIterator implements Iterator<SubscriptionTransitionData> {
+public class SubscriptionTransitionDataIterator implements Iterator<SubscriptionTransition> {
 
     private final Clock clock;
-    private final Iterator<SubscriptionTransitionData> it;
+    private final Iterator<SubscriptionTransition> it;
     private final Kind kind;
     private final TimeLimit timeLimit;
     private final Visibility visibility;
 
-    private SubscriptionTransitionData next;
+    private SubscriptionTransition next;
 
     public enum Order {
         ASC_FROM_PAST,
@@ -55,7 +55,7 @@ public class SubscriptionTransitionDataIterator implements Iterator<Subscription
         ALL
     }
 
-    public SubscriptionTransitionDataIterator(final Clock clock, final LinkedList<SubscriptionTransitionData> transitions,
+    public SubscriptionTransitionDataIterator(final Clock clock, final LinkedList<SubscriptionTransition> transitions,
                                               final Order order, final Kind kind, final Visibility visibility, final TimeLimit timeLimit) {
         this.it = (order == Order.DESC_FROM_FUTURE) ? transitions.descendingIterator() : transitions.iterator();
         this.clock = clock;
@@ -77,12 +77,12 @@ public class SubscriptionTransitionDataIterator implements Iterator<Subscription
         return true;
     }
 
-    private boolean shouldSkip(final SubscriptionTransitionData input) {
-        if (visibility == Visibility.FROM_DISK_ONLY && !input.isFromDisk()) {
+    private boolean shouldSkip(final SubscriptionTransition input) {
+        if (visibility == Visibility.FROM_DISK_ONLY && ! ((SubscriptionTransitionData) input).isFromDisk()) {
             return true;
         }
-        if ((kind == Kind.ENTITLEMENT && shouldSkipForEntitlementEvents(input)) ||
-            (kind == Kind.BILLING && shouldSkipForBillingEvents(input))) {
+        if ((kind == Kind.ENTITLEMENT && shouldSkipForEntitlementEvents((SubscriptionTransitionData)input)) ||
+            (kind == Kind.BILLING && shouldSkipForBillingEvents((SubscriptionTransitionData) input))) {
             return true;
         }
         if ((timeLimit == TimeLimit.FUTURE_ONLY && !input.getEffectiveTransitionTime().isAfter(clock.getUTCNow())) ||
@@ -106,7 +106,7 @@ public class SubscriptionTransitionDataIterator implements Iterator<Subscription
 
 
     @Override
-    public SubscriptionTransitionData next() {
+    public SubscriptionTransition next() {
         return next;
     }
 

@@ -162,6 +162,7 @@ public class MockInvoice extends EntityBase implements Invoice {
         return amountPaid;
     }
 
+
     @Override
     public BigDecimal getChargedAmount() {
         BigDecimal result = BigDecimal.ZERO;
@@ -173,6 +174,7 @@ public class MockInvoice extends EntityBase implements Invoice {
         }
         return result;
     }
+
 
     @Override
     public BigDecimal getCreditAdjAmount() {
@@ -198,17 +200,22 @@ public class MockInvoice extends EntityBase implements Invoice {
 
     @Override
     public BigDecimal getCBAAmount() {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public BigDecimal getTotalAdjAmount() {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public BigDecimal getRefundAdjAmount() {
-        return null;
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public BigDecimal getOriginalChargedAmount() {
+        throw new UnsupportedOperationException();
     }
 }
 

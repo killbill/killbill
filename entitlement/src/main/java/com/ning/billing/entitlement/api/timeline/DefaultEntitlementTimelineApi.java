@@ -43,6 +43,7 @@ import com.ning.billing.entitlement.api.user.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
+import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
 import com.ning.billing.entitlement.engine.addon.AddonUtils;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
@@ -374,8 +375,8 @@ public class DefaultEntitlementTimelineApi extends EntitlementApiBase implements
         if (nbDeleted != deletedEvents.size()) {
             for (final SubscriptionTimeline.DeletedEvent d : deletedEvents) {
                 boolean found = false;
-                for (final SubscriptionTransitionData cur : data.getAllTransitions()) {
-                    if (cur.getId().equals(d.getEventId())) {
+                for (final SubscriptionTransition cur : data.getAllTransitions()) {
+                    if (((SubscriptionTransitionData) cur).getId().equals(d.getEventId())) {
                         found = true;
                     }
                 }

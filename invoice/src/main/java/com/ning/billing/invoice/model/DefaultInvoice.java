@@ -189,6 +189,17 @@ public class DefaultInvoice extends EntityBase implements Invoice {
     }
 
     @Override
+    public BigDecimal getOriginalChargedAmount() {
+        BigDecimal result = BigDecimal.ZERO;
+        for (final InvoiceItem cur :  invoiceItems) {
+            if (cur.getCreatedDate().compareTo(getCreatedDate()) == 0) {
+                result = result.add(cur.getAmount());
+            }
+        }
+        return result;
+    }
+
+    @Override
     public BigDecimal getChargedAmount() {
         return invoiceItems.getChargedAmount();
     }
