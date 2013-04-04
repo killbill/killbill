@@ -281,7 +281,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
         busHandler.pushExpectedEvent(NextEvent.TAG);
         tagApi.addTag(id, type, ControlTagType.AUTO_PAY_OFF.getId(), callContext);
         assertTrue(busHandler.isCompleted(DELAY));
-        final List<Tag> tags = tagApi.getTags(id, type, callContext);
+        final List<Tag> tags = tagApi.getTagsForObject(id, type, callContext);
         assertEquals(tags.size(), 1);
     }
 

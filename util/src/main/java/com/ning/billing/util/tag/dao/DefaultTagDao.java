@@ -19,6 +19,8 @@ package com.ning.billing.util.tag.dao;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +30,7 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.ObjectType;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.audit.ChangeType;
+import com.ning.billing.util.cache.Cachable.CacheType;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
@@ -44,6 +47,9 @@ import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.api.user.TagEventBuilder;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
 public class DefaultTagDao extends EntityDaoBase<TagModelDao, Tag, TagApiException> implements TagDao {
@@ -62,7 +68,7 @@ public class DefaultTagDao extends EntityDaoBase<TagModelDao, Tag, TagApiExcepti
     }
 
     @Override
-    public List<TagModelDao> getTags(final UUID objectId, final ObjectType objectType, final InternalTenantContext internalTenantContext) {
+    public List<TagModelDao> getTagsForObject(final UUID objectId, final ObjectType objectType, final InternalTenantContext internalTenantContext) {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<TagModelDao>>() {
             @Override
             public List<TagModelDao> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
@@ -70,6 +76,30 @@ public class DefaultTagDao extends EntityDaoBase<TagModelDao, Tag, TagApiExcepti
             }
         });
     }
+
+    @Override
+    public List<TagModelDao> getTagsForAccountType(final UUID accountId, final ObjectType objectType, final InternalTenantContext internalTenantContext) {
+
+        final List<TagModelDao> allTags = getTagsForAccount(accountId, internalTenantContext);
+        return ImmutableList.<TagModelDao>copyOf(Collections2.filter(allTags, new Predicate<TagModelDao>() {
+            @Override
+            public boolean apply(@Nullable final TagModelDao input) {
+                return input.getObjectType() == objectType;
+            }
+        }));
+    }
+
+    @Override
+    public List<TagModelDao> getTagsForAccount(final UUID accountId, final InternalTenantContext internalTenantContext) {
+
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<TagModelDao>>() {
+            @Override
+            public List<TagModelDao> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                return entitySqlDaoWrapperFactory.become(TagSqlDao.class).getByAccountRecordId(internalTenantContext);
+            }
+        });
+    }
+
 
     @Override
     protected void postBusEventFromTransaction(final TagModelDao tag, final TagModelDao savedTag, final ChangeType changeType,

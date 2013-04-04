@@ -73,14 +73,22 @@ public class InternalCallContextFactory {
         return new InternalTenantContext(tenantRecordId, accountRecordId);
     }
 
-    /**
-     * Crate an internal call context from a call context, and retrieving the account_record_id from another table
-     *
-     * @param objectId   the id of the row in the table pointed by object type where to look for account_record_id
-     * @param objectType the object type pointed by this objectId
-     * @param context    original call context
-     * @return internal call context from context, with a non null account_record_id (if found)
-     */
+    public InternalTenantContext createInternalTenantContext(final UUID accountId, final TenantContext context) {
+        final Long tenantRecordId = getTenantRecordId(context);
+        final Long accountRecordId = nonEntityDao.retrieveAccountRecordIdFromObject(accountId, ObjectType.ACCOUNT, cacheControllerDispatcher.getCacheController(CacheType.ACCOUNT_RECORD_ID));
+        return new InternalTenantContext(tenantRecordId, accountRecordId);
+    }
+
+
+
+        /**
+         * Crate an internal call context from a call context, and retrieving the account_record_id from another table
+         *
+         * @param objectId   the id of the row in the table pointed by object type where to look for account_record_id
+         * @param objectType the object type pointed by this objectId
+         * @param context    original call context
+         * @return internal call context from context, with a non null account_record_id (if found)
+         */
     public InternalCallContext createInternalCallContext(final UUID objectId, final ObjectType objectType, final CallContext context) {
         // The context may come from a user API - for security, check we're not doing cross-tenants operations
         //final Long tenantRecordIdFromObject = retrieveTenantRecordIdFromObject(objectId, objectType);
@@ -193,6 +201,8 @@ public class InternalCallContextFactory {
         final Long tenantRecordId = getTenantRecordId(context);
         return new InternalCallContext(tenantRecordId, null, context);
     }
+
+
 
     // Used when we need to re-hydrate the context with the account_record_id (when creating the account)
     public InternalCallContext createInternalCallContext(final Long accountRecordId, final InternalCallContext context) {

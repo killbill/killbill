@@ -174,7 +174,7 @@ public class TestIntegrationWithAutoInvoiceOffTag extends TestIntegrationBase {
 
     private void add_AUTO_INVOICING_OFF_Tag(final UUID id, final ObjectType type) throws TagDefinitionApiException, TagApiException {
         tagApi.addTag(id, type, ControlTagType.AUTO_INVOICING_OFF.getId(), callContext);
-        final List<Tag> tags = tagApi.getTags(id, type, callContext);
+        final List<Tag> tags = tagApi.getTagsForObject(id, type, callContext);
         assertEquals(tags.size(), 1);
     }
 
