@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.osgi.bundles.analytics.model;
+package com.ning.billing.osgi.bundles.analytics.dao.model;
 
 import org.joda.time.DateTime;
 import org.mockito.Mockito;

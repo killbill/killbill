@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.osgi.bundles.analytics.model;
+package com.ning.billing.osgi.bundles.analytics.dao.model;
 
 import java.math.BigDecimal;
 import java.util.UUID;
