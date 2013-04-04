@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.skife.jdbi.v2.DBI;
+
 import com.ning.billing.osgi.bundles.analytics.api.BusinessAccount;
 import com.ning.billing.osgi.bundles.analytics.api.BusinessField;
 import com.ning.billing.osgi.bundles.analytics.api.BusinessInvoice;
@@ -39,21 +41,20 @@ import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessOverdueStatusMo
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessSubscriptionTransitionModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessTagModelDao;
 import com.ning.billing.util.callcontext.TenantContext;
-import com.ning.killbill.osgi.libs.killbill.OSGIKillbillAPI;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillDataSource;
-import com.ning.killbill.osgi.libs.killbill.OSGIKillbillLogService;
 
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
-public class AnalyticsDao extends BusinessAnalyticsDaoBase {
+public class AnalyticsDao {
 
-    public AnalyticsDao(final OSGIKillbillLogService logService,
-                        final OSGIKillbillAPI osgiKillbillAPI,
-                        final OSGIKillbillDataSource osgiKillbillDataSource) {
-        super(logService, osgiKillbillAPI, osgiKillbillDataSource);
+    protected final BusinessAnalyticsSqlDao sqlDao;
+
+    public AnalyticsDao(final OSGIKillbillDataSource osgiKillbillDataSource) {
+        final DBI dbi = new DBI(osgiKillbillDataSource.getDataSource());
+        sqlDao = dbi.onDemand(BusinessAnalyticsSqlDao.class);
     }
 
     public BusinessAccount getAccountById(final UUID accountId, final TenantContext context) {

@@ -23,7 +23,6 @@ import java.util.UUID;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
 
-import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.osgi.bundles.analytics.AnalyticsRefreshException;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessTagModelDao;
@@ -43,10 +42,10 @@ public class BusinessTagDao extends BusinessAnalyticsDaoBase {
         super(logService, osgiKillbillAPI, osgiKillbillDataSource);
     }
 
-    public void update(final UUID accountId, final ObjectType objectType, final CallContext context) throws AnalyticsRefreshException {
+    public void update(final UUID accountId, final CallContext context) throws AnalyticsRefreshException {
         final Account account = getAccount(accountId, context);
 
-        final Collection<BusinessTagModelDao> tagModelDaos = createBusinessTags(account, objectType, context);
+        final Collection<BusinessTagModelDao> tagModelDaos = createBusinessTags(account, context);
 
         sqlDao.inTransaction(new Transaction<Void, BusinessAnalyticsSqlDao>() {
             @Override
@@ -71,8 +70,8 @@ public class BusinessTagDao extends BusinessAnalyticsDaoBase {
         }
     }
 
-    private Collection<BusinessTagModelDao> createBusinessTags(final Account account, final ObjectType objectType, final CallContext context) throws AnalyticsRefreshException {
-        final Collection<Tag> tags = getTagsForAccountAndObjectType(account.getId(), objectType, context);
+    private Collection<BusinessTagModelDao> createBusinessTags(final Account account, final CallContext context) throws AnalyticsRefreshException {
+        final Collection<Tag> tags = getTagsForAccount(account.getId(), context);
 
         final Collection<BusinessTagModelDao> tagModelDaos = new LinkedList<BusinessTagModelDao>();
         for (final Tag tag : tags) {

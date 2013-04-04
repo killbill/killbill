@@ -286,6 +286,11 @@
             </dependency>
             <dependency>
                 <groupId>com.ning.billing</groupId>
+                <artifactId>killbill-osgi-bundles-analytics</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.ning.billing</groupId>
                 <artifactId>killbill-osgi-bundles-jruby</artifactId>
                 <version>${project.version}</version>
             </dependency>

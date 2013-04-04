@@ -29,7 +29,7 @@ public class TestAnalyticsDao extends AnalyticsTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testDao() throws Exception {
-        final AnalyticsDao analyticsDao = new AnalyticsDao(logService, killbillAPI, killbillDataSource);
+        final AnalyticsDao analyticsDao = new AnalyticsDao(killbillDataSource);
         Assert.assertNull(analyticsDao.getAccountById(account.getId(), callContext));
 
         final BusinessAccountModelDao accountModelDao = new BusinessAccountModelDao(account,

@@ -27,6 +27,7 @@
     <name>Killbill billing platform: OSGI bundles</name>
     <packaging>pom</packaging>
     <modules>
+        <module>analytics</module>
         <module>jruby</module>
         <module>logger</module>
         <module>meter</module>

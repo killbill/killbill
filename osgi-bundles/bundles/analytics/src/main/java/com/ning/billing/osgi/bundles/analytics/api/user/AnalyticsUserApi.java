@@ -61,7 +61,7 @@ public class AnalyticsUserApi extends BusinessAnalyticsBase {
                             final OSGIKillbillAPI osgiKillbillAPI,
                             final OSGIKillbillDataSource osgiKillbillDataSource) {
         super(logService, osgiKillbillAPI);
-        this.analyticsDao = new AnalyticsDao(logService, osgiKillbillAPI, osgiKillbillDataSource);
+        this.analyticsDao = new AnalyticsDao(osgiKillbillDataSource);
         this.bacDao = new BusinessAccountDao(logService, osgiKillbillAPI, osgiKillbillDataSource);
         this.bstDao = new BusinessSubscriptionTransitionDao(logService, osgiKillbillAPI, osgiKillbillDataSource);
         this.binDao = new BusinessInvoiceDao(logService, osgiKillbillAPI, osgiKillbillDataSource, bacDao);
@@ -109,15 +109,15 @@ public class AnalyticsUserApi extends BusinessAnalyticsBase {
         // Refresh BST
         bstDao.update(accountId, context);
 
+        // Refresh tags
+        bTagDao.update(accountId, context);
+
         for (final ObjectType objectType : ObjectType.values()) {
             // Refresh BOS
             bosDao.update(accountId, objectType, context);
 
             // Refresh fields
             bFieldDao.update(accountId, objectType, context);
-
-            // Refresh tags
-            bTagDao.update(accountId, objectType, context);
         }
 
         logService.log(LogService.LOG_INFO, "Finished rebuild of Analytics for account " + accountId);

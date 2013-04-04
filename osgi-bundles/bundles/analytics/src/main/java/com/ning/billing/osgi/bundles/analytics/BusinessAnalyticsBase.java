@@ -354,11 +354,9 @@ public abstract class BusinessAnalyticsBase {
     // TAG
     //
 
-    protected Collection<Tag> getTagsForAccountAndObjectType(final UUID accountId, final ObjectType objectType, final TenantContext context) throws AnalyticsRefreshException {
+    protected Collection<Tag> getTagsForAccount(final UUID accountId, final TenantContext context) throws AnalyticsRefreshException {
         final TagUserApi tagUserApi = getTagUserApi();
-        // TODO
-        //return tagUserApi.getTagsForAccount(accountId, objectType, context);
-        return null;
+        return tagUserApi.getTagsForAccount(accountId, context);
     }
 
     protected TagDefinition getTagDefinition(final UUID tagDefinitionId, final TenantContext context) throws AnalyticsRefreshException {

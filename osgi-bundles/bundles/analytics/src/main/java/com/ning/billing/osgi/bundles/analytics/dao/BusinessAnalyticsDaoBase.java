@@ -27,7 +27,8 @@ public class BusinessAnalyticsDaoBase extends BusinessAnalyticsBase {
 
     protected final BusinessAnalyticsSqlDao sqlDao;
 
-    public BusinessAnalyticsDaoBase(final OSGIKillbillLogService logService, final OSGIKillbillAPI osgiKillbillAPI,
+    public BusinessAnalyticsDaoBase(final OSGIKillbillLogService logService,
+                                    final OSGIKillbillAPI osgiKillbillAPI,
                                     final OSGIKillbillDataSource osgiKillbillDataSource) {
         super(logService, osgiKillbillAPI);
 
