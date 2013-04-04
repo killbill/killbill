@@ -16,6 +16,8 @@
 
 package com.ning.billing.osgi.bundles.analytics.dao;
 
+import java.util.List;
+
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
@@ -23,7 +25,15 @@ import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.UseStringTemplate3StatementLocator;
 
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessAccountModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessFieldModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceItemBaseModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoicePaymentBaseModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessModelDaoBase;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessOverdueStatusModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessSubscriptionTransitionModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessTagModelDao;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TenantContext;
 
@@ -42,7 +52,42 @@ public interface BusinessAnalyticsSqlDao extends Transactional<BusinessAnalytics
                                         @BindBean final CallContext callContext);
 
     @SqlQuery
-    public Iterable findByAccountRecordId(@Bind("tableName") final String tableName,
-                                          @Bind("accountRecordId") final Long accountRecordId,
-                                          @BindBean final TenantContext callContext);
+    public BusinessAccountModelDao getAccountByAccountRecordId(@Bind("accountRecordId") final Long accountRecordId,
+                                                               @Bind("tenantRecordId") final Long tenantRecordId,
+                                                               @BindBean final TenantContext tenantContext);
+
+    @SqlQuery
+    public List<BusinessSubscriptionTransitionModelDao> getSubscriptionTransitionsByAccountRecordId(@Bind("accountRecordId") final Long accountRecordId,
+                                                                                                    @Bind("tenantRecordId") final Long tenantRecordId,
+                                                                                                    @BindBean final TenantContext tenantContext);
+
+    @SqlQuery
+    public List<BusinessOverdueStatusModelDao> getOverdueStatusesByAccountRecordId(@Bind("accountRecordId") final Long accountRecordId,
+                                                                                   @Bind("tenantRecordId") final Long tenantRecordId,
+                                                                                   @BindBean final TenantContext tenantContext);
+
+    @SqlQuery
+    public List<BusinessInvoiceModelDao> getInvoicesByAccountRecordId(@Bind("accountRecordId") final Long accountRecordId,
+                                                                      @Bind("tenantRecordId") final Long tenantRecordId,
+                                                                      @BindBean final TenantContext tenantContext);
+
+    @SqlQuery
+    public List<BusinessInvoiceItemBaseModelDao> getInvoiceItemsByAccountRecordId(@Bind("accountRecordId") final Long accountRecordId,
+                                                                                  @Bind("tenantRecordId") final Long tenantRecordId,
+                                                                                  @BindBean final TenantContext tenantContext);
+
+    @SqlQuery
+    public List<BusinessInvoicePaymentBaseModelDao> getInvoicePaymentsByAccountRecordId(@Bind("accountRecordId") final Long accountRecordId,
+                                                                                        @Bind("tenantRecordId") final Long tenantRecordId,
+                                                                                        @BindBean final TenantContext tenantContext);
+
+    @SqlQuery
+    public List<BusinessFieldModelDao> getFieldsByAccountRecordId(@Bind("accountRecordId") final Long accountRecordId,
+                                                                  @Bind("tenantRecordId") final Long tenantRecordId,
+                                                                  @BindBean final TenantContext tenantContext);
+
+    @SqlQuery
+    public List<BusinessTagModelDao> getTagsByAccountRecordId(@Bind("accountRecordId") final Long accountRecordId,
+                                                              @Bind("tenantRecordId") final Long tenantRecordId,
+                                                              @BindBean final TenantContext tenantContext);
 }

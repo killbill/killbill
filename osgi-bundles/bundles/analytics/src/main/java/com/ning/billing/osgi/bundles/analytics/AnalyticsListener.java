@@ -28,10 +28,12 @@ import com.ning.billing.commons.locker.GlobalLock;
 import com.ning.billing.commons.locker.GlobalLocker;
 import com.ning.billing.commons.locker.mysql.MySqlGlobalLocker;
 import com.ning.billing.osgi.bundles.analytics.dao.BusinessAccountDao;
+import com.ning.billing.osgi.bundles.analytics.dao.BusinessFieldDao;
 import com.ning.billing.osgi.bundles.analytics.dao.BusinessInvoiceDao;
 import com.ning.billing.osgi.bundles.analytics.dao.BusinessInvoicePaymentDao;
 import com.ning.billing.osgi.bundles.analytics.dao.BusinessOverdueStatusDao;
 import com.ning.billing.osgi.bundles.analytics.dao.BusinessSubscriptionTransitionDao;
+import com.ning.billing.osgi.bundles.analytics.dao.BusinessTagDao;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.UserType;
@@ -51,6 +53,8 @@ public class AnalyticsListener implements OSGIKillbillEventHandler {
     private final BusinessInvoiceDao binDao;
     private final BusinessInvoicePaymentDao bipDao;
     private final BusinessOverdueStatusDao bosDao;
+    private final BusinessFieldDao bFieldDao;
+    private final BusinessTagDao bTagDao;
     private final GlobalLocker locker;
 
     public AnalyticsListener(final OSGIKillbillLogService logService,
@@ -63,6 +67,8 @@ public class AnalyticsListener implements OSGIKillbillEventHandler {
         this.binDao = new BusinessInvoiceDao(logService, osgiKillbillAPI, osgiKillbillDataSource, bacDao);
         this.bipDao = new BusinessInvoicePaymentDao(logService, osgiKillbillAPI, osgiKillbillDataSource, bacDao, binDao);
         this.bosDao = new BusinessOverdueStatusDao(logService, osgiKillbillAPI, osgiKillbillDataSource);
+        this.bFieldDao = new BusinessFieldDao(logService, osgiKillbillAPI, osgiKillbillDataSource);
+        this.bTagDao = new BusinessTagDao(logService, osgiKillbillAPI, osgiKillbillDataSource);
 
         this.locker = new MySqlGlobalLocker(osgiKillbillDataSource.getDataSource());
     }
@@ -147,7 +153,7 @@ public class AnalyticsListener implements OSGIKillbillEventHandler {
         updateWithAccountLock(killbillEvent, new Callable<Void>() {
             @Override
             public Void call() throws Exception {
-                bosDao.update(killbillEvent.getObjectType(), killbillEvent.getObjectId(), callContext);
+                bosDao.update(killbillEvent.getAccountId(), killbillEvent.getObjectType(), callContext);
                 return null;
             }
         });

@@ -335,7 +335,8 @@ public abstract class BusinessAnalyticsBase {
     protected Collection<CustomField> getFieldsForAccountAndObjectType(final UUID accountId, final ObjectType objectType, final TenantContext context) throws AnalyticsRefreshException {
         final CustomFieldUserApi tagUserApi = getCustomFieldUserApi();
         // TODO
-        return tagUserApi.getCustomFieldsForAccount(accountId, objectType, context);
+        //return tagUserApi.getCustomFieldsForAccount(accountId, objectType, context);
+        return null;
     }
 
     protected AuditLog getFieldCreationAuditLog(final UUID fieldId, final TenantContext context) throws AnalyticsRefreshException {
@@ -356,7 +357,8 @@ public abstract class BusinessAnalyticsBase {
     protected Collection<Tag> getTagsForAccountAndObjectType(final UUID accountId, final ObjectType objectType, final TenantContext context) throws AnalyticsRefreshException {
         final TagUserApi tagUserApi = getTagUserApi();
         // TODO
-        return tagUserApi.getTagsForAccount(accountId, objectType, context);
+        //return tagUserApi.getTagsForAccount(accountId, objectType, context);
+        return null;
     }
 
     protected TagDefinition getTagDefinition(final UUID tagDefinitionId, final TenantContext context) throws AnalyticsRefreshException {

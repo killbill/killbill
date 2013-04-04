@@ -49,20 +49,23 @@ public class BusinessOverdueStatusDao extends BusinessAnalyticsDaoBase {
         super(logService, osgiKillbillAPI, osgiKillbillDataSource);
     }
 
-    public void update(final ObjectType objectType, final UUID objectId, final CallContext context) throws AnalyticsRefreshException {
+    public void update(final UUID accountId, final ObjectType objectType, final CallContext context) throws AnalyticsRefreshException {
         if (ObjectType.BUNDLE.equals(objectType)) {
-            updateForBundle(objectId, context);
+            updateForBundle(accountId, context);
         } else {
-            logService.log(LogService.LOG_WARNING, String.format("Ignoring overdue status change for object id %s (type %s)", objectId.toString(), objectType.toString()));
+            logService.log(LogService.LOG_WARNING, String.format("Ignoring overdue status change for account id %s (type %s)", accountId, objectType.toString()));
         }
     }
 
-    private void updateForBundle(final UUID bundleId, final CallContext context) throws AnalyticsRefreshException {
-        final SubscriptionBundle bundle = getSubscriptionBundle(bundleId, context);
-        final Account account = getAccount(bundle.getAccountId(), context);
+    private void updateForBundle(final UUID accountId, final CallContext context) throws AnalyticsRefreshException {
+        final Account account = getAccount(accountId, context);
 
-        // Recompute all blocking states for that bundle
-        final Collection<BusinessOverdueStatusModelDao> businessOverdueStatuses = createBusinessOverdueStatuses(account, bundle, context);
+        final Collection<SubscriptionBundle> bundles = getSubscriptionBundlesForAccount(accountId, context);
+        final Collection<BusinessOverdueStatusModelDao> businessOverdueStatuses = new LinkedList<BusinessOverdueStatusModelDao>();
+        for (final SubscriptionBundle bundle : bundles) {
+            // Recompute all blocking states for that bundle
+            businessOverdueStatuses.addAll(createBusinessOverdueStatuses(account, bundle, context));
+        }
 
         sqlDao.inTransaction(new Transaction<Void, BusinessAnalyticsSqlDao>() {
             @Override

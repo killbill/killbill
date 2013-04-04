@@ -16,25 +16,12 @@
 
 package com.ning.billing.osgi.bundles.analytics.api.user;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.osgi.service.log.LogService;
 
 import com.ning.billing.ObjectType;
-import com.ning.billing.account.api.Account;
-import com.ning.billing.analytics.api.TimeSeriesData;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.junction.api.Blockable.Type;
 import com.ning.billing.osgi.bundles.analytics.AnalyticsRefreshException;
 import com.ning.billing.osgi.bundles.analytics.BusinessAnalyticsBase;
 import com.ning.billing.osgi.bundles.analytics.api.BusinessAccount;
@@ -47,329 +34,92 @@ import com.ning.billing.osgi.bundles.analytics.api.BusinessSubscriptionTransitio
 import com.ning.billing.osgi.bundles.analytics.api.BusinessTag;
 import com.ning.billing.osgi.bundles.analytics.dao.AnalyticsDao;
 import com.ning.billing.osgi.bundles.analytics.dao.BusinessAccountDao;
+import com.ning.billing.osgi.bundles.analytics.dao.BusinessFieldDao;
 import com.ning.billing.osgi.bundles.analytics.dao.BusinessInvoiceDao;
 import com.ning.billing.osgi.bundles.analytics.dao.BusinessInvoicePaymentDao;
 import com.ning.billing.osgi.bundles.analytics.dao.BusinessOverdueStatusDao;
 import com.ning.billing.osgi.bundles.analytics.dao.BusinessSubscriptionTransitionDao;
 import com.ning.billing.osgi.bundles.analytics.dao.BusinessTagDao;
-import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessAccountModelDao;
-import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessAccountTagModelDao;
-import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceModelDao;
-import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoicePaymentModelDao;
-import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessOverdueStatusModelDao;
-import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessSubscriptionTransitionModelDao;
-import com.ning.billing.payment.api.Payment;
-import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.callcontext.InternalCallContextFactory;
-import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.TenantContext;
-import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
-import com.ning.billing.util.svcapi.payment.PaymentInternalApi;
-import com.ning.billing.util.svcapi.tag.TagInternalApi;
-import com.ning.billing.util.tag.Tag;
-import com.ning.billing.util.tag.TagDefinition;
-
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Sets;
+import com.ning.killbill.osgi.libs.killbill.OSGIKillbillAPI;
+import com.ning.killbill.osgi.libs.killbill.OSGIKillbillDataSource;
+import com.ning.killbill.osgi.libs.killbill.OSGIKillbillLogService;
 
 public class AnalyticsUserApi extends BusinessAnalyticsBase {
 
-    private static final Logger log = LoggerFactory.getLogger(AnalyticsUserApi.class);
-
     private final AnalyticsDao analyticsDao;
-    private final BusinessSubscriptionTransitionDao bstDao;
     private final BusinessAccountDao bacDao;
-    private final BusinessInvoiceDao invoiceDao;
-    private final BusinessOverdueStatusDao bosDao;
+    private final BusinessSubscriptionTransitionDao bstDao;
+    private final BusinessInvoiceDao binDao;
     private final BusinessInvoicePaymentDao bipDao;
-    private final BusinessTagDao tagDao;
-    private final EntitlementInternalApi entitlementInternalApi;
-    private final PaymentInternalApi paymentApi;
-    private final TagInternalApi tagInternalApi;
-    private final InternalCallContextFactory internalCallContextFactory;
+    private final BusinessOverdueStatusDao bosDao;
+    private final BusinessFieldDao bFieldDao;
+    private final BusinessTagDao bTagDao;
 
-    public AnalyticsUserApi(final AnalyticsDao analyticsDao,
-                            final BusinessSubscriptionTransitionDao bstDao,
-                            final BusinessAccountDao bacDao,
-                            final BusinessInvoiceDao invoiceDao,
-                            final BusinessOverdueStatusDao bosDao,
-                            final BusinessInvoicePaymentDao bipDao,
-                            final BusinessTagDao tagDao,
-                            final EntitlementInternalApi entitlementInternalApi,
-                            final PaymentInternalApi paymentApi,
-                            final TagInternalApi tagInternalApi,
-                            final InternalCallContextFactory internalCallContextFactory) {
-        super();
-
-        this.analyticsDao = analyticsDao;
-        this.bstDao = bstDao;
-        this.bacDao = bacDao;
-        this.invoiceDao = invoiceDao;
-        this.bosDao = bosDao;
-        this.bipDao = bipDao;
-        this.tagDao = tagDao;
-        this.entitlementInternalApi = entitlementInternalApi;
-        this.paymentApi = paymentApi;
-        this.tagInternalApi = tagInternalApi;
-        this.internalCallContextFactory = internalCallContextFactory;
+    public AnalyticsUserApi(final OSGIKillbillLogService logService,
+                            final OSGIKillbillAPI osgiKillbillAPI,
+                            final OSGIKillbillDataSource osgiKillbillDataSource) {
+        super(logService, osgiKillbillAPI);
+        this.analyticsDao = new AnalyticsDao(logService, osgiKillbillAPI, osgiKillbillDataSource);
+        this.bacDao = new BusinessAccountDao(logService, osgiKillbillAPI, osgiKillbillDataSource);
+        this.bstDao = new BusinessSubscriptionTransitionDao(logService, osgiKillbillAPI, osgiKillbillDataSource);
+        this.binDao = new BusinessInvoiceDao(logService, osgiKillbillAPI, osgiKillbillDataSource, bacDao);
+        this.bipDao = new BusinessInvoicePaymentDao(logService, osgiKillbillAPI, osgiKillbillDataSource, bacDao, binDao);
+        this.bosDao = new BusinessOverdueStatusDao(logService, osgiKillbillAPI, osgiKillbillDataSource);
+        this.bFieldDao = new BusinessFieldDao(logService, osgiKillbillAPI, osgiKillbillDataSource);
+        this.bTagDao = new BusinessTagDao(logService, osgiKillbillAPI, osgiKillbillDataSource);
     }
 
-    public BusinessSnapshot getBusinessSnapshot(final Account account, final TenantContext context) {
+    public BusinessSnapshot getBusinessSnapshot(final UUID accountId, final TenantContext context) {
         // Find account
-        final BusinessAccount businessAccount = getAccountByKey(account.getExternalKey(), context);
+        final BusinessAccount businessAccount = analyticsDao.getAccountById(accountId, context);
 
         // Find all transitions for all bundles for that account, and associated overdue statuses
-        final List<SubscriptionBundle> bundles = entitlementInternalApi.getBundlesForAccount(account.getId(), context);
-        final Collection<BusinessSubscriptionTransition> businessSubscriptionTransitions = new ArrayList<BusinessSubscriptionTransition>();
-        final Collection<BusinessOverdueStatus> businessOverdueStatuses = new ArrayList<BusinessOverdueStatus>();
-        for (final SubscriptionBundle bundle : bundles) {
-            businessSubscriptionTransitions.addAll(getTransitionsForBundle(bundle.getExternalKey(), context));
-            businessOverdueStatuses.addAll(getOverdueStatusesForBundle(bundle.getExternalKey(), context));
-        }
+        final Collection<BusinessSubscriptionTransition> businessSubscriptionTransitions = analyticsDao.getSubscriptionTransitionsForAccount(accountId, context);
+        final Collection<BusinessOverdueStatus> businessOverdueStatuses = analyticsDao.getOverdueStatusesForAccount(accountId, context);
 
         // Find all invoices for that account
-        final Collection<BusinessInvoice> businessInvoices = getInvoicesForAccount(account.getExternalKey(), context);
+        final Collection<BusinessInvoice> businessInvoices = analyticsDao.getInvoicesForAccount(accountId, context);
 
         // Find all payments for that account
-        final Collection<BusinessInvoicePayment> businessInvoicePayments = getInvoicePaymentsForAccount(account.getExternalKey(), context);
+        final Collection<BusinessInvoicePayment> businessInvoicePayments = analyticsDao.getInvoicePaymentsForAccount(accountId, context);
 
         // Find all tags for that account
-        // TODO add other tag types
-        final Collection<BusinessTag> businessTags = getTagsForAccount(account.getExternalKey(), context);
+        final Collection<BusinessTag> businessTags = analyticsDao.getTagsForAccount(accountId, context);
 
-        // TODO find custom fields
-        final Collection<BusinessField> businessFields = ImmutableList.<BusinessField>of();
+        // Find all fields for that account
+        final Collection<BusinessField> businessFields = analyticsDao.getFieldsForAccount(accountId, context);
 
-        return new BusinessSnapshot(businessAccount, businessSubscriptionTransitions, businessInvoices, businessInvoicePayments,
-                                    businessOverdueStatuses, businessTags, businessFields);
+        return new BusinessSnapshot(businessAccount,
+                                    businessSubscriptionTransitions,
+                                    businessInvoices,
+                                    businessInvoicePayments,
+                                    businessOverdueStatuses,
+                                    businessTags,
+                                    businessFields);
     }
 
-    public BusinessAccount getAccountByKey(final String accountKey, final TenantContext context) {
-        final BusinessAccountModelDao accountByKey = analyticsDao.getAccountByKey(accountKey, context);
-        if (accountByKey == null) {
-            return null;
-        } else {
-            return new BusinessAccount(accountByKey);
-        }
-    }
+    public void rebuildAnalyticsForAccount(final UUID accountId, final CallContext context) throws AnalyticsRefreshException {
+        logService.log(LogService.LOG_INFO, "Starting rebuild of Analytics for account " + accountId);
 
-    public List<BusinessSubscriptionTransition> getTransitionsForBundle(final String externalKey, final TenantContext context) {
-        final List<BusinessSubscriptionTransitionModelDao> transitionsByKey = analyticsDao.getSubscriptionTransitionsByBundleExternalKey(externalKey, context);
-        return ImmutableList.<BusinessSubscriptionTransition>copyOf(Collections2.transform(transitionsByKey, new Function<BusinessSubscriptionTransitionModelDao, BusinessSubscriptionTransition>() {
+        // Refresh payments. This will automatically trigger a refresh of invoices and account
+        bipDao.update(accountId, context);
 
-            public BusinessSubscriptionTransition apply(@Nullable final BusinessSubscriptionTransitionModelDao input) {
-                return new BusinessSubscriptionTransition(input);
-            }
-        }));
-    }
+        // Refresh BST
+        bstDao.update(accountId, context);
 
-    public List<BusinessInvoice> getInvoicesForAccount(final String accountKey, final TenantContext context) {
-        final InternalTenantContext internalTenantContext = context;
-        final List<BusinessInvoiceModelDao> invoicesByKey = analyticsDao.getInvoicesByKey(accountKey, internalTenantContext);
-        return ImmutableList.<BusinessInvoice>copyOf(Collections2.transform(invoicesByKey, new Function<BusinessInvoiceModelDao, BusinessInvoice>() {
+        for (final ObjectType objectType : ObjectType.values()) {
+            // Refresh BOS
+            bosDao.update(accountId, objectType, context);
 
-            public BusinessInvoice apply(@Nullable final BusinessInvoiceModelDao input) {
-                return new BusinessInvoice(input, input == null ? null : analyticsDao.getInvoiceItemsForInvoice(input.getInvoiceId().toString(), internalTenantContext));
-            }
-        }));
-    }
+            // Refresh fields
+            bFieldDao.update(accountId, objectType, context);
 
-    public List<BusinessInvoicePayment> getInvoicePaymentsForAccount(final String accountKey, final TenantContext context) {
-        final List<BusinessInvoicePaymentModelDao> invoicePaymentsForAccountByKey = analyticsDao.getInvoicePaymentsForAccountByKey(accountKey, context);
-        return ImmutableList.<BusinessInvoicePayment>copyOf(Collections2.transform(invoicePaymentsForAccountByKey, new Function<BusinessInvoicePaymentModelDao, BusinessInvoicePayment>() {
-
-            public BusinessInvoicePayment apply(@Nullable final BusinessInvoicePaymentModelDao input) {
-                return new BusinessInvoicePayment(input);
-            }
-        }));
-    }
-
-    public List<BusinessOverdueStatus> getOverdueStatusesForBundle(final String externalKey, final TenantContext context) {
-        final List<BusinessOverdueStatusModelDao> overdueStatusesForBundleByKey = analyticsDao.getOverdueStatusesForBundleByKey(externalKey, context);
-        return ImmutableList.<BusinessOverdueStatus>copyOf(Collections2.transform(overdueStatusesForBundleByKey, new Function<BusinessOverdueStatusModelDao, BusinessOverdueStatus>() {
-
-            public BusinessOverdueStatus apply(@Nullable final BusinessOverdueStatusModelDao input) {
-                return new BusinessOverdueStatus(input);
-            }
-        }));
-    }
-
-    public List<BusinessTag> getTagsForAccount(final String accountKey, final TenantContext context) {
-        final List<BusinessAccountTagModelDao> tagsForAccount = analyticsDao.getTagsForAccount(accountKey, context);
-        return ImmutableList.<BusinessTag>copyOf(Collections2.transform(tagsForAccount, new Function<BusinessAccountTagModelDao, BusinessTag>() {
-
-            public BusinessTag apply(@Nullable final BusinessAccountTagModelDao input) {
-                return new BusinessTag(input);
-            }
-        }));
-    }
-
-    public TimeSeriesData getAccountsCreatedOverTime(final TenantContext context) {
-        return analyticsDao.getAccountsCreatedOverTime(context);
-    }
-
-    public TimeSeriesData getSubscriptionsCreatedOverTime(final String productType, final String slug, final TenantContext context) {
-        return analyticsDao.getSubscriptionsCreatedOverTime(productType, slug, context);
-    }
-
-    public void rebuildAnalyticsForAccount(final Account account, final CallContext context) throws AnalyticsRefreshException {
-        // Update the BAC row
-        bacDao.update(account.getId(), context);
-
-        // Update BST for all bundles
-        final Set<UUID> bundleIds = updateBST(account, context);
-
-        // Update BIN, BII, ... for all invoices
-        invoiceDao.update(account.getId(), context);
-
-        // Update BIP for all invoices
-        try {
-            updateBIP(account, context);
-        } catch (PaymentApiException e) {
-            // Log and ignore
-            log.warn(e.toString());
+            // Refresh tags
+            bTagDao.update(accountId, objectType, context);
         }
 
-        // Update BOS for all bundles (only blockable supported today)
-        // TODO: support other blockables
-        for (final UUID bundleId : bundleIds) {
-            bosDao.overdueStatusChanged(Type.SUBSCRIPTION_BUNDLE, bundleId, context);
-        }
-
-        // Update bac_tags
-        // TODO: refresh all tags
-        updateTags(account, context);
-    }
-
-    private Set<UUID> updateBST(final Account account, final InternalCallContext internalCallContext) {
-        // Find the current state of bundles in entitlement
-        final Collection<UUID> entitlementBundlesId = Collections2.transform(entitlementInternalApi.getBundlesForAccount(account.getId(), internalCallContext),
-                                                                             new Function<SubscriptionBundle, UUID>() {
-
-                                                                                 public UUID apply(@Nullable final SubscriptionBundle input) {
-                                                                                     if (input == null) {
-                                                                                         return null;
-                                                                                     } else {
-                                                                                         return input.getId();
-                                                                                     }
-                                                                                 }
-                                                                             });
-
-        // Find the current state of bundles in analytics
-        final Collection<UUID> analyticsBundlesId = Collections2.transform(analyticsDao.getTransitionsForAccount(account.getExternalKey(), internalCallContext),
-                                                                           new Function<BusinessSubscriptionTransitionModelDao, UUID>() {
-
-                                                                               public UUID apply(@Nullable final BusinessSubscriptionTransitionModelDao input) {
-                                                                                   if (input == null) {
-                                                                                       return null;
-                                                                                   } else {
-                                                                                       return input.getBundleId();
-                                                                                   }
-                                                                               }
-                                                                           });
-
-        // Update BST for all bundles found
-        final Set<UUID> bundlesId = new HashSet<UUID>();
-        bundlesId.addAll(entitlementBundlesId);
-        bundlesId.addAll(analyticsBundlesId);
-        for (final UUID bundleId : bundlesId) {
-            bstDao.update(bundleId, internalCallContext);
-        }
-
-        return bundlesId;
-    }
-
-    private void updateBIP(final Account account, final InternalCallContext internalCallContext) throws PaymentApiException {
-        final List<Payment> accountPayments = paymentApi.getAccountPayments(account.getId(), internalCallContext);
-        final Map<UUID, Payment> payments = new HashMap<UUID, Payment>();
-        for (final Payment payment : accountPayments) {
-            payments.put(payment.getId(), payment);
-        }
-
-        // Find the current state of payments in payment
-        final Collection<UUID> paymentPaymentsId = Collections2.transform(accountPayments,
-                                                                          new Function<Payment, UUID>() {
-
-                                                                              public UUID apply(@Nullable final Payment input) {
-                                                                                  if (input == null) {
-                                                                                      return null;
-                                                                                  } else {
-                                                                                      return input.getId();
-                                                                                  }
-                                                                              }
-                                                                          });
-
-        // Find the current state of payments in analytics
-        final Collection<UUID> analyticsPaymentsId = Collections2.transform(analyticsDao.getInvoicePaymentsForAccountByKey(account.getExternalKey(), internalCallContext),
-                                                                            new Function<BusinessInvoicePaymentModelDao, UUID>() {
-
-                                                                                public UUID apply(@Nullable final BusinessInvoicePaymentModelDao input) {
-                                                                                    if (input == null) {
-                                                                                        return null;
-                                                                                    } else {
-                                                                                        return input.getPaymentId();
-                                                                                    }
-                                                                                }
-                                                                            });
-
-        // Update BIP for all payments found
-        final Set<UUID> paymentsId = new HashSet<UUID>();
-        paymentsId.addAll(paymentPaymentsId);
-        paymentsId.addAll(analyticsPaymentsId);
-        for (final UUID paymentId : paymentsId) {
-            final Payment paymentInfo = payments.get(paymentId);
-            bipDao.invoicePaymentPosted(paymentInfo.getAccountId(),
-                                        paymentInfo.getId(),
-                                        paymentInfo.getPaymentStatus().toString(),
-                                        internalCallContext);
-        }
-    }
-
-    private void updateTags(final Account account, final InternalCallContext internalCallContext) {
-        // Find the current state of tags from util
-        final List<TagDefinition> tagDefinitions = tagInternalApi.getTagDefinitions(internalCallContext);
-        final Collection<String> utilTags = Collections2.transform(tagInternalApi.getTags(account.getId(), ObjectType.ACCOUNT, internalCallContext),
-                                                                   new Function<Tag, String>() {
-
-                                                                       public String apply(@Nullable final Tag input) {
-                                                                           if (input == null) {
-                                                                               return "";
-                                                                           }
-
-                                                                           for (final TagDefinition tagDefinition : tagDefinitions) {
-                                                                               if (tagDefinition.getId().equals(input.getTagDefinitionId())) {
-                                                                                   return tagDefinition.getName();
-                                                                               }
-                                                                           }
-                                                                           return "";
-                                                                       }
-                                                                   });
-
-        // Find the current state of tags in analytics
-        final Collection<String> analyticsTags = Collections2.transform(analyticsDao.getTagsForAccount(account.getExternalKey(), internalCallContext),
-                                                                        new Function<BusinessAccountTagModelDao, String>() {
-
-                                                                            public String apply(@Nullable final BusinessAccountTagModelDao input) {
-                                                                                if (input == null) {
-                                                                                    return null;
-                                                                                } else {
-                                                                                    return input.getName();
-                                                                                }
-                                                                            }
-                                                                        });
-
-        // Remove non existing tags
-        for (final String tag : Sets.difference(new HashSet<String>(analyticsTags), new HashSet<String>(utilTags))) {
-            tagDao.tagRemoved(ObjectType.ACCOUNT, account.getId(), tag, internalCallContext);
-        }
-
-        // Add missing ones
-        for (final String tag : Sets.difference(new HashSet<String>(utilTags), new HashSet<String>(analyticsTags))) {
-            tagDao.tagAdded(ObjectType.ACCOUNT, account.getId(), tag, internalCallContext);
-        }
+        logService.log(LogService.LOG_INFO, "Finished rebuild of Analytics for account " + accountId);
     }
 }
