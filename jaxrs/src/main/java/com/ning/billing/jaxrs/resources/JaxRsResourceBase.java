@@ -31,7 +31,6 @@ import org.joda.time.format.ISODateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ning.billing.BillingExceptionBase;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.ObjectType;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
@@ -84,7 +83,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
     }
 
     protected Response getTags(final UUID id, final boolean withAudit, final TenantContext context) throws TagDefinitionApiException {
-        final List<Tag> tags = tagUserApi.getTags(id, getObjectType(), context);
+        final List<Tag> tags = tagUserApi.getTagsForObject(id, getObjectType(), context);
         final Collection<UUID> tagIdList = (tags.size() == 0) ?
                                            Collections.<UUID>emptyList() :
                                            Collections2.transform(tags, new Function<Tag, UUID>() {

@@ -37,14 +37,10 @@ import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.invoice.model.InvoicingConfiguration;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallContextBase;
 import com.ning.billing.util.callcontext.DefaultCallContext;
-import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.Tag;
-
-import sun.management.ThreadInfoCompositeData;
 
 import static org.testng.Assert.assertEquals;
 
@@ -354,12 +350,12 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
     public void testAddRemoveWrittenOffTag() throws InvoiceApiException, TagApiException {
         invoiceUserApi.tagInvoiceAsWrittenOff(invoiceId, callContext);
 
-        List<Tag> tags = tagUserApi.getTags(invoiceId, ObjectType.INVOICE, callContext);
+        List<Tag> tags = tagUserApi.getTagsForObject(invoiceId, ObjectType.INVOICE, callContext);
         assertEquals(tags.size(), 1);
         assertEquals(tags.get(0).getTagDefinitionId(), ControlTagType.WRITTEN_OFF.getId());
 
         invoiceUserApi.tagInvoiceAsNotWrittenOff(invoiceId, callContext);
-        tags = tagUserApi.getTags(invoiceId, ObjectType.INVOICE, callContext);
+        tags = tagUserApi.getTagsForObject(invoiceId, ObjectType.INVOICE, callContext);
         assertEquals(tags.size(), 0);
     }
 }

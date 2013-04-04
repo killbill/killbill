@@ -18,7 +18,6 @@ package com.ning.billing.util.api;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import com.ning.billing.ObjectType;
@@ -51,18 +50,65 @@ public interface TagUserApi {
      */
     public void deleteTagDefinition(UUID tagDefinitionId, CallContext context) throws TagDefinitionApiException;
 
+    /**
+     * @param tagDefinitionId The tag definition id
+     * @param context         The call context, for auditing purposes
+     * @return The Tag definition
+     * @throws TagDefinitionApiException
+     */
     public TagDefinition getTagDefinition(UUID tagDefinitionId, TenantContext context) throws TagDefinitionApiException;
 
+    /**
+     * @param tageDefinitionName The tag definition name
+     * @param context            The call context, for auditing purposes
+     * @return the tag definition
+     * @throws TagDefinitionApiException
+     */
     public TagDefinition getTagDefinitionForName(String tageDefinitionName, TenantContext context) throws TagDefinitionApiException;
 
+    /**
+     * @param tagDefinitionIds The collection of the defintion ids
+     * @param context          The call context, for auditing purposes
+     * @return the tag definition
+     * @throws TagDefinitionApiException
+     * @throws TagDefinitionApiException
+     */
     public List<TagDefinition> getTagDefinitions(Collection<UUID> tagDefinitionIds, TenantContext context) throws TagDefinitionApiException;
 
+    /**
+     * @param objectId         The id for the object on which to add tags
+     * @param objectType       The object type
+     * @param tagDefinitionIds The collection of tag definition ids
+     * @param context          The call context, for auditing purposes
+     * @throws TagApiException
+     */
     public void addTags(UUID objectId, ObjectType objectType, Collection<UUID> tagDefinitionIds, CallContext context) throws TagApiException;
 
+    /**
+     * @param objectId        The id for the object on which to add tags
+     * @param objectType      The object type
+     * @param tagDefinitionId The tag definition id
+     * @param context         The call context, for auditing purposes
+     * @throws TagApiException
+     */
     public void addTag(UUID objectId, ObjectType objectType, UUID tagDefinitionId, CallContext context) throws TagApiException;
 
+    /**
+     * @param objectId       The id for the object on which to add tags
+     * @param objectType     The object type
+     * @param tagDefinitions The collection of tag definition ids
+     * @param context        The call context, for auditing purposes
+     * @throws TagApiException
+     */
     public void removeTags(UUID objectId, ObjectType objectType, Collection<UUID> tagDefinitions, CallContext context) throws TagApiException;
 
+    /**
+     * @param objectId        The id for the object on which to add tags
+     * @param objectType      The object type
+     * @param tagDefinitionId The tage definition id
+     * @param context         The call context, for auditing purposes
+     * @throws TagApiException
+     */
     public void removeTag(UUID objectId, ObjectType objectType, UUID tagDefinitionId, CallContext context) throws TagApiException;
 
     /**
@@ -71,5 +117,22 @@ public interface TagUserApi {
      * @param context    The tenant context
      * @return A map of tag, key being the tagId, and value the tag
      */
-    public List<Tag> getTags(UUID objectId, ObjectType objectType, TenantContext context);
+    public List<Tag> getTagsForObject(UUID objectId, ObjectType objectType, TenantContext context);
+
+    /**
+     * @param accountId  The account id
+     * @param objectType The type of object on which to retrieve the tags
+     * @param context    The tenant context
+     * @return A list of tags for that object type and that given account
+     */
+    public List<Tag> getTagsForAccountType(UUID accountId, ObjectType objectType, TenantContext context);
+
+
+    /**
+     *
+     * @param accountId The account id
+     * @param context   The tenant context
+     * @return A list of tags for that given account
+     */
+    public List<Tag> getTagsForAccount(UUID accountId, TenantContext context);
 }

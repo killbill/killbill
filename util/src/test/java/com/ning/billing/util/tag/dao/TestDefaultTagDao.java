@@ -16,41 +16,23 @@
 
 package com.ning.billing.util.tag.dao;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import com.ning.billing.ObjectType;
 import com.ning.billing.api.TestApiListener;
 import com.ning.billing.api.TestApiListener.NextEvent;
-import com.ning.billing.api.TestListenerStatus;
-import com.ning.billing.mock.glue.MockDbHelperModule;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.api.TagDefinitionApiException;
-import com.ning.billing.util.bus.InMemoryBusModule;
-import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.events.BusInternalEvent;
-import com.ning.billing.util.events.TagInternalEvent;
-import com.ning.billing.util.glue.CacheModule;
-import com.ning.billing.util.glue.ClockModule;
-import com.ning.billing.util.glue.NonEntityDaoModule;
-import com.ning.billing.util.glue.TagStoreModule;
-import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.DescriptiveTag;
 import com.ning.billing.util.tag.Tag;
-
-import com.google.common.eventbus.Subscribe;
-import com.google.inject.Inject;
 
 import static org.testng.Assert.assertEquals;
 
@@ -159,7 +141,7 @@ public class TestDefaultTagDao extends UtilTestSuiteWithEmbeddedDB {
         Assert.assertTrue(eventsListener.isCompleted(2000));
 
         // Make sure we can retrieve it via the DAO
-        final List<TagModelDao> foundTags = tagDao.getTags(objectId, objectType, internalCallContext);
+        final List<TagModelDao> foundTags = tagDao.getTagsForObject(objectId, objectType, internalCallContext);
         Assert.assertEquals(foundTags.size(), 1);
         Assert.assertEquals(foundTags.get(0).getTagDefinitionId(), createdTagDefinition.getId());
 
@@ -179,7 +161,7 @@ public class TestDefaultTagDao extends UtilTestSuiteWithEmbeddedDB {
         Assert.assertTrue(eventsListener.isCompleted(2000));
 
         // Make sure the tag is deleted
-        Assert.assertEquals(tagDao.getTags(objectId, objectType, internalCallContext).size(), 0);
+        Assert.assertEquals(tagDao.getTagsForObject(objectId, objectType, internalCallContext).size(), 0);
 
         /*
         final TagInternalEvent tagSecondEventReceived = eventsListener.getTagEvents().get(1);
