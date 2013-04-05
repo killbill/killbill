@@ -98,7 +98,7 @@ public class BusinessSubscriptionTransitionModelDao extends BusinessModelDaoBase
              event,
              previousSubscription,
              nextSubscription,
-             null /* TODO */,
+             transition.getNextEventCreatedDate(),
              creationAuditLog.getUserName(),
              creationAuditLog.getReasonCode(),
              creationAuditLog.getComment(),

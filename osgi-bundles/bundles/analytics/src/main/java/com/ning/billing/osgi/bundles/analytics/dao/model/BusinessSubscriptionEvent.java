@@ -34,6 +34,7 @@ public class BusinessSubscriptionEvent {
         MIGRATE,
         ADD,
         CANCEL,
+        UN_CANCEL,
         RE_ADD,
         TRANSFER,
         CHANGE,
@@ -88,13 +89,15 @@ public class BusinessSubscriptionEvent {
                 return subscriptionTransfered(transition.getNextPlan());
             case CANCEL:
                 return subscriptionCancelled(transition.getNextPlan());
+            case UNCANCEL:
+                return subscriptionUnCancelled(transition.getNextPlan());
             case CHANGE:
                 return subscriptionChanged(transition.getNextPlan());
             case PHASE:
                 return subscriptionPhaseChanged(transition.getNextPlan());
-            // TODO - should we really ignore these?
-            case MIGRATE_BILLING:
-            case UNCANCEL:
+            case MIGRATE_BILLING: // Has no impact on the subscription
+            case START_BILLING_DISABLED: // See BOS
+            case END_BILLING_DISABLED: // See BOS
             default:
                 return null;
         }
@@ -110,6 +113,10 @@ public class BusinessSubscriptionEvent {
 
     private static BusinessSubscriptionEvent subscriptionCancelled(final Plan plan) {
         return eventFromType(EventType.CANCEL, plan);
+    }
+
+    private static BusinessSubscriptionEvent subscriptionUnCancelled(final Plan plan) {
+        return eventFromType(EventType.UN_CANCEL, plan);
     }
 
     private static BusinessSubscriptionEvent subscriptionChanged(final Plan plan) {

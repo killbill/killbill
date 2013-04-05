@@ -118,9 +118,8 @@ public class BusinessSubscriptionTransitionDao extends BusinessAnalyticsDaoBase 
                                                                                subscriptionTransition.getEffectiveTransitionTime(),
                                                                                subscriptionTransition.getNextState());
 
-        // TODO
-        final Long subscriptionEventRecordId = getSubscriptionEventRecordId(null, context);
-        final AuditLog creationAuditLog = getSubscriptionEventCreationAuditLog(null, context);
+        final Long subscriptionEventRecordId = getSubscriptionEventRecordId(subscriptionTransition.getNextEventId(), context);
+        final AuditLog creationAuditLog = getSubscriptionEventCreationAuditLog(subscriptionTransition.getNextEventId(), context);
 
         final Long accountRecordId = getAccountRecordId(account.getId(), context);
         final Long tenantRecordId = getTenantRecordId(context);

@@ -183,8 +183,7 @@ public abstract class BusinessAnalyticsBase {
     //
 
     protected AuditLog getBlockingStateCreationAuditLog(final UUID blockingStateId, final TenantContext context) throws AnalyticsRefreshException {
-        // TODO
-        final List<AuditLog> auditLogsForBlockingState = getAuditUserApi().getAuditLogs(blockingStateId, null, AuditLevel.MINIMAL, context);
+        final List<AuditLog> auditLogsForBlockingState = getAuditUserApi().getAuditLogs(blockingStateId, ObjectType.BLOCKING_STATES, AuditLevel.MINIMAL, context);
         for (final AuditLog auditLog : auditLogsForBlockingState) {
             if (auditLog.getChangeType().equals(ChangeType.INSERT)) {
                 return auditLog;

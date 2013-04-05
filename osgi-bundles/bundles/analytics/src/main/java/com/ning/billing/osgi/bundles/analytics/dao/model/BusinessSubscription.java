@@ -73,7 +73,6 @@ public class BusinessSubscription {
             final Product product = currentPlan.getProduct();
             productName = product.getName();
             productCategory = product.getCategory().toString();
-            // TODO - we should keep the product type
             productType = product.getCatalogName();
         } else {
             productName = null;

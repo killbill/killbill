@@ -77,39 +77,41 @@ public class AnalyticsListener implements OSGIKillbillEventHandler {
     public void handleKillbillEvent(final ExtBusEvent killbillEvent) {
         final CallContext callContext = new AnalyticsCallContext(killbillEvent);
 
-        try {
-            switch (killbillEvent.getEventType()) {
-                case ACCOUNT_CREATION:
-                case ACCOUNT_CHANGE:
-                    handleAccountEvent(killbillEvent, callContext);
-                    break;
-                case SUBSCRIPTION_CREATION:
-                case SUBSCRIPTION_CHANGE:
-                case SUBSCRIPTION_CANCEL:
-                    handleSubscriptionEvent(killbillEvent, callContext);
-                    break;
-                case OVERDUE_CHANGE:
-                    handleOverdueEvent(killbillEvent, callContext);
-                    break;
-                case INVOICE_CREATION:
-                    handleInvoiceEvent(killbillEvent, callContext);
-                    break;
-                case PAYMENT_SUCCESS:
-                case PAYMENT_FAILED:
-                    handlePaymentEvent(killbillEvent, callContext);
-                    break;
-                default:
-                    // TODO invoice adjustments
-                    // TODO refunds
-                    // TODO tags and custom fields
-                    break;
-            }
-        } catch (AnalyticsRefreshException e) {
-            logService.log(LogService.LOG_WARNING, "Refresh triggered by event " + killbillEvent + " failed", e);
+        switch (killbillEvent.getEventType()) {
+            case ACCOUNT_CREATION:
+            case ACCOUNT_CHANGE:
+                handleAccountEvent(killbillEvent, callContext);
+                break;
+            case SUBSCRIPTION_CREATION:
+            case SUBSCRIPTION_CHANGE:
+            case SUBSCRIPTION_CANCEL:
+                handleSubscriptionEvent(killbillEvent, callContext);
+                break;
+            case OVERDUE_CHANGE:
+                handleOverdueEvent(killbillEvent, callContext);
+                break;
+            case INVOICE_CREATION:
+            case INVOICE_ADJUSTMENT:
+                handleInvoiceEvent(killbillEvent, callContext);
+                break;
+            case PAYMENT_SUCCESS:
+            case PAYMENT_FAILED:
+                handlePaymentEvent(killbillEvent, callContext);
+                break;
+            case TAG_CREATION:
+            case TAG_DELETION:
+                handleTagEvent(killbillEvent, callContext);
+                break;
+            case CUSTOM_FIELD_CREATION:
+            case CUSTOM_FIELD_DELETION:
+                handleFieldEvent(killbillEvent, callContext);
+                break;
+            default:
+                break;
         }
     }
 
-    private void handleAccountEvent(final ExtBusEvent killbillEvent, final CallContext callContext) throws AnalyticsRefreshException {
+    private void handleAccountEvent(final ExtBusEvent killbillEvent, final CallContext callContext) {
         updateWithAccountLock(killbillEvent, new Callable<Void>() {
             @Override
             public Void call() throws Exception {
@@ -119,7 +121,7 @@ public class AnalyticsListener implements OSGIKillbillEventHandler {
         });
     }
 
-    private void handleSubscriptionEvent(final ExtBusEvent killbillEvent, final CallContext callContext) throws AnalyticsRefreshException {
+    private void handleSubscriptionEvent(final ExtBusEvent killbillEvent, final CallContext callContext) {
         updateWithAccountLock(killbillEvent, new Callable<Void>() {
             @Override
             public Void call() throws Exception {
@@ -129,7 +131,7 @@ public class AnalyticsListener implements OSGIKillbillEventHandler {
         });
     }
 
-    private void handleInvoiceEvent(final ExtBusEvent killbillEvent, final CallContext callContext) throws AnalyticsRefreshException {
+    private void handleInvoiceEvent(final ExtBusEvent killbillEvent, final CallContext callContext) {
         updateWithAccountLock(killbillEvent, new Callable<Void>() {
             @Override
             public Void call() throws Exception {
@@ -139,7 +141,7 @@ public class AnalyticsListener implements OSGIKillbillEventHandler {
         });
     }
 
-    private void handlePaymentEvent(final ExtBusEvent killbillEvent, final CallContext callContext) throws AnalyticsRefreshException {
+    private void handlePaymentEvent(final ExtBusEvent killbillEvent, final CallContext callContext) {
         updateWithAccountLock(killbillEvent, new Callable<Void>() {
             @Override
             public Void call() throws Exception {
@@ -149,11 +151,31 @@ public class AnalyticsListener implements OSGIKillbillEventHandler {
         });
     }
 
-    private void handleOverdueEvent(final ExtBusEvent killbillEvent, final CallContext callContext) throws AnalyticsRefreshException {
+    private void handleOverdueEvent(final ExtBusEvent killbillEvent, final CallContext callContext) {
         updateWithAccountLock(killbillEvent, new Callable<Void>() {
             @Override
             public Void call() throws Exception {
                 bosDao.update(killbillEvent.getAccountId(), killbillEvent.getObjectType(), callContext);
+                return null;
+            }
+        });
+    }
+
+    private void handleTagEvent(final ExtBusEvent killbillEvent, final CallContext callContext) {
+        updateWithAccountLock(killbillEvent, new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+                bTagDao.update(killbillEvent.getAccountId(), callContext);
+                return null;
+            }
+        });
+    }
+
+    private void handleFieldEvent(final ExtBusEvent killbillEvent, final CallContext callContext) {
+        updateWithAccountLock(killbillEvent, new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+                bFieldDao.update(killbillEvent.getAccountId(), callContext);
                 return null;
             }
         });

@@ -61,7 +61,7 @@ public class AnalyticsUserApi extends BusinessAnalyticsBase {
                             final OSGIKillbillAPI osgiKillbillAPI,
                             final OSGIKillbillDataSource osgiKillbillDataSource) {
         super(logService, osgiKillbillAPI);
-        this.analyticsDao = new AnalyticsDao(osgiKillbillDataSource);
+        this.analyticsDao = new AnalyticsDao(osgiKillbillAPI, osgiKillbillDataSource);
         this.bacDao = new BusinessAccountDao(logService, osgiKillbillAPI, osgiKillbillDataSource);
         this.bstDao = new BusinessSubscriptionTransitionDao(logService, osgiKillbillAPI, osgiKillbillDataSource);
         this.binDao = new BusinessInvoiceDao(logService, osgiKillbillAPI, osgiKillbillDataSource, bacDao);
