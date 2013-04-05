@@ -35,7 +35,16 @@ import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.events.AccountChangeInternalEvent;
 import com.ning.billing.util.events.AccountCreationInternalEvent;
 import com.ning.billing.util.events.BusInternalEvent;
+import com.ning.billing.util.events.ControlTagCreationInternalEvent;
+import com.ning.billing.util.events.ControlTagDeletionInternalEvent;
+import com.ning.billing.util.events.CustomFieldCreationEvent;
+import com.ning.billing.util.events.CustomFieldDeletionEvent;
+import com.ning.billing.util.events.InvoiceAdjustmentInternalEvent;
+import com.ning.billing.util.events.InvoiceCreationInternalEvent;
+import com.ning.billing.util.events.InvoiceInternalEvent;
 import com.ning.billing.util.events.OverdueChangeInternalEvent;
+import com.ning.billing.util.events.PaymentErrorInternalEvent;
+import com.ning.billing.util.events.PaymentInfoInternalEvent;
 import com.ning.billing.util.events.SubscriptionInternalEvent;
 import com.ning.billing.util.svcsapi.bus.InternalBus.EventBusException;
 
@@ -59,24 +68,6 @@ public class BeatrixListener {
 
     @Subscribe
     public void handleAllInternalKillbillEvents(final BusInternalEvent event) {
-        switch(event.getBusEventType()) {
-            case ACCOUNT_CREATE:
-                break;
-            case ACCOUNT_CHANGE:
-                break;
-            case SUBSCRIPTION_TRANSITION:
-                break;
-            case INVOICE_CREATION:
-                break;
-            case PAYMENT_INFO:
-                break;
-            case PAYMENT_ERROR:
-                break;
-            case OVERDUE_CHANGE:
-                break;
-            default:
-                // Ignore for now.
-        }
         final ExtBusEventEntry externalEvent = computeExtBusEventEntryFromBusInternalEvent(event);
         try {
 
@@ -88,6 +79,7 @@ public class BeatrixListener {
             log.warn("Failed to post external bus event {} {} ", externalEvent.getExtBusType(), externalEvent.getObjectId());
         }
     }
+
 
     private ExtBusEventEntry computeExtBusEventEntryFromBusInternalEvent(final BusInternalEvent event) {
 
@@ -122,14 +114,36 @@ public class BeatrixListener {
             } else if (realEventST.getTransitionType() == SubscriptionTransitionType.CHANGE) {
                 eventBusType = ExtBusEventType.SUBSCRIPTION_CHANGE;
             }
+            break;
 
-            break;
         case INVOICE_CREATION:
+            InvoiceCreationInternalEvent realEventInv = (InvoiceCreationInternalEvent) event;
+            objectType = ObjectType.INVOICE;
+            objectId = realEventInv.getInvoiceId();
+            eventBusType = ExtBusEventType.INVOICE_CREATION;
             break;
+
+        case INVOICE_ADJUSTMENT:
+            InvoiceAdjustmentInternalEvent realEventInvAdj = (InvoiceAdjustmentInternalEvent) event;
+            objectType = ObjectType.INVOICE;
+            objectId = realEventInvAdj.getInvoiceId();
+            eventBusType = ExtBusEventType.INVOICE_ADJUSTMENT;
+            break;
+
         case PAYMENT_INFO:
+            PaymentInfoInternalEvent realEventPay = (PaymentInfoInternalEvent) event;
+            objectType = ObjectType.PAYMENT;
+            objectId = realEventPay.getPaymentId();
+            eventBusType = ExtBusEventType.PAYMENT_SUCCESS;
             break;
+
         case PAYMENT_ERROR:
+            PaymentErrorInternalEvent realEventPayErr = (PaymentErrorInternalEvent) event;
+            objectType = ObjectType.PAYMENT;
+            objectId = realEventPayErr.getPaymentId();
+            eventBusType = ExtBusEventType.PAYMENT_FAILED;
             break;
+
         case OVERDUE_CHANGE:
             OverdueChangeInternalEvent realEventOC = (OverdueChangeInternalEvent) event;
             // TODO When Killbil supports more than overdue for bundle, this will break...
@@ -137,6 +151,37 @@ public class BeatrixListener {
             objectId = realEventOC.getOverdueObjectId();
             eventBusType = ExtBusEventType.OVERDUE_CHANGE;
             break;
+
+       case USER_TAG_CREATION:
+       case CONTROL_TAG_CREATION:
+           ControlTagCreationInternalEvent realTagEventCr = (ControlTagCreationInternalEvent) event;
+           objectType = ObjectType.TAG;
+           objectId = realTagEventCr.getTagId();
+           eventBusType = ExtBusEventType.TAG_CREATION;
+            break;
+
+       case USER_TAG_DELETION:
+       case CONTROL_TAG_DELETION:
+           ControlTagDeletionInternalEvent realTagEventDel = (ControlTagDeletionInternalEvent) event;
+           objectType = ObjectType.TAG;
+           objectId = realTagEventDel.getTagId();
+           eventBusType = ExtBusEventType.TAG_DELETION;
+           break;
+
+       case CUSTOM_FIELD_CREATION:
+           CustomFieldCreationEvent realCustomEveventCr = (CustomFieldCreationEvent) event;
+           objectType = ObjectType.CUSTOM_FIELD;
+           objectId = realCustomEveventCr.getCustomFieldId();
+           eventBusType = ExtBusEventType.CUSTOM_FIELD_CREATION;
+           break;
+
+       case CUSTOM_FIELD_DELETION:
+           CustomFieldDeletionEvent realCustomEveventDel = (CustomFieldDeletionEvent) event;
+           objectType = ObjectType.CUSTOM_FIELD;
+           objectId = realCustomEveventDel.getCustomFieldId();
+           eventBusType = ExtBusEventType.CUSTOM_FIELD_DELETION;
+           break;
+
         default:
         }
         return eventBusType != null ?

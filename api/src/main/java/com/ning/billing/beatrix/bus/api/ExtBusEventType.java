@@ -16,8 +16,9 @@
 package com.ning.billing.beatrix.bus.api;
 
 /**
- * The enum {@code ExtBusEventType} rerpesents the user visible bus event types.
+ * The enum {@code ExtBusEventType} represents the user visible bus event types.
  */
+
 public enum ExtBusEventType {
     ACCOUNT_CREATION,
     ACCOUNT_CHANGE,
@@ -26,6 +27,11 @@ public enum ExtBusEventType {
     SUBSCRIPTION_CANCEL,
     OVERDUE_CHANGE,
     INVOICE_CREATION,
+    INVOICE_ADJUSTMENT,
     PAYMENT_SUCCESS,
-    PAYMENT_FAILED
+    PAYMENT_FAILED,
+    TAG_CREATION,
+    TAG_DELETION,
+    CUSTOM_FIELD_CREATION,
+    CUSTOM_FIELD_DELETION
 }
