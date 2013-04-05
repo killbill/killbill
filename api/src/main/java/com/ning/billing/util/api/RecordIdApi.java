@@ -19,6 +19,7 @@ package com.ning.billing.util.api;
 import java.util.UUID;
 
 import com.ning.billing.ObjectType;
+import com.ning.billing.util.callcontext.TenantContext;
 
 public interface RecordIdApi {
 
@@ -26,9 +27,11 @@ public interface RecordIdApi {
      *
      * This can be used by external plugins to keep the mapping between UUID  and recordId
      *
+     *
      * @param objectId the uuid of the object
      * @param objectType the object type
+     * @param tenantContext the context associated with the call
      * @return the record id associated with that object
      */
-    Long getRecordId(UUID objectId, ObjectType objectType);
+    Long getRecordId(UUID objectId, ObjectType objectType, final TenantContext tenantContext);
 }

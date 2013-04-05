@@ -70,6 +70,7 @@ import com.ning.billing.util.glue.CustomFieldModule;
 import com.ning.billing.util.glue.ExportModule;
 import com.ning.billing.util.glue.NonEntityDaoModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
+import com.ning.billing.util.glue.RecordIdModule;
 import com.ning.billing.util.glue.TagStoreModule;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
@@ -206,6 +207,7 @@ public class TestJaxrsBase extends KillbillClient {
             install(new ExportModule());
             install(new DefaultOSGIModule(configSource));
             install(new UsageModule(configSource));
+            install(new RecordIdModule());
             installClock();
         }
     }

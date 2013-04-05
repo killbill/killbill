@@ -26,6 +26,7 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ning.billing.util.events.CustomFieldEvent;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 import com.ning.billing.util.events.InvoiceAdjustmentInternalEvent;
 import com.ning.billing.util.events.InvoiceCreationInternalEvent;
@@ -76,7 +77,8 @@ public class TestApiListener {
         PAYMENT_ERROR,
         REPAIR_BUNDLE,
         TAG,
-        TAG_DEFINITION
+        TAG_DEFINITION,
+        CUSTOM_FIELD
     }
 
     public void setNonExpectedMode() {
@@ -143,6 +145,14 @@ public class TestApiListener {
         assertEqualsNicely(NextEvent.TAG);
         notifyIfStackEmpty();
     }
+
+    @Subscribe
+    public synchronized void processCustomFieldEvent(final CustomFieldEvent event) {
+        log.info(String.format("Got CustomFieldEvent event %s", event.toString()));
+        assertEqualsNicely(NextEvent.CUSTOM_FIELD);
+        notifyIfStackEmpty();
+    }
+
 
     @Subscribe
     public synchronized void processTagDefinitonEvent(final TagDefinitionInternalEvent event) {

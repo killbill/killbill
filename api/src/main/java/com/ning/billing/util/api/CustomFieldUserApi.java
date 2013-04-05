@@ -25,10 +25,43 @@ import com.ning.billing.ObjectType;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.customfield.CustomField;
+import com.ning.billing.util.tag.Tag;
 
 public interface CustomFieldUserApi {
 
-    List<CustomField> getCustomFields(UUID objectId, ObjectType objectType, TenantContext context);
-
+    /**
+     *
+     * @param fields the list of fields to add
+     * @param context the call context
+     * @throws CustomFieldApiException
+     */
     void addCustomFields(List<CustomField> fields, CallContext context) throws CustomFieldApiException;
+
+    /**
+     *
+     * @param objectId the object id
+     * @param objectType the object type
+     * @param context the call context
+     * @return the list of custom fields associated with that object
+     */
+    List<CustomField> getCustomFieldsForObject(UUID objectId, ObjectType objectType, TenantContext context);
+
+
+    /**
+     *
+     * @param accountId the account id
+     * @param objectType the object type
+     * @param context the call context
+     * @return  the list of custom fields associated with that account for the specified type
+     */
+    List<CustomField> getCustomFieldsForAccountType(UUID accountId, ObjectType objectType, TenantContext context);
+
+
+    /**
+     *
+     * @param accountId the account id
+     * @param context the call context
+     * @return  the list of custom fields associated with that account
+     */
+    List<CustomField> getCustomFieldsForAccount(UUID accountId, TenantContext context);
 }

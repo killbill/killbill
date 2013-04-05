@@ -22,10 +22,16 @@ import java.util.UUID;
 import com.ning.billing.ObjectType;
 import com.ning.billing.util.api.CustomFieldApiException;
 import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.entity.dao.EntityDao;
 
 public interface CustomFieldDao extends EntityDao<CustomFieldModelDao, CustomField, CustomFieldApiException> {
 
-    public List<CustomFieldModelDao> getCustomFields(final UUID objectId, final ObjectType objectType, final InternalTenantContext context);
+    public List<CustomFieldModelDao> getCustomFieldsForObject(final UUID objectId, final ObjectType objectType, final InternalTenantContext context);
+
+    public List<CustomFieldModelDao> getCustomFieldsForAccountType(final ObjectType objectType, final InternalTenantContext context);
+
+    public List<CustomFieldModelDao> getCustomFieldsForAccount(final InternalTenantContext context);
+
 }

@@ -13,25 +13,19 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.ning.billing.beatrix.bus.api;
 
-/**
- * The enum {@code ExtBusEventType} represents the user visible bus event types.
- */
+package com.ning.billing.util.glue;
 
-public enum ExtBusEventType {
-    ACCOUNT_CREATION,
-    ACCOUNT_CHANGE,
-    SUBSCRIPTION_CREATION,
-    SUBSCRIPTION_CHANGE,
-    SUBSCRIPTION_CANCEL,
-    OVERDUE_CHANGE,
-    INVOICE_CREATION,
-    INVOICE_ADJUSTMENT,
-    PAYMENT_SUCCESS,
-    PAYMENT_FAILED,
-    TAG_CREATION,
-    TAG_DELETION,
-    CUSTOM_FIELD_CREATION,
-    CUSTOM_FIELD_DELETION
+import com.ning.billing.util.api.RecordIdApi;
+import com.ning.billing.util.recordid.DefaultRecordIdApi;
+
+import com.google.inject.AbstractModule;
+
+public class RecordIdModule extends AbstractModule {
+
+
+    @Override
+    protected void configure() {
+        bind(RecordIdApi.class).to(DefaultRecordIdApi.class).asEagerSingleton();
+    }
 }

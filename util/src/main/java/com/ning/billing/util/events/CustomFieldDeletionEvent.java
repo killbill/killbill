@@ -13,25 +13,12 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.ning.billing.beatrix.bus.api;
 
-/**
- * The enum {@code ExtBusEventType} represents the user visible bus event types.
- */
+package com.ning.billing.util.events;
 
-public enum ExtBusEventType {
-    ACCOUNT_CREATION,
-    ACCOUNT_CHANGE,
-    SUBSCRIPTION_CREATION,
-    SUBSCRIPTION_CHANGE,
-    SUBSCRIPTION_CANCEL,
-    OVERDUE_CHANGE,
-    INVOICE_CREATION,
-    INVOICE_ADJUSTMENT,
-    PAYMENT_SUCCESS,
-    PAYMENT_FAILED,
-    TAG_CREATION,
-    TAG_DELETION,
-    CUSTOM_FIELD_CREATION,
-    CUSTOM_FIELD_DELETION
+import java.util.UUID;
+
+import com.ning.billing.ObjectType;
+
+public interface CustomFieldDeletionEvent  extends CustomFieldEvent {
 }

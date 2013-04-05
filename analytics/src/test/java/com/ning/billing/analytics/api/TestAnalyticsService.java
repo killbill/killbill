@@ -27,7 +27,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.user.DefaultAccountCreationEvent;
 import com.ning.billing.account.dao.AccountModelDao;
 import com.ning.billing.analytics.AnalyticsTestSuiteWithEmbeddedDB;
@@ -149,6 +148,10 @@ public class TestAnalyticsService extends AnalyticsTestSuiteWithEmbeddedDB {
                 ApiEventType.CREATE,
                 requestedTransitionTime,
                 effectiveTransitionTime,
+                null,
+                null,
+                null,
+                null,
                 null,
                 null,
                 null,

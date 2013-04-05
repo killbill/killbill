@@ -433,6 +433,7 @@ public class TestUserApiChangePlan extends EntitlementTestSuiteWithEmbeddedDB {
             PlanPhase trialPhase = subscription.getCurrentPhase();
             assertEquals(trialPhase.getPhaseType(), PhaseType.TRIAL);
 
+
             // MOVE 2 DAYS AHEAD
             Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(2));
             clock.addDeltaFromReality(it.toDurationMillis());
@@ -468,8 +469,8 @@ public class TestUserApiChangePlan extends EntitlementTestSuiteWithEmbeddedDB {
 
             final DateTime expectedNextPhaseDate = subscription.getStartDate().plusDays(30).plusMonths(6);
             final SubscriptionTransition nextPhase = subscription.getPendingTransition();
-            final DateTime nextPhaseEffectiveDate = nextPhase.getEffectiveTransitionTime();
 
+            final DateTime nextPhaseEffectiveDate = nextPhase.getEffectiveTransitionTime();
             assertEquals(nextPhaseEffectiveDate, expectedNextPhaseDate);
 
             assertListenerStatus();
