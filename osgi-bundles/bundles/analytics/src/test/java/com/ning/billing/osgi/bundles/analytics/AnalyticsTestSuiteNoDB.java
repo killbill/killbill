@@ -55,6 +55,7 @@ import com.ning.billing.payment.api.Payment.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentMethod;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.payment.api.PaymentStatus;
+import com.ning.billing.util.api.RecordIdApi;
 import com.ning.billing.util.audit.AuditLog;
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.CallContext;
@@ -147,6 +148,7 @@ public abstract class AnalyticsTestSuiteNoDB {
         Mockito.when(account.isMigrated()).thenReturn(true);
         Mockito.when(account.isNotifiedForInvoices()).thenReturn(true);
         Mockito.when(account.getCreatedDate()).thenReturn(new DateTime(2016, 1, 22, 10, 56, 47, DateTimeZone.UTC));
+        Mockito.when(account.getUpdatedDate()).thenReturn(new DateTime(2016, 1, 22, 10, 56, 48, DateTimeZone.UTC));
         final UUID accountId = account.getId();
 
         bundle = Mockito.mock(SubscriptionBundle.class);
@@ -192,7 +194,9 @@ public abstract class AnalyticsTestSuiteNoDB {
         Mockito.when(subscriptionTransition.getEffectiveTransitionTime()).thenReturn(new DateTime(2011, 2, 3, 4, 5, 6, DateTimeZone.UTC));
         Mockito.when(subscriptionTransition.getTransitionType()).thenReturn(SubscriptionTransitionType.CREATE);
         Mockito.when(subscriptionTransition.getNextEventCreatedDate()).thenReturn(new DateTime(2016, 1, 22, 10, 56, 49, DateTimeZone.UTC));
+        Mockito.when(subscriptionTransition.getNextEventId()).thenReturn(UUID.randomUUID());
         final UUID subscriptionId = subscriptionTransition.getSubscriptionId();
+        final UUID nextEventId = subscriptionTransition.getNextEventId();
 
         blockingState = Mockito.mock(BlockingState.class);
         Mockito.when(blockingState.getId()).thenReturn(UUID.randomUUID());
@@ -205,7 +209,8 @@ public abstract class AnalyticsTestSuiteNoDB {
         Mockito.when(blockingState.isBlockEntitlement()).thenReturn(true);
         Mockito.when(blockingState.getDescription()).thenReturn(UUID.randomUUID().toString());
         Mockito.when(blockingState.getService()).thenReturn(UUID.randomUUID().toString());
-        Mockito.when(blockingState.getCreatedDate()).thenReturn(new DateTime(2016, 1, 22, 10, 56, 00, DateTimeZone.UTC));
+        Mockito.when(blockingState.getCreatedDate()).thenReturn(new DateTime(2016, 1, 22, 10, 56, 0, DateTimeZone.UTC));
+        final UUID blockingStateId = blockingState.getId();
 
         invoiceItem = Mockito.mock(InvoiceItem.class);
         Mockito.when(invoiceItem.getId()).thenReturn(UUID.randomUUID());
@@ -224,6 +229,7 @@ public abstract class AnalyticsTestSuiteNoDB {
         Mockito.when(invoiceItem.getRate()).thenReturn(new BigDecimal("1203"));
         Mockito.when(invoiceItem.getLinkedItemId()).thenReturn(UUID.randomUUID());
         Mockito.when(invoiceItem.getCreatedDate()).thenReturn(new DateTime(2016, 1, 22, 10, 56, 51, DateTimeZone.UTC));
+        final UUID invoiceItemId = invoiceItem.getId();
 
         final UUID invoiceId = UUID.randomUUID();
 
@@ -238,6 +244,7 @@ public abstract class AnalyticsTestSuiteNoDB {
         Mockito.when(invoicePayment.getLinkedInvoicePaymentId()).thenReturn(UUID.randomUUID());
         Mockito.when(invoicePayment.getPaymentCookieId()).thenReturn(UUID.randomUUID());
         Mockito.when(invoicePayment.getCreatedDate()).thenReturn(new DateTime(2016, 1, 22, 10, 56, 53, DateTimeZone.UTC));
+        final UUID invoicePaymentId = invoicePayment.getId();
 
         invoice = Mockito.mock(Invoice.class);
         Mockito.when(invoice.getId()).thenReturn(invoiceId);
@@ -305,12 +312,14 @@ public abstract class AnalyticsTestSuiteNoDB {
         Mockito.when(customField.getFieldName()).thenReturn(UUID.randomUUID().toString());
         Mockito.when(customField.getFieldValue()).thenReturn(UUID.randomUUID().toString());
         Mockito.when(customField.getCreatedDate()).thenReturn(new DateTime(2016, 1, 22, 10, 56, 57, DateTimeZone.UTC));
+        final UUID fieldId = customField.getId();
 
         tag = Mockito.mock(Tag.class);
         Mockito.when(tag.getObjectId()).thenReturn(UUID.randomUUID());
         Mockito.when(tag.getObjectType()).thenReturn(ObjectType.ACCOUNT);
         Mockito.when(tag.getTagDefinitionId()).thenReturn(UUID.randomUUID());
         Mockito.when(tag.getCreatedDate()).thenReturn(new DateTime(2016, 1, 22, 10, 56, 58, DateTimeZone.UTC));
+        final UUID tagId = tag.getId();
 
         tagDefinition = Mockito.mock(TagDefinition.class);
         Mockito.when(tagDefinition.getId()).thenReturn(UUID.randomUUID());
@@ -331,8 +340,22 @@ public abstract class AnalyticsTestSuiteNoDB {
 
         // Real class for the binding to work with JDBI
         callContext = new TestCallContext();
+        final UUID tenantId = callContext.getTenantId();
+
+        final RecordIdApi recordIdApi = Mockito.mock(RecordIdApi.class);
+        Mockito.when(recordIdApi.getRecordId(accountId, ObjectType.ACCOUNT, callContext)).thenReturn(accountRecordId);
+        Mockito.when(recordIdApi.getRecordId(nextEventId, ObjectType.SUBSCRIPTION_EVENT, callContext)).thenReturn(subscriptionEventRecordId);
+        Mockito.when(recordIdApi.getRecordId(invoiceId, ObjectType.INVOICE, callContext)).thenReturn(invoiceRecordId);
+        Mockito.when(recordIdApi.getRecordId(invoiceItemId, ObjectType.INVOICE_ITEM, callContext)).thenReturn(invoiceItemRecordId);
+        Mockito.when(recordIdApi.getRecordId(invoicePaymentId, ObjectType.INVOICE_PAYMENT, callContext)).thenReturn(invoicePaymentRecordId);
+        Mockito.when(recordIdApi.getRecordId(blockingStateId, ObjectType.BLOCKING_STATES, callContext)).thenReturn(blockingStateRecordId);
+        Mockito.when(recordIdApi.getRecordId(fieldId, ObjectType.CUSTOM_FIELD, callContext)).thenReturn(fieldRecordId);
+        Mockito.when(recordIdApi.getRecordId(tagId, ObjectType.TAG, callContext)).thenReturn(tagRecordId);
+        Mockito.when(recordIdApi.getRecordId(tenantId, ObjectType.TENANT, callContext)).thenReturn(tenantRecordId);
 
         killbillAPI = Mockito.mock(OSGIKillbillAPI.class);
+        Mockito.when(killbillAPI.getRecordIdApi()).thenReturn(recordIdApi);
+
         killbillDataSource = Mockito.mock(OSGIKillbillDataSource.class);
     }
 }

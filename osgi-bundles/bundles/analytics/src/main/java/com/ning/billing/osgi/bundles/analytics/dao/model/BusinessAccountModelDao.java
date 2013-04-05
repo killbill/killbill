@@ -50,6 +50,7 @@ public class BusinessAccountModelDao extends BusinessModelDaoBase {
     private String phone;
     private Boolean migrated;
     private Boolean notifiedForInvoices;
+    private DateTime updatedDate;
     private BigDecimal balance;
     private LocalDate lastInvoiceDate;
     private DateTime lastPaymentDate;
@@ -74,6 +75,7 @@ public class BusinessAccountModelDao extends BusinessModelDaoBase {
                                    final String phone,
                                    final Boolean isMigrated,
                                    final Boolean notifiedForInvoices,
+                                   final DateTime updatedDate,
                                    final BigDecimal balance,
                                    final LocalDate lastInvoiceDate,
                                    final DateTime lastPaymentDate,
@@ -113,6 +115,7 @@ public class BusinessAccountModelDao extends BusinessModelDaoBase {
         this.phone = phone;
         this.migrated = isMigrated;
         this.notifiedForInvoices = notifiedForInvoices;
+        this.updatedDate = updatedDate;
         this.balance = balance;
         this.lastInvoiceDate = lastInvoiceDate;
         this.lastPaymentDate = lastPaymentDate;
@@ -143,6 +146,7 @@ public class BusinessAccountModelDao extends BusinessModelDaoBase {
              account.getPhone(),
              account.isMigrated(),
              account.isNotifiedForInvoices(),
+             account.getUpdatedDate(),
              balance,
              lastInvoice == null ? null : lastInvoice.getInvoiceDate(),
              lastPayment == null ? null : lastPayment.getEffectiveDate(),
@@ -231,6 +235,10 @@ public class BusinessAccountModelDao extends BusinessModelDaoBase {
         return notifiedForInvoices;
     }
 
+    public DateTime getUpdatedDate() {
+        return updatedDate;
+    }
+
     public BigDecimal getBalance() {
         return balance;
     }
@@ -268,6 +276,7 @@ public class BusinessAccountModelDao extends BusinessModelDaoBase {
         sb.append(", phone='").append(phone).append('\'');
         sb.append(", migrated=").append(migrated);
         sb.append(", notifiedForInvoices=").append(notifiedForInvoices);
+        sb.append(", updatedDate=").append(updatedDate);
         sb.append(", balance=").append(balance);
         sb.append(", lastInvoiceDate=").append(lastInvoiceDate);
         sb.append(", lastPaymentDate=").append(lastPaymentDate);
@@ -296,7 +305,7 @@ public class BusinessAccountModelDao extends BusinessModelDaoBase {
         if (address2 != null ? !address2.equals(that.address2) : that.address2 != null) {
             return false;
         }
-        if (balance != null ? !balance.equals(that.balance) : that.balance != null) {
+        if (balance != null ? balance.compareTo(that.balance) != 0 : that.balance != null) {
             return false;
         }
         if (billingCycleDayLocal != null ? !billingCycleDayLocal.equals(that.billingCycleDayLocal) : that.billingCycleDayLocal != null) {
@@ -320,12 +329,6 @@ public class BusinessAccountModelDao extends BusinessModelDaoBase {
         if (firstNameLength != null ? !firstNameLength.equals(that.firstNameLength) : that.firstNameLength != null) {
             return false;
         }
-        if (migrated != null ? !migrated.equals(that.migrated) : that.migrated != null) {
-            return false;
-        }
-        if (notifiedForInvoices != null ? !notifiedForInvoices.equals(that.notifiedForInvoices) : that.notifiedForInvoices != null) {
-            return false;
-        }
         if (lastInvoiceDate != null ? !lastInvoiceDate.equals(that.lastInvoiceDate) : that.lastInvoiceDate != null) {
             return false;
         }
@@ -336,6 +339,12 @@ public class BusinessAccountModelDao extends BusinessModelDaoBase {
             return false;
         }
         if (locale != null ? !locale.equals(that.locale) : that.locale != null) {
+            return false;
+        }
+        if (migrated != null ? !migrated.equals(that.migrated) : that.migrated != null) {
+            return false;
+        }
+        if (notifiedForInvoices != null ? !notifiedForInvoices.equals(that.notifiedForInvoices) : that.notifiedForInvoices != null) {
             return false;
         }
         if (paymentMethodId != null ? !paymentMethodId.equals(that.paymentMethodId) : that.paymentMethodId != null) {
@@ -351,6 +360,9 @@ public class BusinessAccountModelDao extends BusinessModelDaoBase {
             return false;
         }
         if (timeZone != null ? !timeZone.equals(that.timeZone) : that.timeZone != null) {
+            return false;
+        }
+        if (updatedDate != null ? !updatedDate.equals(that.updatedDate) : that.updatedDate != null) {
             return false;
         }
 
@@ -377,6 +389,7 @@ public class BusinessAccountModelDao extends BusinessModelDaoBase {
         result = 31 * result + (phone != null ? phone.hashCode() : 0);
         result = 31 * result + (migrated != null ? migrated.hashCode() : 0);
         result = 31 * result + (notifiedForInvoices != null ? notifiedForInvoices.hashCode() : 0);
+        result = 31 * result + (updatedDate != null ? updatedDate.hashCode() : 0);
         result = 31 * result + (balance != null ? balance.hashCode() : 0);
         result = 31 * result + (lastInvoiceDate != null ? lastInvoiceDate.hashCode() : 0);
         result = 31 * result + (lastPaymentDate != null ? lastPaymentDate.hashCode() : 0);

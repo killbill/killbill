@@ -140,7 +140,11 @@ public class AnalyticsDao {
         final Long accountRecordId = getAccountRecordId(accountId, context);
         final Long tenantRecordId = getTenantRecordId(context);
 
-        final List<BusinessFieldModelDao> businessFieldModelDaos = sqlDao.getFieldsByAccountRecordId(accountRecordId, tenantRecordId, context);
+        final List<BusinessFieldModelDao> businessFieldModelDaos = new LinkedList<BusinessFieldModelDao>();
+        businessFieldModelDaos.addAll(sqlDao.getAccountFieldsByAccountRecordId(accountRecordId, tenantRecordId, context));
+        businessFieldModelDaos.addAll(sqlDao.getInvoiceFieldsByAccountRecordId(accountRecordId, tenantRecordId, context));
+        businessFieldModelDaos.addAll(sqlDao.getInvoicePaymentFieldsByAccountRecordId(accountRecordId, tenantRecordId, context));
+
         return Lists.transform(businessFieldModelDaos, new Function<BusinessFieldModelDao, BusinessField>() {
             @Override
             public BusinessField apply(final BusinessFieldModelDao input) {
@@ -153,7 +157,11 @@ public class AnalyticsDao {
         final Long accountRecordId = getAccountRecordId(accountId, context);
         final Long tenantRecordId = getTenantRecordId(context);
 
-        final List<BusinessTagModelDao> businessTagModelDaos = sqlDao.getTagsByAccountRecordId(accountRecordId, tenantRecordId, context);
+        final List<BusinessTagModelDao> businessTagModelDaos = new LinkedList<BusinessTagModelDao>();
+        businessTagModelDaos.addAll(sqlDao.getAccountTagsByAccountRecordId(accountRecordId, tenantRecordId, context));
+        businessTagModelDaos.addAll(sqlDao.getInvoiceTagsByAccountRecordId(accountRecordId, tenantRecordId, context));
+        businessTagModelDaos.addAll(sqlDao.getInvoicePaymentTagsByAccountRecordId(accountRecordId, tenantRecordId, context));
+
         return Lists.transform(businessTagModelDaos, new Function<BusinessTagModelDao, BusinessTag>() {
             @Override
             public BusinessTag apply(final BusinessTagModelDao input) {

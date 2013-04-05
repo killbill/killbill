@@ -27,14 +27,22 @@ import com.ning.billing.util.callcontext.UserType;
 
 public class TestCallContext implements CallContext {
 
+    private final UUID userToken = UUID.randomUUID();
+    private final String userName = UUID.randomUUID().toString();
+    private final String reasonCode = UUID.randomUUID().toString();
+    private final String comments = UUID.randomUUID().toString();
+    private final DateTime createdDate = new DateTime(2010, 2, 4, 6, 8, 10, DateTimeZone.UTC);
+    private final DateTime updatedDate = new DateTime(2011, 3, 5, 7, 9, 11, DateTimeZone.UTC);
+    private final UUID tenantId = UUID.randomUUID();
+
     @Override
     public UUID getUserToken() {
-        return UUID.randomUUID();
+        return userToken;
     }
 
     @Override
     public String getUserName() {
-        return UUID.randomUUID().toString();
+        return userName;
     }
 
     @Override
@@ -49,26 +57,26 @@ public class TestCallContext implements CallContext {
 
     @Override
     public String getReasonCode() {
-        return UUID.randomUUID().toString();
+        return reasonCode;
     }
 
     @Override
     public String getComments() {
-        return UUID.randomUUID().toString();
+        return comments;
     }
 
     @Override
     public DateTime getCreatedDate() {
-        return new DateTime(2010, 2, 4, 6, 8, 10, DateTimeZone.UTC);
+        return createdDate;
     }
 
     @Override
     public DateTime getUpdatedDate() {
-        return new DateTime(2011, 3, 5, 7, 9, 11, DateTimeZone.UTC);
+        return updatedDate;
     }
 
     @Override
     public UUID getTenantId() {
-        return UUID.randomUUID();
+        return tenantId;
     }
 }

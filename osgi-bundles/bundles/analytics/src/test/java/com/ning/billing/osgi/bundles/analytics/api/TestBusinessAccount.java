@@ -43,6 +43,9 @@ public class TestBusinessAccount extends AnalyticsTestSuiteNoDB {
         Assert.assertEquals(businessAccount.getFirstNameLength(), accountModelDao.getFirstNameLength());
         Assert.assertEquals(businessAccount.getCurrency(), accountModelDao.getCurrency());
         Assert.assertEquals(businessAccount.getBillingCycleDayLocal(), accountModelDao.getBillingCycleDayLocal());
+        Assert.assertEquals(businessAccount.getPaymentMethodId(), accountModelDao.getPaymentMethodId());
+        Assert.assertEquals(businessAccount.getTimeZone(), accountModelDao.getTimeZone());
+        Assert.assertEquals(businessAccount.getLocale(), accountModelDao.getLocale());
         Assert.assertEquals(businessAccount.getAddress1(), accountModelDao.getAddress1());
         Assert.assertEquals(businessAccount.getAddress2(), accountModelDao.getAddress2());
         Assert.assertEquals(businessAccount.getCompanyName(), accountModelDao.getCompanyName());
@@ -53,6 +56,7 @@ public class TestBusinessAccount extends AnalyticsTestSuiteNoDB {
         Assert.assertEquals(businessAccount.getPhone(), accountModelDao.getPhone());
         Assert.assertEquals(businessAccount.getMigrated(), accountModelDao.getMigrated());
         Assert.assertEquals(businessAccount.getNotifiedForInvoices(), accountModelDao.getNotifiedForInvoices());
+        Assert.assertEquals(businessAccount.getUpdatedDate(), accountModelDao.getUpdatedDate());
         Assert.assertEquals(businessAccount.getBalance(), accountModelDao.getBalance());
         Assert.assertEquals(businessAccount.getLastInvoiceDate(), accountModelDao.getLastInvoiceDate());
         Assert.assertEquals(businessAccount.getLastPaymentDate(), accountModelDao.getLastPaymentDate());

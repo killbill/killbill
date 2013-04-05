@@ -43,6 +43,7 @@ public class BusinessAccount extends BusinessEntityBase {
     private final String phone;
     private final Boolean isMigrated;
     private final Boolean isNotifiedForInvoices;
+    private final DateTime updatedDate;
     private final BigDecimal balance;
     private final LocalDate lastInvoiceDate;
     private final DateTime lastPaymentDate;
@@ -73,6 +74,7 @@ public class BusinessAccount extends BusinessEntityBase {
         this.phone = businessAccountModelDao.getPhone();
         this.isMigrated = businessAccountModelDao.getMigrated();
         this.isNotifiedForInvoices = businessAccountModelDao.getNotifiedForInvoices();
+        this.updatedDate = businessAccountModelDao.getUpdatedDate();
         this.balance = businessAccountModelDao.getBalance();
         this.lastInvoiceDate = businessAccountModelDao.getLastInvoiceDate();
         this.lastPaymentDate = businessAccountModelDao.getLastPaymentDate();
@@ -147,6 +149,10 @@ public class BusinessAccount extends BusinessEntityBase {
         return isNotifiedForInvoices;
     }
 
+    public DateTime getUpdatedDate() {
+        return updatedDate;
+    }
+
     public BigDecimal getBalance() {
         return balance;
     }
@@ -184,6 +190,7 @@ public class BusinessAccount extends BusinessEntityBase {
         sb.append(", phone='").append(phone).append('\'');
         sb.append(", isMigrated=").append(isMigrated);
         sb.append(", isNotifiedForInvoices=").append(isNotifiedForInvoices);
+        sb.append(", updatedDate=").append(updatedDate);
         sb.append(", balance=").append(balance);
         sb.append(", lastInvoiceDate=").append(lastInvoiceDate);
         sb.append(", lastPaymentDate=").append(lastPaymentDate);
@@ -212,7 +219,7 @@ public class BusinessAccount extends BusinessEntityBase {
         if (address2 != null ? !address2.equals(that.address2) : that.address2 != null) {
             return false;
         }
-        if (balance != null ? !balance.equals(that.balance) : that.balance != null) {
+        if (balance != null ? balance.compareTo(that.balance) != 0 : that.balance != null) {
             return false;
         }
         if (billingCycleDayLocal != null ? !billingCycleDayLocal.equals(that.billingCycleDayLocal) : that.billingCycleDayLocal != null) {
@@ -269,6 +276,9 @@ public class BusinessAccount extends BusinessEntityBase {
         if (timeZone != null ? !timeZone.equals(that.timeZone) : that.timeZone != null) {
             return false;
         }
+        if (updatedDate != null ? !updatedDate.equals(that.updatedDate) : that.updatedDate != null) {
+            return false;
+        }
 
         return true;
     }
@@ -293,6 +303,7 @@ public class BusinessAccount extends BusinessEntityBase {
         result = 31 * result + (phone != null ? phone.hashCode() : 0);
         result = 31 * result + (isMigrated != null ? isMigrated.hashCode() : 0);
         result = 31 * result + (isNotifiedForInvoices != null ? isNotifiedForInvoices.hashCode() : 0);
+        result = 31 * result + (updatedDate != null ? updatedDate.hashCode() : 0);
         result = 31 * result + (balance != null ? balance.hashCode() : 0);
         result = 31 * result + (lastInvoiceDate != null ? lastInvoiceDate.hashCode() : 0);
         result = 31 * result + (lastPaymentDate != null ? lastPaymentDate.hashCode() : 0);

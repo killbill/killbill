@@ -921,29 +921,32 @@ SELECT_STAR_FROM_TABLE(table) ::= <<
 select *
 from <table> t
 where <CHECK_TENANT_AND_ACCOUNT("t.")>
-;
 >>
 
-deleteByAccountRecordId() ::= <<
-delete from :tableName t
+deleteByAccountRecordId(tableName) ::= <<
+delete from <tableName> t
 where <CHECK_TENANT_AND_ACCOUNT("t.")>
 ;
 >>
 
 getAccountByAccountRecordId() ::= <<
 <SELECT_STAR_FROM_TABLE("bac")>
+;
 >>
 
 getSubscriptionTransitionsByAccountRecordId() ::= <<
 <SELECT_STAR_FROM_TABLE("bst")>
+;
 >>
 
 getOverdueStatusesByAccountRecordId() ::= <<
 <SELECT_STAR_FROM_TABLE("bos")>
+;
 >>
 
 getInvoicesByAccountRecordId() ::= <<
 <SELECT_STAR_FROM_TABLE("bin")>
+;
 >>
 
 getInvoiceItemsByAccountRecordId() ::= <<
@@ -954,6 +957,7 @@ union all
 <SELECT_STAR_FROM_TABLE("biia")>
 union all
 <SELECT_STAR_FROM_TABLE("biic")>
+;
 >>
 
 getInvoicePaymentsByAccountRecordId() ::= <<
@@ -962,20 +966,35 @@ union all
 <SELECT_STAR_FROM_TABLE("bipr")>
 union all
 <SELECT_STAR_FROM_TABLE("bipc")>
+;
 >>
 
-getFieldsByAccountRecordId() ::= <<
+getAccountFieldsByAccountRecordId() ::= <<
 <SELECT_STAR_FROM_TABLE("bac_fields")>
-union all
-<SELECT_STAR_FROM_TABLE("bin_fiels")>
-union all
-<SELECT_STAR_FROM_TABLE("bip_fiels")>
+;
 >>
 
-getTagsByAccountRecordId() ::= <<
+getInvoiceFieldsByAccountRecordId() ::= <<
+<SELECT_STAR_FROM_TABLE("bin_fields")>
+;
+>>
+
+getInvoicePaymentFieldsByAccountRecordId() ::= <<
+<SELECT_STAR_FROM_TABLE("bip_fields")>
+;
+>>
+
+getAccountTagsByAccountRecordId() ::= <<
 <SELECT_STAR_FROM_TABLE("bac_tags")>
-union all
+;
+>>
+
+getInvoiceTagsByAccountRecordId() ::= <<
 <SELECT_STAR_FROM_TABLE("bin_tags")>
-union all
+;
+>>
+
+getInvoicePaymentTagsByAccountRecordId() ::= <<
 <SELECT_STAR_FROM_TABLE("bip_tags")>
+;
 >>
