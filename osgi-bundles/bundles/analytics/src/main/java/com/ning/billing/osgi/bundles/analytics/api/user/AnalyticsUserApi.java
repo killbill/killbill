@@ -112,13 +112,11 @@ public class AnalyticsUserApi extends BusinessAnalyticsBase {
         // Refresh tags
         bTagDao.update(accountId, context);
 
-        for (final ObjectType objectType : ObjectType.values()) {
-            // Refresh BOS
-            bosDao.update(accountId, objectType, context);
+        // Refresh fields
+        bFieldDao.update(accountId, context);
 
-            // Refresh fields
-            bFieldDao.update(accountId, objectType, context);
-        }
+        // Refresh BOS (bundles only for now)
+        bosDao.update(accountId, ObjectType.BUNDLE, context);
 
         logService.log(LogService.LOG_INFO, "Finished rebuild of Analytics for account " + accountId);
     }

@@ -23,7 +23,6 @@ import java.util.UUID;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
 
-import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.osgi.bundles.analytics.AnalyticsRefreshException;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessFieldModelDao;
@@ -42,10 +41,10 @@ public class BusinessFieldDao extends BusinessAnalyticsDaoBase {
         super(logService, osgiKillbillAPI, osgiKillbillDataSource);
     }
 
-    public void update(final UUID accountId, final ObjectType objectType, final CallContext context) throws AnalyticsRefreshException {
+    public void update(final UUID accountId, final CallContext context) throws AnalyticsRefreshException {
         final Account account = getAccount(accountId, context);
 
-        final Collection<BusinessFieldModelDao> fieldModelDaos = createBusinessFields(account, objectType, context);
+        final Collection<BusinessFieldModelDao> fieldModelDaos = createBusinessFields(account, context);
 
         sqlDao.inTransaction(new Transaction<Void, BusinessAnalyticsSqlDao>() {
             @Override
@@ -70,11 +69,11 @@ public class BusinessFieldDao extends BusinessAnalyticsDaoBase {
         }
     }
 
-    private Collection<BusinessFieldModelDao> createBusinessFields(final Account account, final ObjectType objectType, final CallContext context) throws AnalyticsRefreshException {
+    private Collection<BusinessFieldModelDao> createBusinessFields(final Account account, final CallContext context) throws AnalyticsRefreshException {
         final Long accountRecordId = getAccountRecordId(account.getId(), context);
         final Long tenantRecordId = getTenantRecordId(context);
 
-        final Collection<CustomField> fields = getFieldsForAccountAndObjectType(account.getId(), objectType, context);
+        final Collection<CustomField> fields = getFieldsForAccount(account.getId(), context);
 
         final Collection<BusinessFieldModelDao> fieldModelDaos = new LinkedList<BusinessFieldModelDao>();
         for (final CustomField field : fields) {

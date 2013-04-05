@@ -83,7 +83,7 @@ public abstract class BusinessAnalyticsBase {
 
     protected Long getTenantRecordId(final TenantContext context) throws AnalyticsRefreshException {
         final RecordIdApi recordIdUserApi = getRecordIdUserApi();
-        return recordIdUserApi.getRecordId(context.getTenantId(), ObjectType.TENANT);
+        return recordIdUserApi.getRecordId(context.getTenantId(), ObjectType.TENANT, context);
     }
 
     //
@@ -114,7 +114,7 @@ public abstract class BusinessAnalyticsBase {
 
     protected Long getAccountRecordId(final UUID accountId, final TenantContext context) throws AnalyticsRefreshException {
         final RecordIdApi recordIdUserApi = getRecordIdUserApi();
-        return recordIdUserApi.getRecordId(accountId, ObjectType.ACCOUNT);
+        return recordIdUserApi.getRecordId(accountId, ObjectType.ACCOUNT, context);
     }
 
     //
@@ -166,7 +166,7 @@ public abstract class BusinessAnalyticsBase {
 
     protected Long getSubscriptionEventRecordId(final UUID subscriptionEventId, final TenantContext context) throws AnalyticsRefreshException {
         final RecordIdApi recordIdUserApi = getRecordIdUserApi();
-        return recordIdUserApi.getRecordId(subscriptionEventId, ObjectType.SUBSCRIPTION_EVENT);
+        return recordIdUserApi.getRecordId(subscriptionEventId, ObjectType.SUBSCRIPTION_EVENT, context);
     }
 
     //
@@ -196,7 +196,7 @@ public abstract class BusinessAnalyticsBase {
 
     protected Long getBlockingStateRecordId(final UUID blockingStateId, final TenantContext context) throws AnalyticsRefreshException {
         final RecordIdApi recordIdUserApi = getRecordIdUserApi();
-        return recordIdUserApi.getRecordId(blockingStateId, ObjectType.BLOCKING_STATES);
+        return recordIdUserApi.getRecordId(blockingStateId, ObjectType.BLOCKING_STATES, context);
     }
 
     //
@@ -226,7 +226,7 @@ public abstract class BusinessAnalyticsBase {
 
     protected Long getInvoiceRecordId(final UUID invoiceId, final TenantContext context) throws AnalyticsRefreshException {
         final RecordIdApi recordIdUserApi = getRecordIdUserApi();
-        return recordIdUserApi.getRecordId(invoiceId, ObjectType.INVOICE);
+        return recordIdUserApi.getRecordId(invoiceId, ObjectType.INVOICE, context);
     }
 
     protected AuditLog getInvoiceItemCreationAuditLog(final UUID invoiceItemId, final TenantContext context) throws AnalyticsRefreshException {
@@ -242,7 +242,7 @@ public abstract class BusinessAnalyticsBase {
 
     protected Long getInvoiceItemRecordId(final UUID invoiceItemId, final TenantContext context) throws AnalyticsRefreshException {
         final RecordIdApi recordIdUserApi = getRecordIdUserApi();
-        return recordIdUserApi.getRecordId(invoiceItemId, ObjectType.INVOICE_ITEM);
+        return recordIdUserApi.getRecordId(invoiceItemId, ObjectType.INVOICE_ITEM, context);
     }
 
     protected Collection<Invoice> getInvoicesByAccountId(final UUID accountId, final CallContext context) throws AnalyticsRefreshException {
@@ -317,7 +317,7 @@ public abstract class BusinessAnalyticsBase {
 
     protected Long getInvoicePaymentRecordId(final UUID invoicePaymentId, final TenantContext context) throws AnalyticsRefreshException {
         final RecordIdApi recordIdUserApi = getRecordIdUserApi();
-        return recordIdUserApi.getRecordId(invoicePaymentId, ObjectType.INVOICE_PAYMENT);
+        return recordIdUserApi.getRecordId(invoicePaymentId, ObjectType.INVOICE_PAYMENT, context);
     }
 
     //
@@ -372,11 +372,9 @@ public abstract class BusinessAnalyticsBase {
     // FIELD
     //
 
-    protected Collection<CustomField> getFieldsForAccountAndObjectType(final UUID accountId, final ObjectType objectType, final TenantContext context) throws AnalyticsRefreshException {
+    protected Collection<CustomField> getFieldsForAccount(final UUID accountId, final TenantContext context) throws AnalyticsRefreshException {
         final CustomFieldUserApi tagUserApi = getCustomFieldUserApi();
-        // TODO
-        //return tagUserApi.getCustomFieldsForAccount(accountId, objectType, context);
-        return null;
+        return tagUserApi.getCustomFieldsForAccount(accountId, context);
     }
 
     protected AuditLog getFieldCreationAuditLog(final UUID fieldId, final TenantContext context) throws AnalyticsRefreshException {
@@ -392,7 +390,7 @@ public abstract class BusinessAnalyticsBase {
 
     protected Long getFieldRecordId(final UUID fieldId, final TenantContext context) throws AnalyticsRefreshException {
         final RecordIdApi recordIdUserApi = getRecordIdUserApi();
-        return recordIdUserApi.getRecordId(fieldId, ObjectType.CUSTOM_FIELD);
+        return recordIdUserApi.getRecordId(fieldId, ObjectType.CUSTOM_FIELD, context);
     }
 
     //
@@ -428,7 +426,7 @@ public abstract class BusinessAnalyticsBase {
 
     protected Long getTagRecordId(final UUID tagId, final TenantContext context) throws AnalyticsRefreshException {
         final RecordIdApi recordIdUserApi = getRecordIdUserApi();
-        return recordIdUserApi.getRecordId(tagId, ObjectType.TAG);
+        return recordIdUserApi.getRecordId(tagId, ObjectType.TAG, context);
     }
 
     //
