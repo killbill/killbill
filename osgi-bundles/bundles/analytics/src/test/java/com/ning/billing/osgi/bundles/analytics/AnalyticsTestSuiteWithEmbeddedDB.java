@@ -17,6 +17,7 @@
 package com.ning.billing.osgi.bundles.analytics;
 
 import java.io.IOException;
+import java.io.InputStream;
 
 import javax.sql.DataSource;
 
@@ -31,9 +32,11 @@ import org.testng.annotations.BeforeMethod;
 import com.ning.billing.commons.embeddeddb.h2.H2EmbeddedDB;
 import com.ning.billing.osgi.bundles.analytics.dao.BusinessAnalyticsSqlDao;
 import com.ning.billing.osgi.bundles.analytics.dao.BusinessDBIProvider;
-import com.ning.billing.util.io.IOUtils;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillDataSource;
 
+import com.google.common.base.Charsets;
+import com.google.common.io.CharStreams;
+import com.google.common.io.InputSupplier;
 import com.google.common.io.Resources;
 
 public abstract class AnalyticsTestSuiteWithEmbeddedDB extends AnalyticsTestSuiteNoDB {
@@ -56,7 +59,7 @@ public abstract class AnalyticsTestSuiteWithEmbeddedDB extends AnalyticsTestSuit
 
         killbillDataSource = new AnalyticsOSGIKillbillDataSource();
 
-        final String ddl = IOUtils.toString(Resources.getResource("com/ning/billing/osgi/bundles/analytics/ddl.sql").openStream());
+        final String ddl = toString(Resources.getResource("com/ning/billing/osgi/bundles/analytics/ddl.sql").openStream());
         embeddedDB.executeScript(ddl);
 
         dbi = BusinessDBIProvider.get(embeddedDB.getDataSource());
@@ -66,6 +69,17 @@ public abstract class AnalyticsTestSuiteWithEmbeddedDB extends AnalyticsTestSuit
     @AfterClass(groups = "slow")
     public void tearDown() throws Exception {
         embeddedDB.stop();
+    }
+
+    public static String toString(final InputStream stream) throws IOException {
+        final InputSupplier<InputStream> inputSupplier = new InputSupplier<InputStream>() {
+            @Override
+            public InputStream getInput() throws IOException {
+                return stream;
+            }
+        };
+
+        return CharStreams.toString(CharStreams.newReaderSupplier(inputSupplier, Charsets.UTF_8));
     }
 
     private final class AnalyticsOSGIKillbillDataSource extends OSGIKillbillDataSource {
