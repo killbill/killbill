@@ -96,7 +96,7 @@ public class BusinessSubscriptionTransition extends BusinessEntityBase {
             this.prevCurrency = bstModelDao.getPreviousSubscription().getCurrency();
             this.prevBusinessActive = bstModelDao.getPreviousSubscription().getBusinessActive();
             this.prevStartDate = bstModelDao.getPreviousSubscription().getStartDate();
-            this.prevState = bstModelDao.getPreviousSubscription().getState().toString();
+            this.prevState = bstModelDao.getPreviousSubscription().getState();
         } else {
             this.prevProductName = null;
             this.prevProductType = null;
@@ -127,7 +127,7 @@ public class BusinessSubscriptionTransition extends BusinessEntityBase {
             this.nextBusinessActive = bstModelDao.getNextSubscription().getBusinessActive();
             this.nextStartDate = bstModelDao.getNextSubscription().getStartDate();
             this.nextEndDate = bstModelDao.getNextSubscription().getEndDate();
-            this.nextState = bstModelDao.getNextSubscription().getState().toString();
+            this.nextState = bstModelDao.getNextSubscription().getState();
         } else {
             this.nextProductName = null;
             this.nextProductType = null;

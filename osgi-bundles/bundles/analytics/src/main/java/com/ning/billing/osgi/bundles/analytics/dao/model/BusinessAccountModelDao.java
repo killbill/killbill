@@ -33,27 +33,29 @@ public class BusinessAccountModelDao extends BusinessModelDaoBase {
 
     private static final String ACCOUNTS_TABLE_NAME = "bac";
 
-    private final String email;
-    private final Integer firstNameLength;
-    private final String currency;
-    private final Integer billingCycleDayLocal;
-    private final UUID paymentMethodId;
-    private final String timeZone;
-    private final String locale;
-    private final String address1;
-    private final String address2;
-    private final String companyName;
-    private final String city;
-    private final String stateOrProvince;
-    private final String country;
-    private final String postalCode;
-    private final String phone;
-    private final Boolean isMigrated;
-    private final Boolean isNotifiedForInvoices;
-    private final BigDecimal balance;
-    private final LocalDate lastInvoiceDate;
-    private final DateTime lastPaymentDate;
-    private final String lastPaymentStatus;
+    private String email;
+    private Integer firstNameLength;
+    private String currency;
+    private Integer billingCycleDayLocal;
+    private UUID paymentMethodId;
+    private String timeZone;
+    private String locale;
+    private String address1;
+    private String address2;
+    private String companyName;
+    private String city;
+    private String stateOrProvince;
+    private String country;
+    private String postalCode;
+    private String phone;
+    private Boolean migrated;
+    private Boolean notifiedForInvoices;
+    private BigDecimal balance;
+    private LocalDate lastInvoiceDate;
+    private DateTime lastPaymentDate;
+    private String lastPaymentStatus;
+
+    public BusinessAccountModelDao() { /* When reading from the database */ }
 
     public BusinessAccountModelDao(final String email,
                                    final Integer firstNameLength,
@@ -109,8 +111,8 @@ public class BusinessAccountModelDao extends BusinessModelDaoBase {
         this.country = country;
         this.postalCode = postalCode;
         this.phone = phone;
-        this.isMigrated = isMigrated;
-        this.isNotifiedForInvoices = notifiedForInvoices;
+        this.migrated = isMigrated;
+        this.notifiedForInvoices = notifiedForInvoices;
         this.balance = balance;
         this.lastInvoiceDate = lastInvoiceDate;
         this.lastPaymentDate = lastPaymentDate;
@@ -177,6 +179,18 @@ public class BusinessAccountModelDao extends BusinessModelDaoBase {
         return billingCycleDayLocal;
     }
 
+    public UUID getPaymentMethodId() {
+        return paymentMethodId;
+    }
+
+    public String getTimeZone() {
+        return timeZone;
+    }
+
+    public String getLocale() {
+        return locale;
+    }
+
     public String getAddress1() {
         return address1;
     }
@@ -210,11 +224,11 @@ public class BusinessAccountModelDao extends BusinessModelDaoBase {
     }
 
     public Boolean getMigrated() {
-        return isMigrated;
+        return migrated;
     }
 
     public Boolean getNotifiedForInvoices() {
-        return isNotifiedForInvoices;
+        return notifiedForInvoices;
     }
 
     public BigDecimal getBalance() {
@@ -241,6 +255,9 @@ public class BusinessAccountModelDao extends BusinessModelDaoBase {
         sb.append(", firstNameLength=").append(firstNameLength);
         sb.append(", currency='").append(currency).append('\'');
         sb.append(", billingCycleDayLocal=").append(billingCycleDayLocal);
+        sb.append(", paymentMethodId=").append(paymentMethodId);
+        sb.append(", timeZone='").append(timeZone).append('\'');
+        sb.append(", locale='").append(locale).append('\'');
         sb.append(", address1='").append(address1).append('\'');
         sb.append(", address2='").append(address2).append('\'');
         sb.append(", companyName='").append(companyName).append('\'');
@@ -249,8 +266,8 @@ public class BusinessAccountModelDao extends BusinessModelDaoBase {
         sb.append(", country='").append(country).append('\'');
         sb.append(", postalCode='").append(postalCode).append('\'');
         sb.append(", phone='").append(phone).append('\'');
-        sb.append(", isMigrated=").append(isMigrated);
-        sb.append(", isNotifiedForInvoices=").append(isNotifiedForInvoices);
+        sb.append(", migrated=").append(migrated);
+        sb.append(", notifiedForInvoices=").append(notifiedForInvoices);
         sb.append(", balance=").append(balance);
         sb.append(", lastInvoiceDate=").append(lastInvoiceDate);
         sb.append(", lastPaymentDate=").append(lastPaymentDate);
@@ -303,10 +320,10 @@ public class BusinessAccountModelDao extends BusinessModelDaoBase {
         if (firstNameLength != null ? !firstNameLength.equals(that.firstNameLength) : that.firstNameLength != null) {
             return false;
         }
-        if (isMigrated != null ? !isMigrated.equals(that.isMigrated) : that.isMigrated != null) {
+        if (migrated != null ? !migrated.equals(that.migrated) : that.migrated != null) {
             return false;
         }
-        if (isNotifiedForInvoices != null ? !isNotifiedForInvoices.equals(that.isNotifiedForInvoices) : that.isNotifiedForInvoices != null) {
+        if (notifiedForInvoices != null ? !notifiedForInvoices.equals(that.notifiedForInvoices) : that.notifiedForInvoices != null) {
             return false;
         }
         if (lastInvoiceDate != null ? !lastInvoiceDate.equals(that.lastInvoiceDate) : that.lastInvoiceDate != null) {
@@ -318,6 +335,12 @@ public class BusinessAccountModelDao extends BusinessModelDaoBase {
         if (lastPaymentStatus != null ? !lastPaymentStatus.equals(that.lastPaymentStatus) : that.lastPaymentStatus != null) {
             return false;
         }
+        if (locale != null ? !locale.equals(that.locale) : that.locale != null) {
+            return false;
+        }
+        if (paymentMethodId != null ? !paymentMethodId.equals(that.paymentMethodId) : that.paymentMethodId != null) {
+            return false;
+        }
         if (phone != null ? !phone.equals(that.phone) : that.phone != null) {
             return false;
         }
@@ -325,6 +348,9 @@ public class BusinessAccountModelDao extends BusinessModelDaoBase {
             return false;
         }
         if (stateOrProvince != null ? !stateOrProvince.equals(that.stateOrProvince) : that.stateOrProvince != null) {
+            return false;
+        }
+        if (timeZone != null ? !timeZone.equals(that.timeZone) : that.timeZone != null) {
             return false;
         }
 
@@ -338,6 +364,9 @@ public class BusinessAccountModelDao extends BusinessModelDaoBase {
         result = 31 * result + (firstNameLength != null ? firstNameLength.hashCode() : 0);
         result = 31 * result + (currency != null ? currency.hashCode() : 0);
         result = 31 * result + (billingCycleDayLocal != null ? billingCycleDayLocal.hashCode() : 0);
+        result = 31 * result + (paymentMethodId != null ? paymentMethodId.hashCode() : 0);
+        result = 31 * result + (timeZone != null ? timeZone.hashCode() : 0);
+        result = 31 * result + (locale != null ? locale.hashCode() : 0);
         result = 31 * result + (address1 != null ? address1.hashCode() : 0);
         result = 31 * result + (address2 != null ? address2.hashCode() : 0);
         result = 31 * result + (companyName != null ? companyName.hashCode() : 0);
@@ -346,8 +375,8 @@ public class BusinessAccountModelDao extends BusinessModelDaoBase {
         result = 31 * result + (country != null ? country.hashCode() : 0);
         result = 31 * result + (postalCode != null ? postalCode.hashCode() : 0);
         result = 31 * result + (phone != null ? phone.hashCode() : 0);
-        result = 31 * result + (isMigrated != null ? isMigrated.hashCode() : 0);
-        result = 31 * result + (isNotifiedForInvoices != null ? isNotifiedForInvoices.hashCode() : 0);
+        result = 31 * result + (migrated != null ? migrated.hashCode() : 0);
+        result = 31 * result + (notifiedForInvoices != null ? notifiedForInvoices.hashCode() : 0);
         result = 31 * result + (balance != null ? balance.hashCode() : 0);
         result = 31 * result + (lastInvoiceDate != null ? lastInvoiceDate.hashCode() : 0);
         result = 31 * result + (lastPaymentDate != null ? lastPaymentDate.hashCode() : 0);

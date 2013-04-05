@@ -23,6 +23,8 @@ import com.ning.billing.util.tag.TagDefinition;
 
 public class BusinessAccountTagModelDao extends BusinessTagModelDao {
 
+    public BusinessAccountTagModelDao() { /* When reading from the database */ }
+
     public BusinessAccountTagModelDao(final Account account,
                                       final Long accountRecordId,
                                       final Tag tag,

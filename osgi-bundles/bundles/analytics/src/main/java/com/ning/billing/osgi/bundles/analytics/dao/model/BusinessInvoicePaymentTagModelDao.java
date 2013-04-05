@@ -25,7 +25,9 @@ import com.ning.billing.util.tag.TagDefinition;
 
 public class BusinessInvoicePaymentTagModelDao extends BusinessTagModelDao {
 
-    private final UUID invoicePaymentId;
+    private UUID invoicePaymentId;
+
+    public BusinessInvoicePaymentTagModelDao() { /* When reading from the database */ }
 
     public BusinessInvoicePaymentTagModelDao(final Account account,
                                              final Long accountRecordId,

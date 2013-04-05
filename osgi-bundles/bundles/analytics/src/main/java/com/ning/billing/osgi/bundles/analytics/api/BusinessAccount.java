@@ -17,6 +17,7 @@
 package com.ning.billing.osgi.bundles.analytics.api;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
@@ -29,6 +30,9 @@ public class BusinessAccount extends BusinessEntityBase {
     private final Integer firstNameLength;
     private final String currency;
     private final Integer billingCycleDayLocal;
+    private final UUID paymentMethodId;
+    private final String timeZone;
+    private final String locale;
     private final String address1;
     private final String address2;
     private final String companyName;
@@ -56,6 +60,9 @@ public class BusinessAccount extends BusinessEntityBase {
         this.firstNameLength = businessAccountModelDao.getFirstNameLength();
         this.currency = businessAccountModelDao.getCurrency();
         this.billingCycleDayLocal = businessAccountModelDao.getBillingCycleDayLocal();
+        this.paymentMethodId = businessAccountModelDao.getPaymentMethodId();
+        this.timeZone = businessAccountModelDao.getTimeZone();
+        this.locale = businessAccountModelDao.getLocale();
         this.address1 = businessAccountModelDao.getAddress1();
         this.address2 = businessAccountModelDao.getAddress2();
         this.companyName = businessAccountModelDao.getCompanyName();
@@ -86,6 +93,18 @@ public class BusinessAccount extends BusinessEntityBase {
 
     public Integer getBillingCycleDayLocal() {
         return billingCycleDayLocal;
+    }
+
+    public UUID getPaymentMethodId() {
+        return paymentMethodId;
+    }
+
+    public String getTimeZone() {
+        return timeZone;
+    }
+
+    public String getLocale() {
+        return locale;
     }
 
     public String getAddress1() {
@@ -152,6 +171,9 @@ public class BusinessAccount extends BusinessEntityBase {
         sb.append(", firstNameLength=").append(firstNameLength);
         sb.append(", currency='").append(currency).append('\'');
         sb.append(", billingCycleDayLocal=").append(billingCycleDayLocal);
+        sb.append(", paymentMethodId=").append(paymentMethodId);
+        sb.append(", timeZone='").append(timeZone).append('\'');
+        sb.append(", locale='").append(locale).append('\'');
         sb.append(", address1='").append(address1).append('\'');
         sb.append(", address2='").append(address2).append('\'');
         sb.append(", companyName='").append(companyName).append('\'');
@@ -229,6 +251,12 @@ public class BusinessAccount extends BusinessEntityBase {
         if (lastPaymentStatus != null ? !lastPaymentStatus.equals(that.lastPaymentStatus) : that.lastPaymentStatus != null) {
             return false;
         }
+        if (locale != null ? !locale.equals(that.locale) : that.locale != null) {
+            return false;
+        }
+        if (paymentMethodId != null ? !paymentMethodId.equals(that.paymentMethodId) : that.paymentMethodId != null) {
+            return false;
+        }
         if (phone != null ? !phone.equals(that.phone) : that.phone != null) {
             return false;
         }
@@ -236,6 +264,9 @@ public class BusinessAccount extends BusinessEntityBase {
             return false;
         }
         if (stateOrProvince != null ? !stateOrProvince.equals(that.stateOrProvince) : that.stateOrProvince != null) {
+            return false;
+        }
+        if (timeZone != null ? !timeZone.equals(that.timeZone) : that.timeZone != null) {
             return false;
         }
 
@@ -249,6 +280,9 @@ public class BusinessAccount extends BusinessEntityBase {
         result = 31 * result + (firstNameLength != null ? firstNameLength.hashCode() : 0);
         result = 31 * result + (currency != null ? currency.hashCode() : 0);
         result = 31 * result + (billingCycleDayLocal != null ? billingCycleDayLocal.hashCode() : 0);
+        result = 31 * result + (paymentMethodId != null ? paymentMethodId.hashCode() : 0);
+        result = 31 * result + (timeZone != null ? timeZone.hashCode() : 0);
+        result = 31 * result + (locale != null ? locale.hashCode() : 0);
         result = 31 * result + (address1 != null ? address1.hashCode() : 0);
         result = 31 * result + (address2 != null ? address2.hashCode() : 0);
         result = 31 * result + (companyName != null ? companyName.hashCode() : 0);

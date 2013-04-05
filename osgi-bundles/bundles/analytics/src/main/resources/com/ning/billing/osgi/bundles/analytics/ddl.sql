@@ -73,7 +73,7 @@ create table bac (
 , postal_code varchar(16) default null
 , phone varchar(25) default null
 , migrated bool default false
-, is_notified_for_invoices boolean not null
+, notified_for_invoices boolean not null
 , balance numeric(10, 4) default 0
 , last_invoice_date date default null
 , last_payment_date datetime not null

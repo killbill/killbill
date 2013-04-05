@@ -22,17 +22,19 @@ import org.joda.time.DateTime;
 
 public abstract class BusinessModelDaoBase {
 
-    protected final Long recordId;
+    protected Long recordId;
 
-    protected final DateTime createdDate;
-    protected final String createdBy;
-    protected final String createdReasonCode;
-    protected final String createdComments;
-    protected final UUID accountId;
-    protected final String accountName;
-    protected final String accountExternalKey;
-    protected final Long accountRecordId;
-    protected final Long tenantRecordId;
+    protected DateTime createdDate;
+    protected String createdBy;
+    protected String createdReasonCode;
+    protected String createdComments;
+    protected UUID accountId;
+    protected String accountName;
+    protected String accountExternalKey;
+    protected Long accountRecordId;
+    protected Long tenantRecordId;
+
+    public BusinessModelDaoBase() { /* When reading from the database */ }
 
     public BusinessModelDaoBase(final DateTime createdDate, final String createdBy, final String createdReasonCode,
                                 final String createdComments, final UUID accountId, final String accountName,

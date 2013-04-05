@@ -28,6 +28,8 @@ import com.ning.billing.util.audit.AuditLog;
 
 public class BusinessInvoiceAdjustmentModelDao extends BusinessInvoiceItemBaseModelDao {
 
+    public BusinessInvoiceAdjustmentModelDao() { /* When reading from the database */ }
+
     public BusinessInvoiceAdjustmentModelDao(final Account account,
                                              final Long accountRecordId,
                                              final Invoice invoice,

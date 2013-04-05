@@ -32,7 +32,7 @@ public class BusinessAnalyticsDaoBase extends BusinessAnalyticsBase {
                                     final OSGIKillbillDataSource osgiKillbillDataSource) {
         super(logService, osgiKillbillAPI);
 
-        final DBI dbi = new DBI(osgiKillbillDataSource.getDataSource());
+        final DBI dbi = BusinessDBIProvider.get(osgiKillbillDataSource.getDataSource());
         sqlDao = dbi.onDemand(BusinessAnalyticsSqlDao.class);
     }
 }

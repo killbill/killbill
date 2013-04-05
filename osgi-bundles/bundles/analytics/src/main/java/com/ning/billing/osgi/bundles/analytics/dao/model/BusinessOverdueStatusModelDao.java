@@ -29,12 +29,14 @@ public class BusinessOverdueStatusModelDao extends BusinessModelDaoBase {
 
     private static final String OVERDUE_STATUS_TABLE_NAME = "bos";
 
-    private final Long blockingStateRecordId;
-    private final UUID bundleId;
-    private final String bundleExternalKey;
-    private final String status;
-    private final DateTime startDate;
-    private final DateTime endDate;
+    private Long blockingStateRecordId;
+    private UUID bundleId;
+    private String bundleExternalKey;
+    private String status;
+    private DateTime startDate;
+    private DateTime endDate;
+
+    public BusinessOverdueStatusModelDao() { /* When reading from the database */ }
 
     public BusinessOverdueStatusModelDao(final Long blockingStateRecordId,
                                          final UUID bundleId,

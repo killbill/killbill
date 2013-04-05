@@ -33,9 +33,9 @@ public abstract class BusinessFieldModelDao extends BusinessModelDaoBase {
 
     public static final String[] ALL_FIELDS_TABLE_NAMES = new String[]{ACCOUNT_FIELDS_TABLE_NAME, INVOICE_FIELDS_TABLE_NAME, INVOICE_PAYMENT_FIELDS_TABLE_NAME};
 
-    private final Long customFieldRecordId;
-    private final String name;
-    private final String value;
+    private Long customFieldRecordId;
+    private String name;
+    private String value;
 
     public static BusinessFieldModelDao create(final Account account,
                                                final Long accountRecordId,
@@ -69,6 +69,8 @@ public abstract class BusinessFieldModelDao extends BusinessModelDaoBase {
             return null;
         }
     }
+
+    public BusinessFieldModelDao() { /* When reading from the database */ }
 
     public BusinessFieldModelDao(final Long customFieldRecordId,
                                  final String name,

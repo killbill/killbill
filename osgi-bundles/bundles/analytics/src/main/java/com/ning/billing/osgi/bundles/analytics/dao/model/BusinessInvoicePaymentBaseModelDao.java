@@ -38,24 +38,24 @@ public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDa
 
     public static final String[] ALL_INVOICE_PAYMENTS_TABLE_NAMES = new String[]{INVOICE_PAYMENTS_TABLE_NAME, INVOICE_PAYMENT_REFUNDS_TABLE_NAME, INVOICE_PAYMENT_CHARGEBACKS_TABLE_NAME};
 
-    private final Long invoicePaymentRecordId;
-    private final UUID invoicePaymentId;
-    private final UUID invoiceId;
-    private final Integer invoiceNumber;
-    private final DateTime invoiceCreatedDate;
-    private final LocalDate invoiceDate;
-    private final LocalDate invoiceTargetDate;
-    private final String invoiceCurrency;
-    private final BigDecimal invoiceBalance;
-    private final BigDecimal invoiceAmountPaid;
-    private final BigDecimal invoiceAmountCharged;
-    private final BigDecimal invoiceOriginalAmountCharged;
-    private final BigDecimal invoiceAmountCredited;
-    private final String invoicePaymentType;
-    private final Long paymentNumber;
-    private final UUID linkedInvoicePaymentId;
-    private final BigDecimal amount;
-    private final String currency;
+    private Long invoicePaymentRecordId;
+    private UUID invoicePaymentId;
+    private UUID invoiceId;
+    private Integer invoiceNumber;
+    private DateTime invoiceCreatedDate;
+    private LocalDate invoiceDate;
+    private LocalDate invoiceTargetDate;
+    private String invoiceCurrency;
+    private BigDecimal invoiceBalance;
+    private BigDecimal invoiceAmountPaid;
+    private BigDecimal invoiceAmountCharged;
+    private BigDecimal invoiceOriginalAmountCharged;
+    private BigDecimal invoiceAmountCredited;
+    private String invoicePaymentType;
+    private Long paymentNumber;
+    private UUID linkedInvoicePaymentId;
+    private BigDecimal amount;
+    private String currency;
 
     public static BusinessInvoicePaymentBaseModelDao create(final Account account,
                                                             final Long accountRecordId,
@@ -98,6 +98,8 @@ public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDa
                                                       tenantRecordId);
         }
     }
+
+    public BusinessInvoicePaymentBaseModelDao() { /* When reading from the database */ }
 
     public BusinessInvoicePaymentBaseModelDao(final Long invoicePaymentRecordId,
                                               final UUID invoicePaymentId,

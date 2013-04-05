@@ -24,7 +24,9 @@ import com.ning.billing.util.customfield.CustomField;
 
 public class BusinessInvoicePaymentFieldModelDao extends BusinessFieldModelDao {
 
-    private final UUID invoicePaymentId;
+    private UUID invoicePaymentId;
+
+    public BusinessInvoicePaymentFieldModelDao() { /* When reading from the database */ }
 
     public BusinessInvoicePaymentFieldModelDao(final Account account,
                                                final Long accountRecordId,

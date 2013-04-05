@@ -42,33 +42,33 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
 
     public static final String[] ALL_INVOICE_ITEMS_TABLE_NAMES = new String[]{INVOICE_ADJUSTMENTS_TABLE_NAME, INVOICE_ITEMS_TABLE_NAME, INVOICE_ITEM_ADJUSTMENTS_TABLE_NAME, ACCOUNT_CREDITS_TABLE_NAME};
 
-    private final Long invoiceItemRecordId;
-    private final UUID itemId;
-    private final UUID invoiceId;
-    private final Integer invoiceNumber;
-    private final DateTime invoiceCreatedDate;
-    private final LocalDate invoiceDate;
-    private final LocalDate invoiceTargetDate;
-    private final String invoiceCurrency;
-    private final BigDecimal invoiceBalance;
-    private final BigDecimal invoiceAmountPaid;
-    private final BigDecimal invoiceAmountCharged;
-    private final BigDecimal invoiceOriginalAmountCharged;
-    private final BigDecimal invoiceAmountCredited;
-    private final String itemType;
-    private final Boolean revenueRecognizable;
-    private final String bundleExternalKey;
-    private final String productName;
-    private final String productType;
-    private final String productCategory;
-    private final String slug;
-    private final String phase;
-    private final String billingPeriod;
-    private final LocalDate startDate;
-    private final LocalDate endDate;
-    private final BigDecimal amount;
-    private final String currency;
-    private final UUID linkedItemId;
+    private Long invoiceItemRecordId;
+    private UUID itemId;
+    private UUID invoiceId;
+    private Integer invoiceNumber;
+    private DateTime invoiceCreatedDate;
+    private LocalDate invoiceDate;
+    private LocalDate invoiceTargetDate;
+    private String invoiceCurrency;
+    private BigDecimal invoiceBalance;
+    private BigDecimal invoiceAmountPaid;
+    private BigDecimal invoiceAmountCharged;
+    private BigDecimal invoiceOriginalAmountCharged;
+    private BigDecimal invoiceAmountCredited;
+    private String itemType;
+    private Boolean revenueRecognizable;
+    private String bundleExternalKey;
+    private String productName;
+    private String productType;
+    private String productCategory;
+    private String slug;
+    private String phase;
+    private String billingPeriod;
+    private LocalDate startDate;
+    private LocalDate endDate;
+    private BigDecimal amount;
+    private String currency;
+    private UUID linkedItemId;
 
     public static BusinessInvoiceItemBaseModelDao create(final Account account,
                                                          final Long accountRecordId,
@@ -132,6 +132,8 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
             return null;
         }
     }
+
+    public BusinessInvoiceItemBaseModelDao() { /* When reading from the database */ }
 
     public BusinessInvoiceItemBaseModelDao(final Long invoiceItemRecordId,
                                            final UUID itemId,

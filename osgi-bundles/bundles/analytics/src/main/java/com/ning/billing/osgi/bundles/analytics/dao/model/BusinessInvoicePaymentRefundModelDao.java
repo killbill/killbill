@@ -25,6 +25,8 @@ import com.ning.billing.util.audit.AuditLog;
 
 public class BusinessInvoicePaymentRefundModelDao extends BusinessInvoicePaymentBaseModelDao {
 
+    public BusinessInvoicePaymentRefundModelDao() { /* When reading from the database */ }
+
     public BusinessInvoicePaymentRefundModelDao(final Account account,
                                                 final Long accountRecordId,
                                                 final Invoice invoice,

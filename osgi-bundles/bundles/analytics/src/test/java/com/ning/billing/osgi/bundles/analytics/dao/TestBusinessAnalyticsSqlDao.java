@@ -30,7 +30,7 @@ public class TestBusinessAnalyticsSqlDao extends AnalyticsTestSuiteWithEmbeddedD
     public void testSqlDao() throws Exception {
         final BusinessAccountModelDao accountModelDao = new BusinessAccountModelDao(account,
                                                                                     accountRecordId,
-                                                                                    BigDecimal.ONE,
+                                                                                    new BigDecimal("1.2345"),
                                                                                     invoice,
                                                                                     payment,
                                                                                     auditLog,

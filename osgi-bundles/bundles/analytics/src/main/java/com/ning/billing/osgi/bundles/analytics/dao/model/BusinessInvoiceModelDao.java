@@ -30,17 +30,19 @@ public class BusinessInvoiceModelDao extends BusinessModelDaoBase {
 
     public static final String INVOICES_TABLE_NAME = "bin";
 
-    private final Long invoiceRecordId;
-    private final UUID invoiceId;
-    private final Integer invoiceNumber;
-    private final LocalDate invoiceDate;
-    private final LocalDate targetDate;
-    private final String currency;
-    private final BigDecimal balance;
-    private final BigDecimal amountPaid;
-    private final BigDecimal amountCharged;
-    private final BigDecimal originalAmountCharged;
-    private final BigDecimal amountCredited;
+    private Long invoiceRecordId;
+    private UUID invoiceId;
+    private Integer invoiceNumber;
+    private LocalDate invoiceDate;
+    private LocalDate targetDate;
+    private String currency;
+    private BigDecimal balance;
+    private BigDecimal amountPaid;
+    private BigDecimal amountCharged;
+    private BigDecimal originalAmountCharged;
+    private BigDecimal amountCredited;
+
+    public BusinessInvoiceModelDao() { /* When reading from the database */ }
 
     public BusinessInvoiceModelDao(final Long invoiceRecordId,
                                    final UUID invoiceId,

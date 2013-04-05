@@ -32,14 +32,16 @@ public class BusinessSubscriptionTransitionModelDao extends BusinessModelDaoBase
 
     private static final String SUBSCRIPTION_TABLE_NAME = "bst";
 
-    private final Long subscriptionEventRecordId;
-    private final UUID bundleId;
-    private final String bundleExternalKey;
-    private final UUID subscriptionId;
-    private final DateTime requestedTimestamp;
-    private final BusinessSubscriptionEvent event;
-    private final BusinessSubscription previousSubscription;
-    private final BusinessSubscription nextSubscription;
+    private Long subscriptionEventRecordId;
+    private UUID bundleId;
+    private String bundleExternalKey;
+    private UUID subscriptionId;
+    private DateTime requestedTimestamp;
+    private BusinessSubscriptionEvent event;
+    private BusinessSubscription previousSubscription;
+    private BusinessSubscription nextSubscription;
+
+    public BusinessSubscriptionTransitionModelDao() { /* When reading from the database */ }
 
     public BusinessSubscriptionTransitionModelDao(final Long subscriptionEventRecordId,
                                                   final UUID bundleId,

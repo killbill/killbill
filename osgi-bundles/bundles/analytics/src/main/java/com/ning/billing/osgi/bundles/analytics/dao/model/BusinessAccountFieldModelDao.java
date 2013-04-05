@@ -22,6 +22,8 @@ import com.ning.billing.util.customfield.CustomField;
 
 public class BusinessAccountFieldModelDao extends BusinessFieldModelDao {
 
+    public BusinessAccountFieldModelDao() { /* When reading from the database */ }
+
     public BusinessAccountFieldModelDao(final Account account,
                                         final Long accountRecordId,
                                         final CustomField customField,

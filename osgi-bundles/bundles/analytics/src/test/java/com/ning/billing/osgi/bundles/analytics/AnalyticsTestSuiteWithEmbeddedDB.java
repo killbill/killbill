@@ -30,6 +30,7 @@ import org.testng.annotations.BeforeMethod;
 
 import com.ning.billing.commons.embeddeddb.h2.H2EmbeddedDB;
 import com.ning.billing.osgi.bundles.analytics.dao.BusinessAnalyticsSqlDao;
+import com.ning.billing.osgi.bundles.analytics.dao.BusinessDBIProvider;
 import com.ning.billing.util.io.IOUtils;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillDataSource;
 
@@ -55,10 +56,10 @@ public abstract class AnalyticsTestSuiteWithEmbeddedDB extends AnalyticsTestSuit
 
         killbillDataSource = new AnalyticsOSGIKillbillDataSource();
 
-        final String ddl = IOUtils.toString(Resources.getResource("com/ning/billing/osgi/bundles/analytics").openStream());
+        final String ddl = IOUtils.toString(Resources.getResource("com/ning/billing/osgi/bundles/analytics/ddl.sql").openStream());
         embeddedDB.executeScript(ddl);
 
-        dbi = new DBI(embeddedDB.getDataSource());
+        dbi = BusinessDBIProvider.get(embeddedDB.getDataSource());
         analyticsSqlDao = dbi.onDemand(BusinessAnalyticsSqlDao.class);
     }
 

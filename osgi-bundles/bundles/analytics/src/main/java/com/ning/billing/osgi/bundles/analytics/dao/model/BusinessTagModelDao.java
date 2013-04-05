@@ -34,8 +34,8 @@ public abstract class BusinessTagModelDao extends BusinessModelDaoBase {
 
     public static final String[] ALL_TAGS_TABLE_NAMES = new String[]{ACCOUNT_TAGS_TABLE_NAME, INVOICE_PAYMENT_TAGS_TABLE_NAME, INVOICE_TAGS_TABLE_NAME};
 
-    private final Long tagRecordId;
-    private final String name;
+    private Long tagRecordId;
+    private String name;
 
     public static BusinessTagModelDao create(final Account account,
                                              final Long accountRecordId,
@@ -73,6 +73,8 @@ public abstract class BusinessTagModelDao extends BusinessModelDaoBase {
             return null;
         }
     }
+
+    public BusinessTagModelDao() { /* When reading from the database */ }
 
     public BusinessTagModelDao(final Long tagRecordId,
                                final String name,
