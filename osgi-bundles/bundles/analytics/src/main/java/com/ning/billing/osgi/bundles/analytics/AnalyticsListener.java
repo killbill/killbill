@@ -205,7 +205,7 @@ public class AnalyticsListener implements OSGIKillbillEventHandler {
 
         @Override
         public CallOrigin getCallOrigin() {
-            return CallOrigin.EXTERNAL;
+            return CallOrigin.INTERNAL;
         }
 
         @Override

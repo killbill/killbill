@@ -37,6 +37,7 @@ import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessOverdueStatusMo
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessSubscription;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessSubscriptionEvent;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessSubscriptionTransitionModelDao;
+import com.ning.billing.osgi.bundles.analytics.http.ObjectMapperProvider;
 
 import com.google.common.collect.ImmutableList;
 
@@ -158,5 +159,9 @@ public class TestBusinessSnapshot extends AnalyticsTestSuiteNoDB {
         Assert.assertEquals(businessSnapshot.getBusinessTags().iterator().next(), businessTag);
         Assert.assertEquals(businessSnapshot.getBusinessFields().size(), 1);
         Assert.assertEquals(businessSnapshot.getBusinessFields().iterator().next(), businessField);
+
+        // We check we can write it out without exception - we can't deserialize it back (no annotation)
+        // but we don't care since the APIs are read-only for Analytics
+        final String asJson = ObjectMapperProvider.get().writeValueAsString(businessSnapshot);
     }
 }
