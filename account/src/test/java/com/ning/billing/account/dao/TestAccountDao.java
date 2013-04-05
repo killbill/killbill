@@ -111,7 +111,7 @@ public class TestAccountDao extends AccountTestSuiteWithEmbeddedDB {
         final CustomField field = new StringCustomField(fieldName, fieldValue, ObjectType.ACCOUNT, accountId, internalCallContext.getCreatedDate());
         customFieldDao.create(new CustomFieldModelDao(field), internalCallContext);
 
-        final List<CustomFieldModelDao> customFieldMap = customFieldDao.getCustomFields(accountId, ObjectType.ACCOUNT, internalCallContext);
+        final List<CustomFieldModelDao> customFieldMap = customFieldDao.getCustomFieldsForObject(accountId, ObjectType.ACCOUNT, internalCallContext);
         Assert.assertEquals(customFieldMap.size(), 1);
 
         final CustomFieldModelDao customField = customFieldMap.get(0);

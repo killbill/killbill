@@ -153,7 +153,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
     }
 
     protected Response getCustomFields(final UUID id, final TenantContext context) {
-        final List<CustomField> fields = customFieldUserApi.getCustomFields(id, getObjectType(), context);
+        final List<CustomField> fields = customFieldUserApi.getCustomFieldsForObject(id, getObjectType(), context);
 
         final List<CustomFieldJson> result = new LinkedList<CustomFieldJson>();
         for (final CustomField cur : fields) {

@@ -56,7 +56,7 @@ public class TestDefaultCustomFieldUserApi extends UtilTestSuiteWithEmbeddedDB {
         customFieldUserApi.addCustomFields(ImmutableList.<CustomField>of(customField), callContext);
 
         // Verify the field was saved
-        final List<CustomField> customFields = customFieldUserApi.getCustomFields(accountId, ObjectType.ACCOUNT, callContext);
+        final List<CustomField> customFields = customFieldUserApi.getCustomFieldsForObject(accountId, ObjectType.ACCOUNT, callContext);
         Assert.assertEquals(customFields.size(), 1);
         Assert.assertEquals(customFields.get(0), customField);
         // Verify the account_record_id was populated

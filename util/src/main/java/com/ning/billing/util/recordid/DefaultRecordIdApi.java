@@ -24,22 +24,23 @@ import com.ning.billing.ObjectType;
 import com.ning.billing.util.api.RecordIdApi;
 import com.ning.billing.util.cache.Cachable.CacheType;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
+import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.dao.NonEntityDao;
 
-public class DefaultRecordId implements RecordIdApi  {
+public class DefaultRecordIdApi implements RecordIdApi  {
 
     private final NonEntityDao nonEntityDao;
     private final CacheControllerDispatcher cacheControllerDispatcher;
 
     @Inject
-    public DefaultRecordId(final NonEntityDao nonEntityDao, final CacheControllerDispatcher cacheControllerDispatcher) {
+    public DefaultRecordIdApi(final NonEntityDao nonEntityDao, final CacheControllerDispatcher cacheControllerDispatcher) {
         this.nonEntityDao = nonEntityDao;
         this.cacheControllerDispatcher = cacheControllerDispatcher;
     }
 
 
     @Override
-    public Long getRecordId(final UUID objectId, final ObjectType objectType) {
+    public Long getRecordId(final UUID objectId, final ObjectType objectType, final TenantContext tenantContext) {
         return nonEntityDao.retrieveRecordIdFromObject(objectId, objectType, cacheControllerDispatcher.getCacheController(CacheType.RECORD_ID));
     }
 }

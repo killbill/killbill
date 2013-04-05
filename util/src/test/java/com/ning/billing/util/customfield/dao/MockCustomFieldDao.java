@@ -29,7 +29,7 @@ import com.ning.billing.util.entity.dao.MockEntityDaoBase;
 public class MockCustomFieldDao extends MockEntityDaoBase<CustomFieldModelDao, CustomField, CustomFieldApiException> implements CustomFieldDao {
 
     @Override
-    public List<CustomFieldModelDao> getCustomFields(final UUID objectId, final ObjectType objectType, final InternalTenantContext context) {
+    public List<CustomFieldModelDao> getCustomFieldsForObject(final UUID objectId, final ObjectType objectType, final InternalTenantContext context) {
         final List<CustomFieldModelDao> result = new ArrayList<CustomFieldModelDao>();
         final List<CustomFieldModelDao> all = get(context);
         for (final CustomFieldModelDao cur : all) {
@@ -38,5 +38,15 @@ public class MockCustomFieldDao extends MockEntityDaoBase<CustomFieldModelDao, C
             }
         }
         return result;
+    }
+
+    @Override
+    public List<CustomFieldModelDao> getCustomFieldsForAccountType(final ObjectType objectType, final InternalTenantContext context) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public List<CustomFieldModelDao> getCustomFieldsForAccount(final InternalTenantContext context) {
+        throw new UnsupportedOperationException();
     }
 }
