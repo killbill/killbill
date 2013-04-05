@@ -40,6 +40,7 @@ public class TestBusinessOverdueStatus extends AnalyticsTestSuiteNoDB {
                                                                                                               tenantRecordId);
         final BusinessOverdueStatus businessOverdueStatus = new BusinessOverdueStatus(businessOverdueStatusModelDao);
         verifyBusinessEntityBase(businessOverdueStatus);
+        Assert.assertEquals(businessOverdueStatus.getCreatedDate(), businessOverdueStatusModelDao.getCreatedDate());
         Assert.assertEquals(businessOverdueStatus.getObjectType(), ObjectType.BUNDLE.toString());
         Assert.assertEquals(businessOverdueStatus.getStatus(), businessOverdueStatusModelDao.getStatus());
         Assert.assertEquals(businessOverdueStatus.getStartDate(), businessOverdueStatusModelDao.getStartDate());

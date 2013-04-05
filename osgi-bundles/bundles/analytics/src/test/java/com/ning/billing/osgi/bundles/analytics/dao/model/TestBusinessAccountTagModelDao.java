@@ -33,6 +33,7 @@ public class TestBusinessAccountTagModelDao extends AnalyticsTestSuiteNoDB {
                                                                                       auditLog,
                                                                                       tenantRecordId);
         verifyBusinessModelDaoBase(tagModelDao, accountRecordId, tenantRecordId);
+        Assert.assertEquals(tagModelDao.getCreatedDate(), tag.getCreatedDate());
         Assert.assertEquals(tagModelDao.getTagRecordId(), tagRecordId);
         Assert.assertEquals(tagModelDao.getName(), tagDefinition.getName());
     }

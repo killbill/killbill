@@ -32,7 +32,8 @@ public class TestBusinessInvoiceModelDao extends AnalyticsTestSuiteNoDB {
                                                                                     auditLog,
                                                                                     tenantRecordId);
         verifyBusinessModelDaoBase(invoiceModelDao, accountRecordId, tenantRecordId);
-        Assert.assertEquals(invoiceModelDao.getInvoiceRecordId(), invoiceItemRecordId);
+        Assert.assertEquals(invoiceModelDao.getCreatedDate(), invoice.getCreatedDate());
+        Assert.assertEquals(invoiceModelDao.getInvoiceRecordId(), invoiceRecordId);
         Assert.assertEquals(invoiceModelDao.getInvoiceId(), invoice.getId());
         Assert.assertEquals(invoiceModelDao.getInvoiceNumber(), invoice.getInvoiceNumber());
         Assert.assertEquals(invoiceModelDao.getInvoiceDate(), invoice.getInvoiceDate());

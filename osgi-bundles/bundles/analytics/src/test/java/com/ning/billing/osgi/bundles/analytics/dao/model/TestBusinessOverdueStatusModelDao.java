@@ -37,6 +37,7 @@ public class TestBusinessOverdueStatusModelDao extends AnalyticsTestSuiteNoDB {
                                                                                                       auditLog,
                                                                                                       tenantRecordId);
         verifyBusinessModelDaoBase(overdueStatusModelDao, accountRecordId, tenantRecordId);
+        Assert.assertEquals(overdueStatusModelDao.getCreatedDate(), blockingState.getCreatedDate());
         Assert.assertEquals(overdueStatusModelDao.getBlockingStateRecordId(), blockingStateRecordId);
         Assert.assertEquals(overdueStatusModelDao.getBundleId(), bundle.getId());
         Assert.assertEquals(overdueStatusModelDao.getBundleExternalKey(), bundle.getExternalKey());

@@ -38,6 +38,7 @@ public class TestBusinessAccount extends AnalyticsTestSuiteNoDB {
         final BusinessAccount businessAccount = new BusinessAccount(accountModelDao);
 
         verifyBusinessEntityBase(businessAccount);
+        Assert.assertEquals(businessAccount.getCreatedDate(), accountModelDao.getCreatedDate());
         Assert.assertEquals(businessAccount.getEmail(), accountModelDao.getEmail());
         Assert.assertEquals(businessAccount.getFirstNameLength(), accountModelDao.getFirstNameLength());
         Assert.assertEquals(businessAccount.getCurrency(), accountModelDao.getCurrency());

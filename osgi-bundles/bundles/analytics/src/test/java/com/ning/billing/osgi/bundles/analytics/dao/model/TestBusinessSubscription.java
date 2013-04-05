@@ -111,7 +111,7 @@ public class TestBusinessSubscription extends AnalyticsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testConstructorWithNulls() throws Exception {
-        final DateTime startDate = new DateTime(2019, 7, 4, 29, 3, 11, DateTimeZone.UTC);
+        final DateTime startDate = new DateTime(2019, 7, 4, 23, 3, 11, DateTimeZone.UTC);
         final BusinessSubscription businessSubscription = new BusinessSubscription(null,
                                                                                    null,
                                                                                    null,
@@ -127,7 +127,7 @@ public class TestBusinessSubscription extends AnalyticsTestSuiteNoDB {
         Assert.assertNull(businessSubscription.getPrice());
         Assert.assertNull(businessSubscription.getPriceList(), priceList.getName());
         Assert.assertEquals(businessSubscription.getCurrency(), Currency.GBP.toString());
-        Assert.assertEquals(businessSubscription.getState(), SubscriptionState.ACTIVE);
+        Assert.assertEquals(businessSubscription.getState(), SubscriptionState.ACTIVE.toString());
         //Assert.assertEquals(businessSubscription.getBusinessActive(), /* TODO */);
         Assert.assertEquals(businessSubscription.getStartDate(), startDate);
         Assert.assertNull(businessSubscription.getEndDate());
@@ -136,7 +136,7 @@ public class TestBusinessSubscription extends AnalyticsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testConstructorWithoutNulls() throws Exception {
-        final DateTime startDate = new DateTime(2019, 7, 4, 29, 3, 11, DateTimeZone.UTC);
+        final DateTime startDate = new DateTime(2019, 7, 4, 9, 3, 11, DateTimeZone.UTC);
         final BusinessSubscription businessSubscription = new BusinessSubscription(plan,
                                                                                    phase,
                                                                                    priceList,
@@ -152,7 +152,7 @@ public class TestBusinessSubscription extends AnalyticsTestSuiteNoDB {
         Assert.assertEquals(businessSubscription.getPrice(), phase.getRecurringPrice());
         Assert.assertEquals(businessSubscription.getPriceList(), priceList.getName());
         Assert.assertEquals(businessSubscription.getCurrency(), Currency.GBP.toString());
-        Assert.assertEquals(businessSubscription.getState(), SubscriptionState.ACTIVE);
+        Assert.assertEquals(businessSubscription.getState(), SubscriptionState.ACTIVE.toString());
         //Assert.assertEquals(businessSubscription.getBusinessActive(), /* TODO */);
         Assert.assertEquals(businessSubscription.getStartDate(), startDate);
         Assert.assertNull(businessSubscription.getEndDate());

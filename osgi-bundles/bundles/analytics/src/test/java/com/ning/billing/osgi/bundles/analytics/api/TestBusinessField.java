@@ -68,6 +68,7 @@ public class TestBusinessField extends AnalyticsTestSuiteNoDB {
 
     private void verifyBusinessField(final BusinessField accountField) {
         verifyBusinessEntityBase(accountField);
+        Assert.assertEquals(accountField.getCreatedDate(), customField.getCreatedDate());
         Assert.assertEquals(accountField.getName(), customField.getFieldName());
         Assert.assertEquals(accountField.getValue(), customField.getFieldValue());
     }

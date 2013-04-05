@@ -47,7 +47,8 @@ public class TestBusinessSubscriptionTransitionModelDao extends AnalyticsTestSui
                                                                                                                                  auditLog,
                                                                                                                                  tenantRecordId);
         verifyBusinessModelDaoBase(subscriptionTransitionModelDao, accountRecordId, tenantRecordId);
-        //Assert.assertEquals(subscriptionTransitionModelDao.getSubscriptionEventRecordId(), /* TODO */);
+        Assert.assertEquals(subscriptionTransitionModelDao.getCreatedDate(), subscriptionTransition.getNextEventCreatedDate());
+        Assert.assertEquals(subscriptionTransitionModelDao.getSubscriptionEventRecordId(), subscriptionEventRecordId);
         Assert.assertEquals(subscriptionTransitionModelDao.getBundleId(), bundle.getId());
         Assert.assertEquals(subscriptionTransitionModelDao.getBundleExternalKey(), bundle.getExternalKey());
         Assert.assertEquals(subscriptionTransitionModelDao.getSubscriptionId(), subscriptionTransition.getSubscriptionId());

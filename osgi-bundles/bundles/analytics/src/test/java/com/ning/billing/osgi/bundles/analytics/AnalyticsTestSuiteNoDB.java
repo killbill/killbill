@@ -102,7 +102,6 @@ public abstract class AnalyticsTestSuiteNoDB {
     protected OSGIKillbillDataSource killbillDataSource;
 
     protected void verifyBusinessEntityBase(final BusinessEntityBase businessEntityBase) {
-        Assert.assertEquals(businessEntityBase.getCreatedDate(), auditLog.getCreatedDate());
         Assert.assertEquals(businessEntityBase.getCreatedBy(), auditLog.getUserName());
         Assert.assertEquals(businessEntityBase.getCreatedReasonCode(), auditLog.getReasonCode());
         Assert.assertEquals(businessEntityBase.getCreatedComments(), auditLog.getComment());
@@ -114,7 +113,6 @@ public abstract class AnalyticsTestSuiteNoDB {
     protected void verifyBusinessModelDaoBase(final BusinessModelDaoBase businessModelDaoBase,
                                               final Long accountRecordId,
                                               final Long tenantRecordId) {
-        Assert.assertEquals(businessModelDaoBase.getCreatedDate(), account.getCreatedDate());
         Assert.assertEquals(businessModelDaoBase.getCreatedBy(), auditLog.getUserName());
         Assert.assertEquals(businessModelDaoBase.getCreatedReasonCode(), auditLog.getReasonCode());
         Assert.assertEquals(businessModelDaoBase.getCreatedComments(), auditLog.getComment());
@@ -148,12 +146,14 @@ public abstract class AnalyticsTestSuiteNoDB {
         Mockito.when(account.getPhone()).thenReturn(UUID.randomUUID().toString().substring(0, 25));
         Mockito.when(account.isMigrated()).thenReturn(true);
         Mockito.when(account.isNotifiedForInvoices()).thenReturn(true);
+        Mockito.when(account.getCreatedDate()).thenReturn(new DateTime(2016, 1, 22, 10, 56, 47, DateTimeZone.UTC));
         final UUID accountId = account.getId();
 
         bundle = Mockito.mock(SubscriptionBundle.class);
         Mockito.when(bundle.getId()).thenReturn(UUID.randomUUID());
         Mockito.when(bundle.getAccountId()).thenReturn(accountId);
         Mockito.when(bundle.getExternalKey()).thenReturn(UUID.randomUUID().toString());
+        Mockito.when(bundle.getCreatedDate()).thenReturn(new DateTime(2016, 1, 22, 10, 56, 48, DateTimeZone.UTC));
         final UUID bundleId = bundle.getId();
 
         final Product product = Mockito.mock(Product.class);
@@ -191,6 +191,7 @@ public abstract class AnalyticsTestSuiteNoDB {
         Mockito.when(subscriptionTransition.getRequestedTransitionTime()).thenReturn(new DateTime(2010, 1, 2, 3, 4, 5, DateTimeZone.UTC));
         Mockito.when(subscriptionTransition.getEffectiveTransitionTime()).thenReturn(new DateTime(2011, 2, 3, 4, 5, 6, DateTimeZone.UTC));
         Mockito.when(subscriptionTransition.getTransitionType()).thenReturn(SubscriptionTransitionType.CREATE);
+        Mockito.when(subscriptionTransition.getNextEventCreatedDate()).thenReturn(new DateTime(2016, 1, 22, 10, 56, 49, DateTimeZone.UTC));
         final UUID subscriptionId = subscriptionTransition.getSubscriptionId();
 
         blockingState = Mockito.mock(BlockingState.class);
@@ -204,6 +205,7 @@ public abstract class AnalyticsTestSuiteNoDB {
         Mockito.when(blockingState.isBlockEntitlement()).thenReturn(true);
         Mockito.when(blockingState.getDescription()).thenReturn(UUID.randomUUID().toString());
         Mockito.when(blockingState.getService()).thenReturn(UUID.randomUUID().toString());
+        Mockito.when(blockingState.getCreatedDate()).thenReturn(new DateTime(2016, 1, 22, 10, 56, 00, DateTimeZone.UTC));
 
         invoiceItem = Mockito.mock(InvoiceItem.class);
         Mockito.when(invoiceItem.getId()).thenReturn(UUID.randomUUID());
@@ -221,6 +223,7 @@ public abstract class AnalyticsTestSuiteNoDB {
         Mockito.when(invoiceItem.getPhaseName()).thenReturn(phaseName);
         Mockito.when(invoiceItem.getRate()).thenReturn(new BigDecimal("1203"));
         Mockito.when(invoiceItem.getLinkedItemId()).thenReturn(UUID.randomUUID());
+        Mockito.when(invoiceItem.getCreatedDate()).thenReturn(new DateTime(2016, 1, 22, 10, 56, 51, DateTimeZone.UTC));
 
         final UUID invoiceId = UUID.randomUUID();
 
@@ -234,6 +237,7 @@ public abstract class AnalyticsTestSuiteNoDB {
         Mockito.when(invoicePayment.getCurrency()).thenReturn(Currency.MXN);
         Mockito.when(invoicePayment.getLinkedInvoicePaymentId()).thenReturn(UUID.randomUUID());
         Mockito.when(invoicePayment.getPaymentCookieId()).thenReturn(UUID.randomUUID());
+        Mockito.when(invoicePayment.getCreatedDate()).thenReturn(new DateTime(2016, 1, 22, 10, 56, 53, DateTimeZone.UTC));
 
         invoice = Mockito.mock(Invoice.class);
         Mockito.when(invoice.getId()).thenReturn(invoiceId);
@@ -255,6 +259,7 @@ public abstract class AnalyticsTestSuiteNoDB {
         Mockito.when(invoice.getRefundAdjAmount()).thenReturn(new BigDecimal("384"));
         Mockito.when(invoice.getBalance()).thenReturn(new BigDecimal("18376"));
         Mockito.when(invoice.isMigrationInvoice()).thenReturn(false);
+        Mockito.when(invoice.getCreatedDate()).thenReturn(new DateTime(2016, 1, 22, 10, 56, 53, DateTimeZone.UTC));
 
         paymentAttempt = Mockito.mock(PaymentAttempt.class);
         Mockito.when(paymentAttempt.getId()).thenReturn(UUID.randomUUID());
@@ -262,6 +267,7 @@ public abstract class AnalyticsTestSuiteNoDB {
         Mockito.when(paymentAttempt.getGatewayErrorCode()).thenReturn(UUID.randomUUID().toString());
         Mockito.when(paymentAttempt.getGatewayErrorMsg()).thenReturn(UUID.randomUUID().toString());
         Mockito.when(paymentAttempt.getPaymentStatus()).thenReturn(PaymentStatus.SUCCESS);
+        Mockito.when(paymentAttempt.getCreatedDate()).thenReturn(new DateTime(2016, 1, 22, 10, 56, 54, DateTimeZone.UTC));
 
         final PaymentMethodPlugin paymentMethodPlugin = Mockito.mock(PaymentMethodPlugin.class);
         Mockito.when(paymentMethodPlugin.getExternalPaymentMethodId()).thenReturn(UUID.randomUUID().toString());
@@ -273,6 +279,7 @@ public abstract class AnalyticsTestSuiteNoDB {
         Mockito.when(paymentMethod.isActive()).thenReturn(true);
         Mockito.when(paymentMethod.getPluginName()).thenReturn(UUID.randomUUID().toString());
         Mockito.when(paymentMethod.getPluginDetail()).thenReturn(paymentMethodPlugin);
+        Mockito.when(paymentMethod.getCreatedDate()).thenReturn(new DateTime(2016, 1, 22, 10, 56, 55, DateTimeZone.UTC));
         final UUID paymentMethodId = paymentMethod.getId();
 
         payment = Mockito.mock(Payment.class);
@@ -289,6 +296,7 @@ public abstract class AnalyticsTestSuiteNoDB {
         Mockito.when(payment.getAttempts()).thenReturn(ImmutableList.<PaymentAttempt>of(paymentAttempt));
         Mockito.when(payment.getExtFirstPaymentIdRef()).thenReturn(UUID.randomUUID().toString());
         Mockito.when(payment.getExtSecondPaymentIdRef()).thenReturn(UUID.randomUUID().toString());
+        Mockito.when(payment.getCreatedDate()).thenReturn(new DateTime(2016, 1, 22, 10, 56, 56, DateTimeZone.UTC));
 
         customField = Mockito.mock(CustomField.class);
         Mockito.when(customField.getId()).thenReturn(UUID.randomUUID());
@@ -296,11 +304,13 @@ public abstract class AnalyticsTestSuiteNoDB {
         Mockito.when(customField.getObjectType()).thenReturn(ObjectType.TENANT);
         Mockito.when(customField.getFieldName()).thenReturn(UUID.randomUUID().toString());
         Mockito.when(customField.getFieldValue()).thenReturn(UUID.randomUUID().toString());
+        Mockito.when(customField.getCreatedDate()).thenReturn(new DateTime(2016, 1, 22, 10, 56, 57, DateTimeZone.UTC));
 
         tag = Mockito.mock(Tag.class);
         Mockito.when(tag.getObjectId()).thenReturn(UUID.randomUUID());
         Mockito.when(tag.getObjectType()).thenReturn(ObjectType.ACCOUNT);
         Mockito.when(tag.getTagDefinitionId()).thenReturn(UUID.randomUUID());
+        Mockito.when(tag.getCreatedDate()).thenReturn(new DateTime(2016, 1, 22, 10, 56, 58, DateTimeZone.UTC));
 
         tagDefinition = Mockito.mock(TagDefinition.class);
         Mockito.when(tagDefinition.getId()).thenReturn(UUID.randomUUID());
@@ -308,6 +318,7 @@ public abstract class AnalyticsTestSuiteNoDB {
         Mockito.when(tagDefinition.getDescription()).thenReturn(UUID.randomUUID().toString());
         Mockito.when(tagDefinition.isControlTag()).thenReturn(false);
         Mockito.when(tagDefinition.getApplicableObjectTypes()).thenReturn(ImmutableList.<ObjectType>of(ObjectType.INVOICE));
+        Mockito.when(tagDefinition.getCreatedDate()).thenReturn(new DateTime(2016, 1, 22, 10, 56, 59, DateTimeZone.UTC));
 
         auditLog = Mockito.mock(AuditLog.class);
         Mockito.when(auditLog.getId()).thenReturn(UUID.randomUUID());

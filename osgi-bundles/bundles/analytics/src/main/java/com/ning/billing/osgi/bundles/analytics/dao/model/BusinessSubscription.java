@@ -111,15 +111,15 @@ public class BusinessSubscription {
                     mrr = null;
                 }
             } else {
-                price = BigDecimal.ZERO;
-                mrr = BigDecimal.ZERO;
+                price = null;
+                mrr = null;
             }
         } else {
             slug = null;
             phase = null;
             billingPeriod = null;
-            price = BigDecimal.ZERO;
-            mrr = BigDecimal.ZERO;
+            price = null;
+            mrr = null;
         }
 
         if (currency != null) {

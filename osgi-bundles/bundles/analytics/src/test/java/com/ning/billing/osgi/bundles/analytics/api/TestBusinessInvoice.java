@@ -48,6 +48,7 @@ public class TestBusinessInvoice extends AnalyticsTestSuiteNoDB {
         final BusinessInvoice businessInvoice = new BusinessInvoice(invoiceModelDao,
                                                                     ImmutableList.<BusinessInvoiceItemBaseModelDao>of(invoiceItemBaseModelDao));
         verifyBusinessEntityBase(businessInvoice);
+        Assert.assertEquals(businessInvoice.getCreatedDate(), invoiceModelDao.getCreatedDate());
         Assert.assertEquals(businessInvoice.getInvoiceId(), invoiceModelDao.getInvoiceId());
         Assert.assertEquals(businessInvoice.getInvoiceNumber(), invoiceModelDao.getInvoiceNumber());
         Assert.assertEquals(businessInvoice.getInvoiceDate(), invoiceModelDao.getInvoiceDate());
@@ -62,6 +63,7 @@ public class TestBusinessInvoice extends AnalyticsTestSuiteNoDB {
 
         final BusinessInvoiceItem businessInvoiceItem = businessInvoice.getInvoiceItems().get(0);
         verifyBusinessEntityBase(businessInvoiceItem);
+        Assert.assertEquals(businessInvoiceItem.getCreatedDate(), invoiceItemBaseModelDao.getCreatedDate());
         Assert.assertEquals(businessInvoiceItem.getItemId(), invoiceItemBaseModelDao.getItemId());
         Assert.assertEquals(businessInvoiceItem.getInvoiceId(), invoiceItemBaseModelDao.getInvoiceId());
         Assert.assertEquals(businessInvoiceItem.getInvoiceNumber(), invoiceItemBaseModelDao.getInvoiceNumber());

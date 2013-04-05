@@ -33,6 +33,7 @@ public class TestBusinessInvoicePaymentTagModelDao extends AnalyticsTestSuiteNoD
                                                                                                                   auditLog,
                                                                                                                   tenantRecordId);
         verifyBusinessModelDaoBase(invoicePaymentTagModelDao, accountRecordId, tenantRecordId);
+        Assert.assertEquals(invoicePaymentTagModelDao.getCreatedDate(), tag.getCreatedDate());
         Assert.assertEquals(invoicePaymentTagModelDao.getTagRecordId(), tagRecordId);
         Assert.assertEquals(invoicePaymentTagModelDao.getInvoicePaymentId(), tag.getObjectId());
         Assert.assertEquals(invoicePaymentTagModelDao.getName(), tagDefinition.getName());

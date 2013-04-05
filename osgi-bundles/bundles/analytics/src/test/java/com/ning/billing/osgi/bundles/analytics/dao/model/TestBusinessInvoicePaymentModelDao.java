@@ -35,13 +35,14 @@ public class TestBusinessInvoicePaymentModelDao extends AnalyticsTestSuiteNoDB {
                                                                                                          auditLog,
                                                                                                          tenantRecordId);
         verifyBusinessModelDaoBase(invoicePaymentModelDao, accountRecordId, tenantRecordId);
+        Assert.assertEquals(invoicePaymentModelDao.getCreatedDate(), invoicePayment.getCreatedDate());
         Assert.assertEquals(invoicePaymentModelDao.getInvoicePaymentRecordId(), invoicePaymentRecordId);
         Assert.assertEquals(invoicePaymentModelDao.getInvoicePaymentId(), invoicePayment.getId());
         Assert.assertEquals(invoicePaymentModelDao.getInvoiceId(), invoice.getId());
         Assert.assertEquals(invoicePaymentModelDao.getInvoiceNumber(), invoice.getInvoiceNumber());
         Assert.assertEquals(invoicePaymentModelDao.getInvoiceCreatedDate(), invoice.getCreatedDate());
         Assert.assertEquals(invoicePaymentModelDao.getInvoiceDate(), invoice.getInvoiceDate());
-        Assert.assertEquals(invoicePaymentModelDao.getInvoiceTargetDate(), invoice.getInvoiceDate());
+        Assert.assertEquals(invoicePaymentModelDao.getInvoiceTargetDate(), invoice.getTargetDate());
         Assert.assertEquals(invoicePaymentModelDao.getInvoiceCurrency(), invoice.getCurrency().toString());
         Assert.assertEquals(invoicePaymentModelDao.getInvoiceBalance(), invoice.getBalance());
         Assert.assertEquals(invoicePaymentModelDao.getInvoiceAmountPaid(), invoice.getPaidAmount());
@@ -51,7 +52,7 @@ public class TestBusinessInvoicePaymentModelDao extends AnalyticsTestSuiteNoDB {
         Assert.assertEquals(invoicePaymentModelDao.getInvoicePaymentType(), invoicePayment.getType().toString());
         //Assert.assertEquals(invoicePaymentModelDao.getPaymentNumber(), /* TODO */);
         Assert.assertEquals(invoicePaymentModelDao.getLinkedInvoicePaymentId(), invoicePayment.getLinkedInvoicePaymentId());
-        Assert.assertEquals(invoicePaymentModelDao.getAmount(), payment.getAmount());
-        Assert.assertEquals(invoicePaymentModelDao.getCurrency(), payment.getCurrency().toString());
+        Assert.assertEquals(invoicePaymentModelDao.getAmount(), invoicePayment.getAmount());
+        Assert.assertEquals(invoicePaymentModelDao.getCurrency(), invoicePayment.getCurrency().toString());
     }
 }

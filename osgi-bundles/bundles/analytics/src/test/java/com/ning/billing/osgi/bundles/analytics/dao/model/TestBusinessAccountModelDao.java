@@ -59,10 +59,14 @@ public class TestBusinessAccountModelDao extends AnalyticsTestSuiteNoDB {
 
     private void verifyAccountFields(final BusinessAccountModelDao accountModelDao) {
         verifyBusinessModelDaoBase(accountModelDao, accountRecordId, tenantRecordId);
+        Assert.assertEquals(accountModelDao.getCreatedDate(), account.getCreatedDate());
         Assert.assertEquals(accountModelDao.getEmail(), account.getEmail());
         Assert.assertEquals(accountModelDao.getFirstNameLength(), account.getFirstNameLength());
         Assert.assertEquals(accountModelDao.getCurrency(), account.getCurrency().toString());
         Assert.assertEquals(accountModelDao.getBillingCycleDayLocal(), account.getBillCycleDayLocal());
+        Assert.assertEquals(accountModelDao.getPaymentMethodId(), account.getPaymentMethodId());
+        Assert.assertEquals(accountModelDao.getTimeZone(), account.getTimeZone().toString());
+        Assert.assertEquals(accountModelDao.getLocale(), account.getLocale());
         Assert.assertEquals(accountModelDao.getAddress1(), account.getAddress1());
         Assert.assertEquals(accountModelDao.getAddress2(), account.getAddress2());
         Assert.assertEquals(accountModelDao.getCompanyName(), account.getCompanyName());

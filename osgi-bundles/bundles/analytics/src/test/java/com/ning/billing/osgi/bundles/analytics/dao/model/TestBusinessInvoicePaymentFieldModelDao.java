@@ -32,6 +32,7 @@ public class TestBusinessInvoicePaymentFieldModelDao extends AnalyticsTestSuiteN
                                                                                                                         auditLog,
                                                                                                                         tenantRecordId);
         verifyBusinessModelDaoBase(invoicePaymentFieldModelDao, accountRecordId, tenantRecordId);
+        Assert.assertEquals(invoicePaymentFieldModelDao.getCreatedDate(), customField.getCreatedDate());
         Assert.assertEquals(invoicePaymentFieldModelDao.getCustomFieldRecordId(), fieldRecordId);
         Assert.assertEquals(invoicePaymentFieldModelDao.getInvoicePaymentId(), customField.getObjectId());
         Assert.assertEquals(invoicePaymentFieldModelDao.getName(), customField.getFieldName());

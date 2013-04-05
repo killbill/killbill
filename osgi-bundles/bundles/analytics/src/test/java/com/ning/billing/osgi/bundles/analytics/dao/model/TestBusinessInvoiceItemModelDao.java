@@ -43,7 +43,6 @@ public class TestBusinessInvoiceItemModelDao extends AnalyticsTestSuiteNoDB {
         Assert.assertNull(invoiceItemModelDao.getSlug());
         Assert.assertNull(invoiceItemModelDao.getPhase());
         Assert.assertNull(invoiceItemModelDao.getBillingPeriod());
-        Assert.assertNull(invoiceItemModelDao.getEndDate());
     }
 
     @Test(groups = "fast")
@@ -66,11 +65,11 @@ public class TestBusinessInvoiceItemModelDao extends AnalyticsTestSuiteNoDB {
         Assert.assertEquals(invoiceItemModelDao.getSlug(), phase.getName());
         Assert.assertEquals(invoiceItemModelDao.getPhase(), phase.getPhaseType().toString());
         Assert.assertEquals(invoiceItemModelDao.getBillingPeriod(), phase.getBillingPeriod().toString());
-        Assert.assertEquals(invoiceItemModelDao.getEndDate(), invoiceItem.getStartDate().plus(phase.getDuration().toJodaPeriod()));
     }
 
     private void verifyInvoiceItemFields(final BusinessInvoiceItemModelDao invoiceItemModelDao) {
         verifyBusinessModelDaoBase(invoiceItemModelDao, accountRecordId, tenantRecordId);
+        Assert.assertEquals(invoiceItemModelDao.getCreatedDate(), invoiceItem.getCreatedDate());
         Assert.assertEquals(invoiceItemModelDao.getInvoiceItemRecordId(), invoiceItemRecordId);
         Assert.assertEquals(invoiceItemModelDao.getItemId(), invoiceItem.getId());
         Assert.assertEquals(invoiceItemModelDao.getInvoiceId(), invoice.getId());
@@ -90,5 +89,6 @@ public class TestBusinessInvoiceItemModelDao extends AnalyticsTestSuiteNoDB {
         Assert.assertEquals(invoiceItemModelDao.getAmount(), invoiceItem.getAmount());
         Assert.assertEquals(invoiceItemModelDao.getCurrency(), invoiceItem.getCurrency().toString());
         Assert.assertEquals(invoiceItemModelDao.getLinkedItemId(), invoiceItem.getLinkedItemId());
+        Assert.assertEquals(invoiceItemModelDao.getEndDate(), invoiceItem.getEndDate());
     }
 }

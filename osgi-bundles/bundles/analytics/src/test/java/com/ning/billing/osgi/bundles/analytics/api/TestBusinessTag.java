@@ -71,6 +71,7 @@ public class TestBusinessTag extends AnalyticsTestSuiteNoDB {
 
     private void verifyBusinessTag(final BusinessTag accountTag) {
         verifyBusinessEntityBase(accountTag);
+        Assert.assertEquals(accountTag.getCreatedDate(), accountTag.getCreatedDate());
         Assert.assertEquals(accountTag.getName(), accountTag.getName());
     }
 }

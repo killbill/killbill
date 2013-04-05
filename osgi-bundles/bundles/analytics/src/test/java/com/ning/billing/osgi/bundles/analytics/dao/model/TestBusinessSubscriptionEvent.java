@@ -46,6 +46,6 @@ public class TestBusinessSubscriptionEvent extends AnalyticsTestSuiteNoDB {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.fromTransition(subscriptionTransition);
         Assert.assertEquals(event.getEventType(), BusinessSubscriptionEvent.EventType.ADD);
         Assert.assertEquals(event.getCategory(), subscriptionTransition.getNextPlan().getProduct().getCategory());
-        Assert.assertEquals(event.toString(), "ADD_BASE");
+        Assert.assertEquals(event.toString(), "ADD_" + plan.getProduct().getCategory().toString());
     }
 }
