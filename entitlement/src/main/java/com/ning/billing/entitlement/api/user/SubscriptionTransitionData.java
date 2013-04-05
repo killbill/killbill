@@ -40,8 +40,12 @@ public class SubscriptionTransitionData implements SubscriptionTransition {
     private final DateTime effectiveTransitionTime;
     private final SubscriptionState previousState;
     private final PriceList previousPriceList;
+    private final UUID previousEventId;
+    private final DateTime previousEventCreatedDate;
     private final Plan previousPlan;
     private final PlanPhase previousPhase;
+    private final UUID nextEventId;
+    private final DateTime nextEventCreatedDate;
     private final SubscriptionState nextState;
     private final PriceList nextPriceList;
     private final Plan nextPlan;
@@ -57,10 +61,14 @@ public class SubscriptionTransitionData implements SubscriptionTransition {
                                       final ApiEventType apiEventType,
                                       final DateTime requestedTransitionTime,
                                       final DateTime effectiveTransitionTime,
+                                      final UUID previousEventId,
+                                      final DateTime previousEventCreatedDate,
                                       final SubscriptionState previousState,
                                       final Plan previousPlan,
                                       final PlanPhase previousPhase,
                                       final PriceList previousPriceList,
+                                      final UUID nextEventId,
+                                      final DateTime nextEventCreatedDate,
                                       final SubscriptionState nextState,
                                       final Plan nextPlan,
                                       final PlanPhase nextPhase,
@@ -84,12 +92,16 @@ public class SubscriptionTransitionData implements SubscriptionTransition {
         this.nextPriceList = nextPriceList;
         this.nextPhase = nextPhase;
         this.totalOrdering = totalOrdering;
+        this.previousEventId = previousEventId;
+        this.previousEventCreatedDate = previousEventCreatedDate;
+        this.nextEventId = nextEventId;
+        this.nextEventCreatedDate = nextEventCreatedDate;
         this.isFromDisk = isFromDisk;
         this.userToken = userToken;
         this.remainingEventsForUserOperation = 0;
     }
 
-    public SubscriptionTransitionData(final SubscriptionTransitionData input, final int remainingEventsForUserOperation) {
+    public SubscriptionTransitionData(final SubscriptionTransitionData input, int remainingEventsForUserOperation) {
         super();
         this.eventId = input.getId();
         this.subscriptionId = input.getSubscriptionId();
@@ -98,10 +110,14 @@ public class SubscriptionTransitionData implements SubscriptionTransition {
         this.apiEventType = input.getApiEventType();
         this.requestedTransitionTime = input.getRequestedTransitionTime();
         this.effectiveTransitionTime = input.getEffectiveTransitionTime();
+        this.previousEventId = input.getPreviousEventId();
+        this.previousEventCreatedDate = input.getPreviousEventCreatedDate();
         this.previousState = input.getPreviousState();
         this.previousPriceList = input.getPreviousPriceList();
         this.previousPlan = input.getPreviousPlan();
         this.previousPhase = input.getPreviousPhase();
+        this.nextEventId = input.getNextEventId();
+        this.nextEventCreatedDate = input.getNextEventCreatedDate();
         this.nextState = input.getNextState();
         this.nextPlan = input.getNextPlan();
         this.nextPriceList = input.getNextPriceList();
@@ -142,6 +158,16 @@ public class SubscriptionTransitionData implements SubscriptionTransition {
     }
 
     @Override
+    public UUID getNextEventId() {
+        return nextEventId;
+    }
+
+    @Override
+    public DateTime getNextEventCreatedDate() {
+        return nextEventCreatedDate;
+    }
+
+    @Override
     public Plan getNextPlan() {
         return nextPlan;
     }
@@ -154,6 +180,16 @@ public class SubscriptionTransitionData implements SubscriptionTransition {
     @Override
     public SubscriptionState getNextState() {
         return nextState;
+    }
+
+    @Override
+    public UUID getPreviousEventId() {
+        return previousEventId;
+    }
+
+    @Override
+    public DateTime getPreviousEventCreatedDate() {
+        return previousEventCreatedDate;
     }
 
     @Override

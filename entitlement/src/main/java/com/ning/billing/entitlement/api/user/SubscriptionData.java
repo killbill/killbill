@@ -28,7 +28,6 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.ActionPolicy;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Catalog;
@@ -517,18 +516,23 @@ public class SubscriptionData extends EntityBase implements Subscription {
 
         this.events = inputEvents;
 
+        UUID nextUserToken = null;
+
+        UUID nextEventId = null;
+        DateTime nextCreatedDate = null;
         SubscriptionState nextState = null;
         String nextPlanName = null;
         String nextPhaseName = null;
         String nextPriceListName = null;
-        UUID nextUserToken = null;
 
+        UUID prevEventId = null;
+        DateTime prevCreatedDate = null;
         SubscriptionState previousState = null;
         PriceList previousPriceList = null;
-
-        transitions = new LinkedList<SubscriptionTransition>();
         Plan previousPlan = null;
         PlanPhase previousPhase = null;
+
+        transitions = new LinkedList<SubscriptionTransition>();
 
         for (final EntitlementEvent cur : inputEvents) {
 
@@ -539,6 +543,9 @@ public class SubscriptionData extends EntityBase implements Subscription {
             ApiEventType apiEventType = null;
 
             boolean isFromDisk = true;
+
+            nextEventId = cur.getId();
+            nextCreatedDate = cur.getCreatedDate();
 
             switch (cur.getType()) {
 
@@ -558,6 +565,8 @@ public class SubscriptionData extends EntityBase implements Subscription {
                 case MIGRATE_ENTITLEMENT:
                 case CREATE:
                 case RE_CREATE:
+                    prevEventId = null;
+                    prevCreatedDate = null;
                     previousState = null;
                     previousPlan = null;
                     previousPhase = null;
@@ -605,8 +614,11 @@ public class SubscriptionData extends EntityBase implements Subscription {
             final SubscriptionTransitionData transition = new SubscriptionTransitionData(
                     cur.getId(), id, bundleId, cur.getType(), apiEventType,
                     cur.getRequestedDate(), cur.getEffectiveDate(),
+                    prevEventId, prevCreatedDate,
                     previousState, previousPlan, previousPhase,
-                    previousPriceList, nextState, nextPlan, nextPhase,
+                    previousPriceList,
+                    nextEventId, nextCreatedDate,
+                    nextState, nextPlan, nextPhase,
                     nextPriceList, cur.getTotalOrdering(), nextUserToken,
                     isFromDisk);
 
@@ -616,8 +628,9 @@ public class SubscriptionData extends EntityBase implements Subscription {
             previousPlan = nextPlan;
             previousPhase = nextPhase;
             previousPriceList = nextPriceList;
+            prevEventId = nextEventId;
+            prevCreatedDate = nextCreatedDate;
+
         }
     }
-
-
 }
