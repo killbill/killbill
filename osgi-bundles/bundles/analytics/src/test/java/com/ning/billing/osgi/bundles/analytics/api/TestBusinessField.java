@@ -29,7 +29,12 @@ public class TestBusinessField extends AnalyticsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testConstructorAccount() throws Exception {
-        final BusinessAccountFieldModelDao businessAccountFieldModelDao = new BusinessAccountFieldModelDao(account, customField, auditLog);
+        final BusinessAccountFieldModelDao businessAccountFieldModelDao = new BusinessAccountFieldModelDao(account,
+                                                                                                           accountRecordId,
+                                                                                                           customField,
+                                                                                                           fieldRecordId,
+                                                                                                           auditLog,
+                                                                                                           tenantRecordId);
         final BusinessField businessField = BusinessField.create(businessAccountFieldModelDao);
         verifyBusinessField(businessField);
         Assert.assertEquals(businessField.getObjectType(), ObjectType.ACCOUNT);
@@ -37,7 +42,12 @@ public class TestBusinessField extends AnalyticsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testConstructorInvoice() throws Exception {
-        final BusinessInvoiceFieldModelDao businessInvoiceFieldModelDao = new BusinessInvoiceFieldModelDao(account, customField, auditLog);
+        final BusinessInvoiceFieldModelDao businessInvoiceFieldModelDao = new BusinessInvoiceFieldModelDao(account,
+                                                                                                           accountRecordId,
+                                                                                                           customField,
+                                                                                                           fieldRecordId,
+                                                                                                           auditLog,
+                                                                                                           tenantRecordId);
         final BusinessField businessField = BusinessField.create(businessInvoiceFieldModelDao);
         verifyBusinessField(businessField);
         Assert.assertEquals(businessField.getObjectType(), ObjectType.INVOICE);
@@ -45,7 +55,12 @@ public class TestBusinessField extends AnalyticsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testConstructorPayment() throws Exception {
-        final BusinessInvoicePaymentFieldModelDao invoicePaymentFieldModelDao = new BusinessInvoicePaymentFieldModelDao(account, customField, auditLog);
+        final BusinessInvoicePaymentFieldModelDao invoicePaymentFieldModelDao = new BusinessInvoicePaymentFieldModelDao(account,
+                                                                                                                        accountRecordId,
+                                                                                                                        customField,
+                                                                                                                        fieldRecordId,
+                                                                                                                        auditLog,
+                                                                                                                        tenantRecordId);
         final BusinessField businessField = BusinessField.create(invoicePaymentFieldModelDao);
         verifyBusinessField(businessField);
         Assert.assertEquals(businessField.getObjectType(), ObjectType.INVOICE_PAYMENT);

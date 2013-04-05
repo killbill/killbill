@@ -31,10 +31,12 @@ public class TestDefaultAnalyticsUserApi extends AnalyticsTestSuiteWithEmbeddedD
     @Test(groups = "slow")
     public void testAccountSnapshot() throws Exception {
         final BusinessAccountModelDao accountModelDao = new BusinessAccountModelDao(account,
+                                                                                    accountRecordId,
                                                                                     BigDecimal.ONE,
                                                                                     invoice,
                                                                                     payment,
-                                                                                    auditLog);
+                                                                                    auditLog,
+                                                                                    tenantRecordId);
         analyticsSqlDao.create(accountModelDao.getTableName(), accountModelDao, callContext);
 
         final AnalyticsUserApi analyticsUserApi = new AnalyticsUserApi(logService, killbillAPI, killbillDataSource);

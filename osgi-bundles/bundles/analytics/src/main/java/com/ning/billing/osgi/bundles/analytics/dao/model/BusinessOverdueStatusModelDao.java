@@ -69,11 +69,14 @@ public class BusinessOverdueStatusModelDao extends BusinessModelDaoBase {
     }
 
     public BusinessOverdueStatusModelDao(final Account account,
+                                         final Long accountRecordId,
                                          final SubscriptionBundle subscriptionBundle,
                                          final BlockingState blockingState,
+                                         final Long blockingStateRecordId,
                                          final DateTime endDate,
-                                         final AuditLog creationAuditLog) {
-        this(null /* TODO */,
+                                         final AuditLog creationAuditLog,
+                                         final Long tenantRecordId) {
+        this(blockingStateRecordId,
              subscriptionBundle.getId(),
              subscriptionBundle.getExternalKey(),
              blockingState.getStateName(),
@@ -86,9 +89,8 @@ public class BusinessOverdueStatusModelDao extends BusinessModelDaoBase {
              account.getId(),
              account.getName(),
              account.getExternalKey(),
-             // TODO
-             null,
-             null);
+             accountRecordId,
+             tenantRecordId);
     }
 
     @Override

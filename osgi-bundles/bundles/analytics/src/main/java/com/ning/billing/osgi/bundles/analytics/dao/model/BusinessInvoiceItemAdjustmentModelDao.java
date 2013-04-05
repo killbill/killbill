@@ -29,19 +29,25 @@ import com.ning.billing.util.audit.AuditLog;
 public class BusinessInvoiceItemAdjustmentModelDao extends BusinessInvoiceItemBaseModelDao {
 
     public BusinessInvoiceItemAdjustmentModelDao(final Account account,
+                                                 final Long accountRecordId,
                                                  final Invoice invoice,
                                                  final InvoiceItem invoiceItem,
+                                                 final Long invoiceItemRecordId,
                                                  @Nullable final SubscriptionBundle bundle,
                                                  @Nullable final Plan plan,
                                                  @Nullable final PlanPhase planPhase,
-                                                 final AuditLog creationAuditLog) {
+                                                 final AuditLog creationAuditLog,
+                                                 final Long tenantRecordId) {
         super(account,
+              accountRecordId,
               invoice,
               invoiceItem,
+              invoiceItemRecordId,
               bundle,
               plan,
               planPhase,
-              creationAuditLog);
+              creationAuditLog,
+              tenantRecordId);
     }
 
     @Override

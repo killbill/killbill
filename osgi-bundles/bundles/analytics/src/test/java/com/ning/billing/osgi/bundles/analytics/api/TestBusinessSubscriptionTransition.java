@@ -39,13 +39,16 @@ public class TestBusinessSubscriptionTransition extends AnalyticsTestSuiteNoDB {
         final BusinessSubscription previousSubscription = null;
         final BusinessSubscription nextSubscription = new BusinessSubscription(null, null, null, Currency.GBP, startDate, SubscriptionState.ACTIVE);
         final BusinessSubscriptionTransitionModelDao subscriptionTransitionModelDao = new BusinessSubscriptionTransitionModelDao(account,
+                                                                                                                                 accountRecordId,
                                                                                                                                  bundle,
                                                                                                                                  subscriptionTransition,
+                                                                                                                                 subscriptionEventRecordId,
                                                                                                                                  requestedTimestamp,
                                                                                                                                  event,
                                                                                                                                  previousSubscription,
                                                                                                                                  nextSubscription,
-                                                                                                                                 auditLog);
+                                                                                                                                 auditLog,
+                                                                                                                                 tenantRecordId);
         final BusinessSubscriptionTransition businessSubscriptionTransition = new BusinessSubscriptionTransition(subscriptionTransitionModelDao);
 
         verifyBusinessEntityBase(businessSubscriptionTransition);

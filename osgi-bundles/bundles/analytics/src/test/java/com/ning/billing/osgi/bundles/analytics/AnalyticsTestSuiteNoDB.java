@@ -68,6 +68,16 @@ import com.google.common.collect.ImmutableList;
 
 public abstract class AnalyticsTestSuiteNoDB {
 
+    protected final Long accountRecordId = 1L;
+    protected final Long subscriptionEventRecordId = 2L;
+    protected final Long invoiceRecordId = 3L;
+    protected final Long invoiceItemRecordId = 4L;
+    protected final Long invoicePaymentRecordId = 5L;
+    protected final Long blockingStateRecordId = 6L;
+    protected final Long fieldRecordId = 7L;
+    protected final Long tagRecordId = 8L;
+    protected final Long tenantRecordId = 9L;
+
     protected Account account;
     protected SubscriptionBundle bundle;
     protected Plan plan;
@@ -100,8 +110,9 @@ public abstract class AnalyticsTestSuiteNoDB {
         Assert.assertEquals(businessEntityBase.getAccountExternalKey(), account.getExternalKey());
     }
 
-    protected void verifyBusinessModelDaoBase(final BusinessModelDaoBase businessModelDaoBase) {
-        //Assert.assertEquals(businessModelDaoBase.getRecordId(), /* TODO */);
+    protected void verifyBusinessModelDaoBase(final BusinessModelDaoBase businessModelDaoBase,
+                                              final Long accountRecordId,
+                                              final Long tenantRecordId) {
         Assert.assertEquals(businessModelDaoBase.getCreatedDate(), account.getCreatedDate());
         Assert.assertEquals(businessModelDaoBase.getCreatedBy(), auditLog.getUserName());
         Assert.assertEquals(businessModelDaoBase.getCreatedReasonCode(), auditLog.getReasonCode());
@@ -109,8 +120,8 @@ public abstract class AnalyticsTestSuiteNoDB {
         Assert.assertEquals(businessModelDaoBase.getAccountId(), account.getId());
         Assert.assertEquals(businessModelDaoBase.getAccountName(), account.getName());
         Assert.assertEquals(businessModelDaoBase.getAccountExternalKey(), account.getExternalKey());
-        //Assert.assertEquals(businessModelDaoBase.getAccountRecordId(), /* TODO */);
-        //Assert.assertEquals(businessModelDaoBase.getTenantRecordId(), /* TODO */);
+        Assert.assertEquals(businessModelDaoBase.getAccountRecordId(), accountRecordId);
+        Assert.assertEquals(businessModelDaoBase.getTenantRecordId(), tenantRecordId);
     }
 
     @BeforeMethod(groups = "fast")

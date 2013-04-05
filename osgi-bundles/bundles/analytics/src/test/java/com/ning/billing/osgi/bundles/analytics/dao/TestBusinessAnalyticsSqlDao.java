@@ -29,10 +29,12 @@ public class TestBusinessAnalyticsSqlDao extends AnalyticsTestSuiteWithEmbeddedD
     @Test(groups = "slow")
     public void testSqlDao() throws Exception {
         final BusinessAccountModelDao accountModelDao = new BusinessAccountModelDao(account,
+                                                                                    accountRecordId,
                                                                                     BigDecimal.ONE,
                                                                                     invoice,
                                                                                     payment,
-                                                                                    auditLog);
+                                                                                    auditLog,
+                                                                                    tenantRecordId);
 
         Assert.assertNull(analyticsSqlDao.getAccountByAccountRecordId(accountModelDao.getAccountRecordId(),
                                                                       accountModelDao.getTenantRecordId(),

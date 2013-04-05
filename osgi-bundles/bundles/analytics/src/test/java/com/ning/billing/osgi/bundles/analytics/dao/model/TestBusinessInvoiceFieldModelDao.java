@@ -26,10 +26,13 @@ public class TestBusinessInvoiceFieldModelDao extends AnalyticsTestSuiteNoDB {
     @Test(groups = "fast")
     public void testConstructor() throws Exception {
         final BusinessInvoiceFieldModelDao invoiceFieldModelDao = new BusinessInvoiceFieldModelDao(account,
+                                                                                                   accountRecordId,
                                                                                                    customField,
-                                                                                                   auditLog);
-        verifyBusinessModelDaoBase(invoiceFieldModelDao);
-        //Assert.assertEquals(invoiceFieldModelDao.getCustomFieldRecordId(), /* TODO */);
+                                                                                                   fieldRecordId,
+                                                                                                   auditLog,
+                                                                                                   tenantRecordId);
+        verifyBusinessModelDaoBase(invoiceFieldModelDao, accountRecordId, tenantRecordId);
+        Assert.assertEquals(invoiceFieldModelDao.getCustomFieldRecordId(), fieldRecordId);
         Assert.assertEquals(invoiceFieldModelDao.getInvoiceId(), customField.getObjectId());
         Assert.assertEquals(invoiceFieldModelDao.getName(), customField.getFieldName());
         Assert.assertEquals(invoiceFieldModelDao.getValue(), customField.getFieldValue());

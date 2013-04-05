@@ -25,9 +25,15 @@ public class TestBusinessAccountTagModelDao extends AnalyticsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testConstructor() throws Exception {
-        final BusinessAccountTagModelDao tagModelDao = new BusinessAccountTagModelDao(account, tag, tagDefinition, auditLog);
-        verifyBusinessModelDaoBase(tagModelDao);
-        //Assert.assertEquals(tagModelDao.getTagRecordId(), /* TODO */);
+        final BusinessAccountTagModelDao tagModelDao = new BusinessAccountTagModelDao(account,
+                                                                                      accountRecordId,
+                                                                                      tag,
+                                                                                      tagRecordId,
+                                                                                      tagDefinition,
+                                                                                      auditLog,
+                                                                                      tenantRecordId);
+        verifyBusinessModelDaoBase(tagModelDao, accountRecordId, tenantRecordId);
+        Assert.assertEquals(tagModelDao.getTagRecordId(), tagRecordId);
         Assert.assertEquals(tagModelDao.getName(), tagDefinition.getName());
     }
 }

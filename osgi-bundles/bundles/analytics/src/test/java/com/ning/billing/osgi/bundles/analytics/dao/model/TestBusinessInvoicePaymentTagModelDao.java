@@ -26,11 +26,14 @@ public class TestBusinessInvoicePaymentTagModelDao extends AnalyticsTestSuiteNoD
     @Test(groups = "fast")
     public void testConstructor() throws Exception {
         final BusinessInvoicePaymentTagModelDao invoicePaymentTagModelDao = new BusinessInvoicePaymentTagModelDao(account,
+                                                                                                                  accountRecordId,
                                                                                                                   tag,
+                                                                                                                  tagRecordId,
                                                                                                                   tagDefinition,
-                                                                                                                  auditLog);
-        verifyBusinessModelDaoBase(invoicePaymentTagModelDao);
-        //Assert.assertEquals(invoicePaymentTagModelDao.getTagRecordId(), /* TODO */);
+                                                                                                                  auditLog,
+                                                                                                                  tenantRecordId);
+        verifyBusinessModelDaoBase(invoicePaymentTagModelDao, accountRecordId, tenantRecordId);
+        Assert.assertEquals(invoicePaymentTagModelDao.getTagRecordId(), tagRecordId);
         Assert.assertEquals(invoicePaymentTagModelDao.getInvoicePaymentId(), tag.getObjectId());
         Assert.assertEquals(invoicePaymentTagModelDao.getName(), tagDefinition.getName());
     }

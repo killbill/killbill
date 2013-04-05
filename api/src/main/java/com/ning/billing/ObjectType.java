@@ -19,6 +19,7 @@ package com.ning.billing;
 public enum ObjectType {
     ACCOUNT("account"),
     ACCOUNT_EMAIL("account email"),
+    BLOCKING_STATES("blocking state"),
     BUNDLE("subscription bundle"),
     CUSTOM_FIELD("custom field"),
     INVOICE("invoice"),

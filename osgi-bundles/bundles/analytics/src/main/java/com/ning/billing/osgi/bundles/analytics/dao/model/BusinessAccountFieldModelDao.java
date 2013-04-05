@@ -23,9 +23,17 @@ import com.ning.billing.util.customfield.CustomField;
 public class BusinessAccountFieldModelDao extends BusinessFieldModelDao {
 
     public BusinessAccountFieldModelDao(final Account account,
+                                        final Long accountRecordId,
                                         final CustomField customField,
-                                        final AuditLog creationAuditLog) {
-        super(account, customField, creationAuditLog);
+                                        final Long customFieldRecordId,
+                                        final AuditLog creationAuditLog,
+                                        final Long tenantRecordId) {
+        super(account,
+              accountRecordId,
+              customField,
+              customFieldRecordId,
+              creationAuditLog,
+              tenantRecordId);
     }
 
     @Override

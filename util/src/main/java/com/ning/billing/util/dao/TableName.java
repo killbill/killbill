@@ -29,7 +29,7 @@ public enum TableName {
     ACCOUNT_EMAIL_HISTORY("account_email_history"),
     ACCOUNT_EMAIL("account_emails", ObjectType.ACCOUNT_EMAIL, ACCOUNT_EMAIL_HISTORY),
     BUNDLES("bundles", ObjectType.BUNDLE),
-    BLOCKING_STATES("blocking_states"),
+    BLOCKING_STATES("blocking_states", ObjectType.BLOCKING_STATES),
     CUSTOM_FIELD_HISTORY("custom_field_history"),
     CUSTOM_FIELD("custom_fields", ObjectType.CUSTOM_FIELD, CUSTOM_FIELD_HISTORY),
     INVOICE_ITEMS("invoice_items", ObjectType.INVOICE_ITEM),

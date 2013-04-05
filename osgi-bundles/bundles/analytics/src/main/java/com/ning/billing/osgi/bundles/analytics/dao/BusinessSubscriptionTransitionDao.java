@@ -119,15 +119,22 @@ public class BusinessSubscriptionTransitionDao extends BusinessAnalyticsDaoBase 
                                                                                subscriptionTransition.getNextState());
 
         // TODO
+        final Long subscriptionEventRecordId = getSubscriptionEventRecordId(null, context);
         final AuditLog creationAuditLog = getSubscriptionEventCreationAuditLog(null, context);
 
+        final Long accountRecordId = getAccountRecordId(account.getId(), context);
+        final Long tenantRecordId = getTenantRecordId(context);
+
         return new BusinessSubscriptionTransitionModelDao(account,
+                                                          accountRecordId,
                                                           subscriptionBundle,
                                                           subscriptionTransition,
+                                                          subscriptionEventRecordId,
                                                           subscriptionTransition.getRequestedTransitionTime(),
                                                           businessEvent,
                                                           prevBst == null ? null : prevBst.getNextSubscription(),
                                                           nextSubscription,
-                                                          creationAuditLog);
+                                                          creationAuditLog,
+                                                          tenantRecordId);
     }
 }

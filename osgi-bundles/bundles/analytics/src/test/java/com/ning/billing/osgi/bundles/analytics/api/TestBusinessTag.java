@@ -30,9 +30,12 @@ public class TestBusinessTag extends AnalyticsTestSuiteNoDB {
     @Test(groups = "fast")
     public void testConstructorAccount() throws Exception {
         final BusinessAccountTagModelDao businessAccountTagModelDao = new BusinessAccountTagModelDao(account,
+                                                                                                     accountRecordId,
                                                                                                      tag,
+                                                                                                     tagRecordId,
                                                                                                      tagDefinition,
-                                                                                                     auditLog);
+                                                                                                     auditLog,
+                                                                                                     tenantRecordId);
         final BusinessTag businessTag = BusinessTag.create(businessAccountTagModelDao);
         verifyBusinessTag(businessTag);
         Assert.assertEquals(businessTag.getObjectType(), ObjectType.ACCOUNT);
@@ -41,9 +44,12 @@ public class TestBusinessTag extends AnalyticsTestSuiteNoDB {
     @Test(groups = "fast")
     public void testConstructorInvoice() throws Exception {
         final BusinessInvoiceTagModelDao businessInvoiceTagModelDao = new BusinessInvoiceTagModelDao(account,
+                                                                                                     accountRecordId,
                                                                                                      tag,
+                                                                                                     tagRecordId,
                                                                                                      tagDefinition,
-                                                                                                     auditLog);
+                                                                                                     auditLog,
+                                                                                                     tenantRecordId);
         final BusinessTag businessTag = BusinessTag.create(businessInvoiceTagModelDao);
         verifyBusinessTag(businessTag);
         Assert.assertEquals(businessTag.getObjectType(), ObjectType.INVOICE);
@@ -52,9 +58,12 @@ public class TestBusinessTag extends AnalyticsTestSuiteNoDB {
     @Test(groups = "fast")
     public void testConstructorPayment() throws Exception {
         final BusinessInvoicePaymentTagModelDao invoicePaymentTagModelDao = new BusinessInvoicePaymentTagModelDao(account,
+                                                                                                                  accountRecordId,
                                                                                                                   tag,
+                                                                                                                  tagRecordId,
                                                                                                                   tagDefinition,
-                                                                                                                  auditLog);
+                                                                                                                  auditLog,
+                                                                                                                  tenantRecordId);
         final BusinessTag businessTag = BusinessTag.create(invoicePaymentTagModelDao);
         verifyBusinessTag(businessTag);
         Assert.assertEquals(businessTag.getObjectType(), ObjectType.INVOICE_PAYMENT);

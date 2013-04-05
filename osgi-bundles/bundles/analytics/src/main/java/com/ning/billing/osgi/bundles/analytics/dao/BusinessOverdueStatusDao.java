@@ -99,15 +99,22 @@ public class BusinessOverdueStatusDao extends BusinessAnalyticsDaoBase {
             return businessOverdueStatuses;
         }
 
+        final Long accountRecordId = getAccountRecordId(account.getId(), context);
+        final Long tenantRecordId = getTenantRecordId(context);
+
         final List<BlockingState> blockingStates = Lists.reverse(ImmutableList.<BlockingState>copyOf(blockingStatesOrdered));
         DateTime previousStartDate = null;
         for (final BlockingState state : blockingStates) {
+            final Long blockingStateRecordId = getBlockingStateRecordId(state.getId(), context);
             final AuditLog creationAuditLog = getBlockingStateCreationAuditLog(state.getId(), context);
             final BusinessOverdueStatusModelDao overdueStatus = new BusinessOverdueStatusModelDao(account,
+                                                                                                  accountRecordId,
                                                                                                   subscriptionBundle,
                                                                                                   state,
+                                                                                                  blockingStateRecordId,
                                                                                                   previousStartDate,
-                                                                                                  creationAuditLog);
+                                                                                                  creationAuditLog,
+                                                                                                  tenantRecordId);
             businessOverdueStatuses.add(overdueStatus);
             previousStartDate = state.getTimestamp();
         }

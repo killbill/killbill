@@ -71,12 +71,21 @@ public class BusinessFieldDao extends BusinessAnalyticsDaoBase {
     }
 
     private Collection<BusinessFieldModelDao> createBusinessFields(final Account account, final ObjectType objectType, final CallContext context) throws AnalyticsRefreshException {
+        final Long accountRecordId = getAccountRecordId(account.getId(), context);
+        final Long tenantRecordId = getTenantRecordId(context);
+
         final Collection<CustomField> fields = getFieldsForAccountAndObjectType(account.getId(), objectType, context);
 
         final Collection<BusinessFieldModelDao> fieldModelDaos = new LinkedList<BusinessFieldModelDao>();
         for (final CustomField field : fields) {
+            final Long customFieldRecordId = getFieldRecordId(field.getId(), context);
             final AuditLog creationAuditLog = getFieldCreationAuditLog(field.getId(), context);
-            final BusinessFieldModelDao fieldModelDao = BusinessFieldModelDao.create(account, field, creationAuditLog);
+            final BusinessFieldModelDao fieldModelDao = BusinessFieldModelDao.create(account,
+                                                                                     accountRecordId,
+                                                                                     field,
+                                                                                     customFieldRecordId,
+                                                                                     creationAuditLog,
+                                                                                     tenantRecordId);
             fieldModelDaos.add(fieldModelDao);
         }
 

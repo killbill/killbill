@@ -90,6 +90,15 @@ public class BusinessAccountDao extends BusinessAnalyticsDaoBase {
             }
         }
 
-        return new BusinessAccountModelDao(account, accountBalance, lastInvoice, lastPayment, creationAuditLog);
+        final Long accountRecordId = getAccountRecordId(account.getId(), context);
+        final Long tenantRecordId = getTenantRecordId(context);
+
+        return new BusinessAccountModelDao(account,
+                                           accountRecordId,
+                                           accountBalance,
+                                           lastInvoice,
+                                           lastPayment,
+                                           creationAuditLog,
+                                           tenantRecordId);
     }
 }

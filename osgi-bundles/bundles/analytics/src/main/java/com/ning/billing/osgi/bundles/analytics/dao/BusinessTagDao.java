@@ -71,13 +71,23 @@ public class BusinessTagDao extends BusinessAnalyticsDaoBase {
     }
 
     private Collection<BusinessTagModelDao> createBusinessTags(final Account account, final CallContext context) throws AnalyticsRefreshException {
+        final Long accountRecordId = getAccountRecordId(account.getId(), context);
+        final Long tenantRecordId = getTenantRecordId(context);
+
         final Collection<Tag> tags = getTagsForAccount(account.getId(), context);
 
         final Collection<BusinessTagModelDao> tagModelDaos = new LinkedList<BusinessTagModelDao>();
         for (final Tag tag : tags) {
+            final Long tagRecordId = getTagRecordId(tag.getId(), context);
             final TagDefinition tagDefinition = getTagDefinition(tag.getTagDefinitionId(), context);
             final AuditLog creationAuditLog = getTagCreationAuditLog(tag.getId(), context);
-            final BusinessTagModelDao tagModelDao = BusinessTagModelDao.create(account, tag, tagDefinition, creationAuditLog);
+            final BusinessTagModelDao tagModelDao = BusinessTagModelDao.create(account,
+                                                                               accountRecordId,
+                                                                               tag,
+                                                                               tagRecordId,
+                                                                               tagDefinition,
+                                                                               creationAuditLog,
+                                                                               tenantRecordId);
             tagModelDaos.add(tagModelDao);
         }
 

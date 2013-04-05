@@ -36,14 +36,17 @@ public class TestBusinessSubscriptionTransitionModelDao extends AnalyticsTestSui
         final BusinessSubscription previousSubscription = null;
         final BusinessSubscription nextSubscription = new BusinessSubscription(null, null, null, Currency.GBP, startDate, SubscriptionState.ACTIVE);
         final BusinessSubscriptionTransitionModelDao subscriptionTransitionModelDao = new BusinessSubscriptionTransitionModelDao(account,
+                                                                                                                                 accountRecordId,
                                                                                                                                  bundle,
                                                                                                                                  subscriptionTransition,
+                                                                                                                                 subscriptionEventRecordId,
                                                                                                                                  requestedTimestamp,
                                                                                                                                  event,
                                                                                                                                  previousSubscription,
                                                                                                                                  nextSubscription,
-                                                                                                                                 auditLog);
-        verifyBusinessModelDaoBase(subscriptionTransitionModelDao);
+                                                                                                                                 auditLog,
+                                                                                                                                 tenantRecordId);
+        verifyBusinessModelDaoBase(subscriptionTransitionModelDao, accountRecordId, tenantRecordId);
         //Assert.assertEquals(subscriptionTransitionModelDao.getSubscriptionEventRecordId(), /* TODO */);
         Assert.assertEquals(subscriptionTransitionModelDao.getBundleId(), bundle.getId());
         Assert.assertEquals(subscriptionTransitionModelDao.getBundleExternalKey(), bundle.getExternalKey());

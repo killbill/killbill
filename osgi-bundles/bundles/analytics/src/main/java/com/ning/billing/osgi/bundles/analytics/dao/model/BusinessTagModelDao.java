@@ -38,32 +38,53 @@ public abstract class BusinessTagModelDao extends BusinessModelDaoBase {
     private final String name;
 
     public static BusinessTagModelDao create(final Account account,
+                                             final Long accountRecordId,
                                              final Tag tag,
+                                             final Long tagRecordId,
                                              final TagDefinition tagDefinition,
-                                             final AuditLog creationAuditLog) {
+                                             final AuditLog creationAuditLog,
+                                             final Long tenantRecordId) {
         if (ObjectType.ACCOUNT.equals(tag.getObjectType())) {
-            return new BusinessAccountTagModelDao(account, tag, tagDefinition, creationAuditLog);
+            return new BusinessAccountTagModelDao(account,
+                                                  accountRecordId,
+                                                  tag,
+                                                  tagRecordId,
+                                                  tagDefinition,
+                                                  creationAuditLog,
+                                                  tenantRecordId);
         } else if (ObjectType.INVOICE_PAYMENT.equals(tag.getObjectType())) {
-            return new BusinessInvoicePaymentTagModelDao(account, tag, tagDefinition, creationAuditLog);
+            return new BusinessInvoicePaymentTagModelDao(account,
+                                                         accountRecordId,
+                                                         tag,
+                                                         tagRecordId,
+                                                         tagDefinition,
+                                                         creationAuditLog,
+                                                         tenantRecordId);
         } else if (ObjectType.INVOICE.equals(tag.getObjectType())) {
-            return new BusinessInvoiceTagModelDao(account, tag, tagDefinition, creationAuditLog);
+            return new BusinessInvoiceTagModelDao(account,
+                                                  accountRecordId,
+                                                  tag,
+                                                  tagRecordId,
+                                                  tagDefinition,
+                                                  creationAuditLog,
+                                                  tenantRecordId);
         } else {
             // We don't care
             return null;
         }
     }
 
-    private BusinessTagModelDao(final Long tagRecordId,
-                                final String name,
-                                final DateTime createdDate,
-                                final String createdBy,
-                                final String createdReasonCode,
-                                final String createdComments,
-                                final UUID accountId,
-                                final String accountName,
-                                final String accountExternalKey,
-                                final Long accountRecordId,
-                                final Long tenantRecordId) {
+    public BusinessTagModelDao(final Long tagRecordId,
+                               final String name,
+                               final DateTime createdDate,
+                               final String createdBy,
+                               final String createdReasonCode,
+                               final String createdComments,
+                               final UUID accountId,
+                               final String accountName,
+                               final String accountExternalKey,
+                               final Long accountRecordId,
+                               final Long tenantRecordId) {
         super(createdDate,
               createdBy,
               createdReasonCode,
@@ -77,11 +98,14 @@ public abstract class BusinessTagModelDao extends BusinessModelDaoBase {
         this.name = name;
     }
 
-    protected BusinessTagModelDao(final Account account,
-                                  final Tag tag,
-                                  final TagDefinition tagDefinition,
-                                  final AuditLog creationAuditLog) {
-        this(null /* TODO */,
+    public BusinessTagModelDao(final Account account,
+                               final Long accountRecordId,
+                               final Tag tag,
+                               final Long tagRecordId,
+                               final TagDefinition tagDefinition,
+                               final AuditLog creationAuditLog,
+                               final Long tenantRecordId) {
+        this(tagRecordId,
              tagDefinition.getName(),
              tag.getCreatedDate(),
              creationAuditLog.getUserName(),
@@ -90,9 +114,8 @@ public abstract class BusinessTagModelDao extends BusinessModelDaoBase {
              account.getId(),
              account.getName(),
              account.getExternalKey(),
-             // TODO
-             null,
-             null);
+             accountRecordId,
+             tenantRecordId);
     }
 
     public Long getTagRecordId() {

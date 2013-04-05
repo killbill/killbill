@@ -31,10 +31,13 @@ public class TestBusinessOverdueStatus extends AnalyticsTestSuiteNoDB {
     public void testConstructor() throws Exception {
         final DateTime endDate = new DateTime(2005, 6, 5, 4, 5, 6, DateTimeZone.UTC);
         final BusinessOverdueStatusModelDao businessOverdueStatusModelDao = new BusinessOverdueStatusModelDao(account,
+                                                                                                              accountRecordId,
                                                                                                               bundle,
                                                                                                               blockingState,
+                                                                                                              blockingStateRecordId,
                                                                                                               endDate,
-                                                                                                              auditLog);
+                                                                                                              auditLog,
+                                                                                                              tenantRecordId);
         final BusinessOverdueStatus businessOverdueStatus = new BusinessOverdueStatus(businessOverdueStatusModelDao);
         verifyBusinessEntityBase(businessOverdueStatus);
         Assert.assertEquals(businessOverdueStatus.getObjectType(), ObjectType.BUNDLE.toString());

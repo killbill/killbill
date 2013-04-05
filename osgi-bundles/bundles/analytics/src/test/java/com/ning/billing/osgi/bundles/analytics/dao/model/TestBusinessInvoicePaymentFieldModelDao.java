@@ -26,10 +26,13 @@ public class TestBusinessInvoicePaymentFieldModelDao extends AnalyticsTestSuiteN
     @Test(groups = "fast")
     public void testConstructor() throws Exception {
         final BusinessInvoicePaymentFieldModelDao invoicePaymentFieldModelDao = new BusinessInvoicePaymentFieldModelDao(account,
+                                                                                                                        accountRecordId,
                                                                                                                         customField,
-                                                                                                                        auditLog);
-        verifyBusinessModelDaoBase(invoicePaymentFieldModelDao);
-        //Assert.assertEquals(invoicePaymentFieldModelDao.getCustomFieldRecordId(), /* TODO */);
+                                                                                                                        fieldRecordId,
+                                                                                                                        auditLog,
+                                                                                                                        tenantRecordId);
+        verifyBusinessModelDaoBase(invoicePaymentFieldModelDao, accountRecordId, tenantRecordId);
+        Assert.assertEquals(invoicePaymentFieldModelDao.getCustomFieldRecordId(), fieldRecordId);
         Assert.assertEquals(invoicePaymentFieldModelDao.getInvoicePaymentId(), customField.getObjectId());
         Assert.assertEquals(invoicePaymentFieldModelDao.getName(), customField.getFieldName());
         Assert.assertEquals(invoicePaymentFieldModelDao.getValue(), customField.getFieldValue());

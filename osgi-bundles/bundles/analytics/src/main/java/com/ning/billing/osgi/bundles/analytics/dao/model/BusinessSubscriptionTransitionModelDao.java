@@ -78,14 +78,17 @@ public class BusinessSubscriptionTransitionModelDao extends BusinessModelDaoBase
     }
 
     public BusinessSubscriptionTransitionModelDao(final Account account,
+                                                  final Long accountRecordId,
                                                   final SubscriptionBundle bundle,
                                                   final SubscriptionTransition transition,
+                                                  final Long subscriptionEventRecordId,
                                                   final DateTime requestedTimestamp,
                                                   final BusinessSubscriptionEvent event,
                                                   final BusinessSubscription previousSubscription,
                                                   final BusinessSubscription nextSubscription,
-                                                  final AuditLog creationAuditLog) {
-        this(null /* TODO */,
+                                                  final AuditLog creationAuditLog,
+                                                  final Long tenantRecordId) {
+        this(subscriptionEventRecordId,
              bundle.getId(),
              bundle.getExternalKey(),
              transition.getSubscriptionId(),
@@ -100,9 +103,8 @@ public class BusinessSubscriptionTransitionModelDao extends BusinessModelDaoBase
              account.getId(),
              account.getName(),
              account.getExternalKey(),
-             // TODO
-             null,
-             null);
+             accountRecordId,
+             tenantRecordId);
     }
 
     @Override

@@ -71,65 +71,104 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
     private final UUID linkedItemId;
 
     public static BusinessInvoiceItemBaseModelDao create(final Account account,
+                                                         final Long accountRecordId,
                                                          final Invoice invoice,
                                                          final InvoiceItem invoiceItem,
+                                                         final Long invoiceItemRecordId,
                                                          @Nullable final SubscriptionBundle bundle,
                                                          @Nullable final Plan plan,
                                                          @Nullable final PlanPhase planPhase,
-                                                         final AuditLog creationAuditLog) {
+                                                         final AuditLog creationAuditLog,
+                                                         final Long tenantRecordId) {
         if (InvoiceItemType.REFUND_ADJ.equals(invoiceItem.getInvoiceItemType())) {
-            return new BusinessInvoiceAdjustmentModelDao(account, invoice, invoiceItem, bundle, plan, planPhase, creationAuditLog);
+            return new BusinessInvoiceAdjustmentModelDao(account,
+                                                         accountRecordId,
+                                                         invoice,
+                                                         invoiceItem,
+                                                         invoiceItemRecordId,
+                                                         bundle,
+                                                         plan,
+                                                         planPhase,
+                                                         creationAuditLog,
+                                                         tenantRecordId);
         } else if (InvoiceItemType.EXTERNAL_CHARGE.equals(invoiceItem.getInvoiceItemType()) ||
                    InvoiceItemType.FIXED.equals(invoiceItem.getInvoiceItemType()) ||
                    InvoiceItemType.RECURRING.equals(invoiceItem.getInvoiceItemType())) {
-            return new BusinessInvoiceItemModelDao(account, invoice, invoiceItem, bundle, plan, planPhase, creationAuditLog);
+            return new BusinessInvoiceItemModelDao(account,
+                                                   accountRecordId,
+                                                   invoice,
+                                                   invoiceItem,
+                                                   invoiceItemRecordId,
+                                                   bundle,
+                                                   plan,
+                                                   planPhase,
+                                                   creationAuditLog,
+                                                   tenantRecordId);
         } else if (InvoiceItemType.ITEM_ADJ.equals(invoiceItem.getInvoiceItemType())) {
-            return new BusinessInvoiceItemAdjustmentModelDao(account, invoice, invoiceItem, bundle, plan, planPhase, creationAuditLog);
-        } else if ((InvoiceItemType.CBA_ADJ.equals(invoiceItem.getInvoiceItemType()) && invoiceItem.getAmount().compareTo(BigDecimal.ZERO) <= 0) ||
+            return new BusinessInvoiceItemAdjustmentModelDao(account,
+                                                             accountRecordId,
+                                                             invoice,
+                                                             invoiceItem,
+                                                             invoiceItemRecordId,
+                                                             bundle,
+                                                             plan,
+                                                             planPhase,
+                                                             creationAuditLog,
+                                                             tenantRecordId);
+        } else if (InvoiceItemType.CBA_ADJ.equals(invoiceItem.getInvoiceItemType()) ||
                    InvoiceItemType.CREDIT_ADJ.equals(invoiceItem.getInvoiceItemType())) {
-            return new BusinessInvoiceItemCreditModelDao(account, invoice, invoiceItem, bundle, plan, planPhase, creationAuditLog);
+            return new BusinessInvoiceItemCreditModelDao(account,
+                                                         accountRecordId,
+                                                         invoice,
+                                                         invoiceItem,
+                                                         invoiceItemRecordId,
+                                                         bundle,
+                                                         plan,
+                                                         planPhase,
+                                                         creationAuditLog,
+                                                         tenantRecordId);
         } else {
             // We don't care
             return null;
         }
     }
 
-    private BusinessInvoiceItemBaseModelDao(final Long invoiceItemRecordId,
-                                            final UUID itemId,
-                                            final UUID invoiceId,
-                                            final Integer invoiceNumber,
-                                            final DateTime invoiceCreatedDate,
-                                            final LocalDate invoiceDate,
-                                            final LocalDate invoiceTargetDate,
-                                            final String invoiceCurrency,
-                                            final BigDecimal invoiceBalance,
-                                            final BigDecimal invoiceAmountPaid,
-                                            final BigDecimal invoiceAmountCharged,
-                                            final BigDecimal invoiceOriginalAmountCharged,
-                                            final BigDecimal invoiceAmountCredited,
-                                            final String itemType,
-                                            final Boolean revenueRecognizable,
-                                            final String bundleExternalKey,
-                                            final String productName,
-                                            final String productType,
-                                            final String productCategory,
-                                            final String slug,
-                                            final String phase,
-                                            final String billingPeriod,
-                                            final LocalDate startDate,
-                                            final LocalDate endDate,
-                                            final BigDecimal amount,
-                                            final String currency,
-                                            final UUID linkedItemId,
-                                            final DateTime createdDate,
-                                            final String createdBy,
-                                            final String createdReasonCode,
-                                            final String createdComments,
-                                            final UUID accountId,
-                                            final String accountName,
-                                            final String accountExternalKey,
-                                            final Long accountRecordId,
-                                            final Long tenantRecordId) {
+    public BusinessInvoiceItemBaseModelDao(final Long invoiceItemRecordId,
+                                           final UUID itemId,
+                                           final UUID invoiceId,
+                                           final Integer invoiceNumber,
+                                           final DateTime invoiceCreatedDate,
+                                           final LocalDate invoiceDate,
+                                           final LocalDate invoiceTargetDate,
+                                           final String invoiceCurrency,
+                                           final BigDecimal invoiceBalance,
+                                           final BigDecimal invoiceAmountPaid,
+                                           final BigDecimal invoiceAmountCharged,
+                                           final BigDecimal invoiceOriginalAmountCharged,
+                                           final BigDecimal invoiceAmountCredited,
+                                           final String itemType,
+                                           final Boolean revenueRecognizable,
+                                           final String bundleExternalKey,
+                                           final String productName,
+                                           final String productType,
+                                           final String productCategory,
+                                           final String slug,
+                                           final String phase,
+                                           final String billingPeriod,
+                                           final LocalDate startDate,
+                                           final LocalDate endDate,
+                                           final BigDecimal amount,
+                                           final String currency,
+                                           final UUID linkedItemId,
+                                           final DateTime createdDate,
+                                           final String createdBy,
+                                           final String createdReasonCode,
+                                           final String createdComments,
+                                           final UUID accountId,
+                                           final String accountName,
+                                           final String accountExternalKey,
+                                           final Long accountRecordId,
+                                           final Long tenantRecordId) {
         super(createdDate,
               createdBy,
               createdReasonCode,
@@ -168,14 +207,17 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
         this.linkedItemId = linkedItemId;
     }
 
-    protected BusinessInvoiceItemBaseModelDao(final Account account,
-                                              final Invoice invoice,
-                                              final InvoiceItem invoiceItem,
-                                              @Nullable final SubscriptionBundle bundle,
-                                              @Nullable final Plan plan,
-                                              @Nullable final PlanPhase planPhase,
-                                              final AuditLog creationAuditLog) {
-        this(null /* TODO */,
+    public BusinessInvoiceItemBaseModelDao(final Account account,
+                                           final Long accountRecordId,
+                                           final Invoice invoice,
+                                           final InvoiceItem invoiceItem,
+                                           final Long invoiceItemRecordId,
+                                           @Nullable final SubscriptionBundle bundle,
+                                           @Nullable final Plan plan,
+                                           @Nullable final PlanPhase planPhase,
+                                           final AuditLog creationAuditLog,
+                                           final Long tenantRecordId) {
+        this(invoiceItemRecordId,
              invoiceItem.getId(),
              invoice.getId(),
              invoice.getInvoiceNumber(),
@@ -186,7 +228,7 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
              invoice.getBalance(),
              invoice.getPaidAmount(),
              invoice.getChargedAmount(),
-             null /* TODO */,
+             invoice.getOriginalChargedAmount(),
              invoice.getCreditAdjAmount(),
              invoiceItem.getInvoiceItemType().toString(),
              null /* TODO */,
@@ -210,9 +252,8 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
              account.getId(),
              account.getName(),
              account.getExternalKey(),
-             // TODO
-             null,
-             null);
+             accountRecordId,
+             tenantRecordId);
     }
 
     public Long getInvoiceItemRecordId() {

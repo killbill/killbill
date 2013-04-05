@@ -38,32 +38,50 @@ public abstract class BusinessFieldModelDao extends BusinessModelDaoBase {
     private final String value;
 
     public static BusinessFieldModelDao create(final Account account,
+                                               final Long accountRecordId,
                                                final CustomField customField,
-                                               final AuditLog creationAuditLog) {
+                                               final Long customFieldRecordId,
+                                               final AuditLog creationAuditLog,
+                                               final Long tenantRecordId) {
         if (ObjectType.ACCOUNT.equals(customField.getObjectType())) {
-            return new BusinessAccountFieldModelDao(account, customField, creationAuditLog);
+            return new BusinessAccountFieldModelDao(account,
+                                                    accountRecordId,
+                                                    customField,
+                                                    customFieldRecordId,
+                                                    creationAuditLog,
+                                                    tenantRecordId);
         } else if (ObjectType.INVOICE_PAYMENT.equals(customField.getObjectType())) {
-            return new BusinessInvoiceFieldModelDao(account, customField, creationAuditLog);
+            return new BusinessInvoiceFieldModelDao(account,
+                                                    accountRecordId,
+                                                    customField,
+                                                    customFieldRecordId,
+                                                    creationAuditLog,
+                                                    tenantRecordId);
         } else if (ObjectType.INVOICE.equals(customField.getObjectType())) {
-            return new BusinessInvoicePaymentFieldModelDao(account, customField, creationAuditLog);
+            return new BusinessInvoicePaymentFieldModelDao(account,
+                                                           accountRecordId,
+                                                           customField,
+                                                           customFieldRecordId,
+                                                           creationAuditLog,
+                                                           tenantRecordId);
         } else {
             // We don't care
             return null;
         }
     }
 
-    private BusinessFieldModelDao(final Long customFieldRecordId,
-                                  final String name,
-                                  final String value,
-                                  final DateTime createdDate,
-                                  final String createdBy,
-                                  final String createdReasonCode,
-                                  final String createdComments,
-                                  final UUID accountId,
-                                  final String accountName,
-                                  final String accountExternalKey,
-                                  final Long accountRecordId,
-                                  final Long tenantRecordId) {
+    public BusinessFieldModelDao(final Long customFieldRecordId,
+                                 final String name,
+                                 final String value,
+                                 final DateTime createdDate,
+                                 final String createdBy,
+                                 final String createdReasonCode,
+                                 final String createdComments,
+                                 final UUID accountId,
+                                 final String accountName,
+                                 final String accountExternalKey,
+                                 final Long accountRecordId,
+                                 final Long tenantRecordId) {
         super(createdDate,
               createdBy,
               createdReasonCode,
@@ -78,10 +96,13 @@ public abstract class BusinessFieldModelDao extends BusinessModelDaoBase {
         this.value = value;
     }
 
-    protected BusinessFieldModelDao(final Account account,
-                                    final CustomField customField,
-                                    final AuditLog creationAuditLog) {
-        this(null /* TODO */,
+    public BusinessFieldModelDao(final Account account,
+                                 final Long accountRecordId,
+                                 final CustomField customField,
+                                 final Long customFieldRecordId,
+                                 final AuditLog creationAuditLog,
+                                 final Long tenantRecordId) {
+        this(customFieldRecordId,
              customField.getFieldName(),
              customField.getFieldValue(),
              customField.getCreatedDate(),
@@ -91,9 +112,8 @@ public abstract class BusinessFieldModelDao extends BusinessModelDaoBase {
              account.getId(),
              account.getName(),
              account.getExternalKey(),
-             // TODO
-             null,
-             null);
+             accountRecordId,
+             tenantRecordId);
     }
 
     public Long getCustomFieldRecordId() {

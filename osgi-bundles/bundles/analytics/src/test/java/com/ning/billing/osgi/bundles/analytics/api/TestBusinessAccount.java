@@ -29,10 +29,12 @@ public class TestBusinessAccount extends AnalyticsTestSuiteNoDB {
     @Test(groups = "fast")
     public void testConstructor() throws Exception {
         final BusinessAccountModelDao accountModelDao = new BusinessAccountModelDao(account,
+                                                                                    accountRecordId,
                                                                                     BigDecimal.ONE,
                                                                                     invoice,
                                                                                     payment,
-                                                                                    auditLog);
+                                                                                    auditLog,
+                                                                                    tenantRecordId);
         final BusinessAccount businessAccount = new BusinessAccount(accountModelDao);
 
         verifyBusinessEntityBase(businessAccount);

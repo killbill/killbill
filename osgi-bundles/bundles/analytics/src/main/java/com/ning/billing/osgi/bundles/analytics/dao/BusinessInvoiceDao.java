@@ -43,8 +43,6 @@ import com.ning.killbill.osgi.libs.killbill.OSGIKillbillAPI;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillDataSource;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillLogService;
 
-import com.google.common.annotations.VisibleForTesting;
-
 public class BusinessInvoiceDao extends BusinessAnalyticsDaoBase {
 
     private final BusinessAccountDao businessAccountDao;
@@ -88,14 +86,23 @@ public class BusinessInvoiceDao extends BusinessAnalyticsDaoBase {
 
     public Map<BusinessInvoiceModelDao, Collection<BusinessInvoiceItemBaseModelDao>> createBusinessInvoicesAndInvoiceItems(final Account account,
                                                                                                                            final CallContext context) throws AnalyticsRefreshException {
+        final Long accountRecordId = getAccountRecordId(account.getId(), context);
+        final Long tenantRecordId = getTenantRecordId(context);
+
         // Lookup the invoices for that account
         final Map<BusinessInvoiceModelDao, Collection<BusinessInvoiceItemBaseModelDao>> businessInvoices = new HashMap<BusinessInvoiceModelDao, Collection<BusinessInvoiceItemBaseModelDao>>();
 
         // Create the business invoice and associated business invoice items
         final Collection<Invoice> invoices = getInvoicesByAccountId(account.getId(), context);
         for (final Invoice invoice : invoices) {
+            final Long invoiceRecordId = getInvoiceRecordId(invoice.getId(), context);
             final AuditLog creationAuditLog = getInvoiceCreationAuditLog(invoice.getId(), context);
-            final BusinessInvoiceModelDao businessInvoice = new BusinessInvoiceModelDao(account, invoice, creationAuditLog);
+            final BusinessInvoiceModelDao businessInvoice = new BusinessInvoiceModelDao(account,
+                                                                                        accountRecordId,
+                                                                                        invoice,
+                                                                                        invoiceRecordId,
+                                                                                        creationAuditLog,
+                                                                                        tenantRecordId);
 
             final List<BusinessInvoiceItemBaseModelDao> businessInvoiceItems = new ArrayList<BusinessInvoiceItemBaseModelDao>();
             for (final InvoiceItem invoiceItem : invoice.getInvoiceItems()) {
@@ -148,11 +155,10 @@ public class BusinessInvoiceDao extends BusinessAnalyticsDaoBase {
         }
     }
 
-    @VisibleForTesting
-    BusinessInvoiceItemBaseModelDao createBusinessInvoiceItem(final Account account,
-                                                              final Invoice invoice,
-                                                              final InvoiceItem invoiceItem,
-                                                              final TenantContext context) throws AnalyticsRefreshException {
+    private BusinessInvoiceItemBaseModelDao createBusinessInvoiceItem(final Account account,
+                                                                      final Invoice invoice,
+                                                                      final InvoiceItem invoiceItem,
+                                                                      final TenantContext context) throws AnalyticsRefreshException {
         SubscriptionBundle bundle = null;
         // Subscription and bundle could be null for e.g. credits or adjustments
         if (invoiceItem.getBundleId() != null) {
@@ -169,8 +175,20 @@ public class BusinessInvoiceDao extends BusinessAnalyticsDaoBase {
             planPhase = getPlanPhaseFromInvoiceItem(invoiceItem, context);
         }
 
+        final Long invoiceItemRecordId = getInvoiceItemRecordId(invoiceItem.getId(), context);
         final AuditLog creationAuditLog = getInvoiceItemCreationAuditLog(invoiceItem.getId(), context);
+        final Long accountRecordId = getAccountRecordId(account.getId(), context);
+        final Long tenantRecordId = getTenantRecordId(context);
 
-        return BusinessInvoiceItemBaseModelDao.create(account, invoice, invoiceItem, bundle, plan, planPhase, creationAuditLog);
+        return BusinessInvoiceItemBaseModelDao.create(account,
+                                                      accountRecordId,
+                                                      invoice,
+                                                      invoiceItem,
+                                                      invoiceItemRecordId,
+                                                      bundle,
+                                                      plan,
+                                                      planPhase,
+                                                      creationAuditLog,
+                                                      tenantRecordId);
     }
 }

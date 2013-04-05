@@ -105,14 +105,27 @@ public class BusinessInvoicePaymentDao extends BusinessAnalyticsDaoBase {
                                                                                          final CallContext context) throws AnalyticsRefreshException {
         final Collection<BusinessInvoicePaymentBaseModelDao> businessInvoicePayments = new LinkedList<BusinessInvoicePaymentBaseModelDao>();
 
+        final Long accountRecordId = getAccountRecordId(account.getId(), context);
+        final Long tenantRecordId = getTenantRecordId(context);
+
         final Collection<InvoicePayment> invoicePayments = getAccountInvoicePayments(account.getId(), context);
         for (final InvoicePayment invoicePayment : invoicePayments) {
+            final Long invoicePaymentRecordId = getInvoicePaymentRecordId(invoicePayment.getId(), context);
+
             final Invoice invoice = getInvoice(invoicePayment.getInvoiceId(), context);
             final Payment payment = getPayment(invoicePayment.getPaymentId(), context);
             final PaymentMethod paymentMethod = getPaymentMethod(payment.getPaymentMethodId(), context);
             final AuditLog creationAuditLog = getInvoicePaymentCreationAuditLog(invoicePayment.getId(), context);
 
-            final BusinessInvoicePaymentBaseModelDao businessInvoicePayment = BusinessInvoicePaymentBaseModelDao.create(account, invoice, invoicePayment, payment, paymentMethod, creationAuditLog);
+            final BusinessInvoicePaymentBaseModelDao businessInvoicePayment = BusinessInvoicePaymentBaseModelDao.create(account,
+                                                                                                                        accountRecordId,
+                                                                                                                        invoice,
+                                                                                                                        invoicePayment,
+                                                                                                                        invoicePaymentRecordId,
+                                                                                                                        payment,
+                                                                                                                        paymentMethod,
+                                                                                                                        creationAuditLog,
+                                                                                                                        tenantRecordId);
             if (businessInvoicePayment != null) {
                 businessInvoicePayments.add(businessInvoicePayment);
             }

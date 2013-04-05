@@ -29,12 +29,15 @@ public class TestBusinessOverdueStatusModelDao extends AnalyticsTestSuiteNoDB {
     public void testEquals() throws Exception {
         final DateTime endDate = new DateTime(2012, 7, 21, 10, 10, 10, DateTimeZone.UTC);
         final BusinessOverdueStatusModelDao overdueStatusModelDao = new BusinessOverdueStatusModelDao(account,
+                                                                                                      accountRecordId,
                                                                                                       bundle,
                                                                                                       blockingState,
+                                                                                                      blockingStateRecordId,
                                                                                                       endDate,
-                                                                                                      auditLog);
-        verifyBusinessModelDaoBase(overdueStatusModelDao);
-        //Assert.assertEquals(overdueStatusModelDao.getBlockingStateRecordId(), /* TODO */);
+                                                                                                      auditLog,
+                                                                                                      tenantRecordId);
+        verifyBusinessModelDaoBase(overdueStatusModelDao, accountRecordId, tenantRecordId);
+        Assert.assertEquals(overdueStatusModelDao.getBlockingStateRecordId(), blockingStateRecordId);
         Assert.assertEquals(overdueStatusModelDao.getBundleId(), bundle.getId());
         Assert.assertEquals(overdueStatusModelDao.getBundleExternalKey(), bundle.getExternalKey());
         Assert.assertEquals(overdueStatusModelDao.getStatus(), blockingState.getStateName());

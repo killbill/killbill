@@ -50,6 +50,7 @@ create table bst (
 );
 create index bst_bundle_external_key on bst(bundle_external_key);
 create index bst_account_id on bst(account_id);
+create index bst_account_record_id on bst(account_record_id);
 create index bst_tenant_account_record_id on bst(tenant_record_id, account_record_id);
 
 -- Accounts
@@ -89,8 +90,9 @@ create table bac (
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
 );
-create unique index bac_account_external_key on bac(account_external_key);
-create unique index bac_account_id on bac(account_id);
+create index bac_account_external_key on bac(account_external_key);
+create index bac_account_id on bac(account_id);
+create index bac_account_record_id on bac(account_record_id);
 create index bac_tenant_account_record_id on bac(tenant_record_id, account_record_id);
 
 -- Invoices
@@ -119,8 +121,10 @@ create table bin (
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
 );
-create unique index bin_invoice_record_id on bin(invoice_record_id);
-create unique index bin_invoice_id on bin(invoice_id);
+create index bin_invoice_record_id on bin(invoice_record_id);
+create index bin_invoice_id on bin(invoice_id);
+create index bin_account_id on bin(account_id);
+create index bin_account_record_id on bin(account_record_id);
 create index bin_tenant_account_record_id on bin(tenant_record_id, account_record_id);
 
 -- Invoice adjustments (type REFUND_ADJ)
@@ -165,8 +169,10 @@ create table bia (
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
 );
-create unique index bia_invoice_item_record_id on bia(invoice_item_record_id);
-create unique index bia_item_id on bia(item_id);
+create index bia_invoice_item_record_id on bia(invoice_item_record_id);
+create index bia_item_id on bia(item_id);
+create index bia_account_id on bia(account_id);
+create index bia_account_record_id on bia(account_record_id);
 create index bia_tenant_account_record_id on bia(tenant_record_id, account_record_id);
 
 -- Invoice items (without adjustments, type EXTERNAL_CHARGE, FIXED and RECURRING)
@@ -211,8 +217,10 @@ create table bii (
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
 );
-create unique index bii_invoice_item_record_id on bii(invoice_item_record_id);
-create unique index bii_item_id on bii(item_id);
+create index bii_invoice_item_record_id on bii(invoice_item_record_id);
+create index bii_item_id on bii(item_id);
+create index bii_account_id on bii(account_id);
+create index bii_account_record_id on bii(account_record_id);
 create index bii_tenant_account_record_id on bii(tenant_record_id, account_record_id);
 
 -- Invoice items adjustments (type ITEM_ADJ)
@@ -257,11 +265,13 @@ create table biia (
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
 );
-create unique index biia_invoice_item_record_id on biia(invoice_item_record_id);
-create unique index biia_item_id on biia(item_id);
+create index biia_invoice_item_record_id on biia(invoice_item_record_id);
+create index biia_item_id on biia(item_id);
+create index biia_account_id on biia(account_id);
+create index biia_account_record_id on biia(account_record_id);
 create index biia_tenant_account_record_id on biia(tenant_record_id, account_record_id);
 
--- Account credits (type CBA_ADJ (< 0 only, for applied credits) and CREDIT_ADJ)
+-- Account credits (type CBA_ADJ and CREDIT_ADJ)
 drop table if exists biic;
 create table biic (
   record_id int(11) unsigned not null auto_increment
@@ -303,8 +313,10 @@ create table biic (
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
 );
-create unique index biic_invoice_item_record_id on biic(invoice_item_record_id);
-create unique index biic_item_id on biic(item_id);
+create index biic_invoice_item_record_id on biic(invoice_item_record_id);
+create index biic_item_id on biic(item_id);
+create index biic_account_id on biic(account_id);
+create index biic_account_record_id on biic(account_record_id);
 create index biic_tenant_account_record_id on biic(tenant_record_id, account_record_id);
 
 -- Invoice payments
@@ -340,8 +352,10 @@ create table bip (
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
 );
-create unique index bip_invoice_payment_record_id on bip(invoice_payment_record_id);
-create unique index bip_invoice_payment_id on bip(invoice_payment_id);
+create index bip_invoice_payment_record_id on bip(invoice_payment_record_id);
+create index bip_invoice_payment_id on bip(invoice_payment_id);
+create index bip_account_id on bip(account_id);
+create index bip_account_record_id on bip(account_record_id);
 create index bip_tenant_account_record_id on bip(tenant_record_id, account_record_id);
 
 -- Invoice refunds
@@ -361,10 +375,9 @@ create table bipr (
 , invoice_amount_charged numeric(10, 4) default 0
 , invoice_original_amount_charged numeric(10, 4) default 0
 , invoice_amount_credited numeric(10, 4) default 0
-, payment_id char(36) not null
+, invoice_payment_type varchar(50) default null
 , payment_number bigint default null
-, payment_amount numeric(10, 4) default 0
-, payment_currency char(50) default null
+, linked_invoice_payment_id char(36) default null
 , amount numeric(10, 4) default 0
 , currency char(50) default null
 , created_date datetime not null
@@ -378,8 +391,10 @@ create table bipr (
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
 );
-create unique index bipr_invoice_payment_record_id on bipr(invoice_payment_record_id);
-create unique index bipr_invoice_payment_id on bipr(invoice_payment_id);
+create index bipr_invoice_payment_record_id on bipr(invoice_payment_record_id);
+create index bipr_invoice_payment_id on bipr(invoice_payment_id);
+create index bipr_account_id on bipr(account_id);
+create index bipr_account_record_id on bipr(account_record_id);
 create index bipr_tenant_account_record_id on bipr(tenant_record_id, account_record_id);
 
 -- Invoice payment chargebacks
@@ -399,10 +414,9 @@ create table bipc (
 , invoice_amount_charged numeric(10, 4) default 0
 , invoice_original_amount_charged numeric(10, 4) default 0
 , invoice_amount_credited numeric(10, 4) default 0
-, payment_id char(36) not null
+, invoice_payment_type varchar(50) default null
 , payment_number bigint default null
-, payment_amount numeric(10, 4) default 0
-, payment_currency char(50) default null
+, linked_invoice_payment_id char(36) default null
 , amount numeric(10, 4) default 0
 , currency char(50) default null
 , created_date datetime not null
@@ -416,8 +430,10 @@ create table bipc (
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
 );
-create unique index bipc_invoice_payment_record_id on bipc(invoice_payment_record_id);
-create unique index bipc_invoice_payment_id on bipc(invoice_payment_id);
+create index bipc_invoice_payment_record_id on bipc(invoice_payment_record_id);
+create index bipc_invoice_payment_id on bipc(invoice_payment_id);
+create index bipc_account_id on bipc(account_id);
+create index bipc_account_record_id on bipc(account_record_id);
 create index bipc_tenant_account_record_id on bipc(tenant_record_id, account_record_id);
 
 drop table if exists bos;
@@ -440,6 +456,8 @@ create table bos (
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
 );
+create index bos_account_id on bos(account_id);
+create index bos_account_record_id on bos(account_record_id);
 create index bos_tenant_account_record_id on bos(tenant_record_id, account_record_id);
 
 drop table if exists bac_tags;
@@ -458,6 +476,8 @@ create table bac_tags (
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
 );
+create index bac_tags_account_id on bac_tags(account_id);
+create index bac_tags_account_record_id on bac_tags(account_record_id);
 create index bac_tags_tenant_account_record_id on bac_tags(tenant_record_id, account_record_id);
 
 drop table if exists bin_tags;
@@ -477,6 +497,8 @@ create table bin_tags (
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
 );
+create index bin_tags_account_id on bin_tags(account_id);
+create index bin_tags_account_record_id on bin_tags(account_record_id);
 create index bin_tags_tenant_account_record_id on bin_tags(tenant_record_id, account_record_id);
 
 drop table if exists bip_tags;
@@ -496,6 +518,8 @@ create table bip_tags (
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
 );
+create index bip_tags_account_id on bip_tags(account_id);
+create index bip_tags_account_record_id on bip_tags(account_record_id);
 create index bip_tags_tenant_account_record_id on bip_tags(tenant_record_id, account_record_id);
 
 drop table if exists bac_fields;
@@ -515,6 +539,8 @@ create table bac_fields (
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
 );
+create index bac_fields_account_id on bac_fields(account_id);
+create index bac_fields_account_record_id on bac_fields(account_record_id);
 create index bac_fields_tenant_account_record_id on bac_fields(tenant_record_id, account_record_id);
 
 drop table if exists bin_fields;
@@ -535,6 +561,8 @@ create table bin_fields (
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
 );
+create index bin_fields_account_id on bin_fields(account_id);
+create index bin_fields_account_record_id on bin_fields(account_record_id);
 create index bin_fields_tenant_account_record_id on bin_fields(tenant_record_id, account_record_id);
 
 drop table if exists bip_fields;
@@ -555,4 +583,6 @@ create table bip_fields (
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
 );
+create index bip_fields_account_id on bip_fields(account_id);
+create index bip_fields_account_record_id on bip_fields(account_record_id);
 create index bip_fields_tenant_account_record_id on bip_fields(tenant_record_id, account_record_id);

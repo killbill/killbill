@@ -85,9 +85,12 @@ public class BusinessInvoiceModelDao extends BusinessModelDaoBase {
     }
 
     public BusinessInvoiceModelDao(final Account account,
+                                   final Long accountRecordId,
                                    final Invoice invoice,
-                                   final AuditLog creationAuditLog) {
-        this(null /* TODO */,
+                                   final Long invoiceRecordId,
+                                   final AuditLog creationAuditLog,
+                                   final Long tenantRecordId) {
+        this(invoiceRecordId,
              invoice.getId(),
              invoice.getInvoiceNumber(),
              invoice.getInvoiceDate(),
@@ -105,9 +108,8 @@ public class BusinessInvoiceModelDao extends BusinessModelDaoBase {
              account.getId(),
              account.getName(),
              account.getExternalKey(),
-             // TODO
-             null,
-             null);
+             accountRecordId,
+             tenantRecordId);
     }
 
     @Override

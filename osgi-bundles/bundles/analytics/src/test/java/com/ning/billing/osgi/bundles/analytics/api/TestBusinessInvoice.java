@@ -29,14 +29,22 @@ public class TestBusinessInvoice extends AnalyticsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testConstructor() throws Exception {
-        final BusinessInvoiceModelDao invoiceModelDao = new BusinessInvoiceModelDao(account, invoice, auditLog);
+        final BusinessInvoiceModelDao invoiceModelDao = new BusinessInvoiceModelDao(account,
+                                                                                    accountRecordId,
+                                                                                    invoice,
+                                                                                    invoiceRecordId,
+                                                                                    auditLog,
+                                                                                    tenantRecordId);
         final BusinessInvoiceItemBaseModelDao invoiceItemBaseModelDao = BusinessInvoiceItemBaseModelDao.create(account,
+                                                                                                               accountRecordId,
                                                                                                                invoice,
                                                                                                                invoiceItem,
+                                                                                                               invoiceItemRecordId,
                                                                                                                bundle,
                                                                                                                plan,
                                                                                                                phase,
-                                                                                                               auditLog);
+                                                                                                               auditLog,
+                                                                                                               tenantRecordId);
         final BusinessInvoice businessInvoice = new BusinessInvoice(invoiceModelDao,
                                                                     ImmutableList.<BusinessInvoiceItemBaseModelDao>of(invoiceItemBaseModelDao));
         verifyBusinessEntityBase(businessInvoice);

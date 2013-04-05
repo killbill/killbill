@@ -28,10 +28,19 @@ public class BusinessInvoiceTagModelDao extends BusinessTagModelDao {
     private final UUID invoiceId;
 
     public BusinessInvoiceTagModelDao(final Account account,
+                                      final Long accountRecordId,
                                       final Tag tag,
+                                      final Long tagRecordId,
                                       final TagDefinition tagDefinition,
-                                      final AuditLog creationAuditLog) {
-        super(account, tag, tagDefinition, creationAuditLog);
+                                      final AuditLog creationAuditLog,
+                                      final Long tenantRecordId) {
+        super(account,
+              accountRecordId,
+              tag,
+              tagRecordId,
+              tagDefinition,
+              creationAuditLog,
+              tenantRecordId);
         this.invoiceId = tag.getObjectId();
     }
 

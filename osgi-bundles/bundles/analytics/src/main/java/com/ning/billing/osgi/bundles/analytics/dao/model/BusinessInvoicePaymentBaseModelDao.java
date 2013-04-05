@@ -58,47 +58,74 @@ public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDa
     private final String currency;
 
     public static BusinessInvoicePaymentBaseModelDao create(final Account account,
+                                                            final Long accountRecordId,
                                                             final Invoice invoice,
                                                             final InvoicePayment invoicePayment,
+                                                            final Long invoicePaymentRecordId,
                                                             final Payment payment,
                                                             final PaymentMethod paymentMethod,
-                                                            final AuditLog creationAuditLog) {
+                                                            final AuditLog creationAuditLog,
+                                                            final Long tenantRecordId) {
         if (invoicePayment.getType().equals(InvoicePaymentType.REFUND)) {
-            return new BusinessInvoicePaymentRefundModelDao(account, invoice, invoicePayment, payment, paymentMethod, creationAuditLog);
+            return new BusinessInvoicePaymentRefundModelDao(account,
+                                                            accountRecordId,
+                                                            invoice,
+                                                            invoicePayment,
+                                                            invoicePaymentRecordId,
+                                                            payment,
+                                                            paymentMethod,
+                                                            creationAuditLog,
+                                                            tenantRecordId);
         } else if (invoicePayment.getType().equals(InvoicePaymentType.CHARGED_BACK)) {
-            return new BusinessInvoicePaymentChargebackModelDao(account, invoice, invoicePayment, payment, paymentMethod, creationAuditLog);
+            return new BusinessInvoicePaymentChargebackModelDao(account,
+                                                                accountRecordId,
+                                                                invoice,
+                                                                invoicePayment,
+                                                                invoicePaymentRecordId,
+                                                                payment,
+                                                                paymentMethod,
+                                                                creationAuditLog,
+                                                                tenantRecordId);
         } else {
-            return new BusinessInvoicePaymentModelDao(account, invoice, invoicePayment, payment, paymentMethod, creationAuditLog);
+            return new BusinessInvoicePaymentModelDao(account,
+                                                      accountRecordId,
+                                                      invoice,
+                                                      invoicePayment,
+                                                      invoicePaymentRecordId,
+                                                      payment,
+                                                      paymentMethod,
+                                                      creationAuditLog,
+                                                      tenantRecordId);
         }
     }
 
-    private BusinessInvoicePaymentBaseModelDao(final Long invoicePaymentRecordId,
-                                               final UUID invoicePaymentId,
-                                               final UUID invoiceId,
-                                               final Integer invoiceNumber,
-                                               final DateTime invoiceCreatedDate,
-                                               final LocalDate invoiceDate,
-                                               final LocalDate invoiceTargetDate,
-                                               final String invoiceCurrency,
-                                               final BigDecimal invoiceBalance,
-                                               final BigDecimal invoiceAmountPaid,
-                                               final BigDecimal invoiceAmountCharged,
-                                               final BigDecimal invoiceOriginalAmountCharged,
-                                               final BigDecimal invoiceAmountCredited,
-                                               final String invoicePaymentType,
-                                               final Long paymentNumber,
-                                               final UUID linkedInvoicePaymentId,
-                                               final BigDecimal amount,
-                                               final String currency,
-                                               final DateTime createdDate,
-                                               final String createdBy,
-                                               final String createdReasonCode,
-                                               final String createdComments,
-                                               final UUID accountId,
-                                               final String accountName,
-                                               final String accountExternalKey,
-                                               final Long accountRecordId,
-                                               final Long tenantRecordId) {
+    public BusinessInvoicePaymentBaseModelDao(final Long invoicePaymentRecordId,
+                                              final UUID invoicePaymentId,
+                                              final UUID invoiceId,
+                                              final Integer invoiceNumber,
+                                              final DateTime invoiceCreatedDate,
+                                              final LocalDate invoiceDate,
+                                              final LocalDate invoiceTargetDate,
+                                              final String invoiceCurrency,
+                                              final BigDecimal invoiceBalance,
+                                              final BigDecimal invoiceAmountPaid,
+                                              final BigDecimal invoiceAmountCharged,
+                                              final BigDecimal invoiceOriginalAmountCharged,
+                                              final BigDecimal invoiceAmountCredited,
+                                              final String invoicePaymentType,
+                                              final Long paymentNumber,
+                                              final UUID linkedInvoicePaymentId,
+                                              final BigDecimal amount,
+                                              final String currency,
+                                              final DateTime createdDate,
+                                              final String createdBy,
+                                              final String createdReasonCode,
+                                              final String createdComments,
+                                              final UUID accountId,
+                                              final String accountName,
+                                              final String accountExternalKey,
+                                              final Long accountRecordId,
+                                              final Long tenantRecordId) {
         super(createdDate,
               createdBy,
               createdReasonCode,
@@ -129,12 +156,15 @@ public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDa
     }
 
     protected BusinessInvoicePaymentBaseModelDao(final Account account,
+                                                 final Long accountRecordId,
                                                  final Invoice invoice,
                                                  final InvoicePayment invoicePayment,
+                                                 final Long invoicePaymentRecordId,
                                                  final Payment payment,
                                                  final PaymentMethod paymentMethod,
-                                                 final AuditLog creationAuditLog) {
-        this(null /* TODO */,
+                                                 final AuditLog creationAuditLog,
+                                                 final Long tenantRecordId) {
+        this(invoicePaymentRecordId,
              invoicePayment.getId(),
              invoice.getId(),
              invoice.getInvoiceNumber(),
@@ -145,7 +175,7 @@ public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDa
              invoice.getBalance(),
              invoice.getPaidAmount(),
              invoice.getChargedAmount(),
-             null /* TODO */,
+             invoice.getOriginalChargedAmount(),
              invoice.getCreditAdjAmount(),
              invoicePayment.getType().toString(),
              null /* TODO */,
@@ -159,9 +189,8 @@ public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDa
              account.getId(),
              account.getName(),
              account.getExternalKey(),
-             // TODO
-             null,
-             null);
+             accountRecordId,
+             tenantRecordId);
     }
 
     public Long getInvoicePaymentRecordId() {

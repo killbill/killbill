@@ -37,6 +37,9 @@ public class BusinessAccountModelDao extends BusinessModelDaoBase {
     private final Integer firstNameLength;
     private final String currency;
     private final Integer billingCycleDayLocal;
+    private final UUID paymentMethodId;
+    private final String timeZone;
+    private final String locale;
     private final String address1;
     private final String address2;
     private final String companyName;
@@ -52,33 +55,36 @@ public class BusinessAccountModelDao extends BusinessModelDaoBase {
     private final DateTime lastPaymentDate;
     private final String lastPaymentStatus;
 
-    private BusinessAccountModelDao(final String email,
-                                    final Integer firstNameLength,
-                                    final String currency,
-                                    final Integer billingCycleDayLocal,
-                                    final String address1,
-                                    final String address2,
-                                    final String companyName,
-                                    final String city,
-                                    final String stateOrProvince,
-                                    final String country,
-                                    final String postalCode,
-                                    final String phone,
-                                    final Boolean isMigrated,
-                                    final Boolean notifiedForInvoices,
-                                    final BigDecimal balance,
-                                    final LocalDate lastInvoiceDate,
-                                    final DateTime lastPaymentDate,
-                                    final String lastPaymentStatus,
-                                    final DateTime createdDate,
-                                    final String createdBy,
-                                    final String createdReasonCode,
-                                    final String createdComments,
-                                    final UUID accountId,
-                                    final String accountName,
-                                    final String accountExternalKey,
-                                    final Long accountRecordId,
-                                    final Long tenantRecordId) {
+    public BusinessAccountModelDao(final String email,
+                                   final Integer firstNameLength,
+                                   final String currency,
+                                   final Integer billingCycleDayLocal,
+                                   final UUID paymentMethodId,
+                                   final String timeZone,
+                                   final String locale,
+                                   final String address1,
+                                   final String address2,
+                                   final String companyName,
+                                   final String city,
+                                   final String stateOrProvince,
+                                   final String country,
+                                   final String postalCode,
+                                   final String phone,
+                                   final Boolean isMigrated,
+                                   final Boolean notifiedForInvoices,
+                                   final BigDecimal balance,
+                                   final LocalDate lastInvoiceDate,
+                                   final DateTime lastPaymentDate,
+                                   final String lastPaymentStatus,
+                                   final DateTime createdDate,
+                                   final String createdBy,
+                                   final String createdReasonCode,
+                                   final String createdComments,
+                                   final UUID accountId,
+                                   final String accountName,
+                                   final String accountExternalKey,
+                                   final Long accountRecordId,
+                                   final Long tenantRecordId) {
         super(createdDate,
               createdBy,
               createdReasonCode,
@@ -92,6 +98,9 @@ public class BusinessAccountModelDao extends BusinessModelDaoBase {
         this.firstNameLength = firstNameLength;
         this.currency = currency;
         this.billingCycleDayLocal = billingCycleDayLocal;
+        this.paymentMethodId = paymentMethodId;
+        this.timeZone = timeZone;
+        this.locale = locale;
         this.address1 = address1;
         this.address2 = address2;
         this.companyName = companyName;
@@ -109,14 +118,19 @@ public class BusinessAccountModelDao extends BusinessModelDaoBase {
     }
 
     public BusinessAccountModelDao(final Account account,
+                                   final Long accountRecordId,
                                    final BigDecimal balance,
                                    @Nullable final Invoice lastInvoice,
                                    @Nullable final Payment lastPayment,
-                                   final AuditLog creationAuditLog) {
+                                   final AuditLog creationAuditLog,
+                                   final Long tenantRecordId) {
         this(account.getEmail(),
              account.getFirstNameLength(),
              account.getCurrency() == null ? null : account.getCurrency().toString(),
              account.getBillCycleDayLocal(),
+             account.getPaymentMethodId(),
+             account.getTimeZone() == null ? null : account.getTimeZone().toString(),
+             account.getLocale(),
              account.getAddress1(),
              account.getAddress2(),
              account.getCompanyName(),
@@ -138,9 +152,8 @@ public class BusinessAccountModelDao extends BusinessModelDaoBase {
              account.getId(),
              account.getName(),
              account.getExternalKey(),
-             // TODO
-             null,
-             null);
+             accountRecordId,
+             tenantRecordId);
     }
 
     @Override

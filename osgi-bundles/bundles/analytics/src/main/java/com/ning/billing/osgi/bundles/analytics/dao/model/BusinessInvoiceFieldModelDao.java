@@ -27,9 +27,17 @@ public class BusinessInvoiceFieldModelDao extends BusinessFieldModelDao {
     private final UUID invoiceId;
 
     public BusinessInvoiceFieldModelDao(final Account account,
+                                        final Long accountRecordId,
                                         final CustomField customField,
-                                        final AuditLog creationAuditLog) {
-        super(account, customField, creationAuditLog);
+                                        final Long customFieldRecordId,
+                                        final AuditLog creationAuditLog,
+                                        final Long tenantRecordId) {
+        super(account,
+              accountRecordId,
+              customField,
+              customFieldRecordId,
+              creationAuditLog,
+              tenantRecordId);
         this.invoiceId = customField.getObjectId();
     }
 

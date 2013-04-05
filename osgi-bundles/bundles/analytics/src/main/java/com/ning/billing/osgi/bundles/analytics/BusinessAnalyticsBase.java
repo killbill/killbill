@@ -52,6 +52,7 @@ import com.ning.billing.payment.api.PaymentMethod;
 import com.ning.billing.util.api.AuditLevel;
 import com.ning.billing.util.api.AuditUserApi;
 import com.ning.billing.util.api.CustomFieldUserApi;
+import com.ning.billing.util.api.RecordIdApi;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.audit.AuditLog;
@@ -74,6 +75,15 @@ public abstract class BusinessAnalyticsBase {
     public BusinessAnalyticsBase(final OSGIKillbillLogService logService, final OSGIKillbillAPI osgiKillbillAPI) {
         this.logService = logService;
         this.osgiKillbillAPI = osgiKillbillAPI;
+    }
+
+    //
+    // TENANT
+    //
+
+    protected Long getTenantRecordId(final TenantContext context) throws AnalyticsRefreshException {
+        final RecordIdApi recordIdUserApi = getRecordIdUserApi();
+        return recordIdUserApi.getRecordId(context.getTenantId(), ObjectType.TENANT);
     }
 
     //
@@ -100,6 +110,11 @@ public abstract class BusinessAnalyticsBase {
         }
 
         throw new AnalyticsRefreshException("Unable to find Account creation audit log for id " + accountId);
+    }
+
+    protected Long getAccountRecordId(final UUID accountId, final TenantContext context) throws AnalyticsRefreshException {
+        final RecordIdApi recordIdUserApi = getRecordIdUserApi();
+        return recordIdUserApi.getRecordId(accountId, ObjectType.ACCOUNT);
     }
 
     //
@@ -149,6 +164,11 @@ public abstract class BusinessAnalyticsBase {
         throw new AnalyticsRefreshException("Unable to find Subscription event creation audit log for id " + subscriptionEventId);
     }
 
+    protected Long getSubscriptionEventRecordId(final UUID subscriptionEventId, final TenantContext context) throws AnalyticsRefreshException {
+        final RecordIdApi recordIdUserApi = getRecordIdUserApi();
+        return recordIdUserApi.getRecordId(subscriptionEventId, ObjectType.SUBSCRIPTION_EVENT);
+    }
+
     //
     // OVERDUE
     //
@@ -172,6 +192,11 @@ public abstract class BusinessAnalyticsBase {
         }
 
         throw new AnalyticsRefreshException("Unable to find Blocking state creation audit log for id " + blockingStateId);
+    }
+
+    protected Long getBlockingStateRecordId(final UUID blockingStateId, final TenantContext context) throws AnalyticsRefreshException {
+        final RecordIdApi recordIdUserApi = getRecordIdUserApi();
+        return recordIdUserApi.getRecordId(blockingStateId, ObjectType.BLOCKING_STATES);
     }
 
     //
@@ -199,6 +224,11 @@ public abstract class BusinessAnalyticsBase {
         throw new AnalyticsRefreshException("Unable to find Invoice creation audit log for id " + invoiceId);
     }
 
+    protected Long getInvoiceRecordId(final UUID invoiceId, final TenantContext context) throws AnalyticsRefreshException {
+        final RecordIdApi recordIdUserApi = getRecordIdUserApi();
+        return recordIdUserApi.getRecordId(invoiceId, ObjectType.INVOICE);
+    }
+
     protected AuditLog getInvoiceItemCreationAuditLog(final UUID invoiceItemId, final TenantContext context) throws AnalyticsRefreshException {
         final List<AuditLog> auditLogsForInvoiceItem = getAuditUserApi().getAuditLogs(invoiceItemId, ObjectType.INVOICE_ITEM, AuditLevel.MINIMAL, context);
         for (final AuditLog auditLog : auditLogsForInvoiceItem) {
@@ -208,6 +238,11 @@ public abstract class BusinessAnalyticsBase {
         }
 
         throw new AnalyticsRefreshException("Unable to find Invoice item creation audit log for id " + invoiceItemId);
+    }
+
+    protected Long getInvoiceItemRecordId(final UUID invoiceItemId, final TenantContext context) throws AnalyticsRefreshException {
+        final RecordIdApi recordIdUserApi = getRecordIdUserApi();
+        return recordIdUserApi.getRecordId(invoiceItemId, ObjectType.INVOICE_ITEM);
     }
 
     protected Collection<Invoice> getInvoicesByAccountId(final UUID accountId, final CallContext context) throws AnalyticsRefreshException {
@@ -280,6 +315,11 @@ public abstract class BusinessAnalyticsBase {
         throw new AnalyticsRefreshException("Unable to find Invoice payment creation audit log for id " + invoicePaymentId);
     }
 
+    protected Long getInvoicePaymentRecordId(final UUID invoicePaymentId, final TenantContext context) throws AnalyticsRefreshException {
+        final RecordIdApi recordIdUserApi = getRecordIdUserApi();
+        return recordIdUserApi.getRecordId(invoicePaymentId, ObjectType.INVOICE_PAYMENT);
+    }
+
     //
     // PAYMENT
     //
@@ -350,6 +390,11 @@ public abstract class BusinessAnalyticsBase {
         throw new AnalyticsRefreshException("Unable to find Field creation audit log for id " + fieldId);
     }
 
+    protected Long getFieldRecordId(final UUID fieldId, final TenantContext context) throws AnalyticsRefreshException {
+        final RecordIdApi recordIdUserApi = getRecordIdUserApi();
+        return recordIdUserApi.getRecordId(fieldId, ObjectType.CUSTOM_FIELD);
+    }
+
     //
     // TAG
     //
@@ -379,6 +424,11 @@ public abstract class BusinessAnalyticsBase {
         }
 
         throw new AnalyticsRefreshException("Unable to find Tag creation audit log for id " + tagId);
+    }
+
+    protected Long getTagRecordId(final UUID tagId, final TenantContext context) throws AnalyticsRefreshException {
+        final RecordIdApi recordIdUserApi = getRecordIdUserApi();
+        return recordIdUserApi.getRecordId(tagId, ObjectType.TAG);
     }
 
     //
@@ -463,5 +513,13 @@ public abstract class BusinessAnalyticsBase {
             throw new AnalyticsRefreshException("Error retrieving tagUserApi");
         }
         return tagUserApi;
+    }
+
+    private RecordIdApi getRecordIdUserApi() throws AnalyticsRefreshException {
+        final RecordIdApi recordIdApi = osgiKillbillAPI.getRecordIdApi();
+        if (recordIdApi == null) {
+            throw new AnalyticsRefreshException("Error retrieving recordIdApi");
+        }
+        return recordIdApi;
     }
 }

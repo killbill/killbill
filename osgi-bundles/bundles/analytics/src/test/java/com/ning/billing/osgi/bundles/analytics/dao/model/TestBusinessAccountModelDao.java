@@ -27,7 +27,13 @@ public class TestBusinessAccountModelDao extends AnalyticsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testConstructorWithNulls() throws Exception {
-        final BusinessAccountModelDao accountModelDao = new BusinessAccountModelDao(account, BigDecimal.ONE, null, null, auditLog);
+        final BusinessAccountModelDao accountModelDao = new BusinessAccountModelDao(account,
+                                                                                    accountRecordId,
+                                                                                    BigDecimal.ONE,
+                                                                                    null,
+                                                                                    null,
+                                                                                    auditLog,
+                                                                                    tenantRecordId);
         verifyAccountFields(accountModelDao);
         Assert.assertEquals(accountModelDao.getBalance(), BigDecimal.ONE);
         Assert.assertNull(accountModelDao.getLastInvoiceDate());
@@ -37,7 +43,13 @@ public class TestBusinessAccountModelDao extends AnalyticsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testConstructorWithoutNulls() throws Exception {
-        final BusinessAccountModelDao accountModelDao = new BusinessAccountModelDao(account, BigDecimal.ONE, invoice, payment, auditLog);
+        final BusinessAccountModelDao accountModelDao = new BusinessAccountModelDao(account,
+                                                                                    accountRecordId,
+                                                                                    BigDecimal.ONE,
+                                                                                    invoice,
+                                                                                    payment,
+                                                                                    auditLog,
+                                                                                    tenantRecordId);
         verifyAccountFields(accountModelDao);
         Assert.assertEquals(accountModelDao.getBalance(), BigDecimal.ONE);
         Assert.assertEquals(accountModelDao.getLastInvoiceDate(), invoice.getInvoiceDate());
@@ -46,7 +58,7 @@ public class TestBusinessAccountModelDao extends AnalyticsTestSuiteNoDB {
     }
 
     private void verifyAccountFields(final BusinessAccountModelDao accountModelDao) {
-        verifyBusinessModelDaoBase(accountModelDao);
+        verifyBusinessModelDaoBase(accountModelDao, accountRecordId, tenantRecordId);
         Assert.assertEquals(accountModelDao.getEmail(), account.getEmail());
         Assert.assertEquals(accountModelDao.getFirstNameLength(), account.getFirstNameLength());
         Assert.assertEquals(accountModelDao.getCurrency(), account.getCurrency().toString());

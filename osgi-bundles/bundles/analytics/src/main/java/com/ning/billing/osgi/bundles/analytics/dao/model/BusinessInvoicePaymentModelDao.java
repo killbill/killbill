@@ -26,17 +26,23 @@ import com.ning.billing.util.audit.AuditLog;
 public class BusinessInvoicePaymentModelDao extends BusinessInvoicePaymentBaseModelDao {
 
     public BusinessInvoicePaymentModelDao(final Account account,
+                                          final Long accountRecordId,
                                           final Invoice invoice,
                                           final InvoicePayment invoicePayment,
+                                          final Long invoicePaymentRecordId,
                                           final Payment payment,
                                           final PaymentMethod paymentMethod,
-                                          final AuditLog creationAuditLog) {
+                                          final AuditLog creationAuditLog,
+                                          final Long tenantRecordId) {
         super(account,
+              accountRecordId,
               invoice,
               invoicePayment,
+              invoicePaymentRecordId,
               payment,
               paymentMethod,
-              creationAuditLog);
+              creationAuditLog,
+              tenantRecordId);
     }
 
     @Override

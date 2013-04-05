@@ -46,44 +46,65 @@ public class TestBusinessSnapshot extends AnalyticsTestSuiteNoDB {
     public void testConstructor() throws Exception {
         // Account
         final BusinessAccountModelDao accountModelDao = new BusinessAccountModelDao(account,
+                                                                                    accountRecordId,
                                                                                     BigDecimal.ONE,
                                                                                     invoice,
                                                                                     payment,
-                                                                                    auditLog);
+                                                                                    auditLog,
+                                                                                    tenantRecordId);
         final BusinessAccount businessAccount = new BusinessAccount(accountModelDao);
 
         // Field
-        final BusinessAccountFieldModelDao businessAccountFieldModelDao = new BusinessAccountFieldModelDao(account, customField, auditLog);
+        final BusinessAccountFieldModelDao businessAccountFieldModelDao = new BusinessAccountFieldModelDao(account,
+                                                                                                           accountRecordId,
+                                                                                                           customField,
+                                                                                                           fieldRecordId,
+                                                                                                           auditLog,
+                                                                                                           tenantRecordId);
         final BusinessField businessField = BusinessField.create(businessAccountFieldModelDao);
 
         // Invoice
-        final BusinessInvoiceModelDao invoiceModelDao = new BusinessInvoiceModelDao(account, invoice, auditLog);
+        final BusinessInvoiceModelDao invoiceModelDao = new BusinessInvoiceModelDao(account,
+                                                                                    accountRecordId,
+                                                                                    invoice,
+                                                                                    invoiceRecordId,
+                                                                                    auditLog,
+                                                                                    tenantRecordId);
         final BusinessInvoiceItemBaseModelDao invoiceItemBaseModelDao = BusinessInvoiceItemBaseModelDao.create(account,
+                                                                                                               accountRecordId,
                                                                                                                invoice,
                                                                                                                invoiceItem,
+                                                                                                               invoiceItemRecordId,
                                                                                                                bundle,
                                                                                                                plan,
                                                                                                                phase,
-                                                                                                               auditLog);
+                                                                                                               auditLog,
+                                                                                                               tenantRecordId);
         final BusinessInvoice businessInvoice = new BusinessInvoice(invoiceModelDao,
                                                                     ImmutableList.<BusinessInvoiceItemBaseModelDao>of(invoiceItemBaseModelDao));
 
         // Invoice payment
         final BusinessInvoicePaymentBaseModelDao invoicePaymentBaseModelDao = BusinessInvoicePaymentModelDao.create(account,
+                                                                                                                    accountRecordId,
                                                                                                                     invoice,
                                                                                                                     invoicePayment,
+                                                                                                                    invoicePaymentRecordId,
                                                                                                                     payment,
                                                                                                                     paymentMethod,
-                                                                                                                    auditLog);
+                                                                                                                    auditLog,
+                                                                                                                    tenantRecordId);
         final BusinessInvoicePayment businessInvoicePayment = new BusinessInvoicePayment(invoicePaymentBaseModelDao);
 
         // Overdue
         final DateTime endDate = new DateTime(2005, 6, 5, 4, 5, 6, DateTimeZone.UTC);
         final BusinessOverdueStatusModelDao businessOverdueStatusModelDao = new BusinessOverdueStatusModelDao(account,
+                                                                                                              accountRecordId,
                                                                                                               bundle,
                                                                                                               blockingState,
+                                                                                                              blockingStateRecordId,
                                                                                                               endDate,
-                                                                                                              auditLog);
+                                                                                                              auditLog,
+                                                                                                              tenantRecordId);
         final BusinessOverdueStatus businessOverdueStatus = new BusinessOverdueStatus(businessOverdueStatusModelDao);
 
         // Subscriptions
@@ -94,20 +115,26 @@ public class TestBusinessSnapshot extends AnalyticsTestSuiteNoDB {
         final BusinessSubscription previousSubscription = null;
         final BusinessSubscription nextSubscription = new BusinessSubscription(null, null, null, Currency.GBP, startDate, SubscriptionState.ACTIVE);
         final BusinessSubscriptionTransitionModelDao subscriptionTransitionModelDao = new BusinessSubscriptionTransitionModelDao(account,
+                                                                                                                                 accountRecordId,
                                                                                                                                  bundle,
                                                                                                                                  subscriptionTransition,
+                                                                                                                                 subscriptionEventRecordId,
                                                                                                                                  requestedTimestamp,
                                                                                                                                  event,
                                                                                                                                  previousSubscription,
                                                                                                                                  nextSubscription,
-                                                                                                                                 auditLog);
+                                                                                                                                 auditLog,
+                                                                                                                                 tenantRecordId);
         final BusinessSubscriptionTransition businessSubscriptionTransition = new BusinessSubscriptionTransition(subscriptionTransitionModelDao);
 
         // Tag
         final BusinessAccountTagModelDao businessAccountTagModelDao = new BusinessAccountTagModelDao(account,
+                                                                                                     accountRecordId,
                                                                                                      tag,
+                                                                                                     tagRecordId,
                                                                                                      tagDefinition,
-                                                                                                     auditLog);
+                                                                                                     auditLog,
+                                                                                                     tenantRecordId);
         final BusinessTag businessTag = BusinessTag.create(businessAccountTagModelDao);
 
         // Create the snapshot
