@@ -25,7 +25,21 @@ import org.skife.jdbi.v2.sqlobject.stringtemplate.StringTemplate3StatementLocato
 import org.skife.jdbi.v2.tweak.Argument;
 
 import com.ning.billing.commons.jdbi.mapper.LowerToCamelBeanMapperFactory;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessAccountFieldModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessAccountModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessAccountTagModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceAdjustmentModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceFieldModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceItemAdjustmentModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceItemCreditModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceItemModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoicePaymentChargebackModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoicePaymentFieldModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoicePaymentRefundModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoicePaymentTagModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceTagModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessOverdueStatusModelDao;
 
 import com.google.common.base.CaseFormat;
 
@@ -36,7 +50,24 @@ public class BusinessDBIProvider {
     public static DBI get(final DataSource dataSource) {
         final DBI dbi = new DBI(dataSource);
 
+        dbi.registerMapper(new LowerToCamelBeanMapperFactory(BusinessAccountFieldModelDao.class));
         dbi.registerMapper(new LowerToCamelBeanMapperFactory(BusinessAccountModelDao.class));
+        dbi.registerMapper(new LowerToCamelBeanMapperFactory(BusinessAccountTagModelDao.class));
+        dbi.registerMapper(new LowerToCamelBeanMapperFactory(BusinessInvoiceAdjustmentModelDao.class));
+        dbi.registerMapper(new LowerToCamelBeanMapperFactory(BusinessInvoiceFieldModelDao.class));
+        dbi.registerMapper(new LowerToCamelBeanMapperFactory(BusinessInvoiceItemAdjustmentModelDao.class));
+        dbi.registerMapper(new LowerToCamelBeanMapperFactory(BusinessInvoiceItemCreditModelDao.class));
+        dbi.registerMapper(new LowerToCamelBeanMapperFactory(BusinessInvoiceItemModelDao.class));
+        dbi.registerMapper(new LowerToCamelBeanMapperFactory(BusinessInvoiceModelDao.class));
+        dbi.registerMapper(new LowerToCamelBeanMapperFactory(BusinessInvoicePaymentChargebackModelDao.class));
+        dbi.registerMapper(new LowerToCamelBeanMapperFactory(BusinessInvoicePaymentFieldModelDao.class));
+        dbi.registerMapper(new LowerToCamelBeanMapperFactory(BusinessInvoicePaymentDao.class));
+        dbi.registerMapper(new LowerToCamelBeanMapperFactory(BusinessInvoicePaymentRefundModelDao.class));
+        dbi.registerMapper(new LowerToCamelBeanMapperFactory(BusinessInvoicePaymentTagModelDao.class));
+        dbi.registerMapper(new LowerToCamelBeanMapperFactory(BusinessInvoiceTagModelDao.class));
+        dbi.registerMapper(new LowerToCamelBeanMapperFactory(BusinessOverdueStatusModelDao.class));
+        dbi.registerMapper(new LowerToCamelBeanMapperFactory(BusinessSubscriptionTransitionDao.class));
+
         dbi.setStatementLocator(new AnalyticsStatementLocator());
 
         return dbi;
