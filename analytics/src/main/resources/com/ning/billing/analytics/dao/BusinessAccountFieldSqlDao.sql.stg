@@ -9,14 +9,14 @@ select
 , account_key
 , name
 , value
-from bac_fields
+from old_bac_fields
 where account_key = :account_key
 <AND_CHECK_TENANT()>
 ;
 >>
 
 addField(account_id, account_key, name, value) ::=<<
-insert into bac_fields (
+insert into old_bac_fields (
   account_id
 , account_key
 , name
@@ -34,9 +34,9 @@ insert into bac_fields (
 >>
 
 removeField(account_id, name) ::= <<
-delete from bac_fields where account_id = :account_id and name = :name <AND_CHECK_TENANT()>;
+delete from old_bac_fields where account_id = :account_id and name = :name <AND_CHECK_TENANT()>;
 >>
 
 test() ::= <<
-select 1 from bac_fields where <CHECK_TENANT()> limit 1;
+select 1 from old_bac_fields where <CHECK_TENANT()> limit 1;
 >>

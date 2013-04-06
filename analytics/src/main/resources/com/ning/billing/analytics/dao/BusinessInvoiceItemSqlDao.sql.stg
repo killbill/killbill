@@ -23,7 +23,7 @@ select
 , currency
 , linked_item_id
 , tenant_record_id
-from bii
+from old_bii
 where item_id = :item_id
 <AND_CHECK_TENANT()>
 limit 1
@@ -50,7 +50,7 @@ select
 , currency
 , linked_item_id
 , tenant_record_id
-from bii
+from old_bii
 where invoice_id = :invoice_id
 <AND_CHECK_TENANT()>
 order by created_date asc
@@ -77,7 +77,7 @@ select
 , currency
 , linked_item_id
 , tenant_record_id
-from bii
+from old_bii
 where external_key = :external_key
 <AND_CHECK_TENANT()>
 order by created_date asc
@@ -85,7 +85,7 @@ order by created_date asc
 >>
 
 createInvoiceItem() ::= <<
-insert into bii (
+insert into old_bii (
   item_id
 , created_date
 , updated_date
@@ -129,13 +129,13 @@ insert into bii (
 >>
 
 deleteInvoiceItem(item_id) ::= <<
-delete from bii where item_id = :item_id <AND_CHECK_TENANT()>;
+delete from old_bii where item_id = :item_id <AND_CHECK_TENANT()>;
 >>
 
 deleteInvoiceItemsForAccount(account_id) ::= <<
-delete from bii where bii.invoice_id in (select invoice_id from bin where bin.account_id = :account_id <AND_CHECK_TENANT("bin.")> for update) <AND_CHECK_TENANT("bii.")>;
+delete from old_bii where bii.invoice_id in (select invoice_id from bin where bin.account_id = :account_id <AND_CHECK_TENANT("bin.")> for update) <AND_CHECK_TENANT("bii.")>;
 >>
 
 test() ::= <<
-select 1 from bii where <CHECK_TENANT()> limit 1;
+select 1 from old_bii where <CHECK_TENANT()> limit 1;
 >>

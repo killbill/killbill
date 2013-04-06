@@ -19,7 +19,7 @@ select
 , amount_charged
 , amount_credited
 , tenant_record_id
-from bin
+from old_bin
 where invoice_id = :invoice_id
 <AND_CHECK_TENANT()>
 limit 1
@@ -42,7 +42,7 @@ select
 , amount_charged
 , amount_credited
 , tenant_record_id
-from bin
+from old_bin
 where account_id = :account_id
 <AND_CHECK_TENANT()>
 order by created_date asc
@@ -65,7 +65,7 @@ select
 , amount_charged
 , amount_credited
 , tenant_record_id
-from bin
+from old_bin
 where account_key = :account_key
 <AND_CHECK_TENANT()>
 order by created_date asc
@@ -73,7 +73,7 @@ order by created_date asc
 >>
 
 createInvoice() ::= <<
-insert into bin (
+insert into old_bin (
   invoice_id
 , invoice_number
 , created_date
@@ -109,7 +109,7 @@ insert into bin (
 >>
 
 updateInvoice() ::= <<
-update bin set
+update old_bin set
   updated_date = :updated_date
 , invoice_number = :invoice_number
 , account_key = :account_key
@@ -126,13 +126,13 @@ where invoice_id = :invoice_id
 >>
 
 deleteInvoice(invoice_id) ::= <<
-delete from bin where invoice_id = :invoice_id <AND_CHECK_TENANT()>;
+delete from old_bin where invoice_id = :invoice_id <AND_CHECK_TENANT()>;
 >>
 
 deleteInvoicesForAccount(account_id) ::= <<
-delete from bin where account_id = :account_id <AND_CHECK_TENANT()>;
+delete from old_bin where account_id = :account_id <AND_CHECK_TENANT()>;
 >>
 
 test() ::= <<
-select 1 from bin where <CHECK_TENANT()> limit 1;
+select 1 from old_bin where <CHECK_TENANT()> limit 1;
 >>

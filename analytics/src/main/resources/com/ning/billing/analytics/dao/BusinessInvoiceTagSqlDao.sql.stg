@@ -8,14 +8,14 @@ select
   invoice_id
 , name
 , tenant_record_id
-from bin_tags
+from old_bin_tags
 where invoice_id = :invoice_id
 <AND_CHECK_TENANT()>
 ;
 >>
 
 addTag(invoice_id, name) ::=<<
-insert into bin_tags (
+insert into old_bin_tags (
   invoice_id
 , name
 , account_record_id
@@ -29,9 +29,9 @@ insert into bin_tags (
 >>
 
 removeTag(invoice_id, name) ::= <<
-delete from bin_tags where invoice_id = :invoice_id and name = :name <AND_CHECK_TENANT()>;
+delete from old_bin_tags where invoice_id = :invoice_id and name = :name <AND_CHECK_TENANT()>;
 >>
 
 test() ::= <<
-select 1 from bin_tags where <CHECK_TENANT()> limit 1;
+select 1 from old_bin_tags where <CHECK_TENANT()> limit 1;
 >>

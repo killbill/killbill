@@ -8,14 +8,14 @@ select
   invoice_id
 , name
 , value
-from bin_fields
+from old_bin_fields
 where invoice_id = :invoice_id
 <AND_CHECK_TENANT()>
 ;
 >>
 
 addField(invoice_id, name, value) ::=<<
-insert into bin_fields (
+insert into old_bin_fields (
   invoice_id
 , name
 , value
@@ -31,9 +31,9 @@ insert into bin_fields (
 >>
 
 removeField(invoice_id, name, value) ::= <<
-delete from bin_fields where invoice_id = :invoice_id and name = :name <AND_CHECK_TENANT()>;
+delete from old_bin_fields where invoice_id = :invoice_id and name = :name <AND_CHECK_TENANT()>;
 >>
 
 test() ::= <<
-select 1 from bin_tags where <CHECK_TENANT()> limit 1;
+select 1 from old_bin_tags where <CHECK_TENANT()> limit 1;
 >>

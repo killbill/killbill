@@ -26,7 +26,7 @@ select
 , invoice_payment_type
 , linked_invoice_payment_id
 , tenant_record_id
-from bip
+from old_bip
 where payment_id = :payment_id
 <AND_CHECK_TENANT()>
 limit 1
@@ -56,7 +56,7 @@ select
 , invoice_payment_type
 , linked_invoice_payment_id
 , tenant_record_id
-from bip
+from old_bip
 where account_key = :account_key
 <AND_CHECK_TENANT()>
 order by created_date asc
@@ -64,7 +64,7 @@ order by created_date asc
 >>
 
 createInvoicePayment() ::= <<
-insert into bip (
+insert into old_bip (
   payment_id
 , created_date
 , updated_date
@@ -114,9 +114,9 @@ insert into bip (
 >>
 
 deleteInvoicePayment(payment_id) ::= <<
-delete from bip where payment_id = :payment_id <AND_CHECK_TENANT()>
+delete from old_bip where payment_id = :payment_id <AND_CHECK_TENANT()>
 >>
 
 test() ::= <<
-select 1 from bip where <CHECK_TENANT()> limit 1;
+select 1 from old_bip where <CHECK_TENANT()> limit 1;
 >>

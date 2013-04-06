@@ -1,7 +1,7 @@
 /*! SET storage_engine=INNODB */;
 
-drop table if exists bst;
-create table bst (
+drop table if exists old_bst;
+create table old_bst (
   record_id int(11) unsigned not null auto_increment
 , total_ordering bigint default 0
 , bundle_id char(36) not null
@@ -39,11 +39,11 @@ create table bst (
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
 );
-create index bst_key_index on bst (external_key, requested_timestamp asc);
-create index bst_tenant_account_record_id on bst(tenant_record_id, account_record_id);
+create index old_bst_key_index on old_bst (external_key, requested_timestamp asc);
+create index old_bst_tenant_account_record_id on old_bst(tenant_record_id, account_record_id);
 
-drop table if exists bac;
-create table bac (
+drop table if exists old_bac;
+create table old_bac (
   record_id int(11) unsigned not null auto_increment
 , account_id char(36) not null
 , account_key varchar(50) not null
@@ -62,11 +62,11 @@ create table bac (
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
 );
-create unique index bac_key_index on bac (account_key);
-create index bac_tenant_account_record_id on bac(tenant_record_id, account_record_id);
+create unique index old_bac_key_index on old_bac (account_key);
+create index old_bac_tenant_account_record_id on old_bac(tenant_record_id, account_record_id);
 
-drop table if exists bin;
-create table bin (
+drop table if exists old_bin;
+create table old_bin (
   record_id int(11) unsigned not null auto_increment
 , invoice_id char(36) not null
 , invoice_number bigint default null
@@ -85,11 +85,11 @@ create table bin (
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
 );
-create unique index bin_key_index on bin (invoice_id);
-create index bin_tenant_account_record_id on bin(tenant_record_id, account_record_id);
+create unique index old_bin_key_index on old_bin (invoice_id);
+create index old_bin_tenant_account_record_id on old_bin(tenant_record_id, account_record_id);
 
-drop table if exists bii;
-create table bii (
+drop table if exists old_bii;
+create table old_bii (
   record_id int(11) unsigned not null auto_increment
 , item_id char(36) not null
 , created_date bigint not null
@@ -112,11 +112,11 @@ create table bii (
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
 );
-create unique index bii_key_index on bii (item_id);
-create index bii_tenant_account_record_id on bii(tenant_record_id, account_record_id);
+create unique index old_bii_key_index on old_bii (item_id);
+create index old_bii_tenant_account_record_id on old_bii(tenant_record_id, account_record_id);
 
-drop table if exists bip;
-create table bip (
+drop table if exists old_bip;
+create table old_bip (
   record_id int(11) unsigned not null auto_increment
 , payment_id char(36) not null
 , created_date bigint not null
@@ -142,11 +142,11 @@ create table bip (
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
 );
-create unique index bip_key_index on bip (payment_id);
-create index bip_tenant_account_record_id on bip(tenant_record_id, account_record_id);
+create unique index old_bip_key_index on old_bip (payment_id);
+create index old_bip_tenant_account_record_id on old_bip(tenant_record_id, account_record_id);
 
-drop table if exists bos;
-create table bos (
+drop table if exists old_bos;
+create table old_bos (
   record_id int(11) unsigned not null auto_increment
 , bundle_id char(36) not null
 , external_key varchar(50) not null comment 'Bundle external key'
@@ -158,10 +158,10 @@ create table bos (
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
 );
-create index bos_tenant_account_record_id on bos(tenant_record_id, account_record_id);
+create index old_bos_tenant_account_record_id on old_bos(tenant_record_id, account_record_id);
 
-drop table if exists bac_tags;
-create table bac_tags (
+drop table if exists old_bac_tags;
+create table old_bac_tags (
   record_id int(11) unsigned not null auto_increment
 , account_id char(36) not null
 , account_key varchar(50) not null comment 'Account external key'
@@ -170,10 +170,10 @@ create table bac_tags (
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
 );
-create index bac_tags_tenant_account_record_id on bac_tags(tenant_record_id, account_record_id);
+create index old_bac_tags_tenant_account_record_id on old_bac_tags(tenant_record_id, account_record_id);
 
-drop table if exists bac_fields;
-create table bac_fields (
+drop table if exists old_bac_fields;
+create table old_bac_fields (
   record_id int(11) unsigned not null auto_increment
 , account_id char(36) not null
 , account_key varchar(50) not null comment 'Account external key'
@@ -183,10 +183,10 @@ create table bac_fields (
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
 );
-create index bac_fields_tenant_account_record_id on bac_fields(tenant_record_id, account_record_id);
+create index old_bac_fields_tenant_account_record_id on old_bac_fields(tenant_record_id, account_record_id);
 
-drop table if exists bst_tags;
-create table bst_tags (
+drop table if exists old_bst_tags;
+create table old_bst_tags (
   record_id int(11) unsigned not null auto_increment
 , bundle_id char(36) not null
 , external_key varchar(50) not null comment 'Bundle external key'
@@ -196,10 +196,10 @@ create table bst_tags (
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
 );
-create index bst_tags_tenant_account_record_id on bst_tags(tenant_record_id, account_record_id);
+create index old_bst_tags_tenant_account_record_id on old_bst_tags(tenant_record_id, account_record_id);
 
-drop table if exists bst_fields;
-create table bst_fields (
+drop table if exists old_bst_fields;
+create table old_bst_fields (
   record_id int(11) unsigned not null auto_increment
 , bundle_id char(36) not null
 , external_key varchar(50) not null comment 'Bundle external key'
@@ -210,10 +210,10 @@ create table bst_fields (
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
 );
-create index bst_fields_tenant_account_record_id on bst_fields(tenant_record_id, account_record_id);
+create index old_bst_fields_tenant_account_record_id on old_bst_fields(tenant_record_id, account_record_id);
 
-drop table if exists bin_tags;
-create table bin_tags (
+drop table if exists old_bin_tags;
+create table old_bin_tags (
   record_id int(11) unsigned not null auto_increment
 , invoice_id char(36) not null
 , name varchar(50) not null
@@ -221,10 +221,10 @@ create table bin_tags (
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
 );
-create index bin_tags_tenant_account_record_id on bin_tags(tenant_record_id, account_record_id);
+create index old_bin_tags_tenant_account_record_id on old_bin_tags(tenant_record_id, account_record_id);
 
-drop table if exists bin_fields;
-create table bin_fields (
+drop table if exists old_bin_fields;
+create table old_bin_fields (
   record_id int(11) unsigned not null auto_increment
 , invoice_id char(36) not null
 , name varchar(50) not null
@@ -233,10 +233,10 @@ create table bin_fields (
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
 );
-create index bin_fields_tenant_account_record_id on bin_fields(tenant_record_id, account_record_id);
+create index old_bin_fields_tenant_account_record_id on old_bin_fields(tenant_record_id, account_record_id);
 
-drop table if exists bip_tags;
-create table bip_tags (
+drop table if exists old_bip_tags;
+create table old_bip_tags (
   record_id int(11) unsigned not null auto_increment
 , payment_id char(36) not null
 , name varchar(50) not null
@@ -244,10 +244,10 @@ create table bip_tags (
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
 );
-create index bip_tags_tenant_account_record_id on bip_tags(tenant_record_id, account_record_id);
+create index old_bip_tags_tenant_account_record_id on old_bip_tags(tenant_record_id, account_record_id);
 
-drop table if exists bip_fields;
-create table bip_fields (
+drop table if exists old_bip_fields;
+create table old_bip_fields (
   record_id int(11) unsigned not null auto_increment
 , payment_id char(36) not null
 , name varchar(50) not null
@@ -256,4 +256,4 @@ create table bip_fields (
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
 );
-create index bip_fields_tenant_account_record_id on bip_fields(tenant_record_id, account_record_id);
+create index old_bip_fields_tenant_account_record_id on old_bip_fields(tenant_record_id, account_record_id);

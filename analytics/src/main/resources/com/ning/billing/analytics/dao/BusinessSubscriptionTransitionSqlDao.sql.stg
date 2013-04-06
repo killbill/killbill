@@ -7,7 +7,7 @@ getSubscriptionsCreatedOverTime(product_type, slug) ::= <<
   select
     date(from_unixtime(requested_timestamp / 1000)) day
   , count(record_id) count
-  from bst
+  from old_bst
   where event in ('ADD_ADD_ON', 'ADD_BASE', 'ADD_STANDALONE')
   and next_product_type = :product_type
   and next_slug = :slug
@@ -52,7 +52,7 @@ getTransitionsByKey(external_key) ::= <<
   , next_start_date
   , next_state
   , tenant_record_id
-  from bst
+  from old_bst
   where external_key=:external_key
   <AND_CHECK_TENANT()>
   order by requested_timestamp asc
@@ -94,7 +94,7 @@ getTransitionForSubscription(subscription_id) ::= <<
   , next_start_date
   , next_state
   , tenant_record_id
-  from bst
+  from old_bst
   where subscription_id = :subscription_id
   <AND_CHECK_TENANT()>
   order by requested_timestamp asc
@@ -136,7 +136,7 @@ getTransitionsForAccount(account_id) ::= <<
   , next_start_date
   , next_state
   , tenant_record_id
-  from bst
+  from old_bst
   where account_key = :account_key
   <AND_CHECK_TENANT()>
   order by requested_timestamp asc
@@ -144,7 +144,7 @@ getTransitionsForAccount(account_id) ::= <<
 >>
 
 createTransition() ::= <<
-  insert into bst(
+  insert into old_bst(
     total_ordering
   , bundle_id
   , external_key
@@ -218,12 +218,12 @@ createTransition() ::= <<
 >>
 
 deleteTransitionsForBundle(bundle_id) ::= <<
-  delete from bst
+  delete from old_bst
   where bundle_id=:bundle_id
   <AND_CHECK_TENANT()>
   ;
 >>
 
 test() ::= <<
-select 1 from bst where <CHECK_TENANT()> limit 1;
+select 1 from old_bst where <CHECK_TENANT()> limit 1;
 >>

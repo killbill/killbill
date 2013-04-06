@@ -12,7 +12,7 @@ select
 , start_date
 , end_date
 , tenant_record_id
-from bos
+from old_bos
 where external_key = :external_key
 <AND_CHECK_TENANT()>
 order by start_date asc
@@ -20,7 +20,7 @@ order by start_date asc
 >>
 
 createOverdueStatus() ::= <<
-insert into bos (
+insert into old_bos (
   bundle_id
 , external_key
 , account_key
@@ -42,9 +42,9 @@ insert into bos (
 >>
 
 deleteOverdueStatusesForBundle(bundle_id) ::= <<
-delete from bos where bundle_id = :bundle_id <AND_CHECK_TENANT()>;
+delete from old_bos where bundle_id = :bundle_id <AND_CHECK_TENANT()>;
 >>
 
 test() ::= <<
-select 1 from bos where <CHECK_TENANT()> limit 1;
+select 1 from old_bos where <CHECK_TENANT()> limit 1;
 >>
