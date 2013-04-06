@@ -79,6 +79,7 @@ import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
+import com.ning.billing.payment.api.TestPaymentMethodPluginBase;
 import com.ning.billing.payment.provider.MockPaymentProviderPlugin;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.config.OSGIConfig;
@@ -331,32 +332,18 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         return accountUserApi.getAccountById(account.getId(), callContext);
     }
 
+    private class TestPaymentMethodPlugin extends TestPaymentMethodPluginBase {
+        @Override
+        public List<PaymentMethodKVInfo> getProperties() {
+            PaymentMethodKVInfo prop = new PaymentMethodKVInfo("whatever", "cool", Boolean.TRUE);
+            List<PaymentMethodKVInfo> res = new ArrayList<PaymentMethodKVInfo>();
+            res.add(prop);
+            return res;
+        }
+    }
 
     protected PaymentMethodPlugin createPaymentMethodPlugin() {
-        return new PaymentMethodPlugin() {
-            @Override
-            public boolean isDefaultPaymentMethod() {
-                return false;
-            }
-
-            @Override
-            public String getValueString(final String key) {
-                return null;
-            }
-
-            @Override
-            public List<PaymentMethodKVInfo> getProperties() {
-                PaymentMethodKVInfo prop = new PaymentMethodKVInfo("whatever", "cool", Boolean.TRUE);
-                List<PaymentMethodKVInfo> res = new ArrayList<PaymentMethodKVInfo>();
-                res.add(prop);
-                return res;
-            }
-
-            @Override
-            public String getExternalPaymentMethodId() {
-                return UUID.randomUUID().toString();
-            }
-        };
+        return new TestPaymentMethodPlugin();
     }
 
     protected AccountData getAccountData(final int billingDay) {

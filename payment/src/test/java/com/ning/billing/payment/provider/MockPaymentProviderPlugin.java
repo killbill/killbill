@@ -17,6 +17,7 @@
 package com.ning.billing.payment.provider;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -24,7 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.payment.api.DefaultPaymentMethodPlugin;
+import com.ning.billing.payment.api.TestPaymentMethodPlugin;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.payment.plugin.api.NoOpPaymentPluginApi;
 import com.ning.billing.payment.plugin.api.PaymentInfoPlugin;
@@ -115,7 +116,7 @@ public class MockPaymentProviderPlugin implements NoOpPaymentPluginApi {
     @Override
     public void addPaymentMethod(final UUID kbAccountId, final UUID kbPaymentMethodId, final PaymentMethodPlugin paymentMethodProps, final boolean setDefault, final CallContext context) throws PaymentPluginApiException {
         // externalPaymentMethodId is set to a random value
-        final PaymentMethodPlugin realWithID = new DefaultPaymentMethodPlugin(paymentMethodProps, UUID.randomUUID().toString());
+        final PaymentMethodPlugin realWithID = new TestPaymentMethodPlugin(paymentMethodProps, UUID.randomUUID().toString());
         paymentMethods.put(kbPaymentMethodId.toString(), realWithID);
 
         final PaymentMethodInfoPlugin realInfoWithID = new DefaultPaymentMethodInfoPlugin(kbAccountId, kbPaymentMethodId, setDefault, UUID.randomUUID().toString());
@@ -172,5 +173,10 @@ public class MockPaymentProviderPlugin implements NoOpPaymentPluginApi {
         refunds.put(kbPaymentId.toString(), refundInfoPlugin);
 
         return refundInfoPlugin;
+    }
+
+    @Override
+    public List<RefundInfoPlugin> getRefundInfo(final UUID kbAccountId, final UUID kbPaymentId, final CallContext context) throws PaymentPluginApiException {
+        return Collections.<RefundInfoPlugin>emptyList();
     }
 }

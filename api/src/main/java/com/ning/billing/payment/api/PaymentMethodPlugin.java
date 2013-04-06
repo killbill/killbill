@@ -21,13 +21,103 @@ import java.util.List;
 public interface PaymentMethodPlugin {
 
 
+    /**
+     *
+     * @return the id from the plugin
+     */
     public String getExternalPaymentMethodId();
 
+    /**
+     *
+     * @return whether plugin sees that PM as being the default
+     */
     public boolean isDefaultPaymentMethod();
 
+    /**
+     *
+     * @return the list of key/value pair set by the plugin
+     */
     public List<PaymentMethodKVInfo> getProperties();
 
+    /**
+     *
+     * @param key the key for which to get the value
+     * @return the value associated with the key
+     */
     public String getValueString(String key);
+
+    /**
+     *
+     * @return the payment method type name if applicable
+     */
+    public String getType();
+
+    /**
+     *
+     * @return the credit card name if applicable
+     */
+    public String getCCName();
+
+    /**
+     *
+     * @return the credit card type if applicable
+     */
+    public String getCCType();
+
+    /**
+     *
+     * @return the credit card expiration month
+     */
+    public String getCCExprirationMonth();
+
+    /**
+     *
+     * @return the credit card expiration year
+     */
+    public String getCCExprirationYear();
+
+    /**
+     *
+     * @return the credit card last 4 numbers
+     */
+    public String getCCLast4();
+
+    /**
+     *
+     * @return the address line 1
+     */
+    public String getAddress1();
+
+    /**
+     *
+     * @return the address line 2
+     */
+    public String getAddress2();
+
+    /**
+     *
+     * @return the city
+     */
+    public String getCity();
+
+    /**
+     *
+     * @return the state
+     */
+    public String getState();
+
+    /**
+     *
+     * @return the zip
+     */
+    public String getZip();
+
+    /**
+     *
+     * @return the country
+     */
+    public String getCountry();
+
 
     public class PaymentMethodKVInfo {
 
@@ -52,6 +142,8 @@ public interface PaymentMethodPlugin {
         public Boolean getIsUpdatable() {
             return isUpdatable;
         }
+
+
 
         @Override
         public String toString() {

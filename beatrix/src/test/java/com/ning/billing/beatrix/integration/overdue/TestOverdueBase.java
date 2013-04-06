@@ -13,11 +13,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.ning.billing.beatrix.integration.overdue;
 
-import static com.jayway.awaitility.Awaitility.await;
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.testng.Assert.assertNotNull;
+package com.ning.billing.beatrix.integration.overdue;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -35,7 +32,12 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.overdue.config.OverdueConfig;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
+import com.ning.billing.payment.api.TestPaymentMethodPluginBase;
 import com.ning.billing.util.config.catalog.XMLLoader;
+
+import static com.jayway.awaitility.Awaitility.await;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.testng.Assert.assertNotNull;
 
 public abstract class TestOverdueBase extends TestIntegrationBase {
 
@@ -48,31 +50,11 @@ public abstract class TestOverdueBase extends TestIntegrationBase {
 
     public abstract String getOverdueConfig();
 
-    final PaymentMethodPlugin paymentMethodPlugin = new PaymentMethodPlugin() {
-        @Override
-        public boolean isDefaultPaymentMethod() {
-            return false;
-        }
-
-        @Override
-        public String getValueString(final String key) {
-            return null;
-        }
-
-        @Override
-        public List<PaymentMethodKVInfo> getProperties() {
-            return null;
-        }
-
-        @Override
-        public String getExternalPaymentMethodId() {
-            return UUID.randomUUID().toString();
-        }
-    };
+    final PaymentMethodPlugin paymentMethodPlugin = new TestPaymentMethodPluginBase();
 
     @Override
     @BeforeMethod(groups = "slow")
-    public void beforeMethod( ) throws Exception {
+    public void beforeMethod() throws Exception {
         super.beforeMethod();
         final String configXml = getOverdueConfig();
         final InputStream is = new ByteArrayInputStream(configXml.getBytes());
@@ -110,6 +92,4 @@ public abstract class TestOverdueBase extends TestIntegrationBase {
             Assert.assertEquals(blockingApi.getBlockingStateFor(bundle, internalCallContext).getStateName(), expected, "Got exception: " + e.toString());
         }
     }
-
-
 }

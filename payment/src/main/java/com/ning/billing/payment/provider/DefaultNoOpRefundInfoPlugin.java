@@ -70,6 +70,11 @@ public class DefaultNoOpRefundInfoPlugin implements RefundInfoPlugin {
     }
 
     @Override
+    public String getReferenceId() {
+        return null;
+    }
+
+    @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
         sb.append("DefaultNoOpRefundInfoPlugin");

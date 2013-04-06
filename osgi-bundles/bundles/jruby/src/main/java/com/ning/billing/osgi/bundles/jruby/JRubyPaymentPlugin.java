@@ -104,6 +104,16 @@ public class JRubyPaymentPlugin extends JRubyPlugin implements PaymentPluginApi 
     }
 
     @Override
+    public List<RefundInfoPlugin> getRefundInfo(final UUID kbAccountId, final UUID kbPaymentId, final CallContext context) throws PaymentPluginApiException {
+        return callWithRuntimeAndChecking(new PluginCallback()  {
+            @Override
+            public List<RefundInfoPlugin> doCall(final Ruby runtime) throws PaymentPluginApiException {
+                return ((PaymentPluginApi) pluginInstance).getRefundInfo(kbAccountId, kbPaymentId, context);
+            }
+        });
+    }
+
+    @Override
     public void addPaymentMethod(final UUID kbAccountId, final UUID kbPaymentMethodId, final PaymentMethodPlugin paymentMethodProps, final boolean setDefault, final CallContext context) throws PaymentPluginApiException {
 
         callWithRuntimeAndChecking(new PluginCallback() {
