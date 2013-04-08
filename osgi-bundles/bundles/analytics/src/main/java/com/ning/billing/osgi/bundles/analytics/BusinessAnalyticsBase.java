@@ -49,6 +49,7 @@ import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.PaymentMethod;
+import com.ning.billing.payment.api.Refund;
 import com.ning.billing.util.api.AuditLevel;
 import com.ning.billing.util.api.AuditUserApi;
 import com.ning.billing.util.api.CustomFieldUserApi;
@@ -296,11 +297,13 @@ public abstract class BusinessAnalyticsBase {
         final InvoicePaymentApi invoicePaymentApi = getInvoicePaymentUserApi();
         final Collection<Payment> payments = getPaymentsByAccountId(accountId, context);
 
-        final Collection<InvoicePayment> invoicePayments = new LinkedList<InvoicePayment>();
+        final Collection<InvoicePayment> allInvoicePayments = new LinkedList<InvoicePayment>();
         for (final Payment payment : payments) {
-            invoicePayments.addAll(invoicePaymentApi.getInvoicePayments(payment.getId(), context));
+            // Retrieve all invoice payment types (including refunds and chargebacks) for that payment
+            allInvoicePayments.addAll(invoicePaymentApi.getInvoicePayments(payment.getId(), context));
         }
-        return invoicePayments;
+
+        return allInvoicePayments;
     }
 
     protected AuditLog getInvoicePaymentCreationAuditLog(final UUID invoicePaymentId, final TenantContext context) throws AnalyticsRefreshException {
@@ -333,13 +336,24 @@ public abstract class BusinessAnalyticsBase {
         }
     }
 
-    protected Payment getPayment(final UUID paymentId, final TenantContext context) throws AnalyticsRefreshException {
+    protected Payment getPaymentWithPluginInfo(final UUID paymentId, final TenantContext context) throws AnalyticsRefreshException {
         final PaymentApi paymentApi = getPaymentUserApi();
 
         try {
-            return paymentApi.getPayment(paymentId, context);
+            return paymentApi.getPayment(paymentId, true, context);
         } catch (PaymentApiException e) {
             logService.log(LogService.LOG_WARNING, "Error retrieving payment for id " + paymentId, e);
+            throw new AnalyticsRefreshException(e);
+        }
+    }
+
+    protected Refund getRefundWithPluginInfo(final UUID refundId, final TenantContext context) throws AnalyticsRefreshException {
+        final PaymentApi paymentApi = getPaymentUserApi();
+
+        try {
+            return paymentApi.getRefund(refundId, true, context);
+        } catch (PaymentApiException e) {
+            logService.log(LogService.LOG_WARNING, "Error retrieving refund for id " + refundId, e);
             throw new AnalyticsRefreshException(e);
         }
     }

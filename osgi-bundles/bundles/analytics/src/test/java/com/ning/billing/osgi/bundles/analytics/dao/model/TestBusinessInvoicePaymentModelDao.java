@@ -31,6 +31,7 @@ public class TestBusinessInvoicePaymentModelDao extends AnalyticsTestSuiteNoDB {
                                                                                                          invoicePayment,
                                                                                                          invoicePaymentRecordId,
                                                                                                          payment,
+                                                                                                         refund,
                                                                                                          paymentMethod,
                                                                                                          auditLog,
                                                                                                          tenantRecordId);

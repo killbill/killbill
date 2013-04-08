@@ -25,20 +25,50 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.entity.Entity;
 
 public interface InvoicePayment extends Entity {
+
+    /**
+     * @return payment id
+     */
     UUID getPaymentId();
 
+    /**
+     * @return invoice payment type
+     */
     InvoicePaymentType getType();
 
+    /**
+     * @return invoice id
+     */
     UUID getInvoiceId();
 
+    /**
+     * @return payment date
+     */
     DateTime getPaymentDate();
 
+    /**
+     * @return amount (from the payment)
+     */
     BigDecimal getAmount();
 
+    /**
+     * @return currency (from the payment)
+     */
     Currency getCurrency();
 
+    /**
+     * Linked invoice payment id: null for payments, associated
+     * invoice payment id for refunds and chargebacks
+     *
+     * @return linked invoice payment id
+     */
     UUID getLinkedInvoicePaymentId();
 
+    /**
+     * Payment cookie id: null for payments and chargebacks, refund id for refunds
+     *
+     * @return payment cookie id
+     */
     UUID getPaymentCookieId();
 
     public enum InvoicePaymentType {

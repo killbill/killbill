@@ -91,6 +91,7 @@ public class TestBusinessSnapshot extends AnalyticsTestSuiteNoDB {
                                                                                                                     invoicePayment,
                                                                                                                     invoicePaymentRecordId,
                                                                                                                     payment,
+                                                                                                                    refund,
                                                                                                                     paymentMethod,
                                                                                                                     auditLog,
                                                                                                                     tenantRecordId);

@@ -34,6 +34,7 @@ import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceModelDao
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoicePaymentBaseModelDao;
 import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.PaymentMethod;
+import com.ning.billing.payment.api.Refund;
 import com.ning.billing.util.audit.AuditLog;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillAPI;
@@ -113,7 +114,12 @@ public class BusinessInvoicePaymentDao extends BusinessAnalyticsDaoBase {
             final Long invoicePaymentRecordId = getInvoicePaymentRecordId(invoicePayment.getId(), context);
 
             final Invoice invoice = getInvoice(invoicePayment.getInvoiceId(), context);
-            final Payment payment = getPayment(invoicePayment.getPaymentId(), context);
+            final Payment payment = getPaymentWithPluginInfo(invoicePayment.getPaymentId(), context);
+            Refund refund = null;
+            if (invoicePayment.getPaymentCookieId() != null) {
+                refund = getRefundWithPluginInfo(invoicePayment.getPaymentCookieId(), context);
+            }
+
             final PaymentMethod paymentMethod = getPaymentMethod(payment.getPaymentMethodId(), context);
             final AuditLog creationAuditLog = getInvoicePaymentCreationAuditLog(invoicePayment.getId(), context);
 
@@ -123,6 +129,7 @@ public class BusinessInvoicePaymentDao extends BusinessAnalyticsDaoBase {
                                                                                                                         invoicePayment,
                                                                                                                         invoicePaymentRecordId,
                                                                                                                         payment,
+                                                                                                                        refund,
                                                                                                                         paymentMethod,
                                                                                                                         creationAuditLog,
                                                                                                                         tenantRecordId);

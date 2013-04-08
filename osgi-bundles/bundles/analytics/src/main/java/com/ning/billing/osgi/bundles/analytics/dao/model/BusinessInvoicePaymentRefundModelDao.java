@@ -21,6 +21,7 @@ import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.PaymentMethod;
+import com.ning.billing.payment.api.Refund;
 import com.ning.billing.util.audit.AuditLog;
 
 public class BusinessInvoicePaymentRefundModelDao extends BusinessInvoicePaymentBaseModelDao {
@@ -33,6 +34,7 @@ public class BusinessInvoicePaymentRefundModelDao extends BusinessInvoicePayment
                                                 final InvoicePayment invoicePayment,
                                                 final Long invoicePaymentRecordId,
                                                 final Payment payment,
+                                                final Refund refund,
                                                 final PaymentMethod paymentMethod,
                                                 final AuditLog creationAuditLog,
                                                 final Long tenantRecordId) {
@@ -42,6 +44,7 @@ public class BusinessInvoicePaymentRefundModelDao extends BusinessInvoicePayment
               invoicePayment,
               invoicePaymentRecordId,
               payment,
+              refund,
               paymentMethod,
               creationAuditLog,
               tenantRecordId);

@@ -55,6 +55,7 @@ import com.ning.billing.payment.api.Payment.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentMethod;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.payment.api.PaymentStatus;
+import com.ning.billing.payment.api.Refund;
 import com.ning.billing.util.api.RecordIdApi;
 import com.ning.billing.util.audit.AuditLog;
 import com.ning.billing.util.audit.ChangeType;
@@ -93,6 +94,7 @@ public abstract class AnalyticsTestSuiteNoDB {
     protected PaymentAttempt paymentAttempt;
     protected PaymentMethod paymentMethod;
     protected Payment payment;
+    protected Refund refund;
     protected CustomField customField;
     protected Tag tag;
     protected TagDefinition tagDefinition;
@@ -304,6 +306,14 @@ public abstract class AnalyticsTestSuiteNoDB {
         Mockito.when(payment.getExtFirstPaymentIdRef()).thenReturn(UUID.randomUUID().toString());
         Mockito.when(payment.getExtSecondPaymentIdRef()).thenReturn(UUID.randomUUID().toString());
         Mockito.when(payment.getCreatedDate()).thenReturn(new DateTime(2016, 1, 22, 10, 56, 56, DateTimeZone.UTC));
+
+        refund = Mockito.mock(Refund.class);
+        Mockito.when(refund.getId()).thenReturn(UUID.randomUUID());
+        Mockito.when(refund.getPaymentId()).thenReturn(UUID.randomUUID());
+        Mockito.when(refund.isAdjusted()).thenReturn(true);
+        Mockito.when(refund.getRefundAmount()).thenReturn(BigDecimal.TEN);
+        Mockito.when(refund.getCurrency()).thenReturn(Currency.BRL);
+        Mockito.when(refund.getEffectiveDate()).thenReturn(new DateTime(2015, 2, 2, 10, 56, 5, DateTimeZone.UTC));
 
         customField = Mockito.mock(CustomField.class);
         Mockito.when(customField.getId()).thenReturn(UUID.randomUUID());
