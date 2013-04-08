@@ -57,4 +57,10 @@ public interface RefundInfoPlugin {
      * @return gateway error code, if any
      */
     public String getGatewayErrorCode();
+
+    /**
+     *
+     * @return the reference id
+     */
+    public String getReferenceId();
 }

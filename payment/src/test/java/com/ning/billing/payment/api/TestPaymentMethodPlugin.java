@@ -13,17 +13,18 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.payment.api;
 
 import java.util.List;
 
-public class DefaultPaymentMethodPlugin implements PaymentMethodPlugin {
+public class TestPaymentMethodPlugin extends TestPaymentMethodPluginBase implements PaymentMethodPlugin {
 
     private final String externalPaymentMethodId;
     private final boolean isDefaultPaymentMethod;
     private final List<PaymentMethodKVInfo> properties;
 
-    public DefaultPaymentMethodPlugin(final PaymentMethodPlugin src, final String externalPaymentId) {
+    public TestPaymentMethodPlugin(final PaymentMethodPlugin src, final String externalPaymentId) {
         this.externalPaymentMethodId = externalPaymentId;
         this.isDefaultPaymentMethod = src.isDefaultPaymentMethod();
         this.properties = src.getProperties();

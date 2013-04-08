@@ -22,6 +22,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.payment.plugin.api.PaymentInfoPlugin;
 import com.ning.billing.util.entity.Entity;
 
 public interface Payment extends Entity {
@@ -50,6 +51,8 @@ public interface Payment extends Entity {
 
     public String getExtSecondPaymentIdRef();
 
+    public PaymentInfoPlugin getPaymentInfoPlugin();
+
     public interface PaymentAttempt extends Entity {
 
         public UUID getId();
@@ -62,4 +65,6 @@ public interface Payment extends Entity {
 
         public PaymentStatus getPaymentStatus();
     }
+
+
 }

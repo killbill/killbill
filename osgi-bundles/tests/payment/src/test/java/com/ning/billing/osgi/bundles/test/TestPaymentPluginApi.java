@@ -17,6 +17,7 @@
 package com.ning.billing.osgi.bundles.test;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -71,6 +72,16 @@ public class TestPaymentPluginApi implements PaymentPluginApiWithTestControl {
             public String getGatewayErrorCode() {
                 return null;
             }
+
+            @Override
+            public String getFirstPaymentReferenceId() {
+                return null;
+            }
+
+            @Override
+            public String getSecondPaymentReferenceId() {
+                return null;
+            }
         });
     }
 
@@ -101,6 +112,16 @@ public class TestPaymentPluginApi implements PaymentPluginApiWithTestControl {
             }
             @Override
             public String getGatewayErrorCode() {
+                return null;
+            }
+
+            @Override
+            public String getFirstPaymentReferenceId() {
+                return null;
+            }
+
+            @Override
+            public String getSecondPaymentReferenceId() {
                 return null;
             }
         });
@@ -135,7 +156,17 @@ public class TestPaymentPluginApi implements PaymentPluginApiWithTestControl {
             public String getGatewayErrorCode() {
                 return null;
             }
+
+            @Override
+            public String getReferenceId() {
+                return null;
+            }
         });
+    }
+
+    @Override
+    public List<RefundInfoPlugin> getRefundInfo(final UUID kbAccountId, final UUID kbPaymentId, final CallContext context) {
+        return Collections.<RefundInfoPlugin>emptyList();
     }
 
     @Override

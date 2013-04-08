@@ -24,6 +24,7 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.payment.plugin.api.RefundInfoPlugin;
 import com.ning.billing.util.entity.EntityBase;
 
 public class DefaultRefund extends EntityBase implements Refund {
@@ -68,6 +69,12 @@ public class DefaultRefund extends EntityBase implements Refund {
     @Override
     public DateTime getEffectiveDate() {
         return effectiveDate;
+    }
+
+    @Override
+    public RefundInfoPlugin getPluginDetail() {
+        // TODO not implemented
+        return null;
     }
 
     @Override

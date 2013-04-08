@@ -366,7 +366,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
 
         // Now, refund the second (first non-zero dollar) invoice
-        final Payment payment = paymentApi.getPayment(invoiceUserApi.getInvoicesByAccount(account.getId(), callContext).get(1).getPayments().get(0).getPaymentId(), callContext);
+        final Payment payment = paymentApi.getPayment(invoiceUserApi.getInvoicesByAccount(account.getId(), callContext).get(1).getPayments().get(0).getPaymentId(), false, callContext);
         refundPaymentAndCheckForCompletion(account, payment, NextEvent.INVOICE_ADJUSTMENT);
         // We should now be in OD1
         checkODState("OD1");

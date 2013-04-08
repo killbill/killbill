@@ -62,7 +62,7 @@ public class RefundResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     public Response getRefund(@PathParam("refundId") final String refundId,
                               @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
-        final Refund refund = paymentApi.getRefund(UUID.fromString(refundId), context.createContext(request));
+        final Refund refund = paymentApi.getRefund(UUID.fromString(refundId), false, context.createContext(request));
         // TODO Return adjusted items and audits
         return Response.status(Status.OK).entity(new RefundJson(refund, null, null)).build();
     }

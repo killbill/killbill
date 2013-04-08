@@ -46,6 +46,9 @@ import com.ning.billing.util.events.OverdueChangeInternalEvent;
 import com.ning.billing.util.events.PaymentErrorInternalEvent;
 import com.ning.billing.util.events.PaymentInfoInternalEvent;
 import com.ning.billing.util.events.SubscriptionInternalEvent;
+import com.ning.billing.util.events.UserTagCreationInternalEvent;
+import com.ning.billing.util.events.UserTagDefinitionCreationInternalEvent;
+import com.ning.billing.util.events.UserTagDefinitionDeletionInternalEvent;
 import com.ning.billing.util.svcsapi.bus.InternalBus.EventBusException;
 
 import com.google.common.eventbus.Subscribe;
@@ -153,14 +156,26 @@ public class BeatrixListener {
             break;
 
        case USER_TAG_CREATION:
+           UserTagCreationInternalEvent realUserTagEventCr = (UserTagCreationInternalEvent) event;
+           objectType = ObjectType.TAG;
+           objectId = realUserTagEventCr.getTagId();
+           eventBusType = ExtBusEventType.TAG_CREATION;
+           break;
+
        case CONTROL_TAG_CREATION:
            ControlTagCreationInternalEvent realTagEventCr = (ControlTagCreationInternalEvent) event;
            objectType = ObjectType.TAG;
            objectId = realTagEventCr.getTagId();
            eventBusType = ExtBusEventType.TAG_CREATION;
-            break;
+           break;
 
        case USER_TAG_DELETION:
+           UserTagDefinitionDeletionInternalEvent realUserTagEventDel = (UserTagDefinitionDeletionInternalEvent) event;
+           objectType = ObjectType.TAG;
+           objectId = null; // TODO missing..
+           eventBusType = ExtBusEventType.TAG_DELETION;
+           break;
+
        case CONTROL_TAG_DELETION:
            ControlTagDeletionInternalEvent realTagEventDel = (ControlTagDeletionInternalEvent) event;
            objectType = ObjectType.TAG;

@@ -31,6 +31,7 @@ import com.ning.billing.payment.dao.PaymentAttemptModelDao;
 import com.ning.billing.payment.dao.PaymentModelDao;
 import com.ning.billing.payment.dao.RefundModelDao;
 import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
+import com.ning.billing.payment.plugin.api.PaymentInfoPlugin;
 import com.ning.billing.util.entity.EntityBase;
 
 import com.google.common.base.Function;
@@ -50,11 +51,14 @@ public class DefaultPayment extends EntityBase implements Payment {
     private final String extFirstPaymentIdRef;
     private final String extSecondPaymentIdRef;
     private final List<PaymentAttempt> attempts;
+    private final PaymentInfoPlugin paymentPluginInfo;
 
     private DefaultPayment(final UUID id, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate, final UUID accountId, final UUID invoiceId,
                            final UUID paymentMethodId, final BigDecimal amount, final BigDecimal paidAmount, final Currency currency,
                            final DateTime effectiveDate, final Integer paymentNumber,
-                           final PaymentStatus paymentStatus, final String paymentError, final String extFirstPaymentIdRef,
+                           final PaymentStatus paymentStatus, final String paymentError,
+                           final PaymentInfoPlugin paymentPluginInfo,
+                           final String extFirstPaymentIdRef,
                            final String extSecondPaymentIdRef, final List<PaymentAttempt> attempts) {
         super(id, createdDate, updatedDate);
         this.accountId = accountId;
@@ -69,9 +73,10 @@ public class DefaultPayment extends EntityBase implements Payment {
         this.extFirstPaymentIdRef = extFirstPaymentIdRef;
         this.extSecondPaymentIdRef = extSecondPaymentIdRef;
         this.attempts = attempts;
+        this.paymentPluginInfo = paymentPluginInfo;
     }
 
-    public DefaultPayment(final PaymentModelDao src, final List<PaymentAttemptModelDao> attempts, final List<RefundModelDao> refunds) {
+    public DefaultPayment(final PaymentModelDao src, final PaymentInfoPlugin paymentPluginInfo, final List<PaymentAttemptModelDao> attempts, final List<RefundModelDao> refunds) {
         this(src.getId(),
              src.getCreatedDate(),
              src.getUpdatedDate(),
@@ -85,6 +90,7 @@ public class DefaultPayment extends EntityBase implements Payment {
              src.getPaymentNumber(),
              src.getPaymentStatus(),
              null,
+             paymentPluginInfo,
              src.getExtFirstPaymentRefId(),
              src.getExtSecondPaymentRefId(),
              toPaymentAttempts(attempts));
@@ -143,6 +149,11 @@ public class DefaultPayment extends EntityBase implements Payment {
     @Override
     public String getExtSecondPaymentIdRef() {
         return extSecondPaymentIdRef;
+    }
+
+    @Override
+    public PaymentInfoPlugin getPaymentInfoPlugin() {
+        return paymentPluginInfo;
     }
 
     @Override

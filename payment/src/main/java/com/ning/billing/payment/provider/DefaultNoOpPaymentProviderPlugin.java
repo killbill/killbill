@@ -37,6 +37,7 @@ import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.clock.Clock;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.inject.Inject;
@@ -177,5 +178,10 @@ public class DefaultNoOpPaymentProviderPlugin implements NoOpPaymentPluginApi {
         refunds.put(kbPaymentId.toString(), refundInfoPlugin);
 
         return refundInfoPlugin;
+    }
+
+    @Override
+    public List<RefundInfoPlugin> getRefundInfo(final UUID kbAccountId, final UUID kbPaymentId, final CallContext context) {
+        return ImmutableList.<RefundInfoPlugin>copyOf(refunds.get(kbPaymentId.toString()));
     }
 }
