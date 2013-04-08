@@ -39,6 +39,7 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.ning.billing</groupId>
@@ -48,6 +49,10 @@
         <dependency>
             <groupId>com.ning.billing</groupId>
             <artifactId>killbill-osgi-bundles-lib-killbill</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-osgi-bundles-lib-slf4j-osgi</artifactId>
         </dependency>
         <dependency>
             <groupId>com.ning.billing.commons</groupId>
@@ -145,7 +150,7 @@
                         <Export-Package/>
                         <Private-Package>com.ning.billing.osgi.bundles.analytics.*</Private-Package>
                         <!-- Optional resolution because exported by the Felix system bundle -->
-                        <Import-Package>*;resolution:=optional</Import-Package>
+                        <Import-Package>*;com.ning.billing.osgi.api;resolution:=optional</Import-Package>
                     </instructions>
                 </configuration>
                 <executions>
