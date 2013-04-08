@@ -16,19 +16,19 @@
 
 package com.ning.billing.catalog;
 
-import com.google.inject.Inject;
-import com.google.inject.Provider;
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.StaticCatalog;
 import com.ning.billing.catalog.io.VersionedCatalogLoader;
-import com.ning.billing.util.config.CatalogConfig;
 import com.ning.billing.lifecycle.KillbillService;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
+import com.ning.billing.util.config.CatalogConfig;
+
+import com.google.inject.Inject;
+import com.google.inject.Provider;
 
 public class DefaultCatalogService implements KillbillService, Provider<Catalog>, CatalogService {
-    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(DefaultCatalogService.class);
 
     private static final String CATALOG_SERVICE_NAME = "catalog-service";
 
@@ -38,7 +38,6 @@ public class DefaultCatalogService implements KillbillService, Provider<Catalog>
     private boolean isInitialized;
 
     private final VersionedCatalogLoader loader;
-
 
     @Inject
     public DefaultCatalogService(final CatalogConfig config, final VersionedCatalogLoader loader) {
@@ -61,23 +60,16 @@ public class DefaultCatalogService implements KillbillService, Provider<Catalog>
         }
     }
 
-
     @Override
     public String getName() {
         return CATALOG_SERVICE_NAME;
     }
 
-
-    /* (non-Javadoc)
-    * @see com.ning.billing.catalog.ICatlogService#getCatalog()
-    */
     @Override
     public Catalog getFullCatalog() {
         return catalog;
     }
 
-
-    // Should be able to use bind(ICatalog.class).toProvider(CatalogService.class);
     @Override
     public Catalog get() {
         return catalog;
@@ -87,5 +79,4 @@ public class DefaultCatalogService implements KillbillService, Provider<Catalog>
     public StaticCatalog getCurrentCatalog() {
         return catalog;
     }
-
 }
