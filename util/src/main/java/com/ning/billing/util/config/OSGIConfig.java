@@ -62,7 +62,14 @@ public interface OSGIConfig extends KillbillConfig {
              "com.ning.billing.tenant.api," +
              "com.ning.billing.usage.api," +
              "com.ning.billing.util.api," +
+             "com.ning.billing.util.audit," +
              "com.ning.billing.util.callcontext," +
+             "com.ning.billing.util.customfield," +
+             "com.ning.billing.util.email," +
+             "com.ning.billing.util.entity," +
+             "com.ning.billing.util.tag," +
+             "com.ning.billing.util.template," +
+             "com.ning.billing.util.template.translation," +
              // javax.servlet and javax.servlet.http are not exported by default - we
              // need the bundles to see them for them to be able to register their servlets.
              // Note: bundles should mark javax.servlet:servlet-api as provided
