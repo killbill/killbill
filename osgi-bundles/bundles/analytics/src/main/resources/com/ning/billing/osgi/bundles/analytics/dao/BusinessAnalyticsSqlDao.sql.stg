@@ -924,8 +924,8 @@ where <CHECK_TENANT_AND_ACCOUNT("t.")>
 >>
 
 deleteByAccountRecordId(tableName) ::= <<
-delete from <tableName> t
-where <CHECK_TENANT_AND_ACCOUNT("t.")>
+delete from <tableName>
+where <CHECK_TENANT_AND_ACCOUNT("")>
 ;
 >>
 

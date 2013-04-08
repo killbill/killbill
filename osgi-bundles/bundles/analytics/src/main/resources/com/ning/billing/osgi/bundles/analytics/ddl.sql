@@ -76,7 +76,7 @@ create table bac (
 , notified_for_invoices boolean not null
 , balance numeric(10, 4) default 0
 , last_invoice_date date default null
-, last_payment_date datetime not null
+, last_payment_date datetime default null
 , last_payment_status varchar(255) default null
 , created_date datetime not null
 , created_by varchar(50) not null
