@@ -57,8 +57,8 @@ public class TestBusinessSubscriptionTransition extends AnalyticsTestSuiteNoDB {
         Assert.assertEquals(businessSubscriptionTransition.getBundleExternalKey(), subscriptionTransitionModelDao.getBundleExternalKey());
         Assert.assertEquals(businessSubscriptionTransition.getSubscriptionId(), subscriptionTransitionModelDao.getSubscriptionId());
         Assert.assertEquals(businessSubscriptionTransition.getRequestedTimestamp(), subscriptionTransitionModelDao.getRequestedTimestamp());
-        Assert.assertEquals(businessSubscriptionTransition.getEventType(), subscriptionTransitionModelDao.getEvent().getEventType().toString());
-        Assert.assertEquals(businessSubscriptionTransition.getCategory(), subscriptionTransitionModelDao.getEvent().getCategory().toString());
+        Assert.assertEquals(businessSubscriptionTransition.getEventType(), subscriptionTransitionModelDao.getEventType());
+        Assert.assertEquals(businessSubscriptionTransition.getCategory(), subscriptionTransitionModelDao.getCategory());
 
         Assert.assertNull(businessSubscriptionTransition.getPrevProductName());
         Assert.assertNull(businessSubscriptionTransition.getPrevProductType());
@@ -74,19 +74,19 @@ public class TestBusinessSubscriptionTransition extends AnalyticsTestSuiteNoDB {
         Assert.assertNull(businessSubscriptionTransition.getPrevStartDate());
         Assert.assertNull(businessSubscriptionTransition.getPrevState());
 
-        Assert.assertEquals(businessSubscriptionTransition.getNextProductName(), subscriptionTransitionModelDao.getNextSubscription().getProductName());
-        Assert.assertEquals(businessSubscriptionTransition.getNextProductType(), subscriptionTransitionModelDao.getNextSubscription().getProductType());
-        Assert.assertEquals(businessSubscriptionTransition.getNextProductCategory(), subscriptionTransitionModelDao.getNextSubscription().getProductCategory());
-        Assert.assertEquals(businessSubscriptionTransition.getNextSlug(), subscriptionTransitionModelDao.getNextSubscription().getSlug());
-        Assert.assertEquals(businessSubscriptionTransition.getNextPhase(), subscriptionTransitionModelDao.getNextSubscription().getPhase());
-        Assert.assertEquals(businessSubscriptionTransition.getNextBillingPeriod(), subscriptionTransitionModelDao.getNextSubscription().getBillingPeriod());
-        Assert.assertEquals(businessSubscriptionTransition.getNextPrice(), subscriptionTransitionModelDao.getNextSubscription().getPrice());
-        Assert.assertEquals(businessSubscriptionTransition.getNextPriceList(), subscriptionTransitionModelDao.getNextSubscription().getPriceList());
-        Assert.assertEquals(businessSubscriptionTransition.getNextMrr(), subscriptionTransitionModelDao.getNextSubscription().getMrr());
-        Assert.assertEquals(businessSubscriptionTransition.getNextCurrency(), subscriptionTransitionModelDao.getNextSubscription().getCurrency());
-        Assert.assertEquals(businessSubscriptionTransition.getNextBusinessActive(), subscriptionTransitionModelDao.getNextSubscription().getBusinessActive());
-        Assert.assertEquals(businessSubscriptionTransition.getNextStartDate(), subscriptionTransitionModelDao.getNextSubscription().getStartDate());
-        Assert.assertEquals(businessSubscriptionTransition.getNextEndDate(), subscriptionTransitionModelDao.getNextSubscription().getEndDate());
-        Assert.assertEquals(businessSubscriptionTransition.getNextState(), subscriptionTransitionModelDao.getNextSubscription().getState());
+        Assert.assertEquals(businessSubscriptionTransition.getNextProductName(), subscriptionTransitionModelDao.getNextProductName());
+        Assert.assertEquals(businessSubscriptionTransition.getNextProductType(), subscriptionTransitionModelDao.getNextProductType());
+        Assert.assertEquals(businessSubscriptionTransition.getNextProductCategory(), subscriptionTransitionModelDao.getNextProductCategory());
+        Assert.assertEquals(businessSubscriptionTransition.getNextSlug(), subscriptionTransitionModelDao.getNextSlug());
+        Assert.assertEquals(businessSubscriptionTransition.getNextPhase(), subscriptionTransitionModelDao.getNextPhase());
+        Assert.assertEquals(businessSubscriptionTransition.getNextBillingPeriod(), subscriptionTransitionModelDao.getNextBillingPeriod());
+        Assert.assertEquals(businessSubscriptionTransition.getNextPrice(), subscriptionTransitionModelDao.getNextPrice());
+        Assert.assertEquals(businessSubscriptionTransition.getNextPriceList(), subscriptionTransitionModelDao.getNextPriceList());
+        Assert.assertEquals(businessSubscriptionTransition.getNextMrr(), subscriptionTransitionModelDao.getNextMrr());
+        Assert.assertEquals(businessSubscriptionTransition.getNextCurrency(), subscriptionTransitionModelDao.getNextCurrency());
+        Assert.assertEquals(businessSubscriptionTransition.getNextBusinessActive(), subscriptionTransitionModelDao.getNextBusinessActive());
+        Assert.assertEquals(businessSubscriptionTransition.getNextStartDate(), subscriptionTransitionModelDao.getNextStartDate());
+        Assert.assertEquals(businessSubscriptionTransition.getNextEndDate(), subscriptionTransitionModelDao.getNextEndDate());
+        Assert.assertEquals(businessSubscriptionTransition.getNextState(), subscriptionTransitionModelDao.getNextState());
     }
 }

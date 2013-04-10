@@ -85,14 +85,20 @@ public class BusinessSubscriptionTransitionDao extends BusinessAnalyticsDaoBase 
             for (final Subscription subscription : subscriptions) {
                 final List<SubscriptionTransition> transitions = subscription.getAllTransitions();
 
-                BusinessSubscriptionTransitionModelDao prevBst = null;
+                BusinessSubscription prevNextSubscription = null;
 
                 // Ordered for us by entitlement
                 for (final SubscriptionTransition transition : transitions) {
-                    final BusinessSubscriptionTransitionModelDao bst = createBusinessSubscriptionTransition(account, bundle, transition, prevBst, context);
+                    final BusinessSubscription nextSubscription = getBusinessSubscriptionFromTransition(account, transition);
+                    final BusinessSubscriptionTransitionModelDao bst = createBusinessSubscriptionTransition(account,
+                                                                                                            bundle,
+                                                                                                            transition,
+                                                                                                            prevNextSubscription,
+                                                                                                            nextSubscription,
+                                                                                                            context);
                     if (bst != null) {
                         bsts.add(bst);
-                        prevBst = bst;
+                        prevNextSubscription = nextSubscription;
                     }
                 }
             }
@@ -104,19 +110,13 @@ public class BusinessSubscriptionTransitionDao extends BusinessAnalyticsDaoBase 
     private BusinessSubscriptionTransitionModelDao createBusinessSubscriptionTransition(final Account account,
                                                                                         final SubscriptionBundle subscriptionBundle,
                                                                                         final SubscriptionTransition subscriptionTransition,
-                                                                                        @Nullable final BusinessSubscriptionTransitionModelDao prevBst,
+                                                                                        @Nullable final BusinessSubscription prevNextSubscription,
+                                                                                        final BusinessSubscription nextSubscription,
                                                                                         final CallContext context) throws AnalyticsRefreshException {
         final BusinessSubscriptionEvent businessEvent = BusinessSubscriptionEvent.fromTransition(subscriptionTransition);
         if (businessEvent == null) {
             return null;
         }
-
-        final BusinessSubscription nextSubscription = new BusinessSubscription(subscriptionTransition.getNextPlan(),
-                                                                               subscriptionTransition.getNextPhase(),
-                                                                               subscriptionTransition.getNextPriceList(),
-                                                                               account.getCurrency(),
-                                                                               subscriptionTransition.getEffectiveTransitionTime(),
-                                                                               subscriptionTransition.getNextState());
 
         final Long subscriptionEventRecordId = getSubscriptionEventRecordId(subscriptionTransition.getNextEventId(), context);
         final AuditLog creationAuditLog = getSubscriptionEventCreationAuditLog(subscriptionTransition.getNextEventId(), context);
@@ -131,9 +131,18 @@ public class BusinessSubscriptionTransitionDao extends BusinessAnalyticsDaoBase 
                                                           subscriptionEventRecordId,
                                                           subscriptionTransition.getRequestedTransitionTime(),
                                                           businessEvent,
-                                                          prevBst == null ? null : prevBst.getNextSubscription(),
+                                                          prevNextSubscription,
                                                           nextSubscription,
                                                           creationAuditLog,
                                                           tenantRecordId);
+    }
+
+    private BusinessSubscription getBusinessSubscriptionFromTransition(final Account account, final SubscriptionTransition subscriptionTransition) {
+        return new BusinessSubscription(subscriptionTransition.getNextPlan(),
+                                        subscriptionTransition.getNextPhase(),
+                                        subscriptionTransition.getNextPriceList(),
+                                        account.getCurrency(),
+                                        subscriptionTransition.getEffectiveTransitionTime(),
+                                        subscriptionTransition.getNextState());
     }
 }

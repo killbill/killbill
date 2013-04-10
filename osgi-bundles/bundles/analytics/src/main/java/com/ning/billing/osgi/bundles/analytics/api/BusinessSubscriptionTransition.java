@@ -76,74 +76,37 @@ public class BusinessSubscriptionTransition extends BusinessEntityBase {
         this.subscriptionId = bstModelDao.getSubscriptionId();
 
         this.requestedTimestamp = bstModelDao.getRequestedTimestamp();
-        this.eventType = bstModelDao.getEvent().getEventType().toString();
-        if (bstModelDao.getEvent().getCategory() != null) {
-            this.category = bstModelDao.getEvent().getCategory().toString();
-        } else {
-            this.category = null;
-        }
+        this.eventType = bstModelDao.getEventType();
+        this.category = bstModelDao.getCategory();
 
-        if (bstModelDao.getPreviousSubscription() != null) {
-            this.prevProductName = bstModelDao.getPreviousSubscription().getProductName();
-            this.prevProductType = bstModelDao.getPreviousSubscription().getProductType();
-            this.prevProductCategory = bstModelDao.getPreviousSubscription().getProductCategory();
-            this.prevSlug = bstModelDao.getPreviousSubscription().getSlug();
-            this.prevPhase = bstModelDao.getPreviousSubscription().getPhase();
-            this.prevBillingPeriod = bstModelDao.getPreviousSubscription().getBillingPeriod();
-            this.prevPrice = bstModelDao.getPreviousSubscription().getPrice();
-            this.prevPriceList = bstModelDao.getPreviousSubscription().getPriceList();
-            this.prevMrr = bstModelDao.getPreviousSubscription().getMrr();
-            this.prevCurrency = bstModelDao.getPreviousSubscription().getCurrency();
-            this.prevBusinessActive = bstModelDao.getPreviousSubscription().getBusinessActive();
-            this.prevStartDate = bstModelDao.getPreviousSubscription().getStartDate();
-            this.prevState = bstModelDao.getPreviousSubscription().getState();
-        } else {
-            this.prevProductName = null;
-            this.prevProductType = null;
-            this.prevProductCategory = null;
-            this.prevSlug = null;
-            this.prevPhase = null;
-            this.prevBillingPeriod = null;
-            this.prevPrice = null;
-            this.prevPriceList = null;
-            this.prevMrr = null;
-            this.prevCurrency = null;
-            this.prevBusinessActive = null;
-            this.prevStartDate = null;
-            this.prevState = null;
-        }
+        this.prevProductName = bstModelDao.getPrevProductName();
+        this.prevProductType = bstModelDao.getPrevProductType();
+        this.prevProductCategory = bstModelDao.getPrevProductCategory();
+        this.prevSlug = bstModelDao.getPrevSlug();
+        this.prevPhase = bstModelDao.getPrevPhase();
+        this.prevBillingPeriod = bstModelDao.getPrevBillingPeriod();
+        this.prevPrice = bstModelDao.getPrevPrice();
+        this.prevPriceList = bstModelDao.getPrevPriceList();
+        this.prevMrr = bstModelDao.getPrevMrr();
+        this.prevCurrency = bstModelDao.getPrevCurrency();
+        this.prevBusinessActive = bstModelDao.getPrevBusinessActive();
+        this.prevStartDate = bstModelDao.getPrevStartDate();
+        this.prevState = bstModelDao.getPrevState();
 
-        if (bstModelDao.getNextSubscription() != null) {
-            this.nextProductName = bstModelDao.getNextSubscription().getProductName();
-            this.nextProductType = bstModelDao.getNextSubscription().getProductType();
-            this.nextProductCategory = bstModelDao.getNextSubscription().getProductCategory();
-            this.nextSlug = bstModelDao.getNextSubscription().getSlug();
-            this.nextPhase = bstModelDao.getNextSubscription().getPhase();
-            this.nextBillingPeriod = bstModelDao.getNextSubscription().getBillingPeriod();
-            this.nextPrice = bstModelDao.getNextSubscription().getPrice();
-            this.nextPriceList = bstModelDao.getNextSubscription().getPriceList();
-            this.nextMrr = bstModelDao.getNextSubscription().getMrr();
-            this.nextCurrency = bstModelDao.getNextSubscription().getCurrency();
-            this.nextBusinessActive = bstModelDao.getNextSubscription().getBusinessActive();
-            this.nextStartDate = bstModelDao.getNextSubscription().getStartDate();
-            this.nextEndDate = bstModelDao.getNextSubscription().getEndDate();
-            this.nextState = bstModelDao.getNextSubscription().getState();
-        } else {
-            this.nextProductName = null;
-            this.nextProductType = null;
-            this.nextProductCategory = null;
-            this.nextSlug = null;
-            this.nextPhase = null;
-            this.nextBillingPeriod = null;
-            this.nextPrice = null;
-            this.nextPriceList = null;
-            this.nextMrr = null;
-            this.nextCurrency = null;
-            this.nextBusinessActive = null;
-            this.nextStartDate = null;
-            this.nextEndDate = null;
-            this.nextState = null;
-        }
+        this.nextProductName = bstModelDao.getNextProductName();
+        this.nextProductType = bstModelDao.getNextProductType();
+        this.nextProductCategory = bstModelDao.getNextProductCategory();
+        this.nextSlug = bstModelDao.getNextSlug();
+        this.nextPhase = bstModelDao.getNextPhase();
+        this.nextBillingPeriod = bstModelDao.getNextBillingPeriod();
+        this.nextPrice = bstModelDao.getNextPrice();
+        this.nextPriceList = bstModelDao.getNextPriceList();
+        this.nextMrr = bstModelDao.getNextMrr();
+        this.nextCurrency = bstModelDao.getNextCurrency();
+        this.nextBusinessActive = bstModelDao.getNextBusinessActive();
+        this.nextStartDate = bstModelDao.getNextStartDate();
+        this.nextEndDate = bstModelDao.getNextEndDate();
+        this.nextState = bstModelDao.getNextState();
     }
 
     public UUID getBundleId() {
