@@ -251,7 +251,7 @@ public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDa
              invoice.getOriginalChargedAmount(),
              invoice.getCreditAdjAmount(),
              invoicePayment.getType().toString(),
-             null /* TODO */,
+             payment.getPaymentNumber() == null ? null : payment.getPaymentNumber().longValue(),
              invoicePayment.getLinkedInvoicePaymentId(),
              invoicePayment.getAmount(),
              invoicePayment.getCurrency() == null ? null : invoicePayment.getCurrency().toString(),
