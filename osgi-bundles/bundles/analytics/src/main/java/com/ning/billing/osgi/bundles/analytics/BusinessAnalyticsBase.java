@@ -283,10 +283,7 @@ public abstract class BusinessAnalyticsBase {
 
     protected Catalog getCatalog(final TenantContext context) throws AnalyticsRefreshException {
         final CatalogUserApi catalogUserApi = getCatalogUserApi();
-
-        // TODO FIXME
-        final String catalogName = "Please, please, fix me!!!";
-        return catalogUserApi.getCatalog(catalogName, context);
+        return catalogUserApi.getCatalog(null, context);
     }
 
     //
