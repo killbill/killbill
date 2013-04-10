@@ -21,9 +21,9 @@ import javax.sql.DataSource;
 import org.skife.jdbi.v2.Binding;
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.StatementContext;
-import org.skife.jdbi.v2.sqlobject.stringtemplate.StringTemplate3StatementLocator;
 import org.skife.jdbi.v2.tweak.Argument;
 
+import com.ning.billing.commons.jdbi.ReusableStringTemplate3StatementLocator;
 import com.ning.billing.commons.jdbi.mapper.LowerToCamelBeanMapperFactory;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessAccountFieldModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessAccountModelDao;
@@ -73,7 +73,7 @@ public class BusinessDBIProvider {
         return dbi;
     }
 
-    private static final class AnalyticsStatementLocator extends StringTemplate3StatementLocator {
+    private static final class AnalyticsStatementLocator extends ReusableStringTemplate3StatementLocator {
 
         public AnalyticsStatementLocator() {
             super(BusinessAnalyticsSqlDao.class, true, true);
