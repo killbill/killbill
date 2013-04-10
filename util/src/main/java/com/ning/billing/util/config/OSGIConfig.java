@@ -48,6 +48,7 @@ public interface OSGIConfig extends KillbillConfig {
              "com.ning.billing.analytics.api.user," +
              "com.ning.billing.beatrix.bus.api," +
              "com.ning.billing.catalog.api," +
+             "com.ning.billing.entitlement.api," +
              "com.ning.billing.entitlement.api.migration," +
              "com.ning.billing.entitlement.api.timeline," +
              "com.ning.billing.entitlement.api.transfer," +
