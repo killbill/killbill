@@ -29,7 +29,7 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
-import com.ning.billing.commons.embeddeddb.h2.H2EmbeddedDB;
+import com.ning.billing.commons.embeddeddb.mysql.MySQLEmbeddedDB;
 import com.ning.billing.osgi.bundles.analytics.dao.BusinessAnalyticsSqlDao;
 import com.ning.billing.osgi.bundles.analytics.dao.BusinessDBIProvider;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillDataSource;
@@ -41,13 +41,13 @@ import com.google.common.io.Resources;
 
 public abstract class AnalyticsTestSuiteWithEmbeddedDB extends AnalyticsTestSuiteNoDB {
 
-    protected H2EmbeddedDB embeddedDB;
+    protected MySQLEmbeddedDB embeddedDB;
     protected DBI dbi;
     protected BusinessAnalyticsSqlDao analyticsSqlDao;
 
     @BeforeClass(groups = "slow")
     public void setUpClass() throws Exception {
-        embeddedDB = new H2EmbeddedDB();
+        embeddedDB = new MySQLEmbeddedDB();
         embeddedDB.initialize();
         embeddedDB.start();
     }
