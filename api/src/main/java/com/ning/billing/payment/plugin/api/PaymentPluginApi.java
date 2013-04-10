@@ -77,7 +77,7 @@ public interface PaymentPluginApi {
      * @return information about the refunds in the gateway
      * @throws PaymentPluginApiException
      */
-    public List<RefundInfoPlugin> getRefundInfo(UUID kbAccountId, UUID kbPaymentId, CallContext context)
+    public List<RefundInfoPlugin> getRefundInfo(UUID kbAccountId, UUID kbPaymentId, TenantContext context)
             throws PaymentPluginApiException;
 
 

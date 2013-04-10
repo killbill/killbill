@@ -17,6 +17,7 @@
 package com.ning.billing.payment.dao;
 
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.List;
 
 import org.skife.jdbi.v2.sqlobject.Bind;
@@ -39,6 +40,7 @@ public interface PaymentSqlDao extends EntitySqlDao<PaymentModelDao, Payment> {
     @Audited(ChangeType.UPDATE)
     void updatePaymentStatus(@Bind("id") final String paymentId,
                              @Bind("paymentStatus") final String paymentStatus,
+                             @Bind("effectiveDate") final Date effectiveDate,
                              @BindBean final InternalCallContext context);
 
     @SqlUpdate

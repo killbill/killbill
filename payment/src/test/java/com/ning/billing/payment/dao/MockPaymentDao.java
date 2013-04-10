@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
+
 import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
 import com.ning.billing.util.callcontext.InternalCallContext;
@@ -56,9 +58,9 @@ public class MockPaymentDao implements PaymentDao {
     }
 
     @Override
-    public void updateStatusForPaymentWithAttempt(final UUID paymentId, final PaymentStatus paymentStatus, final String gatewayErrorCode,
-                                                  final String gatewayErrorMsg,
-                                                  final UUID attemptId, final InternalCallContext context) {
+    public void updateStatusAndEffectiveDateForPaymentWithAttempt(final UUID paymentId, final PaymentStatus paymentStatus, final DateTime effectibeDate,  final UUID attemptId, final String gatewayErrorCode,
+                                                                  final String gatewayErrorMsg,
+                                                                  final InternalCallContext context) {
         synchronized (this) {
             final PaymentModelDao entry = payments.remove(paymentId);
             if (entry != null) {
