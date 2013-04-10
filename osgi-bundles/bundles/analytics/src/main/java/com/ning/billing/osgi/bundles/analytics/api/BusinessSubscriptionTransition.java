@@ -30,8 +30,7 @@ public class BusinessSubscriptionTransition extends BusinessEntityBase {
     private final UUID subscriptionId;
 
     private final DateTime requestedTimestamp;
-    private final String eventType;
-    private final String category;
+    private final String event;
 
     private final String prevProductName;
     private final String prevProductType;
@@ -76,8 +75,7 @@ public class BusinessSubscriptionTransition extends BusinessEntityBase {
         this.subscriptionId = bstModelDao.getSubscriptionId();
 
         this.requestedTimestamp = bstModelDao.getRequestedTimestamp();
-        this.eventType = bstModelDao.getEventType();
-        this.category = bstModelDao.getCategory();
+        this.event = bstModelDao.getEvent();
 
         this.prevProductName = bstModelDao.getPrevProductName();
         this.prevProductType = bstModelDao.getPrevProductType();
@@ -125,12 +123,8 @@ public class BusinessSubscriptionTransition extends BusinessEntityBase {
         return requestedTimestamp;
     }
 
-    public String getEventType() {
-        return eventType;
-    }
-
-    public String getCategory() {
-        return category;
+    public String getEvent() {
+        return event;
     }
 
     public String getPrevProductName() {
@@ -249,8 +243,7 @@ public class BusinessSubscriptionTransition extends BusinessEntityBase {
         sb.append(", bundleExternalKey='").append(bundleExternalKey).append('\'');
         sb.append(", subscriptionId=").append(subscriptionId);
         sb.append(", requestedTimestamp=").append(requestedTimestamp);
-        sb.append(", eventType='").append(eventType).append('\'');
-        sb.append(", category='").append(category).append('\'');
+        sb.append(", event='").append(event).append('\'');
         sb.append(", prevProductName='").append(prevProductName).append('\'');
         sb.append(", prevProductType='").append(prevProductType).append('\'');
         sb.append(", prevProductCategory='").append(prevProductCategory).append('\'');
@@ -302,10 +295,7 @@ public class BusinessSubscriptionTransition extends BusinessEntityBase {
         if (bundleId != null ? !bundleId.equals(that.bundleId) : that.bundleId != null) {
             return false;
         }
-        if (category != null ? !category.equals(that.category) : that.category != null) {
-            return false;
-        }
-        if (eventType != null ? !eventType.equals(that.eventType) : that.eventType != null) {
+        if (event != null ? !event.equals(that.event) : that.event != null) {
             return false;
         }
         if (nextBillingPeriod != null ? !nextBillingPeriod.equals(that.nextBillingPeriod) : that.nextBillingPeriod != null) {
@@ -406,8 +396,7 @@ public class BusinessSubscriptionTransition extends BusinessEntityBase {
         result = 31 * result + (bundleExternalKey != null ? bundleExternalKey.hashCode() : 0);
         result = 31 * result + (subscriptionId != null ? subscriptionId.hashCode() : 0);
         result = 31 * result + (requestedTimestamp != null ? requestedTimestamp.hashCode() : 0);
-        result = 31 * result + (eventType != null ? eventType.hashCode() : 0);
-        result = 31 * result + (category != null ? category.hashCode() : 0);
+        result = 31 * result + (event != null ? event.hashCode() : 0);
         result = 31 * result + (prevProductName != null ? prevProductName.hashCode() : 0);
         result = 31 * result + (prevProductType != null ? prevProductType.hashCode() : 0);
         result = 31 * result + (prevProductCategory != null ? prevProductCategory.hashCode() : 0);

@@ -57,8 +57,7 @@ public class TestBusinessSubscriptionTransition extends AnalyticsTestSuiteNoDB {
         Assert.assertEquals(businessSubscriptionTransition.getBundleExternalKey(), subscriptionTransitionModelDao.getBundleExternalKey());
         Assert.assertEquals(businessSubscriptionTransition.getSubscriptionId(), subscriptionTransitionModelDao.getSubscriptionId());
         Assert.assertEquals(businessSubscriptionTransition.getRequestedTimestamp(), subscriptionTransitionModelDao.getRequestedTimestamp());
-        Assert.assertEquals(businessSubscriptionTransition.getEventType(), subscriptionTransitionModelDao.getEventType());
-        Assert.assertEquals(businessSubscriptionTransition.getCategory(), subscriptionTransitionModelDao.getCategory());
+        Assert.assertEquals(businessSubscriptionTransition.getEvent(), subscriptionTransitionModelDao.getEvent());
 
         Assert.assertNull(businessSubscriptionTransition.getPrevProductName());
         Assert.assertNull(businessSubscriptionTransition.getPrevProductType());
