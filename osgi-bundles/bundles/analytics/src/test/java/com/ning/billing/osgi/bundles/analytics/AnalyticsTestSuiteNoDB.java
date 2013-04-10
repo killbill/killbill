@@ -75,6 +75,7 @@ public abstract class AnalyticsTestSuiteNoDB {
     protected final Long subscriptionEventRecordId = 2L;
     protected final Long invoiceRecordId = 3L;
     protected final Long invoiceItemRecordId = 4L;
+    protected final Long secondInvoiceItemRecordId = 24L;
     protected final Long invoicePaymentRecordId = 5L;
     protected final Long blockingStateRecordId = 6L;
     protected final Long fieldRecordId = 7L;

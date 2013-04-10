@@ -132,6 +132,7 @@ drop table if exists bia;
 create table bia (
   record_id int(11) unsigned not null auto_increment
 , invoice_item_record_id int(11) unsigned default null
+, second_invoice_item_record_id int(11) unsigned default null
 , item_id char(36) not null
 , invoice_id char(36) not null
 , invoice_number bigint default null
@@ -180,6 +181,7 @@ drop table if exists bii;
 create table bii (
   record_id int(11) unsigned not null auto_increment
 , invoice_item_record_id int(11) unsigned default null
+, second_invoice_item_record_id int(11) unsigned default null
 , item_id char(36) not null
 , invoice_id char(36) not null
 , invoice_number bigint default null
@@ -228,6 +230,7 @@ drop table if exists biia;
 create table biia (
   record_id int(11) unsigned not null auto_increment
 , invoice_item_record_id int(11) unsigned default null
+, second_invoice_item_record_id int(11) unsigned default null
 , item_id char(36) not null
 , invoice_id char(36) not null
 , invoice_number bigint default null
@@ -276,6 +279,7 @@ drop table if exists biic;
 create table biic (
   record_id int(11) unsigned not null auto_increment
 , invoice_item_record_id int(11) unsigned default null
+, second_invoice_item_record_id int(11) unsigned default null
 , item_id char(36) not null
 , invoice_id char(36) not null
 , invoice_number bigint default null

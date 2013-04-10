@@ -30,6 +30,7 @@ public class TestBusinessInvoiceItemModelDao extends AnalyticsTestSuiteNoDB {
                                                                                                 invoice,
                                                                                                 invoiceItem,
                                                                                                 invoiceItemRecordId,
+                                                                                                secondInvoiceItemRecordId,
                                                                                                 null,
                                                                                                 null,
                                                                                                 null,
@@ -52,6 +53,7 @@ public class TestBusinessInvoiceItemModelDao extends AnalyticsTestSuiteNoDB {
                                                                                                 invoice,
                                                                                                 invoiceItem,
                                                                                                 invoiceItemRecordId,
+                                                                                                secondInvoiceItemRecordId,
                                                                                                 bundle,
                                                                                                 plan,
                                                                                                 phase,
@@ -71,6 +73,7 @@ public class TestBusinessInvoiceItemModelDao extends AnalyticsTestSuiteNoDB {
         verifyBusinessModelDaoBase(invoiceItemModelDao, accountRecordId, tenantRecordId);
         Assert.assertEquals(invoiceItemModelDao.getCreatedDate(), invoiceItem.getCreatedDate());
         Assert.assertEquals(invoiceItemModelDao.getInvoiceItemRecordId(), invoiceItemRecordId);
+        Assert.assertEquals(invoiceItemModelDao.getSecondInvoiceItemRecordId(), secondInvoiceItemRecordId);
         Assert.assertEquals(invoiceItemModelDao.getItemId(), invoiceItem.getId());
         Assert.assertEquals(invoiceItemModelDao.getInvoiceId(), invoice.getId());
         Assert.assertEquals(invoiceItemModelDao.getInvoiceNumber(), invoice.getInvoiceNumber());

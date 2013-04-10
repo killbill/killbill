@@ -43,6 +43,7 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
     public static final String[] ALL_INVOICE_ITEMS_TABLE_NAMES = new String[]{INVOICE_ADJUSTMENTS_TABLE_NAME, INVOICE_ITEMS_TABLE_NAME, INVOICE_ITEM_ADJUSTMENTS_TABLE_NAME, ACCOUNT_CREDITS_TABLE_NAME};
 
     private Long invoiceItemRecordId;
+    private Long secondInvoiceItemRecordId;
     private UUID itemId;
     private UUID invoiceId;
     private Integer invoiceNumber;
@@ -75,6 +76,7 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
                                                          final Invoice invoice,
                                                          final InvoiceItem invoiceItem,
                                                          final Long invoiceItemRecordId,
+                                                         final Long secondInvoiceItemRecordId,
                                                          @Nullable final SubscriptionBundle bundle,
                                                          @Nullable final Plan plan,
                                                          @Nullable final PlanPhase planPhase,
@@ -86,6 +88,7 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
                                                          invoice,
                                                          invoiceItem,
                                                          invoiceItemRecordId,
+                                                         secondInvoiceItemRecordId,
                                                          bundle,
                                                          plan,
                                                          planPhase,
@@ -99,6 +102,7 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
                                                    invoice,
                                                    invoiceItem,
                                                    invoiceItemRecordId,
+                                                   secondInvoiceItemRecordId,
                                                    bundle,
                                                    plan,
                                                    planPhase,
@@ -110,6 +114,7 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
                                                              invoice,
                                                              invoiceItem,
                                                              invoiceItemRecordId,
+                                                             secondInvoiceItemRecordId,
                                                              bundle,
                                                              plan,
                                                              planPhase,
@@ -122,6 +127,7 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
                                                          invoice,
                                                          invoiceItem,
                                                          invoiceItemRecordId,
+                                                         secondInvoiceItemRecordId,
                                                          bundle,
                                                          plan,
                                                          planPhase,
@@ -136,6 +142,7 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
     public BusinessInvoiceItemBaseModelDao() { /* When reading from the database */ }
 
     public BusinessInvoiceItemBaseModelDao(final Long invoiceItemRecordId,
+                                           final Long secondInvoiceItemRecordId,
                                            final UUID itemId,
                                            final UUID invoiceId,
                                            final Integer invoiceNumber,
@@ -181,6 +188,7 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
               accountRecordId,
               tenantRecordId);
         this.invoiceItemRecordId = invoiceItemRecordId;
+        this.secondInvoiceItemRecordId = secondInvoiceItemRecordId;
         this.itemId = itemId;
         this.invoiceId = invoiceId;
         this.invoiceNumber = invoiceNumber;
@@ -214,12 +222,14 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
                                            final Invoice invoice,
                                            final InvoiceItem invoiceItem,
                                            final Long invoiceItemRecordId,
+                                           final Long secondInvoiceItemRecordId,
                                            @Nullable final SubscriptionBundle bundle,
                                            @Nullable final Plan plan,
                                            @Nullable final PlanPhase planPhase,
                                            final AuditLog creationAuditLog,
                                            final Long tenantRecordId) {
         this(invoiceItemRecordId,
+             secondInvoiceItemRecordId,
              invoiceItem.getId(),
              invoice.getId(),
              invoice.getInvoiceNumber(),
@@ -260,6 +270,10 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
 
     public Long getInvoiceItemRecordId() {
         return invoiceItemRecordId;
+    }
+
+    public Long getSecondInvoiceItemRecordId() {
+        return secondInvoiceItemRecordId;
     }
 
     public UUID getItemId() {
@@ -371,6 +385,7 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
         final StringBuilder sb = new StringBuilder();
         sb.append("BusinessInvoiceItemBaseModelDao");
         sb.append("{invoiceItemRecordId=").append(invoiceItemRecordId);
+        sb.append(", secondInvoiceItemRecordId=").append(secondInvoiceItemRecordId);
         sb.append(", itemId=").append(itemId);
         sb.append(", invoiceId=").append(invoiceId);
         sb.append(", invoiceNumber=").append(invoiceNumber);
@@ -490,6 +505,9 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
         if (revenueRecognizable != null ? !revenueRecognizable.equals(that.revenueRecognizable) : that.revenueRecognizable != null) {
             return false;
         }
+        if (secondInvoiceItemRecordId != null ? !secondInvoiceItemRecordId.equals(that.secondInvoiceItemRecordId) : that.secondInvoiceItemRecordId != null) {
+            return false;
+        }
         if (slug != null ? !slug.equals(that.slug) : that.slug != null) {
             return false;
         }
@@ -504,6 +522,7 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
     public int hashCode() {
         int result = super.hashCode();
         result = 31 * result + (invoiceItemRecordId != null ? invoiceItemRecordId.hashCode() : 0);
+        result = 31 * result + (secondInvoiceItemRecordId != null ? secondInvoiceItemRecordId.hashCode() : 0);
         result = 31 * result + (itemId != null ? itemId.hashCode() : 0);
         result = 31 * result + (invoiceId != null ? invoiceId.hashCode() : 0);
         result = 31 * result + (invoiceNumber != null ? invoiceNumber.hashCode() : 0);

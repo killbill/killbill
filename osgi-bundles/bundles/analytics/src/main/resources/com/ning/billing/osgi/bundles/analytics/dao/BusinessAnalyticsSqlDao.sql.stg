@@ -205,6 +205,7 @@ insert into bin (
 createBia() ::= <<
 insert into bia (
 , invoice_item_record_id
+, second_invoice_item_record_id
 , item_id
 , invoice_id
 , invoice_number
@@ -242,6 +243,7 @@ insert into bia (
 , tenant_record_id
 ) values (
   :invoiceItemRecordId
+, :secondInvoiceItemRecordId
 , :itemId
 , :invoiceId
 , :invoiceNumber
@@ -283,6 +285,7 @@ insert into bia (
 createBii() ::= <<
 insert into bii (
   invoice_item_record_id
+, second_invoice_item_record_id
 , item_id
 , invoice_id
 , invoice_number
@@ -320,6 +323,7 @@ insert into bii (
 , tenant_record_id
 ) values (
   :invoiceItemRecordId
+, :secondInvoiceItemRecordId
 , :itemId
 , :invoiceId
 , :invoiceNumber
@@ -361,6 +365,7 @@ insert into bii (
 createBiia() ::= <<
 insert into biia (
   invoice_item_record_id
+, second_invoice_item_record_id
 , item_id
 , invoice_id
 , invoice_number
@@ -398,6 +403,7 @@ insert into biia (
 , tenant_record_id
 ) values (
   :invoiceItemRecordId
+, :secondInvoiceItemRecordId
 , :itemId
 , :invoiceId
 , :invoiceNumber
@@ -439,6 +445,7 @@ insert into biia (
 createBiic() ::= <<
 insert into biic (
   invoice_item_record_id
+, second_invoice_item_record_id
 , item_id
 , invoice_id
 , invoice_number
@@ -476,6 +483,7 @@ insert into biic (
 , tenant_record_id
 ) values (
   :invoiceItemRecordId
+, :secondInvoiceItemRecordId
 , :itemId
 , :invoiceId
 , :invoiceNumber

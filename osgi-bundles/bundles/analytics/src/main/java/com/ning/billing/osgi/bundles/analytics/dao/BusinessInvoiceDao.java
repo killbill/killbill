@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
 
@@ -106,7 +108,12 @@ public class BusinessInvoiceDao extends BusinessAnalyticsDaoBase {
 
             final List<BusinessInvoiceItemBaseModelDao> businessInvoiceItems = new ArrayList<BusinessInvoiceItemBaseModelDao>();
             for (final InvoiceItem invoiceItem : invoice.getInvoiceItems()) {
-                final BusinessInvoiceItemBaseModelDao businessInvoiceItem = createBusinessInvoiceItem(account, invoice, invoiceItem, context);
+                final BusinessInvoiceItemBaseModelDao businessInvoiceItem = createBusinessInvoiceItem(account,
+                                                                                                      invoice,
+                                                                                                      invoiceItem,
+                                                                                                      // TODO Will be used for REPAIR_ADJ
+                                                                                                      null,
+                                                                                                      context);
                 if (businessInvoiceItem != null) {
                     businessInvoiceItems.add(businessInvoiceItem);
                 }
@@ -158,6 +165,7 @@ public class BusinessInvoiceDao extends BusinessAnalyticsDaoBase {
     private BusinessInvoiceItemBaseModelDao createBusinessInvoiceItem(final Account account,
                                                                       final Invoice invoice,
                                                                       final InvoiceItem invoiceItem,
+                                                                      @Nullable final Long secondInvoiceItemRecordId,
                                                                       final TenantContext context) throws AnalyticsRefreshException {
         SubscriptionBundle bundle = null;
         // Subscription and bundle could be null for e.g. credits or adjustments
@@ -185,6 +193,7 @@ public class BusinessInvoiceDao extends BusinessAnalyticsDaoBase {
                                                       invoice,
                                                       invoiceItem,
                                                       invoiceItemRecordId,
+                                                      secondInvoiceItemRecordId,
                                                       bundle,
                                                       plan,
                                                       planPhase,
