@@ -19,6 +19,8 @@ package com.ning.billing.payment.dao;
 import java.util.List;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
+
 import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
 import com.ning.billing.util.callcontext.InternalCallContext;
@@ -31,9 +33,8 @@ public interface PaymentDao {
 
     public PaymentAttemptModelDao insertNewAttemptForPayment(UUID paymentId, PaymentAttemptModelDao attempt, InternalCallContext context);
 
-    public void updateStatusForPaymentWithAttempt(UUID paymentId, PaymentStatus paymentStatus, String gatewayErrorCode,
-                                                  String gatewayErrorMsg,
-                                                  UUID attemptId, InternalCallContext context);
+    public void updateStatusAndEffectiveDateForPaymentWithAttempt(UUID paymentId, PaymentStatus paymentStatus, DateTime newEffectiveDate,
+                                                                  UUID attemptId, String gatewayErrorMsg, String gatewayErrorCode, InternalCallContext context);
 
     public PaymentAttemptModelDao getPaymentAttempt(UUID attemptId, InternalTenantContext context);
 

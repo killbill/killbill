@@ -23,6 +23,7 @@ import java.util.UUID;
 
 import javax.inject.Inject;
 
+import org.joda.time.DateTime;
 import org.skife.jdbi.v2.IDBI;
 
 import com.ning.billing.payment.api.PaymentStatus;
@@ -92,17 +93,18 @@ public class DefaultPaymentDao implements PaymentDao {
     }
 
     @Override
-    public void updateStatusForPaymentWithAttempt(final UUID paymentId,
-                                                  final PaymentStatus paymentStatus,
-                                                  final String gatewayErrorCode,
-                                                  final String gatewayErrorMsg,
-                                                  final UUID attemptId,
-                                                  final InternalCallContext context) {
+    public void updateStatusAndEffectiveDateForPaymentWithAttempt(final UUID paymentId,
+                                                                  final PaymentStatus paymentStatus,
+                                                                  final DateTime newEffectiveDate,
+                                                                  final UUID attemptId,
+                                                                  final String gatewayErrorCode,
+                                                                  final String gatewayErrorMsg,
+                                                                  final InternalCallContext context) {
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
 
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                entitySqlDaoWrapperFactory.become(PaymentSqlDao.class).updatePaymentStatus(paymentId.toString(), paymentStatus.toString(), context);
+                entitySqlDaoWrapperFactory.become(PaymentSqlDao.class).updatePaymentStatus(paymentId.toString(), paymentStatus.toString(), newEffectiveDate.toDate(), context);
                 entitySqlDaoWrapperFactory.become(PaymentAttemptSqlDao.class).updatePaymentAttemptStatus(attemptId.toString(), paymentStatus.toString(), gatewayErrorCode, gatewayErrorMsg, context);
                 return null;
             }
