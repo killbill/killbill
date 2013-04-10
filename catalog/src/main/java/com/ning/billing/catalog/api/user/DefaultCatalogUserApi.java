@@ -16,14 +16,26 @@
 
 package com.ning.billing.catalog.api.user;
 
+import javax.inject.Inject;
+
 import com.ning.billing.catalog.api.Catalog;
+import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.CatalogUserApi;
 import com.ning.billing.util.callcontext.TenantContext;
 
 public class DefaultCatalogUserApi implements CatalogUserApi {
 
+    private final CatalogService catalogService;
+
+    @Inject
+    public DefaultCatalogUserApi(final CatalogService catalogService) {
+        this.catalogService = catalogService;
+    }
+
     @Override
     public Catalog getCatalog(final String catalogName, final TenantContext context) {
-        throw new UnsupportedOperationException();
+        // STEPH TODO this is  hack until we decides what do do exactly:
+        // Probably we want one catalog for tenant but but TBD
+        return catalogService.getFullCatalog();
     }
 }
