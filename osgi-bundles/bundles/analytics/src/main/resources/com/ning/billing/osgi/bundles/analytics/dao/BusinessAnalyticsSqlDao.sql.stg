@@ -913,8 +913,8 @@ insert into bip_fields (
 >>
 
 CHECK_TENANT_AND_ACCOUNT(prefix) ::= <<
-    <prefix>tenant_record_id = :tenantRecordId
-and <prefix>account_record_id = :accountRecordId
+    <prefix>tenant_record_id <=> :tenantRecordId
+and <prefix>account_record_id <=> :accountRecordId
 >>
 
 SELECT_STAR_FROM_TABLE(table) ::= <<
