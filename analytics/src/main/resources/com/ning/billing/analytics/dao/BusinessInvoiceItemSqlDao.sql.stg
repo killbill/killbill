@@ -133,7 +133,7 @@ delete from old_bii where item_id = :item_id <AND_CHECK_TENANT()>;
 >>
 
 deleteInvoiceItemsForAccount(account_id) ::= <<
-delete from old_bii where bii.invoice_id in (select invoice_id from bin where bin.account_id = :account_id <AND_CHECK_TENANT("bin.")> for update) <AND_CHECK_TENANT("bii.")>;
+delete from old_bii where old_bii.invoice_id in (select invoice_id from old_bin where old_bin.account_id = :account_id <AND_CHECK_TENANT("old_bin.")> for update) <AND_CHECK_TENANT("old_bii.")>;
 >>
 
 test() ::= <<

@@ -169,13 +169,10 @@ public abstract class BusinessModelDaoBase {
         if (createdComments != null ? !createdComments.equals(that.createdComments) : that.createdComments != null) {
             return false;
         }
-        if (createdDate != null ? !createdDate.equals(that.createdDate) : that.createdDate != null) {
+        if (createdDate != null ? (createdDate.compareTo(that.createdDate) != 0) : that.createdDate != null) {
             return false;
         }
         if (createdReasonCode != null ? !createdReasonCode.equals(that.createdReasonCode) : that.createdReasonCode != null) {
-            return false;
-        }
-        if (recordId != null ? !recordId.equals(that.recordId) : that.recordId != null) {
             return false;
         }
         if (reportGroup != null ? !reportGroup.equals(that.reportGroup) : that.reportGroup != null) {
@@ -191,7 +188,6 @@ public abstract class BusinessModelDaoBase {
     @Override
     public int hashCode() {
         int result = DEFAULT_REPORT_GROUP.hashCode();
-        result = 31 * result + (recordId != null ? recordId.hashCode() : 0);
         result = 31 * result + (createdDate != null ? createdDate.hashCode() : 0);
         result = 31 * result + (createdBy != null ? createdBy.hashCode() : 0);
         result = 31 * result + (createdReasonCode != null ? createdReasonCode.hashCode() : 0);

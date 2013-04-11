@@ -49,6 +49,7 @@ import com.ning.billing.util.events.SubscriptionInternalEvent;
 import com.ning.billing.util.events.UserTagCreationInternalEvent;
 import com.ning.billing.util.events.UserTagDefinitionCreationInternalEvent;
 import com.ning.billing.util.events.UserTagDefinitionDeletionInternalEvent;
+import com.ning.billing.util.events.UserTagDeletionInternalEvent;
 import com.ning.billing.util.svcsapi.bus.InternalBus.EventBusException;
 
 import com.google.common.eventbus.Subscribe;
@@ -170,9 +171,9 @@ public class BeatrixListener {
            break;
 
        case USER_TAG_DELETION:
-           UserTagDefinitionDeletionInternalEvent realUserTagEventDel = (UserTagDefinitionDeletionInternalEvent) event;
+           UserTagDeletionInternalEvent realUserTagEventDel = (UserTagDeletionInternalEvent) event;
            objectType = ObjectType.TAG;
-           objectId = null; // TODO missing..
+           objectId = realUserTagEventDel.getObjectId();
            eventBusType = ExtBusEventType.TAG_DELETION;
            break;
 

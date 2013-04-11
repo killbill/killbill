@@ -42,10 +42,15 @@ public class TestBusinessAnalyticsSqlDao extends AnalyticsTestSuiteWithEmbeddedD
                                                                       callContext));
 
         analyticsSqlDao.create(accountModelDao.getTableName(), accountModelDao, callContext);
+        final BusinessAccountModelDao newBusinessAccountModelDao = analyticsSqlDao.getAccountByAccountRecordId(accountModelDao.getAccountRecordId(),
+                                                                                                               accountModelDao.getTenantRecordId(),
+                                                                                                               callContext);
+        Assert.assertEquals(newBusinessAccountModelDao, accountModelDao);
+       /*
         Assert.assertEquals(analyticsSqlDao.getAccountByAccountRecordId(accountModelDao.getAccountRecordId(),
                                                                         accountModelDao.getTenantRecordId(),
                                                                         callContext), accountModelDao);
-
+*/
         analyticsSqlDao.deleteByAccountRecordId(accountModelDao.getTableName(),
                                                 accountModelDao.getAccountRecordId(),
                                                 accountModelDao.getTenantRecordId(),

@@ -366,7 +366,7 @@ public class BusinessAccountModelDao extends BusinessModelDaoBase {
         if (timeZone != null ? !timeZone.equals(that.timeZone) : that.timeZone != null) {
             return false;
         }
-        if (updatedDate != null ? !updatedDate.equals(that.updatedDate) : that.updatedDate != null) {
+        if (updatedDate != null ? (updatedDate.compareTo(that.updatedDate) != 0) : that.updatedDate != null) {
             return false;
         }
 
