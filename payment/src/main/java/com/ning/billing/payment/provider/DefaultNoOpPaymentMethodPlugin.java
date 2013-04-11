@@ -75,6 +75,66 @@ public class DefaultNoOpPaymentMethodPlugin implements PaymentMethodPlugin {
     }
 
     @Override
+    public String getType() {
+        return "noop";
+    }
+
+    @Override
+    public String getCCName() {
+        return null;
+    }
+
+    @Override
+    public String getCCType() {
+        return null;
+    }
+
+    @Override
+    public String getCCExprirationMonth() {
+        return null;
+    }
+
+    @Override
+    public String getCCExprirationYear() {
+        return null;
+    }
+
+    @Override
+    public String getCCLast4() {
+        return null;
+    }
+
+    @Override
+    public String getAddress1() {
+        return null;
+    }
+
+    @Override
+    public String getAddress2() {
+        return null;
+    }
+
+    @Override
+    public String getCity() {
+        return null;
+    }
+
+    @Override
+    public String getState() {
+        return null;
+    }
+
+    @Override
+    public String getZip() {
+        return null;
+    }
+
+    @Override
+    public String getCountry() {
+        return null;
+    }
+
+    @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
         sb.append("DefaultNoOpPaymentMethodPlugin");

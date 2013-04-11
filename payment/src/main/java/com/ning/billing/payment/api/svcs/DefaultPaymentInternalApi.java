@@ -44,7 +44,7 @@ public class DefaultPaymentInternalApi implements PaymentInternalApi {
 
     @Override
     public Payment getPayment(final UUID paymentId, final InternalTenantContext context) throws PaymentApiException {
-        final Payment payment = paymentProcessor.getPayment(paymentId, context);
+        final Payment payment = paymentProcessor.getPayment(paymentId, false, context);
         if (payment == null) {
             throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT, paymentId);
         }

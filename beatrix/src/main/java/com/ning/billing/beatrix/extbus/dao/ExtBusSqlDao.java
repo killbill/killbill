@@ -83,16 +83,24 @@ public interface ExtBusSqlDao extends Transactional<ExtBusSqlDao>, CloseMe {
 
         @Override
         public void bind(@SuppressWarnings("rawtypes") final SQLStatement stmt, final Bind bind, final ExtBusEventEntry evt) {
-            stmt.bind("eventType", evt.getExtBusType().toString());
-            stmt.bind("objectId", evt.getObjectId().toString());
-            stmt.bind("objectType", evt.getObjectType().toString());
+            stmt.bind("eventType", extractWithNullValue(evt.getExtBusType().toString()));
+            stmt.bind("objectId", extractWithNullValue(evt.getObjectId().toString()));
+            stmt.bind("objectType", extractWithNullValue(evt.getObjectType().toString()));
             stmt.bind("userToken", getUUIDString(evt.getUserToken()));
             stmt.bind("createdDate", getDate(new DateTime()));
-            stmt.bind("creatingOwner", evt.getCreatedOwner());
+            stmt.bind("creatingOwner", extractWithNullValue(evt.getCreatedOwner()));
             stmt.bind("processingAvailableDate", getDate(evt.getNextAvailableDate()));
-            stmt.bind("processingOwner", evt.getOwner());
+            stmt.bind("processingOwner", extractWithNullValue(evt.getOwner()));
             stmt.bind("processingState", PersistentQueueEntryLifecycleState.AVAILABLE.toString());
         }
+
+        private String extractWithNullValue(Object obj) {
+            if (obj == null) {
+                return null;
+            }
+            return obj.toString();
+        }
+
     }
 
     public static class ExtBusSqlMapper extends MapperBase implements ResultSetMapper<ExtBusEventEntry> {

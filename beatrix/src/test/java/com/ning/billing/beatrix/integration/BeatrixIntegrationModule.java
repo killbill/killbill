@@ -67,6 +67,7 @@ import com.ning.billing.util.glue.ExportModule;
 import com.ning.billing.util.glue.GlobalLockerModule;
 import com.ning.billing.util.glue.NonEntityDaoModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
+import com.ning.billing.util.glue.RecordIdModule;
 import com.ning.billing.util.glue.TagStoreModule;
 import com.ning.billing.util.svcsapi.bus.BusService;
 
@@ -122,6 +123,7 @@ public class BeatrixIntegrationModule extends AbstractModule {
         install(new ExportModule());
         install(new DefaultOSGIModule(configSource));
         install(new NonEntityDaoModule());
+        install(new RecordIdModule());
 
         bind(AccountChecker.class).asEagerSingleton();
         bind(EntitlementChecker.class).asEagerSingleton();

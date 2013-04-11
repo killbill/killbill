@@ -38,7 +38,9 @@ public interface BusInternalEvent {
         CONTROL_TAGDEFINITION_DELETION,
         USER_TAGDEFINITION_CREATION,
         USER_TAGDEFINITION_DELETION,
-        OVERDUE_CHANGE
+        OVERDUE_CHANGE,
+        CUSTOM_FIELD_CREATION,
+        CUSTOM_FIELD_DELETION,
     }
 
     public BusInternalEventType getBusEventType();

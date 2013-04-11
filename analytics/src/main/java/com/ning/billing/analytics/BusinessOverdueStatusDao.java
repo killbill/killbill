@@ -35,6 +35,7 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.BlockingState;
+import com.ning.billing.junction.api.JunctionApi;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
@@ -51,16 +52,16 @@ public class BusinessOverdueStatusDao {
 
     private final AccountInternalApi accountApi;
     private final EntitlementInternalApi entitlementApi;
-    private final BlockingInternalApi blockingApi;
+    private final JunctionApi junctionApi;
 
     @Inject
     public BusinessOverdueStatusDao(final BusinessOverdueStatusSqlDao overdueStatusSqlDao, final AccountInternalApi accountApi,
-                                    final EntitlementInternalApi entitlementApi, final BlockingInternalApi blockingApi) {
+                                    final EntitlementInternalApi entitlementApi, final JunctionApi junctionApi) {
 
         this.overdueStatusSqlDao = overdueStatusSqlDao;
         this.accountApi = accountApi;
         this.entitlementApi = entitlementApi;
-        this.blockingApi = blockingApi;
+        this.junctionApi = junctionApi;
     }
 
     public void overdueStatusChanged(final Blockable.Type objectType, final UUID objectId, final InternalCallContext context) {
@@ -96,7 +97,7 @@ public class BusinessOverdueStatusDao {
             public Void inTransaction(final BusinessOverdueStatusSqlDao transactional, final TransactionStatus status) throws Exception {
                 log.info("Started rebuilding overdue statuses for bundle id {}", bundleId);
                 transactional.deleteOverdueStatusesForBundle(bundleId.toString(), context);
-                final List<BlockingState> blockingHistory = blockingApi.getBlockingHistory(bundleId, context);
+                final List<BlockingState> blockingHistory = junctionApi.getBlockingHistory(bundleId, context.toTenantContext());
                 if (blockingHistory != null && blockingHistory.size() > 0) {
                     final List<BlockingState> overdueStates = ImmutableList.<BlockingState>copyOf(blockingHistory);
                     final List<BlockingState> overdueStatesReversed = Lists.reverse(overdueStates);

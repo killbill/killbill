@@ -27,4 +27,6 @@ public interface JunctionModule {
 
     public void installEntitlementUserApi();
 
+    public void installJunctionApi();
+
 }

@@ -62,14 +62,32 @@ public class TestUserApiCreate extends EntitlementTestSuiteWithEmbeddedDB {
                                                                                                        testUtil.getProductSpecifier(productName, planSetName, term, null), requestedDate, callContext);
             assertNotNull(subscription);
 
+            //
+            // In addition to Alignment phase we also test SubscriptionTransition eventIds and created dates.
+            // Keep tracks of row events to compare with ids and created dates returned by SubscriptionTransition later.
+            //
+            final List<EntitlementEvent> events = subscription.getEvents();
+            Assert.assertEquals(events.size(), 2);
+
+            final EntitlementEvent trialEvent = events.get(0);
+            final EntitlementEvent phaseEvent = events.get(1);
+
+
             assertEquals(subscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
             //assertEquals(subscription.getAccount(), account.getId());
             assertEquals(subscription.getBundleId(), bundle.getId());
             assertEquals(subscription.getStartDate(), requestedDate);
 
             assertTrue(testListener.isCompleted(5000));
-
             assertListenerStatus();
+
+            final SubscriptionTransition transition = subscription.getPreviousTransition();
+
+            assertEquals(transition.getPreviousEventId(), trialEvent.getId());
+            assertEquals(transition.getNextEventId(), phaseEvent.getId());
+
+            assertEquals(transition.getPreviousEventCreatedDate().compareTo(trialEvent.getCreatedDate()), 0);
+            assertEquals(transition.getNextEventCreatedDate().compareTo(phaseEvent.getCreatedDate()), 0);
 
         } catch (EntitlementUserApiException e) {
             log.error("Unexpected exception", e);

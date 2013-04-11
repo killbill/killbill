@@ -162,6 +162,16 @@ where <recordIdField("t.")> = :recordId
 ;
 >>
 
+getByAccountRecordId(accountRecordId) ::= <<
+select
+<allTableFields("t.")>
+from <tableName()> t
+where <accountRecordIdField("t.")> = :accountRecordId
+<AND_CHECK_TENANT("t.")>
+;
+>>
+
+
 getHistoryTargetRecordId(recordId) ::= <<
 select
 <targetRecordIdField("t.")>

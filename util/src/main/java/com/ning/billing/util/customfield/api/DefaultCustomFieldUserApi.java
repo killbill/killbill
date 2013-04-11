@@ -47,21 +47,35 @@ public class DefaultCustomFieldUserApi implements CustomFieldUserApi {
     }
 
     @Override
-    public List<CustomField> getCustomFields(final UUID objectId, final ObjectType objectType, final TenantContext context) {
-        return ImmutableList.<CustomField>copyOf(Collections2.transform(customFieldDao.getCustomFields(objectId, objectType, internalCallContextFactory.createInternalTenantContext(context)),
-                                                                        new Function<CustomFieldModelDao, CustomField>() {
-                                                                            @Override
-                                                                            public CustomField apply(final CustomFieldModelDao input) {
-                                                                                return new StringCustomField(input);
-                                                                            }
-                                                                        }));
-    }
-
-    @Override
     public void addCustomFields(final List<CustomField> fields, final CallContext context) throws CustomFieldApiException {
         // TODO make it transactional
         for (final CustomField cur : fields) {
             customFieldDao.create(new CustomFieldModelDao(cur), internalCallContextFactory.createInternalCallContext(cur.getObjectId(), cur.getObjectType(), context));
         }
     }
+
+    @Override
+    public List<CustomField> getCustomFieldsForObject(final UUID objectId, final ObjectType objectType, final TenantContext context) {
+        return withCustomFieldsTransform(customFieldDao.getCustomFieldsForObject(objectId, objectType, internalCallContextFactory.createInternalTenantContext(context)));
+    }
+
+    @Override
+    public List<CustomField> getCustomFieldsForAccountType(final UUID accountId, final ObjectType objectType, final TenantContext context) {
+        return withCustomFieldsTransform(customFieldDao.getCustomFieldsForAccountType(objectType, internalCallContextFactory.createInternalTenantContext(accountId, context)));
+    }
+
+    @Override
+    public List<CustomField> getCustomFieldsForAccount(final UUID accountId, final TenantContext context) {
+        return withCustomFieldsTransform(customFieldDao.getCustomFieldsForAccount(internalCallContextFactory.createInternalTenantContext(accountId, context)));
+    }
+
+    private List<CustomField> withCustomFieldsTransform(List<CustomFieldModelDao> input) {
+        return ImmutableList.<CustomField>copyOf(Collections2.transform(input, new Function<CustomFieldModelDao, CustomField>() {
+            @Override
+            public CustomField apply(final CustomFieldModelDao input) {
+                return new StringCustomField(input);
+            }
+        }));
+    }
+
 }

@@ -65,7 +65,7 @@ public class MockTagDao implements TagDao {
     }
 
     @Override
-    public List<TagModelDao> getTags(final UUID objectId, final ObjectType objectType, final InternalTenantContext internalTenantContext) {
+    public List<TagModelDao> getTagsForObject(final UUID objectId, final ObjectType objectType, final InternalTenantContext internalTenantContext) {
         if (tagStore.get(objectId) == null) {
             return ImmutableList.<TagModelDao>of();
         }
@@ -76,6 +76,16 @@ public class MockTagDao implements TagDao {
                 return objectType.equals(input.getObjectType());
             }
         }));
+    }
+
+    @Override
+    public List<TagModelDao> getTagsForAccountType(final UUID accountId, final ObjectType objectType, final InternalTenantContext internalTenantContext) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public List<TagModelDao> getTagsForAccount(final UUID accountId, final InternalTenantContext internalTenantContext) {
+        throw new UnsupportedOperationException();
     }
 
     public void clear() {

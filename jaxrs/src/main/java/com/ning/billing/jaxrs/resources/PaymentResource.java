@@ -106,7 +106,7 @@ public class PaymentResource extends JaxRsResourceBase {
         final TenantContext tenantContext = context.createContext(request);
 
         final UUID paymentId = UUID.fromString(paymentIdString);
-        final Payment payment = paymentApi.getPayment(paymentId, tenantContext);
+        final Payment payment = paymentApi.getPayment(paymentId, false, tenantContext);
 
         final PaymentJsonSimple paymentJsonSimple;
         if (withRefundsAndChargebacks) {
@@ -167,7 +167,7 @@ public class PaymentResource extends JaxRsResourceBase {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
         final UUID paymentUuid = UUID.fromString(paymentId);
-        final Payment payment = paymentApi.getPayment(paymentUuid, callContext);
+        final Payment payment = paymentApi.getPayment(paymentUuid, false, callContext);
         final Account account = accountApi.getAccountById(payment.getAccountId(), callContext);
 
         final Refund result;

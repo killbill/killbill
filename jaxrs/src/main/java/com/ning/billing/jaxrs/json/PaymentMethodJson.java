@@ -121,6 +121,78 @@ public class PaymentMethodJson {
                     }
 
                     @Override
+                    public String getType() {
+                        // N/A
+                        return null;
+                    }
+
+                    @Override
+                    public String getCCName() {
+                        // N/A
+                        return null;
+                    }
+
+                    @Override
+                    public String getCCType() {
+                        // N/A
+                        return null;
+                    }
+
+                    @Override
+                    public String getCCExprirationMonth() {
+                        // N/A
+                        return null;
+                    }
+
+                    @Override
+                    public String getCCExprirationYear() {
+                        // N/A
+                        return null;
+                    }
+
+                    @Override
+                    public String getCCLast4() {
+                        // N/A
+                        return null;
+                    }
+
+                    @Override
+                    public String getAddress1() {
+                        // N/A
+                        return null;
+                    }
+
+                    @Override
+                    public String getAddress2() {
+                        // N/A
+                        return null;
+                    }
+
+                    @Override
+                    public String getCity() {
+                        // N/A
+                        return null;
+                    }
+
+                    @Override
+                    public String getState() {
+                        // N/A
+                        return null;
+                    }
+
+                    @Override
+                    public String getZip() {
+                        // N/A
+                        return null;
+                    }
+
+                    @Override
+                    public String getCountry() {
+                        // N/A
+                        return null;
+                    }
+
+                    @Override
                     public String getExternalPaymentMethodId() {
                         return pluginInfo.getExternalPaymentId();
                     }

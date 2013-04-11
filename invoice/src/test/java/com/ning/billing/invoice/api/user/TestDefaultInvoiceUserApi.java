@@ -30,11 +30,15 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.invoice.InvoiceTestSuiteWithEmbeddedDB;
+import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.invoice.model.InvoicingConfiguration;
 import com.ning.billing.util.api.TagApiException;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.DefaultCallContext;
+import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.Tag;
 
@@ -109,13 +113,39 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         // Verify the initial account balance
         final BigDecimal accountBalance = invoiceUserApi.getAccountBalance(accountId, callContext);
         Assert.assertEquals(accountBalance, invoiceBalance);
-
         // Post an external charge
         final BigDecimal externalChargeAmount = BigDecimal.TEN;
         final InvoiceItem externalChargeInvoiceItem = invoiceUserApi.insertExternalChargeForInvoice(accountId, invoiceId,
                                                                                                     externalChargeAmount, UUID.randomUUID().toString(),
                                                                                                     clock.getUTCToday(), accountCurrency, callContext);
         verifyExternalChargeOnExistingInvoice(invoiceBalance, null, externalChargeAmount, externalChargeInvoiceItem);
+    }
+
+    @Test(groups = "slow")
+    public void testOriginalAmountCharged() throws Exception {
+
+        final Invoice initialInvoice = invoiceUserApi.getInvoice(invoiceId, callContext);
+        final BigDecimal originalAmountCharged = initialInvoice.getOriginalChargedAmount();
+        final BigDecimal amountCharged = initialInvoice.getChargedAmount();
+        Assert.assertEquals(originalAmountCharged.compareTo(amountCharged), 0);
+
+        ((ClockMock) clock).addDays(1);
+
+        // Sleep at least one sec to make sure created_date for the external charge is different than the created date for the invoice itself
+        CallContext newCallContextLater = new DefaultCallContext(callContext.getTenantId(), callContext.getUserName(), callContext.getCallOrigin(), callContext.getUserType(), callContext.getUserToken(), clock);
+        // Post an external charge
+        final BigDecimal externalChargeAmount = BigDecimal.TEN;
+        final InvoiceItem externalChargeInvoiceItem = invoiceUserApi.insertExternalChargeForInvoice(accountId, invoiceId,
+                                                                                                    externalChargeAmount, UUID.randomUUID().toString(),
+                                                                                                    clock.getUTCToday(), accountCurrency, newCallContextLater);
+
+        final Invoice newInvoice = invoiceUserApi.getInvoice(invoiceId, callContext);
+        final BigDecimal newOriginalAmountCharged = newInvoice.getOriginalChargedAmount();
+        final BigDecimal newAmountCharged = newInvoice.getChargedAmount();
+        final BigDecimal expectedChargedAmount = newInvoice.getOriginalChargedAmount().add(externalChargeInvoiceItem.getAmount());
+
+        Assert.assertEquals(originalAmountCharged.compareTo(newOriginalAmountCharged), 0);
+        Assert.assertEquals(newAmountCharged.compareTo(expectedChargedAmount), 0);
     }
 
     @Test(groups = "slow")
@@ -320,12 +350,12 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
     public void testAddRemoveWrittenOffTag() throws InvoiceApiException, TagApiException {
         invoiceUserApi.tagInvoiceAsWrittenOff(invoiceId, callContext);
 
-        List<Tag> tags = tagUserApi.getTags(invoiceId, ObjectType.INVOICE, callContext);
+        List<Tag> tags = tagUserApi.getTagsForObject(invoiceId, ObjectType.INVOICE, callContext);
         assertEquals(tags.size(), 1);
         assertEquals(tags.get(0).getTagDefinitionId(), ControlTagType.WRITTEN_OFF.getId());
 
         invoiceUserApi.tagInvoiceAsNotWrittenOff(invoiceId, callContext);
-        tags = tagUserApi.getTags(invoiceId, ObjectType.INVOICE, callContext);
+        tags = tagUserApi.getTagsForObject(invoiceId, ObjectType.INVOICE, callContext);
         assertEquals(tags.size(), 0);
     }
 }

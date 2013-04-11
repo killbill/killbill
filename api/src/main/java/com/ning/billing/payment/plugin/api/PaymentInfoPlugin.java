@@ -57,4 +57,17 @@ public interface PaymentInfoPlugin {
      * @return gateway error code, if any
      */
     public String getGatewayErrorCode();
+
+    /**
+     *
+     * @return the first payment reference id
+     */
+    public String getFirstPaymentReferenceId();
+
+    /**
+     *
+     * @return the first payment reference id
+     */
+    public String getSecondPaymentReferenceId();
+
 }

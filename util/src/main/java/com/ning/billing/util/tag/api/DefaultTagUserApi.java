@@ -127,22 +127,35 @@ public class DefaultTagUserApi implements TagUserApi {
     }
 
     @Override
-    public List<Tag> getTags(final UUID objectId, final ObjectType objectType, final TenantContext context) {
-        return ImmutableList.<Tag>copyOf(Collections2.transform(tagDao.getTags(objectId, objectType, internalCallContextFactory.createInternalTenantContext(context)),
-                                                                new Function<TagModelDao, Tag>() {
-                                                                    @Override
-                                                                    public Tag apply(final TagModelDao input) {
-                                                                        return TagModelDaoHelper.isControlTag(input.getTagDefinitionId()) ?
-                                                                               new DefaultControlTag(ControlTagType.getTypeFromId(input.getTagDefinitionId()), objectType, objectId, input.getCreatedDate()) :
-                                                                               new DescriptiveTag(input.getTagDefinitionId(), objectType, objectId, input.getCreatedDate());
-                                                                    }
-                                                                }));
-    }
-
-    @Override
     public TagDefinition getTagDefinitionForName(final String tagDefinitionName, final TenantContext context)
             throws TagDefinitionApiException {
         return new DefaultTagDefinition(tagDefinitionDao.getByName(tagDefinitionName, internalCallContextFactory.createInternalTenantContext(context)),
                                         TagModelDaoHelper.isControlTag(tagDefinitionName));
+    }
+
+    @Override
+    public List<Tag> getTagsForObject(final UUID objectId, final ObjectType objectType, final TenantContext context) {
+        return withModelTransform(tagDao.getTagsForObject(objectId, objectType, internalCallContextFactory.createInternalTenantContext(context)));
+    }
+
+    @Override
+    public List<Tag> getTagsForAccountType(final UUID accountId, final ObjectType objectType, final TenantContext context) {
+        return withModelTransform(tagDao.getTagsForAccountType(accountId, objectType, internalCallContextFactory.createInternalTenantContext(accountId, context)));
+    }
+
+    @Override
+    public List<Tag> getTagsForAccount(final UUID accountId, final TenantContext context) {
+        return withModelTransform(tagDao.getTagsForAccount(accountId, internalCallContextFactory.createInternalTenantContext(accountId, context)));
+    }
+
+    private List<Tag> withModelTransform(final List<TagModelDao> input) {
+        return ImmutableList.<Tag>copyOf(Collections2.transform(input, new Function<TagModelDao, Tag>() {
+            @Override
+            public Tag apply(final TagModelDao input) {
+                return TagModelDaoHelper.isControlTag(input.getTagDefinitionId()) ?
+                       new DefaultControlTag(ControlTagType.getTypeFromId(input.getTagDefinitionId()), input.getObjectType(), input.getObjectId(), input.getCreatedDate()) :
+                       new DescriptiveTag(input.getTagDefinitionId(), input.getObjectType(), input.getObjectId(), input.getCreatedDate());
+            }
+        }));
     }
 }

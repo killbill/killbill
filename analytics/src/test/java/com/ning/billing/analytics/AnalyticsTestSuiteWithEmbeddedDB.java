@@ -44,6 +44,7 @@ import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.invoice.dao.InvoiceDao;
+import com.ning.billing.junction.api.JunctionApi;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.util.glue.RealImplementation;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
@@ -123,6 +124,8 @@ public abstract class AnalyticsTestSuiteWithEmbeddedDB extends GuicyKillbillTest
     protected BusinessSubscriptionTransitionSqlDao subscriptionTransitionSqlDao;
     @Inject
     protected BusinessTagDao tagDao;
+    @Inject
+    protected JunctionApi junctionApi;
 
     @BeforeClass(groups = "slow")
     protected void beforeClass() throws Exception {

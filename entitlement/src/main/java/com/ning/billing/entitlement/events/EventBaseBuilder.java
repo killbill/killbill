@@ -46,7 +46,7 @@ public class EventBaseBuilder<T extends EventBaseBuilder<T>> {
         this.requestedDate = copy.requestedDate;
         this.effectiveDate = copy.effectiveDate;
         this.processedDate = copy.processedDate;
-
+        this.createdDate = copy.getCreatedDate();
         this.activeVersion = copy.activeVersion;
         this.isActive = copy.isActive;
         this.totalOrdering = copy.totalOrdering;

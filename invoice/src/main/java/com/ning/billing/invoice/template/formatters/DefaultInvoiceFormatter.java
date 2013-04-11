@@ -183,6 +183,11 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
     }
 
     @Override
+    public BigDecimal getOriginalChargedAmount() {
+        return round(Objects.firstNonNull(invoice.getOriginalChargedAmount(), BigDecimal.ZERO));
+    }
+
+    @Override
     public BigDecimal getCBAAmount() {
         return round(Objects.firstNonNull(invoice.getCBAAmount(), BigDecimal.ZERO));
     }

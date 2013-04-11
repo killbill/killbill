@@ -22,6 +22,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.payment.plugin.api.RefundInfoPlugin;
 import com.ning.billing.util.entity.Entity;
 
 public interface Refund extends Entity {
@@ -37,4 +38,6 @@ public interface Refund extends Entity {
     public Currency getCurrency();
 
     public DateTime getEffectiveDate();
+
+    public RefundInfoPlugin getPluginDetail();
 }

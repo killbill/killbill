@@ -78,7 +78,7 @@ public class TestDefaultAuditDao extends UtilTestSuiteWithEmbeddedDB {
         final Tag tag = new DescriptiveTag(tagDefinition.getId(), ObjectType.ACCOUNT, objectId, clock.getUTCNow());
 
         tagDao.create(new TagModelDao(tag), internalCallContext);
-        final List<TagModelDao> tags = tagDao.getTags(objectId, ObjectType.ACCOUNT, internalCallContext);
+        final List<TagModelDao> tags = tagDao.getTagsForObject(objectId, ObjectType.ACCOUNT, internalCallContext);
         Assert.assertEquals(tags.size(), 1);
         final TagModelDao savedTag = tags.get(0);
         Assert.assertEquals(savedTag.getTagDefinitionId(), tagDefinition.getId());

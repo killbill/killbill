@@ -111,7 +111,7 @@ public class TestAccountDao extends AccountTestSuiteWithEmbeddedDB {
         final CustomField field = new StringCustomField(fieldName, fieldValue, ObjectType.ACCOUNT, accountId, internalCallContext.getCreatedDate());
         customFieldDao.create(new CustomFieldModelDao(field), internalCallContext);
 
-        final List<CustomFieldModelDao> customFieldMap = customFieldDao.getCustomFields(accountId, ObjectType.ACCOUNT, internalCallContext);
+        final List<CustomFieldModelDao> customFieldMap = customFieldDao.getCustomFieldsForObject(accountId, ObjectType.ACCOUNT, internalCallContext);
         Assert.assertEquals(customFieldMap.size(), 1);
 
         final CustomFieldModelDao customField = customFieldMap.get(0);
@@ -126,7 +126,7 @@ public class TestAccountDao extends AccountTestSuiteWithEmbeddedDB {
         final Tag tag = new DescriptiveTag(tagDefinition.getId(), ObjectType.ACCOUNT, account.getId(), internalCallContext.getCreatedDate());
         tagDao.create(new TagModelDao(tag), internalCallContext);
 
-        final List<TagModelDao> tags = tagDao.getTags(account.getId(), ObjectType.ACCOUNT, internalCallContext);
+        final List<TagModelDao> tags = tagDao.getTagsForObject(account.getId(), ObjectType.ACCOUNT, internalCallContext);
         Assert.assertEquals(tags.size(), 1);
         Assert.assertEquals(tags.get(0).getTagDefinitionId(), tagDefinition.getId());
         Assert.assertEquals(tags.get(0).getObjectId(), account.getId());

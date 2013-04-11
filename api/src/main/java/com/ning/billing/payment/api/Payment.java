@@ -22,44 +22,124 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.payment.plugin.api.PaymentInfoPlugin;
 import com.ning.billing.util.entity.Entity;
 
 public interface Payment extends Entity {
 
-    public UUID getAccountId();
+    /**
+     *
+     * @return the account id
+     */
+    UUID getAccountId();
 
-    public UUID getInvoiceId();
+    /**
+     *
+     * @return the invoice id
+     */
+    UUID getInvoiceId();
 
-    public UUID getPaymentMethodId();
+    /**
+     *
+     * @return the payment method id
+     */
+    UUID getPaymentMethodId();
 
-    public Integer getPaymentNumber();
+    /**
+     *
+     * @return the payment number
+     */
+    Integer getPaymentNumber();
 
-    public BigDecimal getAmount();
+    /**
+     *
+     * @return the amount that needs to be paid
+     */
+    BigDecimal getAmount();
 
-    public BigDecimal getPaidAmount();
+    /**
+     *
+     * @return the paid amount
+     */
+    BigDecimal getPaidAmount();
 
-    public DateTime getEffectiveDate();
+    /**
+     * If the payment is successful, this date is the date of payment, otherwise this is the date of the last attempt
+     *
+     * @return the effective date of the payment
+     */
+    DateTime getEffectiveDate();
 
-    public Currency getCurrency();
+    /**
+     *
+     * @return the currency associated with that payment
+     */
+    Currency getCurrency();
 
-    public PaymentStatus getPaymentStatus();
+    /**
+     *
+     * @return the payment status
+     */
+    PaymentStatus getPaymentStatus();
 
-    public List<PaymentAttempt> getAttempts();
+    /**
+     *
+     * @return the list of attempts on that payment
+     */
+    List<PaymentAttempt> getAttempts();
 
-    public String getExtFirstPaymentIdRef();
+    /**
+     *
+     * @return the first payment ref id from the plugin
+     */
+    @Deprecated
+    String getExtFirstPaymentIdRef();
 
-    public String getExtSecondPaymentIdRef();
+    /**
+     *
+     * @return the second payment ref id from the plugin
+     */
+    @Deprecated
+    String getExtSecondPaymentIdRef();
 
+    /**
+     * This will only be filled when the call requires the detail from the plugin
+     *
+     * @return the addtional info from the plugin
+     */
+    PaymentInfoPlugin getPaymentInfoPlugin();
+
+    
     public interface PaymentAttempt extends Entity {
 
-        public UUID getId();
+        /**
+         *
+         * @return the payment attempt id
+         */
+        UUID getId();
 
-        public DateTime getEffectiveDate();
+        /**
+         *
+         * @return the date when that attempt was made
+         */
+        DateTime getEffectiveDate();
 
-        public String getGatewayErrorCode();
+        /**
+         *
+         * @return the error code from the gateway
+         */
+        String getGatewayErrorCode();
 
-        public String getGatewayErrorMsg();
+        /**
+         *
+         * @return the error message from the gateway
+         */
+        String getGatewayErrorMsg();
 
-        public PaymentStatus getPaymentStatus();
+        /**
+         *
+         * @return the status for that attempt
+         */
+        PaymentStatus getPaymentStatus();
     }
 }

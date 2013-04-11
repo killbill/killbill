@@ -71,7 +71,8 @@ order by effective_date desc limit 1
 
 updatePaymentStatus() ::= <<
 update payments
-set payment_status = :paymentStatus
+set payment_status = :paymentStatus,
+effective_date = :effectiveDate
 where id = :id
 <AND_CHECK_TENANT()>
 ;

@@ -31,6 +31,7 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.invoice.api.InvoiceMigrationApi;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.api.InvoiceUserApi;
+import com.ning.billing.junction.api.JunctionApi;
 import com.ning.billing.osgi.api.OSGIKillbill;
 import com.ning.billing.osgi.api.config.PluginConfigServiceApi;
 import com.ning.billing.osgi.glue.DefaultOSGIModule;
@@ -41,6 +42,7 @@ import com.ning.billing.usage.api.UsageUserApi;
 import com.ning.billing.util.api.AuditUserApi;
 import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.api.ExportUserApi;
+import com.ning.billing.util.api.RecordIdApi;
 import com.ning.billing.util.api.TagUserApi;
 
 public class DefaultOSGIKillbill implements OSGIKillbill {
@@ -64,6 +66,9 @@ public class DefaultOSGIKillbill implements OSGIKillbill {
     private final CustomFieldUserApi customFieldUserApi;
     private final ExportUserApi exportUserApi;
     private final TagUserApi tagUserApi;
+    private final JunctionApi junctionApi;
+    private final RecordIdApi recordIdApi;
+
     private final PluginConfigServiceApi configServiceApi;
 
     @Inject
@@ -86,6 +91,8 @@ public class DefaultOSGIKillbill implements OSGIKillbill {
                                final CustomFieldUserApi customFieldUserApi,
                                final ExportUserApi exportUserApi,
                                final TagUserApi tagUserApi,
+                               final JunctionApi junctionApi,
+                               final RecordIdApi recordIdApi,
                                final PluginConfigServiceApi configServiceApi) {
         this.accountUserApi = accountUserApi;
         this.analyticsSanityApi = analyticsSanityApi;
@@ -106,6 +113,8 @@ public class DefaultOSGIKillbill implements OSGIKillbill {
         this.customFieldUserApi = customFieldUserApi;
         this.exportUserApi = exportUserApi;
         this.tagUserApi = tagUserApi;
+        this.junctionApi = junctionApi;
+        this.recordIdApi = recordIdApi;
         this.configServiceApi = configServiceApi;
     }
 
@@ -202,6 +211,16 @@ public class DefaultOSGIKillbill implements OSGIKillbill {
     @Override
     public TagUserApi getTagUserApi() {
         return tagUserApi;
+    }
+
+    @Override
+    public JunctionApi getJunctionApi() {
+        return junctionApi;
+    }
+
+    @Override
+    public RecordIdApi getRecordIdApi() {
+        return recordIdApi;
     }
 
     @Override

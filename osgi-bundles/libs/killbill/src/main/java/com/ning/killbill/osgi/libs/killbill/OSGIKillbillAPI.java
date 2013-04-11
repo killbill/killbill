@@ -30,6 +30,7 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.invoice.api.InvoiceMigrationApi;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.api.InvoiceUserApi;
+import com.ning.billing.junction.api.JunctionApi;
 import com.ning.billing.osgi.api.OSGIKillbill;
 import com.ning.billing.osgi.api.config.PluginConfigServiceApi;
 import com.ning.billing.overdue.OverdueUserApi;
@@ -39,6 +40,7 @@ import com.ning.billing.usage.api.UsageUserApi;
 import com.ning.billing.util.api.AuditUserApi;
 import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.api.ExportUserApi;
+import com.ning.billing.util.api.RecordIdApi;
 import com.ning.billing.util.api.TagUserApi;
 
 public class OSGIKillbillAPI extends OSGIKillbillLibraryBase implements OSGIKillbill {
@@ -246,6 +248,26 @@ public class OSGIKillbillAPI extends OSGIKillbillLibraryBase implements OSGIKill
             @Override
             public TagUserApi executeWithService(final OSGIKillbill service) {
                 return service.getTagUserApi();
+            }
+        });
+    }
+
+    @Override
+    public JunctionApi getJunctionApi() {
+        return withServiceTracker(killbillTracker, new APICallback<JunctionApi, OSGIKillbill>(KILLBILL_SERVICE_NAME) {
+            @Override
+            public JunctionApi executeWithService(final OSGIKillbill service) {
+                return service.getJunctionApi();
+            }
+        });
+    }
+
+    @Override
+    public RecordIdApi getRecordIdApi() {
+        return withServiceTracker(killbillTracker, new APICallback<RecordIdApi, OSGIKillbill>(KILLBILL_SERVICE_NAME) {
+            @Override
+            public RecordIdApi executeWithService(final OSGIKillbill service) {
+                return service.getRecordIdApi();
             }
         });
     }

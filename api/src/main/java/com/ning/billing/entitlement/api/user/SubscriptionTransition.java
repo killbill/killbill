@@ -35,11 +35,19 @@ public interface SubscriptionTransition {
 
     public SubscriptionState getNextState();
 
+    public UUID getPreviousEventId();
+
+    public DateTime getPreviousEventCreatedDate();
+
     public Plan getPreviousPlan();
 
     public Plan getNextPlan();
 
     public PlanPhase getPreviousPhase();
+
+    public UUID getNextEventId();
+
+    public DateTime getNextEventCreatedDate();
 
     public PlanPhase getNextPhase();
 

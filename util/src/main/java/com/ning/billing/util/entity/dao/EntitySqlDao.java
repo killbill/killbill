@@ -56,6 +56,10 @@ public interface EntitySqlDao<M extends EntityModelDao<E>, E extends Entity> ext
                            @BindBean final InternalTenantContext context);
 
     @SqlQuery
+    public List<M> getByAccountRecordId(@BindBean final InternalTenantContext context);
+
+
+    @SqlQuery
     @Cachable(CacheType.RECORD_ID)
     public Long getRecordId(@Bind("id") final String id,
                             @BindBean final InternalTenantContext context);

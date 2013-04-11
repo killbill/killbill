@@ -16,6 +16,7 @@
 
 package com.ning.billing.entitlement.api.user;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -100,4 +101,6 @@ public interface Subscription extends Entity, Blockable {
     public SubscriptionTransition getPendingTransition();
 
     public SubscriptionTransition getPreviousTransition();
+
+    public List<SubscriptionTransition> getAllTransitions();
 }
