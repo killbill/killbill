@@ -107,29 +107,27 @@ public class TestBusinessInvoiceDao extends AnalyticsTestSuiteNoDB {
             if (invoiceItem.getId().equals(recurring1.getId())) {
                 Assert.assertEquals(invoiceItem, recurring1);
             } else if (invoiceItem.getId().equals(repair1.getId())) {
-                Assert.fail("Repair item 1 shouldn't be in the sanitized elements");
+                if (InvoiceItemType.ITEM_ADJ.equals(invoiceItem.getInvoiceItemType()) && invoiceItem.getLinkedItemId().equals(recurring1.getId())) {
+                    Assert.assertEquals(invoiceItem.getAmount(), new BigDecimal("20").negate());
+                } else {
+                    Assert.fail("Repair item 1 shouldn't be in the sanitized elements");
+                }
             } else if (invoiceItem.getId().equals(reparation1.getId())) {
                 Assert.fail("Reparation item 1 shouldn't be in the sanitized elements");
             } else if (invoiceItem.getId().equals(recurring2.getId())) {
                 Assert.assertEquals(invoiceItem, recurring2);
             } else if (invoiceItem.getId().equals(repair2.getId())) {
-                Assert.fail("Repair item 2 shouldn't be in the sanitized elements");
+                if (InvoiceItemType.ITEM_ADJ.equals(invoiceItem.getInvoiceItemType()) && invoiceItem.getLinkedItemId().equals(recurring2.getId())) {
+                    Assert.assertEquals(invoiceItem.getAmount(), new BigDecimal("15").negate());
+                } else {
+                    Assert.fail("Repair item 2 shouldn't be in the sanitized elements");
+                }
             } else if (invoiceItem.getId().equals(reparation2.getId())) {
                 Assert.fail("Reparation item 2 shouldn't be in the sanitized elements");
             } else if (invoiceItem.getId().equals(externalCharge.getId())) {
                 Assert.assertEquals(invoiceItem, externalCharge);
             } else {
-                if (InvoiceItemType.ITEM_ADJ.equals(invoiceItem.getInvoiceItemType())) {
-                    if (invoiceItem.getLinkedItemId().equals(recurring1.getId())) {
-                        Assert.assertEquals(invoiceItem.getAmount(), new BigDecimal("20").negate());
-                    } else if (invoiceItem.getLinkedItemId().equals(recurring2.getId())) {
-                        Assert.assertEquals(invoiceItem.getAmount(), new BigDecimal("15").negate());
-                    } else {
-                        Assert.fail("Shouldn't be in the sanitized elements: " + invoiceItem);
-                    }
-                } else {
-                    Assert.fail("Shouldn't be in the sanitized elements: " + invoiceItem);
-                }
+                Assert.fail("Shouldn't be in the sanitized elements: " + invoiceItem);
             }
         }
     }

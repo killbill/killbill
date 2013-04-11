@@ -30,7 +30,6 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.util.audit.AuditLog;
 
 public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBase {
@@ -71,10 +70,18 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
     private String currency;
     private UUID linkedItemId;
 
+    public enum BusinessInvoiceItemType {
+        INVOICE_ADJUSTMENT,
+        INVOICE_ITEM_ADJUSTMENT,
+        ACCOUNT_CREDIT,
+        CHARGE
+    }
+
     public static BusinessInvoiceItemBaseModelDao create(final Account account,
                                                          final Long accountRecordId,
                                                          final Invoice invoice,
                                                          final InvoiceItem invoiceItem,
+                                                         final BusinessInvoiceItemType businessInvoiceItemType,
                                                          final Long invoiceItemRecordId,
                                                          final Long secondInvoiceItemRecordId,
                                                          @Nullable final SubscriptionBundle bundle,
@@ -83,7 +90,7 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
                                                          final AuditLog creationAuditLog,
                                                          final Long tenantRecordId,
                                                          @Nullable final ReportGroup reportGroup) {
-        if (InvoiceItemType.REFUND_ADJ.equals(invoiceItem.getInvoiceItemType())) {
+        if (BusinessInvoiceItemType.INVOICE_ADJUSTMENT.equals(businessInvoiceItemType)) {
             return new BusinessInvoiceAdjustmentModelDao(account,
                                                          accountRecordId,
                                                          invoice,
@@ -96,9 +103,7 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
                                                          creationAuditLog,
                                                          tenantRecordId,
                                                          reportGroup);
-        } else if (InvoiceItemType.EXTERNAL_CHARGE.equals(invoiceItem.getInvoiceItemType()) ||
-                   InvoiceItemType.FIXED.equals(invoiceItem.getInvoiceItemType()) ||
-                   InvoiceItemType.RECURRING.equals(invoiceItem.getInvoiceItemType())) {
+        } else if (BusinessInvoiceItemType.CHARGE.equals(businessInvoiceItemType)) {
             return new BusinessInvoiceItemModelDao(account,
                                                    accountRecordId,
                                                    invoice,
@@ -111,7 +116,7 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
                                                    creationAuditLog,
                                                    tenantRecordId,
                                                    reportGroup);
-        } else if (InvoiceItemType.ITEM_ADJ.equals(invoiceItem.getInvoiceItemType())) {
+        } else if (BusinessInvoiceItemType.INVOICE_ADJUSTMENT.equals(businessInvoiceItemType)) {
             return new BusinessInvoiceItemAdjustmentModelDao(account,
                                                              accountRecordId,
                                                              invoice,
@@ -124,8 +129,7 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
                                                              creationAuditLog,
                                                              tenantRecordId,
                                                              reportGroup);
-        } else if (InvoiceItemType.CBA_ADJ.equals(invoiceItem.getInvoiceItemType()) ||
-                   InvoiceItemType.CREDIT_ADJ.equals(invoiceItem.getInvoiceItemType())) {
+        } else if (BusinessInvoiceItemType.ACCOUNT_CREDIT.equals(businessInvoiceItemType)) {
             return new BusinessInvoiceItemCreditModelDao(account,
                                                          accountRecordId,
                                                          invoice,

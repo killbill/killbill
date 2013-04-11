@@ -51,6 +51,7 @@ import com.ning.billing.junction.api.Blockable.Type;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.osgi.bundles.analytics.api.BusinessEntityBase;
 import com.ning.billing.osgi.bundles.analytics.dao.TestCallContext;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceItemBaseModelDao.BusinessInvoiceItemType;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessModelDaoBase;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessModelDaoBase.ReportGroup;
 import com.ning.billing.payment.api.Payment;
@@ -88,6 +89,7 @@ public abstract class AnalyticsTestSuiteNoDB {
     protected final Long tenantRecordId = 9L;
 
     protected final ReportGroup reportGroup = ReportGroup.partner;
+    protected final BusinessInvoiceItemType invoiceItemType = BusinessInvoiceItemType.INVOICE_ITEM_ADJUSTMENT;
 
     protected Account account;
     protected SubscriptionBundle bundle;

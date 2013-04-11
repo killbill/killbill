@@ -26,8 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
-
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.osgi.service.log.LogService;
@@ -45,6 +43,7 @@ import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.osgi.bundles.analytics.AnalyticsRefreshException;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessAccountModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceItemBaseModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceItemBaseModelDao.BusinessInvoiceItemType;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessModelDaoBase.ReportGroup;
 import com.ning.billing.util.audit.AuditLog;
@@ -55,6 +54,8 @@ import com.ning.killbill.osgi.libs.killbill.OSGIKillbillDataSource;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillLogService;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
 
 public class BusinessInvoiceDao extends BusinessAnalyticsDaoBase {
 
@@ -127,8 +128,13 @@ public class BusinessInvoiceDao extends BusinessAnalyticsDaoBase {
                 final BusinessInvoiceItemBaseModelDao businessInvoiceItem = createBusinessInvoiceItem(account,
                                                                                                       invoice,
                                                                                                       invoiceItem,
-                                                                                                      // TODO Will be used for REPAIR_ADJ
-                                                                                                      null,
+                                                                                                      Collections2.filter(sanitizedInvoiceItems,
+                                                                                                                          new Predicate<InvoiceItem>() {
+                                                                                                                              @Override
+                                                                                                                              public boolean apply(final InvoiceItem input) {
+                                                                                                                                  return !input.getId().equals(invoiceItem.getId());
+                                                                                                                              }
+                                                                                                                          }),
                                                                                                       context);
                 if (businessInvoiceItem != null) {
                     businessInvoiceItems.add(businessInvoiceItem);
@@ -181,7 +187,7 @@ public class BusinessInvoiceDao extends BusinessAnalyticsDaoBase {
     private BusinessInvoiceItemBaseModelDao createBusinessInvoiceItem(final Account account,
                                                                       final Invoice invoice,
                                                                       final InvoiceItem invoiceItem,
-                                                                      @Nullable final Long secondInvoiceItemRecordId,
+                                                                      final Collection<InvoiceItem> otherInvoiceItemsOnInvoice,
                                                                       final TenantContext context) throws AnalyticsRefreshException {
         SubscriptionBundle bundle = null;
         // Subscription and bundle could be null for e.g. credits or adjustments
@@ -205,10 +211,32 @@ public class BusinessInvoiceDao extends BusinessAnalyticsDaoBase {
         final Long tenantRecordId = getTenantRecordId(context);
         final ReportGroup reportGroup = getReportGroup(account.getId(), context);
 
+        final BusinessInvoiceItemType businessInvoiceItemType;
+        if (isCharge(invoiceItem)) {
+            businessInvoiceItemType = BusinessInvoiceItemType.CHARGE;
+        } else if (isAccountCreditItem(invoiceItem, otherInvoiceItemsOnInvoice)) {
+            businessInvoiceItemType = BusinessInvoiceItemType.ACCOUNT_CREDIT;
+        } else if (isInvoiceItemAdjustementItem(invoiceItem)) {
+            businessInvoiceItemType = BusinessInvoiceItemType.INVOICE_ITEM_ADJUSTMENT;
+        } else if (isInvoiceAdjustementItem(invoiceItem, otherInvoiceItemsOnInvoice)) {
+            businessInvoiceItemType = BusinessInvoiceItemType.INVOICE_ADJUSTMENT;
+        } else {
+            // We don't care
+            return null;
+        }
+
+        final Long secondInvoiceItemRecordId;
+        if (invoiceItem instanceof AdjustmentInvoiceItemForRepair) {
+            secondInvoiceItemRecordId = getInvoiceItemRecordId(((AdjustmentInvoiceItemForRepair) invoiceItem).getSecondId(), context);
+        } else {
+            secondInvoiceItemRecordId = null;
+        }
+
         return BusinessInvoiceItemBaseModelDao.create(account,
                                                       accountRecordId,
                                                       invoice,
                                                       invoiceItem,
+                                                      businessInvoiceItemType,
                                                       invoiceItemRecordId,
                                                       secondInvoiceItemRecordId,
                                                       bundle,
@@ -217,6 +245,38 @@ public class BusinessInvoiceDao extends BusinessAnalyticsDaoBase {
                                                       creationAuditLog,
                                                       tenantRecordId,
                                                       reportGroup);
+    }
+
+    // Invoice adjustments
+    private boolean isInvoiceAdjustementItem(final InvoiceItem invoiceItem, final Collection<InvoiceItem> otherInvoiceItemsOnInvoice) {
+        // Either REFUND_ADJ
+        return InvoiceItemType.REFUND_ADJ.equals(invoiceItem.getInvoiceItemType()) ||
+               // Or invoice level credit
+               (InvoiceItemType.CREDIT_ADJ.equals(invoiceItem.getInvoiceItemType()) &&
+                !isAccountCreditItem(invoiceItem, otherInvoiceItemsOnInvoice));
+    }
+
+    // Item adjustments
+    private boolean isInvoiceItemAdjustementItem(final InvoiceItem invoiceItem) {
+        return InvoiceItemType.ITEM_ADJ.equals(invoiceItem.getInvoiceItemType());
+    }
+
+    // Account credits, used or consumed
+    private boolean isAccountCreditItem(final InvoiceItem invoiceItem, final Collection<InvoiceItem> otherInvoiceItemsOnInvoice) {
+        // Either CBA (positive or negative, i.e. given or consumed)
+        return InvoiceItemType.CBA_ADJ.equals(invoiceItem.getInvoiceItemType()) ||
+               // Or credit adj on its on own invoice (credit adj is negative, hence the CBA item)
+               (InvoiceItemType.CREDIT_ADJ.equals(invoiceItem.getInvoiceItemType()) &&
+                otherInvoiceItemsOnInvoice.size() == 1 &&
+                InvoiceItemType.CBA_ADJ.equals(otherInvoiceItemsOnInvoice.iterator().next().getInvoiceItemType()) &&
+                otherInvoiceItemsOnInvoice.iterator().next().getAmount().compareTo(invoiceItem.getAmount().negate()) == 0);
+    }
+
+    // Regular line item (charges)
+    private boolean isCharge(final InvoiceItem invoiceItem) {
+        return InvoiceItemType.EXTERNAL_CHARGE.equals(invoiceItem.getInvoiceItemType()) ||
+               InvoiceItemType.FIXED.equals(invoiceItem.getInvoiceItemType()) ||
+               InvoiceItemType.RECURRING.equals(invoiceItem.getInvoiceItemType());
     }
 
     @VisibleForTesting
@@ -365,8 +425,13 @@ public class BusinessInvoiceDao extends BusinessAnalyticsDaoBase {
 
         @Override
         public UUID getId() {
-            // Fake id, doesn't exist in raw tables
-            return UUID.randomUUID();
+            // We pretend to be the repair, the reparation item record id
+            // will be available as secondId
+            return repairInvoiceItem.getId();
+        }
+
+        public UUID getSecondId() {
+            return reparationInvoiceItem.getId();
         }
 
         @Override
