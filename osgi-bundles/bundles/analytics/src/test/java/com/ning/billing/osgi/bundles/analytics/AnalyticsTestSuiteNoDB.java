@@ -100,6 +100,7 @@ public abstract class AnalyticsTestSuiteNoDB {
     protected BlockingState blockingState;
     protected Invoice invoice;
     protected InvoiceItem invoiceItem;
+    protected Boolean recognizable;
     protected InvoicePayment invoicePayment;
     protected PaymentAttempt paymentAttempt;
     protected PaymentMethod paymentMethod;
@@ -244,6 +245,8 @@ public abstract class AnalyticsTestSuiteNoDB {
         Mockito.when(invoiceItem.getLinkedItemId()).thenReturn(UUID.randomUUID());
         Mockito.when(invoiceItem.getCreatedDate()).thenReturn(new DateTime(2016, 1, 22, 10, 56, 51, DateTimeZone.UTC));
         final UUID invoiceItemId = invoiceItem.getId();
+
+        recognizable = false;
 
         final UUID invoiceId = UUID.randomUUID();
 

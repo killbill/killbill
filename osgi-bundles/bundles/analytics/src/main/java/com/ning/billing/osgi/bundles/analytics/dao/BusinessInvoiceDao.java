@@ -214,16 +214,18 @@ public class BusinessInvoiceDao extends BusinessAnalyticsDaoBase {
         final BusinessInvoiceItemType businessInvoiceItemType;
         if (isCharge(invoiceItem)) {
             businessInvoiceItemType = BusinessInvoiceItemType.CHARGE;
-        } else if (isAccountCreditItem(invoiceItem, otherInvoiceItemsOnInvoice)) {
+        } else if (isAccountCreditItem(invoiceItem)) {
             businessInvoiceItemType = BusinessInvoiceItemType.ACCOUNT_CREDIT;
-        } else if (isInvoiceItemAdjustementItem(invoiceItem)) {
+        } else if (isInvoiceItemAdjustmentItem(invoiceItem)) {
             businessInvoiceItemType = BusinessInvoiceItemType.INVOICE_ITEM_ADJUSTMENT;
-        } else if (isInvoiceAdjustementItem(invoiceItem, otherInvoiceItemsOnInvoice)) {
+        } else if (isInvoiceAdjustmentItem(invoiceItem, otherInvoiceItemsOnInvoice)) {
             businessInvoiceItemType = BusinessInvoiceItemType.INVOICE_ADJUSTMENT;
         } else {
             // We don't care
             return null;
         }
+
+        final Boolean revenueRecognizable = isRevenueRecognizable(invoiceItem);
 
         final Long secondInvoiceItemRecordId;
         if (invoiceItem instanceof AdjustmentInvoiceItemForRepair) {
@@ -236,6 +238,7 @@ public class BusinessInvoiceDao extends BusinessAnalyticsDaoBase {
                                                       accountRecordId,
                                                       invoice,
                                                       invoiceItem,
+                                                      revenueRecognizable,
                                                       businessInvoiceItemType,
                                                       invoiceItemRecordId,
                                                       secondInvoiceItemRecordId,
@@ -247,29 +250,33 @@ public class BusinessInvoiceDao extends BusinessAnalyticsDaoBase {
                                                       reportGroup);
     }
 
+    @VisibleForTesting
+    Boolean isRevenueRecognizable(final InvoiceItem invoiceItem) {
+        // REFUND_ADJ are recognizable because associated with a payment
+        return !InvoiceItemType.CREDIT_ADJ.equals(invoiceItem.getInvoiceItemType());
+    }
+
     // Invoice adjustments
-    private boolean isInvoiceAdjustementItem(final InvoiceItem invoiceItem, final Collection<InvoiceItem> otherInvoiceItemsOnInvoice) {
+    @VisibleForTesting
+    boolean isInvoiceAdjustmentItem(final InvoiceItem invoiceItem, final Collection<InvoiceItem> otherInvoiceItemsOnInvoice) {
         // Either REFUND_ADJ
         return InvoiceItemType.REFUND_ADJ.equals(invoiceItem.getInvoiceItemType()) ||
-               // Or invoice level credit
+               // Or invoice level credit, i.e. credit adj, but NOT on its on own invoice
+               // Note: the negative credit adj items (internal generation of account level credits) doesn't figure in analytics
                (InvoiceItemType.CREDIT_ADJ.equals(invoiceItem.getInvoiceItemType()) &&
-                !isAccountCreditItem(invoiceItem, otherInvoiceItemsOnInvoice));
+                !(otherInvoiceItemsOnInvoice.size() == 1 &&
+                  InvoiceItemType.CBA_ADJ.equals(otherInvoiceItemsOnInvoice.iterator().next().getInvoiceItemType()) &&
+                  otherInvoiceItemsOnInvoice.iterator().next().getAmount().compareTo(invoiceItem.getAmount().negate()) == 0));
     }
 
     // Item adjustments
-    private boolean isInvoiceItemAdjustementItem(final InvoiceItem invoiceItem) {
+    private boolean isInvoiceItemAdjustmentItem(final InvoiceItem invoiceItem) {
         return InvoiceItemType.ITEM_ADJ.equals(invoiceItem.getInvoiceItemType());
     }
 
     // Account credits, used or consumed
-    private boolean isAccountCreditItem(final InvoiceItem invoiceItem, final Collection<InvoiceItem> otherInvoiceItemsOnInvoice) {
-        // Either CBA (positive or negative, i.e. given or consumed)
-        return InvoiceItemType.CBA_ADJ.equals(invoiceItem.getInvoiceItemType()) ||
-               // Or credit adj on its on own invoice (credit adj is negative, hence the CBA item)
-               (InvoiceItemType.CREDIT_ADJ.equals(invoiceItem.getInvoiceItemType()) &&
-                otherInvoiceItemsOnInvoice.size() == 1 &&
-                InvoiceItemType.CBA_ADJ.equals(otherInvoiceItemsOnInvoice.iterator().next().getInvoiceItemType()) &&
-                otherInvoiceItemsOnInvoice.iterator().next().getAmount().compareTo(invoiceItem.getAmount().negate()) == 0);
+    private boolean isAccountCreditItem(final InvoiceItem invoiceItem) {
+        return InvoiceItemType.CBA_ADJ.equals(invoiceItem.getInvoiceItemType());
     }
 
     // Regular line item (charges)

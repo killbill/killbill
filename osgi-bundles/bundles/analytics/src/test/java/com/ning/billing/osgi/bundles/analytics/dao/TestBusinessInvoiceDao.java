@@ -49,20 +49,19 @@ public class TestBusinessInvoiceDao extends AnalyticsTestSuiteNoDB {
     private final UUID invoiceId = UUID.randomUUID();
     private final UUID bundleId = UUID.randomUUID();
 
-    private OSGIKillbillDataSource osgiKillbillDataSource;
-    private OSGIKillbillLogService osgiKillbillLogService;
+    private BusinessInvoiceDao invoiceDao;
 
     @Override
     @BeforeMethod
     public void setUp() throws Exception {
         super.setUp();
 
-        osgiKillbillDataSource = Mockito.mock(OSGIKillbillDataSource.class);
+        final OSGIKillbillDataSource osgiKillbillDataSource = Mockito.mock(OSGIKillbillDataSource.class);
 
         final DataSource dataSource = Mockito.mock(DataSource.class);
         Mockito.when(osgiKillbillDataSource.getDataSource()).thenReturn(dataSource);
 
-        osgiKillbillLogService = Mockito.mock(OSGIKillbillLogService.class);
+        final OSGIKillbillLogService osgiKillbillLogService = Mockito.mock(OSGIKillbillLogService.class);
         Mockito.doAnswer(new Answer() {
             @Override
             public Object answer(final InvocationOnMock invocation) throws Throwable {
@@ -70,6 +69,37 @@ public class TestBusinessInvoiceDao extends AnalyticsTestSuiteNoDB {
                 return null;
             }
         }).when(osgiKillbillLogService).log(Mockito.anyInt(), Mockito.anyString());
+
+        invoiceDao = new BusinessInvoiceDao(osgiKillbillLogService, null, osgiKillbillDataSource, null);
+    }
+
+    @Test(groups = "fast")
+    public void testRevenueRecognizable() throws Exception {
+        // All items but CREDIT_ADJ are recognizable by default
+        Assert.assertTrue(invoiceDao.isRevenueRecognizable(createInvoiceItem(InvoiceItemType.RECURRING)
+                                                          ));
+        Assert.assertFalse(invoiceDao.isRevenueRecognizable(createInvoiceItem(InvoiceItemType.CREDIT_ADJ)
+                                                           ));
+    }
+
+    @Test(groups = "fast")
+    public void testInvoiceAdjustment() throws Exception {
+        Assert.assertFalse(invoiceDao.isInvoiceAdjustmentItem(createInvoiceItem(InvoiceItemType.RECURRING),
+                                                              ImmutableList.<InvoiceItem>of()));
+        Assert.assertTrue(invoiceDao.isInvoiceAdjustmentItem(createInvoiceItem(InvoiceItemType.REFUND_ADJ),
+                                                             ImmutableList.<InvoiceItem>of()));
+
+        final InvoiceItem creditAdj = createInvoiceItem(InvoiceItemType.CREDIT_ADJ);
+
+        // Account credit
+        Assert.assertFalse(invoiceDao.isInvoiceAdjustmentItem(creditAdj,
+                                                              ImmutableList.<InvoiceItem>of(createInvoiceItem(InvoiceItemType.CBA_ADJ, creditAdj.getAmount().negate()))));
+
+        Assert.assertTrue(invoiceDao.isInvoiceAdjustmentItem(creditAdj,
+                                                             ImmutableList.<InvoiceItem>of(createInvoiceItem(InvoiceItemType.CBA_ADJ, creditAdj.getAmount().negate().add(BigDecimal.ONE)))));
+        Assert.assertTrue(invoiceDao.isInvoiceAdjustmentItem(creditAdj,
+                                                             ImmutableList.<InvoiceItem>of(createInvoiceItem(InvoiceItemType.RECURRING),
+                                                                                           createInvoiceItem(InvoiceItemType.CBA_ADJ, creditAdj.getAmount().negate()))));
     }
 
     @Test(groups = "fast")
@@ -100,7 +130,6 @@ public class TestBusinessInvoiceDao extends AnalyticsTestSuiteNoDB {
         final BigDecimal externalChargeAmount = BigDecimal.TEN;
         final InvoiceItem externalCharge = createInvoiceItem(InvoiceItemType.EXTERNAL_CHARGE, externalChargeSubscriptionId, externalStartDate, null, externalChargeAmount, null);
 
-        final BusinessInvoiceDao invoiceDao = new BusinessInvoiceDao(osgiKillbillLogService, null, osgiKillbillDataSource, null);
         final Collection<InvoiceItem> sanitizedInvoiceItems = invoiceDao.sanitizeInvoiceItems(ImmutableList.<InvoiceItem>of(recurring1, repair1, reparation1, recurring2, repair2, reparation2, externalCharge));
         Assert.assertEquals(sanitizedInvoiceItems.size(), 2 + 2 + 1);
         for (final InvoiceItem invoiceItem : sanitizedInvoiceItems) {
@@ -130,6 +159,14 @@ public class TestBusinessInvoiceDao extends AnalyticsTestSuiteNoDB {
                 Assert.fail("Shouldn't be in the sanitized elements: " + invoiceItem);
             }
         }
+    }
+
+    private InvoiceItem createInvoiceItem(final InvoiceItemType type) {
+        return createInvoiceItem(type, BigDecimal.TEN);
+    }
+
+    private InvoiceItem createInvoiceItem(final InvoiceItemType type, final BigDecimal amount) {
+        return createInvoiceItem(type, UUID.randomUUID(), new LocalDate(2013, 1, 2), new LocalDate(2013, 2, 5), amount, null);
     }
 
     private InvoiceItem createInvoiceItem(final InvoiceItemType invoiceItemType,
