@@ -8,7 +8,7 @@ getAccountsCreatedOverTime() ::= <<
     date(from_unixtime(created_date / 1000)) day
     -- TODO: use account_record_id, once populated
   , count(record_id) count
-  from bac
+  from old_bac
   where <CHECK_TENANT()>
   group by 1
   order by 1
@@ -31,7 +31,7 @@ getAccount(account_id) ::= <<
   , billing_address_country
   , currency
   , tenant_record_id
-  from bac
+  from old_bac
   where account_id=:account_id
   <AND_CHECK_TENANT()>
   limit 1
@@ -54,7 +54,7 @@ getAccountByKey(account_key) ::= <<
   , billing_address_country
   , currency
   , tenant_record_id
-  from bac
+  from old_bac
   where account_key=:account_key
   <AND_CHECK_TENANT()>
   limit 1
@@ -62,7 +62,7 @@ getAccountByKey(account_key) ::= <<
 >>
 
 createAccount() ::= <<
-  insert into bac(
+  insert into old_bac(
     account_id
   , account_key
   , created_date
@@ -98,7 +98,7 @@ createAccount() ::= <<
 >>
 
 saveAccount() ::= <<
-  update bac set
+  update old_bac set
     updated_date=:updated_date
   , balance=:balance
   , name=:name
@@ -115,9 +115,9 @@ saveAccount() ::= <<
 >>
 
 deleteAccount(account_id) ::= <<
-delete from bac where account_id = :account_id <AND_CHECK_TENANT()>;
+delete from old_bac where account_id = :account_id <AND_CHECK_TENANT()>;
 >>
 
 test() ::= <<
-select 1 from bac where <CHECK_TENANT()> limit 1;
+select 1 from old_bac where <CHECK_TENANT()> limit 1;
 >>

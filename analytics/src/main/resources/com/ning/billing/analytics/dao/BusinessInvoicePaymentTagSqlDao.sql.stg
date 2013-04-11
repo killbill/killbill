@@ -8,14 +8,14 @@ select
   payment_id
 , name
 , tenant_record_id
-from bip_tags
+from old_bip_tags
 where payment_id = :payment_id
 <AND_CHECK_TENANT()>
 ;
 >>
 
 addTag(payment_id, name) ::=<<
-insert into bip_tags (
+insert into old_bip_tags (
   payment_id
 , name
 , account_record_id
@@ -29,9 +29,9 @@ insert into bip_tags (
 >>
 
 removeTag(payment_id, name) ::= <<
-delete from bip_tags where payment_id = :payment_id and name = :name <AND_CHECK_TENANT()>;
+delete from old_bip_tags where payment_id = :payment_id and name = :name <AND_CHECK_TENANT()>;
 >>
 
 test() ::= <<
-select 1 from bip_tags where <CHECK_TENANT()> limit 1;
+select 1 from old_bip_tags where <CHECK_TENANT()> limit 1;
 >>

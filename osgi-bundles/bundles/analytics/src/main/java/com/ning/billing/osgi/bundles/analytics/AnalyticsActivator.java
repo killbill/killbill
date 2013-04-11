@@ -16,17 +16,22 @@
 
 package com.ning.billing.osgi.bundles.analytics;
 
-import org.osgi.framework.BundleContext;
-import org.skife.config.SimplePropertyConfigSource;
+import java.util.Hashtable;
 
-import com.ning.billing.osgi.bundles.analytics.setup.AnalyticsModule;
+import javax.servlet.Servlet;
+import javax.servlet.http.HttpServlet;
+
+import org.osgi.framework.BundleContext;
+
+import com.ning.billing.osgi.api.OSGIPluginProperties;
+import com.ning.billing.osgi.bundles.analytics.api.user.AnalyticsUserApi;
+import com.ning.billing.osgi.bundles.analytics.http.AnalyticsServlet;
 import com.ning.killbill.osgi.libs.killbill.KillbillActivatorBase;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillEventDispatcher.OSGIKillbillEventHandler;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-
 public class AnalyticsActivator extends KillbillActivatorBase {
+
+    public static final String PLUGIN_NAME = "killbill-analytics";
 
     private OSGIKillbillEventHandler analyticsListener;
 
@@ -34,13 +39,22 @@ public class AnalyticsActivator extends KillbillActivatorBase {
     public void start(final BundleContext context) throws Exception {
         super.start(context);
 
-        final SimplePropertyConfigSource configSource = new SimplePropertyConfigSource(System.getProperties());
-        final Injector injector = Guice.createInjector(new AnalyticsModule(configSource));
-        analyticsListener = injector.getInstance(AnalyticsListener.class);
+        analyticsListener = new AnalyticsListener(logService, killbillAPI, dataSource);
+        dispatcher.registerEventHandler(analyticsListener);
+
+        final AnalyticsUserApi analyticsUserApi = new AnalyticsUserApi(logService, killbillAPI, dataSource);
+        final AnalyticsServlet analyticsServlet = new AnalyticsServlet(analyticsUserApi);
+        registerServlet(context, analyticsServlet);
     }
 
     @Override
     public OSGIKillbillEventHandler getOSGIKillbillEventHandler() {
         return analyticsListener;
+    }
+
+    private void registerServlet(final BundleContext context, final HttpServlet servlet) {
+        final Hashtable<String, String> props = new Hashtable<String, String>();
+        props.put(OSGIPluginProperties.PLUGIN_NAME_PROP, PLUGIN_NAME);
+        registrar.registerService(context, Servlet.class, servlet, props);
     }
 }

@@ -21,7 +21,7 @@
     <parent>
         <groupId>com.ning.billing</groupId>
         <artifactId>killbill-osgi-bundles</artifactId>
-        <version>0.1.62-SNAPSHOT</version>
+        <version>0.1.63-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>killbill-osgi-bundles-analytics</artifactId>
@@ -29,12 +29,17 @@
     <packaging>bundle</packaging>
     <dependencies>
         <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.google.inject</groupId>
-            <artifactId>guice</artifactId>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-joda</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.ning.billing</groupId>
@@ -47,7 +52,19 @@
         </dependency>
         <dependency>
             <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-util</artifactId>
+            <artifactId>killbill-osgi-bundles-lib-slf4j-osgi</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing.commons</groupId>
+            <artifactId>killbill-embeddeddb</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing.commons</groupId>
+            <artifactId>killbill-jdbi</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing.commons</groupId>
+            <artifactId>killbill-locker</artifactId>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>
@@ -90,62 +107,8 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-account</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-catalog</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-catalog</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-entitlement</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-entitlement</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-junction</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-junction</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-invoice</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-payment</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-util</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.jayway.awaitility</groupId>
-            <artifactId>awaitility</artifactId>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -156,16 +119,6 @@
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-mxj-db-files</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -202,7 +155,7 @@
                         <Export-Package/>
                         <Private-Package>com.ning.billing.osgi.bundles.analytics.*</Private-Package>
                         <!-- Optional resolution because exported by the Felix system bundle -->
-                        <Import-Package>*;resolution:=optional</Import-Package>
+                        <Import-Package>*;com.ning.billing.osgi.api;resolution:=optional</Import-Package>
                     </instructions>
                 </configuration>
                 <executions>

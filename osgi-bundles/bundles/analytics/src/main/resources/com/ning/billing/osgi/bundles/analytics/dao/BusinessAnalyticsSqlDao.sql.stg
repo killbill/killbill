@@ -1,0 +1,1008 @@
+group BusinessAnalyticsSqlDao;
+
+createBst() ::= <<
+insert into bst (
+  subscription_event_record_id
+, bundle_id
+, bundle_external_key
+, subscription_id
+, requested_timestamp
+, event
+, prev_product_name
+, prev_product_type
+, prev_product_category
+, prev_slug
+, prev_phase
+, prev_billing_period
+, prev_price
+, prev_price_list
+, prev_mrr
+, prev_currency
+, prev_state
+, prev_business_active
+, prev_start_date
+, next_product_name
+, next_product_type
+, next_product_category
+, next_slug
+, next_phase
+, next_billing_period
+, next_price
+, next_price_list
+, next_mrr
+, next_currency
+, next_state
+, next_business_active
+, next_start_date
+, next_end_date
+, created_date
+, created_by
+, created_reason_code
+, created_comments
+, account_id
+, account_name
+, account_external_key
+, account_record_id
+, tenant_record_id
+) values (
+  :subscriptionEventRecordId
+, :bundleId
+, :bundleExternalKey
+, :subscriptionId
+, :requestedTimestamp
+, :event
+, :prevProductName
+, :prevProductType
+, :prevProductCategory
+, :prevSlug
+, :prevPhase
+, :prevBillingPeriod
+, :prevPrice
+, :prevPriceList
+, :prevMrr
+, :prevCurrency
+, :prevState
+, :prevBusinessActive
+, :prevStartDate
+, :nextProductName
+, :nextProductType
+, :nextProductCategory
+, :nextSlug
+, :nextPhase
+, :nextBillingPeriod
+, :nextPrice
+, :nextPriceList
+, :nextMrr
+, :nextCurrency
+, :nextState
+, :nextBusinessActive
+, :nextStartDate
+, :nextEndDate
+, :createdDate
+, :createdBy
+, :createdReasonCode
+, :createdComments
+, :accountId
+, :accountName
+, :accountExternalKey
+, :accountRecordId
+, :tenantRecordId
+);
+>>
+
+createBac() ::= <<
+insert into bac (
+  email
+, first_name_length
+, currency
+, billing_cycle_day_local
+, payment_method_id
+, time_zone
+, locale
+, address1
+, address2
+, company_name
+, city
+, state_or_province
+, country
+, postal_code
+, phone
+, migrated
+, notified_for_invoices
+, balance
+, last_invoice_date
+, last_payment_date
+, last_payment_status
+, created_date
+, created_by
+, created_reason_code
+, created_comments
+, updated_date
+, account_id
+, account_name
+, account_external_key
+, account_record_id
+, tenant_record_id
+) values (
+  :email
+, :firstNameLength
+, :currency
+, :billingCycleDayLocal
+, :paymentMethodId
+, :timeZone
+, :locale
+, :address1
+, :address2
+, :companyName
+, :city
+, :stateOrProvince
+, :country
+, :postalCode
+, :phone
+, :migrated
+, :notifiedForInvoices
+, :balance
+, :lastInvoiceDate
+, :lastPaymentDate
+, :lastPaymentStatus
+, :createdDate
+, :createdBy
+, :createdReasonCode
+, :createdComments
+, :updatedDate
+, :accountId
+, :accountName
+, :accountExternalKey
+, :accountRecordId
+, :tenantRecordId
+);
+>>
+
+createBin() ::= <<
+insert into bin (
+  invoice_record_id
+, invoice_id
+, invoice_number
+, invoice_date
+, target_date
+, currency
+, balance
+, amount_paid
+, amount_charged
+, original_amount_charged
+, amount_credited
+, created_date
+, created_by
+, created_reason_code
+, created_comments
+, account_id
+, account_name
+, account_external_key
+, account_record_id
+) values (
+  :invoiceRecordId
+, :invoiceId
+, :invoiceNumber
+, :invoiceDate
+, :targetDate
+, :currency
+, :balance
+, :amountPaid
+, :amountCharged
+, :originalAmountCharged
+, :amountCredited
+, :createdDate
+, :createdBy
+, :createdReasonCode
+, :createdComments
+, :accountId
+, :accountName
+, :accountExternalKey
+, :accountRecordId
+);
+>>
+
+createBia() ::= <<
+insert into bia (
+, invoice_item_record_id
+, second_invoice_item_record_id
+, item_id
+, invoice_id
+, invoice_number
+, invoice_created_date
+, invoice_date
+, invoice_target_date
+, invoice_currency
+, invoice_balance
+, invoice_amount_paid
+, invoice_amount_charged
+, invoice_original_amount_charged
+, invoice_amount_credited
+, item_type
+, revenue_recognizable
+, bundle_external_key
+, product_name
+, product_type
+, product_category
+, slug
+, phase
+, billing_period
+, start_date
+, end_date
+, amount
+, currency
+, linked_item_id
+, created_date
+, created_by
+, created_reason_code
+, created_comments
+, account_id
+, account_name
+, account_external_key
+, account_record_id
+, tenant_record_id
+) values (
+  :invoiceItemRecordId
+, :secondInvoiceItemRecordId
+, :itemId
+, :invoiceId
+, :invoiceNumber
+, :invoiceCreatedDate
+, :invoiceDate
+, :invoiceTargetDate
+, :invoiceCurrency
+, :invoiceBalance
+, :invoiceAmountPaid
+, :invoiceAmountCharged
+, :invoiceOriginalAmountCharged
+, :invoiceAmountCredited
+, :itemType
+, :revenueRecognizable
+, :bundleExternalKey
+, :productName
+, :productType
+, :productCategory
+, :slug
+, :phase
+, :billingPeriod
+, :startDate
+, :endDate
+, :amount
+, :currency
+, :linkedItemId
+, :createdDate
+, :createdBy
+, :createdReasonCode
+, :createdComments
+, :accountId
+, :accountName
+, :accountExternalKey
+, :accountRecordId
+, :tenantRecordId
+);
+>>
+
+createBii() ::= <<
+insert into bii (
+  invoice_item_record_id
+, second_invoice_item_record_id
+, item_id
+, invoice_id
+, invoice_number
+, invoice_created_date
+, invoice_date
+, invoice_target_date
+, invoice_currency
+, invoice_balance
+, invoice_amount_paid
+, invoice_amount_charged
+, invoice_original_amount_charged
+, invoice_amount_credited
+, item_type
+, revenue_recognizable
+, bundle_external_key
+, product_name
+, product_type
+, product_category
+, slug
+, phase
+, billing_period
+, start_date
+, end_date
+, amount
+, currency
+, linked_item_id
+, created_date
+, created_by
+, created_reason_code
+, created_comments
+, account_id
+, account_name
+, account_external_key
+, account_record_id
+, tenant_record_id
+) values (
+  :invoiceItemRecordId
+, :secondInvoiceItemRecordId
+, :itemId
+, :invoiceId
+, :invoiceNumber
+, :invoiceCreatedDate
+, :invoiceDate
+, :invoiceTargetDate
+, :invoiceCurrency
+, :invoiceBalance
+, :invoiceAmountPaid
+, :invoiceAmountCharged
+, :invoiceOriginalAmountCharged
+, :invoiceAmountCredited
+, :itemType
+, :revenueRecognizable
+, :bundleExternalKey
+, :productName
+, :productType
+, :productCategory
+, :slug
+, :phase
+, :billingPeriod
+, :startDate
+, :endDate
+, :amount
+, :currency
+, :linkedItemId
+, :createdDate
+, :createdBy
+, :createdReasonCode
+, :createdComments
+, :accountId
+, :accountName
+, :accountExternalKey
+, :accountRecordId
+, :tenantRecordId
+);
+>>
+
+createBiia() ::= <<
+insert into biia (
+  invoice_item_record_id
+, second_invoice_item_record_id
+, item_id
+, invoice_id
+, invoice_number
+, invoice_created_date
+, invoice_date
+, invoice_target_date
+, invoice_currency
+, invoice_balance
+, invoice_amount_paid
+, invoice_amount_charged
+, invoice_original_amount_charged
+, invoice_amount_credited
+, item_type
+, revenue_recognizable
+, bundle_external_key
+, product_name
+, product_type
+, product_category
+, slug
+, phase
+, billing_period
+, start_date
+, end_date
+, amount
+, currency
+, linked_item_id
+, created_date
+, created_by
+, created_reason_code
+, created_comments
+, account_id
+, account_name
+, account_external_key
+, account_record_id
+, tenant_record_id
+) values (
+  :invoiceItemRecordId
+, :secondInvoiceItemRecordId
+, :itemId
+, :invoiceId
+, :invoiceNumber
+, :invoiceCreatedDate
+, :invoiceDate
+, :invoiceTargetDate
+, :invoiceCurrency
+, :invoiceBalance
+, :invoiceAmountPaid
+, :invoiceAmountCharged
+, :invoiceOriginalAmountCharged
+, :invoiceAmountCredited
+, :itemType
+, :revenueRecognizable
+, :bundleExternalKey
+, :productName
+, :productType
+, :productCategory
+, :slug
+, :phase
+, :billingPeriod
+, :startDate
+, :endDate
+, :amount
+, :currency
+, :linkedItemId
+, :createdDate
+, :createdBy
+, :createdReasonCode
+, :createdComments
+, :accountId
+, :accountName
+, :accountExternalKey
+, :accountRecordId
+, :tenantRecordId
+);
+>>
+
+createBiic() ::= <<
+insert into biic (
+  invoice_item_record_id
+, second_invoice_item_record_id
+, item_id
+, invoice_id
+, invoice_number
+, invoice_created_date
+, invoice_date
+, invoice_target_date
+, invoice_currency
+, invoice_balance
+, invoice_amount_paid
+, invoice_amount_charged
+, invoice_original_amount_charged
+, invoice_amount_credited
+, item_type
+, revenue_recognizable
+, bundle_external_key
+, product_name
+, product_type
+, product_category
+, slug
+, phase
+, billing_period
+, start_date
+, end_date
+, amount
+, currency
+, linked_item_id
+, created_date
+, created_by
+, created_reason_code
+, created_comments
+, account_id
+, account_name
+, account_external_key
+, account_record_id
+, tenant_record_id
+) values (
+  :invoiceItemRecordId
+, :secondInvoiceItemRecordId
+, :itemId
+, :invoiceId
+, :invoiceNumber
+, :invoiceCreatedDate
+, :invoiceDate
+, :invoiceTargetDate
+, :invoiceCurrency
+, :invoiceBalance
+, :invoiceAmountPaid
+, :invoiceAmountCharged
+, :invoiceOriginalAmountCharged
+, :invoiceAmountCredited
+, :itemType
+, :revenueRecognizable
+, :bundleExternalKey
+, :productName
+, :productType
+, :productCategory
+, :slug
+, :phase
+, :billingPeriod
+, :startDate
+, :endDate
+, :amount
+, :currency
+, :linkedItemId
+, :createdDate
+, :createdBy
+, :createdReasonCode
+, :createdComments
+, :accountId
+, :accountName
+, :accountExternalKey
+, :accountRecordId
+, :tenantRecordId
+);
+>>
+
+createBip() ::= <<
+insert into bip (
+  invoice_payment_record_id
+, invoice_payment_id
+, invoice_id
+, invoice_number
+, invoice_created_date
+, invoice_date
+, invoice_target_date
+, invoice_currency
+, invoice_balance
+, invoice_amount_paid
+, invoice_amount_charged
+, invoice_original_amount_charged
+, invoice_amount_credited
+, invoice_payment_type
+, payment_number
+, linked_invoice_payment_id
+, amount
+, currency
+, created_date
+, created_by
+, created_reason_code
+, created_comments
+, account_id
+, account_name
+, account_external_key
+, account_record_id
+, tenant_record_id
+) values (
+  :invoicePaymentRecordId
+, :invoicePaymentId
+, :invoiceId
+, :invoiceNumber
+, :invoiceCreatedDate
+, :invoiceDate
+, :invoiceTargetDate
+, :invoiceCurrency
+, :invoiceBalance
+, :invoiceAmountPaid
+, :invoiceAmountCharged
+, :invoiceOriginalAmountCharged
+, :invoiceAmountCredited
+, :invoicePaymentType
+, :paymentNumber
+, :linkedInvoicePaymentId
+, :amount
+, :currency
+, :createdDate
+, :createdBy
+, :createdReasonCode
+, :createdComments
+, :accountId
+, :accountName
+, :accountExternalKey
+, :accountRecordId
+, :tenantRecordId
+);
+>>
+
+createBipr() ::= <<
+insert into bipr (
+  invoice_payment_record_id
+, invoice_payment_id
+, invoice_id
+, invoice_number
+, invoice_created_date
+, invoice_date
+, invoice_target_date
+, invoice_currency
+, invoice_balance
+, invoice_amount_paid
+, invoice_amount_charged
+, invoice_original_amount_charged
+, invoice_amount_credited
+, invoice_payment_type
+, payment_number
+, linked_invoice_payment_id
+, amount
+, currency
+, created_date
+, created_by
+, created_reason_code
+, created_comments
+, account_id
+, account_name
+, account_external_key
+, account_record_id
+, tenant_record_id
+) values (
+  :invoicePaymentRecordId
+, :invoicePaymentId
+, :invoiceId
+, :invoiceNumber
+, :invoiceCreatedDate
+, :invoiceDate
+, :invoiceTargetDate
+, :invoiceCurrency
+, :invoiceBalance
+, :invoiceAmountPaid
+, :invoiceAmountCharged
+, :invoiceOriginalAmountCharged
+, :invoiceAmountCredited
+, :invoicePaymentType
+, :paymentNumber
+, :linkedInvoicePaymentId
+, :amount
+, :currency
+, :createdDate
+, :createdBy
+, :createdReasonCode
+, :createdComments
+, :accountId
+, :accountName
+, :accountExternalKey
+, :accountRecordId
+, :tenantRecordId
+);
+>>
+
+createBipc() ::= <<
+insert into bipc (
+  invoice_payment_record_id
+, invoice_payment_id
+, invoice_id
+, invoice_number
+, invoice_created_date
+, invoice_date
+, invoice_target_date
+, invoice_currency
+, invoice_balance
+, invoice_amount_paid
+, invoice_amount_charged
+, invoice_original_amount_charged
+, invoice_amount_credited
+, invoice_payment_type
+, payment_number
+, linked_invoice_payment_id
+, amount
+, currency
+, created_date
+, created_by
+, created_reason_code
+, created_comments
+, account_id
+, account_name
+, account_external_key
+, account_record_id
+, tenant_record_id
+) values (
+  :invoicePaymentRecordId
+, :invoicePaymentId
+, :invoiceId
+, :invoiceNumber
+, :invoiceCreatedDate
+, :invoiceDate
+, :invoiceTargetDate
+, :invoiceCurrency
+, :invoiceBalance
+, :invoiceAmountPaid
+, :invoiceAmountCharged
+, :invoiceOriginalAmountCharged
+, :invoiceAmountCredited
+, :invoicePaymentType
+, :paymentNumber
+, :linkedInvoicePaymentId
+, :amount
+, :currency
+, :createdDate
+, :createdBy
+, :createdReasonCode
+, :createdComments
+, :accountId
+, :accountName
+, :accountExternalKey
+, :accountRecordId
+, :tenantRecordId
+);
+>>
+
+createBos() ::= <<
+insert into bos (
+  blocking_state_record_id
+, bundle_id
+, bundle_external_key
+, status
+, start_date
+, end_date
+, created_date
+, created_by
+, created_reason_code
+, created_comments
+, account_id
+, account_name
+, account_external_key
+, account_record_id
+, tenant_record_id
+) values (
+  :blockingStateRecordId
+, :bundleId
+, :bundleExternalKey
+, :status
+, :startDate
+, :endDate
+, :createdDate
+, :createdBy
+, :createdReasonCode
+, :createdComments
+, :accountId
+, :accountName
+, :accountExternalKey
+, :accountRecordId
+, :tenantRecordId
+);
+>>
+
+createBacTags() ::= <<
+insert into bac_tags (
+  tag_record_id
+, name
+, created_date
+, created_by
+, created_reason_code
+, created_comments
+, account_id
+, account_name
+, account_external_key
+, account_record_id
+, tenant_record_id
+) values (
+  :tagRecordId
+, :name
+, :createdDate
+, :createdBy
+, :createdReasonCode
+, :createdComments
+, :accountId
+, :accountName
+, :accountExternalKey
+, :accountRecordId
+, :tenantRecordId
+);
+>>
+
+createBinTags() ::= <<
+insert into bin_tags (
+  tag_record_id
+, invoice_id
+, name
+, created_date
+, created_by
+, created_reason_code
+, created_comments
+, account_id
+, account_name
+, account_external_key
+, account_record_id
+, tenant_record_id
+) values (
+  :tagRecordId
+, :invoiceId
+, :name
+, :createdDate
+, :createdBy
+, :createdReasonCode
+, :createdComments
+, :accountId
+, :accountName
+, :accountExternalKey
+, :accountRecordId
+, :tenantRecordId
+);
+>>
+
+createBipTags() ::= <<
+insert into bip_tags (
+  tag_record_id
+, invoice_payment_id
+, name
+, created_date
+, created_by
+, created_reason_code
+, created_comments
+, account_id
+, account_name
+, account_external_key
+, account_record_id
+, tenant_record_id
+) values (
+  :tagRecordId
+, :invoicePaymentId
+, :name
+, :createdDate
+, :createdBy
+, :createdReasonCode
+, :createdComments
+, :accountId
+, :accountName
+, :accountExternalKey
+, :accountRecordId
+, :tenantRecordId
+);
+>>
+
+createBacFields() ::= <<
+insert into bac_fields (
+  custom_field_record_id
+, name
+, value
+, created_date
+, created_by
+, created_reason_code
+, created_comments
+, account_id
+, account_name
+, account_external_key
+, account_record_id
+, tenant_record_id
+) values (
+  :customFieldRecordId
+, :name
+, :value
+, :createdDate
+, :createdBy
+, :createdReasonCode
+, :createdComments
+, :accountId
+, :accountName
+, :accountExternalKey
+, :accountRecordId
+, :tenantRecordId
+);
+>>
+
+createBinFields() ::= <<
+insert into bin_fields (
+  custom_field_record_id
+, invoice_id
+, name
+, value
+, created_date
+, created_by
+, created_reason_code
+, created_comments
+, account_id
+, account_name
+, account_external_key
+, account_record_id
+, tenant_record_id
+) values (
+  :customFieldRecordId
+, :invoiceId
+, :name
+, :value
+, :createdDate
+, :createdBy
+, :createdReasonCode
+, :createdComments
+, :accountId
+, :accountName
+, :accountExternalKey
+, :accountRecordId
+, :tenantRecordId
+);
+>>
+
+createBipFields() ::= <<
+insert into bip_fields (
+, custom_field_record_id
+, invoice_payment_id
+, name
+, value
+, created_date
+, created_by
+, created_reason_code
+, created_comments
+, account_id
+, account_name
+, account_external_key
+, account_record_id
+, tenant_record_id
+) values (
+, :customFieldRecordId
+, :invoicePaymentId
+, :name
+, :value
+, :createdDate
+, :createdBy
+, :createdReasonCode
+, :createdComments
+, :accountId
+, :accountName
+, :accountExternalKey
+, :accountRecordId
+, :tenantRecordId
+);
+>>
+
+CHECK_TENANT_AND_ACCOUNT(prefix) ::= <<
+    <prefix>tenant_record_id \<=\> :tenantRecordId
+and <prefix>account_record_id \<=\> :accountRecordId
+>>
+
+SELECT_STAR_FROM_TABLE(table) ::= <<
+select *
+from <table> t
+where <CHECK_TENANT_AND_ACCOUNT("t.")>
+>>
+
+deleteByAccountRecordId(tableName) ::= <<
+delete from <tableName>
+where <CHECK_TENANT_AND_ACCOUNT("")>
+;
+>>
+
+getAccountByAccountRecordId() ::= <<
+<SELECT_STAR_FROM_TABLE("bac")>
+;
+>>
+
+getSubscriptionTransitionsByAccountRecordId() ::= <<
+<SELECT_STAR_FROM_TABLE("bst")>
+;
+>>
+
+getOverdueStatusesByAccountRecordId() ::= <<
+<SELECT_STAR_FROM_TABLE("bos")>
+;
+>>
+
+getInvoicesByAccountRecordId() ::= <<
+<SELECT_STAR_FROM_TABLE("bin")>
+;
+>>
+
+getInvoiceItemsByAccountRecordId() ::= <<
+<SELECT_STAR_FROM_TABLE("bia")>
+union all
+<SELECT_STAR_FROM_TABLE("bii")>
+union all
+<SELECT_STAR_FROM_TABLE("biia")>
+union all
+<SELECT_STAR_FROM_TABLE("biic")>
+;
+>>
+
+getInvoicePaymentsByAccountRecordId() ::= <<
+<SELECT_STAR_FROM_TABLE("bip")>
+union all
+<SELECT_STAR_FROM_TABLE("bipr")>
+union all
+<SELECT_STAR_FROM_TABLE("bipc")>
+;
+>>
+
+getAccountFieldsByAccountRecordId() ::= <<
+<SELECT_STAR_FROM_TABLE("bac_fields")>
+;
+>>
+
+getInvoiceFieldsByAccountRecordId() ::= <<
+<SELECT_STAR_FROM_TABLE("bin_fields")>
+;
+>>
+
+getInvoicePaymentFieldsByAccountRecordId() ::= <<
+<SELECT_STAR_FROM_TABLE("bip_fields")>
+;
+>>
+
+getAccountTagsByAccountRecordId() ::= <<
+<SELECT_STAR_FROM_TABLE("bac_tags")>
+;
+>>
+
+getInvoiceTagsByAccountRecordId() ::= <<
+<SELECT_STAR_FROM_TABLE("bin_tags")>
+;
+>>
+
+getInvoicePaymentTagsByAccountRecordId() ::= <<
+<SELECT_STAR_FROM_TABLE("bip_tags")>
+;
+>>

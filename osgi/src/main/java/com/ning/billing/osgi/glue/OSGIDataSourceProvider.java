@@ -18,17 +18,12 @@ package com.ning.billing.osgi.glue;
 
 import java.util.concurrent.TimeUnit;
 
-import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.sql.DataSource;
 
 import org.skife.config.TimeSpan;
 import org.skife.jdbi.v2.DBI;
-import org.skife.jdbi.v2.TimingCollector;
 import org.skife.jdbi.v2.tweak.SQLLog;
-import org.skife.jdbi.v2.tweak.TransactionHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.ning.billing.util.dao.DateTimeArgumentFactory;
 import com.ning.billing.util.dao.DateTimeZoneArgumentFactory;
@@ -37,30 +32,22 @@ import com.ning.billing.util.dao.LocalDateArgumentFactory;
 import com.ning.billing.util.dao.UUIDArgumentFactory;
 import com.ning.billing.util.dao.UuidMapper;
 
+import com.google.inject.Inject;
 import com.jolbox.bonecp.BoneCPConfig;
 import com.jolbox.bonecp.BoneCPDataSource;
 import com.mchange.v2.c3p0.ComboPooledDataSource;
-import com.yammer.metrics.core.MetricsRegistry;
 
 public class OSGIDataSourceProvider implements Provider<DataSource> {
 
     private final OSGIDataSourceConfig config;
-    private final String jdbcUri;
-    private final String userName;
-    private final String userPwd;
-
     private SQLLog sqlLog;
 
     @Inject
     public OSGIDataSourceProvider(final OSGIDataSourceConfig config) {
         this.config = config;
-        this.jdbcUri = config.getJdbcUrl();
-        this.userName = config.getUsername();
-        this.userPwd = config.getPassword();
     }
 
-
-    @com.google.inject.Inject(optional = true)
+    @Inject(optional = true)
     public void setSqlLog(final SQLLog sqlLog) {
         this.sqlLog = sqlLog;
     }
@@ -136,12 +123,12 @@ public class OSGIDataSourceProvider implements Provider<DataSource> {
         cpds.setCheckoutTimeout(toMilliSeconds(config.getConnectionTimeout()));
         // http://www.mchange.com/projects/c3p0/#maxIdleTime
         // Seconds a Connection can remain pooled but unused before being discarded. Zero means idle connections never expire.
-//        cpds.setMaxIdleTime(toSeconds(config.getIdleMaxAge()));
+        //        cpds.setMaxIdleTime(toSeconds(config.getIdleMaxAge()));
         // http://www.mchange.com/projects/c3p0/#maxConnectionAge
         // Seconds, effectively a time to live. A Connection older than maxConnectionAge will be destroyed and purged from the pool.
         // This differs from maxIdleTime in that it refers to absolute age. Even a Connection which has not been much idle will be purged
         // from the pool if it exceeds maxConnectionAge. Zero means no maximum absolute age is enforced.
-//        cpds.setMaxConnectionAge(toSeconds(config.getMaxConnectionAge()));
+        //        cpds.setMaxConnectionAge(toSeconds(config.getMaxConnectionAge()));
         // http://www.mchange.com/projects/c3p0/#idleConnectionTestPeriod
         // If this is a number greater than 0, c3p0 will test all idle, pooled but unchecked-out connections, every this number of seconds.
         cpds.setIdleConnectionTestPeriod(60);

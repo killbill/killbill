@@ -16,138 +16,86 @@
 
 package com.ning.billing.osgi.bundles.analytics;
 
-import org.testng.annotations.AfterMethod;
+import java.io.IOException;
+import java.io.InputStream;
+
+import javax.sql.DataSource;
+
+import org.mockito.Mockito;
+import org.osgi.framework.BundleContext;
+import org.skife.jdbi.v2.DBI;
+import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
-import com.ning.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
-import com.ning.billing.account.api.AccountUserApi;
-import com.ning.billing.analytics.api.AnalyticsService;
-import com.ning.billing.analytics.api.user.AnalyticsUserApi;
-import com.ning.billing.catalog.api.CatalogService;
-import com.ning.billing.entitlement.api.user.EntitlementUserApi;
-import com.ning.billing.invoice.api.InvoiceUserApi;
-import com.ning.billing.invoice.dao.InvoiceDao;
-import com.ning.billing.osgi.bundles.analytics.api.DefaultAnalyticsService;
-import com.ning.billing.osgi.bundles.analytics.dao.BusinessAccountFieldSqlDao;
-import com.ning.billing.osgi.bundles.analytics.dao.BusinessAccountSqlDao;
-import com.ning.billing.osgi.bundles.analytics.dao.BusinessAccountTagSqlDao;
-import com.ning.billing.osgi.bundles.analytics.dao.BusinessInvoiceFieldSqlDao;
-import com.ning.billing.osgi.bundles.analytics.dao.BusinessInvoiceItemSqlDao;
-import com.ning.billing.osgi.bundles.analytics.dao.BusinessInvoicePaymentFieldSqlDao;
-import com.ning.billing.osgi.bundles.analytics.dao.BusinessInvoicePaymentSqlDao;
-import com.ning.billing.osgi.bundles.analytics.dao.BusinessInvoicePaymentTagSqlDao;
-import com.ning.billing.osgi.bundles.analytics.dao.BusinessInvoiceSqlDao;
-import com.ning.billing.osgi.bundles.analytics.dao.BusinessInvoiceTagSqlDao;
-import com.ning.billing.osgi.bundles.analytics.dao.BusinessOverdueStatusSqlDao;
-import com.ning.billing.osgi.bundles.analytics.dao.BusinessSubscriptionTransitionFieldSqlDao;
-import com.ning.billing.osgi.bundles.analytics.dao.BusinessSubscriptionTransitionSqlDao;
-import com.ning.billing.osgi.bundles.analytics.dao.BusinessSubscriptionTransitionTagSqlDao;
-import com.ning.billing.osgi.bundles.analytics.glue.TestAnalyticsModuleWithEmbeddedDB;
-import com.ning.billing.payment.dao.PaymentDao;
-import com.ning.billing.util.glue.RealImplementation;
-import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
-import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
-import com.ning.billing.util.svcsapi.bus.InternalBus;
+import com.ning.billing.commons.embeddeddb.mysql.MySQLEmbeddedDB;
+import com.ning.billing.osgi.bundles.analytics.dao.BusinessAnalyticsSqlDao;
+import com.ning.billing.osgi.bundles.analytics.dao.BusinessDBIProvider;
+import com.ning.killbill.osgi.libs.killbill.OSGIKillbillDataSource;
 
-import com.google.inject.Guice;
-import com.google.inject.Inject;
-import com.google.inject.Injector;
+import com.google.common.base.Charsets;
+import com.google.common.io.CharStreams;
+import com.google.common.io.InputSupplier;
+import com.google.common.io.Resources;
 
-public abstract class AnalyticsTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWithEmbeddedDB {
+public abstract class AnalyticsTestSuiteWithEmbeddedDB extends AnalyticsTestSuiteNoDB {
 
-    @Inject
-    @RealImplementation
-    protected AccountUserApi accountApi;
-    @Inject
-    protected AccountInternalApi accountInternalApi;
-    @Inject
-    protected AnalyticsUserApi analyticsUserApi;
-    @Inject
-    protected AnalyticsService analyticsService;
-    @Inject
-    protected CatalogService catalogService;
-    @Inject
-    @RealImplementation
-    protected EntitlementUserApi entitlementApi;
-    @Inject
-    protected EntitlementInternalApi entitlementInternalApi;
-    @Inject
-    protected InvoiceUserApi invoiceApi;
-    @Inject
-    protected InvoiceDao realInvoiceDao;
-    @Inject
-    protected InvoiceInternalApi invoiceInternalApi;
-    @Inject
-    protected PaymentDao paymentDao;
-    @Inject
-    protected DefaultAnalyticsService service;
-    @Inject
-    protected InternalBus bus;
-    @Inject
-    protected BusinessAccountDao accountDao;
-    @Inject
-    protected BusinessAccountSqlDao accountSqlDao;
-    @Inject
-    protected BusinessAccountFieldSqlDao accountFieldSqlDao;
-    @Inject
-    protected BusinessAccountTagSqlDao accountTagSqlDao;
-    @Inject
-    protected BusinessInvoiceFieldSqlDao invoiceFieldSqlDao;
-    @Inject
-    protected BusinessInvoiceItemSqlDao invoiceItemSqlDao;
-    @Inject
-    protected BusinessInvoicePaymentFieldSqlDao invoicePaymentFieldSqlDao;
-    @Inject
-    protected BusinessInvoicePaymentSqlDao invoicePaymentSqlDao;
-    @Inject
-    protected BusinessInvoicePaymentTagSqlDao invoicePaymentTagSqlDao;
-    @Inject
-    protected BusinessInvoiceDao invoiceDao;
-    @Inject
-    protected BusinessInvoiceSqlDao invoiceSqlDao;
-    @Inject
-    protected BusinessInvoiceTagSqlDao invoiceTagSqlDao;
-    @Inject
-    protected BusinessOverdueStatusDao overdueStatusDao;
-    @Inject
-    protected BusinessOverdueStatusSqlDao overdueStatusSqlDao;
-    @Inject
-    protected BusinessSubscriptionTransitionFieldSqlDao subscriptionTransitionFieldSqlDao;
-    @Inject
-    protected BusinessSubscriptionTransitionTagSqlDao subscriptionTransitionTagSqlDao;
-    @Inject
-    protected BusinessSubscriptionTransitionDao subscriptionTransitionDao;
-    @Inject
-    protected BusinessSubscriptionTransitionSqlDao subscriptionTransitionSqlDao;
-    @Inject
-    protected BusinessTagDao tagDao;
+    protected MySQLEmbeddedDB embeddedDB;
+    protected DBI dbi;
+    protected BusinessAnalyticsSqlDao analyticsSqlDao;
 
     @BeforeClass(groups = "slow")
-    protected void beforeClass() throws Exception {
-        final Injector injector = Guice.createInjector(new TestAnalyticsModuleWithEmbeddedDB(configSource));
-        injector.injectMembers(this);
+    public void setUpClass() throws Exception {
+        embeddedDB = new MySQLEmbeddedDB();
+        embeddedDB.initialize();
+        embeddedDB.start();
     }
 
     @BeforeMethod(groups = "slow")
-    public void beforeMethod() throws Exception {
-        super.beforeMethod();
-        bus.start();
-        restartAnalyticsService();
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
+
+        killbillDataSource = new AnalyticsOSGIKillbillDataSource();
+
+        final String ddl = toString(Resources.getResource("com/ning/billing/osgi/bundles/analytics/ddl.sql").openStream());
+        embeddedDB.executeScript(ddl);
+
+        dbi = BusinessDBIProvider.get(embeddedDB.getDataSource());
+        analyticsSqlDao = dbi.onDemand(BusinessAnalyticsSqlDao.class);
     }
 
-    @AfterMethod(groups = "slow")
-    public void afterMethod() throws Exception {
-        bus.stop();
-        stopAnalyticsService();
+    @AfterClass(groups = "slow")
+    public void tearDown() throws Exception {
+        embeddedDB.stop();
     }
 
-    private void restartAnalyticsService() throws Exception {
-        ((DefaultAnalyticsService) analyticsService).registerForNotifications();
+    public static String toString(final InputStream stream) throws IOException {
+        final InputSupplier<InputStream> inputSupplier = new InputSupplier<InputStream>() {
+            @Override
+            public InputStream getInput() throws IOException {
+                return stream;
+            }
+        };
+
+        return CharStreams.toString(CharStreams.newReaderSupplier(inputSupplier, Charsets.UTF_8));
     }
 
-    private void stopAnalyticsService() throws Exception {
-        ((DefaultAnalyticsService) analyticsService).unregisterForNotifications();
+    private final class AnalyticsOSGIKillbillDataSource extends OSGIKillbillDataSource {
+
+        public AnalyticsOSGIKillbillDataSource() {
+            super(Mockito.mock(BundleContext.class));
+        }
+
+        @Override
+        public DataSource getDataSource() {
+            try {
+                return embeddedDB.getDataSource();
+            } catch (IOException e) {
+                Assert.fail(e.toString(), e);
+                return null;
+            }
+        }
     }
 }

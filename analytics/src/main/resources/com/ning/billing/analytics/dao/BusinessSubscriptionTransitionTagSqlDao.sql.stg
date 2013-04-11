@@ -10,14 +10,14 @@ select
 , account_key
 , name
 , tenant_record_id
-from bst_tags
+from old_bst_tags
 where external_key = :external_key
 <AND_CHECK_TENANT()>
 ;
 >>
 
 addTag(bundle_id, external_key, name) ::=<<
-insert into bst_tags (
+insert into old_bst_tags (
   bundle_id
 , external_key
 , account_key
@@ -35,9 +35,9 @@ insert into bst_tags (
 >>
 
 removeTag(bundle_id, name) ::= <<
-delete from bst_tags where bundle_id = :bundle_id and name = :name <AND_CHECK_TENANT()>;
+delete from old_bst_tags where bundle_id = :bundle_id and name = :name <AND_CHECK_TENANT()>;
 >>
 
 test() ::= <<
-select 1 from bst_tags where <CHECK_TENANT()> limit 1;
+select 1 from old_bst_tags where <CHECK_TENANT()> limit 1;
 >>
