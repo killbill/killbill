@@ -119,7 +119,7 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
                                                    creationAuditLog,
                                                    tenantRecordId,
                                                    reportGroup);
-        } else if (BusinessInvoiceItemType.INVOICE_ADJUSTMENT.equals(businessInvoiceItemType)) {
+        } else if (BusinessInvoiceItemType.INVOICE_ITEM_ADJUSTMENT.equals(businessInvoiceItemType)) {
             return new BusinessInvoiceItemAdjustmentModelDao(account,
                                                              accountRecordId,
                                                              invoice,

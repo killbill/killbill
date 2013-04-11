@@ -52,7 +52,7 @@ public class TestBusinessInvoiceDao extends AnalyticsTestSuiteNoDB {
     private BusinessInvoiceDao invoiceDao;
 
     @Override
-    @BeforeMethod
+    @BeforeMethod(groups = "fast")
     public void setUp() throws Exception {
         super.setUp();
 
