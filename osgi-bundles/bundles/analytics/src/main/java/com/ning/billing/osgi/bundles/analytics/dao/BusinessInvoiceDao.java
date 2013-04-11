@@ -298,19 +298,14 @@ public class BusinessInvoiceDao extends BusinessAnalyticsDaoBase {
 
         // Now find the "reparation" items, i.e. the ones which correspond to the repaired items
         final Map<UUID, InvoiceItem> reparationInvoiceItemIdToRepairItemMappings = new LinkedHashMap<UUID, InvoiceItem>();
-        for (final InvoiceItem repairedInvoiceItem : allInvoiceItems) {
-            // Skip non-repaired items
-            if (!repairedInvoiceItemIdToRepairInvoiceItemMappings.keySet().contains(repairedInvoiceItem.getId())) {
-                continue;
-            }
-
+        for (final InvoiceItem repairedInvoiceItem : repairedInvoiceItemIdToRepairInvoiceItemMappings.values()) {
             InvoiceItem reparationItem = null;
             for (final InvoiceItem invoiceItem : allInvoiceItems) {
                 // Try to find the matching "reparation" item
                 if (repairedInvoiceItem.getInvoiceItemType().equals(invoiceItem.getInvoiceItemType()) &&
                     repairedInvoiceItem.getSubscriptionId().equals(invoiceItem.getSubscriptionId()) &&
                     repairedInvoiceItem.getStartDate().compareTo(invoiceItem.getStartDate()) == 0 &&
-                    repairedInvoiceItem.getEndDate().isAfter(invoiceItem.getEndDate())) {
+                    !repairedInvoiceItem.getEndDate().isBefore(invoiceItem.getEndDate())) {
                     if (reparationItem == null) {
                         reparationItem = invoiceItem;
                     } else {
