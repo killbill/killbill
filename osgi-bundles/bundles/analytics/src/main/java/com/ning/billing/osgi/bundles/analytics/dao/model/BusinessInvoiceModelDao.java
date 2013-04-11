@@ -19,6 +19,8 @@ package com.ning.billing.osgi.bundles.analytics.dao.model;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 
@@ -63,7 +65,8 @@ public class BusinessInvoiceModelDao extends BusinessModelDaoBase {
                                    final String accountName,
                                    final String accountExternalKey,
                                    final Long accountRecordId,
-                                   final Long tenantRecordId) {
+                                   final Long tenantRecordId,
+                                   @Nullable final ReportGroup reportGroup) {
         super(createdDate,
               createdBy,
               createdReasonCode,
@@ -72,7 +75,8 @@ public class BusinessInvoiceModelDao extends BusinessModelDaoBase {
               accountName,
               accountExternalKey,
               accountRecordId,
-              tenantRecordId);
+              tenantRecordId,
+              reportGroup);
         this.invoiceRecordId = invoiceRecordId;
         this.invoiceId = invoiceId;
         this.invoiceNumber = invoiceNumber;
@@ -91,7 +95,8 @@ public class BusinessInvoiceModelDao extends BusinessModelDaoBase {
                                    final Invoice invoice,
                                    final Long invoiceRecordId,
                                    final AuditLog creationAuditLog,
-                                   final Long tenantRecordId) {
+                                   final Long tenantRecordId,
+                                   @Nullable final ReportGroup reportGroup) {
         this(invoiceRecordId,
              invoice.getId(),
              invoice.getInvoiceNumber(),
@@ -111,7 +116,8 @@ public class BusinessInvoiceModelDao extends BusinessModelDaoBase {
              account.getName(),
              account.getExternalKey(),
              accountRecordId,
-             tenantRecordId);
+             tenantRecordId,
+             reportGroup);
     }
 
     @Override

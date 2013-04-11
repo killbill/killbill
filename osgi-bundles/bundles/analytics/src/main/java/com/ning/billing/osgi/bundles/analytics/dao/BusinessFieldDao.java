@@ -26,6 +26,7 @@ import org.skife.jdbi.v2.TransactionStatus;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.osgi.bundles.analytics.AnalyticsRefreshException;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessFieldModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessModelDaoBase.ReportGroup;
 import com.ning.billing.util.audit.AuditLog;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.customfield.CustomField;
@@ -72,6 +73,7 @@ public class BusinessFieldDao extends BusinessAnalyticsDaoBase {
     private Collection<BusinessFieldModelDao> createBusinessFields(final Account account, final CallContext context) throws AnalyticsRefreshException {
         final Long accountRecordId = getAccountRecordId(account.getId(), context);
         final Long tenantRecordId = getTenantRecordId(context);
+        final ReportGroup reportGroup = getReportGroup(account.getId(), context);
 
         final Collection<CustomField> fields = getFieldsForAccount(account.getId(), context);
 
@@ -84,7 +86,8 @@ public class BusinessFieldDao extends BusinessAnalyticsDaoBase {
                                                                                      field,
                                                                                      customFieldRecordId,
                                                                                      creationAuditLog,
-                                                                                     tenantRecordId);
+                                                                                     tenantRecordId,
+                                                                                     reportGroup);
             fieldModelDaos.add(fieldModelDao);
         }
 

@@ -40,7 +40,8 @@ public class BusinessInvoiceItemCreditModelDao extends BusinessInvoiceItemBaseMo
                                              @Nullable final Plan plan,
                                              @Nullable final PlanPhase planPhase,
                                              final AuditLog creationAuditLogs,
-                                             final Long tenantRecordId) {
+                                             final Long tenantRecordId,
+                                             @Nullable final ReportGroup reportGroup) {
         super(account,
               accountRecordId,
               invoice,
@@ -51,7 +52,8 @@ public class BusinessInvoiceItemCreditModelDao extends BusinessInvoiceItemBaseMo
               plan,
               planPhase,
               creationAuditLogs,
-              tenantRecordId);
+              tenantRecordId,
+              reportGroup);
     }
 
     @Override

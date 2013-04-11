@@ -88,7 +88,8 @@ public class BusinessAccountModelDao extends BusinessModelDaoBase {
                                    final String accountName,
                                    final String accountExternalKey,
                                    final Long accountRecordId,
-                                   final Long tenantRecordId) {
+                                   final Long tenantRecordId,
+                                   @Nullable final ReportGroup reportGroup) {
         super(createdDate,
               createdBy,
               createdReasonCode,
@@ -97,7 +98,8 @@ public class BusinessAccountModelDao extends BusinessModelDaoBase {
               accountName,
               accountExternalKey,
               accountRecordId,
-              tenantRecordId);
+              tenantRecordId,
+              reportGroup);
         this.email = email;
         this.firstNameLength = firstNameLength;
         this.currency = currency;
@@ -128,7 +130,8 @@ public class BusinessAccountModelDao extends BusinessModelDaoBase {
                                    @Nullable final Invoice lastInvoice,
                                    @Nullable final Payment lastPayment,
                                    final AuditLog creationAuditLog,
-                                   final Long tenantRecordId) {
+                                   final Long tenantRecordId,
+                                   @Nullable final ReportGroup reportGroup) {
         this(account.getEmail(),
              account.getFirstNameLength(),
              account.getCurrency() == null ? null : account.getCurrency().toString(),
@@ -159,7 +162,8 @@ public class BusinessAccountModelDao extends BusinessModelDaoBase {
              account.getName(),
              account.getExternalKey(),
              accountRecordId,
-             tenantRecordId);
+             tenantRecordId,
+             reportGroup);
     }
 
     @Override

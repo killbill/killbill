@@ -44,6 +44,7 @@ insert into bst (
 , account_external_key
 , account_record_id
 , tenant_record_id
+, report_group
 ) values (
   :subscriptionEventRecordId
 , :bundleId
@@ -87,6 +88,7 @@ insert into bst (
 , :accountExternalKey
 , :accountRecordId
 , :tenantRecordId
+, :reportGroup
 );
 >>
 
@@ -123,6 +125,7 @@ insert into bac (
 , account_external_key
 , account_record_id
 , tenant_record_id
+, report_group
 ) values (
   :email
 , :firstNameLength
@@ -155,6 +158,7 @@ insert into bac (
 , :accountExternalKey
 , :accountRecordId
 , :tenantRecordId
+, :reportGroup
 );
 >>
 
@@ -179,6 +183,7 @@ insert into bin (
 , account_name
 , account_external_key
 , account_record_id
+, report_group
 ) values (
   :invoiceRecordId
 , :invoiceId
@@ -199,6 +204,7 @@ insert into bin (
 , :accountName
 , :accountExternalKey
 , :accountRecordId
+, :reportGroup
 );
 >>
 
@@ -241,6 +247,7 @@ insert into bia (
 , account_external_key
 , account_record_id
 , tenant_record_id
+, report_group
 ) values (
   :invoiceItemRecordId
 , :secondInvoiceItemRecordId
@@ -279,6 +286,7 @@ insert into bia (
 , :accountExternalKey
 , :accountRecordId
 , :tenantRecordId
+, :reportGroup
 );
 >>
 
@@ -321,6 +329,7 @@ insert into bii (
 , account_external_key
 , account_record_id
 , tenant_record_id
+, report_group
 ) values (
   :invoiceItemRecordId
 , :secondInvoiceItemRecordId
@@ -359,6 +368,7 @@ insert into bii (
 , :accountExternalKey
 , :accountRecordId
 , :tenantRecordId
+, :reportGroup
 );
 >>
 
@@ -401,6 +411,7 @@ insert into biia (
 , account_external_key
 , account_record_id
 , tenant_record_id
+, report_group
 ) values (
   :invoiceItemRecordId
 , :secondInvoiceItemRecordId
@@ -439,6 +450,7 @@ insert into biia (
 , :accountExternalKey
 , :accountRecordId
 , :tenantRecordId
+, :reportGroup
 );
 >>
 
@@ -481,6 +493,7 @@ insert into biic (
 , account_external_key
 , account_record_id
 , tenant_record_id
+, report_group
 ) values (
   :invoiceItemRecordId
 , :secondInvoiceItemRecordId
@@ -519,6 +532,7 @@ insert into biic (
 , :accountExternalKey
 , :accountRecordId
 , :tenantRecordId
+, :reportGroup
 );
 >>
 
@@ -551,6 +565,7 @@ insert into bip (
 , account_external_key
 , account_record_id
 , tenant_record_id
+, report_group
 ) values (
   :invoicePaymentRecordId
 , :invoicePaymentId
@@ -579,6 +594,7 @@ insert into bip (
 , :accountExternalKey
 , :accountRecordId
 , :tenantRecordId
+, :reportGroup
 );
 >>
 
@@ -611,6 +627,7 @@ insert into bipr (
 , account_external_key
 , account_record_id
 , tenant_record_id
+, report_group
 ) values (
   :invoicePaymentRecordId
 , :invoicePaymentId
@@ -639,6 +656,7 @@ insert into bipr (
 , :accountExternalKey
 , :accountRecordId
 , :tenantRecordId
+, :reportGroup
 );
 >>
 
@@ -671,6 +689,7 @@ insert into bipc (
 , account_external_key
 , account_record_id
 , tenant_record_id
+, report_group
 ) values (
   :invoicePaymentRecordId
 , :invoicePaymentId
@@ -699,6 +718,7 @@ insert into bipc (
 , :accountExternalKey
 , :accountRecordId
 , :tenantRecordId
+, :reportGroup
 );
 >>
 
@@ -719,6 +739,7 @@ insert into bos (
 , account_external_key
 , account_record_id
 , tenant_record_id
+, report_group
 ) values (
   :blockingStateRecordId
 , :bundleId
@@ -735,6 +756,7 @@ insert into bos (
 , :accountExternalKey
 , :accountRecordId
 , :tenantRecordId
+, :reportGroup
 );
 >>
 
@@ -751,6 +773,7 @@ insert into bac_tags (
 , account_external_key
 , account_record_id
 , tenant_record_id
+, report_group
 ) values (
   :tagRecordId
 , :name
@@ -763,6 +786,7 @@ insert into bac_tags (
 , :accountExternalKey
 , :accountRecordId
 , :tenantRecordId
+, :reportGroup
 );
 >>
 
@@ -780,6 +804,7 @@ insert into bin_tags (
 , account_external_key
 , account_record_id
 , tenant_record_id
+, report_group
 ) values (
   :tagRecordId
 , :invoiceId
@@ -793,6 +818,7 @@ insert into bin_tags (
 , :accountExternalKey
 , :accountRecordId
 , :tenantRecordId
+, :reportGroup
 );
 >>
 
@@ -810,6 +836,7 @@ insert into bip_tags (
 , account_external_key
 , account_record_id
 , tenant_record_id
+, report_group
 ) values (
   :tagRecordId
 , :invoicePaymentId
@@ -823,6 +850,7 @@ insert into bip_tags (
 , :accountExternalKey
 , :accountRecordId
 , :tenantRecordId
+, :reportGroup
 );
 >>
 
@@ -840,6 +868,7 @@ insert into bac_fields (
 , account_external_key
 , account_record_id
 , tenant_record_id
+, report_group
 ) values (
   :customFieldRecordId
 , :name
@@ -853,6 +882,7 @@ insert into bac_fields (
 , :accountExternalKey
 , :accountRecordId
 , :tenantRecordId
+, :reportGroup
 );
 >>
 
@@ -871,6 +901,7 @@ insert into bin_fields (
 , account_external_key
 , account_record_id
 , tenant_record_id
+, report_group
 ) values (
   :customFieldRecordId
 , :invoiceId
@@ -885,6 +916,7 @@ insert into bin_fields (
 , :accountExternalKey
 , :accountRecordId
 , :tenantRecordId
+, :reportGroup
 );
 >>
 
@@ -903,6 +935,7 @@ insert into bip_fields (
 , account_external_key
 , account_record_id
 , tenant_record_id
+, report_group
 ) values (
 , :customFieldRecordId
 , :invoicePaymentId
@@ -917,6 +950,7 @@ insert into bip_fields (
 , :accountExternalKey
 , :accountRecordId
 , :tenantRecordId
+, :reportGroup
 );
 >>
 

@@ -81,7 +81,8 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
                                                          @Nullable final Plan plan,
                                                          @Nullable final PlanPhase planPhase,
                                                          final AuditLog creationAuditLog,
-                                                         final Long tenantRecordId) {
+                                                         final Long tenantRecordId,
+                                                         @Nullable final ReportGroup reportGroup) {
         if (InvoiceItemType.REFUND_ADJ.equals(invoiceItem.getInvoiceItemType())) {
             return new BusinessInvoiceAdjustmentModelDao(account,
                                                          accountRecordId,
@@ -93,7 +94,8 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
                                                          plan,
                                                          planPhase,
                                                          creationAuditLog,
-                                                         tenantRecordId);
+                                                         tenantRecordId,
+                                                         reportGroup);
         } else if (InvoiceItemType.EXTERNAL_CHARGE.equals(invoiceItem.getInvoiceItemType()) ||
                    InvoiceItemType.FIXED.equals(invoiceItem.getInvoiceItemType()) ||
                    InvoiceItemType.RECURRING.equals(invoiceItem.getInvoiceItemType())) {
@@ -107,7 +109,8 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
                                                    plan,
                                                    planPhase,
                                                    creationAuditLog,
-                                                   tenantRecordId);
+                                                   tenantRecordId,
+                                                   reportGroup);
         } else if (InvoiceItemType.ITEM_ADJ.equals(invoiceItem.getInvoiceItemType())) {
             return new BusinessInvoiceItemAdjustmentModelDao(account,
                                                              accountRecordId,
@@ -119,7 +122,8 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
                                                              plan,
                                                              planPhase,
                                                              creationAuditLog,
-                                                             tenantRecordId);
+                                                             tenantRecordId,
+                                                             reportGroup);
         } else if (InvoiceItemType.CBA_ADJ.equals(invoiceItem.getInvoiceItemType()) ||
                    InvoiceItemType.CREDIT_ADJ.equals(invoiceItem.getInvoiceItemType())) {
             return new BusinessInvoiceItemCreditModelDao(account,
@@ -132,7 +136,8 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
                                                          plan,
                                                          planPhase,
                                                          creationAuditLog,
-                                                         tenantRecordId);
+                                                         tenantRecordId,
+                                                         reportGroup);
         } else {
             // We don't care
             return null;
@@ -177,7 +182,8 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
                                            final String accountName,
                                            final String accountExternalKey,
                                            final Long accountRecordId,
-                                           final Long tenantRecordId) {
+                                           final Long tenantRecordId,
+                                           @Nullable final ReportGroup reportGroup) {
         super(createdDate,
               createdBy,
               createdReasonCode,
@@ -186,7 +192,8 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
               accountName,
               accountExternalKey,
               accountRecordId,
-              tenantRecordId);
+              tenantRecordId,
+              reportGroup);
         this.invoiceItemRecordId = invoiceItemRecordId;
         this.secondInvoiceItemRecordId = secondInvoiceItemRecordId;
         this.itemId = itemId;
@@ -227,7 +234,8 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
                                            @Nullable final Plan plan,
                                            @Nullable final PlanPhase planPhase,
                                            final AuditLog creationAuditLog,
-                                           final Long tenantRecordId) {
+                                           final Long tenantRecordId,
+                                           @Nullable final ReportGroup reportGroup) {
         this(invoiceItemRecordId,
              secondInvoiceItemRecordId,
              invoiceItem.getId(),
@@ -265,7 +273,8 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
              account.getName(),
              account.getExternalKey(),
              accountRecordId,
-             tenantRecordId);
+             tenantRecordId,
+             reportGroup);
     }
 
     public Long getInvoiceItemRecordId() {

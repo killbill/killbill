@@ -60,7 +60,8 @@ public class BusinessInvoiceItem extends BusinessEntityBase {
               businessInvoiceItemBaseModelDao.getCreatedComments(),
               businessInvoiceItemBaseModelDao.getAccountId(),
               businessInvoiceItemBaseModelDao.getAccountName(),
-              businessInvoiceItemBaseModelDao.getAccountExternalKey());
+              businessInvoiceItemBaseModelDao.getAccountExternalKey(),
+              businessInvoiceItemBaseModelDao.getReportGroup());
         this.itemId = businessInvoiceItemBaseModelDao.getItemId();
         this.invoiceId = businessInvoiceItemBaseModelDao.getInvoiceId();
         this.invoiceNumber = businessInvoiceItemBaseModelDao.getInvoiceNumber();

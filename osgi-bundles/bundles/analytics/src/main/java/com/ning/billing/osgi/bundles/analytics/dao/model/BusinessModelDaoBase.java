@@ -18,9 +18,20 @@ package com.ning.billing.osgi.bundles.analytics.dao.model;
 
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
 
 public abstract class BusinessModelDaoBase {
+
+    // See ddl.sql
+    private final String DEFAULT_REPORT_GROUP = "default";
+
+    // See ddl.sql
+    public enum ReportGroup {
+        test,
+        partner
+    }
 
     protected Long recordId;
 
@@ -33,12 +44,20 @@ public abstract class BusinessModelDaoBase {
     protected String accountExternalKey;
     protected Long accountRecordId;
     protected Long tenantRecordId;
+    protected String reportGroup;
 
     public BusinessModelDaoBase() { /* When reading from the database */ }
 
-    public BusinessModelDaoBase(final DateTime createdDate, final String createdBy, final String createdReasonCode,
-                                final String createdComments, final UUID accountId, final String accountName,
-                                final String accountExternalKey, final Long accountRecordId, final Long tenantRecordId) {
+    public BusinessModelDaoBase(final DateTime createdDate,
+                                final String createdBy,
+                                final String createdReasonCode,
+                                final String createdComments,
+                                final UUID accountId,
+                                final String accountName,
+                                final String accountExternalKey,
+                                final Long accountRecordId,
+                                final Long tenantRecordId,
+                                @Nullable final ReportGroup reportGroup) {
         recordId = null;
         this.createdDate = createdDate;
         this.createdBy = createdBy;
@@ -49,6 +68,7 @@ public abstract class BusinessModelDaoBase {
         this.accountExternalKey = accountExternalKey;
         this.accountRecordId = accountRecordId;
         this.tenantRecordId = tenantRecordId;
+        this.reportGroup = reportGroup == null ? DEFAULT_REPORT_GROUP : reportGroup.toString();
     }
 
     public abstract String getTableName();
@@ -93,11 +113,17 @@ public abstract class BusinessModelDaoBase {
         return tenantRecordId;
     }
 
+    public String getReportGroup() {
+        return reportGroup;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
         sb.append("BusinessModelDaoBase");
-        sb.append("{createdDate=").append(createdDate);
+        sb.append("{DEFAULT_REPORT_GROUP='").append(DEFAULT_REPORT_GROUP).append('\'');
+        sb.append(", recordId=").append(recordId);
+        sb.append(", createdDate=").append(createdDate);
         sb.append(", createdBy='").append(createdBy).append('\'');
         sb.append(", createdReasonCode='").append(createdReasonCode).append('\'');
         sb.append(", createdComments='").append(createdComments).append('\'');
@@ -106,6 +132,7 @@ public abstract class BusinessModelDaoBase {
         sb.append(", accountExternalKey='").append(accountExternalKey).append('\'');
         sb.append(", accountRecordId=").append(accountRecordId);
         sb.append(", tenantRecordId=").append(tenantRecordId);
+        sb.append(", reportGroup='").append(reportGroup).append('\'');
         sb.append('}');
         return sb.toString();
     }
@@ -121,6 +148,9 @@ public abstract class BusinessModelDaoBase {
 
         final BusinessModelDaoBase that = (BusinessModelDaoBase) o;
 
+        if (DEFAULT_REPORT_GROUP != null ? !DEFAULT_REPORT_GROUP.equals(that.DEFAULT_REPORT_GROUP) : that.DEFAULT_REPORT_GROUP != null) {
+            return false;
+        }
         if (accountExternalKey != null ? !accountExternalKey.equals(that.accountExternalKey) : that.accountExternalKey != null) {
             return false;
         }
@@ -145,6 +175,12 @@ public abstract class BusinessModelDaoBase {
         if (createdReasonCode != null ? !createdReasonCode.equals(that.createdReasonCode) : that.createdReasonCode != null) {
             return false;
         }
+        if (recordId != null ? !recordId.equals(that.recordId) : that.recordId != null) {
+            return false;
+        }
+        if (reportGroup != null ? !reportGroup.equals(that.reportGroup) : that.reportGroup != null) {
+            return false;
+        }
         if (tenantRecordId != null ? !tenantRecordId.equals(that.tenantRecordId) : that.tenantRecordId != null) {
             return false;
         }
@@ -154,7 +190,9 @@ public abstract class BusinessModelDaoBase {
 
     @Override
     public int hashCode() {
-        int result = createdDate != null ? createdDate.hashCode() : 0;
+        int result = DEFAULT_REPORT_GROUP.hashCode();
+        result = 31 * result + (recordId != null ? recordId.hashCode() : 0);
+        result = 31 * result + (createdDate != null ? createdDate.hashCode() : 0);
         result = 31 * result + (createdBy != null ? createdBy.hashCode() : 0);
         result = 31 * result + (createdReasonCode != null ? createdReasonCode.hashCode() : 0);
         result = 31 * result + (createdComments != null ? createdComments.hashCode() : 0);
@@ -163,6 +201,7 @@ public abstract class BusinessModelDaoBase {
         result = 31 * result + (accountExternalKey != null ? accountExternalKey.hashCode() : 0);
         result = 31 * result + (accountRecordId != null ? accountRecordId.hashCode() : 0);
         result = 31 * result + (tenantRecordId != null ? tenantRecordId.hashCode() : 0);
+        result = 31 * result + (reportGroup != null ? reportGroup.hashCode() : 0);
         return result;
     }
 }

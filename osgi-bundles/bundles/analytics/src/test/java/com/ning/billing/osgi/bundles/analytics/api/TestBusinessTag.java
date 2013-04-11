@@ -35,7 +35,8 @@ public class TestBusinessTag extends AnalyticsTestSuiteNoDB {
                                                                                                      tagRecordId,
                                                                                                      tagDefinition,
                                                                                                      auditLog,
-                                                                                                     tenantRecordId);
+                                                                                                     tenantRecordId,
+                                                                                                     reportGroup);
         final BusinessTag businessTag = BusinessTag.create(businessAccountTagModelDao);
         verifyBusinessTag(businessTag);
         Assert.assertEquals(businessTag.getObjectType(), ObjectType.ACCOUNT);
@@ -49,7 +50,8 @@ public class TestBusinessTag extends AnalyticsTestSuiteNoDB {
                                                                                                      tagRecordId,
                                                                                                      tagDefinition,
                                                                                                      auditLog,
-                                                                                                     tenantRecordId);
+                                                                                                     tenantRecordId,
+                                                                                                     reportGroup);
         final BusinessTag businessTag = BusinessTag.create(businessInvoiceTagModelDao);
         verifyBusinessTag(businessTag);
         Assert.assertEquals(businessTag.getObjectType(), ObjectType.INVOICE);
@@ -63,7 +65,8 @@ public class TestBusinessTag extends AnalyticsTestSuiteNoDB {
                                                                                                                   tagRecordId,
                                                                                                                   tagDefinition,
                                                                                                                   auditLog,
-                                                                                                                  tenantRecordId);
+                                                                                                                  tenantRecordId,
+                                                                                                                  reportGroup);
         final BusinessTag businessTag = BusinessTag.create(invoicePaymentTagModelDao);
         verifyBusinessTag(businessTag);
         Assert.assertEquals(businessTag.getObjectType(), ObjectType.INVOICE_PAYMENT);

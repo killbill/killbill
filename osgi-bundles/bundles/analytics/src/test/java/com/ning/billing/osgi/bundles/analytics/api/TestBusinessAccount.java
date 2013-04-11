@@ -34,7 +34,8 @@ public class TestBusinessAccount extends AnalyticsTestSuiteNoDB {
                                                                                     invoice,
                                                                                     payment,
                                                                                     auditLog,
-                                                                                    tenantRecordId);
+                                                                                    tenantRecordId,
+                                                                                    reportGroup);
         final BusinessAccount businessAccount = new BusinessAccount(accountModelDao);
 
         verifyBusinessEntityBase(businessAccount);

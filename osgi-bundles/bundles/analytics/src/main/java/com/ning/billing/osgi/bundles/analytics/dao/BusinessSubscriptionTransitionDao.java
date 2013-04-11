@@ -31,6 +31,7 @@ import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 import com.ning.billing.osgi.bundles.analytics.AnalyticsRefreshException;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessModelDaoBase.ReportGroup;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessSubscription;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessSubscriptionEvent;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessSubscriptionTransitionModelDao;
@@ -123,6 +124,7 @@ public class BusinessSubscriptionTransitionDao extends BusinessAnalyticsDaoBase 
 
         final Long accountRecordId = getAccountRecordId(account.getId(), context);
         final Long tenantRecordId = getTenantRecordId(context);
+        final ReportGroup reportGroup = getReportGroup(account.getId(), context);
 
         return new BusinessSubscriptionTransitionModelDao(account,
                                                           accountRecordId,
@@ -134,7 +136,8 @@ public class BusinessSubscriptionTransitionDao extends BusinessAnalyticsDaoBase 
                                                           prevNextSubscription,
                                                           nextSubscription,
                                                           creationAuditLog,
-                                                          tenantRecordId);
+                                                          tenantRecordId,
+                                                          reportGroup);
     }
 
     private BusinessSubscription getBusinessSubscriptionFromTransition(final Account account, final SubscriptionTransition subscriptionTransition) {

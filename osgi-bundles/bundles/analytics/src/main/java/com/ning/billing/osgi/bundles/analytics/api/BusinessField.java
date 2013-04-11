@@ -35,7 +35,8 @@ public class BusinessField extends BusinessEntityBase {
               businessFieldModelDao.getCreatedComments(),
               businessFieldModelDao.getAccountId(),
               businessFieldModelDao.getAccountName(),
-              businessFieldModelDao.getAccountExternalKey());
+              businessFieldModelDao.getAccountExternalKey(),
+              businessFieldModelDao.getReportGroup());
         this.objectType = objectType;
         this.name = businessFieldModelDao.getName();
         this.value = businessFieldModelDao.getValue();

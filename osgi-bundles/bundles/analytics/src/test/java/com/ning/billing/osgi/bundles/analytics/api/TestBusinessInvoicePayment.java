@@ -36,7 +36,8 @@ public class TestBusinessInvoicePayment extends AnalyticsTestSuiteNoDB {
                                                                                                                     refund,
                                                                                                                     paymentMethod,
                                                                                                                     auditLog,
-                                                                                                                    tenantRecordId);
+                                                                                                                    tenantRecordId,
+                                                                                                                    reportGroup);
         final BusinessInvoicePayment businessInvoicePayment = new BusinessInvoicePayment(invoicePaymentBaseModelDao);
         verifyBusinessEntityBase(businessInvoicePayment);
         Assert.assertEquals(businessInvoicePayment.getCreatedDate(), invoicePaymentBaseModelDao.getCreatedDate());

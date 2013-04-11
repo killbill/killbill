@@ -29,10 +29,16 @@ public abstract class BusinessEntityBase {
     protected final UUID accountId;
     protected final String accountName;
     protected final String accountExternalKey;
+    protected final String reportGroup;
 
-    public BusinessEntityBase(final DateTime createdDate, final String createdBy, final String createdReasonCode,
-                              final String createdComments, final UUID accountId, final String accountName,
-                              final String accountExternalKey) {
+    public BusinessEntityBase(final DateTime createdDate,
+                              final String createdBy,
+                              final String createdReasonCode,
+                              final String createdComments,
+                              final UUID accountId,
+                              final String accountName,
+                              final String accountExternalKey,
+                              final String reportGroup) {
         this.createdDate = createdDate;
         this.createdBy = createdBy;
         this.createdReasonCode = createdReasonCode;
@@ -40,6 +46,7 @@ public abstract class BusinessEntityBase {
         this.accountId = accountId;
         this.accountName = accountName;
         this.accountExternalKey = accountExternalKey;
+        this.reportGroup = reportGroup;
     }
 
     public DateTime getCreatedDate() {
@@ -70,6 +77,10 @@ public abstract class BusinessEntityBase {
         return accountExternalKey;
     }
 
+    public String getReportGroup() {
+        return reportGroup;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
@@ -81,6 +92,7 @@ public abstract class BusinessEntityBase {
         sb.append(", accountId=").append(accountId);
         sb.append(", accountName='").append(accountName).append('\'');
         sb.append(", accountExternalKey='").append(accountExternalKey).append('\'');
+        sb.append(", reportGroup='").append(reportGroup).append('\'');
         sb.append('}');
         return sb.toString();
     }
@@ -117,6 +129,9 @@ public abstract class BusinessEntityBase {
         if (createdReasonCode != null ? !createdReasonCode.equals(that.createdReasonCode) : that.createdReasonCode != null) {
             return false;
         }
+        if (reportGroup != null ? !reportGroup.equals(that.reportGroup) : that.reportGroup != null) {
+            return false;
+        }
 
         return true;
     }
@@ -130,6 +145,7 @@ public abstract class BusinessEntityBase {
         result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
         result = 31 * result + (accountName != null ? accountName.hashCode() : 0);
         result = 31 * result + (accountExternalKey != null ? accountExternalKey.hashCode() : 0);
+        result = 31 * result + (reportGroup != null ? reportGroup.hashCode() : 0);
         return result;
     }
 }

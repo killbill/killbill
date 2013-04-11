@@ -32,6 +32,7 @@ import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessAccountModelDao
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceItemBaseModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoicePaymentBaseModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessModelDaoBase.ReportGroup;
 import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.PaymentMethod;
 import com.ning.billing.payment.api.Refund;
@@ -108,6 +109,7 @@ public class BusinessInvoicePaymentDao extends BusinessAnalyticsDaoBase {
 
         final Long accountRecordId = getAccountRecordId(account.getId(), context);
         final Long tenantRecordId = getTenantRecordId(context);
+        final ReportGroup reportGroup = getReportGroup(account.getId(), context);
 
         final Collection<InvoicePayment> invoicePayments = getAccountInvoicePayments(account.getId(), context);
         for (final InvoicePayment invoicePayment : invoicePayments) {
@@ -132,7 +134,8 @@ public class BusinessInvoicePaymentDao extends BusinessAnalyticsDaoBase {
                                                                                                                         refund,
                                                                                                                         paymentMethod,
                                                                                                                         creationAuditLog,
-                                                                                                                        tenantRecordId);
+                                                                                                                        tenantRecordId,
+                                                                                                                        reportGroup);
             if (businessInvoicePayment != null) {
                 businessInvoicePayments.add(businessInvoicePayment);
             }

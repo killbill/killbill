@@ -18,6 +18,8 @@ package com.ning.billing.osgi.bundles.analytics.dao.model;
 
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import com.ning.billing.account.api.Account;
 import com.ning.billing.util.audit.AuditLog;
 import com.ning.billing.util.customfield.CustomField;
@@ -33,13 +35,15 @@ public class BusinessInvoicePaymentFieldModelDao extends BusinessFieldModelDao {
                                                final CustomField customField,
                                                final Long customFieldRecordId,
                                                final AuditLog creationAuditLog,
-                                               final Long tenantRecordId) {
+                                               final Long tenantRecordId,
+                                               @Nullable final ReportGroup reportGroup) {
         super(account,
               accountRecordId,
               customField,
               customFieldRecordId,
               creationAuditLog,
-              tenantRecordId);
+              tenantRecordId,
+              reportGroup);
         this.invoicePaymentId = customField.getObjectId();
     }
 

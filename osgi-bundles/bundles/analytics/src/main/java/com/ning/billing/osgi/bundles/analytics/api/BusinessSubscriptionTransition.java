@@ -28,7 +28,6 @@ public class BusinessSubscriptionTransition extends BusinessEntityBase {
     private final UUID bundleId;
     private final String bundleExternalKey;
     private final UUID subscriptionId;
-
     private final DateTime requestedTimestamp;
     private final String event;
 
@@ -68,7 +67,8 @@ public class BusinessSubscriptionTransition extends BusinessEntityBase {
               bstModelDao.getCreatedComments(),
               bstModelDao.getAccountId(),
               bstModelDao.getAccountName(),
-              bstModelDao.getAccountExternalKey());
+              bstModelDao.getAccountExternalKey(),
+              bstModelDao.getReportGroup());
 
         this.bundleId = bstModelDao.getBundleId();
         this.bundleExternalKey = bstModelDao.getBundleExternalKey();

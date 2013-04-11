@@ -18,6 +18,8 @@ package com.ning.billing.osgi.bundles.analytics.dao.model;
 
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
 
 import com.ning.billing.ObjectType;
@@ -42,28 +44,32 @@ public abstract class BusinessFieldModelDao extends BusinessModelDaoBase {
                                                final CustomField customField,
                                                final Long customFieldRecordId,
                                                final AuditLog creationAuditLog,
-                                               final Long tenantRecordId) {
+                                               final Long tenantRecordId,
+                                               @Nullable final ReportGroup reportGroup) {
         if (ObjectType.ACCOUNT.equals(customField.getObjectType())) {
             return new BusinessAccountFieldModelDao(account,
                                                     accountRecordId,
                                                     customField,
                                                     customFieldRecordId,
                                                     creationAuditLog,
-                                                    tenantRecordId);
+                                                    tenantRecordId,
+                                                    reportGroup);
         } else if (ObjectType.INVOICE_PAYMENT.equals(customField.getObjectType())) {
             return new BusinessInvoiceFieldModelDao(account,
                                                     accountRecordId,
                                                     customField,
                                                     customFieldRecordId,
                                                     creationAuditLog,
-                                                    tenantRecordId);
+                                                    tenantRecordId,
+                                                    reportGroup);
         } else if (ObjectType.INVOICE.equals(customField.getObjectType())) {
             return new BusinessInvoicePaymentFieldModelDao(account,
                                                            accountRecordId,
                                                            customField,
                                                            customFieldRecordId,
                                                            creationAuditLog,
-                                                           tenantRecordId);
+                                                           tenantRecordId,
+                                                           reportGroup);
         } else {
             // We don't care
             return null;
@@ -83,7 +89,8 @@ public abstract class BusinessFieldModelDao extends BusinessModelDaoBase {
                                  final String accountName,
                                  final String accountExternalKey,
                                  final Long accountRecordId,
-                                 final Long tenantRecordId) {
+                                 final Long tenantRecordId,
+                                 @Nullable final ReportGroup reportGroup) {
         super(createdDate,
               createdBy,
               createdReasonCode,
@@ -92,7 +99,8 @@ public abstract class BusinessFieldModelDao extends BusinessModelDaoBase {
               accountName,
               accountExternalKey,
               accountRecordId,
-              tenantRecordId);
+              tenantRecordId,
+              reportGroup);
         this.customFieldRecordId = customFieldRecordId;
         this.name = name;
         this.value = value;
@@ -103,7 +111,8 @@ public abstract class BusinessFieldModelDao extends BusinessModelDaoBase {
                                  final CustomField customField,
                                  final Long customFieldRecordId,
                                  final AuditLog creationAuditLog,
-                                 final Long tenantRecordId) {
+                                 final Long tenantRecordId,
+                                 @Nullable final ReportGroup reportGroup) {
         this(customFieldRecordId,
              customField.getFieldName(),
              customField.getFieldValue(),
@@ -115,7 +124,8 @@ public abstract class BusinessFieldModelDao extends BusinessModelDaoBase {
              account.getName(),
              account.getExternalKey(),
              accountRecordId,
-             tenantRecordId);
+             tenantRecordId,
+             reportGroup);
     }
 
     public Long getCustomFieldRecordId() {

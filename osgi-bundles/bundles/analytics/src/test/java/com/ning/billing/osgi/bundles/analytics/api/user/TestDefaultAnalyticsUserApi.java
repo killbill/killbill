@@ -36,7 +36,8 @@ public class TestDefaultAnalyticsUserApi extends AnalyticsTestSuiteWithEmbeddedD
                                                                                     invoice,
                                                                                     payment,
                                                                                     auditLog,
-                                                                                    tenantRecordId);
+                                                                                    tenantRecordId,
+                                                                                    reportGroup);
         analyticsSqlDao.create(accountModelDao.getTableName(), accountModelDao, callContext);
 
         final AnalyticsUserApi analyticsUserApi = new AnalyticsUserApi(logService, killbillAPI, killbillDataSource);

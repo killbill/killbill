@@ -34,7 +34,8 @@ public class TestBusinessInvoice extends AnalyticsTestSuiteNoDB {
                                                                                     invoice,
                                                                                     invoiceRecordId,
                                                                                     auditLog,
-                                                                                    tenantRecordId);
+                                                                                    tenantRecordId,
+                                                                                    reportGroup);
         final BusinessInvoiceItemBaseModelDao invoiceItemBaseModelDao = BusinessInvoiceItemBaseModelDao.create(account,
                                                                                                                accountRecordId,
                                                                                                                invoice,
@@ -45,7 +46,8 @@ public class TestBusinessInvoice extends AnalyticsTestSuiteNoDB {
                                                                                                                plan,
                                                                                                                phase,
                                                                                                                auditLog,
-                                                                                                               tenantRecordId);
+                                                                                                               tenantRecordId,
+                                                                                                               reportGroup);
         final BusinessInvoice businessInvoice = new BusinessInvoice(invoiceModelDao,
                                                                     ImmutableList.<BusinessInvoiceItemBaseModelDao>of(invoiceItemBaseModelDao));
         verifyBusinessEntityBase(businessInvoice);

@@ -34,7 +34,8 @@ public class TestBusinessAnalyticsSqlDao extends AnalyticsTestSuiteWithEmbeddedD
                                                                                     invoice,
                                                                                     payment,
                                                                                     auditLog,
-                                                                                    tenantRecordId);
+                                                                                    tenantRecordId,
+                                                                                    reportGroup);
 
         Assert.assertNull(analyticsSqlDao.getAccountByAccountRecordId(accountModelDao.getAccountRecordId(),
                                                                       accountModelDao.getTenantRecordId(),
