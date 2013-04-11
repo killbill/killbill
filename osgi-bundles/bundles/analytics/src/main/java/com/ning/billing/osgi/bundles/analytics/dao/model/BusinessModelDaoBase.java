@@ -148,9 +148,6 @@ public abstract class BusinessModelDaoBase {
 
         final BusinessModelDaoBase that = (BusinessModelDaoBase) o;
 
-        if (DEFAULT_REPORT_GROUP != null ? !DEFAULT_REPORT_GROUP.equals(that.DEFAULT_REPORT_GROUP) : that.DEFAULT_REPORT_GROUP != null) {
-            return false;
-        }
         if (accountExternalKey != null ? !accountExternalKey.equals(that.accountExternalKey) : that.accountExternalKey != null) {
             return false;
         }

@@ -23,6 +23,8 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.mockito.Mockito;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 
@@ -71,6 +73,8 @@ import com.ning.killbill.osgi.libs.killbill.OSGIKillbillLogService;
 import com.google.common.collect.ImmutableList;
 
 public abstract class AnalyticsTestSuiteNoDB {
+
+    protected final Logger logger = LoggerFactory.getLogger(AnalyticsTestSuiteNoDB.class);
 
     protected final Long accountRecordId = 1L;
     protected final Long subscriptionEventRecordId = 2L;
