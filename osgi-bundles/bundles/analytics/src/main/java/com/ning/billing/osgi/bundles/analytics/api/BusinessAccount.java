@@ -56,7 +56,8 @@ public class BusinessAccount extends BusinessEntityBase {
               businessAccountModelDao.getCreatedComments(),
               businessAccountModelDao.getAccountId(),
               businessAccountModelDao.getAccountName(),
-              businessAccountModelDao.getAccountExternalKey());
+              businessAccountModelDao.getAccountExternalKey(),
+              businessAccountModelDao.getReportGroup());
         this.email = businessAccountModelDao.getEmail();
         this.firstNameLength = businessAccountModelDao.getFirstNameLength();
         this.currency = businessAccountModelDao.getCurrency();

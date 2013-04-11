@@ -34,14 +34,12 @@ import com.ning.billing.util.audit.AuditLog;
 public class BusinessSubscriptionTransitionModelDao extends BusinessModelDaoBase {
 
     private static final String SUBSCRIPTION_TABLE_NAME = "bst";
-
     private Long subscriptionEventRecordId;
     private UUID bundleId;
     private String bundleExternalKey;
     private UUID subscriptionId;
     private DateTime requestedTimestamp;
     private String event;
-
     private String prevProductName;
     private String prevProductType;
     private String prevProductCategory;
@@ -55,7 +53,6 @@ public class BusinessSubscriptionTransitionModelDao extends BusinessModelDaoBase
     private Boolean prevBusinessActive;
     private DateTime prevStartDate;
     private String prevState;
-
     private String nextProductName;
     private String nextProductType;
     private String nextProductCategory;
@@ -89,7 +86,8 @@ public class BusinessSubscriptionTransitionModelDao extends BusinessModelDaoBase
                                                   final String accountName,
                                                   final String accountExternalKey,
                                                   final Long accountRecordId,
-                                                  final Long tenantRecordId) {
+                                                  final Long tenantRecordId,
+                                                  @Nullable final ReportGroup reportGroup) {
         super(createdDate,
               createdBy,
               createdReasonCode,
@@ -98,7 +96,8 @@ public class BusinessSubscriptionTransitionModelDao extends BusinessModelDaoBase
               accountName,
               accountExternalKey,
               accountRecordId,
-              tenantRecordId);
+              tenantRecordId,
+              reportGroup);
         this.subscriptionEventRecordId = subscriptionEventRecordId;
         this.bundleId = bundleId;
         this.bundleExternalKey = bundleExternalKey;
@@ -163,7 +162,8 @@ public class BusinessSubscriptionTransitionModelDao extends BusinessModelDaoBase
                                                   @Nullable final BusinessSubscription previousSubscription,
                                                   final BusinessSubscription nextSubscription,
                                                   final AuditLog creationAuditLog,
-                                                  final Long tenantRecordId) {
+                                                  final Long tenantRecordId,
+                                                  @Nullable final ReportGroup reportGroup) {
         this(subscriptionEventRecordId,
              bundle.getId(),
              bundle.getExternalKey(),
@@ -180,7 +180,8 @@ public class BusinessSubscriptionTransitionModelDao extends BusinessModelDaoBase
              account.getName(),
              account.getExternalKey(),
              accountRecordId,
-             tenantRecordId);
+             tenantRecordId,
+             reportGroup);
     }
 
     @Override

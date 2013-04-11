@@ -16,6 +16,8 @@
 
 package com.ning.billing.osgi.bundles.analytics.dao.model;
 
+import javax.annotation.Nullable;
+
 import com.ning.billing.account.api.Account;
 import com.ning.billing.util.audit.AuditLog;
 import com.ning.billing.util.tag.Tag;
@@ -31,14 +33,16 @@ public class BusinessAccountTagModelDao extends BusinessTagModelDao {
                                       final Long tagRecordId,
                                       final TagDefinition tagDefinition,
                                       final AuditLog creationAuditLog,
-                                      final Long tenantRecordId) {
+                                      final Long tenantRecordId,
+                                      @Nullable final ReportGroup reportGroup) {
         super(account,
               accountRecordId,
               tag,
               tagRecordId,
               tagDefinition,
               creationAuditLog,
-              tenantRecordId);
+              tenantRecordId,
+              reportGroup);
     }
 
     @Override

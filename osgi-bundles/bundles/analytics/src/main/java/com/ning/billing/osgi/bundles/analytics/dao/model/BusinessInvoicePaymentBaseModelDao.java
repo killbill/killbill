@@ -90,7 +90,8 @@ public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDa
                                                             final Refund refund,
                                                             final PaymentMethod paymentMethod,
                                                             final AuditLog creationAuditLog,
-                                                            final Long tenantRecordId) {
+                                                            final Long tenantRecordId,
+                                                            @Nullable final ReportGroup reportGroup) {
         if (invoicePayment.getType().equals(InvoicePaymentType.REFUND)) {
             return new BusinessInvoicePaymentRefundModelDao(account,
                                                             accountRecordId,
@@ -101,7 +102,8 @@ public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDa
                                                             refund,
                                                             paymentMethod,
                                                             creationAuditLog,
-                                                            tenantRecordId);
+                                                            tenantRecordId,
+                                                            reportGroup);
         } else if (invoicePayment.getType().equals(InvoicePaymentType.CHARGED_BACK)) {
             return new BusinessInvoicePaymentChargebackModelDao(account,
                                                                 accountRecordId,
@@ -112,7 +114,8 @@ public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDa
                                                                 refund,
                                                                 paymentMethod,
                                                                 creationAuditLog,
-                                                                tenantRecordId);
+                                                                tenantRecordId,
+                                                                reportGroup);
         } else {
             return new BusinessInvoicePaymentModelDao(account,
                                                       accountRecordId,
@@ -123,7 +126,8 @@ public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDa
                                                       refund,
                                                       paymentMethod,
                                                       creationAuditLog,
-                                                      tenantRecordId);
+                                                      tenantRecordId,
+                                                      reportGroup);
         }
     }
 
@@ -176,7 +180,8 @@ public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDa
                                               final String accountName,
                                               final String accountExternalKey,
                                               final Long accountRecordId,
-                                              final Long tenantRecordId) {
+                                              final Long tenantRecordId,
+                                              @Nullable final ReportGroup reportGroup) {
         super(createdDate,
               createdBy,
               createdReasonCode,
@@ -185,7 +190,8 @@ public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDa
               accountName,
               accountExternalKey,
               accountRecordId,
-              tenantRecordId);
+              tenantRecordId,
+              reportGroup);
         this.invoicePaymentRecordId = invoicePaymentRecordId;
         this.invoicePaymentId = invoicePaymentId;
         this.invoiceId = invoiceId;
@@ -236,7 +242,8 @@ public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDa
                                                  @Nullable final Refund refund,
                                                  final PaymentMethod paymentMethod,
                                                  final AuditLog creationAuditLog,
-                                                 final Long tenantRecordId) {
+                                                 final Long tenantRecordId,
+                                                 @Nullable final ReportGroup reportGroup) {
         this(invoicePaymentRecordId,
              invoicePayment.getId(),
              invoice.getId(),
@@ -284,7 +291,8 @@ public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDa
              account.getName(),
              account.getExternalKey(),
              accountRecordId,
-             tenantRecordId);
+             tenantRecordId,
+             reportGroup);
     }
 
     public Long getInvoicePaymentRecordId() {

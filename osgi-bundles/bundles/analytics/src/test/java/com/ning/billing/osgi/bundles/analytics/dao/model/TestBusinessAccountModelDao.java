@@ -33,7 +33,8 @@ public class TestBusinessAccountModelDao extends AnalyticsTestSuiteNoDB {
                                                                                     null,
                                                                                     null,
                                                                                     auditLog,
-                                                                                    tenantRecordId);
+                                                                                    tenantRecordId,
+                                                                                    reportGroup);
         verifyAccountFields(accountModelDao);
         Assert.assertEquals(accountModelDao.getBalance(), BigDecimal.ONE);
         Assert.assertNull(accountModelDao.getLastInvoiceDate());
@@ -49,7 +50,8 @@ public class TestBusinessAccountModelDao extends AnalyticsTestSuiteNoDB {
                                                                                     invoice,
                                                                                     payment,
                                                                                     auditLog,
-                                                                                    tenantRecordId);
+                                                                                    tenantRecordId,
+                                                                                    reportGroup);
         verifyAccountFields(accountModelDao);
         Assert.assertEquals(accountModelDao.getBalance(), BigDecimal.ONE);
         Assert.assertEquals(accountModelDao.getLastInvoiceDate(), invoice.getInvoiceDate());

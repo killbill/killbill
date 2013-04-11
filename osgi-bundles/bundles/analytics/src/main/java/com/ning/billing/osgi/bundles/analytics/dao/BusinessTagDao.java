@@ -25,6 +25,7 @@ import org.skife.jdbi.v2.TransactionStatus;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.osgi.bundles.analytics.AnalyticsRefreshException;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessModelDaoBase.ReportGroup;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessTagModelDao;
 import com.ning.billing.util.audit.AuditLog;
 import com.ning.billing.util.callcontext.CallContext;
@@ -73,6 +74,7 @@ public class BusinessTagDao extends BusinessAnalyticsDaoBase {
     private Collection<BusinessTagModelDao> createBusinessTags(final Account account, final CallContext context) throws AnalyticsRefreshException {
         final Long accountRecordId = getAccountRecordId(account.getId(), context);
         final Long tenantRecordId = getTenantRecordId(context);
+        final ReportGroup reportGroup = getReportGroup(account.getId(), context);
 
         final Collection<Tag> tags = getTagsForAccount(account.getId(), context);
 
@@ -87,7 +89,8 @@ public class BusinessTagDao extends BusinessAnalyticsDaoBase {
                                                                                tagRecordId,
                                                                                tagDefinition,
                                                                                creationAuditLog,
-                                                                               tenantRecordId);
+                                                                               tenantRecordId,
+                                                                               reportGroup);
             tagModelDaos.add(tagModelDao);
         }
 

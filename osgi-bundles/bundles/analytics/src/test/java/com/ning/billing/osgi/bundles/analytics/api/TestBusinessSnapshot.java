@@ -52,7 +52,8 @@ public class TestBusinessSnapshot extends AnalyticsTestSuiteNoDB {
                                                                                     invoice,
                                                                                     payment,
                                                                                     auditLog,
-                                                                                    tenantRecordId);
+                                                                                    tenantRecordId,
+                                                                                    reportGroup);
         final BusinessAccount businessAccount = new BusinessAccount(accountModelDao);
 
         // Field
@@ -61,7 +62,8 @@ public class TestBusinessSnapshot extends AnalyticsTestSuiteNoDB {
                                                                                                            customField,
                                                                                                            fieldRecordId,
                                                                                                            auditLog,
-                                                                                                           tenantRecordId);
+                                                                                                           tenantRecordId,
+                                                                                                           reportGroup);
         final BusinessField businessField = BusinessField.create(businessAccountFieldModelDao);
 
         // Invoice
@@ -70,7 +72,8 @@ public class TestBusinessSnapshot extends AnalyticsTestSuiteNoDB {
                                                                                     invoice,
                                                                                     invoiceRecordId,
                                                                                     auditLog,
-                                                                                    tenantRecordId);
+                                                                                    tenantRecordId,
+                                                                                    reportGroup);
         final BusinessInvoiceItemBaseModelDao invoiceItemBaseModelDao = BusinessInvoiceItemBaseModelDao.create(account,
                                                                                                                accountRecordId,
                                                                                                                invoice,
@@ -81,7 +84,8 @@ public class TestBusinessSnapshot extends AnalyticsTestSuiteNoDB {
                                                                                                                plan,
                                                                                                                phase,
                                                                                                                auditLog,
-                                                                                                               tenantRecordId);
+                                                                                                               tenantRecordId,
+                                                                                                               reportGroup);
         final BusinessInvoice businessInvoice = new BusinessInvoice(invoiceModelDao,
                                                                     ImmutableList.<BusinessInvoiceItemBaseModelDao>of(invoiceItemBaseModelDao));
 
@@ -95,7 +99,8 @@ public class TestBusinessSnapshot extends AnalyticsTestSuiteNoDB {
                                                                                                                     refund,
                                                                                                                     paymentMethod,
                                                                                                                     auditLog,
-                                                                                                                    tenantRecordId);
+                                                                                                                    tenantRecordId,
+                                                                                                                    reportGroup);
         final BusinessInvoicePayment businessInvoicePayment = new BusinessInvoicePayment(invoicePaymentBaseModelDao);
 
         // Overdue
@@ -107,7 +112,8 @@ public class TestBusinessSnapshot extends AnalyticsTestSuiteNoDB {
                                                                                                               blockingStateRecordId,
                                                                                                               endDate,
                                                                                                               auditLog,
-                                                                                                              tenantRecordId);
+                                                                                                              tenantRecordId,
+                                                                                                              reportGroup);
         final BusinessOverdueStatus businessOverdueStatus = new BusinessOverdueStatus(businessOverdueStatusModelDao);
 
         // Subscriptions
@@ -127,7 +133,8 @@ public class TestBusinessSnapshot extends AnalyticsTestSuiteNoDB {
                                                                                                                                  previousSubscription,
                                                                                                                                  nextSubscription,
                                                                                                                                  auditLog,
-                                                                                                                                 tenantRecordId);
+                                                                                                                                 tenantRecordId,
+                                                                                                                                 reportGroup);
         final BusinessSubscriptionTransition businessSubscriptionTransition = new BusinessSubscriptionTransition(subscriptionTransitionModelDao);
 
         // Tag
@@ -137,7 +144,8 @@ public class TestBusinessSnapshot extends AnalyticsTestSuiteNoDB {
                                                                                                      tagRecordId,
                                                                                                      tagDefinition,
                                                                                                      auditLog,
-                                                                                                     tenantRecordId);
+                                                                                                     tenantRecordId,
+                                                                                                     reportGroup);
         final BusinessTag businessTag = BusinessTag.create(businessAccountTagModelDao);
 
         // Create the snapshot

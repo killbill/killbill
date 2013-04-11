@@ -16,6 +16,8 @@
 
 package com.ning.billing.osgi.bundles.analytics.dao.model;
 
+import javax.annotation.Nullable;
+
 import com.ning.billing.account.api.Account;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoicePayment;
@@ -37,7 +39,8 @@ public class BusinessInvoicePaymentRefundModelDao extends BusinessInvoicePayment
                                                 final Refund refund,
                                                 final PaymentMethod paymentMethod,
                                                 final AuditLog creationAuditLog,
-                                                final Long tenantRecordId) {
+                                                final Long tenantRecordId,
+                                                @Nullable final ReportGroup reportGroup) {
         super(account,
               accountRecordId,
               invoice,
@@ -47,7 +50,8 @@ public class BusinessInvoicePaymentRefundModelDao extends BusinessInvoicePayment
               refund,
               paymentMethod,
               creationAuditLog,
-              tenantRecordId);
+              tenantRecordId,
+              reportGroup);
     }
 
     @Override

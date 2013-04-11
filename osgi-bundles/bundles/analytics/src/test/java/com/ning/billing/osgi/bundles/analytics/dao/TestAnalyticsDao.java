@@ -38,7 +38,8 @@ public class TestAnalyticsDao extends AnalyticsTestSuiteWithEmbeddedDB {
                                                                                     invoice,
                                                                                     payment,
                                                                                     auditLog,
-                                                                                    tenantRecordId);
+                                                                                    tenantRecordId,
+                                                                                    reportGroup);
 
         analyticsSqlDao.create(accountModelDao.getTableName(), accountModelDao, callContext);
         Assert.assertEquals(analyticsDao.getAccountById(account.getId(), callContext), new BusinessAccount(accountModelDao));

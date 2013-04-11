@@ -48,7 +48,8 @@ public class TestBusinessSubscriptionTransition extends AnalyticsTestSuiteNoDB {
                                                                                                                                  previousSubscription,
                                                                                                                                  nextSubscription,
                                                                                                                                  auditLog,
-                                                                                                                                 tenantRecordId);
+                                                                                                                                 tenantRecordId,
+                                                                                                                                 reportGroup);
         final BusinessSubscriptionTransition businessSubscriptionTransition = new BusinessSubscriptionTransition(subscriptionTransitionModelDao);
 
         verifyBusinessEntityBase(businessSubscriptionTransition);

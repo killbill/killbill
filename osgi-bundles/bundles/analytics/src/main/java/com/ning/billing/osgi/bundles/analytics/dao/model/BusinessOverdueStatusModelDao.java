@@ -18,6 +18,8 @@ package com.ning.billing.osgi.bundles.analytics.dao.model;
 
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
 
 import com.ning.billing.account.api.Account;
@@ -28,7 +30,6 @@ import com.ning.billing.util.audit.AuditLog;
 public class BusinessOverdueStatusModelDao extends BusinessModelDaoBase {
 
     private static final String OVERDUE_STATUS_TABLE_NAME = "bos";
-
     private Long blockingStateRecordId;
     private UUID bundleId;
     private String bundleExternalKey;
@@ -52,7 +53,8 @@ public class BusinessOverdueStatusModelDao extends BusinessModelDaoBase {
                                          final String accountName,
                                          final String accountExternalKey,
                                          final Long accountRecordId,
-                                         final Long tenantRecordId) {
+                                         final Long tenantRecordId,
+                                         @Nullable final ReportGroup reportGroup) {
         super(createdDate,
               createdBy,
               createdReasonCode,
@@ -61,7 +63,8 @@ public class BusinessOverdueStatusModelDao extends BusinessModelDaoBase {
               accountName,
               accountExternalKey,
               accountRecordId,
-              tenantRecordId);
+              tenantRecordId,
+              reportGroup);
         this.blockingStateRecordId = blockingStateRecordId;
         this.bundleId = bundleId;
         this.bundleExternalKey = bundleExternalKey;
@@ -77,7 +80,8 @@ public class BusinessOverdueStatusModelDao extends BusinessModelDaoBase {
                                          final Long blockingStateRecordId,
                                          final DateTime endDate,
                                          final AuditLog creationAuditLog,
-                                         final Long tenantRecordId) {
+                                         final Long tenantRecordId,
+                                         @Nullable final ReportGroup reportGroup) {
         this(blockingStateRecordId,
              subscriptionBundle.getId(),
              subscriptionBundle.getExternalKey(),
@@ -92,7 +96,8 @@ public class BusinessOverdueStatusModelDao extends BusinessModelDaoBase {
              account.getName(),
              account.getExternalKey(),
              accountRecordId,
-             tenantRecordId);
+             tenantRecordId,
+             reportGroup);
     }
 
     @Override

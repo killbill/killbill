@@ -34,7 +34,8 @@ public class BusinessTag extends BusinessEntityBase {
               businessTagModelDao.getCreatedComments(),
               businessTagModelDao.getAccountId(),
               businessTagModelDao.getAccountName(),
-              businessTagModelDao.getAccountExternalKey());
+              businessTagModelDao.getAccountExternalKey(),
+              businessTagModelDao.getReportGroup());
         this.objectType = objectType;
         this.name = businessTagModelDao.getName();
     }

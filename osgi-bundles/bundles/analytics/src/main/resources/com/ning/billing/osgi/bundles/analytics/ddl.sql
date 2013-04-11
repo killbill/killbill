@@ -46,6 +46,7 @@ create table bst (
 , account_external_key varchar(50) not null
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
+, report_group enum('default', 'test', 'partner') not null
 , primary key(record_id)
 );
 create index bst_bundle_external_key on bst(bundle_external_key);
@@ -88,6 +89,7 @@ create table bac (
 , account_external_key varchar(50) not null
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
+, report_group enum('default', 'test', 'partner') not null
 , primary key(record_id)
 );
 create index bac_account_external_key on bac(account_external_key);
@@ -119,6 +121,7 @@ create table bin (
 , account_external_key varchar(50) not null
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
+, report_group enum('default', 'test', 'partner') not null
 , primary key(record_id)
 );
 create index bin_invoice_record_id on bin(invoice_record_id);
@@ -168,6 +171,7 @@ create table bia (
 , account_external_key varchar(50) not null
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
+, report_group enum('default', 'test', 'partner') not null
 , primary key(record_id)
 );
 create index bia_invoice_item_record_id on bia(invoice_item_record_id);
@@ -217,6 +221,7 @@ create table bii (
 , account_external_key varchar(50) not null
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
+, report_group enum('default', 'test', 'partner') not null
 , primary key(record_id)
 );
 create index bii_invoice_item_record_id on bii(invoice_item_record_id);
@@ -266,6 +271,7 @@ create table biia (
 , account_external_key varchar(50) not null
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
+, report_group enum('default', 'test', 'partner') not null
 , primary key(record_id)
 );
 create index biia_invoice_item_record_id on biia(invoice_item_record_id);
@@ -315,6 +321,7 @@ create table biic (
 , account_external_key varchar(50) not null
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
+, report_group enum('default', 'test', 'partner') not null
 , primary key(record_id)
 );
 create index biic_invoice_item_record_id on biic(invoice_item_record_id);
@@ -375,6 +382,7 @@ create table bip (
 , account_external_key varchar(50) not null
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
+, report_group enum('default', 'test', 'partner') not null
 , primary key(record_id)
 );
 create index bip_invoice_payment_record_id on bip(invoice_payment_record_id);
@@ -435,6 +443,7 @@ create table bipr (
 , account_external_key varchar(50) not null
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
+, report_group enum('default', 'test', 'partner') not null
 , primary key(record_id)
 );
 create index bipr_invoice_payment_record_id on bipr(invoice_payment_record_id);
@@ -495,6 +504,7 @@ create table bipc (
 , account_external_key varchar(50) not null
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
+, report_group enum('default', 'test', 'partner') not null
 , primary key(record_id)
 );
 create index bipc_invoice_payment_record_id on bipc(invoice_payment_record_id);
@@ -521,6 +531,7 @@ create table bos (
 , account_external_key varchar(50) not null
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
+, report_group enum('default', 'test', 'partner') not null
 , primary key(record_id)
 );
 create index bos_account_id on bos(account_id);
@@ -541,6 +552,7 @@ create table bac_tags (
 , account_external_key varchar(50) not null
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
+, report_group enum('default', 'test', 'partner') not null
 , primary key(record_id)
 );
 create index bac_tags_account_id on bac_tags(account_id);
@@ -562,6 +574,7 @@ create table bin_tags (
 , account_external_key varchar(50) not null
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
+, report_group enum('default', 'test', 'partner') not null
 , primary key(record_id)
 );
 create index bin_tags_account_id on bin_tags(account_id);
@@ -583,6 +596,7 @@ create table bip_tags (
 , account_external_key varchar(50) not null
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
+, report_group enum('default', 'test', 'partner') not null
 , primary key(record_id)
 );
 create index bip_tags_account_id on bip_tags(account_id);
@@ -604,6 +618,7 @@ create table bac_fields (
 , account_external_key varchar(50) not null
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
+, report_group enum('default', 'test', 'partner') not null
 , primary key(record_id)
 );
 create index bac_fields_account_id on bac_fields(account_id);
@@ -626,6 +641,7 @@ create table bin_fields (
 , account_external_key varchar(50) not null
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
+, report_group enum('default', 'test', 'partner') not null
 , primary key(record_id)
 );
 create index bin_fields_account_id on bin_fields(account_id);
@@ -648,6 +664,7 @@ create table bip_fields (
 , account_external_key varchar(50) not null
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
+, report_group enum('default', 'test', 'partner') not null
 , primary key(record_id)
 );
 create index bip_fields_account_id on bip_fields(account_id);

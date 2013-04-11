@@ -34,7 +34,8 @@ public class TestBusinessInvoicePaymentModelDao extends AnalyticsTestSuiteNoDB {
                                                                                                          refund,
                                                                                                          paymentMethod,
                                                                                                          auditLog,
-                                                                                                         tenantRecordId);
+                                                                                                         tenantRecordId,
+                                                                                                         reportGroup);
         verifyBusinessModelDaoBase(invoicePaymentModelDao, accountRecordId, tenantRecordId);
         Assert.assertEquals(invoicePaymentModelDao.getCreatedDate(), invoicePayment.getCreatedDate());
         Assert.assertEquals(invoicePaymentModelDao.getInvoicePaymentRecordId(), invoicePaymentRecordId);

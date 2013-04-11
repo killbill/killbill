@@ -27,6 +27,7 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.osgi.bundles.analytics.AnalyticsRefreshException;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessAccountModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessModelDaoBase.ReportGroup;
 import com.ning.billing.payment.api.Payment;
 import com.ning.billing.util.audit.AuditLog;
 import com.ning.billing.util.callcontext.CallContext;
@@ -92,6 +93,7 @@ public class BusinessAccountDao extends BusinessAnalyticsDaoBase {
 
         final Long accountRecordId = getAccountRecordId(account.getId(), context);
         final Long tenantRecordId = getTenantRecordId(context);
+        final ReportGroup reportGroup = getReportGroup(account.getId(), context);
 
         return new BusinessAccountModelDao(account,
                                            accountRecordId,
@@ -99,6 +101,7 @@ public class BusinessAccountDao extends BusinessAnalyticsDaoBase {
                                            lastInvoice,
                                            lastPayment,
                                            creationAuditLog,
-                                           tenantRecordId);
+                                           tenantRecordId,
+                                           reportGroup);
     }
 }

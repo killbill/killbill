@@ -34,7 +34,8 @@ public class TestBusinessField extends AnalyticsTestSuiteNoDB {
                                                                                                            customField,
                                                                                                            fieldRecordId,
                                                                                                            auditLog,
-                                                                                                           tenantRecordId);
+                                                                                                           tenantRecordId,
+                                                                                                           reportGroup);
         final BusinessField businessField = BusinessField.create(businessAccountFieldModelDao);
         verifyBusinessField(businessField);
         Assert.assertEquals(businessField.getObjectType(), ObjectType.ACCOUNT);
@@ -47,7 +48,8 @@ public class TestBusinessField extends AnalyticsTestSuiteNoDB {
                                                                                                            customField,
                                                                                                            fieldRecordId,
                                                                                                            auditLog,
-                                                                                                           tenantRecordId);
+                                                                                                           tenantRecordId,
+                                                                                                           reportGroup);
         final BusinessField businessField = BusinessField.create(businessInvoiceFieldModelDao);
         verifyBusinessField(businessField);
         Assert.assertEquals(businessField.getObjectType(), ObjectType.INVOICE);
@@ -60,7 +62,8 @@ public class TestBusinessField extends AnalyticsTestSuiteNoDB {
                                                                                                                         customField,
                                                                                                                         fieldRecordId,
                                                                                                                         auditLog,
-                                                                                                                        tenantRecordId);
+                                                                                                                        tenantRecordId,
+                                                                                                                        reportGroup);
         final BusinessField businessField = BusinessField.create(invoicePaymentFieldModelDao);
         verifyBusinessField(businessField);
         Assert.assertEquals(businessField.getObjectType(), ObjectType.INVOICE_PAYMENT);

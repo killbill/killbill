@@ -45,6 +45,7 @@ import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.junction.api.JunctionApi;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessModelDaoBase.ReportGroup;
 import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentApiException;
@@ -62,6 +63,7 @@ import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.customfield.CustomField;
+import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillAPI;
@@ -116,6 +118,30 @@ public abstract class BusinessAnalyticsBase {
     protected Long getAccountRecordId(final UUID accountId, final TenantContext context) throws AnalyticsRefreshException {
         final RecordIdApi recordIdUserApi = getRecordIdUserApi();
         return recordIdUserApi.getRecordId(accountId, ObjectType.ACCOUNT, context);
+    }
+
+    protected ReportGroup getReportGroup(final UUID accountId, final TenantContext context) throws AnalyticsRefreshException {
+        final TagUserApi tagUserApi = getTagUserApi();
+        boolean isTestAccount = false;
+        boolean isPartnerAccount = false;
+
+        final List<Tag> tagForAccount = tagUserApi.getTagsForObject(accountId, ObjectType.TAG, context);
+        for (final Tag tag : tagForAccount) {
+            if (ControlTagType.TEST.getId().equals(tag.getTagDefinitionId())) {
+                isTestAccount = true;
+            } else if (ControlTagType.PARTNER.getId().equals(tag.getTagDefinitionId())) {
+                isPartnerAccount = true;
+            }
+        }
+
+        // Test group has precedence
+        if (isTestAccount) {
+            return ReportGroup.test;
+        } else if (isPartnerAccount) {
+            return ReportGroup.partner;
+        } else {
+            return null;
+        }
     }
 
     //

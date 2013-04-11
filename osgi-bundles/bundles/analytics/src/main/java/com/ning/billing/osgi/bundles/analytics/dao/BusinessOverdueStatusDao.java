@@ -31,6 +31,7 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.osgi.bundles.analytics.AnalyticsRefreshException;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessModelDaoBase.ReportGroup;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessOverdueStatusModelDao;
 import com.ning.billing.util.audit.AuditLog;
 import com.ning.billing.util.callcontext.CallContext;
@@ -101,6 +102,7 @@ public class BusinessOverdueStatusDao extends BusinessAnalyticsDaoBase {
 
         final Long accountRecordId = getAccountRecordId(account.getId(), context);
         final Long tenantRecordId = getTenantRecordId(context);
+        final ReportGroup reportGroup = getReportGroup(account.getId(), context);
 
         final List<BlockingState> blockingStates = Lists.reverse(ImmutableList.<BlockingState>copyOf(blockingStatesOrdered));
         DateTime previousStartDate = null;
@@ -114,7 +116,8 @@ public class BusinessOverdueStatusDao extends BusinessAnalyticsDaoBase {
                                                                                                   blockingStateRecordId,
                                                                                                   previousStartDate,
                                                                                                   creationAuditLog,
-                                                                                                  tenantRecordId);
+                                                                                                  tenantRecordId,
+                                                                                                  reportGroup);
             businessOverdueStatuses.add(overdueStatus);
             previousStartDate = state.getTimestamp();
         }

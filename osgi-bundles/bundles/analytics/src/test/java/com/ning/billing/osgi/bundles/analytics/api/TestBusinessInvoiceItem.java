@@ -36,7 +36,8 @@ public class TestBusinessInvoiceItem extends AnalyticsTestSuiteNoDB {
                                                                                                                plan,
                                                                                                                phase,
                                                                                                                auditLog,
-                                                                                                               tenantRecordId);
+                                                                                                               tenantRecordId,
+                                                                                                               reportGroup);
         final BusinessInvoiceItem businessInvoiceItem = new BusinessInvoiceItem(invoiceItemBaseModelDao);
         verifyBusinessEntityBase(businessInvoiceItem);
         Assert.assertEquals(businessInvoiceItem.getCreatedDate(), invoiceItemBaseModelDao.getCreatedDate());

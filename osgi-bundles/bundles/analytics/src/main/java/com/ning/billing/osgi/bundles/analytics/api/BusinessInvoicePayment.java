@@ -51,7 +51,8 @@ public class BusinessInvoicePayment extends BusinessEntityBase {
               businessInvoicePaymentBaseModelDao.getCreatedComments(),
               businessInvoicePaymentBaseModelDao.getAccountId(),
               businessInvoicePaymentBaseModelDao.getAccountName(),
-              businessInvoicePaymentBaseModelDao.getAccountExternalKey());
+              businessInvoicePaymentBaseModelDao.getAccountExternalKey(),
+              businessInvoicePaymentBaseModelDao.getReportGroup());
         this.invoicePaymentId = businessInvoicePaymentBaseModelDao.getInvoicePaymentId();
         this.invoiceId = businessInvoicePaymentBaseModelDao.getInvoiceId();
         this.invoiceNumber = businessInvoicePaymentBaseModelDao.getInvoiceNumber();

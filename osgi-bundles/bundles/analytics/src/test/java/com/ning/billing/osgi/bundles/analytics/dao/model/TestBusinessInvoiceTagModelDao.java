@@ -31,7 +31,8 @@ public class TestBusinessInvoiceTagModelDao extends AnalyticsTestSuiteNoDB {
                                                                                              tagRecordId,
                                                                                              tagDefinition,
                                                                                              auditLog,
-                                                                                             tenantRecordId);
+                                                                                             tenantRecordId,
+                                                                                             reportGroup);
         verifyBusinessModelDaoBase(invoiceTagModelDao, accountRecordId, tenantRecordId);
         Assert.assertEquals(invoiceTagModelDao.getCreatedDate(), tag.getCreatedDate());
         Assert.assertEquals(invoiceTagModelDao.getTagRecordId(), tagRecordId);

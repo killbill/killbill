@@ -38,6 +38,7 @@ import com.ning.billing.osgi.bundles.analytics.AnalyticsRefreshException;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessAccountModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceItemBaseModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessModelDaoBase.ReportGroup;
 import com.ning.billing.util.audit.AuditLog;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TenantContext;
@@ -90,6 +91,7 @@ public class BusinessInvoiceDao extends BusinessAnalyticsDaoBase {
                                                                                                                            final CallContext context) throws AnalyticsRefreshException {
         final Long accountRecordId = getAccountRecordId(account.getId(), context);
         final Long tenantRecordId = getTenantRecordId(context);
+        final ReportGroup reportGroup = getReportGroup(account.getId(), context);
 
         // Lookup the invoices for that account
         final Map<BusinessInvoiceModelDao, Collection<BusinessInvoiceItemBaseModelDao>> businessInvoices = new HashMap<BusinessInvoiceModelDao, Collection<BusinessInvoiceItemBaseModelDao>>();
@@ -104,7 +106,8 @@ public class BusinessInvoiceDao extends BusinessAnalyticsDaoBase {
                                                                                         invoice,
                                                                                         invoiceRecordId,
                                                                                         creationAuditLog,
-                                                                                        tenantRecordId);
+                                                                                        tenantRecordId,
+                                                                                        reportGroup);
 
             final List<BusinessInvoiceItemBaseModelDao> businessInvoiceItems = new ArrayList<BusinessInvoiceItemBaseModelDao>();
             for (final InvoiceItem invoiceItem : invoice.getInvoiceItems()) {
@@ -187,6 +190,7 @@ public class BusinessInvoiceDao extends BusinessAnalyticsDaoBase {
         final AuditLog creationAuditLog = getInvoiceItemCreationAuditLog(invoiceItem.getId(), context);
         final Long accountRecordId = getAccountRecordId(account.getId(), context);
         final Long tenantRecordId = getTenantRecordId(context);
+        final ReportGroup reportGroup = getReportGroup(account.getId(), context);
 
         return BusinessInvoiceItemBaseModelDao.create(account,
                                                       accountRecordId,
@@ -198,6 +202,7 @@ public class BusinessInvoiceDao extends BusinessAnalyticsDaoBase {
                                                       plan,
                                                       planPhase,
                                                       creationAuditLog,
-                                                      tenantRecordId);
+                                                      tenantRecordId,
+                                                      reportGroup);
     }
 }

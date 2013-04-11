@@ -50,6 +50,7 @@ import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.osgi.bundles.analytics.api.BusinessEntityBase;
 import com.ning.billing.osgi.bundles.analytics.dao.TestCallContext;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessModelDaoBase;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessModelDaoBase.ReportGroup;
 import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.Payment.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentMethod;
@@ -82,6 +83,8 @@ public abstract class AnalyticsTestSuiteNoDB {
     protected final Long tagRecordId = 8L;
     protected final Long tenantRecordId = 9L;
 
+    protected final ReportGroup reportGroup = ReportGroup.partner;
+
     protected Account account;
     protected SubscriptionBundle bundle;
     protected Plan plan;
@@ -112,6 +115,7 @@ public abstract class AnalyticsTestSuiteNoDB {
         Assert.assertEquals(businessEntityBase.getAccountId(), account.getId());
         Assert.assertEquals(businessEntityBase.getAccountName(), account.getName());
         Assert.assertEquals(businessEntityBase.getAccountExternalKey(), account.getExternalKey());
+        Assert.assertEquals(businessEntityBase.getReportGroup(), reportGroup.toString());
     }
 
     protected void verifyBusinessModelDaoBase(final BusinessModelDaoBase businessModelDaoBase,
@@ -125,6 +129,7 @@ public abstract class AnalyticsTestSuiteNoDB {
         Assert.assertEquals(businessModelDaoBase.getAccountExternalKey(), account.getExternalKey());
         Assert.assertEquals(businessModelDaoBase.getAccountRecordId(), accountRecordId);
         Assert.assertEquals(businessModelDaoBase.getTenantRecordId(), tenantRecordId);
+        Assert.assertEquals(businessModelDaoBase.getReportGroup(), reportGroup.toString());
     }
 
     @BeforeMethod(groups = "fast")

@@ -18,6 +18,8 @@ package com.ning.billing.osgi.bundles.analytics.dao.model;
 
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
 
 import com.ning.billing.ObjectType;
@@ -43,7 +45,8 @@ public abstract class BusinessTagModelDao extends BusinessModelDaoBase {
                                              final Long tagRecordId,
                                              final TagDefinition tagDefinition,
                                              final AuditLog creationAuditLog,
-                                             final Long tenantRecordId) {
+                                             final Long tenantRecordId,
+                                             @Nullable final ReportGroup reportGroup) {
         if (ObjectType.ACCOUNT.equals(tag.getObjectType())) {
             return new BusinessAccountTagModelDao(account,
                                                   accountRecordId,
@@ -51,7 +54,8 @@ public abstract class BusinessTagModelDao extends BusinessModelDaoBase {
                                                   tagRecordId,
                                                   tagDefinition,
                                                   creationAuditLog,
-                                                  tenantRecordId);
+                                                  tenantRecordId,
+                                                  reportGroup);
         } else if (ObjectType.INVOICE_PAYMENT.equals(tag.getObjectType())) {
             return new BusinessInvoicePaymentTagModelDao(account,
                                                          accountRecordId,
@@ -59,7 +63,8 @@ public abstract class BusinessTagModelDao extends BusinessModelDaoBase {
                                                          tagRecordId,
                                                          tagDefinition,
                                                          creationAuditLog,
-                                                         tenantRecordId);
+                                                         tenantRecordId,
+                                                         reportGroup);
         } else if (ObjectType.INVOICE.equals(tag.getObjectType())) {
             return new BusinessInvoiceTagModelDao(account,
                                                   accountRecordId,
@@ -67,7 +72,8 @@ public abstract class BusinessTagModelDao extends BusinessModelDaoBase {
                                                   tagRecordId,
                                                   tagDefinition,
                                                   creationAuditLog,
-                                                  tenantRecordId);
+                                                  tenantRecordId,
+                                                  reportGroup);
         } else {
             // We don't care
             return null;
@@ -86,7 +92,8 @@ public abstract class BusinessTagModelDao extends BusinessModelDaoBase {
                                final String accountName,
                                final String accountExternalKey,
                                final Long accountRecordId,
-                               final Long tenantRecordId) {
+                               final Long tenantRecordId,
+                               @Nullable final ReportGroup reportGroup) {
         super(createdDate,
               createdBy,
               createdReasonCode,
@@ -95,7 +102,8 @@ public abstract class BusinessTagModelDao extends BusinessModelDaoBase {
               accountName,
               accountExternalKey,
               accountRecordId,
-              tenantRecordId);
+              tenantRecordId,
+              reportGroup);
         this.tagRecordId = tagRecordId;
         this.name = name;
     }
@@ -106,7 +114,8 @@ public abstract class BusinessTagModelDao extends BusinessModelDaoBase {
                                final Long tagRecordId,
                                final TagDefinition tagDefinition,
                                final AuditLog creationAuditLog,
-                               final Long tenantRecordId) {
+                               final Long tenantRecordId,
+                               @Nullable final ReportGroup reportGroup) {
         this(tagRecordId,
              tagDefinition.getName(),
              tag.getCreatedDate(),
@@ -117,7 +126,8 @@ public abstract class BusinessTagModelDao extends BusinessModelDaoBase {
              account.getName(),
              account.getExternalKey(),
              accountRecordId,
-             tenantRecordId);
+             tenantRecordId,
+             reportGroup);
     }
 
     public Long getTagRecordId() {

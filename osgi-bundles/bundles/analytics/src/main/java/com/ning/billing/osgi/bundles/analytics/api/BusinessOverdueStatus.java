@@ -35,7 +35,8 @@ public class BusinessOverdueStatus extends BusinessEntityBase {
               businessOverdueStatusModelDao.getCreatedComments(),
               businessOverdueStatusModelDao.getAccountId(),
               businessOverdueStatusModelDao.getAccountName(),
-              businessOverdueStatusModelDao.getAccountExternalKey());
+              businessOverdueStatusModelDao.getAccountExternalKey(),
+              businessOverdueStatusModelDao.getReportGroup());
 
         // TODO For now
         this.objectType = ObjectType.BUNDLE.toString();
