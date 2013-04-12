@@ -183,6 +183,7 @@ insert into bin (
 , account_name
 , account_external_key
 , account_record_id
+, tenant_record_id
 , report_group
 ) values (
   :invoiceRecordId
@@ -204,6 +205,7 @@ insert into bin (
 , :accountName
 , :accountExternalKey
 , :accountRecordId
+, :tenantRecordId
 , :reportGroup
 );
 >>
@@ -556,6 +558,27 @@ insert into bip (
 , linked_invoice_payment_id
 , amount
 , currency
+, plugin_created_date
+, plugin_effective_date
+, plugin_status
+, plugin_gateway_error
+, plugin_gateway_error_code
+, plugin_first_reference_id
+, plugin_second_reference_id
+, plugin_pm_id
+, plugin_pm_is_default
+, plugin_pm_type
+, plugin_pm_cc_name
+, plugin_pm_cc_type
+, plugin_pm_cc_expiration_month
+, plugin_pm_cc_expiration_year
+, plugin_pm_cc_last_4
+, plugin_pm_address1
+, plugin_pm_address2
+, plugin_pm_city
+, plugin_pm_state
+, plugin_pm_zip
+, plugin_pm_country
 , created_date
 , created_by
 , created_reason_code
@@ -585,6 +608,27 @@ insert into bip (
 , :linkedInvoicePaymentId
 , :amount
 , :currency
+, :pluginCreatedDate
+, :pluginEffectiveDate
+, :pluginStatus
+, :pluginGatewayError
+, :pluginGatewayErrorCode
+, :pluginFirstReferenceId
+, :pluginSecondReferenceId
+, :pluginPmId
+, :pluginPmIsDefault
+, :pluginPmType
+, :pluginPmCcName
+, :pluginPmCcType
+, :pluginPmCcExpirationMonth
+, :pluginPmCcExpirationYear
+, :pluginPmCcLast4
+, :pluginPmAddress1
+, :pluginPmAddress2
+, :pluginPmCity
+, :pluginPmState
+, :pluginPmZip
+, :pluginPmCountry
 , :createdDate
 , :createdBy
 , :createdReasonCode
@@ -618,6 +662,27 @@ insert into bipr (
 , linked_invoice_payment_id
 , amount
 , currency
+, plugin_created_date
+, plugin_effective_date
+, plugin_status
+, plugin_gateway_error
+, plugin_gateway_error_code
+, plugin_first_reference_id
+, plugin_second_reference_id
+, plugin_pm_id
+, plugin_pm_is_default
+, plugin_pm_type
+, plugin_pm_cc_name
+, plugin_pm_cc_type
+, plugin_pm_cc_expiration_month
+, plugin_pm_cc_expiration_year
+, plugin_pm_cc_last_4
+, plugin_pm_address1
+, plugin_pm_address2
+, plugin_pm_city
+, plugin_pm_state
+, plugin_pm_zip
+, plugin_pm_country
 , created_date
 , created_by
 , created_reason_code
@@ -647,6 +712,27 @@ insert into bipr (
 , :linkedInvoicePaymentId
 , :amount
 , :currency
+, :pluginCreatedDate
+, :pluginEffectiveDate
+, :pluginStatus
+, :pluginGatewayError
+, :pluginGatewayErrorCode
+, :pluginFirstReferenceId
+, :pluginSecondReferenceId
+, :pluginPmId
+, :pluginPmIsDefault
+, :pluginPmType
+, :pluginPmCcName
+, :pluginPmCcType
+, :pluginPmCcExpirationMonth
+, :pluginPmCcExpirationYear
+, :pluginPmCcLast4
+, :pluginPmAddress1
+, :pluginPmAddress2
+, :pluginPmCity
+, :pluginPmState
+, :pluginPmZip
+, :pluginPmCountry
 , :createdDate
 , :createdBy
 , :createdReasonCode
@@ -680,6 +766,27 @@ insert into bipc (
 , linked_invoice_payment_id
 , amount
 , currency
+, plugin_created_date
+, plugin_effective_date
+, plugin_status
+, plugin_gateway_error
+, plugin_gateway_error_code
+, plugin_first_reference_id
+, plugin_second_reference_id
+, plugin_pm_id
+, plugin_pm_is_default
+, plugin_pm_type
+, plugin_pm_cc_name
+, plugin_pm_cc_type
+, plugin_pm_cc_expiration_month
+, plugin_pm_cc_expiration_year
+, plugin_pm_cc_last_4
+, plugin_pm_address1
+, plugin_pm_address2
+, plugin_pm_city
+, plugin_pm_state
+, plugin_pm_zip
+, plugin_pm_country
 , created_date
 , created_by
 , created_reason_code
@@ -709,6 +816,27 @@ insert into bipc (
 , :linkedInvoicePaymentId
 , :amount
 , :currency
+, :pluginCreatedDate
+, :pluginEffectiveDate
+, :pluginStatus
+, :pluginGatewayError
+, :pluginGatewayErrorCode
+, :pluginFirstReferenceId
+, :pluginSecondReferenceId
+, :pluginPmId
+, :pluginPmIsDefault
+, :pluginPmType
+, :pluginPmCcName
+, :pluginPmCcType
+, :pluginPmCcExpirationMonth
+, :pluginPmCcExpirationYear
+, :pluginPmCcLast4
+, :pluginPmAddress1
+, :pluginPmAddress2
+, :pluginPmCity
+, :pluginPmState
+, :pluginPmZip
+, :pluginPmCountry
 , :createdDate
 , :createdBy
 , :createdReasonCode
@@ -922,7 +1050,7 @@ insert into bin_fields (
 
 createBipFields() ::= <<
 insert into bip_fields (
-, custom_field_record_id
+  custom_field_record_id
 , invoice_payment_id
 , name
 , value
@@ -937,7 +1065,7 @@ insert into bip_fields (
 , tenant_record_id
 , report_group
 ) values (
-, :customFieldRecordId
+  :customFieldRecordId
 , :invoicePaymentId
 , :name
 , :value
@@ -991,22 +1119,37 @@ getInvoicesByAccountRecordId() ::= <<
 ;
 >>
 
-getInvoiceItemsByAccountRecordId() ::= <<
+getInvoiceAdjustmentsByAccountRecordId() ::= <<
 <SELECT_STAR_FROM_TABLE("bia")>
-union all
+;
+>>
+
+getInvoiceItemsByAccountRecordId() ::= <<
 <SELECT_STAR_FROM_TABLE("bii")>
-union all
+;
+>>
+
+getInvoiceItemAdjustmentsByAccountRecordId() ::= <<
 <SELECT_STAR_FROM_TABLE("biia")>
-union all
+;
+>>
+
+getInvoiceItemCreditsByAccountRecordId() ::= <<
 <SELECT_STAR_FROM_TABLE("biic")>
 ;
 >>
 
 getInvoicePaymentsByAccountRecordId() ::= <<
 <SELECT_STAR_FROM_TABLE("bip")>
-union all
+;
+>>
+
+getInvoicePaymentRefundsByAccountRecordId() ::= <<
 <SELECT_STAR_FROM_TABLE("bipr")>
-union all
+;
+>>
+
+getInvoicePaymentChargebacksByAccountRecordId() ::= <<
 <SELECT_STAR_FROM_TABLE("bipc")>
 ;
 >>

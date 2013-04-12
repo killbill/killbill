@@ -16,6 +16,7 @@
 
 package com.ning.billing.osgi.bundles.analytics.dao;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -105,7 +106,12 @@ public class AnalyticsDao {
         final Long accountRecordId = getAccountRecordId(accountId, context);
         final Long tenantRecordId = getTenantRecordId(context);
 
-        final List<BusinessInvoiceItemBaseModelDao> businessInvoiceItemModelDaos = sqlDao.getInvoiceItemsByAccountRecordId(accountRecordId, tenantRecordId, context);
+        final List<BusinessInvoiceItemBaseModelDao> businessInvoiceItemModelDaos = new ArrayList<BusinessInvoiceItemBaseModelDao>();
+        businessInvoiceItemModelDaos.addAll(sqlDao.getInvoiceAdjustmentsByAccountRecordId(accountRecordId, tenantRecordId, context));
+        businessInvoiceItemModelDaos.addAll(sqlDao.getInvoiceItemsByAccountRecordId(accountRecordId, tenantRecordId, context));
+        businessInvoiceItemModelDaos.addAll(sqlDao.getInvoiceItemAdjustmentsByAccountRecordId(accountRecordId, tenantRecordId, context));
+        businessInvoiceItemModelDaos.addAll(sqlDao.getInvoiceItemCreditsByAccountRecordId(accountRecordId, tenantRecordId, context));
+
         final Map<UUID, List<BusinessInvoiceItemBaseModelDao>> itemsPerInvoice = new LinkedHashMap<UUID, List<BusinessInvoiceItemBaseModelDao>>();
         for (final BusinessInvoiceItemBaseModelDao businessInvoiceModelDao : businessInvoiceItemModelDaos) {
             if (itemsPerInvoice.get(businessInvoiceModelDao.getInvoiceId()) == null) {
@@ -127,8 +133,12 @@ public class AnalyticsDao {
         final Long accountRecordId = getAccountRecordId(accountId, context);
         final Long tenantRecordId = getTenantRecordId(context);
 
-        final List<BusinessInvoicePaymentBaseModelDao> businessInvoicePaymentBaseModelDaos = sqlDao.getInvoicePaymentsByAccountRecordId(accountRecordId, tenantRecordId, context);
-        return Lists.transform(businessInvoicePaymentBaseModelDaos, new Function<BusinessInvoicePaymentBaseModelDao, BusinessInvoicePayment>() {
+        final List<BusinessInvoicePaymentBaseModelDao> businessInvoicePaymentModelDaos = new ArrayList<BusinessInvoicePaymentBaseModelDao>();
+        businessInvoicePaymentModelDaos.addAll(sqlDao.getInvoicePaymentsByAccountRecordId(accountRecordId, tenantRecordId, context));
+        businessInvoicePaymentModelDaos.addAll(sqlDao.getInvoicePaymentRefundsByAccountRecordId(accountRecordId, tenantRecordId, context));
+        businessInvoicePaymentModelDaos.addAll(sqlDao.getInvoicePaymentChargebacksByAccountRecordId(accountRecordId, tenantRecordId, context));
+
+        return Lists.transform(businessInvoicePaymentModelDaos, new Function<BusinessInvoicePaymentBaseModelDao, BusinessInvoicePayment>() {
             @Override
             public BusinessInvoicePayment apply(final BusinessInvoicePaymentBaseModelDao input) {
                 return new BusinessInvoicePayment(input);

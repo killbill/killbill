@@ -36,10 +36,12 @@ import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceItemMode
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoicePaymentChargebackModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoicePaymentFieldModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoicePaymentModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoicePaymentRefundModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoicePaymentTagModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceTagModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessOverdueStatusModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessSubscriptionTransitionModelDao;
 
 import com.google.common.base.CaseFormat;
 
@@ -61,12 +63,12 @@ public class BusinessDBIProvider {
         dbi.registerMapper(new LowerToCamelBeanMapperFactory(BusinessInvoiceModelDao.class));
         dbi.registerMapper(new LowerToCamelBeanMapperFactory(BusinessInvoicePaymentChargebackModelDao.class));
         dbi.registerMapper(new LowerToCamelBeanMapperFactory(BusinessInvoicePaymentFieldModelDao.class));
-        dbi.registerMapper(new LowerToCamelBeanMapperFactory(BusinessInvoicePaymentDao.class));
+        dbi.registerMapper(new LowerToCamelBeanMapperFactory(BusinessInvoicePaymentModelDao.class));
         dbi.registerMapper(new LowerToCamelBeanMapperFactory(BusinessInvoicePaymentRefundModelDao.class));
         dbi.registerMapper(new LowerToCamelBeanMapperFactory(BusinessInvoicePaymentTagModelDao.class));
         dbi.registerMapper(new LowerToCamelBeanMapperFactory(BusinessInvoiceTagModelDao.class));
         dbi.registerMapper(new LowerToCamelBeanMapperFactory(BusinessOverdueStatusModelDao.class));
-        dbi.registerMapper(new LowerToCamelBeanMapperFactory(BusinessSubscriptionTransitionDao.class));
+        dbi.registerMapper(new LowerToCamelBeanMapperFactory(BusinessSubscriptionTransitionModelDao.class));
 
         dbi.setStatementLocator(new AnalyticsStatementLocator());
 

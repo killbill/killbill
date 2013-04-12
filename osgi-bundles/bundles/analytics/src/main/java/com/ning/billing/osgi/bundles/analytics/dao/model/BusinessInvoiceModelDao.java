@@ -202,22 +202,22 @@ public class BusinessInvoiceModelDao extends BusinessModelDaoBase {
 
         final BusinessInvoiceModelDao that = (BusinessInvoiceModelDao) o;
 
-        if (amountCharged != null ? !amountCharged.equals(that.amountCharged) : that.amountCharged != null) {
+        if (amountCharged != null ? (amountCharged.compareTo(that.amountCharged) != 0) : that.amountCharged != null) {
             return false;
         }
-        if (amountCredited != null ? !amountCredited.equals(that.amountCredited) : that.amountCredited != null) {
+        if (amountCredited != null ? (amountCredited.compareTo(that.amountCredited) != 0) : that.amountCredited != null) {
             return false;
         }
-        if (amountPaid != null ? !amountPaid.equals(that.amountPaid) : that.amountPaid != null) {
+        if (amountPaid != null ? (amountPaid.compareTo(that.amountPaid) != 0) : that.amountPaid != null) {
             return false;
         }
-        if (balance != null ? !balance.equals(that.balance) : that.balance != null) {
+        if (balance != null ? (balance.compareTo(that.balance) != 0) : that.balance != null) {
             return false;
         }
         if (currency != null ? !currency.equals(that.currency) : that.currency != null) {
             return false;
         }
-        if (invoiceDate != null ? !invoiceDate.equals(that.invoiceDate) : that.invoiceDate != null) {
+        if (invoiceDate != null ? (invoiceDate.compareTo(that.invoiceDate) != 0) : that.invoiceDate != null) {
             return false;
         }
         if (invoiceId != null ? !invoiceId.equals(that.invoiceId) : that.invoiceId != null) {
@@ -229,10 +229,10 @@ public class BusinessInvoiceModelDao extends BusinessModelDaoBase {
         if (invoiceRecordId != null ? !invoiceRecordId.equals(that.invoiceRecordId) : that.invoiceRecordId != null) {
             return false;
         }
-        if (originalAmountCharged != null ? !originalAmountCharged.equals(that.originalAmountCharged) : that.originalAmountCharged != null) {
+        if (originalAmountCharged != null ? (originalAmountCharged.compareTo(that.originalAmountCharged) != 0) : that.originalAmountCharged != null) {
             return false;
         }
-        if (targetDate != null ? !targetDate.equals(that.targetDate) : that.targetDate != null) {
+        if (targetDate != null ? (targetDate.compareTo(that.targetDate) != 0) : that.targetDate != null) {
             return false;
         }
 

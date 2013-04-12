@@ -139,7 +139,7 @@ create table bia (
 , item_id char(36) not null
 , invoice_id char(36) not null
 , invoice_number bigint default null
-, invoice_created_date date not null
+, invoice_created_date datetime not null
 , invoice_date date not null
 , invoice_target_date date not null
 , invoice_currency char(50) not null
@@ -189,7 +189,7 @@ create table bii (
 , item_id char(36) not null
 , invoice_id char(36) not null
 , invoice_number bigint default null
-, invoice_created_date date not null
+, invoice_created_date datetime not null
 , invoice_date date not null
 , invoice_target_date date not null
 , invoice_currency char(50) not null
@@ -239,7 +239,7 @@ create table biia (
 , item_id char(36) not null
 , invoice_id char(36) not null
 , invoice_number bigint default null
-, invoice_created_date date not null
+, invoice_created_date datetime not null
 , invoice_date date not null
 , invoice_target_date date not null
 , invoice_currency char(50) not null
@@ -289,7 +289,7 @@ create table biic (
 , item_id char(36) not null
 , invoice_id char(36) not null
 , invoice_number bigint default null
-, invoice_created_date date not null
+, invoice_created_date datetime not null
 , invoice_date date not null
 , invoice_target_date date not null
 , invoice_currency char(50) not null
@@ -338,7 +338,7 @@ create table bip (
 , invoice_payment_id char(36) not null
 , invoice_id char(36) not null
 , invoice_number bigint default null
-, invoice_created_date date not null
+, invoice_created_date datetime not null
 , invoice_date date not null
 , invoice_target_date date not null
 , invoice_currency char(50) not null
@@ -399,7 +399,7 @@ create table bipr (
 , invoice_payment_id char(36) not null
 , invoice_id char(36) not null
 , invoice_number bigint default null
-, invoice_created_date date not null
+, invoice_created_date datetime not null
 , invoice_date date not null
 , invoice_target_date date not null
 , invoice_currency char(50) not null
@@ -460,7 +460,7 @@ create table bipc (
 , invoice_payment_id char(36) not null
 , invoice_id char(36) not null
 , invoice_number bigint default null
-, invoice_created_date date not null
+, invoice_created_date datetime not null
 , invoice_date date not null
 , invoice_target_date date not null
 , invoice_currency char(50) not null

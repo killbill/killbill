@@ -394,16 +394,16 @@ public class BusinessSubscriptionTransitionModelDao extends BusinessModelDaoBase
         if (nextCurrency != null ? !nextCurrency.equals(that.nextCurrency) : that.nextCurrency != null) {
             return false;
         }
-        if (nextEndDate != null ? !nextEndDate.equals(that.nextEndDate) : that.nextEndDate != null) {
+        if (nextEndDate != null ? (nextEndDate.compareTo(that.nextEndDate) != 0) : that.nextEndDate != null) {
             return false;
         }
-        if (nextMrr != null ? !nextMrr.equals(that.nextMrr) : that.nextMrr != null) {
+        if (nextMrr != null ? (nextMrr.compareTo(that.nextMrr) != 0) : that.nextMrr != null) {
             return false;
         }
         if (nextPhase != null ? !nextPhase.equals(that.nextPhase) : that.nextPhase != null) {
             return false;
         }
-        if (nextPrice != null ? !nextPrice.equals(that.nextPrice) : that.nextPrice != null) {
+        if (nextPrice != null ? (nextPrice.compareTo(that.nextPrice) != 0) : that.nextPrice != null) {
             return false;
         }
         if (nextPriceList != null ? !nextPriceList.equals(that.nextPriceList) : that.nextPriceList != null) {
@@ -421,7 +421,7 @@ public class BusinessSubscriptionTransitionModelDao extends BusinessModelDaoBase
         if (nextSlug != null ? !nextSlug.equals(that.nextSlug) : that.nextSlug != null) {
             return false;
         }
-        if (nextStartDate != null ? !nextStartDate.equals(that.nextStartDate) : that.nextStartDate != null) {
+        if (nextStartDate != null ? (nextStartDate.compareTo(that.nextStartDate) != 0) : that.nextStartDate != null) {
             return false;
         }
         if (nextState != null ? !nextState.equals(that.nextState) : that.nextState != null) {
@@ -436,13 +436,13 @@ public class BusinessSubscriptionTransitionModelDao extends BusinessModelDaoBase
         if (prevCurrency != null ? !prevCurrency.equals(that.prevCurrency) : that.prevCurrency != null) {
             return false;
         }
-        if (prevMrr != null ? !prevMrr.equals(that.prevMrr) : that.prevMrr != null) {
+        if (prevMrr != null ? (prevMrr.compareTo(that.prevMrr) != 0) : that.prevMrr != null) {
             return false;
         }
         if (prevPhase != null ? !prevPhase.equals(that.prevPhase) : that.prevPhase != null) {
             return false;
         }
-        if (prevPrice != null ? !prevPrice.equals(that.prevPrice) : that.prevPrice != null) {
+        if (prevPrice != null ? (prevPrice.compareTo(that.prevPrice) != 0) : that.prevPrice != null) {
             return false;
         }
         if (prevPriceList != null ? !prevPriceList.equals(that.prevPriceList) : that.prevPriceList != null) {
@@ -460,13 +460,13 @@ public class BusinessSubscriptionTransitionModelDao extends BusinessModelDaoBase
         if (prevSlug != null ? !prevSlug.equals(that.prevSlug) : that.prevSlug != null) {
             return false;
         }
-        if (prevStartDate != null ? !prevStartDate.equals(that.prevStartDate) : that.prevStartDate != null) {
+        if (prevStartDate != null ? (prevStartDate.compareTo(that.prevStartDate) != 0) : that.prevStartDate != null) {
             return false;
         }
         if (prevState != null ? !prevState.equals(that.prevState) : that.prevState != null) {
             return false;
         }
-        if (requestedTimestamp != null ? !requestedTimestamp.equals(that.requestedTimestamp) : that.requestedTimestamp != null) {
+        if (requestedTimestamp != null ? (requestedTimestamp.compareTo(that.requestedTimestamp) != 0) : that.requestedTimestamp != null) {
             return false;
         }
         if (subscriptionEventRecordId != null ? !subscriptionEventRecordId.equals(that.subscriptionEventRecordId) : that.subscriptionEventRecordId != null) {

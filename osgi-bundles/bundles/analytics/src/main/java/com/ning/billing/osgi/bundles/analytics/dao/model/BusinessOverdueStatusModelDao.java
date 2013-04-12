@@ -166,10 +166,10 @@ public class BusinessOverdueStatusModelDao extends BusinessModelDaoBase {
         if (bundleId != null ? !bundleId.equals(that.bundleId) : that.bundleId != null) {
             return false;
         }
-        if (endDate != null ? !endDate.equals(that.endDate) : that.endDate != null) {
+        if (endDate != null ? (endDate.compareTo(that.endDate) != 0) : that.endDate != null) {
             return false;
         }
-        if (startDate != null ? !startDate.equals(that.startDate) : that.startDate != null) {
+        if (startDate != null ? (startDate.compareTo(that.startDate) != 0) : that.startDate != null) {
             return false;
         }
         if (status != null ? !status.equals(that.status) : that.status != null) {

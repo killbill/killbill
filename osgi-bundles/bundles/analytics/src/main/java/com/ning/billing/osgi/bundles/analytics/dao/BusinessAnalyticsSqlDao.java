@@ -28,11 +28,16 @@ import com.ning.billing.commons.jdbi.binder.SmartBindBean;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessAccountFieldModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessAccountModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessAccountTagModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceAdjustmentModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceFieldModelDao;
-import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceItemBaseModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceItemAdjustmentModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceItemCreditModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceItemModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceModelDao;
-import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoicePaymentBaseModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoicePaymentChargebackModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoicePaymentFieldModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoicePaymentModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoicePaymentRefundModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoicePaymentTagModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceTagModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessModelDaoBase;
@@ -77,14 +82,39 @@ public interface BusinessAnalyticsSqlDao extends Transactional<BusinessAnalytics
                                                                       final TenantContext tenantContext);
 
     @SqlQuery
-    public List<BusinessInvoiceItemBaseModelDao> getInvoiceItemsByAccountRecordId(@Bind("accountRecordId") final Long accountRecordId,
-                                                                                  @Bind("tenantRecordId") final Long tenantRecordId,
-                                                                                  final TenantContext tenantContext);
+    public List<BusinessInvoiceAdjustmentModelDao> getInvoiceAdjustmentsByAccountRecordId(@Bind("accountRecordId") final Long accountRecordId,
+                                                                                          @Bind("tenantRecordId") final Long tenantRecordId,
+                                                                                          final TenantContext tenantContext);
 
     @SqlQuery
-    public List<BusinessInvoicePaymentBaseModelDao> getInvoicePaymentsByAccountRecordId(@Bind("accountRecordId") final Long accountRecordId,
-                                                                                        @Bind("tenantRecordId") final Long tenantRecordId,
-                                                                                        final TenantContext tenantContext);
+    public List<BusinessInvoiceItemModelDao> getInvoiceItemsByAccountRecordId(@Bind("accountRecordId") final Long accountRecordId,
+                                                                              @Bind("tenantRecordId") final Long tenantRecordId,
+                                                                              final TenantContext tenantContext);
+
+    @SqlQuery
+    public List<BusinessInvoiceItemAdjustmentModelDao> getInvoiceItemAdjustmentsByAccountRecordId(@Bind("accountRecordId") final Long accountRecordId,
+                                                                                                  @Bind("tenantRecordId") final Long tenantRecordId,
+                                                                                                  final TenantContext tenantContext);
+
+    @SqlQuery
+    public List<BusinessInvoiceItemCreditModelDao> getInvoiceItemCreditsByAccountRecordId(@Bind("accountRecordId") final Long accountRecordId,
+                                                                                          @Bind("tenantRecordId") final Long tenantRecordId,
+                                                                                          final TenantContext tenantContext);
+
+    @SqlQuery
+    public List<BusinessInvoicePaymentModelDao> getInvoicePaymentsByAccountRecordId(@Bind("accountRecordId") final Long accountRecordId,
+                                                                                    @Bind("tenantRecordId") final Long tenantRecordId,
+                                                                                    final TenantContext tenantContext);
+
+    @SqlQuery
+    public List<BusinessInvoicePaymentRefundModelDao> getInvoicePaymentRefundsByAccountRecordId(@Bind("accountRecordId") final Long accountRecordId,
+                                                                                                @Bind("tenantRecordId") final Long tenantRecordId,
+                                                                                                final TenantContext tenantContext);
+
+    @SqlQuery
+    public List<BusinessInvoicePaymentChargebackModelDao> getInvoicePaymentChargebacksByAccountRecordId(@Bind("accountRecordId") final Long accountRecordId,
+                                                                                                        @Bind("tenantRecordId") final Long tenantRecordId,
+                                                                                                        final TenantContext tenantContext);
 
     @SqlQuery
     public List<BusinessAccountFieldModelDao> getAccountFieldsByAccountRecordId(@Bind("accountRecordId") final Long accountRecordId,

@@ -449,7 +449,7 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
 
         final BusinessInvoiceItemBaseModelDao that = (BusinessInvoiceItemBaseModelDao) o;
 
-        if (amount != null ? !amount.equals(that.amount) : that.amount != null) {
+        if (amount != null ? (amount.compareTo(that.amount) != 0) : that.amount != null) {
             return false;
         }
         if (billingPeriod != null ? !billingPeriod.equals(that.billingPeriod) : that.billingPeriod != null) {
@@ -458,31 +458,31 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
         if (bundleExternalKey != null ? !bundleExternalKey.equals(that.bundleExternalKey) : that.bundleExternalKey != null) {
             return false;
         }
-        if (currency != that.currency) {
+        if (currency != null ? !currency.equals(that.currency) : that.currency != null) {
             return false;
         }
-        if (endDate != null ? !endDate.equals(that.endDate) : that.endDate != null) {
+        if (endDate != null ? (endDate.compareTo(that.endDate) != 0) : that.endDate != null) {
             return false;
         }
-        if (invoiceAmountCharged != null ? !invoiceAmountCharged.equals(that.invoiceAmountCharged) : that.invoiceAmountCharged != null) {
+        if (invoiceAmountCharged != null ? (invoiceAmountCharged.compareTo(that.invoiceAmountCharged) != 0) : that.invoiceAmountCharged != null) {
             return false;
         }
-        if (invoiceAmountCredited != null ? !invoiceAmountCredited.equals(that.invoiceAmountCredited) : that.invoiceAmountCredited != null) {
+        if (invoiceAmountCredited != null ? (invoiceAmountCredited.compareTo(that.invoiceAmountCredited) != 0) : that.invoiceAmountCredited != null) {
             return false;
         }
-        if (invoiceAmountPaid != null ? !invoiceAmountPaid.equals(that.invoiceAmountPaid) : that.invoiceAmountPaid != null) {
+        if (invoiceAmountPaid != null ? (invoiceAmountPaid.compareTo(that.invoiceAmountPaid) != 0) : that.invoiceAmountPaid != null) {
             return false;
         }
-        if (invoiceBalance != null ? !invoiceBalance.equals(that.invoiceBalance) : that.invoiceBalance != null) {
+        if (invoiceBalance != null ? (invoiceBalance.compareTo(that.invoiceBalance) != 0) : that.invoiceBalance != null) {
             return false;
         }
-        if (invoiceCreatedDate != null ? !invoiceCreatedDate.equals(that.invoiceCreatedDate) : that.invoiceCreatedDate != null) {
+        if (invoiceCreatedDate != null ? (invoiceCreatedDate.compareTo(that.invoiceCreatedDate) != 0) : that.invoiceCreatedDate != null) {
             return false;
         }
         if (invoiceCurrency != null ? !invoiceCurrency.equals(that.invoiceCurrency) : that.invoiceCurrency != null) {
             return false;
         }
-        if (invoiceDate != null ? !invoiceDate.equals(that.invoiceDate) : that.invoiceDate != null) {
+        if (invoiceDate != null ? (invoiceDate.compareTo(that.invoiceDate) != 0) : that.invoiceDate != null) {
             return false;
         }
         if (invoiceId != null ? !invoiceId.equals(that.invoiceId) : that.invoiceId != null) {
@@ -494,10 +494,10 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
         if (invoiceNumber != null ? !invoiceNumber.equals(that.invoiceNumber) : that.invoiceNumber != null) {
             return false;
         }
-        if (invoiceOriginalAmountCharged != null ? !invoiceOriginalAmountCharged.equals(that.invoiceOriginalAmountCharged) : that.invoiceOriginalAmountCharged != null) {
+        if (invoiceOriginalAmountCharged != null ? (invoiceOriginalAmountCharged.compareTo(that.invoiceOriginalAmountCharged) != 0) : that.invoiceOriginalAmountCharged != null) {
             return false;
         }
-        if (invoiceTargetDate != null ? !invoiceTargetDate.equals(that.invoiceTargetDate) : that.invoiceTargetDate != null) {
+        if (invoiceTargetDate != null ? (invoiceTargetDate.compareTo(that.invoiceTargetDate) != 0) : that.invoiceTargetDate != null) {
             return false;
         }
         if (itemId != null ? !itemId.equals(that.itemId) : that.itemId != null) {
@@ -530,7 +530,7 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
         if (slug != null ? !slug.equals(that.slug) : that.slug != null) {
             return false;
         }
-        if (startDate != null ? !startDate.equals(that.startDate) : that.startDate != null) {
+        if (startDate != null ? (startDate.compareTo(that.startDate) != 0) : that.startDate != null) {
             return false;
         }
 

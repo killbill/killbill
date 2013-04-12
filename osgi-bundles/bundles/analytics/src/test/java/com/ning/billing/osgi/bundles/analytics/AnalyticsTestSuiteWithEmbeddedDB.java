@@ -50,6 +50,9 @@ public abstract class AnalyticsTestSuiteWithEmbeddedDB extends AnalyticsTestSuit
         embeddedDB = new MySQLEmbeddedDB();
         embeddedDB.initialize();
         embeddedDB.start();
+
+        final String ddl = toString(Resources.getResource("com/ning/billing/osgi/bundles/analytics/ddl.sql").openStream());
+        embeddedDB.executeScript(ddl);
     }
 
     @BeforeMethod(groups = "slow")
@@ -59,8 +62,7 @@ public abstract class AnalyticsTestSuiteWithEmbeddedDB extends AnalyticsTestSuit
 
         killbillDataSource = new AnalyticsOSGIKillbillDataSource();
 
-        final String ddl = toString(Resources.getResource("com/ning/billing/osgi/bundles/analytics/ddl.sql").openStream());
-        embeddedDB.executeScript(ddl);
+        embeddedDB.cleanupAllTables();
 
         dbi = BusinessDBIProvider.get(embeddedDB.getDataSource());
         analyticsSqlDao = dbi.onDemand(BusinessAnalyticsSqlDao.class);
