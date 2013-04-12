@@ -35,10 +35,6 @@ public class TestBusinessSubscriptionEvent extends AnalyticsTestSuiteNoDB {
         event = BusinessSubscriptionEvent.valueOf("CANCEL_BASE");
         Assert.assertEquals(event.getEventType(), BusinessSubscriptionEvent.EventType.CANCEL);
         Assert.assertEquals(event.getCategory(), ProductCategory.BASE);
-
-        event = BusinessSubscriptionEvent.valueOf("SYSTEM_CANCEL_ADD_ON");
-        Assert.assertEquals(event.getEventType(), BusinessSubscriptionEvent.EventType.SYSTEM_CANCEL);
-        Assert.assertEquals(event.getCategory(), ProductCategory.ADD_ON);
     }
 
     @Test(groups = "fast")

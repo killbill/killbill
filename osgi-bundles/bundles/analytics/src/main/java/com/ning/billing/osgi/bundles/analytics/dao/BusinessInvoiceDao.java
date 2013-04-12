@@ -275,7 +275,7 @@ public class BusinessInvoiceDao extends BusinessAnalyticsDaoBase {
         return InvoiceItemType.ITEM_ADJ.equals(invoiceItem.getInvoiceItemType());
     }
 
-    // Account credits, used or consumed
+    // Account credits, gained or consumed
     private boolean isAccountCreditItem(final InvoiceItem invoiceItem) {
         return InvoiceItemType.CBA_ADJ.equals(invoiceItem.getInvoiceItemType());
     }

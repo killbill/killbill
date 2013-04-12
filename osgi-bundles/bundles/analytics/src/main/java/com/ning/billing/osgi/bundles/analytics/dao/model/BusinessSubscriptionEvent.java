@@ -38,7 +38,6 @@ public class BusinessSubscriptionEvent {
         RE_ADD,
         TRANSFER,
         CHANGE,
-        SYSTEM_CANCEL,
         SYSTEM_CHANGE
     }
 
@@ -88,7 +87,8 @@ public class BusinessSubscriptionEvent {
             case TRANSFER:
                 return subscriptionTransfered(transition.getNextPlan());
             case CANCEL:
-                return subscriptionCancelled(transition.getNextPlan());
+                // Need to take the previous plan (the next one is null)
+                return subscriptionCancelled(transition.getPreviousPlan());
             case UNCANCEL:
                 return subscriptionUnCancelled(transition.getNextPlan());
             case CHANGE:
