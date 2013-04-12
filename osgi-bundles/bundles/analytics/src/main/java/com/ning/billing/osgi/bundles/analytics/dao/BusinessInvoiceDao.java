@@ -55,6 +55,7 @@ import com.ning.killbill.osgi.libs.killbill.OSGIKillbillLogService;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Predicate;
+import com.google.common.base.Strings;
 import com.google.common.collect.Collections2;
 
 public class BusinessInvoiceDao extends BusinessAnalyticsDaoBase {
@@ -196,12 +197,12 @@ public class BusinessInvoiceDao extends BusinessAnalyticsDaoBase {
         }
 
         Plan plan = null;
-        if (invoiceItem.getPlanName() != null) {
+        if (Strings.emptyToNull(invoiceItem.getPlanName()) != null) {
             plan = getPlanFromInvoiceItem(invoiceItem, context);
         }
 
         PlanPhase planPhase = null;
-        if (invoiceItem.getSubscriptionId() != null && invoiceItem.getPhaseName() != null) {
+        if (invoiceItem.getSubscriptionId() != null && Strings.emptyToNull(invoiceItem.getPhaseName()) != null) {
             planPhase = getPlanPhaseFromInvoiceItem(invoiceItem, context);
         }
 
