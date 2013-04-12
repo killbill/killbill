@@ -177,6 +177,6 @@ public class AnalyticsDao {
 
     private Long getTenantRecordId(final TenantContext context) {
         final RecordIdApi recordIdApi = osgiKillbillAPI.getRecordIdApi();
-        return recordIdApi == null ? -1L : recordIdApi.getRecordId(context.getTenantId(), ObjectType.TENANT, context);
+        return (recordIdApi == null || context.getTenantId() == null) ? -1L : recordIdApi.getRecordId(context.getTenantId(), ObjectType.TENANT, context);
     }
 }
