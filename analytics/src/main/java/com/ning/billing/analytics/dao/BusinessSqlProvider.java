@@ -18,17 +18,15 @@ package com.ning.billing.analytics.dao;
 
 import org.skife.jdbi.v2.IDBI;
 
-import com.google.inject.Inject;
 import com.google.inject.Provider;
 
 public class BusinessSqlProvider<T> implements Provider<T> {
 
-    @Inject
-    private IDBI dbi;
-
+    private final IDBI dbi;
     private final Class clazz;
 
-    public BusinessSqlProvider(final Class<T> clazz) {
+    public BusinessSqlProvider(final IDBI dbi, final Class<T> clazz) {
+        this.dbi = dbi;
         this.clazz = clazz;
     }
 
