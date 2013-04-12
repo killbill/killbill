@@ -86,7 +86,7 @@ public class BusinessOverdueStatus extends BusinessEntityBase {
         if (endDate != null ? !endDate.equals(that.endDate) : that.endDate != null) {
             return false;
         }
-        if (objectType != that.objectType) {
+        if (objectType != null ? !objectType.equals(that.objectType) : that.objectType != null) {
             return false;
         }
         if (startDate != null ? !startDate.equals(that.startDate) : that.startDate != null) {

@@ -310,13 +310,13 @@ public class BusinessSubscriptionTransition extends BusinessEntityBase {
         if (nextEndDate != null ? !nextEndDate.equals(that.nextEndDate) : that.nextEndDate != null) {
             return false;
         }
-        if (nextMrr != null ? !nextMrr.equals(that.nextMrr) : that.nextMrr != null) {
+        if (nextMrr != null ? !(nextMrr.compareTo(that.nextMrr) == 0) : that.nextMrr != null) {
             return false;
         }
         if (nextPhase != null ? !nextPhase.equals(that.nextPhase) : that.nextPhase != null) {
             return false;
         }
-        if (nextPrice != null ? !nextPrice.equals(that.nextPrice) : that.nextPrice != null) {
+        if (nextPrice != null ? !(nextPrice.compareTo(that.nextPrice) == 0) : that.nextPrice != null) {
             return false;
         }
         if (nextPriceList != null ? !nextPriceList.equals(that.nextPriceList) : that.nextPriceList != null) {
@@ -349,13 +349,13 @@ public class BusinessSubscriptionTransition extends BusinessEntityBase {
         if (prevCurrency != null ? !prevCurrency.equals(that.prevCurrency) : that.prevCurrency != null) {
             return false;
         }
-        if (prevMrr != null ? !prevMrr.equals(that.prevMrr) : that.prevMrr != null) {
+        if (prevMrr != null ? !(prevMrr.compareTo(that.prevMrr) == 0) : that.prevMrr != null) {
             return false;
         }
         if (prevPhase != null ? !prevPhase.equals(that.prevPhase) : that.prevPhase != null) {
             return false;
         }
-        if (prevPrice != null ? !prevPrice.equals(that.prevPrice) : that.prevPrice != null) {
+        if (prevPrice != null ? !(prevPrice.compareTo(that.prevPrice) == 0) : that.prevPrice != null) {
             return false;
         }
         if (prevPriceList != null ? !prevPriceList.equals(that.prevPriceList) : that.prevPriceList != null) {

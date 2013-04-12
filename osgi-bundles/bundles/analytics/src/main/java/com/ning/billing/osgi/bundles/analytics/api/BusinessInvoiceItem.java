@@ -242,7 +242,7 @@ public class BusinessInvoiceItem extends BusinessEntityBase {
 
         final BusinessInvoiceItem that = (BusinessInvoiceItem) o;
 
-        if (amount != null ? !amount.equals(that.amount) : that.amount != null) {
+        if (amount != null ? !(amount.compareTo(that.amount) == 0) : that.amount != null) {
             return false;
         }
         if (billingPeriod != null ? !billingPeriod.equals(that.billingPeriod) : that.billingPeriod != null) {
@@ -257,16 +257,16 @@ public class BusinessInvoiceItem extends BusinessEntityBase {
         if (endDate != null ? !endDate.equals(that.endDate) : that.endDate != null) {
             return false;
         }
-        if (invoiceAmountCharged != null ? !invoiceAmountCharged.equals(that.invoiceAmountCharged) : that.invoiceAmountCharged != null) {
+        if (invoiceAmountCharged != null ? !(invoiceAmountCharged.compareTo(that.invoiceAmountCharged) == 0) : that.invoiceAmountCharged != null) {
             return false;
         }
-        if (invoiceAmountCredited != null ? !invoiceAmountCredited.equals(that.invoiceAmountCredited) : that.invoiceAmountCredited != null) {
+        if (invoiceAmountCredited != null ? !(invoiceAmountCredited.compareTo(that.invoiceAmountCredited) == 0) : that.invoiceAmountCredited != null) {
             return false;
         }
-        if (invoiceAmountPaid != null ? !invoiceAmountPaid.equals(that.invoiceAmountPaid) : that.invoiceAmountPaid != null) {
+        if (invoiceAmountPaid != null ? !(invoiceAmountPaid.compareTo(that.invoiceAmountPaid) == 0) : that.invoiceAmountPaid != null) {
             return false;
         }
-        if (invoiceBalance != null ? !invoiceBalance.equals(that.invoiceBalance) : that.invoiceBalance != null) {
+        if (invoiceBalance != null ? !(invoiceBalance.compareTo(that.invoiceBalance) == 0) : that.invoiceBalance != null) {
             return false;
         }
         if (invoiceCreatedDate != null ? !invoiceCreatedDate.equals(that.invoiceCreatedDate) : that.invoiceCreatedDate != null) {
@@ -284,7 +284,7 @@ public class BusinessInvoiceItem extends BusinessEntityBase {
         if (invoiceNumber != null ? !invoiceNumber.equals(that.invoiceNumber) : that.invoiceNumber != null) {
             return false;
         }
-        if (invoiceOriginalAmountCharged != null ? !invoiceOriginalAmountCharged.equals(that.invoiceOriginalAmountCharged) : that.invoiceOriginalAmountCharged != null) {
+        if (invoiceOriginalAmountCharged != null ? !(invoiceOriginalAmountCharged.compareTo(that.invoiceOriginalAmountCharged) == 0) : that.invoiceOriginalAmountCharged != null) {
             return false;
         }
         if (invoiceTargetDate != null ? !invoiceTargetDate.equals(that.invoiceTargetDate) : that.invoiceTargetDate != null) {

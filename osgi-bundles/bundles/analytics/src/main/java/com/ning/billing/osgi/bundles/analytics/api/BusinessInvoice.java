@@ -143,16 +143,16 @@ public class BusinessInvoice extends BusinessEntityBase {
 
         final BusinessInvoice that = (BusinessInvoice) o;
 
-        if (amountCharged != null ? !amountCharged.equals(that.amountCharged) : that.amountCharged != null) {
+        if (amountCharged != null ? !(amountCharged.compareTo(that.amountCharged) == 0) : that.amountCharged != null) {
             return false;
         }
-        if (amountCredited != null ? !amountCredited.equals(that.amountCredited) : that.amountCredited != null) {
+        if (amountCredited != null ? !(amountCredited.compareTo(that.amountCredited) == 0) : that.amountCredited != null) {
             return false;
         }
-        if (amountPaid != null ? !amountPaid.equals(that.amountPaid) : that.amountPaid != null) {
+        if (amountPaid != null ? !(amountPaid.compareTo(that.amountPaid) == 0) : that.amountPaid != null) {
             return false;
         }
-        if (balance != null ? !balance.equals(that.balance) : that.balance != null) {
+        if (balance != null ? !(balance.compareTo(that.balance) == 0) : that.balance != null) {
             return false;
         }
         if (currency != null ? !currency.equals(that.currency) : that.currency != null) {
@@ -170,7 +170,7 @@ public class BusinessInvoice extends BusinessEntityBase {
         if (invoiceNumber != null ? !invoiceNumber.equals(that.invoiceNumber) : that.invoiceNumber != null) {
             return false;
         }
-        if (originalAmountCharged != null ? !originalAmountCharged.equals(that.originalAmountCharged) : that.originalAmountCharged != null) {
+        if (originalAmountCharged != null ? !(originalAmountCharged.compareTo(that.originalAmountCharged) == 0) : that.originalAmountCharged != null) {
             return false;
         }
         if (targetDate != null ? !targetDate.equals(that.targetDate) : that.targetDate != null) {
