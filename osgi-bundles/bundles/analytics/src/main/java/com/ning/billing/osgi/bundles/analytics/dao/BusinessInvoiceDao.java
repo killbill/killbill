@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.osgi.service.log.LogService;
@@ -212,6 +214,35 @@ public class BusinessInvoiceDao extends BusinessAnalyticsDaoBase {
         final Long tenantRecordId = getTenantRecordId(context);
         final ReportGroup reportGroup = getReportGroup(account.getId(), context);
 
+        return createBusinessInvoiceItem(account,
+                                         invoice,
+                                         invoiceItem,
+                                         otherInvoiceItemsOnInvoice,
+                                         bundle,
+                                         plan,
+                                         planPhase,
+                                         invoiceItemRecordId,
+                                         creationAuditLog,
+                                         accountRecordId,
+                                         tenantRecordId,
+                                         reportGroup,
+                                         context);
+    }
+
+    @VisibleForTesting
+    BusinessInvoiceItemBaseModelDao createBusinessInvoiceItem(final Account account,
+                                                              final Invoice invoice,
+                                                              final InvoiceItem invoiceItem,
+                                                              final Collection<InvoiceItem> otherInvoiceItemsOnInvoice,
+                                                              @Nullable final SubscriptionBundle bundle,
+                                                              @Nullable final Plan plan,
+                                                              @Nullable final PlanPhase planPhase,
+                                                              final Long invoiceItemRecordId,
+                                                              final AuditLog creationAuditLog,
+                                                              final Long accountRecordId,
+                                                              final Long tenantRecordId,
+                                                              final ReportGroup reportGroup,
+                                                              final TenantContext context) throws AnalyticsRefreshException {
         final BusinessInvoiceItemType businessInvoiceItemType;
         if (isCharge(invoiceItem)) {
             businessInvoiceItemType = BusinessInvoiceItemType.CHARGE;
@@ -226,7 +257,7 @@ public class BusinessInvoiceDao extends BusinessAnalyticsDaoBase {
             return null;
         }
 
-        final Boolean revenueRecognizable = isRevenueRecognizable(invoiceItem);
+        final Boolean revenueRecognizable = isRevenueRecognizable(invoiceItem, otherInvoiceItemsOnInvoice);
 
         final Long secondInvoiceItemRecordId;
         if (invoiceItem instanceof AdjustmentInvoiceItemForRepair) {
@@ -251,10 +282,12 @@ public class BusinessInvoiceDao extends BusinessAnalyticsDaoBase {
                                                       reportGroup);
     }
 
-    @VisibleForTesting
-    Boolean isRevenueRecognizable(final InvoiceItem invoiceItem) {
-        // REFUND_ADJ are recognizable because associated with a payment
-        return !InvoiceItemType.CREDIT_ADJ.equals(invoiceItem.getInvoiceItemType());
+    private Boolean isRevenueRecognizable(final InvoiceItem invoiceItem, final Collection<InvoiceItem> otherInvoiceItemsOnInvoice) {
+        // All items are recognizable except user generated credit (CBA_ADJ and CREDIT_ADJ on their own invoice)
+        return !(InvoiceItemType.CBA_ADJ.equals(invoiceItem.getInvoiceItemType()) &&
+                 (otherInvoiceItemsOnInvoice.size() == 1 &&
+                  InvoiceItemType.CREDIT_ADJ.equals(otherInvoiceItemsOnInvoice.iterator().next().getInvoiceItemType()) &&
+                  otherInvoiceItemsOnInvoice.iterator().next().getAmount().compareTo(invoiceItem.getAmount().negate()) == 0));
     }
 
     // Invoice adjustments

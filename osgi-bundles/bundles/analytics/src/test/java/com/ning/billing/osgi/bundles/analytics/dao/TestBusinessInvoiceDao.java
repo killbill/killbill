@@ -38,6 +38,7 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.osgi.bundles.analytics.AnalyticsTestSuiteNoDB;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceItemBaseModelDao;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillDataSource;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillLogService;
 
@@ -74,12 +75,120 @@ public class TestBusinessInvoiceDao extends AnalyticsTestSuiteNoDB {
     }
 
     @Test(groups = "fast")
-    public void testRevenueRecognizable() throws Exception {
-        // All items but CREDIT_ADJ are recognizable by default
-        Assert.assertTrue(invoiceDao.isRevenueRecognizable(createInvoiceItem(InvoiceItemType.RECURRING)
-                                                          ));
-        Assert.assertFalse(invoiceDao.isRevenueRecognizable(createInvoiceItem(InvoiceItemType.CREDIT_ADJ)
-                                                           ));
+    public void testRevenueRecognizableClassicAccountCredit() throws Exception {
+        // Classic account credit ($10), from the perspective of the CREDIT_ADJ item
+        final BusinessInvoiceItemBaseModelDao businessCreditAdjItem = invoiceDao.createBusinessInvoiceItem(account,
+                                                                                                           invoice,
+                                                                                                           createInvoiceItem(InvoiceItemType.CREDIT_ADJ, new BigDecimal("-10")),
+                                                                                                           ImmutableList.<InvoiceItem>of(createInvoiceItem(InvoiceItemType.CBA_ADJ, new BigDecimal("10"))),
+                                                                                                           null,
+                                                                                                           null,
+                                                                                                           null,
+                                                                                                           invoiceItemRecordId,
+                                                                                                           auditLog,
+                                                                                                           accountRecordId,
+                                                                                                           tenantRecordId,
+                                                                                                           reportGroup,
+                                                                                                           callContext);
+        // We ignore these
+        Assert.assertNull(businessCreditAdjItem);
+
+        // Classic account credit ($10), from the perspective of the CBA_ADJ item
+        final BusinessInvoiceItemBaseModelDao businessCreditItem = invoiceDao.createBusinessInvoiceItem(account,
+                                                                                                        invoice,
+                                                                                                        createInvoiceItem(InvoiceItemType.CBA_ADJ, new BigDecimal("10")),
+                                                                                                        ImmutableList.<InvoiceItem>of(createInvoiceItem(InvoiceItemType.CREDIT_ADJ, new BigDecimal("-10"))),
+                                                                                                        null,
+                                                                                                        null,
+                                                                                                        null,
+                                                                                                        invoiceItemRecordId,
+                                                                                                        auditLog,
+                                                                                                        accountRecordId,
+                                                                                                        tenantRecordId,
+                                                                                                        reportGroup,
+                                                                                                        callContext);
+        // We treat these as NOT recognizable account credits
+        Assert.assertEquals(businessCreditItem.getAmount().compareTo(new BigDecimal("10")), 0);
+        Assert.assertEquals(businessCreditItem.getItemType(), InvoiceItemType.CBA_ADJ.toString());
+        Assert.assertFalse(businessCreditItem.getRevenueRecognizable());
+
+        // Invoice adjustment, not to be mixed with credits!
+        final BusinessInvoiceItemBaseModelDao businessInvoiceAdjustmentItem = invoiceDao.createBusinessInvoiceItem(account,
+                                                                                                                   invoice,
+                                                                                                                   createInvoiceItem(InvoiceItemType.CREDIT_ADJ, new BigDecimal("-10")),
+                                                                                                                   ImmutableList.<InvoiceItem>of(createInvoiceItem(InvoiceItemType.RECURRING, new BigDecimal("10"))),
+                                                                                                                   null,
+                                                                                                                   null,
+                                                                                                                   null,
+                                                                                                                   invoiceItemRecordId,
+                                                                                                                   auditLog,
+                                                                                                                   accountRecordId,
+                                                                                                                   tenantRecordId,
+                                                                                                                   reportGroup,
+                                                                                                                   callContext);
+        Assert.assertEquals(businessInvoiceAdjustmentItem.getAmount().compareTo(new BigDecimal("-10")), 0);
+        Assert.assertEquals(businessInvoiceAdjustmentItem.getItemType(), InvoiceItemType.CREDIT_ADJ.toString());
+        // Recognizable by default
+        Assert.assertTrue(businessInvoiceAdjustmentItem.getRevenueRecognizable());
+
+        // Invoice adjustment via refund
+        final BusinessInvoiceItemBaseModelDao businessRefundInvoiceAdjustmentItem = invoiceDao.createBusinessInvoiceItem(account,
+                                                                                                                         invoice,
+                                                                                                                         createInvoiceItem(InvoiceItemType.REFUND_ADJ, new BigDecimal("-10")),
+                                                                                                                         ImmutableList.<InvoiceItem>of(createInvoiceItem(InvoiceItemType.RECURRING, new BigDecimal("10"))),
+                                                                                                                         null,
+                                                                                                                         null,
+                                                                                                                         null,
+                                                                                                                         invoiceItemRecordId,
+                                                                                                                         auditLog,
+                                                                                                                         accountRecordId,
+                                                                                                                         tenantRecordId,
+                                                                                                                         reportGroup,
+                                                                                                                         callContext);
+        Assert.assertEquals(businessRefundInvoiceAdjustmentItem.getAmount().compareTo(new BigDecimal("-10")), 0);
+        Assert.assertEquals(businessRefundInvoiceAdjustmentItem.getItemType(), InvoiceItemType.REFUND_ADJ.toString());
+        // Recognizable by default
+        Assert.assertTrue(businessRefundInvoiceAdjustmentItem.getRevenueRecognizable());
+
+        // Item adjustment
+        final BusinessInvoiceItemBaseModelDao businessInvoiceItemAdjustmentItem = invoiceDao.createBusinessInvoiceItem(account,
+                                                                                                                       invoice,
+                                                                                                                       createInvoiceItem(InvoiceItemType.ITEM_ADJ, new BigDecimal("-10")),
+                                                                                                                       ImmutableList.<InvoiceItem>of(createInvoiceItem(InvoiceItemType.RECURRING, new BigDecimal("10"))),
+                                                                                                                       null,
+                                                                                                                       null,
+                                                                                                                       null,
+                                                                                                                       invoiceItemRecordId,
+                                                                                                                       auditLog,
+                                                                                                                       accountRecordId,
+                                                                                                                       tenantRecordId,
+                                                                                                                       reportGroup,
+                                                                                                                       callContext);
+        Assert.assertEquals(businessInvoiceItemAdjustmentItem.getAmount().compareTo(new BigDecimal("-10")), 0);
+        Assert.assertEquals(businessInvoiceItemAdjustmentItem.getItemType(), InvoiceItemType.ITEM_ADJ.toString());
+        // Recognizable by default
+        Assert.assertTrue(businessInvoiceItemAdjustmentItem.getRevenueRecognizable());
+
+        // System generated account credit
+        final BusinessInvoiceItemBaseModelDao businessCBAItem = invoiceDao.createBusinessInvoiceItem(account,
+                                                                                                     invoice,
+                                                                                                     createInvoiceItem(InvoiceItemType.CBA_ADJ, new BigDecimal("10")),
+                                                                                                     ImmutableList.<InvoiceItem>of(createInvoiceItem(InvoiceItemType.RECURRING, new BigDecimal("30")),
+                                                                                                                                   createInvoiceItem(InvoiceItemType.REPAIR_ADJ, new BigDecimal("-30")),
+                                                                                                                                   createInvoiceItem(InvoiceItemType.RECURRING, new BigDecimal("20"))),
+                                                                                                     null,
+                                                                                                     null,
+                                                                                                     null,
+                                                                                                     invoiceItemRecordId,
+                                                                                                     auditLog,
+                                                                                                     accountRecordId,
+                                                                                                     tenantRecordId,
+                                                                                                     reportGroup,
+                                                                                                     callContext);
+        Assert.assertEquals(businessCBAItem.getAmount().compareTo(new BigDecimal("10")), 0);
+        Assert.assertEquals(businessCBAItem.getItemType(), InvoiceItemType.CBA_ADJ.toString());
+        // Recognizable by default
+        Assert.assertTrue(businessCBAItem.getRevenueRecognizable());
     }
 
     @Test(groups = "fast")
