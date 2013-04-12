@@ -17,6 +17,10 @@
 package com.ning.billing.analytics.setup;
 
 import org.skife.config.ConfigSource;
+import org.skife.jdbi.v2.DBI;
+import org.skife.jdbi.v2.tweak.TransactionHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.ning.billing.analytics.AnalyticsListener;
 import com.ning.billing.analytics.BusinessAccountDao;
@@ -47,15 +51,28 @@ import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionSqlDao;
 import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionTagSqlDao;
 import com.ning.billing.analytics.dao.DefaultAnalyticsDao;
 import com.ning.billing.analytics.dao.DefaultAnalyticsSanityDao;
+import com.ning.billing.util.dao.DateTimeArgumentFactory;
+import com.ning.billing.util.dao.DateTimeZoneArgumentFactory;
+import com.ning.billing.util.dao.EnumArgumentFactory;
+import com.ning.billing.util.dao.LocalDateArgumentFactory;
+import com.ning.billing.util.dao.UUIDArgumentFactory;
+import com.ning.billing.util.dao.UuidMapper;
 
 import com.google.inject.AbstractModule;
+import com.mchange.v2.c3p0.ComboPooledDataSource;
 
 public class AnalyticsModule extends AbstractModule {
 
+    private static final Logger logger = LoggerFactory.getLogger(AnalyticsModule.class);
+
+    public static final String ANALYTICS_DBI_CONFIG_STRING = "com.ning.billing.analytics.dbi.";
+
     protected final ConfigSource configSource;
+    protected final DBI dbi;
 
     public AnalyticsModule(final ConfigSource configSource) {
         this.configSource = configSource;
+        this.dbi = createDBI(configSource);
     }
 
     @Override
@@ -81,26 +98,54 @@ public class AnalyticsModule extends AbstractModule {
 
     protected void installAnalyticsDao() {
         bind(AnalyticsDao.class).to(DefaultAnalyticsDao.class).asEagerSingleton();
-        bind(AnalyticsSanityDao.class).to(DefaultAnalyticsSanityDao.class).asEagerSingleton();
+        bind(AnalyticsSanityDao.class).toInstance(new DefaultAnalyticsSanityDao(dbi));
         bind(BusinessSubscriptionTransitionDao.class).asEagerSingleton();
         bind(BusinessAccountDao.class).asEagerSingleton();
         bind(BusinessTagDao.class).asEagerSingleton();
     }
 
     protected void installAnalyticsSqlDao() {
-        bind(BusinessAccountSqlDao.class).toProvider(new BusinessSqlProvider<BusinessAccountSqlDao>(BusinessAccountSqlDao.class));
-        bind(BusinessAccountTagSqlDao.class).toProvider(new BusinessSqlProvider<BusinessAccountTagSqlDao>(BusinessAccountTagSqlDao.class));
-        bind(BusinessAccountFieldSqlDao.class).toProvider(new BusinessSqlProvider<BusinessAccountFieldSqlDao>(BusinessAccountFieldSqlDao.class));
-        bind(BusinessInvoiceFieldSqlDao.class).toProvider(new BusinessSqlProvider<BusinessInvoiceFieldSqlDao>(BusinessInvoiceFieldSqlDao.class));
-        bind(BusinessInvoiceItemSqlDao.class).toProvider(new BusinessSqlProvider<BusinessInvoiceItemSqlDao>(BusinessInvoiceItemSqlDao.class));
-        bind(BusinessInvoicePaymentFieldSqlDao.class).toProvider(new BusinessSqlProvider<BusinessInvoicePaymentFieldSqlDao>(BusinessInvoicePaymentFieldSqlDao.class));
-        bind(BusinessInvoicePaymentSqlDao.class).toProvider(new BusinessSqlProvider<BusinessInvoicePaymentSqlDao>(BusinessInvoicePaymentSqlDao.class));
-        bind(BusinessInvoicePaymentTagSqlDao.class).toProvider(new BusinessSqlProvider<BusinessInvoicePaymentTagSqlDao>(BusinessInvoicePaymentTagSqlDao.class));
-        bind(BusinessInvoiceSqlDao.class).toProvider(new BusinessSqlProvider<BusinessInvoiceSqlDao>(BusinessInvoiceSqlDao.class));
-        bind(BusinessInvoiceTagSqlDao.class).toProvider(new BusinessSqlProvider<BusinessInvoiceTagSqlDao>(BusinessInvoiceTagSqlDao.class));
-        bind(BusinessOverdueStatusSqlDao.class).toProvider(new BusinessSqlProvider<BusinessOverdueStatusSqlDao>(BusinessOverdueStatusSqlDao.class));
-        bind(BusinessSubscriptionTransitionFieldSqlDao.class).toProvider(new BusinessSqlProvider<BusinessSubscriptionTransitionFieldSqlDao>(BusinessSubscriptionTransitionFieldSqlDao.class));
-        bind(BusinessSubscriptionTransitionSqlDao.class).toProvider(new BusinessSqlProvider<BusinessSubscriptionTransitionSqlDao>(BusinessSubscriptionTransitionSqlDao.class));
-        bind(BusinessSubscriptionTransitionTagSqlDao.class).toProvider(new BusinessSqlProvider<BusinessSubscriptionTransitionTagSqlDao>(BusinessSubscriptionTransitionTagSqlDao.class));
+        bind(BusinessAccountSqlDao.class).toProvider(new BusinessSqlProvider<BusinessAccountSqlDao>(dbi, BusinessAccountSqlDao.class));
+        bind(BusinessAccountTagSqlDao.class).toProvider(new BusinessSqlProvider<BusinessAccountTagSqlDao>(dbi, BusinessAccountTagSqlDao.class));
+        bind(BusinessAccountFieldSqlDao.class).toProvider(new BusinessSqlProvider<BusinessAccountFieldSqlDao>(dbi, BusinessAccountFieldSqlDao.class));
+        bind(BusinessInvoiceFieldSqlDao.class).toProvider(new BusinessSqlProvider<BusinessInvoiceFieldSqlDao>(dbi, BusinessInvoiceFieldSqlDao.class));
+        bind(BusinessInvoiceItemSqlDao.class).toProvider(new BusinessSqlProvider<BusinessInvoiceItemSqlDao>(dbi, BusinessInvoiceItemSqlDao.class));
+        bind(BusinessInvoicePaymentFieldSqlDao.class).toProvider(new BusinessSqlProvider<BusinessInvoicePaymentFieldSqlDao>(dbi, BusinessInvoicePaymentFieldSqlDao.class));
+        bind(BusinessInvoicePaymentSqlDao.class).toProvider(new BusinessSqlProvider<BusinessInvoicePaymentSqlDao>(dbi, BusinessInvoicePaymentSqlDao.class));
+        bind(BusinessInvoicePaymentTagSqlDao.class).toProvider(new BusinessSqlProvider<BusinessInvoicePaymentTagSqlDao>(dbi, BusinessInvoicePaymentTagSqlDao.class));
+        bind(BusinessInvoiceSqlDao.class).toProvider(new BusinessSqlProvider<BusinessInvoiceSqlDao>(dbi, BusinessInvoiceSqlDao.class));
+        bind(BusinessInvoiceTagSqlDao.class).toProvider(new BusinessSqlProvider<BusinessInvoiceTagSqlDao>(dbi, BusinessInvoiceTagSqlDao.class));
+        bind(BusinessOverdueStatusSqlDao.class).toProvider(new BusinessSqlProvider<BusinessOverdueStatusSqlDao>(dbi, BusinessOverdueStatusSqlDao.class));
+        bind(BusinessSubscriptionTransitionFieldSqlDao.class).toProvider(new BusinessSqlProvider<BusinessSubscriptionTransitionFieldSqlDao>(dbi, BusinessSubscriptionTransitionFieldSqlDao.class));
+        bind(BusinessSubscriptionTransitionSqlDao.class).toProvider(new BusinessSqlProvider<BusinessSubscriptionTransitionSqlDao>(dbi, BusinessSubscriptionTransitionSqlDao.class));
+        bind(BusinessSubscriptionTransitionTagSqlDao.class).toProvider(new BusinessSqlProvider<BusinessSubscriptionTransitionTagSqlDao>(dbi, BusinessSubscriptionTransitionTagSqlDao.class));
+    }
+
+    private DBI createDBI(final ConfigSource configSource) {
+        final ComboPooledDataSource dataSource = new ComboPooledDataSource();
+        dataSource.setJdbcUrl(configSource.getString(ANALYTICS_DBI_CONFIG_STRING + "url"));
+        dataSource.setUser(configSource.getString(ANALYTICS_DBI_CONFIG_STRING + "user"));
+        dataSource.setPassword(configSource.getString(ANALYTICS_DBI_CONFIG_STRING + "password"));
+        dataSource.setMinPoolSize(1);
+        dataSource.setMaxPoolSize(10);
+        dataSource.setCheckoutTimeout(10 * 1000);
+        dataSource.setMaxIdleTime(60 * 60);
+        dataSource.setMaxConnectionAge(0);
+        dataSource.setIdleConnectionTestPeriod(5 * 60);
+
+        final DBI dbi = new DBI(dataSource);
+        dbi.registerArgumentFactory(new UUIDArgumentFactory());
+        dbi.registerArgumentFactory(new DateTimeZoneArgumentFactory());
+        dbi.registerArgumentFactory(new DateTimeArgumentFactory());
+        dbi.registerArgumentFactory(new LocalDateArgumentFactory());
+        dbi.registerArgumentFactory(new EnumArgumentFactory());
+        dbi.registerMapper(new UuidMapper());
+        try {
+            dbi.setTransactionHandler((TransactionHandler) Class.forName("com.ning.jetty.jdbi.RestartTransactionRunner").newInstance());
+        } catch (Exception e) {
+            logger.warn("Unable to register transaction handler");
+        }
+
+        return dbi;
     }
 }

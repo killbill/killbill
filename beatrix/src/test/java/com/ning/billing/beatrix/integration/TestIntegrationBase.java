@@ -40,6 +40,7 @@ import com.ning.billing.account.api.AccountService;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.analytics.AnalyticsListener;
 import com.ning.billing.analytics.api.user.DefaultAnalyticsUserApi;
+import com.ning.billing.analytics.setup.AnalyticsModule;
 import com.ning.billing.api.TestApiListener;
 import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.api.TestListenerStatus;
@@ -57,6 +58,7 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.dbi.DBTestingHelper;
 import com.ning.billing.entitlement.api.EntitlementService;
 import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
 import com.ning.billing.entitlement.api.transfer.EntitlementTransferApi;
@@ -226,6 +228,10 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
     @BeforeClass(groups = "slow")
     public void beforeClass() throws Exception {
+        configSource.setProperty(AnalyticsModule.ANALYTICS_DBI_CONFIG_STRING + "url", getDBTestingHelper().getJdbcConnectionString());
+        configSource.setProperty(AnalyticsModule.ANALYTICS_DBI_CONFIG_STRING + "user", DBTestingHelper.USERNAME);
+        configSource.setProperty(AnalyticsModule.ANALYTICS_DBI_CONFIG_STRING + "password", DBTestingHelper.PASSWORD);
+
         final Injector g = Guice.createInjector(Stage.PRODUCTION, new BeatrixIntegrationModule(configSource));
         g.injectMembers(this);
         busHandler = new TestApiListener(this);

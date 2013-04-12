@@ -23,6 +23,8 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.mockito.Mockito;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 
@@ -49,6 +51,7 @@ import com.ning.billing.junction.api.Blockable.Type;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.osgi.bundles.analytics.api.BusinessEntityBase;
 import com.ning.billing.osgi.bundles.analytics.dao.TestCallContext;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceItemBaseModelDao.BusinessInvoiceItemType;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessModelDaoBase;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessModelDaoBase.ReportGroup;
 import com.ning.billing.payment.api.Payment;
@@ -72,6 +75,8 @@ import com.google.common.collect.ImmutableList;
 
 public abstract class AnalyticsTestSuiteNoDB {
 
+    protected final Logger logger = LoggerFactory.getLogger(AnalyticsTestSuiteNoDB.class);
+
     protected final Long accountRecordId = 1L;
     protected final Long subscriptionEventRecordId = 2L;
     protected final Long invoiceRecordId = 3L;
@@ -84,6 +89,7 @@ public abstract class AnalyticsTestSuiteNoDB {
     protected final Long tenantRecordId = 9L;
 
     protected final ReportGroup reportGroup = ReportGroup.partner;
+    protected final BusinessInvoiceItemType invoiceItemType = BusinessInvoiceItemType.INVOICE_ITEM_ADJUSTMENT;
 
     protected Account account;
     protected SubscriptionBundle bundle;
@@ -94,6 +100,7 @@ public abstract class AnalyticsTestSuiteNoDB {
     protected BlockingState blockingState;
     protected Invoice invoice;
     protected InvoiceItem invoiceItem;
+    protected Boolean recognizable;
     protected InvoicePayment invoicePayment;
     protected PaymentAttempt paymentAttempt;
     protected PaymentMethod paymentMethod;
@@ -238,6 +245,8 @@ public abstract class AnalyticsTestSuiteNoDB {
         Mockito.when(invoiceItem.getLinkedItemId()).thenReturn(UUID.randomUUID());
         Mockito.when(invoiceItem.getCreatedDate()).thenReturn(new DateTime(2016, 1, 22, 10, 56, 51, DateTimeZone.UTC));
         final UUID invoiceItemId = invoiceItem.getId();
+
+        recognizable = false;
 
         final UUID invoiceId = UUID.randomUUID();
 

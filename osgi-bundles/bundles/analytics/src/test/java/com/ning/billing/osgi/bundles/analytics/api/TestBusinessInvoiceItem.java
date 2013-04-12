@@ -30,6 +30,8 @@ public class TestBusinessInvoiceItem extends AnalyticsTestSuiteNoDB {
                                                                                                                accountRecordId,
                                                                                                                invoice,
                                                                                                                invoiceItem,
+                                                                                                               recognizable,
+                                                                                                               invoiceItemType,
                                                                                                                invoiceItemRecordId,
                                                                                                                secondInvoiceItemRecordId,
                                                                                                                bundle,
