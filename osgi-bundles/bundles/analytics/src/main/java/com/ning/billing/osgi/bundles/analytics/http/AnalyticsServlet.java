@@ -81,17 +81,15 @@ public class AnalyticsServlet extends HttpServlet {
         final String comment = Objects.firstNonNull(req.getHeader(HDR_COMMENT), req.getRequestURI());
 
         final String tenantIdString = req.getParameter(QUERY_TENANT_ID);
-        if (tenantIdString == null) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing tenantId query parameter in request: " + req.getPathInfo());
-            return null;
-        }
 
-        final UUID tenantId;
-        try {
-            tenantId = UUID.fromString(tenantIdString);
-        } catch (final IllegalArgumentException e) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid UUID for tenant id: " + tenantIdString);
-            return null;
+        UUID tenantId = null;
+        if (tenantIdString != null) {
+            try {
+                tenantId = UUID.fromString(tenantIdString);
+            } catch (final IllegalArgumentException e) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid UUID for tenant id: " + tenantIdString);
+                return null;
+            }
         }
 
         return new AnalyticsApiCallContext(createdBy, reason, comment, tenantId);
