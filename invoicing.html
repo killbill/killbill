@@ -6,6 +6,8 @@ layout: default
     <div class="span3 bs-docs-sidebar">
         <ul class="nav nav-list bs-docs-sidenav affix">
             <li><a href="#invoicing_overview">Overview</a></li>
+            <li><a href="#invoicing_items">Invoice items</a></li>
+            <li><a href="#invoicing_payments">Invoice payments</a></li>
         </ul>
     </div>
 
@@ -39,6 +41,317 @@ layout: default
             </p>
 
             <p>Recurring invoice items start and end on the same day of the month. For example, a monthly subscription starting on the 21st will have items for the service period 2012-08-21 to 2012-09-21, 2012-09-21 to 2012-10-21, etc. Fixed items have only a start date and never get pro-rated.</p>
+        </section>
+
+        <section id="invoicing_items">
+            <div class="page-header">
+                <h1>Invoice items</h1>
+            </div>
+            <p>An invoice for a subscription on a fixed phase of $0 (trial phase for example) would look like:
+                <table class="table table-condensed table-striped">
+                    <thead>
+                        <tr>
+                            <th>Invoice #</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                            <th>Amount</th>
+                            <th>Start date</th>
+                            <th>End date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1028</td>
+                            <td>FIXED</td>
+                            <td>Silver trial</td>
+                            <td>$0</td>
+                            <td>2013-03-10</td>
+                            <td></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </p>
+            <p>An invoice for a subscription on a recurring phase of $20 would look like:
+                <table class="table table-condensed table-striped">
+                    <thead>
+                        <tr>
+                            <th>Invoice #</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                            <th>Amount</th>
+                            <th>Start date</th>
+                            <th>End date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1029</td>
+                            <td>RECURRING</td>
+                            <td>Silver monthly</td>
+                            <td>$20</td>
+                            <td>2013-04-11</td>
+                            <td>2013-05-11</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </p>
+            <p>If the user upgrades on 2013-04-26 (halfway through the month), the invoice would be repaired as follow (the CBA_ADJ item assumes the invoice was paid in full):
+                <table class="table table-condensed table-striped">
+                    <thead>
+                        <tr>
+                            <th>Invoice #</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                            <th>Amount</th>
+                            <th>Start date</th>
+                            <th>End date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1029</td>
+                            <td>RECURRING</td>
+                            <td>Silver monthly</td>
+                            <td>$20</td>
+                            <td>2013-04-11</td>
+                            <td>2013-05-11</td>
+                        </tr>
+                        <tr>
+                            <td>1029</td>
+                            <td>REPAIR_ADJ</td>
+                            <td></td>
+                            <td>$-20</td>
+                            <td>2013-04-11</td>
+                            <td>2013-05-11</td>
+                        </tr>
+                        <tr>
+                            <td>1029</td>
+                            <td>CBA_ADJ</td>
+                            <td></td>
+                            <td>$20</td>
+                            <td>2013-04-26</td>
+                            <td>2013-04-26</td>
+                        </tr>
+                    </tbody>
+                </table>
+                and a new invoice would be generated reflecting the reality:
+                <table class="table table-condensed table-striped">
+                    <thead>
+                        <tr>
+                            <th>Invoice #</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                            <th>Amount</th>
+                            <th>Start date</th>
+                            <th>End date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1030</td>
+                            <td>RECURRING</td>
+                            <td>Silver monthly</td>
+                            <td>$10</td>
+                            <td>2013-04-11</td>
+                            <td>2013-04-26</td>
+                        </tr>
+                        <tr>
+                            <td>1030</td>
+                            <td>RECURRING</td>
+                            <td>Gold monthly</td>
+                            <td>$30</td>
+                            <td>2013-04-26</td>
+                            <td>2013-05-11</td>
+                        </tr>
+                        <tr>
+                            <td>1030</td>
+                            <td>CBA_ADJ</td>
+                            <td></td>
+                            <td>$-20</td>
+                            <td>2013-04-26</td>
+                            <td>2013-04-26</td>
+                        </tr>
+                    </tbody>
+                </table>
+                The last negative CBA_ADJ is the account credit applied from the payment of the first invoice. The balance of the new invoice is only $20.
+            </p>
+            <p>An invoice item adjustment would look like (assuming the invoice wasn't paid, otherwise a CBA_ADJ item would be added):
+                <table class="table table-condensed table-striped">
+                    <thead>
+                        <tr>
+                            <th>Invoice #</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                            <th>Amount</th>
+                            <th>Start date</th>
+                            <th>End date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1029</td>
+                            <td>RECURRING</td>
+                            <td>Silver monthly</td>
+                            <td>$20</td>
+                            <td>2013-04-11</td>
+                            <td>2013-05-11</td>
+                        </tr>
+                        <tr>
+                            <td>1029</td>
+                            <td>ITEM_ADJ</td>
+                            <td></td>
+                            <td>$-20</td>
+                            <td>2013-04-20</td>
+                            <td>2013-04-20</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </p>
+            <p>An invoice adjustment would look similar (assuming again the invoice wasn't paid, otherwise a CBA_ADJ item would be added):
+                <table class="table table-condensed table-striped">
+                    <thead>
+                        <tr>
+                            <th>Invoice #</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                            <th>Amount</th>
+                            <th>Start date</th>
+                            <th>End date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1029</td>
+                            <td>RECURRING</td>
+                            <td>Silver monthly</td>
+                            <td>$20</td>
+                            <td>2013-04-11</td>
+                            <td>2013-05-11</td>
+                        </tr>
+                        <tr>
+                            <td>1029</td>
+                            <td>CREDIT_ADJ</td>
+                            <td></td>
+                            <td>$-20</td>
+                            <td>2013-04-20</td>
+                            <td>2013-04-20</td>
+                        </tr>
+                    </tbody>
+                </table>
+                A REFUND_ADJ item would be used instead of CREDIT_ADJ if the invoice was paid and a refund had been issued.
+            </p>
+            <p>Note that CREDIT_ADJ items are also used to represent credits created by the user (via APIs). In this case, a dummy invoice is created with a negative amount for the CREDIT_ADJ item. This makes the system generate a CBA_ADJ automatically, which in turn can be used as account credits. For example, here is how a $20 credit would be represented:
+                <table class="table table-condensed table-striped">
+                    <thead>
+                        <tr>
+                            <th>Invoice #</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                            <th>Amount</th>
+                            <th>Start date</th>
+                            <th>End date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1029</td>
+                            <td>CREDIT_ADJ</td>
+                            <td></td>
+                            <td>$-20</td>
+                            <td>2013-04-20</td>
+                            <td>2013-04-20</td>
+                        </tr>
+                        <tr>
+                            <td>1029</td>
+                            <td>CBA_ADJ</td>
+                            <td></td>
+                            <td>$20</td>
+                            <td>2013-04-20</td>
+                            <td>2013-04-20</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </p>
+        </section>
+
+        <section id="invoicing_payments">
+            <div class="page-header">
+                <h1>Invoice payments</h1>
+            </div>
+            <p>The invoice payment table is the bridge between the invoice and payment subsystems, and is used to compute invoice balances. It will contain the payments, refunds and chargebacks made against an invoice.</p>
+            <p>If an invoice doesn't have any corresponding row in invoice payment, this means the invoice isn't paid (either because no payment was ever attempted, or the payment attempts weren't successful).</p>
+            <p>A successful payment against an invoice would have a single row (of type ATTEMPT):
+                <table class="table table-condensed table-striped">
+                    <thead>
+                        <tr>
+                            <th>Invoice #</th>
+                            <th>Type</th>
+                            <th>Payment date</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1029</td>
+                            <td>ATTEMPT</td>
+                            <td>2013-04-12 22:45:39</td>
+                            <td>$20</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </p>
+            <p>Here is how a payment, followed by a refund would look like:
+                <table class="table table-condensed table-striped">
+                    <thead>
+                        <tr>
+                            <th>Invoice #</th>
+                            <th>Type</th>
+                            <th>Payment date</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1029</td>
+                            <td>ATTEMPT</td>
+                            <td>2013-04-12 22:45:39</td>
+                            <td>$20</td>
+                        </tr>
+                        <tr>
+                            <td>1029</td>
+                            <td>REFUND</td>
+                            <td>2013-04-18 10:23:11</td>
+                            <td>$-20</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </p>
+            <p>Here is how a payment, followed by a chargeback would look like:
+                <table class="table table-condensed table-striped">
+                    <thead>
+                        <tr>
+                            <th>Invoice #</th>
+                            <th>Type</th>
+                            <th>Payment date</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1029</td>
+                            <td>ATTEMPT</td>
+                            <td>2013-04-12 22:45:39</td>
+                            <td>$20</td>
+                        </tr>
+                        <tr>
+                            <td>1029</td>
+                            <td>CHARGED_BACK</td>
+                            <td>2013-04-18 10:23:11</td>
+                            <td>$-20</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </p>
         </section>
     </div>
 </div>
