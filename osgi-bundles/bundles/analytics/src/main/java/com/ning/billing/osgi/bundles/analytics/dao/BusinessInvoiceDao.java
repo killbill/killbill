@@ -17,12 +17,10 @@
 package com.ning.billing.osgi.bundles.analytics.dao;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -107,12 +105,24 @@ public class BusinessInvoiceDao extends BusinessAnalyticsDaoBase {
         final Long tenantRecordId = getTenantRecordId(context);
         final ReportGroup reportGroup = getReportGroup(account.getId(), context);
 
-        // Lookup the invoices for that account
-        final Map<BusinessInvoiceModelDao, Collection<BusinessInvoiceItemBaseModelDao>> businessInvoices = new HashMap<BusinessInvoiceModelDao, Collection<BusinessInvoiceItemBaseModelDao>>();
+        final Map<UUID, BusinessInvoiceModelDao> businessInvoices = new HashMap<UUID, BusinessInvoiceModelDao>();
+        final Map<UUID, Collection<BusinessInvoiceItemBaseModelDao>> businessInvoiceItems = new HashMap<UUID, Collection<BusinessInvoiceItemBaseModelDao>>();
 
-        // Create the business invoice and associated business invoice items
+        // All invoice items across all invoices for that account
+        // We need to be able to reference items across multiple invoices
+        final Collection<InvoiceItem> allInvoiceItems = new LinkedList<InvoiceItem>();
+
+        // Lookup the invoices for that account
         final Collection<Invoice> invoices = getInvoicesByAccountId(account.getId(), context);
+
+        // Create a convenient mapping invoice_id -> invoice
+        final Map<UUID, Invoice> invoiceIdToInvoiceMappings = new LinkedHashMap<UUID, Invoice>();
+
+        // Create the business invoices
         for (final Invoice invoice : invoices) {
+            invoiceIdToInvoiceMappings.put(invoice.getId(), invoice);
+            allInvoiceItems.addAll(invoice.getInvoiceItems());
+
             final Long invoiceRecordId = getInvoiceRecordId(invoice.getId(), context);
             final AuditLog creationAuditLog = getInvoiceCreationAuditLog(invoice.getId(), context);
             final BusinessInvoiceModelDao businessInvoice = new BusinessInvoiceModelDao(account,
@@ -123,31 +133,43 @@ public class BusinessInvoiceDao extends BusinessAnalyticsDaoBase {
                                                                                         tenantRecordId,
                                                                                         reportGroup);
 
-            final List<InvoiceItem> allInvoiceItems = invoice.getInvoiceItems();
-            final Collection<InvoiceItem> sanitizedInvoiceItems = sanitizeInvoiceItems(allInvoiceItems);
-
-            final List<BusinessInvoiceItemBaseModelDao> businessInvoiceItems = new ArrayList<BusinessInvoiceItemBaseModelDao>();
-            for (final InvoiceItem invoiceItem : sanitizedInvoiceItems) {
-                final BusinessInvoiceItemBaseModelDao businessInvoiceItem = createBusinessInvoiceItem(account,
-                                                                                                      invoice,
-                                                                                                      invoiceItem,
-                                                                                                      Collections2.filter(sanitizedInvoiceItems,
-                                                                                                                          new Predicate<InvoiceItem>() {
-                                                                                                                              @Override
-                                                                                                                              public boolean apply(final InvoiceItem input) {
-                                                                                                                                  return !input.getId().equals(invoiceItem.getId());
-                                                                                                                              }
-                                                                                                                          }),
-                                                                                                      context);
-                if (businessInvoiceItem != null) {
-                    businessInvoiceItems.add(businessInvoiceItem);
-                }
-            }
-
-            businessInvoices.put(businessInvoice, businessInvoiceItems);
+            businessInvoices.put(invoice.getId(), businessInvoice);
         }
 
-        return businessInvoices;
+        // Sanitize (cherry-pick, merge) the items
+        final Collection<InvoiceItem> sanitizedInvoiceItems = sanitizeInvoiceItems(allInvoiceItems);
+
+        // Create the business invoice items
+        for (final InvoiceItem invoiceItem : sanitizedInvoiceItems) {
+            final Invoice invoice = invoiceIdToInvoiceMappings.get(invoiceItem.getInvoiceId());
+            final BusinessInvoiceItemBaseModelDao businessInvoiceItem = createBusinessInvoiceItem(account,
+                                                                                                  invoice,
+                                                                                                  invoiceItem,
+                                                                                                  Collections2.filter(sanitizedInvoiceItems,
+                                                                                                                      new Predicate<InvoiceItem>() {
+                                                                                                                          @Override
+                                                                                                                          public boolean apply(final InvoiceItem input) {
+                                                                                                                              return !input.getId().equals(invoiceItem.getId());
+                                                                                                                          }
+                                                                                                                      }),
+                                                                                                  accountRecordId,
+                                                                                                  tenantRecordId,
+                                                                                                  reportGroup,
+                                                                                                  context);
+            if (businessInvoiceItem != null) {
+                if (businessInvoiceItems.get(invoice.getId()) == null) {
+                    businessInvoiceItems.put(invoice.getId(), new LinkedList<BusinessInvoiceItemBaseModelDao>());
+                }
+                businessInvoiceItems.get(invoice.getId()).add(businessInvoiceItem);
+            }
+        }
+
+        final Map<BusinessInvoiceModelDao, Collection<BusinessInvoiceItemBaseModelDao>> businessRecords = new HashMap<BusinessInvoiceModelDao, Collection<BusinessInvoiceItemBaseModelDao>>();
+        for (final BusinessInvoiceModelDao businessInvoiceModelDao : businessInvoices.values()) {
+            businessRecords.put(businessInvoiceModelDao, businessInvoiceItems.get(businessInvoiceModelDao.getInvoiceId()));
+        }
+
+        return businessRecords;
     }
 
     private void rebuildInvoicesForAccountInTransaction(final BusinessAccountModelDao account,
@@ -190,7 +212,10 @@ public class BusinessInvoiceDao extends BusinessAnalyticsDaoBase {
     private BusinessInvoiceItemBaseModelDao createBusinessInvoiceItem(final Account account,
                                                                       final Invoice invoice,
                                                                       final InvoiceItem invoiceItem,
-                                                                      final Collection<InvoiceItem> otherInvoiceItemsOnInvoice,
+                                                                      final Collection<InvoiceItem> otherInvoiceItems,
+                                                                      final Long accountRecordId,
+                                                                      final Long tenantRecordId,
+                                                                      final ReportGroup reportGroup,
                                                                       final TenantContext context) throws AnalyticsRefreshException {
         SubscriptionBundle bundle = null;
         // Subscription and bundle could be null for e.g. credits or adjustments
@@ -210,14 +235,11 @@ public class BusinessInvoiceDao extends BusinessAnalyticsDaoBase {
 
         final Long invoiceItemRecordId = getInvoiceItemRecordId(invoiceItem.getId(), context);
         final AuditLog creationAuditLog = getInvoiceItemCreationAuditLog(invoiceItem.getId(), context);
-        final Long accountRecordId = getAccountRecordId(account.getId(), context);
-        final Long tenantRecordId = getTenantRecordId(context);
-        final ReportGroup reportGroup = getReportGroup(account.getId(), context);
 
         return createBusinessInvoiceItem(account,
                                          invoice,
                                          invoiceItem,
-                                         otherInvoiceItemsOnInvoice,
+                                         otherInvoiceItems,
                                          bundle,
                                          plan,
                                          planPhase,
@@ -233,7 +255,7 @@ public class BusinessInvoiceDao extends BusinessAnalyticsDaoBase {
     BusinessInvoiceItemBaseModelDao createBusinessInvoiceItem(final Account account,
                                                               final Invoice invoice,
                                                               final InvoiceItem invoiceItem,
-                                                              final Collection<InvoiceItem> otherInvoiceItemsOnInvoice,
+                                                              final Collection<InvoiceItem> otherInvoiceItems,
                                                               @Nullable final SubscriptionBundle bundle,
                                                               @Nullable final Plan plan,
                                                               @Nullable final PlanPhase planPhase,
@@ -250,14 +272,14 @@ public class BusinessInvoiceDao extends BusinessAnalyticsDaoBase {
             businessInvoiceItemType = BusinessInvoiceItemType.ACCOUNT_CREDIT;
         } else if (isInvoiceItemAdjustmentItem(invoiceItem)) {
             businessInvoiceItemType = BusinessInvoiceItemType.INVOICE_ITEM_ADJUSTMENT;
-        } else if (isInvoiceAdjustmentItem(invoiceItem, otherInvoiceItemsOnInvoice)) {
+        } else if (isInvoiceAdjustmentItem(invoiceItem, otherInvoiceItems)) {
             businessInvoiceItemType = BusinessInvoiceItemType.INVOICE_ADJUSTMENT;
         } else {
             // We don't care
             return null;
         }
 
-        final Boolean revenueRecognizable = isRevenueRecognizable(invoiceItem, otherInvoiceItemsOnInvoice);
+        final Boolean revenueRecognizable = isRevenueRecognizable(invoiceItem, otherInvoiceItems);
 
         final Long secondInvoiceItemRecordId;
         if (invoiceItem instanceof AdjustmentInvoiceItemForRepair) {
@@ -282,25 +304,27 @@ public class BusinessInvoiceDao extends BusinessAnalyticsDaoBase {
                                                       reportGroup);
     }
 
-    private Boolean isRevenueRecognizable(final InvoiceItem invoiceItem, final Collection<InvoiceItem> otherInvoiceItemsOnInvoice) {
+    private Boolean isRevenueRecognizable(final InvoiceItem invoiceItem, final Collection<InvoiceItem> otherInvoiceItems) {
         // All items are recognizable except user generated credit (CBA_ADJ and CREDIT_ADJ on their own invoice)
         return !(InvoiceItemType.CBA_ADJ.equals(invoiceItem.getInvoiceItemType()) &&
-                 (otherInvoiceItemsOnInvoice.size() == 1 &&
-                  InvoiceItemType.CREDIT_ADJ.equals(otherInvoiceItemsOnInvoice.iterator().next().getInvoiceItemType()) &&
-                  otherInvoiceItemsOnInvoice.iterator().next().getAmount().compareTo(invoiceItem.getAmount().negate()) == 0));
+                 (otherInvoiceItems.size() == 1 &&
+                  InvoiceItemType.CREDIT_ADJ.equals(otherInvoiceItems.iterator().next().getInvoiceItemType()) &&
+                  otherInvoiceItems.iterator().next().getInvoiceId().equals(invoiceItem.getInvoiceId()) &&
+                  otherInvoiceItems.iterator().next().getAmount().compareTo(invoiceItem.getAmount().negate()) == 0));
     }
 
     // Invoice adjustments
     @VisibleForTesting
-    boolean isInvoiceAdjustmentItem(final InvoiceItem invoiceItem, final Collection<InvoiceItem> otherInvoiceItemsOnInvoice) {
+    boolean isInvoiceAdjustmentItem(final InvoiceItem invoiceItem, final Collection<InvoiceItem> otherInvoiceItems) {
         // Either REFUND_ADJ
         return InvoiceItemType.REFUND_ADJ.equals(invoiceItem.getInvoiceItemType()) ||
                // Or invoice level credit, i.e. credit adj, but NOT on its on own invoice
                // Note: the negative credit adj items (internal generation of account level credits) doesn't figure in analytics
                (InvoiceItemType.CREDIT_ADJ.equals(invoiceItem.getInvoiceItemType()) &&
-                !(otherInvoiceItemsOnInvoice.size() == 1 &&
-                  InvoiceItemType.CBA_ADJ.equals(otherInvoiceItemsOnInvoice.iterator().next().getInvoiceItemType()) &&
-                  otherInvoiceItemsOnInvoice.iterator().next().getAmount().compareTo(invoiceItem.getAmount().negate()) == 0));
+                !(otherInvoiceItems.size() == 1 &&
+                  InvoiceItemType.CBA_ADJ.equals(otherInvoiceItems.iterator().next().getInvoiceItemType()) &&
+                  otherInvoiceItems.iterator().next().getInvoiceId().equals(invoiceItem.getInvoiceId()) &&
+                  otherInvoiceItems.iterator().next().getAmount().compareTo(invoiceItem.getAmount().negate()) == 0));
     }
 
     // Item adjustments
@@ -321,7 +345,7 @@ public class BusinessInvoiceDao extends BusinessAnalyticsDaoBase {
     }
 
     @VisibleForTesting
-    Collection<InvoiceItem> sanitizeInvoiceItems(final List<InvoiceItem> allInvoiceItems) {
+    Collection<InvoiceItem> sanitizeInvoiceItems(final Collection<InvoiceItem> allInvoiceItems) {
         // Build a convenience mapping between items -> repair_adj items (inverse of linkedItemId)
         final Map<UUID, InvoiceItem> repairedInvoiceItemIdToRepairInvoiceItemMappings = new HashMap<UUID, InvoiceItem>();
         for (final InvoiceItem invoiceItem : allInvoiceItems) {

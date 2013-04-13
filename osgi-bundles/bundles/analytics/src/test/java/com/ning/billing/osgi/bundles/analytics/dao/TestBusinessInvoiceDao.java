@@ -47,7 +47,6 @@ import com.google.common.collect.ImmutableList;
 public class TestBusinessInvoiceDao extends AnalyticsTestSuiteNoDB {
 
     private final UUID accountId = UUID.randomUUID();
-    private final UUID invoiceId = UUID.randomUUID();
     private final UUID bundleId = UUID.randomUUID();
 
     private BusinessInvoiceDao invoiceDao;
@@ -76,11 +75,13 @@ public class TestBusinessInvoiceDao extends AnalyticsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testRevenueRecognizableClassicAccountCredit() throws Exception {
+        final UUID invoiceId = UUID.randomUUID();
+
         // Classic account credit ($10), from the perspective of the CREDIT_ADJ item
         final BusinessInvoiceItemBaseModelDao businessCreditAdjItem = invoiceDao.createBusinessInvoiceItem(account,
                                                                                                            invoice,
-                                                                                                           createInvoiceItem(InvoiceItemType.CREDIT_ADJ, new BigDecimal("-10")),
-                                                                                                           ImmutableList.<InvoiceItem>of(createInvoiceItem(InvoiceItemType.CBA_ADJ, new BigDecimal("10"))),
+                                                                                                           createInvoiceItem(invoiceId, InvoiceItemType.CREDIT_ADJ, new BigDecimal("-10")),
+                                                                                                           ImmutableList.<InvoiceItem>of(createInvoiceItem(invoiceId, InvoiceItemType.CBA_ADJ, new BigDecimal("10"))),
                                                                                                            null,
                                                                                                            null,
                                                                                                            null,
@@ -96,8 +97,8 @@ public class TestBusinessInvoiceDao extends AnalyticsTestSuiteNoDB {
         // Classic account credit ($10), from the perspective of the CBA_ADJ item
         final BusinessInvoiceItemBaseModelDao businessCreditItem = invoiceDao.createBusinessInvoiceItem(account,
                                                                                                         invoice,
-                                                                                                        createInvoiceItem(InvoiceItemType.CBA_ADJ, new BigDecimal("10")),
-                                                                                                        ImmutableList.<InvoiceItem>of(createInvoiceItem(InvoiceItemType.CREDIT_ADJ, new BigDecimal("-10"))),
+                                                                                                        createInvoiceItem(invoiceId, InvoiceItemType.CBA_ADJ, new BigDecimal("10")),
+                                                                                                        ImmutableList.<InvoiceItem>of(createInvoiceItem(invoiceId, InvoiceItemType.CREDIT_ADJ, new BigDecimal("-10"))),
                                                                                                         null,
                                                                                                         null,
                                                                                                         null,
@@ -115,8 +116,8 @@ public class TestBusinessInvoiceDao extends AnalyticsTestSuiteNoDB {
         // Invoice adjustment, not to be mixed with credits!
         final BusinessInvoiceItemBaseModelDao businessInvoiceAdjustmentItem = invoiceDao.createBusinessInvoiceItem(account,
                                                                                                                    invoice,
-                                                                                                                   createInvoiceItem(InvoiceItemType.CREDIT_ADJ, new BigDecimal("-10")),
-                                                                                                                   ImmutableList.<InvoiceItem>of(createInvoiceItem(InvoiceItemType.RECURRING, new BigDecimal("10"))),
+                                                                                                                   createInvoiceItem(invoiceId, InvoiceItemType.CREDIT_ADJ, new BigDecimal("-10")),
+                                                                                                                   ImmutableList.<InvoiceItem>of(createInvoiceItem(invoiceId, InvoiceItemType.RECURRING, new BigDecimal("10"))),
                                                                                                                    null,
                                                                                                                    null,
                                                                                                                    null,
@@ -134,8 +135,8 @@ public class TestBusinessInvoiceDao extends AnalyticsTestSuiteNoDB {
         // Invoice adjustment via refund
         final BusinessInvoiceItemBaseModelDao businessRefundInvoiceAdjustmentItem = invoiceDao.createBusinessInvoiceItem(account,
                                                                                                                          invoice,
-                                                                                                                         createInvoiceItem(InvoiceItemType.REFUND_ADJ, new BigDecimal("-10")),
-                                                                                                                         ImmutableList.<InvoiceItem>of(createInvoiceItem(InvoiceItemType.RECURRING, new BigDecimal("10"))),
+                                                                                                                         createInvoiceItem(invoiceId, InvoiceItemType.REFUND_ADJ, new BigDecimal("-10")),
+                                                                                                                         ImmutableList.<InvoiceItem>of(createInvoiceItem(invoiceId, InvoiceItemType.RECURRING, new BigDecimal("10"))),
                                                                                                                          null,
                                                                                                                          null,
                                                                                                                          null,
@@ -153,8 +154,8 @@ public class TestBusinessInvoiceDao extends AnalyticsTestSuiteNoDB {
         // Item adjustment
         final BusinessInvoiceItemBaseModelDao businessInvoiceItemAdjustmentItem = invoiceDao.createBusinessInvoiceItem(account,
                                                                                                                        invoice,
-                                                                                                                       createInvoiceItem(InvoiceItemType.ITEM_ADJ, new BigDecimal("-10")),
-                                                                                                                       ImmutableList.<InvoiceItem>of(createInvoiceItem(InvoiceItemType.RECURRING, new BigDecimal("10"))),
+                                                                                                                       createInvoiceItem(invoiceId, InvoiceItemType.ITEM_ADJ, new BigDecimal("-10")),
+                                                                                                                       ImmutableList.<InvoiceItem>of(createInvoiceItem(invoiceId, InvoiceItemType.RECURRING, new BigDecimal("10"))),
                                                                                                                        null,
                                                                                                                        null,
                                                                                                                        null,
@@ -172,10 +173,10 @@ public class TestBusinessInvoiceDao extends AnalyticsTestSuiteNoDB {
         // System generated account credit
         final BusinessInvoiceItemBaseModelDao businessCBAItem = invoiceDao.createBusinessInvoiceItem(account,
                                                                                                      invoice,
-                                                                                                     createInvoiceItem(InvoiceItemType.CBA_ADJ, new BigDecimal("10")),
-                                                                                                     ImmutableList.<InvoiceItem>of(createInvoiceItem(InvoiceItemType.RECURRING, new BigDecimal("30")),
-                                                                                                                                   createInvoiceItem(InvoiceItemType.REPAIR_ADJ, new BigDecimal("-30")),
-                                                                                                                                   createInvoiceItem(InvoiceItemType.RECURRING, new BigDecimal("20"))),
+                                                                                                     createInvoiceItem(invoiceId, InvoiceItemType.CBA_ADJ, new BigDecimal("10")),
+                                                                                                     ImmutableList.<InvoiceItem>of(createInvoiceItem(invoiceId, InvoiceItemType.RECURRING, new BigDecimal("30")),
+                                                                                                                                   createInvoiceItem(invoiceId, InvoiceItemType.REPAIR_ADJ, new BigDecimal("-30")),
+                                                                                                                                   createInvoiceItem(invoiceId, InvoiceItemType.RECURRING, new BigDecimal("20"))),
                                                                                                      null,
                                                                                                      null,
                                                                                                      null,
@@ -193,22 +194,24 @@ public class TestBusinessInvoiceDao extends AnalyticsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testInvoiceAdjustment() throws Exception {
-        Assert.assertFalse(invoiceDao.isInvoiceAdjustmentItem(createInvoiceItem(InvoiceItemType.RECURRING),
+        final UUID invoiceId = UUID.randomUUID();
+
+        Assert.assertFalse(invoiceDao.isInvoiceAdjustmentItem(createInvoiceItem(invoiceId, InvoiceItemType.RECURRING),
                                                               ImmutableList.<InvoiceItem>of()));
-        Assert.assertTrue(invoiceDao.isInvoiceAdjustmentItem(createInvoiceItem(InvoiceItemType.REFUND_ADJ),
+        Assert.assertTrue(invoiceDao.isInvoiceAdjustmentItem(createInvoiceItem(invoiceId, InvoiceItemType.REFUND_ADJ),
                                                              ImmutableList.<InvoiceItem>of()));
 
-        final InvoiceItem creditAdj = createInvoiceItem(InvoiceItemType.CREDIT_ADJ);
+        final InvoiceItem creditAdj = createInvoiceItem(invoiceId, InvoiceItemType.CREDIT_ADJ);
 
         // Account credit
         Assert.assertFalse(invoiceDao.isInvoiceAdjustmentItem(creditAdj,
-                                                              ImmutableList.<InvoiceItem>of(createInvoiceItem(InvoiceItemType.CBA_ADJ, creditAdj.getAmount().negate()))));
+                                                              ImmutableList.<InvoiceItem>of(createInvoiceItem(invoiceId, InvoiceItemType.CBA_ADJ, creditAdj.getAmount().negate()))));
 
         Assert.assertTrue(invoiceDao.isInvoiceAdjustmentItem(creditAdj,
-                                                             ImmutableList.<InvoiceItem>of(createInvoiceItem(InvoiceItemType.CBA_ADJ, creditAdj.getAmount().negate().add(BigDecimal.ONE)))));
+                                                             ImmutableList.<InvoiceItem>of(createInvoiceItem(invoiceId, InvoiceItemType.CBA_ADJ, creditAdj.getAmount().negate().add(BigDecimal.ONE)))));
         Assert.assertTrue(invoiceDao.isInvoiceAdjustmentItem(creditAdj,
-                                                             ImmutableList.<InvoiceItem>of(createInvoiceItem(InvoiceItemType.RECURRING),
-                                                                                           createInvoiceItem(InvoiceItemType.CBA_ADJ, creditAdj.getAmount().negate()))));
+                                                             ImmutableList.<InvoiceItem>of(createInvoiceItem(invoiceId, InvoiceItemType.RECURRING),
+                                                                                           createInvoiceItem(invoiceId, InvoiceItemType.CBA_ADJ, creditAdj.getAmount().negate()))));
     }
 
     @Test(groups = "fast")
@@ -218,26 +221,30 @@ public class TestBusinessInvoiceDao extends AnalyticsTestSuiteNoDB {
         final LocalDate startDate1 = new LocalDate(2013, 4, 1);
         final LocalDate endDate1 = new LocalDate(2013, 4, 30);
         final BigDecimal amount1 = new BigDecimal("30");
-        final InvoiceItem recurring1 = createInvoiceItem(InvoiceItemType.RECURRING, subscriptionId1, startDate1, endDate1, amount1, null);
-        final InvoiceItem repair1 = createInvoiceItem(InvoiceItemType.REPAIR_ADJ, subscriptionId1, startDate1, endDate1, amount1.negate(), recurring1.getId());
+        final UUID originalInvoice1 = UUID.randomUUID();
+        final UUID reparationInvoice1 = UUID.randomUUID();
+        final InvoiceItem recurring1 = createInvoiceItem(originalInvoice1, InvoiceItemType.RECURRING, subscriptionId1, startDate1, endDate1, amount1, null);
+        final InvoiceItem repair1 = createInvoiceItem(originalInvoice1, InvoiceItemType.REPAIR_ADJ, subscriptionId1, startDate1, endDate1, amount1.negate(), recurring1.getId());
         final LocalDate reparationEndDate1 = new LocalDate(2013, 4, 10);
         final BigDecimal reparationAmount1 = new BigDecimal("10");
-        final InvoiceItem reparation1 = createInvoiceItem(InvoiceItemType.RECURRING, subscriptionId1, startDate1, reparationEndDate1, reparationAmount1, null);
+        final InvoiceItem reparation1 = createInvoiceItem(reparationInvoice1, InvoiceItemType.RECURRING, subscriptionId1, startDate1, reparationEndDate1, reparationAmount1, null);
 
         final UUID subscriptionId2 = UUID.randomUUID();
         final LocalDate startDate2 = new LocalDate(2013, 4, 10);
         final LocalDate endDate2 = new LocalDate(2013, 4, 30);
         final BigDecimal amount2 = new BigDecimal("20");
-        final InvoiceItem recurring2 = createInvoiceItem(InvoiceItemType.RECURRING, subscriptionId2, startDate2, endDate2, amount2, null);
-        final InvoiceItem repair2 = createInvoiceItem(InvoiceItemType.REPAIR_ADJ, subscriptionId2, startDate2, endDate2, amount2.negate(), recurring2.getId());
+        final UUID originalInvoice2 = UUID.randomUUID();
+        final UUID reparationInvoice2 = UUID.randomUUID();
+        final InvoiceItem recurring2 = createInvoiceItem(originalInvoice2, InvoiceItemType.RECURRING, subscriptionId2, startDate2, endDate2, amount2, null);
+        final InvoiceItem repair2 = createInvoiceItem(originalInvoice2, InvoiceItemType.REPAIR_ADJ, subscriptionId2, startDate2, endDate2, amount2.negate(), recurring2.getId());
         final LocalDate reparationEndDate2 = new LocalDate(2013, 4, 15);
         final BigDecimal reparationAmount2 = new BigDecimal("5");
-        final InvoiceItem reparation2 = createInvoiceItem(InvoiceItemType.RECURRING, subscriptionId2, startDate2, reparationEndDate2, reparationAmount2, null);
+        final InvoiceItem reparation2 = createInvoiceItem(reparationInvoice2, InvoiceItemType.RECURRING, subscriptionId2, startDate2, reparationEndDate2, reparationAmount2, null);
 
         final UUID externalChargeSubscriptionId = UUID.randomUUID();
         final LocalDate externalStartDate = new LocalDate(2012, 1, 1);
         final BigDecimal externalChargeAmount = BigDecimal.TEN;
-        final InvoiceItem externalCharge = createInvoiceItem(InvoiceItemType.EXTERNAL_CHARGE, externalChargeSubscriptionId, externalStartDate, null, externalChargeAmount, null);
+        final InvoiceItem externalCharge = createInvoiceItem(UUID.randomUUID(), InvoiceItemType.EXTERNAL_CHARGE, externalChargeSubscriptionId, externalStartDate, null, externalChargeAmount, null);
 
         final Collection<InvoiceItem> sanitizedInvoiceItems = invoiceDao.sanitizeInvoiceItems(ImmutableList.<InvoiceItem>of(recurring1, repair1, reparation1, recurring2, repair2, reparation2, externalCharge));
         Assert.assertEquals(sanitizedInvoiceItems.size(), 2 + 2 + 1);
@@ -270,15 +277,16 @@ public class TestBusinessInvoiceDao extends AnalyticsTestSuiteNoDB {
         }
     }
 
-    private InvoiceItem createInvoiceItem(final InvoiceItemType type) {
-        return createInvoiceItem(type, BigDecimal.TEN);
+    private InvoiceItem createInvoiceItem(final UUID invoiceId, final InvoiceItemType type) {
+        return createInvoiceItem(invoiceId, type, BigDecimal.TEN);
     }
 
-    private InvoiceItem createInvoiceItem(final InvoiceItemType type, final BigDecimal amount) {
-        return createInvoiceItem(type, UUID.randomUUID(), new LocalDate(2013, 1, 2), new LocalDate(2013, 2, 5), amount, null);
+    private InvoiceItem createInvoiceItem(final UUID invoiceId, final InvoiceItemType type, final BigDecimal amount) {
+        return createInvoiceItem(invoiceId, type, UUID.randomUUID(), new LocalDate(2013, 1, 2), new LocalDate(2013, 2, 5), amount, null);
     }
 
-    private InvoiceItem createInvoiceItem(final InvoiceItemType invoiceItemType,
+    private InvoiceItem createInvoiceItem(final UUID invoiceId,
+                                          final InvoiceItemType invoiceItemType,
                                           final UUID subscriptionId,
                                           final LocalDate startDate,
                                           final LocalDate endDate,
