@@ -63,7 +63,7 @@ public class TestDefaultInvoiceGeneratorUnit extends InvoiceTestSuiteNoDB {
         items.add(item1);
         items.add(new RepairAdjInvoiceItem(invoiceId, accountId, startDate, endDate, amount.negate(), currency, item1.getId()));
         items.add(new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, endDate, nextEndDate, amount2, rate2, currency));
-        ((DefaultInvoiceGenerator) generator).removeCancellingInvoiceItems(items);
+        ((DefaultInvoiceGenerator) generator).removeRepairedAndRepairInvoiceItems(items);
         assertEquals(items.size(), 1);
         final InvoiceItem leftItem = items.get(0);
         assertEquals(leftItem.getInvoiceItemType(), InvoiceItemType.RECURRING);
@@ -85,7 +85,7 @@ public class TestDefaultInvoiceGeneratorUnit extends InvoiceTestSuiteNoDB {
         items.add(item1);
         items.add(new RepairAdjInvoiceItem(invoiceId, accountId, startDate, endDate, amount1.negate(), currency, item1.getId()));
         items.add(new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, endDate, nextEndDate, amount2, rate2, currency));
-        ((DefaultInvoiceGenerator) generator).removeCancellingInvoiceItems(items);
+        ((DefaultInvoiceGenerator) generator).removeRepairedAndRepairInvoiceItems(items);
         assertEquals(items.size(), 1);
         final InvoiceItem leftItem = items.get(0);
         assertEquals(leftItem.getInvoiceItemType(), InvoiceItemType.RECURRING);
@@ -109,7 +109,7 @@ public class TestDefaultInvoiceGeneratorUnit extends InvoiceTestSuiteNoDB {
         final InvoiceItem other1 = new FixedPriceInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, amount, currency);
         proposed.add(other1);
 
-        ((DefaultInvoiceGenerator) generator).removeDuplicatedInvoiceItems(proposed, existing);
+        ((DefaultInvoiceGenerator) generator).removeMatchingInvoiceItems(proposed, existing);
         assertEquals(existing.size(), 1);
         assertEquals(proposed.size(), 0);
     }
@@ -131,7 +131,7 @@ public class TestDefaultInvoiceGeneratorUnit extends InvoiceTestSuiteNoDB {
         proposed.add(other1);
         proposed.add(other2);
 
-        ((DefaultInvoiceGenerator) generator).removeDuplicatedInvoiceItems(proposed, existing);
+        ((DefaultInvoiceGenerator) generator).removeMatchingInvoiceItems(proposed, existing);
         assertEquals(existing.size(), 0);
         assertEquals(proposed.size(), 1);
     }
@@ -158,7 +158,7 @@ public class TestDefaultInvoiceGeneratorUnit extends InvoiceTestSuiteNoDB {
         proposed.add(other1);
         proposed.add(other2);
 
-        ((DefaultInvoiceGenerator) generator).removeDuplicatedInvoiceItems(proposed, existing);
+        ((DefaultInvoiceGenerator) generator).removeMatchingInvoiceItems(proposed, existing);
         assertEquals(existing.size(), 0);
         assertEquals(proposed.size(), 1);
     }
@@ -185,7 +185,7 @@ public class TestDefaultInvoiceGeneratorUnit extends InvoiceTestSuiteNoDB {
         proposed.add(item1);
         proposed.add(other);
 
-        ((DefaultInvoiceGenerator) generator).removeDuplicatedInvoiceItems(proposed, existing);
+        ((DefaultInvoiceGenerator) generator).removeMatchingInvoiceItems(proposed, existing);
         assertEquals(existing.size(), 0);
         assertEquals(proposed.size(), 1);
         final InvoiceItem leftItem = proposed.get(0);
@@ -214,7 +214,7 @@ public class TestDefaultInvoiceGeneratorUnit extends InvoiceTestSuiteNoDB {
         proposed.add(item1);
         proposed.add(other);
 
-        ((DefaultInvoiceGenerator) generator).removeDuplicatedInvoiceItems(proposed, existing);
+        ((DefaultInvoiceGenerator) generator).removeMatchingInvoiceItems(proposed, existing);
         assertEquals(existing.size(), 0);
         assertEquals(proposed.size(), 1);
         final InvoiceItem leftItem = proposed.get(0);
@@ -244,7 +244,7 @@ public class TestDefaultInvoiceGeneratorUnit extends InvoiceTestSuiteNoDB {
         final InvoiceItem other = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, endDate, nextEndDate, amount2, rate2, currency);
         proposed.add(other);
 
-        ((DefaultInvoiceGenerator) generator).addRepairedItems(existing, proposed);
+        ((DefaultInvoiceGenerator) generator).addRepairItems(existing, proposed);
         assertEquals(existing.size(), 1);
         assertEquals(proposed.size(), 2);
         final InvoiceItem leftItem1 = proposed.get(0);
