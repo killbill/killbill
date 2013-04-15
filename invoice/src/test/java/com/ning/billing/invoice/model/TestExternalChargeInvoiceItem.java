@@ -64,9 +64,9 @@ public class TestExternalChargeInvoiceItem extends InvoiceTestSuiteNoDB {
         // Check comparison (done by start date)
         final ExternalChargeInvoiceItem itemBefore = new ExternalChargeInvoiceItem(id, invoiceId, accountId, bundleId, description,
                                                                                    effectiveDate.minusDays(1), amount, currency);
-        Assert.assertEquals(itemBefore.compareTo(item), -1);
+        Assert.assertFalse(itemBefore.matches(item));
         final ExternalChargeInvoiceItem itemAfter = new ExternalChargeInvoiceItem(id, invoiceId, accountId, bundleId, description,
                                                                                   effectiveDate.plusDays(1), amount, currency);
-        Assert.assertEquals(itemAfter.compareTo(item), 1);
+        Assert.assertFalse(itemAfter.matches(item));
     }
 }

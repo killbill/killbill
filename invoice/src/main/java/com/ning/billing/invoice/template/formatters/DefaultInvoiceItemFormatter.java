@@ -135,11 +135,6 @@ public class DefaultInvoiceItemFormatter implements InvoiceItemFormatter {
     }
 
     @Override
-    public int compareTo(final InvoiceItem invoiceItem) {
-        return item.compareTo(invoiceItem);
-    }
-
-    @Override
     public UUID getId() {
         return item.getId();
     }
@@ -162,5 +157,10 @@ public class DefaultInvoiceItemFormatter implements InvoiceItemFormatter {
     @Override
     public UUID getLinkedItemId() {
         return null;
+    }
+
+    @Override
+    public boolean matches(final Object other) {
+        throw new UnsupportedOperationException();
     }
 }

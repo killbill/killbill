@@ -485,8 +485,8 @@ public class BusinessInvoiceDao extends BusinessAnalyticsDaoBase {
         }
 
         @Override
-        public int compareTo(final InvoiceItem o) {
-            return repairInvoiceItem.compareTo(o);
+        public boolean matches(final Object other) {
+            throw new UnsupportedOperationException();
         }
 
         @Override

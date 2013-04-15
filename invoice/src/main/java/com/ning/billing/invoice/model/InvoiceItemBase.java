@@ -170,13 +170,94 @@ public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem 
         return linkedItemId;
     }
 
+
+    @Override
+    public boolean equals(final Object o) {
+
+        if (!matches(o)) {
+            return false;
+        }
+        final InvoiceItemBase that = (InvoiceItemBase) o;
+        if (!super.equals(that)) {
+            return false;
+        }
+        if (invoiceId != null ? !invoiceId.equals(that.invoiceId) : that.invoiceId != null) {
+            return false;
+        }
+        if (linkedItemId != null ? !linkedItemId.equals(that.linkedItemId) : that.linkedItemId != null) {
+            return false;
+        }
+        return true;
+    }
+
+
+    @Override
+    public boolean matches(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof InvoiceItemBase)) {
+            return false;
+        }
+
+        final InvoiceItemBase that = (InvoiceItemBase) o;
+
+        if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
+            return false;
+        }
+        if (bundleId != null ? !bundleId.equals(that.bundleId) : that.bundleId != null) {
+            return false;
+        }
+        if (subscriptionId != null ? !subscriptionId.equals(that.subscriptionId) : that.subscriptionId != null) {
+            return false;
+        }
+        if (safeCompareTo(startDate, that.startDate) != 0) {
+            return false;
+        }
+        if (safeCompareTo(endDate, that.endDate) != 0) {
+            return false;
+        }
+        if (safeCompareTo(amount, that.amount) != 0) {
+            return false;
+        }
+        if (safeCompareTo(rate, that.rate) != 0) {
+            return false;
+        }
+        if (currency != that.currency) {
+            return false;
+        }
+        if (phaseName != null ? !phaseName.equals(that.phaseName) : that.phaseName != null) {
+            return false;
+        }
+        if (planName != null ? !planName.equals(that.planName) : that.planName != null) {
+            return false;
+        }
+        return true;
+    }
+
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (invoiceId != null ? invoiceId.hashCode() : 0);
+        result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
+        result = 31 * result + (startDate != null ? startDate.hashCode() : 0);
+        result = 31 * result + (endDate != null ? endDate.hashCode() : 0);
+        result = 31 * result + (amount != null ? amount.hashCode() : 0);
+        result = 31 * result + (currency != null ? currency.hashCode() : 0);
+        result = 31 * result + (subscriptionId != null ? subscriptionId.hashCode() : 0);
+        result = 31 * result + (bundleId != null ? bundleId.hashCode() : 0);
+        result = 31 * result + (planName != null ? planName.hashCode() : 0);
+        result = 31 * result + (phaseName != null ? phaseName.hashCode() : 0);
+        result = 31 * result + (rate != null ? rate.hashCode() : 0);
+        result = 31 * result + (linkedItemId != null ? linkedItemId.hashCode() : 0);
+        return result;
+    }
+
     @Override
     public abstract InvoiceItemType getInvoiceItemType();
 
     @Override
     public abstract String getDescription();
-
-    @Override
-    public abstract int compareTo(InvoiceItem invoiceItem);
 
 }

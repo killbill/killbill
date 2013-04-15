@@ -24,7 +24,7 @@ import org.joda.time.LocalDate;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.entity.Entity;
 
-public interface InvoiceItem extends Entity, Comparable<InvoiceItem> {
+public interface InvoiceItem extends Entity {
 
     InvoiceItemType getInvoiceItemType();
 
@@ -61,4 +61,11 @@ public interface InvoiceItem extends Entity, Comparable<InvoiceItem> {
     BigDecimal getRate();
 
     UUID getLinkedItemId();
+
+    /**
+     * Items match if they correspond to the same subscription for the same catalog plan and same start / end dates
+     *
+     * @return true if current and other items match
+     */
+    boolean matches(Object other);
 }

@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.api.Currency;
@@ -146,7 +147,7 @@ public class TestInvoiceItemDao extends InvoiceTestSuiteWithEmbeddedDB {
         invoiceUtil.createInvoiceItem(creditInvoiceItem, internalCallContext);
 
         final InvoiceItemModelDao savedItem = invoiceUtil.getInvoiceItemById(creditInvoiceItem.getId(), internalCallContext);
-        assertEquals(InvoiceItemFactory.fromModelDao(savedItem), creditInvoiceItem);
+        assertSameInvoiceItem(creditInvoiceItem, savedItem);
     }
 
     @Test(groups = "slow")
@@ -160,7 +161,7 @@ public class TestInvoiceItemDao extends InvoiceTestSuiteWithEmbeddedDB {
         invoiceUtil.createInvoiceItem(fixedPriceInvoiceItem, internalCallContext);
 
         final InvoiceItemModelDao savedItem = invoiceUtil.getInvoiceItemById(fixedPriceInvoiceItem.getId(), internalCallContext);
-        assertEquals(InvoiceItemFactory.fromModelDao(savedItem), fixedPriceInvoiceItem);
+        assertSameInvoiceItem(fixedPriceInvoiceItem, savedItem);
     }
 
     @Test(groups = "slow")
@@ -175,6 +176,14 @@ public class TestInvoiceItemDao extends InvoiceTestSuiteWithEmbeddedDB {
         invoiceUtil.createInvoiceItem(externalChargeInvoiceItem, internalCallContext);
 
         final InvoiceItemModelDao savedItem = invoiceUtil.getInvoiceItemById(externalChargeInvoiceItem.getId(), internalCallContext);
-        assertEquals(InvoiceItemFactory.fromModelDao(savedItem), externalChargeInvoiceItem);
+        assertSameInvoiceItem(externalChargeInvoiceItem, savedItem);
+    }
+
+
+    private void assertSameInvoiceItem(final InvoiceItem initialItem, final InvoiceItemModelDao fromDao) {
+        final InvoiceItem newItem = InvoiceItemFactory.fromModelDao(fromDao);
+        Assert.assertEquals(newItem.getId(), initialItem.getId());
+        Assert.assertTrue(newItem.matches(initialItem));
+
     }
 }

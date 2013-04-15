@@ -128,7 +128,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         // Finally add thos new items on the new invoice
         invoice.addInvoiceItems(proposedItems);
 
-        return invoice;
+        return proposedItems.size() != 0 ?  invoice : null;
     }
 
     void generateCBAForExistingInvoices(final UUID accountId, final List<Invoice> existingInvoices,
@@ -259,7 +259,6 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                 maxDate = invoice.getTargetDate();
             }
         }
-
         return maxDate;
     }
 
@@ -276,7 +275,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
             final Iterator<InvoiceItem> existingItemIterator = existingInvoiceItems.iterator();
             while (existingItemIterator.hasNext()) {
                 final InvoiceItem existingItem = existingItemIterator.next();
-                if (existingItem.equals(proposedItem)) {
+                if (existingItem.matches(proposedItem)) {
                     existingItemIterator.remove();
                     proposedItemIterator.remove();
                     break;

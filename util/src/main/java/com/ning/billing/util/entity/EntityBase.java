@@ -19,6 +19,8 @@ package com.ning.billing.util.entity;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.ReadableInstant;
+import org.joda.time.ReadablePartial;
 
 public abstract class EntityBase implements Entity {
 
@@ -73,11 +75,10 @@ public abstract class EntityBase implements Entity {
         }
 
         final EntityBase that = (EntityBase) o;
-
-        if (createdDate != null ? !createdDate.equals(that.createdDate) : that.createdDate != null) {
+        if (id != null ? !id.equals(that.id) : that.id != null) {
             return false;
         }
-        if (id != null ? !id.equals(that.id) : that.id != null) {
+        if (createdDate != null ? !createdDate.equals(that.createdDate) : that.createdDate != null) {
             return false;
         }
         if (updatedDate != null ? !updatedDate.equals(that.updatedDate) : that.updatedDate != null) {
@@ -93,5 +94,17 @@ public abstract class EntityBase implements Entity {
         result = 31 * result + (createdDate != null ? createdDate.hashCode() : 0);
         result = 31 * result + (updatedDate != null ? updatedDate.hashCode() : 0);
         return result;
+    }
+
+    protected <T> int safeCompareTo(final Comparable<T> c1, final T c2) {
+        if (c1 == null && c2 == null) {
+            return 0;
+        } else if (c1 == null) {
+            return -1;
+        } else if (c2 == null) {
+            return 1;
+        } else {
+            return c1.compareTo(c2);
+        }
     }
 }

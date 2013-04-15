@@ -164,6 +164,11 @@ public class MockRecurringInvoiceItem extends EntityBase implements InvoiceItem 
         return reversedItemId;
     }
 
+    @Override
+    public boolean matches(final Object other) {
+        throw new UnsupportedOperationException();
+    }
+
     public boolean reversesItem() {
         return (reversedItemId != null);
     }
@@ -173,103 +178,6 @@ public class MockRecurringInvoiceItem extends EntityBase implements InvoiceItem 
         return rate;
     }
 
-    @Override
-    public int compareTo(final InvoiceItem item) {
-        if (item == null) {
-            return -1;
-        }
-        if (!(item instanceof MockRecurringInvoiceItem)) {
-            return -1;
-        }
-
-        final MockRecurringInvoiceItem that = (MockRecurringInvoiceItem) item;
-        final int compareAccounts = getAccountId().compareTo(that.getAccountId());
-        if (compareAccounts == 0 && bundleId != null) {
-            final int compareBundles = getBundleId().compareTo(that.getBundleId());
-            if (compareBundles == 0 && subscriptionId != null) {
-
-                final int compareSubscriptions = getSubscriptionId().compareTo(that.getSubscriptionId());
-                if (compareSubscriptions == 0) {
-                    final int compareStartDates = getStartDate().compareTo(that.getStartDate());
-                    if (compareStartDates == 0) {
-                        return getEndDate().compareTo(that.getEndDate());
-                    } else {
-                        return compareStartDates;
-                    }
-                } else {
-                    return compareSubscriptions;
-                }
-            } else {
-                return compareBundles;
-            }
-        } else {
-            return compareAccounts;
-        }
-    }
-
-    @Override
-    public boolean equals(final Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-
-        final MockRecurringInvoiceItem that = (MockRecurringInvoiceItem) o;
-
-        if (accountId.compareTo(that.accountId) != 0) {
-            return false;
-        }
-        if (amount.compareTo(that.amount) != 0) {
-            return false;
-        }
-        if (currency != that.currency) {
-            return false;
-        }
-        if (startDate.compareTo(that.startDate) != 0) {
-            return false;
-        }
-        if (endDate.compareTo(that.endDate) != 0) {
-            return false;
-        }
-        if (!phaseName.equals(that.phaseName)) {
-            return false;
-        }
-        if (!planName.equals(that.planName)) {
-            return false;
-        }
-        if (rate.compareTo(that.rate) != 0) {
-            return false;
-        }
-        if (reversedItemId != null ? !reversedItemId.equals(that.reversedItemId) : that.reversedItemId != null) {
-            return false;
-        }
-        if (subscriptionId != null ? !subscriptionId.equals(that.subscriptionId) : that.subscriptionId != null) {
-            return false;
-        }
-        if (bundleId != null ? !bundleId.equals(that.bundleId) : that.bundleId != null) {
-            return false;
-        }
-
-        return true;
-    }
-
-    @Override
-    public int hashCode() {
-        int result = accountId.hashCode();
-        result = 31 * result + (subscriptionId != null ? subscriptionId.hashCode() : 0);
-        result = 31 * result + (bundleId != null ? bundleId.hashCode() : 0);
-        result = 31 * result + planName.hashCode();
-        result = 31 * result + phaseName.hashCode();
-        result = 31 * result + startDate.hashCode();
-        result = 31 * result + endDate.hashCode();
-        result = 31 * result + amount.hashCode();
-        result = 31 * result + rate.hashCode();
-        result = 31 * result + currency.hashCode();
-        result = 31 * result + (reversedItemId != null ? reversedItemId.hashCode() : 0);
-        return result;
-    }
 
     @Override
     public String toString() {
