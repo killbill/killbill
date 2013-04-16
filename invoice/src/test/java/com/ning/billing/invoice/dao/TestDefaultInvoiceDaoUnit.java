@@ -77,7 +77,8 @@ public class TestDefaultInvoiceDaoUnit extends InvoiceTestSuiteNoDB {
         final InvoicePaymentModelDao invoicePayment = Mockito.mock(InvoicePaymentModelDao.class);
         Mockito.when(invoicePayment.getAmount()).thenReturn(paymentAmount);
 
-        final BigDecimal actualRefundAmount = DefaultInvoiceDao.computePositiveRefundAmount(invoicePayment, requestedAmount, invoiceItemIdsWithAmounts);
+        final InvoiceDaoHelper invoiceDaoHelper = new InvoiceDaoHelper();
+        final BigDecimal actualRefundAmount = invoiceDaoHelper.computePositiveRefundAmount(invoicePayment, requestedAmount, invoiceItemIdsWithAmounts);
         Assert.assertEquals(actualRefundAmount, expectedRefundAmount);
     }
 }

@@ -1004,49 +1004,6 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         assertTrue(invoice3.getBalance().compareTo(FIFTEEN.multiply(TWO).add(TWELVE)) == 0);
     }
 
-    @Test(groups = "fast")
-    public void testAccountCredit() throws CatalogApiException, InvoiceApiException {
-        final BillingEventSet billingEventSet = new MockBillingEventSet();
-
-        final LocalDate startDate = new LocalDate(2012, 3, 1);
-        final UUID accountId = UUID.randomUUID();
-        final UUID subscriptionId = UUID.randomUUID();
-        final Plan plan = new MockPlan("original plan");
-        final MockInternationalPrice price10 = new MockInternationalPrice(new DefaultPrice(TEN, Currency.USD));
-        final PlanPhase planPhase = new MockPlanPhase(price10, null, BillingPeriod.MONTHLY, PhaseType.EVERGREEN);
-        final BillingEvent creation = createBillingEvent(subscriptionId, startDate, plan, planPhase, 1);
-        billingEventSet.add(creation);
-
-        final List<Invoice> invoices = new ArrayList<Invoice>();
-
-        final Invoice initialInvoice = generator.generateInvoice(accountId, billingEventSet, null, startDate, Currency.USD);
-        assertNotNull(initialInvoice);
-        assertEquals(initialInvoice.getNumberOfItems(), 1);
-        assertEquals(initialInvoice.getBalance().compareTo(TEN), 0);
-        invoices.add(initialInvoice);
-
-        printDetailInvoice(initialInvoice);
-
-        // add account-level credit
-        final LocalDate creditDate = new LocalDate(startDate.plusDays(5), DateTimeZone.UTC);
-        final Invoice invoiceWithCredit = new DefaultInvoice(accountId, creditDate, creditDate, Currency.USD);
-        final InvoiceItem accountCredit = new CreditBalanceAdjInvoiceItem(invoiceWithCredit.getId(), accountId, creditDate, FIVE, Currency.USD);
-        invoiceWithCredit.addInvoiceItem(accountCredit);
-        invoices.add(invoiceWithCredit);
-
-        printDetailInvoice(invoiceWithCredit);
-
-        // invoice one month after the initial subscription
-        final Invoice finalInvoice = generator.generateInvoice(accountId, billingEventSet, invoices, startDate.plusMonths(1), Currency.USD);
-
-        printDetailInvoice(finalInvoice);
-
-        System.out.println("BALANCE = " + finalInvoice.getBalance());
-        assertEquals(finalInvoice.getBalance().compareTo(FIVE), 0);
-        System.out.println("CBA = " + finalInvoice.getCBAAmount());
-        assertEquals(finalInvoice.getCBAAmount().compareTo(FIVE.negate()), 0);
-        assertEquals(finalInvoice.getNumberOfItems(), 2);
-    }
 
     private void printDetailInvoice(final Invoice invoice) {
         log.info("--------------------  START DETAIL ----------------------");

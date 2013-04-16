@@ -122,9 +122,6 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         // TODO Should this be merged with existing CBA logic in the dao layer ?
         generateCBAForExistingInvoices(accountId, existingInvoices, proposedItems, targetCurrency);
 
-
-        consumeExistingCredit(invoiceId, accountId, existingItems, proposedItems, targetCurrency);
-
         // Finally add thos new items on the new invoice
         invoice.addInvoiceItems(proposedItems);
 
@@ -201,42 +198,6 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
             totalAdjustedOnItem = totalAdjustedOnItem.add(invoiceItem.getAmount());
         }
         return totalAdjustedOnItem.negate();
-    }
-
-    void consumeExistingCredit(final UUID invoiceId, final UUID accountId, final List<InvoiceItem> existingItems,
-                               final List<InvoiceItem> proposedItems, final Currency targetCurrency) {
-
-        BigDecimal totalUnusedCreditAmount = BigDecimal.ZERO;
-        BigDecimal totalAmountOwed = BigDecimal.ZERO;
-
-        for (final InvoiceItem item : existingItems) {
-            if (item.getInvoiceItemType() == InvoiceItemType.CBA_ADJ) {
-                totalUnusedCreditAmount = totalUnusedCreditAmount.add(item.getAmount());
-            }
-        }
-
-        for (final InvoiceItem item : proposedItems) {
-            if (item.getInvoiceItemType() == InvoiceItemType.CBA_ADJ) {
-                totalUnusedCreditAmount = totalUnusedCreditAmount.add(item.getAmount());
-            } else if (item.getInvoiceId().equals(invoiceId)) {
-                totalAmountOwed = totalAmountOwed.add(item.getAmount());
-            }
-        }
-
-        BigDecimal creditAmount = BigDecimal.ZERO;
-        if (totalUnusedCreditAmount.compareTo(BigDecimal.ZERO) > 0) {
-            if (totalAmountOwed.abs().compareTo(totalUnusedCreditAmount.abs()) > 0) {
-                creditAmount = totalUnusedCreditAmount.negate();
-            } else {
-                creditAmount = totalAmountOwed.negate();
-            }
-        }
-
-        if (creditAmount.compareTo(BigDecimal.ZERO) < 0) {
-            final LocalDate creditDate = clock.getUTCToday();
-            final CreditBalanceAdjInvoiceItem creditInvoiceItem = new CreditBalanceAdjInvoiceItem(invoiceId, accountId, creditDate, creditAmount, targetCurrency);
-            proposedItems.add(creditInvoiceItem);
-        }
     }
 
     private void validateTargetDate(final LocalDate targetDate) throws InvoiceApiException {
