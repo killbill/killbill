@@ -20,7 +20,7 @@
     <parent>
         <groupId>com.ning.billing</groupId>
         <artifactId>killbill-osgi-test-bundles</artifactId>
-        <version>0.1.66</version>
+        <version>0.1.67-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>killbill-osgi-bundles-test-payment</artifactId>
