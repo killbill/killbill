@@ -179,7 +179,10 @@ public class BusinessInvoiceDao extends BusinessAnalyticsDaoBase {
         deleteInvoicesAndInvoiceItemsForAccountInTransaction(transactional, account.getAccountRecordId(), account.getTenantRecordId(), context);
 
         for (final BusinessInvoiceModelDao businessInvoice : businessInvoices.keySet()) {
-            createInvoiceInTransaction(transactional, businessInvoice, businessInvoices.get(businessInvoice), context);
+            final Collection<BusinessInvoiceItemBaseModelDao> invoiceItems = businessInvoices.get(businessInvoice);
+            if (invoiceItems != null) {
+                createInvoiceInTransaction(transactional, businessInvoice, invoiceItems, context);
+            }
         }
     }
 
@@ -215,7 +218,7 @@ public class BusinessInvoiceDao extends BusinessAnalyticsDaoBase {
                                                                       final Collection<InvoiceItem> otherInvoiceItems,
                                                                       final Long accountRecordId,
                                                                       final Long tenantRecordId,
-                                                                      final ReportGroup reportGroup,
+                                                                      @Nullable final ReportGroup reportGroup,
                                                                       final TenantContext context) throws AnalyticsRefreshException {
         SubscriptionBundle bundle = null;
         // Subscription and bundle could be null for e.g. credits or adjustments
