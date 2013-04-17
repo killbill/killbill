@@ -33,13 +33,15 @@ import com.ning.billing.util.audit.AuditLog;
  */
 public class BusinessSubscriptionTransitionModelDao extends BusinessModelDaoBase {
 
-    private static final String SUBSCRIPTION_TABLE_NAME = "bst";
+    public static final String SUBSCRIPTION_TABLE_NAME = "bst";
+
     private Long subscriptionEventRecordId;
     private UUID bundleId;
     private String bundleExternalKey;
     private UUID subscriptionId;
     private DateTime requestedTimestamp;
     private String event;
+
     private String prevProductName;
     private String prevProductType;
     private String prevProductCategory;
@@ -53,6 +55,7 @@ public class BusinessSubscriptionTransitionModelDao extends BusinessModelDaoBase
     private Boolean prevBusinessActive;
     private DateTime prevStartDate;
     private String prevState;
+
     private String nextProductName;
     private String nextProductType;
     private String nextProductCategory;

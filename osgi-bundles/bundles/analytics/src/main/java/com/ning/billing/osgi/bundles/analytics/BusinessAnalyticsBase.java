@@ -169,6 +169,22 @@ public abstract class BusinessAnalyticsBase {
         return entitlementUserApi.getBundlesForAccount(accountId, context);
     }
 
+    protected Long getBundleRecordId(final UUID bundleId, final TenantContext context) throws AnalyticsRefreshException {
+        final RecordIdApi recordIdUserApi = getRecordIdUserApi();
+        return recordIdUserApi.getRecordId(bundleId, ObjectType.BUNDLE, context);
+    }
+
+    protected AuditLog getBundleCreationAuditLog(final UUID bundleId, final TenantContext context) throws AnalyticsRefreshException {
+        final List<AuditLog> auditLogsForBundle = getAuditUserApi().getAuditLogs(bundleId, ObjectType.BUNDLE, AuditLevel.MINIMAL, context);
+        for (final AuditLog auditLog : auditLogsForBundle) {
+            if (auditLog.getChangeType().equals(ChangeType.INSERT)) {
+                return auditLog;
+            }
+        }
+
+        throw new AnalyticsRefreshException("Unable to find Bundle creation audit log for id " + bundleId);
+    }
+
     protected Subscription getSubscription(final UUID subscriptionId, final TenantContext context) throws AnalyticsRefreshException {
         final EntitlementUserApi entitlementUserApi = getEntitlementUserApi();
 

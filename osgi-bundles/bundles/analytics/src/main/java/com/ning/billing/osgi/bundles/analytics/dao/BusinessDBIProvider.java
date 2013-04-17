@@ -28,6 +28,7 @@ import com.ning.billing.commons.jdbi.mapper.LowerToCamelBeanMapperFactory;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessAccountFieldModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessAccountModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessAccountTagModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessBundleSummaryModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceAdjustmentModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceFieldModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceItemAdjustmentModelDao;
@@ -69,6 +70,7 @@ public class BusinessDBIProvider {
         dbi.registerMapper(new LowerToCamelBeanMapperFactory(BusinessInvoiceTagModelDao.class));
         dbi.registerMapper(new LowerToCamelBeanMapperFactory(BusinessOverdueStatusModelDao.class));
         dbi.registerMapper(new LowerToCamelBeanMapperFactory(BusinessSubscriptionTransitionModelDao.class));
+        dbi.registerMapper(new LowerToCamelBeanMapperFactory(BusinessBundleSummaryModelDao.class));
 
         dbi.setStatementLocator(new AnalyticsStatementLocator());
 

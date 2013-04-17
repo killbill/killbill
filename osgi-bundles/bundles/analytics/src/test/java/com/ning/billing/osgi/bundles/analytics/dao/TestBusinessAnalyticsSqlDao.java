@@ -29,6 +29,7 @@ import com.ning.billing.osgi.bundles.analytics.AnalyticsTestSuiteWithEmbeddedDB;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessAccountFieldModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessAccountModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessAccountTagModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessBundleSummaryModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessFieldModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceFieldModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceItemBaseModelDao;
@@ -278,6 +279,48 @@ public class TestBusinessAnalyticsSqlDao extends AnalyticsTestSuiteWithEmbeddedD
         // Delete and verify it doesn't exist anymore
         analyticsSqlDao.deleteByAccountRecordId(businessSubscriptionTransitionModelDao.getTableName(), accountRecordId, tenantRecordId, callContext);
         Assert.assertEquals(analyticsSqlDao.getSubscriptionTransitionsByAccountRecordId(accountRecordId, tenantRecordId, callContext).size(), 0);
+    }
+
+    @Test(groups = "slow")
+    public void testSqlDaoForBundleSummary() throws Exception {
+        final DateTime startDate = new DateTime(2012, 6, 5, 4, 3, 12, DateTimeZone.UTC);
+        final DateTime requestedTimestamp = new DateTime(2012, 7, 21, 10, 10, 10, DateTimeZone.UTC);
+
+        final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.valueOf("ADD_BASE");
+        final BusinessSubscription previousSubscription = null;
+        final BusinessSubscription nextSubscription = new BusinessSubscription(null, null, null, Currency.GBP, startDate, SubscriptionState.ACTIVE);
+        final BusinessSubscriptionTransitionModelDao businessSubscriptionTransitionModelDao = new BusinessSubscriptionTransitionModelDao(account,
+                                                                                                                                         accountRecordId,
+                                                                                                                                         bundle,
+                                                                                                                                         subscriptionTransition,
+                                                                                                                                         subscriptionEventRecordId,
+                                                                                                                                         requestedTimestamp,
+                                                                                                                                         event,
+                                                                                                                                         previousSubscription,
+                                                                                                                                         nextSubscription,
+                                                                                                                                         auditLog,
+                                                                                                                                         tenantRecordId,
+                                                                                                                                         reportGroup);
+        final BusinessBundleSummaryModelDao bundleSummaryModelDao = new BusinessBundleSummaryModelDao(account,
+                                                                                                      accountRecordId,
+                                                                                                      bundle,
+                                                                                                      bundleRecordId,
+                                                                                                      3,
+                                                                                                      businessSubscriptionTransitionModelDao,
+                                                                                                      auditLog,
+                                                                                                      tenantRecordId,
+                                                                                                      reportGroup);
+        // Check the record doesn't exist yet
+        Assert.assertEquals(analyticsSqlDao.getBundleSummariesByAccountRecordId(accountRecordId, tenantRecordId, callContext).size(), 0);
+
+        // Create and check we can retrieve it
+        analyticsSqlDao.create(bundleSummaryModelDao.getTableName(), bundleSummaryModelDao, callContext);
+        Assert.assertEquals(analyticsSqlDao.getBundleSummariesByAccountRecordId(accountRecordId, tenantRecordId, callContext).size(), 1);
+        Assert.assertEquals(analyticsSqlDao.getBundleSummariesByAccountRecordId(accountRecordId, tenantRecordId, callContext).get(0), bundleSummaryModelDao);
+
+        // Delete and verify it doesn't exist anymore
+        analyticsSqlDao.deleteByAccountRecordId(bundleSummaryModelDao.getTableName(), accountRecordId, tenantRecordId, callContext);
+        Assert.assertEquals(analyticsSqlDao.getBundleSummariesByAccountRecordId(accountRecordId, tenantRecordId, callContext).size(), 0);
     }
 
     @Test(groups = "slow")

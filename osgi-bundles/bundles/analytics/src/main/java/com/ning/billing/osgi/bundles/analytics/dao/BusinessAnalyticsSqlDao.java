@@ -28,6 +28,7 @@ import com.ning.billing.commons.jdbi.binder.SmartBindBean;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessAccountFieldModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessAccountModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessAccountTagModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessBundleSummaryModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceAdjustmentModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceFieldModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceItemAdjustmentModelDao;
@@ -70,6 +71,11 @@ public interface BusinessAnalyticsSqlDao extends Transactional<BusinessAnalytics
     public List<BusinessSubscriptionTransitionModelDao> getSubscriptionTransitionsByAccountRecordId(@Bind("accountRecordId") final Long accountRecordId,
                                                                                                     @Bind("tenantRecordId") final Long tenantRecordId,
                                                                                                     final TenantContext tenantContext);
+
+    @SqlQuery
+    public List<BusinessBundleSummaryModelDao> getBundleSummariesByAccountRecordId(@Bind("accountRecordId") final Long accountRecordId,
+                                                                                   @Bind("tenantRecordId") final Long tenantRecordId,
+                                                                                   final TenantContext tenantContext);
 
     @SqlQuery
     public List<BusinessOverdueStatusModelDao> getOverdueStatusesByAccountRecordId(@Bind("accountRecordId") final Long accountRecordId,
