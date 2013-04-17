@@ -54,6 +54,7 @@ public class TestBusinessAnalyticsSqlDao extends AnalyticsTestSuiteWithEmbeddedD
                                                                                     new BigDecimal("1.2345"),
                                                                                     invoice,
                                                                                     payment,
+                                                                                    3,
                                                                                     auditLog,
                                                                                     tenantRecordId,
                                                                                     reportGroup);

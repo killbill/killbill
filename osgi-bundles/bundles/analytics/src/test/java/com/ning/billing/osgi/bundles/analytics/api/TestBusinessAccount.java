@@ -33,6 +33,7 @@ public class TestBusinessAccount extends AnalyticsTestSuiteNoDB {
                                                                                     BigDecimal.ONE,
                                                                                     invoice,
                                                                                     payment,
+                                                                                    3,
                                                                                     auditLog,
                                                                                     tenantRecordId,
                                                                                     reportGroup);
@@ -62,5 +63,6 @@ public class TestBusinessAccount extends AnalyticsTestSuiteNoDB {
         Assert.assertEquals(businessAccount.getLastInvoiceDate(), accountModelDao.getLastInvoiceDate());
         Assert.assertEquals(businessAccount.getLastPaymentDate(), accountModelDao.getLastPaymentDate());
         Assert.assertEquals(businessAccount.getLastPaymentStatus(), accountModelDao.getLastPaymentStatus());
+        Assert.assertEquals(businessAccount.getNbActiveBundles(), accountModelDao.getNbActiveBundles());
     }
 }

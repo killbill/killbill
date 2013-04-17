@@ -120,6 +120,7 @@ create table bac (
 , last_invoice_date date default null
 , last_payment_date datetime default null
 , last_payment_status varchar(255) default null
+, nb_active_bundles int(11) default 0
 , created_date datetime not null
 , created_by varchar(50) not null
 , created_reason_code varchar(255) default null

@@ -179,6 +179,7 @@ insert into bac (
 , last_invoice_date
 , last_payment_date
 , last_payment_status
+, nb_active_bundles
 , created_date
 , created_by
 , created_reason_code
@@ -212,6 +213,7 @@ insert into bac (
 , :lastInvoiceDate
 , :lastPaymentDate
 , :lastPaymentStatus
+, :nbActiveBundles
 , :createdDate
 , :createdBy
 , :createdReasonCode
