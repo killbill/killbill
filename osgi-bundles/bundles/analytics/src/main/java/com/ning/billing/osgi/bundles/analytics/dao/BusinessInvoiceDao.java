@@ -371,7 +371,9 @@ public class BusinessInvoiceDao extends BusinessAnalyticsDaoBase {
                 if (repairedInvoiceItem.getInvoiceItemType().equals(invoiceItem.getInvoiceItemType()) &&
                     repairedInvoiceItem.getSubscriptionId().equals(invoiceItem.getSubscriptionId()) &&
                     repairedInvoiceItem.getStartDate().compareTo(invoiceItem.getStartDate()) == 0 &&
-                    !repairedInvoiceItem.getEndDate().isBefore(invoiceItem.getEndDate()) &&
+                    // FIXED items have a null end date
+                    ((repairedInvoiceItem.getEndDate() == null && invoiceItem.getEndDate() == null) ||
+                     (repairedInvoiceItem.getEndDate() != null && invoiceItem.getEndDate() != null && !repairedInvoiceItem.getEndDate().isBefore(invoiceItem.getEndDate()))) &&
                     !repairedInvoiceItem.getId().equals(invoiceItem.getId())) {
                     if (reparationItem == null) {
                         reparationItem = invoiceItem;
