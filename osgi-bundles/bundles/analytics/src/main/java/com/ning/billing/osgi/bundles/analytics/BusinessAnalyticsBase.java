@@ -420,9 +420,18 @@ public abstract class BusinessAnalyticsBase {
         final PaymentApi paymentApi = getPaymentUserApi();
 
         try {
+            // Try to get all payment methods, including deleted ones, with plugin information
             return paymentApi.getPaymentMethodById(paymentMethodId, true, true, context);
         } catch (PaymentApiException e) {
             logService.log(LogService.LOG_INFO, "Error retrieving payment method for id " + paymentMethodId + " (already deleted?)", e);
+        }
+
+        try {
+            // If we come here, it is possible that the plugin couldn't answer about the payment method, maybe
+            // because it was deleted in the gateway. Try to return the Kill Bill specific info only
+            return paymentApi.getPaymentMethodById(paymentMethodId, true, false, context);
+        } catch (PaymentApiException e) {
+            logService.log(LogService.LOG_INFO, "Error retrieving payment method for id " + paymentMethodId, e);
             return null;
         }
     }
