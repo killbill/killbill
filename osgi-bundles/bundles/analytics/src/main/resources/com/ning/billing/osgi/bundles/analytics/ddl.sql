@@ -5,11 +5,11 @@ drop table if exists bst;
 create table bst (
   record_id int(11) unsigned not null auto_increment
 , subscription_event_record_id int(11) unsigned default null
-, bundle_id char(36) not null
-, bundle_external_key varchar(50) not null
-, subscription_id char(36) not null
-, requested_timestamp datetime not null
-, event varchar(50) not null
+, bundle_id char(36) default null
+, bundle_external_key varchar(50) default null
+, subscription_id char(36) default null
+, requested_timestamp datetime default null
+, event varchar(50) default null
 , prev_product_name varchar(50) default null
 , prev_product_type varchar(50) default null
 , prev_product_category varchar(50) default null
@@ -37,13 +37,13 @@ create table bst (
 , next_business_active bool default true
 , next_start_date datetime default null
 , next_end_date datetime default null
-, created_date datetime not null
-, created_by varchar(50) not null
+, created_date datetime default null
+, created_by varchar(50) default null
 , created_reason_code varchar(255) default null
 , created_comments varchar(255) default null
-, account_id char(36) not null
-, account_name varchar(100) not null
-, account_external_key varchar(50) not null
+, account_id char(36) default null
+, account_name varchar(100) default null
+, account_external_key varchar(50) default null
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
 , report_group enum('default', 'test', 'partner') not null
@@ -59,10 +59,10 @@ drop table if exists bbs;
 create table bbs (
   record_id int(11) unsigned not null auto_increment
 , bundle_record_id int(11) unsigned default null
-, bundle_id char(36) not null
-, bundle_external_key varchar(50) not null
-, subscription_id char(36) not null
-, bundle_account_rank int(11) not null
+, bundle_id char(36) default null
+, bundle_external_key varchar(50) default null
+, subscription_id char(36) default null
+, bundle_account_rank int(11) default null
 , charged_through_date datetime default null
 , current_product_name varchar(50) default null
 , current_product_type varchar(50) default null
@@ -78,13 +78,13 @@ create table bbs (
 , current_business_active bool default true
 , current_start_date datetime default null
 , current_end_date datetime default null
-, created_date datetime not null
-, created_by varchar(50) not null
+, created_date datetime default null
+, created_by varchar(50) default null
 , created_reason_code varchar(255) default null
 , created_comments varchar(255) default null
-, account_id char(36) not null
-, account_name varchar(100) not null
-, account_external_key varchar(50) not null
+, account_id char(36) default null
+, account_name varchar(100) default null
+, account_external_key varchar(50) default null
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
 , report_group enum('default', 'test', 'partner') not null
@@ -99,8 +99,8 @@ create index bbs_tenant_account_record_id on bbs(tenant_record_id, account_recor
 drop table if exists bac;
 create table bac (
   record_id int(11) unsigned not null auto_increment
-, email varchar(128) not null
-, first_name_length int not null
+, email varchar(128) default null
+, first_name_length int(11) default null
 , currency char(3) default null
 , billing_cycle_day_local int default null
 , payment_method_id char(36) default null
@@ -115,20 +115,20 @@ create table bac (
 , postal_code varchar(16) default null
 , phone varchar(25) default null
 , migrated bool default false
-, notified_for_invoices boolean not null
+, notified_for_invoices boolean default null
 , balance numeric(10, 4) default 0
 , last_invoice_date date default null
 , last_payment_date datetime default null
 , last_payment_status varchar(255) default null
 , nb_active_bundles int(11) default 0
-, created_date datetime not null
-, created_by varchar(50) not null
+, created_date datetime default null
+, created_by varchar(50) default null
 , created_reason_code varchar(255) default null
 , created_comments varchar(255) default null
-, updated_date datetime not null
-, account_id char(36) not null
-, account_name varchar(100) not null
-, account_external_key varchar(50) not null
+, updated_date datetime default null
+, account_id char(36) default null
+, account_name varchar(100) default null
+, account_external_key varchar(50) default null
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
 , report_group enum('default', 'test', 'partner') not null
@@ -144,23 +144,23 @@ drop table if exists bin;
 create table bin (
   record_id int(11) unsigned not null auto_increment
 , invoice_record_id int(11) unsigned default null
-, invoice_id char(36) not null
+, invoice_id char(36) default null
 , invoice_number bigint default null
-, invoice_date date not null
-, target_date date not null
-, currency char(50) not null
+, invoice_date date default null
+, target_date date default null
+, currency char(50) default null
 , balance numeric(10, 4) default 0
 , amount_paid numeric(10, 4) default 0
 , amount_charged numeric(10, 4) default 0
 , original_amount_charged numeric(10, 4) default 0
 , amount_credited numeric(10, 4) default 0
-, created_date datetime not null
-, created_by varchar(50) not null
+, created_date datetime default null
+, created_by varchar(50) default null
 , created_reason_code varchar(255) default null
 , created_comments varchar(255) default null
-, account_id char(36) not null
-, account_name varchar(100) not null
-, account_external_key varchar(50) not null
+, account_id char(36) default null
+, account_name varchar(100) default null
+, account_external_key varchar(50) default null
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
 , report_group enum('default', 'test', 'partner') not null
@@ -178,19 +178,19 @@ create table bia (
   record_id int(11) unsigned not null auto_increment
 , invoice_item_record_id int(11) unsigned default null
 , second_invoice_item_record_id int(11) unsigned default null
-, item_id char(36) not null
-, invoice_id char(36) not null
+, item_id char(36) default null
+, invoice_id char(36) default null
 , invoice_number bigint default null
-, invoice_created_date datetime not null
-, invoice_date date not null
-, invoice_target_date date not null
-, invoice_currency char(50) not null
+, invoice_created_date datetime default null
+, invoice_date date default null
+, invoice_target_date date default null
+, invoice_currency char(50) default null
 , invoice_balance numeric(10, 4) default 0
 , invoice_amount_paid numeric(10, 4) default 0
 , invoice_amount_charged numeric(10, 4) default 0
 , invoice_original_amount_charged numeric(10, 4) default 0
 , invoice_amount_credited numeric(10, 4) default 0
-, item_type char(50) not null
+, item_type char(50) default null
 , revenue_recognizable bool default true
 , bundle_external_key varchar(50) default null
 , product_name varchar(50) default null
@@ -204,13 +204,13 @@ create table bia (
 , amount numeric(10, 4) default 0
 , currency char(50) default null
 , linked_item_id char(36) default null
-, created_date datetime not null
-, created_by varchar(50) not null
+, created_date datetime default null
+, created_by varchar(50) default null
 , created_reason_code varchar(255) default null
 , created_comments varchar(255) default null
-, account_id char(36) not null
-, account_name varchar(100) not null
-, account_external_key varchar(50) not null
+, account_id char(36) default null
+, account_name varchar(100) default null
+, account_external_key varchar(50) default null
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
 , report_group enum('default', 'test', 'partner') not null
@@ -228,19 +228,19 @@ create table bii (
   record_id int(11) unsigned not null auto_increment
 , invoice_item_record_id int(11) unsigned default null
 , second_invoice_item_record_id int(11) unsigned default null
-, item_id char(36) not null
-, invoice_id char(36) not null
+, item_id char(36) default null
+, invoice_id char(36) default null
 , invoice_number bigint default null
-, invoice_created_date datetime not null
-, invoice_date date not null
-, invoice_target_date date not null
-, invoice_currency char(50) not null
+, invoice_created_date datetime default null
+, invoice_date date default null
+, invoice_target_date date default null
+, invoice_currency char(50) default null
 , invoice_balance numeric(10, 4) default 0
 , invoice_amount_paid numeric(10, 4) default 0
 , invoice_amount_charged numeric(10, 4) default 0
 , invoice_original_amount_charged numeric(10, 4) default 0
 , invoice_amount_credited numeric(10, 4) default 0
-, item_type char(50) not null
+, item_type char(50) default null
 , revenue_recognizable bool default true
 , bundle_external_key varchar(50) default null
 , product_name varchar(50) default null
@@ -254,13 +254,13 @@ create table bii (
 , amount numeric(10, 4) default 0
 , currency char(50) default null
 , linked_item_id char(36) default null
-, created_date datetime not null
-, created_by varchar(50) not null
+, created_date datetime default null
+, created_by varchar(50) default null
 , created_reason_code varchar(255) default null
 , created_comments varchar(255) default null
-, account_id char(36) not null
-, account_name varchar(100) not null
-, account_external_key varchar(50) not null
+, account_id char(36) default null
+, account_name varchar(100) default null
+, account_external_key varchar(50) default null
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
 , report_group enum('default', 'test', 'partner') not null
@@ -278,19 +278,19 @@ create table biia (
   record_id int(11) unsigned not null auto_increment
 , invoice_item_record_id int(11) unsigned default null
 , second_invoice_item_record_id int(11) unsigned default null
-, item_id char(36) not null
-, invoice_id char(36) not null
+, item_id char(36) default null
+, invoice_id char(36) default null
 , invoice_number bigint default null
-, invoice_created_date datetime not null
-, invoice_date date not null
-, invoice_target_date date not null
-, invoice_currency char(50) not null
+, invoice_created_date datetime default null
+, invoice_date date default null
+, invoice_target_date date default null
+, invoice_currency char(50) default null
 , invoice_balance numeric(10, 4) default 0
 , invoice_amount_paid numeric(10, 4) default 0
 , invoice_amount_charged numeric(10, 4) default 0
 , invoice_original_amount_charged numeric(10, 4) default 0
 , invoice_amount_credited numeric(10, 4) default 0
-, item_type char(50) not null
+, item_type char(50) default null
 , revenue_recognizable bool default true
 , bundle_external_key varchar(50) default null
 , product_name varchar(50) default null
@@ -304,13 +304,13 @@ create table biia (
 , amount numeric(10, 4) default 0
 , currency char(50) default null
 , linked_item_id char(36) default null
-, created_date datetime not null
-, created_by varchar(50) not null
+, created_date datetime default null
+, created_by varchar(50) default null
 , created_reason_code varchar(255) default null
 , created_comments varchar(255) default null
-, account_id char(36) not null
-, account_name varchar(100) not null
-, account_external_key varchar(50) not null
+, account_id char(36) default null
+, account_name varchar(100) default null
+, account_external_key varchar(50) default null
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
 , report_group enum('default', 'test', 'partner') not null
@@ -328,19 +328,19 @@ create table biic (
   record_id int(11) unsigned not null auto_increment
 , invoice_item_record_id int(11) unsigned default null
 , second_invoice_item_record_id int(11) unsigned default null
-, item_id char(36) not null
-, invoice_id char(36) not null
+, item_id char(36) default null
+, invoice_id char(36) default null
 , invoice_number bigint default null
-, invoice_created_date datetime not null
-, invoice_date date not null
-, invoice_target_date date not null
-, invoice_currency char(50) not null
+, invoice_created_date datetime default null
+, invoice_date date default null
+, invoice_target_date date default null
+, invoice_currency char(50) default null
 , invoice_balance numeric(10, 4) default 0
 , invoice_amount_paid numeric(10, 4) default 0
 , invoice_amount_charged numeric(10, 4) default 0
 , invoice_original_amount_charged numeric(10, 4) default 0
 , invoice_amount_credited numeric(10, 4) default 0
-, item_type char(50) not null
+, item_type char(50) default null
 , revenue_recognizable bool default true
 , bundle_external_key varchar(50) default null
 , product_name varchar(50) default null
@@ -354,13 +354,13 @@ create table biic (
 , amount numeric(10, 4) default 0
 , currency char(50) default null
 , linked_item_id char(36) default null
-, created_date datetime not null
-, created_by varchar(50) not null
+, created_date datetime default null
+, created_by varchar(50) default null
 , created_reason_code varchar(255) default null
 , created_comments varchar(255) default null
-, account_id char(36) not null
-, account_name varchar(100) not null
-, account_external_key varchar(50) not null
+, account_id char(36) default null
+, account_name varchar(100) default null
+, account_external_key varchar(50) default null
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
 , report_group enum('default', 'test', 'partner') not null
@@ -377,13 +377,13 @@ drop table if exists bip;
 create table bip (
   record_id int(11) unsigned not null auto_increment
 , invoice_payment_record_id int(11) unsigned default null
-, invoice_payment_id char(36) not null
-, invoice_id char(36) not null
+, invoice_payment_id char(36) default null
+, invoice_id char(36) default null
 , invoice_number bigint default null
-, invoice_created_date datetime not null
-, invoice_date date not null
-, invoice_target_date date not null
-, invoice_currency char(50) not null
+, invoice_created_date datetime default null
+, invoice_date date default null
+, invoice_target_date date default null
+, invoice_currency char(50) default null
 , invoice_balance numeric(10, 4) default 0
 , invoice_amount_paid numeric(10, 4) default 0
 , invoice_amount_charged numeric(10, 4) default 0
@@ -417,13 +417,13 @@ create table bip (
 , plugin_pm_state varchar(255) default null
 , plugin_pm_zip varchar(255) default null
 , plugin_pm_country varchar(255) default null
-, created_date datetime not null
-, created_by varchar(50) not null
+, created_date datetime default null
+, created_by varchar(50) default null
 , created_reason_code varchar(255) default null
 , created_comments varchar(255) default null
-, account_id char(36) not null
-, account_name varchar(100) not null
-, account_external_key varchar(50) not null
+, account_id char(36) default null
+, account_name varchar(100) default null
+, account_external_key varchar(50) default null
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
 , report_group enum('default', 'test', 'partner') not null
@@ -440,13 +440,13 @@ drop table if exists bipr;
 create table bipr (
   record_id int(11) unsigned not null auto_increment
 , invoice_payment_record_id int(11) unsigned default null
-, invoice_payment_id char(36) not null
-, invoice_id char(36) not null
+, invoice_payment_id char(36) default null
+, invoice_id char(36) default null
 , invoice_number bigint default null
-, invoice_created_date datetime not null
-, invoice_date date not null
-, invoice_target_date date not null
-, invoice_currency char(50) not null
+, invoice_created_date datetime default null
+, invoice_date date default null
+, invoice_target_date date default null
+, invoice_currency char(50) default null
 , invoice_balance numeric(10, 4) default 0
 , invoice_amount_paid numeric(10, 4) default 0
 , invoice_amount_charged numeric(10, 4) default 0
@@ -481,13 +481,13 @@ create table bipr (
 , plugin_pm_state varchar(255) default null
 , plugin_pm_zip varchar(255) default null
 , plugin_pm_country varchar(255) default null
-, created_date datetime not null
-, created_by varchar(50) not null
+, created_date datetime default null
+, created_by varchar(50) default null
 , created_reason_code varchar(255) default null
 , created_comments varchar(255) default null
-, account_id char(36) not null
-, account_name varchar(100) not null
-, account_external_key varchar(50) not null
+, account_id char(36) default null
+, account_name varchar(100) default null
+, account_external_key varchar(50) default null
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
 , report_group enum('default', 'test', 'partner') not null
@@ -504,13 +504,13 @@ drop table if exists bipc;
 create table bipc (
   record_id int(11) unsigned not null auto_increment
 , invoice_payment_record_id int(11) unsigned default null
-, invoice_payment_id char(36) not null
-, invoice_id char(36) not null
+, invoice_payment_id char(36) default null
+, invoice_id char(36) default null
 , invoice_number bigint default null
-, invoice_created_date datetime not null
-, invoice_date date not null
-, invoice_target_date date not null
-, invoice_currency char(50) not null
+, invoice_created_date datetime default null
+, invoice_date date default null
+, invoice_target_date date default null
+, invoice_currency char(50) default null
 , invoice_balance numeric(10, 4) default 0
 , invoice_amount_paid numeric(10, 4) default 0
 , invoice_amount_charged numeric(10, 4) default 0
@@ -544,13 +544,13 @@ create table bipc (
 , plugin_pm_state varchar(255) default null
 , plugin_pm_zip varchar(255) default null
 , plugin_pm_country varchar(255) default null
-, created_date datetime not null
-, created_by varchar(50) not null
+, created_date datetime default null
+, created_by varchar(50) default null
 , created_reason_code varchar(255) default null
 , created_comments varchar(255) default null
-, account_id char(36) not null
-, account_name varchar(100) not null
-, account_external_key varchar(50) not null
+, account_id char(36) default null
+, account_name varchar(100) default null
+, account_external_key varchar(50) default null
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
 , report_group enum('default', 'test', 'partner') not null
@@ -566,18 +566,18 @@ drop table if exists bos;
 create table bos (
   record_id int(11) unsigned not null auto_increment
 , blocking_state_record_id int(11) unsigned default null
-, bundle_id char(36) not null
-, bundle_external_key varchar(50) not null
-, status varchar(50) not null
+, bundle_id char(36) default null
+, bundle_external_key varchar(50) default null
+, status varchar(50) default null
 , start_date datetime default null
 , end_date datetime default null
-, created_date datetime not null
-, created_by varchar(50) not null
+, created_date datetime default null
+, created_by varchar(50) default null
 , created_reason_code varchar(255) default null
 , created_comments varchar(255) default null
-, account_id char(36) not null
-, account_name varchar(100) not null
-, account_external_key varchar(50) not null
+, account_id char(36) default null
+, account_name varchar(100) default null
+, account_external_key varchar(50) default null
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
 , report_group enum('default', 'test', 'partner') not null
@@ -591,14 +591,14 @@ drop table if exists bac_tags;
 create table bac_tags (
   record_id int(11) unsigned not null auto_increment
 , tag_record_id int(11) unsigned default null
-, name varchar(50) not null
-, created_date datetime not null
-, created_by varchar(50) not null
+, name varchar(50) default null
+, created_date datetime default null
+, created_by varchar(50) default null
 , created_reason_code varchar(255) default null
 , created_comments varchar(255) default null
-, account_id char(36) not null
-, account_name varchar(100) not null
-, account_external_key varchar(50) not null
+, account_id char(36) default null
+, account_name varchar(100) default null
+, account_external_key varchar(50) default null
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
 , report_group enum('default', 'test', 'partner') not null
@@ -612,15 +612,15 @@ drop table if exists bin_tags;
 create table bin_tags (
   record_id int(11) unsigned not null auto_increment
 , tag_record_id int(11) unsigned default null
-, invoice_id char(36) not null
-, name varchar(50) not null
-, created_date datetime not null
-, created_by varchar(50) not null
+, invoice_id char(36) default null
+, name varchar(50) default null
+, created_date datetime default null
+, created_by varchar(50) default null
 , created_reason_code varchar(255) default null
 , created_comments varchar(255) default null
-, account_id char(36) not null
-, account_name varchar(100) not null
-, account_external_key varchar(50) not null
+, account_id char(36) default null
+, account_name varchar(100) default null
+, account_external_key varchar(50) default null
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
 , report_group enum('default', 'test', 'partner') not null
@@ -634,15 +634,15 @@ drop table if exists bip_tags;
 create table bip_tags (
   record_id int(11) unsigned not null auto_increment
 , tag_record_id int(11) unsigned default null
-, invoice_payment_id char(36) not null
-, name varchar(50) not null
-, created_date datetime not null
-, created_by varchar(50) not null
+, invoice_payment_id char(36) default null
+, name varchar(50) default null
+, created_date datetime default null
+, created_by varchar(50) default null
 , created_reason_code varchar(255) default null
 , created_comments varchar(255) default null
-, account_id char(36) not null
-, account_name varchar(100) not null
-, account_external_key varchar(50) not null
+, account_id char(36) default null
+, account_name varchar(100) default null
+, account_external_key varchar(50) default null
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
 , report_group enum('default', 'test', 'partner') not null
@@ -656,15 +656,15 @@ drop table if exists bac_fields;
 create table bac_fields (
   record_id int(11) unsigned not null auto_increment
 , custom_field_record_id int(11) unsigned default null
-, name varchar(50) not null
+, name varchar(50) default null
 , value varchar(255) default null
-, created_date datetime not null
-, created_by varchar(50) not null
+, created_date datetime default null
+, created_by varchar(50) default null
 , created_reason_code varchar(255) default null
 , created_comments varchar(255) default null
-, account_id char(36) not null
-, account_name varchar(100) not null
-, account_external_key varchar(50) not null
+, account_id char(36) default null
+, account_name varchar(100) default null
+, account_external_key varchar(50) default null
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
 , report_group enum('default', 'test', 'partner') not null
@@ -678,16 +678,16 @@ drop table if exists bin_fields;
 create table bin_fields (
   record_id int(11) unsigned not null auto_increment
 , custom_field_record_id int(11) unsigned default null
-, invoice_id char(36) not null
-, name varchar(50) not null
+, invoice_id char(36) default null
+, name varchar(50) default null
 , value varchar(255) default null
-, created_date datetime not null
-, created_by varchar(50) not null
+, created_date datetime default null
+, created_by varchar(50) default null
 , created_reason_code varchar(255) default null
 , created_comments varchar(255) default null
-, account_id char(36) not null
-, account_name varchar(100) not null
-, account_external_key varchar(50) not null
+, account_id char(36) default null
+, account_name varchar(100) default null
+, account_external_key varchar(50) default null
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
 , report_group enum('default', 'test', 'partner') not null
@@ -701,16 +701,16 @@ drop table if exists bip_fields;
 create table bip_fields (
   record_id int(11) unsigned not null auto_increment
 , custom_field_record_id int(11) unsigned default null
-, invoice_payment_id char(36) not null
-, name varchar(50) not null
+, invoice_payment_id char(36) default null
+, name varchar(50) default null
 , value varchar(255) default null
-, created_date datetime not null
-, created_by varchar(50) not null
+, created_date datetime default null
+, created_by varchar(50) default null
 , created_reason_code varchar(255) default null
 , created_comments varchar(255) default null
-, account_id char(36) not null
-, account_name varchar(100) not null
-, account_external_key varchar(50) not null
+, account_id char(36) default null
+, account_name varchar(100) default null
+, account_external_key varchar(50) default null
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
 , report_group enum('default', 'test', 'partner') not null

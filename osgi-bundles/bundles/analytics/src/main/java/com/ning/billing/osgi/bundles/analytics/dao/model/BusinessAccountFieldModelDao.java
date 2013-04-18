@@ -30,7 +30,7 @@ public class BusinessAccountFieldModelDao extends BusinessFieldModelDao {
                                         final Long accountRecordId,
                                         final CustomField customField,
                                         final Long customFieldRecordId,
-                                        final AuditLog creationAuditLog,
+                                        @Nullable final AuditLog creationAuditLog,
                                         final Long tenantRecordId,
                                         @Nullable final ReportGroup reportGroup) {
         super(account,

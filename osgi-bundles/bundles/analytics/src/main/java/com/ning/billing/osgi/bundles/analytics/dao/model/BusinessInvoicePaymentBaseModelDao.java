@@ -92,7 +92,7 @@ public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDa
                                                             final Payment payment,
                                                             final Refund refund,
                                                             final PaymentMethod paymentMethod,
-                                                            final AuditLog creationAuditLog,
+                                                            @Nullable final AuditLog creationAuditLog,
                                                             final Long tenantRecordId,
                                                             @Nullable final ReportGroup reportGroup) {
         if (invoicePayment.getType().equals(InvoicePaymentType.REFUND)) {
@@ -250,7 +250,7 @@ public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDa
                                                  final Payment payment,
                                                  @Nullable final Refund refund,
                                                  final PaymentMethod paymentMethod,
-                                                 final AuditLog creationAuditLog,
+                                                 @Nullable final AuditLog creationAuditLog,
                                                  final Long tenantRecordId,
                                                  @Nullable final ReportGroup reportGroup) {
         this(invoicePaymentRecordId,
@@ -296,9 +296,9 @@ public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDa
              paymentMethod.getPluginDetail() != null ? paymentMethod.getPluginDetail().getZip() : null,
              paymentMethod.getPluginDetail() != null ? paymentMethod.getPluginDetail().getCountry() : null,
              invoicePayment.getCreatedDate(),
-             creationAuditLog.getUserName(),
-             creationAuditLog.getReasonCode(),
-             creationAuditLog.getComment(),
+             creationAuditLog != null ? creationAuditLog.getUserName() : null,
+             creationAuditLog != null ? creationAuditLog.getReasonCode() : null,
+             creationAuditLog != null ? creationAuditLog.getComment() : null,
              account.getId(),
              account.getName(),
              account.getExternalKey(),

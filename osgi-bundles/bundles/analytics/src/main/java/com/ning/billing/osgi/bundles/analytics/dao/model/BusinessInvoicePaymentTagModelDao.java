@@ -36,7 +36,7 @@ public class BusinessInvoicePaymentTagModelDao extends BusinessTagModelDao {
                                              final Tag tag,
                                              final Long tagRecordId,
                                              final TagDefinition tagDefinition,
-                                             final AuditLog creationAuditLog,
+                                             @Nullable final AuditLog creationAuditLog,
                                              final Long tenantRecordId,
                                              @Nullable final ReportGroup reportGroup) {
         super(account,

@@ -69,7 +69,12 @@ import com.ning.billing.util.tag.TagDefinition;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillAPI;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillLogService;
 
-// Wrapper around Kill Bill APIs
+/**
+ * Wrapper around Kill Bill APIs
+ * <p/>
+ * Note: the code is merciful in case audit logs cannot be retrieved. This is because the auditing code
+ * is fairly recent, and we want this plugin to support early versions of Kill Bill (with non audited data).
+ */
 public abstract class BusinessAnalyticsBase {
 
     protected final OSGIKillbillLogService logService;
@@ -119,7 +124,8 @@ public abstract class BusinessAnalyticsBase {
             }
         }
 
-        throw new AnalyticsRefreshException("Unable to find Account creation audit log for id " + accountId);
+        logService.log(LogService.LOG_WARNING, "Unable to find Account creation audit log for id " + accountId);
+        return null;
     }
 
     protected Long getAccountRecordId(final UUID accountId, final TenantContext context) throws AnalyticsRefreshException {
@@ -189,7 +195,8 @@ public abstract class BusinessAnalyticsBase {
             }
         }
 
-        throw new AnalyticsRefreshException("Unable to find Bundle creation audit log for id " + bundleId);
+        logService.log(LogService.LOG_WARNING, "Unable to find Bundle creation audit log for id " + bundleId);
+        return null;
     }
 
     protected Subscription getSubscription(final UUID subscriptionId, final TenantContext context) throws AnalyticsRefreshException {
@@ -211,7 +218,8 @@ public abstract class BusinessAnalyticsBase {
             }
         }
 
-        throw new AnalyticsRefreshException("Unable to find Subscription event creation audit log for id " + subscriptionEventId);
+        logService.log(LogService.LOG_WARNING, "Unable to find Subscription event creation audit log for id " + subscriptionEventId);
+        return null;
     }
 
     protected Long getSubscriptionEventRecordId(final UUID subscriptionEventId, final TenantContext context) throws AnalyticsRefreshException {
@@ -240,7 +248,8 @@ public abstract class BusinessAnalyticsBase {
             }
         }
 
-        throw new AnalyticsRefreshException("Unable to find Blocking state creation audit log for id " + blockingStateId);
+        logService.log(LogService.LOG_WARNING, "Unable to find Blocking state creation audit log for id " + blockingStateId);
+        return null;
     }
 
     protected Long getBlockingStateRecordId(final UUID blockingStateId, final TenantContext context) throws AnalyticsRefreshException {
@@ -270,7 +279,8 @@ public abstract class BusinessAnalyticsBase {
             }
         }
 
-        throw new AnalyticsRefreshException("Unable to find Invoice creation audit log for id " + invoiceId);
+        logService.log(LogService.LOG_WARNING, "Unable to find Invoice creation audit log for id " + invoiceId);
+        return null;
     }
 
     protected Long getInvoiceRecordId(final UUID invoiceId, final TenantContext context) throws AnalyticsRefreshException {
@@ -286,7 +296,8 @@ public abstract class BusinessAnalyticsBase {
             }
         }
 
-        throw new AnalyticsRefreshException("Unable to find Invoice item creation audit log for id " + invoiceItemId);
+        logService.log(LogService.LOG_WARNING, "Unable to find Invoice item creation audit log for id " + invoiceItemId);
+        return null;
     }
 
     protected Long getInvoiceItemRecordId(final UUID invoiceItemId, final TenantContext context) throws AnalyticsRefreshException {
@@ -360,7 +371,8 @@ public abstract class BusinessAnalyticsBase {
             }
         }
 
-        throw new AnalyticsRefreshException("Unable to find Invoice payment creation audit log for id " + invoicePaymentId);
+        logService.log(LogService.LOG_WARNING, "Unable to find Invoice payment creation audit log for id " + invoicePaymentId);
+        return null;
     }
 
     protected Long getInvoicePaymentRecordId(final UUID invoicePaymentId, final TenantContext context) throws AnalyticsRefreshException {
@@ -404,18 +416,6 @@ public abstract class BusinessAnalyticsBase {
         }
     }
 
-    protected Collection<PaymentMethod> getAccountPaymentMethods(final UUID accountId, final TenantContext context) throws AnalyticsRefreshException {
-        final Account account = getAccount(accountId, context);
-
-        final PaymentApi paymentApi = getPaymentUserApi();
-        try {
-            return paymentApi.getPaymentMethods(account, true, context);
-        } catch (PaymentApiException e) {
-            logService.log(LogService.LOG_WARNING, "Error retrieving payment methods for account id " + accountId, e);
-            throw new AnalyticsRefreshException(e);
-        }
-    }
-
     protected PaymentMethod getPaymentMethod(final UUID paymentMethodId, final TenantContext context) throws AnalyticsRefreshException {
         final PaymentApi paymentApi = getPaymentUserApi();
 
@@ -444,7 +444,8 @@ public abstract class BusinessAnalyticsBase {
             }
         }
 
-        throw new AnalyticsRefreshException("Unable to find Field creation audit log for id " + fieldId);
+        logService.log(LogService.LOG_WARNING, "Unable to find Field creation audit log for id " + fieldId);
+        return null;
     }
 
     protected Long getFieldRecordId(final UUID fieldId, final TenantContext context) throws AnalyticsRefreshException {
@@ -480,7 +481,8 @@ public abstract class BusinessAnalyticsBase {
             }
         }
 
-        throw new AnalyticsRefreshException("Unable to find Tag creation audit log for id " + tagId);
+        logService.log(LogService.LOG_WARNING, "Unable to find Tag creation audit log for id " + tagId);
+        return null;
     }
 
     protected Long getTagRecordId(final UUID tagId, final TenantContext context) throws AnalyticsRefreshException {

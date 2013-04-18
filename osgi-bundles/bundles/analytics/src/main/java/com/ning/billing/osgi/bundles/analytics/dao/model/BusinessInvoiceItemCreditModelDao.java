@@ -40,7 +40,7 @@ public class BusinessInvoiceItemCreditModelDao extends BusinessInvoiceItemBaseMo
                                              @Nullable final SubscriptionBundle bundle,
                                              @Nullable final Plan plan,
                                              @Nullable final PlanPhase planPhase,
-                                             final AuditLog creationAuditLogs,
+                                             @Nullable final AuditLog creationAuditLogs,
                                              final Long tenantRecordId,
                                              @Nullable final ReportGroup reportGroup) {
         super(account,

@@ -88,7 +88,7 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
                                                          @Nullable final SubscriptionBundle bundle,
                                                          @Nullable final Plan plan,
                                                          @Nullable final PlanPhase planPhase,
-                                                         final AuditLog creationAuditLog,
+                                                         @Nullable final AuditLog creationAuditLog,
                                                          final Long tenantRecordId,
                                                          @Nullable final ReportGroup reportGroup) {
         if (BusinessInvoiceItemType.INVOICE_ADJUSTMENT.equals(businessInvoiceItemType)) {
@@ -243,7 +243,7 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
                                            @Nullable final SubscriptionBundle bundle,
                                            @Nullable final Plan plan,
                                            @Nullable final PlanPhase planPhase,
-                                           final AuditLog creationAuditLog,
+                                           @Nullable final AuditLog creationAuditLog,
                                            final Long tenantRecordId,
                                            @Nullable final ReportGroup reportGroup) {
         this(invoiceItemRecordId,
@@ -276,9 +276,9 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
              invoiceItem.getCurrency() == null ? null : invoiceItem.getCurrency().toString(),
              invoiceItem.getLinkedItemId(),
              invoiceItem.getCreatedDate(),
-             creationAuditLog.getUserName(),
-             creationAuditLog.getReasonCode(),
-             creationAuditLog.getComment(),
+             creationAuditLog != null ? creationAuditLog.getUserName() : null,
+             creationAuditLog != null ? creationAuditLog.getReasonCode() : null,
+             creationAuditLog != null ? creationAuditLog.getComment() : null,
              account.getId(),
              account.getName(),
              account.getExternalKey(),
