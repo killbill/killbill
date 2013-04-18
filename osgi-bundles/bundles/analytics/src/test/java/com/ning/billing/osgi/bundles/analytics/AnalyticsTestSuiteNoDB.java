@@ -87,6 +87,7 @@ public abstract class AnalyticsTestSuiteNoDB {
     protected final Long fieldRecordId = 7L;
     protected final Long tagRecordId = 8L;
     protected final Long tenantRecordId = 9L;
+    protected final Long bundleRecordId = 10L;
 
     protected final ReportGroup reportGroup = ReportGroup.partner;
     protected final BusinessInvoiceItemType invoiceItemType = BusinessInvoiceItemType.INVOICE_ITEM_ADJUSTMENT;

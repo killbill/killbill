@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.UUID;
 
 public interface AccountChangeInternalEvent extends BusInternalEvent {
+
     public UUID getAccountId();
 
     public List<ChangedField> getChangedFields();

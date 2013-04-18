@@ -48,6 +48,7 @@ public class BusinessAccount extends BusinessEntityBase {
     private final LocalDate lastInvoiceDate;
     private final DateTime lastPaymentDate;
     private final String lastPaymentStatus;
+    private final Integer nbActiveBundles;
 
     public BusinessAccount(final BusinessAccountModelDao businessAccountModelDao) {
         super(businessAccountModelDao.getCreatedDate(),
@@ -80,6 +81,7 @@ public class BusinessAccount extends BusinessEntityBase {
         this.lastInvoiceDate = businessAccountModelDao.getLastInvoiceDate();
         this.lastPaymentDate = businessAccountModelDao.getLastPaymentDate();
         this.lastPaymentStatus = businessAccountModelDao.getLastPaymentStatus();
+        this.nbActiveBundles = businessAccountModelDao.getNbActiveBundles();
     }
 
     public String getEmail() {
@@ -170,6 +172,10 @@ public class BusinessAccount extends BusinessEntityBase {
         return lastPaymentStatus;
     }
 
+    public Integer getNbActiveBundles() {
+        return nbActiveBundles;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
@@ -196,6 +202,7 @@ public class BusinessAccount extends BusinessEntityBase {
         sb.append(", lastInvoiceDate=").append(lastInvoiceDate);
         sb.append(", lastPaymentDate=").append(lastPaymentDate);
         sb.append(", lastPaymentStatus='").append(lastPaymentStatus).append('\'');
+        sb.append(", nbActiveBundles='").append(nbActiveBundles).append('\'');
         sb.append('}');
         return sb.toString();
     }
@@ -262,6 +269,9 @@ public class BusinessAccount extends BusinessEntityBase {
         if (locale != null ? !locale.equals(that.locale) : that.locale != null) {
             return false;
         }
+        if (nbActiveBundles != null ? !nbActiveBundles.equals(that.nbActiveBundles) : that.nbActiveBundles != null) {
+            return false;
+        }
         if (paymentMethodId != null ? !paymentMethodId.equals(that.paymentMethodId) : that.paymentMethodId != null) {
             return false;
         }
@@ -309,6 +319,7 @@ public class BusinessAccount extends BusinessEntityBase {
         result = 31 * result + (lastInvoiceDate != null ? lastInvoiceDate.hashCode() : 0);
         result = 31 * result + (lastPaymentDate != null ? lastPaymentDate.hashCode() : 0);
         result = 31 * result + (lastPaymentStatus != null ? lastPaymentStatus.hashCode() : 0);
+        result = 31 * result + (nbActiveBundles != null ? nbActiveBundles.hashCode() : 0);
         return result;
     }
 }

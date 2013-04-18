@@ -92,6 +92,70 @@ insert into bst (
 );
 >>
 
+createBbs() ::= <<
+insert into bbs (
+  bundle_record_id
+, bundle_id
+, bundle_external_key
+, subscription_id
+, bundle_account_rank
+, current_product_name
+, current_product_type
+, current_product_category
+, current_slug
+, current_phase
+, current_billing_period
+, current_price
+, current_price_list
+, current_mrr
+, current_currency
+, current_state
+, current_business_active
+, current_start_date
+, current_end_date
+, created_date
+, created_by
+, created_reason_code
+, created_comments
+, account_id
+, account_name
+, account_external_key
+, account_record_id
+, tenant_record_id
+, report_group
+) values (
+  :bundleRecordId
+, :bundleId
+, :bundleExternalKey
+, :subscriptionId
+, :bundleAccountRank
+, :currentProductName
+, :currentProductType
+, :currentProductCategory
+, :currentSlug
+, :currentPhase
+, :currentBillingPeriod
+, :currentPrice
+, :currentPriceList
+, :currentMrr
+, :currentCurrency
+, :currentState
+, :currentBusinessActive
+, :currentStartDate
+, :currentEndDate
+, :createdDate
+, :createdBy
+, :createdReasonCode
+, :createdComments
+, :accountId
+, :accountName
+, :accountExternalKey
+, :accountRecordId
+, :tenantRecordId
+, :reportGroup
+);
+>>
+
 createBac() ::= <<
 insert into bac (
   email
@@ -115,6 +179,7 @@ insert into bac (
 , last_invoice_date
 , last_payment_date
 , last_payment_status
+, nb_active_bundles
 , created_date
 , created_by
 , created_reason_code
@@ -148,6 +213,7 @@ insert into bac (
 , :lastInvoiceDate
 , :lastPaymentDate
 , :lastPaymentStatus
+, :nbActiveBundles
 , :createdDate
 , :createdBy
 , :createdReasonCode
@@ -1106,6 +1172,11 @@ getAccountByAccountRecordId() ::= <<
 
 getSubscriptionTransitionsByAccountRecordId() ::= <<
 <SELECT_STAR_FROM_TABLE("bst")>
+;
+>>
+
+getBundleSummariesByAccountRecordId() ::= <<
+<SELECT_STAR_FROM_TABLE("bbs")>
 ;
 >>
 

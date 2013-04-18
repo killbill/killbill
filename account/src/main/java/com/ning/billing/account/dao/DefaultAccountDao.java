@@ -139,12 +139,10 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
                                                                                              specifiedAccount,
                                                                                              context.getAccountRecordId(),
                                                                                              context.getTenantRecordId());
-                if (changeEvent.hasChanges()) {
-                    try {
-                        eventBus.postFromTransaction(changeEvent, entitySqlDaoWrapperFactory, context);
-                    } catch (final EventBusException e) {
-                        log.warn("Failed to post account change event for account " + accountId, e);
-                    }
+                try {
+                    eventBus.postFromTransaction(changeEvent, entitySqlDaoWrapperFactory, context);
+                } catch (final EventBusException e) {
+                    log.warn("Failed to post account change event for account " + accountId, e);
                 }
 
                 return null;
@@ -170,12 +168,10 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
                 final AccountChangeInternalEvent changeEvent = new DefaultAccountChangeEvent(accountId, context.getUserToken(), currentAccount, account,
                                                                                              context.getAccountRecordId(), context.getTenantRecordId());
 
-                if (changeEvent.hasChanges()) {
-                    try {
-                        eventBus.postFromTransaction(changeEvent, entitySqlDaoWrapperFactory, context);
-                    } catch (final EventBusException e) {
-                        log.warn("Failed to post account change event for account " + accountId, e);
-                    }
+                try {
+                    eventBus.postFromTransaction(changeEvent, entitySqlDaoWrapperFactory, context);
+                } catch (final EventBusException e) {
+                    log.warn("Failed to post account change event for account " + accountId, e);
                 }
                 return null;
             }

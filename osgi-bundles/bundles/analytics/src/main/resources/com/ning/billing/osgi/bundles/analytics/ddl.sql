@@ -54,6 +54,47 @@ create index bst_account_id on bst(account_id);
 create index bst_account_record_id on bst(account_record_id);
 create index bst_tenant_account_record_id on bst(tenant_record_id, account_record_id);
 
+-- Bundle summary
+drop table if exists bbs;
+create table bbs (
+  record_id int(11) unsigned not null auto_increment
+, bundle_record_id int(11) unsigned default null
+, bundle_id char(36) not null
+, bundle_external_key varchar(50) not null
+, subscription_id char(36) not null
+, bundle_account_rank int(11) not null
+, charged_through_date datetime default null
+, current_product_name varchar(50) default null
+, current_product_type varchar(50) default null
+, current_product_category varchar(50) default null
+, current_slug varchar(50) default null
+, current_phase varchar(50) default null
+, current_billing_period varchar(50) default null
+, current_price numeric(10, 4) default 0
+, current_price_list varchar(50) default null
+, current_mrr numeric(10, 4) default 0
+, current_currency varchar(50) default null
+, current_state varchar(50) default null
+, current_business_active bool default true
+, current_start_date datetime default null
+, current_end_date datetime default null
+, created_date datetime not null
+, created_by varchar(50) not null
+, created_reason_code varchar(255) default null
+, created_comments varchar(255) default null
+, account_id char(36) not null
+, account_name varchar(100) not null
+, account_external_key varchar(50) not null
+, account_record_id int(11) unsigned default null
+, tenant_record_id int(11) unsigned default null
+, report_group enum('default', 'test', 'partner') not null
+, primary key(record_id)
+);
+create index bbs_bundle_external_key on bbs(bundle_external_key);
+create index bbs_account_id on bbs(account_id);
+create index bbs_account_record_id on bbs(account_record_id);
+create index bbs_tenant_account_record_id on bbs(tenant_record_id, account_record_id);
+
 -- Accounts
 drop table if exists bac;
 create table bac (
@@ -79,6 +120,7 @@ create table bac (
 , last_invoice_date date default null
 , last_payment_date datetime default null
 , last_payment_status varchar(255) default null
+, nb_active_bundles int(11) default 0
 , created_date datetime not null
 , created_by varchar(50) not null
 , created_reason_code varchar(255) default null

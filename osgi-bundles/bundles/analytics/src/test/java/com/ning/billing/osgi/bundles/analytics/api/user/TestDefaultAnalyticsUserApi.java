@@ -35,6 +35,7 @@ public class TestDefaultAnalyticsUserApi extends AnalyticsTestSuiteWithEmbeddedD
                                                                                     BigDecimal.ONE,
                                                                                     invoice,
                                                                                     payment,
+                                                                                    3,
                                                                                     auditLog,
                                                                                     tenantRecordId,
                                                                                     reportGroup);

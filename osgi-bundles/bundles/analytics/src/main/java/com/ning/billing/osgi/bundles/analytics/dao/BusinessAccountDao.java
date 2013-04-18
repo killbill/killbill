@@ -18,12 +18,16 @@ package com.ning.billing.osgi.bundles.analytics.dao;
 
 import java.math.BigDecimal;
 import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
 
 import com.ning.billing.account.api.Account;
+import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.osgi.bundles.analytics.AnalyticsRefreshException;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessAccountModelDao;
@@ -91,6 +95,18 @@ public class BusinessAccountDao extends BusinessAnalyticsDaoBase {
             }
         }
 
+        final List<SubscriptionBundle> bundles = getSubscriptionBundlesForAccount(account.getId(), context);
+        int nbActiveBundles = 0;
+        for (final SubscriptionBundle bundle : bundles) {
+            final Collection<Subscription> subscriptionsForBundle = getSubscriptionsForBundle(bundle.getId(), context);
+            for (final Subscription subscription : subscriptionsForBundle) {
+                if (ProductCategory.BASE.equals(subscription.getCategory()) &&
+                    !(subscription.getEndDate() != null && !subscription.getEndDate().isAfterNow())) {
+                    nbActiveBundles++;
+                }
+            }
+        }
+
         final Long accountRecordId = getAccountRecordId(account.getId(), context);
         final Long tenantRecordId = getTenantRecordId(context);
         final ReportGroup reportGroup = getReportGroup(account.getId(), context);
@@ -100,6 +116,7 @@ public class BusinessAccountDao extends BusinessAnalyticsDaoBase {
                                            accountBalance,
                                            lastInvoice,
                                            lastPayment,
+                                           nbActiveBundles,
                                            creationAuditLog,
                                            tenantRecordId,
                                            reportGroup);

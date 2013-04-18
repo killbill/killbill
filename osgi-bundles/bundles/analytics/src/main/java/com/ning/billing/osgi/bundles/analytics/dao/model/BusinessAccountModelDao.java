@@ -55,6 +55,7 @@ public class BusinessAccountModelDao extends BusinessModelDaoBase {
     private LocalDate lastInvoiceDate;
     private DateTime lastPaymentDate;
     private String lastPaymentStatus;
+    private Integer nbActiveBundles;
 
     public BusinessAccountModelDao() { /* When reading from the database */ }
 
@@ -80,6 +81,7 @@ public class BusinessAccountModelDao extends BusinessModelDaoBase {
                                    final LocalDate lastInvoiceDate,
                                    final DateTime lastPaymentDate,
                                    final String lastPaymentStatus,
+                                   final Integer nbActiveBundles,
                                    final DateTime createdDate,
                                    final String createdBy,
                                    final String createdReasonCode,
@@ -122,6 +124,7 @@ public class BusinessAccountModelDao extends BusinessModelDaoBase {
         this.lastInvoiceDate = lastInvoiceDate;
         this.lastPaymentDate = lastPaymentDate;
         this.lastPaymentStatus = lastPaymentStatus;
+        this.nbActiveBundles = nbActiveBundles;
     }
 
     public BusinessAccountModelDao(final Account account,
@@ -129,6 +132,7 @@ public class BusinessAccountModelDao extends BusinessModelDaoBase {
                                    final BigDecimal balance,
                                    @Nullable final Invoice lastInvoice,
                                    @Nullable final Payment lastPayment,
+                                   final Integer nbActiveBundles,
                                    final AuditLog creationAuditLog,
                                    final Long tenantRecordId,
                                    @Nullable final ReportGroup reportGroup) {
@@ -154,6 +158,7 @@ public class BusinessAccountModelDao extends BusinessModelDaoBase {
              lastInvoice == null ? null : lastInvoice.getInvoiceDate(),
              lastPayment == null ? null : lastPayment.getEffectiveDate(),
              lastPayment == null ? null : lastPayment.getPaymentStatus().toString(),
+             nbActiveBundles,
              account.getCreatedDate(),
              creationAuditLog.getUserName(),
              creationAuditLog.getReasonCode(),
@@ -259,6 +264,10 @@ public class BusinessAccountModelDao extends BusinessModelDaoBase {
         return lastPaymentStatus;
     }
 
+    public Integer getNbActiveBundles() {
+        return nbActiveBundles;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
@@ -285,6 +294,7 @@ public class BusinessAccountModelDao extends BusinessModelDaoBase {
         sb.append(", lastInvoiceDate=").append(lastInvoiceDate);
         sb.append(", lastPaymentDate=").append(lastPaymentDate);
         sb.append(", lastPaymentStatus='").append(lastPaymentStatus).append('\'');
+        sb.append(", nbActiveBundles='").append(nbActiveBundles).append('\'');
         sb.append('}');
         return sb.toString();
     }
@@ -348,6 +358,9 @@ public class BusinessAccountModelDao extends BusinessModelDaoBase {
         if (migrated != null ? !migrated.equals(that.migrated) : that.migrated != null) {
             return false;
         }
+        if (nbActiveBundles != null ? !nbActiveBundles.equals(that.nbActiveBundles) : that.nbActiveBundles != null) {
+            return false;
+        }
         if (notifiedForInvoices != null ? !notifiedForInvoices.equals(that.notifiedForInvoices) : that.notifiedForInvoices != null) {
             return false;
         }
@@ -398,6 +411,7 @@ public class BusinessAccountModelDao extends BusinessModelDaoBase {
         result = 31 * result + (lastInvoiceDate != null ? lastInvoiceDate.hashCode() : 0);
         result = 31 * result + (lastPaymentDate != null ? lastPaymentDate.hashCode() : 0);
         result = 31 * result + (lastPaymentStatus != null ? lastPaymentStatus.hashCode() : 0);
+        result = 31 * result + (nbActiveBundles != null ? nbActiveBundles.hashCode() : 0);
         return result;
     }
 }
