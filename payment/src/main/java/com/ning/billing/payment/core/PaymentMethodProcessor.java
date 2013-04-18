@@ -122,9 +122,9 @@ public class PaymentMethodProcessor extends ProcessorBase {
         return getPaymentMethodInternal(paymentMethodModels, withPluginInfo, context);
     }
 
-    public PaymentMethod getPaymentMethodById(final UUID paymentMethodId, final boolean withPluginInfo, final InternalTenantContext context)
+    public PaymentMethod getPaymentMethodById(final UUID paymentMethodId, final boolean includedDeleted, final boolean withPluginInfo, final InternalTenantContext context)
             throws PaymentApiException {
-        final PaymentMethodModelDao paymentMethodModel = paymentDao.getPaymentMethod(paymentMethodId, context);
+        final PaymentMethodModelDao paymentMethodModel = includedDeleted ? paymentDao.getPaymentMethodIncludedDeleted(paymentMethodId, context) : paymentDao.getPaymentMethod(paymentMethodId, context);
         if (paymentMethodModel == null) {
             throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, paymentMethodId);
         }

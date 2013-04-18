@@ -420,7 +420,7 @@ public abstract class BusinessAnalyticsBase {
         final PaymentApi paymentApi = getPaymentUserApi();
 
         try {
-            return paymentApi.getPaymentMethodById(paymentMethodId, true, context);
+            return paymentApi.getPaymentMethodById(paymentMethodId, true, true, context);
         } catch (PaymentApiException e) {
             logService.log(LogService.LOG_INFO, "Error retrieving payment method for id " + paymentMethodId + " (already deleted?)", e);
             return null;
