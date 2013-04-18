@@ -220,6 +220,7 @@ public class InternalCallContextFactory {
 
     private Long getTenantRecordId(final TenantContext context) {
         // Default to single default tenant (e.g. single tenant mode)
+        // TODO Extract this convention (e.g. BusinessAnalyticsBase needs to know about it)
         if (context.getTenantId() == null) {
             return INTERNAL_TENANT_RECORD_ID;
         } else {

@@ -84,9 +84,16 @@ public abstract class BusinessAnalyticsBase {
     // TENANT
     //
 
+    private static final long INTERNAL_TENANT_RECORD_ID = 0L;
+
     protected Long getTenantRecordId(final TenantContext context) throws AnalyticsRefreshException {
-        final RecordIdApi recordIdUserApi = getRecordIdUserApi();
-        return recordIdUserApi.getRecordId(context.getTenantId(), ObjectType.TENANT, context);
+        // See convention in InternalCallContextFactory
+        if (context.getTenantId() == null) {
+            return INTERNAL_TENANT_RECORD_ID;
+        } else {
+            final RecordIdApi recordIdUserApi = getRecordIdUserApi();
+            return recordIdUserApi.getRecordId(context.getTenantId(), ObjectType.TENANT, context);
+        }
     }
 
     //
