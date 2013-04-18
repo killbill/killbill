@@ -684,10 +684,10 @@ public class DefaultEntitlementDao implements EntitlementDao {
     }
 
     private Subscription buildSubscription(final Subscription input, final InternalTenantContext context) {
+
         if (input == null) {
             return null;
         }
-
         final List<Subscription> bundleInput = new ArrayList<Subscription>();
         if (input.getCategory() == ProductCategory.ADD_ON) {
             final Subscription baseSubscription = getBaseSubscription(input.getBundleId(), false, context);
@@ -741,7 +741,7 @@ public class DefaultEntitlementDao implements EntitlementDao {
                     final Collection<EntitlementEvent> futureApiEvents = Collections2.filter(events, new Predicate<EntitlementEvent>() {
                         @Override
                         public boolean apply(final EntitlementEvent input) {
-                            return (input.getEffectiveDate().isAfter(clock.getUTCNow()) &&
+                            return (input.isActive() && input.getEffectiveDate().isAfter(clock.getUTCNow()) &&
                                     ((input instanceof ApiEventCancel) || (input instanceof ApiEventChange)));
                         }
                     });
@@ -758,7 +758,7 @@ public class DefaultEntitlementDao implements EntitlementDao {
                                                        ((!addonUtils.isAddonAvailableFromPlanName(baseProductName, futureBaseEvent.getEffectiveDate(), targetAddOnPlan)) ||
                                                         (addonUtils.isAddonIncludedFromPlanName(baseProductName, futureBaseEvent.getEffectiveDate(), targetAddOnPlan))));
 
-                    if (createCancelEvent) {
+                    if (createCancelEvent && reloaded.getFutureEndDate() == null) {
                         final DateTime now = clock.getUTCNow();
                         final EntitlementEvent addOnCancelEvent = new ApiEventCancel(new ApiEventBuilder()
                                                                                              .setSubscriptionId(reloaded.getId())

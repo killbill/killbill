@@ -17,6 +17,7 @@
 package com.ning.billing.entitlement.api.user;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
@@ -40,6 +41,7 @@ import com.ning.billing.catalog.api.PlanSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
+import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.api.user.SubscriptionStatusDryRun.DryRunChangeReason;
 import com.ning.billing.util.clock.DefaultClock;
@@ -50,16 +52,16 @@ public class TestUserApiAddOn extends EntitlementTestSuiteWithEmbeddedDB {
     public void testCreateCancelAddon() {
         try {
             final String baseProduct = "Shotgun";
-            final BillingPeriod baseTerm = BillingPeriod.MONTHLY;
+            final BillingPeriod baseTerm = BillingPeriod.ANNUAL;
             final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-            testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList);
+            SubscriptionData baseSubscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList);
 
             final String aoProduct = "Telescopic-Scope";
             final BillingPeriod aoTerm = BillingPeriod.MONTHLY;
             final String aoPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-            final SubscriptionData aoSubscription = testUtil.createSubscription(bundle, aoProduct, aoTerm, aoPriceList);
+            SubscriptionData aoSubscription = testUtil.createSubscription(bundle, aoProduct, aoTerm, aoPriceList);
             assertEquals(aoSubscription.getState(), SubscriptionState.ACTIVE);
 
             final DateTime now = clock.getUTCNow();
@@ -68,14 +70,97 @@ public class TestUserApiAddOn extends EntitlementTestSuiteWithEmbeddedDB {
             testListener.reset();
             testListener.pushExpectedEvent(NextEvent.CANCEL);
             assertTrue(testListener.isCompleted(5000));
-
+            aoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId(), callContext);
             assertEquals(aoSubscription.getState(), SubscriptionState.CANCELLED);
+
 
             assertListenerStatus();
         } catch (Exception e) {
             Assert.fail(e.getMessage());
         }
     }
+
+    @Test(groups = "slow")
+    public void testCreateCancelAddonAndThenBP() {
+        try {
+            final String baseProduct = "Shotgun";
+            final BillingPeriod baseTerm = BillingPeriod.ANNUAL;
+            final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
+
+            SubscriptionData baseSubscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList);
+
+            final String aoProduct = "Telescopic-Scope";
+            final BillingPeriod aoTerm = BillingPeriod.MONTHLY;
+            final String aoPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
+
+            SubscriptionData aoSubscription = testUtil.createSubscription(bundle, aoProduct, aoTerm, aoPriceList);
+            assertEquals(aoSubscription.getState(), SubscriptionState.ACTIVE);
+
+            // Move clock after a month
+            Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(1));
+            testListener.pushExpectedEvent(NextEvent.PHASE);
+            testListener.pushExpectedEvent(NextEvent.PHASE);
+            clock.addDeltaFromReality(it.toDurationMillis());
+            assertTrue(testListener.isCompleted(5000));
+
+
+            // SET CTD TO CANCEL IN FUTURE
+            final DateTime now = clock.getUTCNow();
+            final Duration aoCtd = testUtil.getDurationMonth(1);
+            final DateTime newAOChargedThroughDate = DefaultClock.addDuration(now, aoCtd);
+            entitlementInternalApi.setChargedThroughDate(aoSubscription.getId(), newAOChargedThroughDate, internalCallContext);
+
+            final Duration bpCtd = testUtil.getDurationMonth(11);
+            final DateTime newBPChargedThroughDate = DefaultClock.addDuration(now, bpCtd);
+            entitlementInternalApi.setChargedThroughDate(baseSubscription.getId(), newBPChargedThroughDate, internalCallContext);
+
+            baseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
+            aoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId(), callContext);
+
+            it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(1));
+            clock.addDeltaFromReality(it.toDurationMillis());
+
+            // CANCEL AO
+            aoSubscription.cancel(clock.getUTCNow(), callContext);
+            aoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId(), callContext);
+            assertEquals(aoSubscription.getState(), SubscriptionState.ACTIVE);
+            assertTrue(aoSubscription.isSubscriptionFutureCancelled());
+
+            // CANCEL BASE NOW
+            baseSubscription.cancel(clock.getUTCNow(), callContext);
+            baseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
+            assertEquals(baseSubscription.getState(), SubscriptionState.ACTIVE);
+            assertTrue(baseSubscription.isSubscriptionFutureCancelled());
+
+            aoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId(), callContext);
+            List<SubscriptionTransition> aoTransitions =  aoSubscription.getAllTransitions();
+            assertEquals(aoTransitions.size(), 3);
+            assertEquals(aoTransitions.get(0).getTransitionType(), SubscriptionTransitionType.CREATE);
+            assertEquals(aoTransitions.get(1).getTransitionType(), SubscriptionTransitionType.PHASE);
+            assertEquals(aoTransitions.get(2).getTransitionType(), SubscriptionTransitionType.CANCEL);
+            assertTrue(aoSubscription.getFutureEndDate().compareTo(newAOChargedThroughDate) == 0);
+
+            testListener.pushExpectedEvent(NextEvent.UNCANCEL);
+            aoSubscription.uncancel(callContext);
+            assertTrue(testListener.isCompleted(5000));
+
+            aoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId(), callContext);
+            aoTransitions =  aoSubscription.getAllTransitions();
+            assertEquals(aoTransitions.size(), 4);
+            assertEquals(aoTransitions.get(0).getTransitionType(), SubscriptionTransitionType.CREATE);
+            assertEquals(aoTransitions.get(1).getTransitionType(), SubscriptionTransitionType.PHASE);
+            assertEquals(aoTransitions.get(2).getTransitionType(), SubscriptionTransitionType.UNCANCEL);
+            assertEquals(aoTransitions.get(3).getTransitionType(), SubscriptionTransitionType.CANCEL);
+            assertTrue(aoSubscription.getFutureEndDate().compareTo(newBPChargedThroughDate) == 0);
+
+            assertListenerStatus();
+        } catch (Exception e) {
+            Assert.fail(e.getMessage());
+        }
+    }
+
+
+
 
     @Test(groups = "slow")
     public void testCancelBPWithAddon() {
@@ -137,6 +222,82 @@ public class TestUserApiAddOn extends EntitlementTestSuiteWithEmbeddedDB {
             Assert.fail(e.getMessage());
         }
     }
+
+
+    @Test(groups = "slow")
+    public void testCancelUncancelBPWithAddon() {
+        try {
+            final String baseProduct = "Shotgun";
+            final BillingPeriod baseTerm = BillingPeriod.MONTHLY;
+            final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
+
+            // CREATE BP
+            SubscriptionData baseSubscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList);
+
+            final String aoProduct = "Telescopic-Scope";
+            final BillingPeriod aoTerm = BillingPeriod.MONTHLY;
+            final String aoPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
+
+            SubscriptionData aoSubscription = testUtil.createSubscription(bundle, aoProduct, aoTerm, aoPriceList);
+
+            testListener.reset();
+            testListener.pushExpectedEvent(NextEvent.PHASE);
+            testListener.pushExpectedEvent(NextEvent.PHASE);
+
+            // MOVE CLOCK AFTER TRIAL + AO DISCOUNT
+            Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(2));
+            clock.addDeltaFromReality(it.toDurationMillis());
+            assertTrue(testListener.isCompleted(5000));
+
+            // SET CTD TO CANCEL IN FUTURE
+            final DateTime now = clock.getUTCNow();
+            final Duration ctd = testUtil.getDurationMonth(1);
+            // Why not just use clock.getUTCNow().plusMonths(1) ?
+            final DateTime newChargedThroughDate = DefaultClock.addDuration(now, ctd);
+            entitlementInternalApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate, internalCallContext);
+            baseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
+
+            // FUTURE CANCELLATION
+            baseSubscription.cancel(now, callContext);
+
+            // REFETCH AO SUBSCRIPTION AND CHECK THIS IS ACTIVE
+            aoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId(), callContext);
+            assertEquals(aoSubscription.getState(), SubscriptionState.ACTIVE);
+            assertTrue(aoSubscription.isSubscriptionFutureCancelled());
+
+
+            testListener.reset();
+            testListener.pushExpectedEvent(NextEvent.UNCANCEL);
+            baseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
+            baseSubscription.uncancel(callContext);
+            assertTrue(testListener.isCompleted(5000));
+
+            aoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId(), callContext);
+            assertEquals(aoSubscription.getState(), SubscriptionState.ACTIVE);
+            assertFalse(aoSubscription.isSubscriptionFutureCancelled());
+
+            // CANCEL AGAIN
+            it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(1));
+            clock.addDeltaFromReality(it.toDurationMillis());
+
+            baseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
+            baseSubscription.cancel(clock.getUTCNow(), callContext);
+            baseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
+            assertEquals(baseSubscription.getState(), SubscriptionState.ACTIVE);
+            assertTrue(baseSubscription.isSubscriptionFutureCancelled());
+
+            aoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId(), callContext);
+            assertEquals(aoSubscription.getState(), SubscriptionState.ACTIVE);
+            assertTrue(aoSubscription.isSubscriptionFutureCancelled());
+            assertListenerStatus();
+
+        } catch (Exception e) {
+            Assert.fail(e.getMessage());
+        }
+    }
+
+
+
 
     @Test(groups = "slow")
     public void testChangeBPWithAddonIncluded() {
