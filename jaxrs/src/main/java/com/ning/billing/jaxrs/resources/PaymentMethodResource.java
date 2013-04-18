@@ -79,7 +79,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException {
         final TenantContext tenantContext = context.createContext(request);
 
-        final PaymentMethod paymentMethod = paymentApi.getPaymentMethodById(UUID.fromString(paymentMethodId), withPluginInfo, tenantContext);
+        final PaymentMethod paymentMethod = paymentApi.getPaymentMethodById(UUID.fromString(paymentMethodId), false, withPluginInfo, tenantContext);
         final Account account = accountApi.getAccountById(paymentMethod.getAccountId(), tenantContext);
         final PaymentMethodJson json = PaymentMethodJson.toPaymentMethodJson(account, paymentMethod);
 
@@ -97,7 +97,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
                                         @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
-        final PaymentMethod paymentMethod = paymentApi.getPaymentMethodById(UUID.fromString(paymentMethodId), false, callContext);
+        final PaymentMethod paymentMethod = paymentApi.getPaymentMethodById(UUID.fromString(paymentMethodId), false, false, callContext);
         final Account account = accountApi.getAccountById(paymentMethod.getAccountId(), callContext);
 
         paymentApi.deletedPaymentMethod(account, UUID.fromString(paymentMethodId), deleteDefaultPaymentMethodWithAutoPayOff, callContext);

@@ -189,13 +189,14 @@ public interface PaymentApi {
             throws PaymentApiException;
 
     /**
+     *
      * @param paymentMethodId the payment methid id
+     * @param includedInactive returns the payment method even if this is not active
      * @param withPluginInfo  whether we want to retrieve the plugin info for that payment method
-     * @param context         the call context
-     * @return the payment method
+     * @param context         the call context   @return the payment method
      * @throws PaymentApiException
      */
-    public PaymentMethod getPaymentMethodById(UUID paymentMethodId, final boolean withPluginInfo, TenantContext context)
+    public PaymentMethod getPaymentMethodById(UUID paymentMethodId, final boolean includedInactive, final boolean withPluginInfo, TenantContext context)
             throws PaymentApiException;
 
     /**

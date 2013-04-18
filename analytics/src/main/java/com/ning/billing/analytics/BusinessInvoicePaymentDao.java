@@ -96,7 +96,7 @@ public class BusinessInvoicePaymentDao {
 
         PaymentMethod paymentMethod = null;
         try {
-            paymentMethod = paymentApi.getPaymentMethodById(payment.getPaymentMethodId(), context);
+            paymentMethod = paymentApi.getPaymentMethodById(payment.getPaymentMethodId(), true, context);
         } catch (PaymentApiException e) {
             log.info("For payment {}: payment method {} does not exist", paymentId, payment.getPaymentMethodId());
         }

@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.api.Currency;
@@ -29,10 +30,13 @@ import com.ning.billing.catalog.api.Duration;
 import com.ning.billing.payment.PaymentTestSuiteWithEmbeddedDB;
 import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
+import com.ning.billing.payment.provider.MockPaymentProviderPlugin;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
+import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
@@ -270,7 +274,14 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
 
         paymentDao.deletedPaymentMethod(paymentMethodId, internalCallContext);
 
-        final PaymentMethodModelDao deletedPaymentMethod = paymentDao.getPaymentMethod(paymentMethodId, internalCallContext);
+        PaymentMethodModelDao deletedPaymentMethod = paymentDao.getPaymentMethod(paymentMethodId, internalCallContext);
         assertNull(deletedPaymentMethod);
+
+        deletedPaymentMethod = paymentDao.getPaymentMethodIncludedDeleted(paymentMethodId, internalCallContext);
+        assertNotNull(deletedPaymentMethod);
+        assertFalse(deletedPaymentMethod.isActive());
+        assertEquals(deletedPaymentMethod.getAccountId(), accountId);
+        assertEquals(deletedPaymentMethod.getId(), paymentMethodId);
+        assertEquals(deletedPaymentMethod.getPluginName(), pluginName);
     }
 }
