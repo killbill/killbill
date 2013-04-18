@@ -153,8 +153,8 @@ public class DefaultTagUserApi implements TagUserApi {
             @Override
             public Tag apply(final TagModelDao input) {
                 return TagModelDaoHelper.isControlTag(input.getTagDefinitionId()) ?
-                       new DefaultControlTag(ControlTagType.getTypeFromId(input.getTagDefinitionId()), input.getObjectType(), input.getObjectId(), input.getCreatedDate()) :
-                       new DescriptiveTag(input.getTagDefinitionId(), input.getObjectType(), input.getObjectId(), input.getCreatedDate());
+                       new DefaultControlTag(input.getId(), ControlTagType.getTypeFromId(input.getTagDefinitionId()), input.getObjectType(), input.getObjectId(), input.getCreatedDate()) :
+                       new DescriptiveTag(input.getId(), input.getTagDefinitionId(), input.getObjectType(), input.getObjectId(), input.getCreatedDate());
             }
         }));
     }

@@ -83,6 +83,7 @@ import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.payment.api.TestPaymentMethodPluginBase;
 import com.ning.billing.payment.provider.MockPaymentProviderPlugin;
+import com.ning.billing.util.api.RecordIdApi;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.config.OSGIConfig;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
@@ -201,6 +202,8 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     @Inject
     protected OSGIConfig osgiConfig;
 
+    @Inject
+    protected RecordIdApi recordIdApi;
 
     protected TestApiListener busHandler;
 
