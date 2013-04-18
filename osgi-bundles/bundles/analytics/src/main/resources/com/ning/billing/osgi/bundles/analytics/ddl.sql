@@ -390,10 +390,12 @@ create table bip (
 , invoice_original_amount_charged numeric(10, 4) default 0
 , invoice_amount_credited numeric(10, 4) default 0
 , invoice_payment_type varchar(50) default null
+, payment_id char(36) default null
 , payment_number bigint default null
 , linked_invoice_payment_id char(36) default null
 , amount numeric(10, 4) default 0
 , currency char(50) default null
+, plugin_name varchar(255) default null
 , plugin_created_date datetime default null
 , plugin_effective_date datetime default null
 , plugin_status varchar(255) default null
@@ -451,10 +453,13 @@ create table bipr (
 , invoice_original_amount_charged numeric(10, 4) default 0
 , invoice_amount_credited numeric(10, 4) default 0
 , invoice_payment_type varchar(50) default null
+, payment_id char(36) default null
+, refund_id char(36) default null
 , payment_number bigint default null
 , linked_invoice_payment_id char(36) default null
 , amount numeric(10, 4) default 0
 , currency char(50) default null
+, plugin_name varchar(255) default null
 , plugin_created_date datetime default null
 , plugin_effective_date datetime default null
 , plugin_status varchar(255) default null
@@ -512,10 +517,12 @@ create table bipc (
 , invoice_original_amount_charged numeric(10, 4) default 0
 , invoice_amount_credited numeric(10, 4) default 0
 , invoice_payment_type varchar(50) default null
+, payment_id char(36) default null
 , payment_number bigint default null
 , linked_invoice_payment_id char(36) default null
 , amount numeric(10, 4) default 0
 , currency char(50) default null
+, plugin_name varchar(255) default null
 , plugin_created_date datetime default null
 , plugin_effective_date datetime default null
 , plugin_status varchar(255) default null

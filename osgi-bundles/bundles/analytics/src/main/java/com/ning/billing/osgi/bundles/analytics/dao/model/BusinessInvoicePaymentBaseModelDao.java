@@ -55,10 +55,13 @@ public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDa
     private BigDecimal invoiceOriginalAmountCharged;
     private BigDecimal invoiceAmountCredited;
     private String invoicePaymentType;
+    private UUID paymentId;
+    private UUID refundId;
     private Long paymentNumber;
     private UUID linkedInvoicePaymentId;
     private BigDecimal amount;
     private String currency;
+    private String pluginName;
     private DateTime pluginCreatedDate;
     private DateTime pluginEffectiveDate;
     private String pluginStatus;
@@ -147,10 +150,13 @@ public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDa
                                               final BigDecimal invoiceOriginalAmountCharged,
                                               final BigDecimal invoiceAmountCredited,
                                               final String invoicePaymentType,
+                                              final UUID paymentId,
+                                              final UUID refundId,
                                               final Long paymentNumber,
                                               final UUID linkedInvoicePaymentId,
                                               final BigDecimal amount,
                                               final String currency,
+                                              final String pluginName,
                                               final DateTime pluginCreatedDate,
                                               final DateTime pluginEffectiveDate,
                                               final String pluginStatus,
@@ -206,10 +212,13 @@ public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDa
         this.invoiceOriginalAmountCharged = invoiceOriginalAmountCharged;
         this.invoiceAmountCredited = invoiceAmountCredited;
         this.invoicePaymentType = invoicePaymentType;
+        this.paymentId = paymentId;
+        this.refundId = refundId;
         this.paymentNumber = paymentNumber;
         this.linkedInvoicePaymentId = linkedInvoicePaymentId;
         this.amount = amount;
         this.currency = currency;
+        this.pluginName = pluginName;
         this.pluginCreatedDate = pluginCreatedDate;
         this.pluginEffectiveDate = pluginEffectiveDate;
         this.pluginStatus = pluginStatus;
@@ -258,10 +267,13 @@ public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDa
              invoice.getOriginalChargedAmount(),
              invoice.getCreditAdjAmount(),
              invoicePayment.getType().toString(),
+             payment.getId(),
+             refund != null ? refund.getId() : null,
              payment.getPaymentNumber() == null ? null : payment.getPaymentNumber().longValue(),
              invoicePayment.getLinkedInvoicePaymentId(),
              invoicePayment.getAmount(),
              invoicePayment.getCurrency() == null ? null : invoicePayment.getCurrency().toString(),
+             paymentMethod.getPluginName(),
              refund != null ? (refund.getPluginDetail() != null ? refund.getPluginDetail().getCreatedDate() : null) : (payment.getPaymentInfoPlugin() != null ? payment.getPaymentInfoPlugin().getCreatedDate() : null),
              refund != null ? (refund.getPluginDetail() != null ? refund.getPluginDetail().getEffectiveDate() : null) : (payment.getPaymentInfoPlugin() != null ? payment.getPaymentInfoPlugin().getEffectiveDate() : null),
              refund != null ? (refund.getPluginDetail() != null ? refund.getPluginDetail().getStatus().toString() : null) : (payment.getPaymentInfoPlugin() != null ? payment.getPaymentInfoPlugin().getStatus().toString() : null),
@@ -351,6 +363,14 @@ public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDa
         return invoicePaymentType;
     }
 
+    public UUID getPaymentId() {
+        return paymentId;
+    }
+
+    public UUID getRefundId() {
+        return refundId;
+    }
+
     public Long getPaymentNumber() {
         return paymentNumber;
     }
@@ -365,6 +385,10 @@ public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDa
 
     public String getCurrency() {
         return currency;
+    }
+
+    public String getPluginName() {
+        return pluginName;
     }
 
     public DateTime getPluginCreatedDate() {
@@ -453,9 +477,8 @@ public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDa
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder();
-        sb.append("BusinessInvoicePaymentBaseModelDao");
-        sb.append("{invoicePaymentRecordId=").append(invoicePaymentRecordId);
+        final StringBuilder sb = new StringBuilder("BusinessInvoicePaymentBaseModelDao{");
+        sb.append("invoicePaymentRecordId=").append(invoicePaymentRecordId);
         sb.append(", invoicePaymentId=").append(invoicePaymentId);
         sb.append(", invoiceId=").append(invoiceId);
         sb.append(", invoiceNumber=").append(invoiceNumber);
@@ -469,10 +492,13 @@ public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDa
         sb.append(", invoiceOriginalAmountCharged=").append(invoiceOriginalAmountCharged);
         sb.append(", invoiceAmountCredited=").append(invoiceAmountCredited);
         sb.append(", invoicePaymentType='").append(invoicePaymentType).append('\'');
+        sb.append(", paymentId=").append(paymentId);
+        sb.append(", refundId=").append(refundId);
         sb.append(", paymentNumber=").append(paymentNumber);
         sb.append(", linkedInvoicePaymentId=").append(linkedInvoicePaymentId);
         sb.append(", amount=").append(amount);
         sb.append(", currency='").append(currency).append('\'');
+        sb.append(", pluginName='").append(pluginName).append('\'');
         sb.append(", pluginCreatedDate=").append(pluginCreatedDate);
         sb.append(", pluginEffectiveDate=").append(pluginEffectiveDate);
         sb.append(", pluginStatus='").append(pluginStatus).append('\'');
@@ -563,6 +589,12 @@ public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDa
         if (linkedInvoicePaymentId != null ? !linkedInvoicePaymentId.equals(that.linkedInvoicePaymentId) : that.linkedInvoicePaymentId != null) {
             return false;
         }
+        if (paymentId != null ? !paymentId.equals(that.paymentId) : that.paymentId != null) {
+            return false;
+        }
+        if (refundId != null ? !refundId.equals(that.refundId) : that.refundId != null) {
+            return false;
+        }
         if (paymentNumber != null ? !paymentNumber.equals(that.paymentNumber) : that.paymentNumber != null) {
             return false;
         }
@@ -579,6 +611,9 @@ public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDa
             return false;
         }
         if (pluginGatewayErrorCode != null ? !pluginGatewayErrorCode.equals(that.pluginGatewayErrorCode) : that.pluginGatewayErrorCode != null) {
+            return false;
+        }
+        if (pluginName != null ? !pluginName.equals(that.pluginName) : that.pluginName != null) {
             return false;
         }
         if (pluginPmAddress1 != null ? !pluginPmAddress1.equals(that.pluginPmAddress1) : that.pluginPmAddress1 != null) {
@@ -650,10 +685,13 @@ public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDa
         result = 31 * result + (invoiceOriginalAmountCharged != null ? invoiceOriginalAmountCharged.hashCode() : 0);
         result = 31 * result + (invoiceAmountCredited != null ? invoiceAmountCredited.hashCode() : 0);
         result = 31 * result + (invoicePaymentType != null ? invoicePaymentType.hashCode() : 0);
+        result = 31 * result + (paymentId != null ? paymentId.hashCode() : 0);
+        result = 31 * result + (refundId != null ? refundId.hashCode() : 0);
         result = 31 * result + (paymentNumber != null ? paymentNumber.hashCode() : 0);
         result = 31 * result + (linkedInvoicePaymentId != null ? linkedInvoicePaymentId.hashCode() : 0);
         result = 31 * result + (amount != null ? amount.hashCode() : 0);
         result = 31 * result + (currency != null ? currency.hashCode() : 0);
+        result = 31 * result + (pluginName != null ? pluginName.hashCode() : 0);
         result = 31 * result + (pluginCreatedDate != null ? pluginCreatedDate.hashCode() : 0);
         result = 31 * result + (pluginEffectiveDate != null ? pluginEffectiveDate.hashCode() : 0);
         result = 31 * result + (pluginStatus != null ? pluginStatus.hashCode() : 0);
