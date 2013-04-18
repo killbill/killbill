@@ -39,10 +39,13 @@ public class BusinessInvoicePayment extends BusinessEntityBase {
     private final BigDecimal invoiceOriginalAmountCharged;
     private final BigDecimal invoiceAmountCredited;
     private final String invoicePaymentType;
+    private final UUID paymentId;
+    private final UUID refundId;
     private final Long paymentNumber;
     private final UUID linkedInvoicePaymentId;
     private final BigDecimal amount;
     private final String currency;
+    private final String pluginName;
     private final DateTime pluginCreatedDate;
     private final DateTime pluginEffectiveDate;
     private final String pluginStatus;
@@ -87,10 +90,13 @@ public class BusinessInvoicePayment extends BusinessEntityBase {
         this.invoiceOriginalAmountCharged = businessInvoicePaymentBaseModelDao.getInvoiceOriginalAmountCharged();
         this.invoiceAmountCredited = businessInvoicePaymentBaseModelDao.getInvoiceAmountCredited();
         this.invoicePaymentType = businessInvoicePaymentBaseModelDao.getInvoicePaymentType();
+        this.paymentId = businessInvoicePaymentBaseModelDao.getPaymentId();
+        this.refundId = businessInvoicePaymentBaseModelDao.getRefundId();
         this.paymentNumber = businessInvoicePaymentBaseModelDao.getPaymentNumber();
         this.linkedInvoicePaymentId = businessInvoicePaymentBaseModelDao.getLinkedInvoicePaymentId();
         this.amount = businessInvoicePaymentBaseModelDao.getAmount();
         this.currency = businessInvoicePaymentBaseModelDao.getCurrency();
+        this.pluginName = businessInvoicePaymentBaseModelDao.getPluginName();
         this.pluginCreatedDate = businessInvoicePaymentBaseModelDao.getPluginCreatedDate();
         this.pluginEffectiveDate = businessInvoicePaymentBaseModelDao.getPluginEffectiveDate();
         this.pluginStatus = businessInvoicePaymentBaseModelDao.getPluginStatus();
@@ -166,6 +172,14 @@ public class BusinessInvoicePayment extends BusinessEntityBase {
         return invoicePaymentType;
     }
 
+    public UUID getPaymentId() {
+        return paymentId;
+    }
+
+    public UUID getRefundId() {
+        return refundId;
+    }
+
     public Long getPaymentNumber() {
         return paymentNumber;
     }
@@ -180,6 +194,10 @@ public class BusinessInvoicePayment extends BusinessEntityBase {
 
     public String getCurrency() {
         return currency;
+    }
+
+    public String getPluginName() {
+        return pluginName;
     }
 
     public DateTime getPluginCreatedDate() {
@@ -282,10 +300,13 @@ public class BusinessInvoicePayment extends BusinessEntityBase {
         sb.append(", invoiceOriginalAmountCharged=").append(invoiceOriginalAmountCharged);
         sb.append(", invoiceAmountCredited=").append(invoiceAmountCredited);
         sb.append(", invoicePaymentType='").append(invoicePaymentType).append('\'');
+        sb.append(", paymentId=").append(paymentId);
+        sb.append(", refundId=").append(refundId);
         sb.append(", paymentNumber=").append(paymentNumber);
         sb.append(", linkedInvoicePaymentId=").append(linkedInvoicePaymentId);
         sb.append(", amount=").append(amount);
         sb.append(", currency='").append(currency).append('\'');
+        sb.append(", pluginName='").append(pluginName).append('\'');
         sb.append(", pluginCreatedDate=").append(pluginCreatedDate);
         sb.append(", pluginEffectiveDate=").append(pluginEffectiveDate);
         sb.append(", pluginStatus='").append(pluginStatus).append('\'');
@@ -373,7 +394,16 @@ public class BusinessInvoicePayment extends BusinessEntityBase {
         if (linkedInvoicePaymentId != null ? !linkedInvoicePaymentId.equals(that.linkedInvoicePaymentId) : that.linkedInvoicePaymentId != null) {
             return false;
         }
+        if (paymentId != null ? !paymentId.equals(that.paymentId) : that.paymentId != null) {
+            return false;
+        }
+        if (refundId != null ? !refundId.equals(that.refundId) : that.refundId != null) {
+            return false;
+        }
         if (paymentNumber != null ? !paymentNumber.equals(that.paymentNumber) : that.paymentNumber != null) {
+            return false;
+        }
+        if (pluginName != null ? !pluginName.equals(that.pluginName) : that.pluginName != null) {
             return false;
         }
         if (pluginCreatedDate != null ? !pluginCreatedDate.equals(that.pluginCreatedDate) : that.pluginCreatedDate != null) {
@@ -459,10 +489,13 @@ public class BusinessInvoicePayment extends BusinessEntityBase {
         result = 31 * result + (invoiceOriginalAmountCharged != null ? invoiceOriginalAmountCharged.hashCode() : 0);
         result = 31 * result + (invoiceAmountCredited != null ? invoiceAmountCredited.hashCode() : 0);
         result = 31 * result + (invoicePaymentType != null ? invoicePaymentType.hashCode() : 0);
+        result = 31 * result + (paymentId != null ? paymentId.hashCode() : 0);
+        result = 31 * result + (refundId != null ? refundId.hashCode() : 0);
         result = 31 * result + (paymentNumber != null ? paymentNumber.hashCode() : 0);
         result = 31 * result + (linkedInvoicePaymentId != null ? linkedInvoicePaymentId.hashCode() : 0);
         result = 31 * result + (amount != null ? amount.hashCode() : 0);
         result = 31 * result + (currency != null ? currency.hashCode() : 0);
+        result = 31 * result + (pluginName != null ? pluginName.hashCode() : 0);
         result = 31 * result + (pluginCreatedDate != null ? pluginCreatedDate.hashCode() : 0);
         result = 31 * result + (pluginEffectiveDate != null ? pluginEffectiveDate.hashCode() : 0);
         result = 31 * result + (pluginStatus != null ? pluginStatus.hashCode() : 0);

@@ -44,7 +44,7 @@ public abstract class BusinessTagModelDao extends BusinessModelDaoBase {
                                              final Tag tag,
                                              final Long tagRecordId,
                                              final TagDefinition tagDefinition,
-                                             final AuditLog creationAuditLog,
+                                             @Nullable final AuditLog creationAuditLog,
                                              final Long tenantRecordId,
                                              @Nullable final ReportGroup reportGroup) {
         if (ObjectType.ACCOUNT.equals(tag.getObjectType())) {
@@ -113,15 +113,15 @@ public abstract class BusinessTagModelDao extends BusinessModelDaoBase {
                                final Tag tag,
                                final Long tagRecordId,
                                final TagDefinition tagDefinition,
-                               final AuditLog creationAuditLog,
+                               @Nullable final AuditLog creationAuditLog,
                                final Long tenantRecordId,
                                @Nullable final ReportGroup reportGroup) {
         this(tagRecordId,
              tagDefinition.getName(),
              tag.getCreatedDate(),
-             creationAuditLog.getUserName(),
-             creationAuditLog.getReasonCode(),
-             creationAuditLog.getComment(),
+             creationAuditLog != null ? creationAuditLog.getUserName() : null,
+             creationAuditLog != null ? creationAuditLog.getReasonCode() : null,
+             creationAuditLog != null ? creationAuditLog.getComment() : null,
              account.getId(),
              account.getName(),
              account.getExternalKey(),

@@ -37,8 +37,8 @@ public class BusinessInvoicePaymentRefundModelDao extends BusinessInvoicePayment
                                                 final Long invoicePaymentRecordId,
                                                 final Payment payment,
                                                 final Refund refund,
-                                                final PaymentMethod paymentMethod,
-                                                final AuditLog creationAuditLog,
+                                                @Nullable final PaymentMethod paymentMethod,
+                                                @Nullable final AuditLog creationAuditLog,
                                                 final Long tenantRecordId,
                                                 @Nullable final ReportGroup reportGroup) {
         super(account,

@@ -20,11 +20,13 @@ import java.math.BigDecimal;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
+import com.ning.billing.invoice.api.InvoicePayment.InvoicePaymentType;
 import com.ning.billing.osgi.bundles.analytics.AnalyticsTestSuiteWithEmbeddedDB;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessAccountFieldModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessAccountModelDao;
@@ -206,7 +208,7 @@ public class TestBusinessAnalyticsSqlDao extends AnalyticsTestSuiteWithEmbeddedD
                                                                                                                         invoicePayment,
                                                                                                                         invoicePaymentRecordId,
                                                                                                                         payment,
-                                                                                                                        refund,
+                                                                                                                        null,
                                                                                                                         paymentMethod,
                                                                                                                         auditLog,
                                                                                                                         tenantRecordId,
@@ -222,6 +224,33 @@ public class TestBusinessAnalyticsSqlDao extends AnalyticsTestSuiteWithEmbeddedD
         // Delete and verify it doesn't exist anymore
         analyticsSqlDao.deleteByAccountRecordId(businessInvoicePaymentModelDao.getTableName(), accountRecordId, tenantRecordId, callContext);
         Assert.assertEquals(analyticsSqlDao.getInvoicePaymentsByAccountRecordId(accountRecordId, tenantRecordId, callContext).size(), 0);
+    }
+
+    @Test(groups = "slow")
+    public void testSqlDaoForInvoicePaymentRefund() throws Exception {
+        Mockito.when(invoicePayment.getType()).thenReturn(InvoicePaymentType.REFUND);
+        final BusinessInvoicePaymentBaseModelDao businessInvoicePaymentRefundModelDao = BusinessInvoicePaymentModelDao.create(account,
+                                                                                                                              accountRecordId,
+                                                                                                                              invoice,
+                                                                                                                              invoicePayment,
+                                                                                                                              invoicePaymentRecordId,
+                                                                                                                              payment,
+                                                                                                                              refund,
+                                                                                                                              paymentMethod,
+                                                                                                                              auditLog,
+                                                                                                                              tenantRecordId,
+                                                                                                                              reportGroup);
+        // Check the record doesn't exist yet
+        Assert.assertEquals(analyticsSqlDao.getInvoicePaymentsByAccountRecordId(accountRecordId, tenantRecordId, callContext).size(), 0);
+
+        // Create and check we can retrieve it
+        analyticsSqlDao.create(businessInvoicePaymentRefundModelDao.getTableName(), businessInvoicePaymentRefundModelDao, callContext);
+        Assert.assertEquals(analyticsSqlDao.getInvoicePaymentRefundsByAccountRecordId(accountRecordId, tenantRecordId, callContext).size(), 1);
+        Assert.assertEquals(analyticsSqlDao.getInvoicePaymentRefundsByAccountRecordId(accountRecordId, tenantRecordId, callContext).get(0), businessInvoicePaymentRefundModelDao);
+
+        // Delete and verify it doesn't exist anymore
+        analyticsSqlDao.deleteByAccountRecordId(businessInvoicePaymentRefundModelDao.getTableName(), accountRecordId, tenantRecordId, callContext);
+        Assert.assertEquals(analyticsSqlDao.getInvoicePaymentRefundsByAccountRecordId(accountRecordId, tenantRecordId, callContext).size(), 0);
     }
 
     @Test(groups = "slow")
