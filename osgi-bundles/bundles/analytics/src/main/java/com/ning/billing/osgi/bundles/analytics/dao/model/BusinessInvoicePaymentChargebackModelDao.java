@@ -37,7 +37,7 @@ public class BusinessInvoicePaymentChargebackModelDao extends BusinessInvoicePay
                                                     final Long invoicePaymentRecordId,
                                                     final Payment payment,
                                                     final Refund refund,
-                                                    final PaymentMethod paymentMethod,
+                                                    @Nullable final PaymentMethod paymentMethod,
                                                     @Nullable final AuditLog creationAuditLog,
                                                     final Long tenantRecordId,
                                                     @Nullable final ReportGroup reportGroup) {

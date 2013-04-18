@@ -33,7 +33,12 @@ import com.ning.billing.payment.api.PaymentMethod;
 import com.ning.billing.payment.api.Refund;
 import com.ning.billing.util.audit.AuditLog;
 
+import com.google.common.annotations.VisibleForTesting;
+
 public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDaoBase {
+
+    @VisibleForTesting
+    static final String DEFAULT_PLUGIN_NAME = "__UNKNOWN__";
 
     protected static final String INVOICE_PAYMENTS_TABLE_NAME = "bip";
     protected static final String INVOICE_PAYMENT_REFUNDS_TABLE_NAME = "bipr";
@@ -91,7 +96,7 @@ public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDa
                                                             final Long invoicePaymentRecordId,
                                                             final Payment payment,
                                                             final Refund refund,
-                                                            final PaymentMethod paymentMethod,
+                                                            @Nullable final PaymentMethod paymentMethod,
                                                             @Nullable final AuditLog creationAuditLog,
                                                             final Long tenantRecordId,
                                                             @Nullable final ReportGroup reportGroup) {
@@ -249,7 +254,7 @@ public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDa
                                                  final Long invoicePaymentRecordId,
                                                  final Payment payment,
                                                  @Nullable final Refund refund,
-                                                 final PaymentMethod paymentMethod,
+                                                 @Nullable final PaymentMethod paymentMethod,
                                                  @Nullable final AuditLog creationAuditLog,
                                                  final Long tenantRecordId,
                                                  @Nullable final ReportGroup reportGroup) {
@@ -273,7 +278,7 @@ public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDa
              invoicePayment.getLinkedInvoicePaymentId(),
              invoicePayment.getAmount(),
              invoicePayment.getCurrency() == null ? null : invoicePayment.getCurrency().toString(),
-             paymentMethod.getPluginName(),
+             paymentMethod != null ? paymentMethod.getPluginName() : DEFAULT_PLUGIN_NAME,
              refund != null ? (refund.getPluginDetail() != null ? refund.getPluginDetail().getCreatedDate() : null) : (payment.getPaymentInfoPlugin() != null ? payment.getPaymentInfoPlugin().getCreatedDate() : null),
              refund != null ? (refund.getPluginDetail() != null ? refund.getPluginDetail().getEffectiveDate() : null) : (payment.getPaymentInfoPlugin() != null ? payment.getPaymentInfoPlugin().getEffectiveDate() : null),
              refund != null ? (refund.getPluginDetail() != null ? refund.getPluginDetail().getStatus().toString() : null) : (payment.getPaymentInfoPlugin() != null ? payment.getPaymentInfoPlugin().getStatus().toString() : null),
@@ -281,20 +286,20 @@ public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDa
              refund != null ? (refund.getPluginDetail() != null ? refund.getPluginDetail().getGatewayErrorCode() : null) : (payment.getPaymentInfoPlugin() != null ? payment.getPaymentInfoPlugin().getGatewayErrorCode() : null),
              refund != null ? (refund.getPluginDetail() != null ? refund.getPluginDetail().getReferenceId() : null) : (payment.getPaymentInfoPlugin() != null ? payment.getPaymentInfoPlugin().getFirstPaymentReferenceId() : null),
              refund != null ? null : (payment.getPaymentInfoPlugin() != null ? payment.getPaymentInfoPlugin().getSecondPaymentReferenceId() : null),
-             paymentMethod.getPluginDetail() != null ? paymentMethod.getPluginDetail().getExternalPaymentMethodId() : null,
-             paymentMethod.getPluginDetail() != null ? paymentMethod.getPluginDetail().isDefaultPaymentMethod() : null,
-             paymentMethod.getPluginDetail() != null ? paymentMethod.getPluginDetail().getType() : null,
-             paymentMethod.getPluginDetail() != null ? paymentMethod.getPluginDetail().getCCName() : null,
-             paymentMethod.getPluginDetail() != null ? paymentMethod.getPluginDetail().getCCType() : null,
-             paymentMethod.getPluginDetail() != null ? paymentMethod.getPluginDetail().getCCExprirationMonth() : null,
-             paymentMethod.getPluginDetail() != null ? paymentMethod.getPluginDetail().getCCExprirationYear() : null,
-             paymentMethod.getPluginDetail() != null ? paymentMethod.getPluginDetail().getCCLast4() : null,
-             paymentMethod.getPluginDetail() != null ? paymentMethod.getPluginDetail().getAddress1() : null,
-             paymentMethod.getPluginDetail() != null ? paymentMethod.getPluginDetail().getAddress2() : null,
-             paymentMethod.getPluginDetail() != null ? paymentMethod.getPluginDetail().getCity() : null,
-             paymentMethod.getPluginDetail() != null ? paymentMethod.getPluginDetail().getState() : null,
-             paymentMethod.getPluginDetail() != null ? paymentMethod.getPluginDetail().getZip() : null,
-             paymentMethod.getPluginDetail() != null ? paymentMethod.getPluginDetail().getCountry() : null,
+             paymentMethod != null ? (paymentMethod.getPluginDetail() != null ? paymentMethod.getPluginDetail().getExternalPaymentMethodId() : null) : null,
+             paymentMethod != null ? (paymentMethod.getPluginDetail() != null ? paymentMethod.getPluginDetail().isDefaultPaymentMethod() : null) : null,
+             paymentMethod != null ? (paymentMethod.getPluginDetail() != null ? paymentMethod.getPluginDetail().getType() : null) : null,
+             paymentMethod != null ? (paymentMethod.getPluginDetail() != null ? paymentMethod.getPluginDetail().getCCName() : null) : null,
+             paymentMethod != null ? (paymentMethod.getPluginDetail() != null ? paymentMethod.getPluginDetail().getCCType() : null) : null,
+             paymentMethod != null ? (paymentMethod.getPluginDetail() != null ? paymentMethod.getPluginDetail().getCCExprirationMonth() : null) : null,
+             paymentMethod != null ? (paymentMethod.getPluginDetail() != null ? paymentMethod.getPluginDetail().getCCExprirationYear() : null) : null,
+             paymentMethod != null ? (paymentMethod.getPluginDetail() != null ? paymentMethod.getPluginDetail().getCCLast4() : null) : null,
+             paymentMethod != null ? (paymentMethod.getPluginDetail() != null ? paymentMethod.getPluginDetail().getAddress1() : null) : null,
+             paymentMethod != null ? (paymentMethod.getPluginDetail() != null ? paymentMethod.getPluginDetail().getAddress2() : null) : null,
+             paymentMethod != null ? (paymentMethod.getPluginDetail() != null ? paymentMethod.getPluginDetail().getCity() : null) : null,
+             paymentMethod != null ? (paymentMethod.getPluginDetail() != null ? paymentMethod.getPluginDetail().getState() : null) : null,
+             paymentMethod != null ? (paymentMethod.getPluginDetail() != null ? paymentMethod.getPluginDetail().getZip() : null) : null,
+             paymentMethod != null ? (paymentMethod.getPluginDetail() != null ? paymentMethod.getPluginDetail().getCountry() : null) : null,
              invoicePayment.getCreatedDate(),
              creationAuditLog != null ? creationAuditLog.getUserName() : null,
              creationAuditLog != null ? creationAuditLog.getReasonCode() : null,

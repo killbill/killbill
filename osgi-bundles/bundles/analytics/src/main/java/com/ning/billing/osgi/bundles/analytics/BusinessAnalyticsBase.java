@@ -422,8 +422,8 @@ public abstract class BusinessAnalyticsBase {
         try {
             return paymentApi.getPaymentMethodById(paymentMethodId, true, context);
         } catch (PaymentApiException e) {
-            logService.log(LogService.LOG_WARNING, "Error retrieving payment method for id " + paymentMethodId, e);
-            throw new AnalyticsRefreshException(e);
+            logService.log(LogService.LOG_INFO, "Error retrieving payment method for id " + paymentMethodId + " (already deleted?)", e);
+            return null;
         }
     }
 
