@@ -62,6 +62,21 @@ public class InvoiceItemList extends ArrayList<InvoiceItem> {
         return getAmoutForItems(InvoiceItemType.EXTERNAL_CHARGE, InvoiceItemType.RECURRING, InvoiceItemType.FIXED, InvoiceItemType.REPAIR_ADJ);
     }
 
+    public BigDecimal getOriginalChargedAmount() {
+        BigDecimal result = BigDecimal.ZERO.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+        for (final InvoiceItem cur :  this) {
+            if (cur.getInvoiceItemType() != InvoiceItemType.EXTERNAL_CHARGE &&
+                cur.getInvoiceItemType() != InvoiceItemType.RECURRING &&
+                cur.getInvoiceItemType() != InvoiceItemType.FIXED) {
+                continue;
+            }
+            if (cur.getCreatedDate().compareTo(cur.getCreatedDate()) == 0) {
+                result = result.add(cur.getAmount());
+            }
+        }
+        return result;
+    }
+
     public BigDecimal getCBAAmount() {
         return getAmoutForItems(InvoiceItemType.CBA_ADJ);
     }
