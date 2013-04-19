@@ -56,6 +56,15 @@ layout: default
                 <h1>Invoices and invoice items</h1>
             </div>
             <p>The tables <strong>bin</strong> (Business Invoices), <strong>bia</strong> (Business Invoice Adjustments), <strong>biia</strong> (Business Invoice Item adjustments), <strong>biic</strong> (Business Invoice Item Credits) and <strong>bii</strong> (Business Invoice Items) maintain information about invoices posted by account.</p>
+            <p>Definitions:
+                <ul>
+                    <li><b>invoice_balance</b>: invoice_amount_charged - (invoice_amount_credited + invoice_amount_paid)</li>
+                    <li><b>invoice_amount_paid</b>: sum of all bip, bipr and bipc items for that invoice</li>
+                    <li><b>invoice_amount_charged</b>: sum of all bii, bia and biia items for that invoice</li>
+                    <li><b>invoice_original_amount_charged</b>: sum of all bii items for that invoice at the time of invoice creation</li>
+                    <li><b>invoice_amount_credited</b>: sum of all biic items for that invoice (positive if granted, negative if used)</li>
+                </ul>
+            </p>
             <p>A few remarks:
                 <ul>
                     <li>EXTERNAL_CHARGE, FIXED and RECURRING items are treated as regular line items (stored in bii)</li>
