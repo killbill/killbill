@@ -278,7 +278,7 @@ insert into bin (
 
 createBia() ::= <<
 insert into bia (
-, invoice_item_record_id
+  invoice_item_record_id
 , second_invoice_item_record_id
 , item_id
 , invoice_id

@@ -320,8 +320,8 @@ public abstract class BusinessAnalyticsBase {
             final Catalog catalog = getCatalog(context);
             return catalog.findPlan(invoiceItem.getPlanName(), invoiceItem.getStartDate().toDateTimeAtStartOfDay());
         } catch (CatalogApiException e) {
-            logService.log(LogService.LOG_WARNING, "Unable to retrieve plan for invoice item " + invoiceItem.getId(), e);
-            throw new AnalyticsRefreshException(e);
+            logService.log(LogService.LOG_INFO, "Unable to retrieve plan for invoice item " + invoiceItem.getId(), e);
+            return null;
         }
     }
 
@@ -332,8 +332,8 @@ public abstract class BusinessAnalyticsBase {
             final Catalog catalog = getCatalog(context);
             return catalog.findPhase(invoiceItem.getPhaseName(), invoiceItem.getStartDate().toDateTimeAtStartOfDay(), subscription.getStartDate());
         } catch (CatalogApiException e) {
-            logService.log(LogService.LOG_WARNING, "Unable to retrieve phase for invoice item " + invoiceItem.getId(), e);
-            throw new AnalyticsRefreshException(e);
+            logService.log(LogService.LOG_INFO, "Unable to retrieve phase for invoice item " + invoiceItem.getId(), e);
+            return null;
         }
     }
 
