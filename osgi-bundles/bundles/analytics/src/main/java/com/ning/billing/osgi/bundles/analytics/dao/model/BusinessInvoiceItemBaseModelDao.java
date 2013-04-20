@@ -55,6 +55,7 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
     private BigDecimal invoiceAmountCharged;
     private BigDecimal invoiceOriginalAmountCharged;
     private BigDecimal invoiceAmountCredited;
+    private BigDecimal invoiceAmountRefunded;
     private String itemType;
     private Boolean revenueRecognizable;
     private String bundleExternalKey;
@@ -76,6 +77,8 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
         ACCOUNT_CREDIT,
         CHARGE
     }
+
+    public abstract BusinessInvoiceItemType getBusinessInvoiceItemType();
 
     public static BusinessInvoiceItemBaseModelDao create(final Account account,
                                                          final Long accountRecordId,
@@ -164,11 +167,6 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
                                            final LocalDate invoiceDate,
                                            final LocalDate invoiceTargetDate,
                                            final String invoiceCurrency,
-                                           final BigDecimal invoiceBalance,
-                                           final BigDecimal invoiceAmountPaid,
-                                           final BigDecimal invoiceAmountCharged,
-                                           final BigDecimal invoiceOriginalAmountCharged,
-                                           final BigDecimal invoiceAmountCredited,
                                            final String itemType,
                                            final Boolean revenueRecognizable,
                                            final String bundleExternalKey,
@@ -212,11 +210,6 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
         this.invoiceDate = invoiceDate;
         this.invoiceTargetDate = invoiceTargetDate;
         this.invoiceCurrency = invoiceCurrency;
-        this.invoiceBalance = invoiceBalance;
-        this.invoiceAmountPaid = invoiceAmountPaid;
-        this.invoiceAmountCharged = invoiceAmountCharged;
-        this.invoiceOriginalAmountCharged = invoiceOriginalAmountCharged;
-        this.invoiceAmountCredited = invoiceAmountCredited;
         this.itemType = itemType;
         this.revenueRecognizable = revenueRecognizable;
         this.bundleExternalKey = bundleExternalKey;
@@ -255,23 +248,18 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
              invoice.getInvoiceDate(),
              invoice.getTargetDate(),
              invoice.getCurrency() == null ? null : invoice.getCurrency().toString(),
-             invoice.getBalance(),
-             invoice.getPaidAmount(),
-             invoice.getChargedAmount(),
-             invoice.getOriginalChargedAmount(),
-             invoice.getCreditAdjAmount(),
              invoiceItem.getInvoiceItemType().toString(),
              revenueRecognizable,
              bundle == null ? null : bundle.getExternalKey(),
-             plan != null ? plan.getProduct().getName() : null,
-             plan != null ? plan.getProduct().getCatalogName() : null,
-             plan != null ? plan.getProduct().getCategory().toString() : null,
+             (plan != null && plan.getProduct() != null) ? plan.getProduct().getName() : null,
+             (plan != null && plan.getProduct() != null) ? plan.getProduct().getCatalogName() : null,
+             (plan != null && plan.getProduct().getCategory() != null) ? plan.getProduct().getCategory().toString() : null,
              planPhase != null ? planPhase.getName() : null,
-             planPhase != null ? planPhase.getPhaseType().toString() : null,
-             planPhase != null ? planPhase.getBillingPeriod().toString() : null,
+             (planPhase != null && planPhase.getPhaseType() != null) ? planPhase.getPhaseType().toString() : null,
+             (planPhase != null && planPhase.getBillingPeriod() != null) ? planPhase.getBillingPeriod().toString() : null,
              invoiceItem.getStartDate(),
              /* Populate end date for fixed items for convenience (null in invoice_items table) */
-             (invoiceItem.getEndDate() == null && planPhase != null) ? invoiceItem.getStartDate().plus(planPhase.getDuration().toJodaPeriod()) : invoiceItem.getEndDate(),
+             (invoiceItem.getEndDate() == null && planPhase != null && planPhase.getDuration() != null) ? invoiceItem.getStartDate().plus(planPhase.getDuration().toJodaPeriod()) : invoiceItem.getEndDate(),
              invoiceItem.getAmount(),
              invoiceItem.getCurrency() == null ? null : invoiceItem.getCurrency().toString(),
              invoiceItem.getLinkedItemId(),
@@ -285,6 +273,15 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
              accountRecordId,
              tenantRecordId,
              reportGroup);
+    }
+
+    public void populateDenormalizedInvoiceFields(final BusinessInvoiceModelDao businessInvoice) {
+        invoiceBalance = businessInvoice.getBalance();
+        invoiceAmountPaid = businessInvoice.getAmountPaid();
+        invoiceAmountCharged = businessInvoice.getAmountCharged();
+        invoiceOriginalAmountCharged = businessInvoice.getOriginalAmountCharged();
+        invoiceAmountCredited = businessInvoice.getAmountCredited();
+        invoiceAmountRefunded = businessInvoice.getAmountRefunded();
     }
 
     public Long getInvoiceItemRecordId() {
@@ -341,6 +338,10 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
 
     public BigDecimal getInvoiceAmountCredited() {
         return invoiceAmountCredited;
+    }
+
+    public BigDecimal getInvoiceAmountRefunded() {
+        return invoiceAmountRefunded;
     }
 
     public String getItemType() {
@@ -417,6 +418,7 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
         sb.append(", invoiceAmountCharged=").append(invoiceAmountCharged);
         sb.append(", invoiceOriginalAmountCharged=").append(invoiceOriginalAmountCharged);
         sb.append(", invoiceAmountCredited=").append(invoiceAmountCredited);
+        sb.append(", invoiceAmountRefunded=").append(invoiceAmountRefunded);
         sb.append(", itemType='").append(itemType).append('\'');
         sb.append(", revenueRecognizable=").append(revenueRecognizable);
         sb.append(", bundleExternalKey='").append(bundleExternalKey).append('\'');
@@ -471,6 +473,9 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
             return false;
         }
         if (invoiceAmountPaid != null ? (invoiceAmountPaid.compareTo(that.invoiceAmountPaid) != 0) : that.invoiceAmountPaid != null) {
+            return false;
+        }
+        if (invoiceAmountRefunded != null ? (invoiceAmountRefunded.compareTo(that.invoiceAmountRefunded) != 0) : that.invoiceAmountRefunded != null) {
             return false;
         }
         if (invoiceBalance != null ? (invoiceBalance.compareTo(that.invoiceBalance) != 0) : that.invoiceBalance != null) {
@@ -554,6 +559,7 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
         result = 31 * result + (invoiceAmountCharged != null ? invoiceAmountCharged.hashCode() : 0);
         result = 31 * result + (invoiceOriginalAmountCharged != null ? invoiceOriginalAmountCharged.hashCode() : 0);
         result = 31 * result + (invoiceAmountCredited != null ? invoiceAmountCredited.hashCode() : 0);
+        result = 31 * result + (invoiceAmountRefunded != null ? invoiceAmountRefunded.hashCode() : 0);
         result = 31 * result + (itemType != null ? itemType.hashCode() : 0);
         result = 31 * result + (revenueRecognizable != null ? revenueRecognizable.hashCode() : 0);
         result = 31 * result + (bundleExternalKey != null ? bundleExternalKey.hashCode() : 0);

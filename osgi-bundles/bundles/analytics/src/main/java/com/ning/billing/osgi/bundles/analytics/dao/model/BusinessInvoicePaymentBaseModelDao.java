@@ -59,6 +59,7 @@ public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDa
     private BigDecimal invoiceAmountCharged;
     private BigDecimal invoiceOriginalAmountCharged;
     private BigDecimal invoiceAmountCredited;
+    private BigDecimal invoiceAmountRefunded;
     private String invoicePaymentType;
     private UUID paymentId;
     private UUID refundId;
@@ -149,11 +150,6 @@ public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDa
                                               final LocalDate invoiceDate,
                                               final LocalDate invoiceTargetDate,
                                               final String invoiceCurrency,
-                                              final BigDecimal invoiceBalance,
-                                              final BigDecimal invoiceAmountPaid,
-                                              final BigDecimal invoiceAmountCharged,
-                                              final BigDecimal invoiceOriginalAmountCharged,
-                                              final BigDecimal invoiceAmountCredited,
                                               final String invoicePaymentType,
                                               final UUID paymentId,
                                               final UUID refundId,
@@ -211,11 +207,6 @@ public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDa
         this.invoiceDate = invoiceDate;
         this.invoiceTargetDate = invoiceTargetDate;
         this.invoiceCurrency = invoiceCurrency;
-        this.invoiceBalance = invoiceBalance;
-        this.invoiceAmountPaid = invoiceAmountPaid;
-        this.invoiceAmountCharged = invoiceAmountCharged;
-        this.invoiceOriginalAmountCharged = invoiceOriginalAmountCharged;
-        this.invoiceAmountCredited = invoiceAmountCredited;
         this.invoicePaymentType = invoicePaymentType;
         this.paymentId = paymentId;
         this.refundId = refundId;
@@ -266,12 +257,7 @@ public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDa
              invoice.getInvoiceDate(),
              invoice.getTargetDate(),
              invoice.getCurrency() == null ? null : invoice.getCurrency().toString(),
-             invoice.getBalance(),
-             invoice.getPaidAmount(),
-             invoice.getChargedAmount(),
-             invoice.getOriginalChargedAmount(),
-             invoice.getCreditAdjAmount(),
-             invoicePayment.getType().toString(),
+             invoicePayment.getType() == null ? null : invoicePayment.getType().toString(),
              payment.getId(),
              refund != null ? refund.getId() : null,
              payment.getPaymentNumber() == null ? null : payment.getPaymentNumber().longValue(),
@@ -281,7 +267,7 @@ public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDa
              paymentMethod != null ? paymentMethod.getPluginName() : DEFAULT_PLUGIN_NAME,
              refund != null ? (refund.getPluginDetail() != null ? refund.getPluginDetail().getCreatedDate() : null) : (payment.getPaymentInfoPlugin() != null ? payment.getPaymentInfoPlugin().getCreatedDate() : null),
              refund != null ? (refund.getPluginDetail() != null ? refund.getPluginDetail().getEffectiveDate() : null) : (payment.getPaymentInfoPlugin() != null ? payment.getPaymentInfoPlugin().getEffectiveDate() : null),
-             refund != null ? (refund.getPluginDetail() != null ? refund.getPluginDetail().getStatus().toString() : null) : (payment.getPaymentInfoPlugin() != null ? payment.getPaymentInfoPlugin().getStatus().toString() : null),
+             refund != null ? (refund.getPluginDetail() != null && refund.getPluginDetail().getStatus() != null ? refund.getPluginDetail().getStatus().toString() : null) : (payment.getPaymentInfoPlugin() != null && payment.getPaymentInfoPlugin().getStatus() != null ? payment.getPaymentInfoPlugin().getStatus().toString() : null),
              refund != null ? (refund.getPluginDetail() != null ? refund.getPluginDetail().getGatewayError() : null) : (payment.getPaymentInfoPlugin() != null ? payment.getPaymentInfoPlugin().getGatewayError() : null),
              refund != null ? (refund.getPluginDetail() != null ? refund.getPluginDetail().getGatewayErrorCode() : null) : (payment.getPaymentInfoPlugin() != null ? payment.getPaymentInfoPlugin().getGatewayErrorCode() : null),
              refund != null ? (refund.getPluginDetail() != null ? refund.getPluginDetail().getReferenceId() : null) : (payment.getPaymentInfoPlugin() != null ? payment.getPaymentInfoPlugin().getFirstPaymentReferenceId() : null),
@@ -310,6 +296,15 @@ public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDa
              accountRecordId,
              tenantRecordId,
              reportGroup);
+    }
+
+    public void populateDenormalizedInvoiceFields(final BusinessInvoiceModelDao businessInvoice) {
+        invoiceBalance = businessInvoice.getBalance();
+        invoiceAmountPaid = businessInvoice.getAmountPaid();
+        invoiceAmountCharged = businessInvoice.getAmountCharged();
+        invoiceOriginalAmountCharged = businessInvoice.getOriginalAmountCharged();
+        invoiceAmountCredited = businessInvoice.getAmountCredited();
+        invoiceAmountRefunded = businessInvoice.getAmountRefunded();
     }
 
     public Long getInvoicePaymentRecordId() {
@@ -362,6 +357,10 @@ public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDa
 
     public BigDecimal getInvoiceAmountCredited() {
         return invoiceAmountCredited;
+    }
+
+    public BigDecimal getInvoiceAmountRefunded() {
+        return invoiceAmountRefunded;
     }
 
     public String getInvoicePaymentType() {
@@ -496,6 +495,7 @@ public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDa
         sb.append(", invoiceAmountCharged=").append(invoiceAmountCharged);
         sb.append(", invoiceOriginalAmountCharged=").append(invoiceOriginalAmountCharged);
         sb.append(", invoiceAmountCredited=").append(invoiceAmountCredited);
+        sb.append(", invoiceAmountRefunded=").append(invoiceAmountRefunded);
         sb.append(", invoicePaymentType='").append(invoicePaymentType).append('\'');
         sb.append(", paymentId=").append(paymentId);
         sb.append(", refundId=").append(refundId);
@@ -556,6 +556,9 @@ public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDa
             return false;
         }
         if (invoiceAmountPaid != null ? (invoiceAmountPaid.compareTo(that.invoiceAmountPaid) != 0) : that.invoiceAmountPaid != null) {
+            return false;
+        }
+        if (invoiceAmountRefunded != null ? (invoiceAmountRefunded.compareTo(that.invoiceAmountRefunded) != 0) : that.invoiceAmountRefunded != null) {
             return false;
         }
         if (invoiceBalance != null ? (invoiceBalance.compareTo(that.invoiceBalance) != 0) : that.invoiceBalance != null) {
@@ -689,6 +692,7 @@ public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDa
         result = 31 * result + (invoiceAmountCharged != null ? invoiceAmountCharged.hashCode() : 0);
         result = 31 * result + (invoiceOriginalAmountCharged != null ? invoiceOriginalAmountCharged.hashCode() : 0);
         result = 31 * result + (invoiceAmountCredited != null ? invoiceAmountCredited.hashCode() : 0);
+        result = 31 * result + (invoiceAmountRefunded != null ? invoiceAmountRefunded.hashCode() : 0);
         result = 31 * result + (invoicePaymentType != null ? invoicePaymentType.hashCode() : 0);
         result = 31 * result + (paymentId != null ? paymentId.hashCode() : 0);
         result = 31 * result + (refundId != null ? refundId.hashCode() : 0);

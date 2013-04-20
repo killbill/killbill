@@ -62,4 +62,9 @@ public class BusinessInvoiceItemAdjustmentModelDao extends BusinessInvoiceItemBa
     public String getTableName() {
         return INVOICE_ITEM_ADJUSTMENTS_TABLE_NAME;
     }
+
+    @Override
+    public BusinessInvoiceItemType getBusinessInvoiceItemType() {
+        return BusinessInvoiceItemType.INVOICE_ITEM_ADJUSTMENT;
+    }
 }

@@ -16,6 +16,8 @@
 
 package com.ning.billing.osgi.bundles.analytics.dao.model;
 
+import java.math.BigDecimal;
+
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -25,13 +27,22 @@ public class TestBusinessInvoiceModelDao extends AnalyticsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testConstructor() throws Exception {
+        final BigDecimal balance = BigDecimal.ONE;
+        final BigDecimal amountCharged = BigDecimal.ZERO;
+        final BigDecimal originalAmountCharged = BigDecimal.ONE;
+        final BigDecimal amountCredited = BigDecimal.TEN;
+
         final BusinessInvoiceModelDao invoiceModelDao = new BusinessInvoiceModelDao(account,
                                                                                     accountRecordId,
                                                                                     invoice,
+                                                                                    amountCharged,
+                                                                                    originalAmountCharged,
+                                                                                    amountCredited,
                                                                                     invoiceRecordId,
                                                                                     auditLog,
                                                                                     tenantRecordId,
                                                                                     reportGroup);
+
         verifyBusinessModelDaoBase(invoiceModelDao, accountRecordId, tenantRecordId);
         Assert.assertEquals(invoiceModelDao.getCreatedDate(), invoice.getCreatedDate());
         Assert.assertEquals(invoiceModelDao.getInvoiceRecordId(), invoiceRecordId);
@@ -40,10 +51,11 @@ public class TestBusinessInvoiceModelDao extends AnalyticsTestSuiteNoDB {
         Assert.assertEquals(invoiceModelDao.getInvoiceDate(), invoice.getInvoiceDate());
         Assert.assertEquals(invoiceModelDao.getTargetDate(), invoice.getTargetDate());
         Assert.assertEquals(invoiceModelDao.getCurrency(), invoice.getCurrency().toString());
-        Assert.assertEquals(invoiceModelDao.getBalance(), invoice.getBalance());
-        Assert.assertEquals(invoiceModelDao.getAmountPaid(), invoice.getPaidAmount());
-        Assert.assertEquals(invoiceModelDao.getAmountCharged(), invoice.getChargedAmount());
-        Assert.assertEquals(invoiceModelDao.getOriginalAmountCharged(), invoice.getOriginalChargedAmount());
-        Assert.assertEquals(invoiceModelDao.getAmountCredited(), invoice.getCreditAdjAmount());
+        Assert.assertEquals(invoiceModelDao.getAmountCharged(), amountCharged);
+        Assert.assertEquals(invoiceModelDao.getOriginalAmountCharged(), originalAmountCharged);
+        Assert.assertEquals(invoiceModelDao.getAmountCredited(), amountCredited);
+        Assert.assertNull(invoiceModelDao.getBalance());
+        Assert.assertNull(invoiceModelDao.getAmountPaid());
+        Assert.assertNull(invoiceModelDao.getAmountRefunded());
     }
 }

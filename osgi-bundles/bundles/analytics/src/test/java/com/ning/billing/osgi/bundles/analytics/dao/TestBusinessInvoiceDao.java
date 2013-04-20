@@ -21,11 +21,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
 import javax.sql.DataSource;
 
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
@@ -34,20 +31,17 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.osgi.bundles.analytics.AnalyticsTestSuiteNoDB;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceItemBaseModelDao;
+import com.ning.billing.osgi.bundles.analytics.utils.BusinessInvoiceUtils;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillDataSource;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillLogService;
 
 import com.google.common.collect.ImmutableList;
 
 public class TestBusinessInvoiceDao extends AnalyticsTestSuiteNoDB {
-
-    private final UUID accountId = UUID.randomUUID();
-    private final UUID bundleId = UUID.randomUUID();
 
     private BusinessInvoiceDao invoiceDao;
 
@@ -70,7 +64,7 @@ public class TestBusinessInvoiceDao extends AnalyticsTestSuiteNoDB {
             }
         }).when(osgiKillbillLogService).log(Mockito.anyInt(), Mockito.anyString());
 
-        invoiceDao = new BusinessInvoiceDao(osgiKillbillLogService, null, osgiKillbillDataSource, null);
+        invoiceDao = new BusinessInvoiceDao(osgiKillbillLogService, null, osgiKillbillDataSource);
     }
 
     @Test(groups = "fast")
@@ -196,22 +190,22 @@ public class TestBusinessInvoiceDao extends AnalyticsTestSuiteNoDB {
     public void testInvoiceAdjustment() throws Exception {
         final UUID invoiceId = UUID.randomUUID();
 
-        Assert.assertFalse(invoiceDao.isInvoiceAdjustmentItem(createInvoiceItem(invoiceId, InvoiceItemType.RECURRING),
-                                                              ImmutableList.<InvoiceItem>of()));
-        Assert.assertTrue(invoiceDao.isInvoiceAdjustmentItem(createInvoiceItem(invoiceId, InvoiceItemType.REFUND_ADJ),
-                                                             ImmutableList.<InvoiceItem>of()));
+        Assert.assertFalse(BusinessInvoiceUtils.isInvoiceAdjustmentItem(createInvoiceItem(invoiceId, InvoiceItemType.RECURRING),
+                                                                        ImmutableList.<InvoiceItem>of()));
+        Assert.assertTrue(BusinessInvoiceUtils.isInvoiceAdjustmentItem(createInvoiceItem(invoiceId, InvoiceItemType.REFUND_ADJ),
+                                                                       ImmutableList.<InvoiceItem>of()));
 
         final InvoiceItem creditAdj = createInvoiceItem(invoiceId, InvoiceItemType.CREDIT_ADJ);
 
         // Account credit
-        Assert.assertFalse(invoiceDao.isInvoiceAdjustmentItem(creditAdj,
-                                                              ImmutableList.<InvoiceItem>of(createInvoiceItem(invoiceId, InvoiceItemType.CBA_ADJ, creditAdj.getAmount().negate()))));
+        Assert.assertFalse(BusinessInvoiceUtils.isInvoiceAdjustmentItem(creditAdj,
+                                                                        ImmutableList.<InvoiceItem>of(createInvoiceItem(invoiceId, InvoiceItemType.CBA_ADJ, creditAdj.getAmount().negate()))));
 
-        Assert.assertTrue(invoiceDao.isInvoiceAdjustmentItem(creditAdj,
-                                                             ImmutableList.<InvoiceItem>of(createInvoiceItem(invoiceId, InvoiceItemType.CBA_ADJ, creditAdj.getAmount().negate().add(BigDecimal.ONE)))));
-        Assert.assertTrue(invoiceDao.isInvoiceAdjustmentItem(creditAdj,
-                                                             ImmutableList.<InvoiceItem>of(createInvoiceItem(invoiceId, InvoiceItemType.RECURRING),
-                                                                                           createInvoiceItem(invoiceId, InvoiceItemType.CBA_ADJ, creditAdj.getAmount().negate()))));
+        Assert.assertTrue(BusinessInvoiceUtils.isInvoiceAdjustmentItem(creditAdj,
+                                                                       ImmutableList.<InvoiceItem>of(createInvoiceItem(invoiceId, InvoiceItemType.CBA_ADJ, creditAdj.getAmount().negate().add(BigDecimal.ONE)))));
+        Assert.assertTrue(BusinessInvoiceUtils.isInvoiceAdjustmentItem(creditAdj,
+                                                                       ImmutableList.<InvoiceItem>of(createInvoiceItem(invoiceId, InvoiceItemType.RECURRING),
+                                                                                                     createInvoiceItem(invoiceId, InvoiceItemType.CBA_ADJ, creditAdj.getAmount().negate()))));
     }
 
     @Test(groups = "fast")
@@ -275,43 +269,5 @@ public class TestBusinessInvoiceDao extends AnalyticsTestSuiteNoDB {
                 Assert.fail("Shouldn't be in the sanitized elements: " + invoiceItem);
             }
         }
-    }
-
-    private InvoiceItem createInvoiceItem(final UUID invoiceId, final InvoiceItemType type) {
-        return createInvoiceItem(invoiceId, type, BigDecimal.TEN);
-    }
-
-    private InvoiceItem createInvoiceItem(final UUID invoiceId, final InvoiceItemType type, final BigDecimal amount) {
-        return createInvoiceItem(invoiceId, type, UUID.randomUUID(), new LocalDate(2013, 1, 2), new LocalDate(2013, 2, 5), amount, null);
-    }
-
-    private InvoiceItem createInvoiceItem(final UUID invoiceId,
-                                          final InvoiceItemType invoiceItemType,
-                                          final UUID subscriptionId,
-                                          final LocalDate startDate,
-                                          final LocalDate endDate,
-                                          final BigDecimal amount,
-                                          @Nullable final UUID linkedItemId) {
-        final UUID invoiceItemId = UUID.randomUUID();
-
-        final InvoiceItem invoiceItem = Mockito.mock(InvoiceItem.class);
-        Mockito.when(invoiceItem.getId()).thenReturn(invoiceItemId);
-        Mockito.when(invoiceItem.getInvoiceItemType()).thenReturn(invoiceItemType);
-        Mockito.when(invoiceItem.getInvoiceId()).thenReturn(invoiceId);
-        Mockito.when(invoiceItem.getAccountId()).thenReturn(accountId);
-        Mockito.when(invoiceItem.getStartDate()).thenReturn(startDate);
-        Mockito.when(invoiceItem.getEndDate()).thenReturn(endDate);
-        Mockito.when(invoiceItem.getAmount()).thenReturn(amount);
-        Mockito.when(invoiceItem.getCurrency()).thenReturn(Currency.EUR);
-        Mockito.when(invoiceItem.getDescription()).thenReturn(UUID.randomUUID().toString());
-        Mockito.when(invoiceItem.getBundleId()).thenReturn(bundleId);
-        Mockito.when(invoiceItem.getSubscriptionId()).thenReturn(subscriptionId);
-        Mockito.when(invoiceItem.getPlanName()).thenReturn(UUID.randomUUID().toString());
-        Mockito.when(invoiceItem.getPhaseName()).thenReturn(UUID.randomUUID().toString());
-        Mockito.when(invoiceItem.getRate()).thenReturn(new BigDecimal("1203"));
-        Mockito.when(invoiceItem.getLinkedItemId()).thenReturn(linkedItemId);
-        Mockito.when(invoiceItem.getCreatedDate()).thenReturn(new DateTime(2016, 1, 22, 10, 56, 51, DateTimeZone.UTC));
-
-        return invoiceItem;
     }
 }

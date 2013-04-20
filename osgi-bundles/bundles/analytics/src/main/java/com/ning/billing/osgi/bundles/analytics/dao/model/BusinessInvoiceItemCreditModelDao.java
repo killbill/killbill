@@ -62,4 +62,9 @@ public class BusinessInvoiceItemCreditModelDao extends BusinessInvoiceItemBaseMo
     public String getTableName() {
         return ACCOUNT_CREDITS_TABLE_NAME;
     }
+
+    @Override
+    public BusinessInvoiceItemType getBusinessInvoiceItemType() {
+        return BusinessInvoiceItemType.ACCOUNT_CREDIT;
+    }
 }

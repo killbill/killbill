@@ -19,10 +19,8 @@ package com.ning.billing.osgi.bundles.analytics.dao;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Map;
-import java.util.UUID;
 
-import org.skife.jdbi.v2.Transaction;
-import org.skife.jdbi.v2.TransactionStatus;
+import javax.annotation.Nullable;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.invoice.api.Invoice;
@@ -44,50 +42,18 @@ import com.ning.killbill.osgi.libs.killbill.OSGIKillbillLogService;
 
 public class BusinessInvoicePaymentDao extends BusinessAnalyticsDaoBase {
 
-    private final BusinessAccountDao businessAccountDao;
-    private final BusinessInvoiceDao businessInvoiceDao;
-
     public BusinessInvoicePaymentDao(final OSGIKillbillLogService logService,
                                      final OSGIKillbillAPI osgiKillbillAPI,
-                                     final OSGIKillbillDataSource osgiKillbillDataSource,
-                                     final BusinessAccountDao businessAccountDao,
-                                     final BusinessInvoiceDao businessInvoiceDao) {
+                                     final OSGIKillbillDataSource osgiKillbillDataSource) {
         super(logService, osgiKillbillAPI, osgiKillbillDataSource);
-        this.businessAccountDao = businessAccountDao;
-        this.businessInvoiceDao = businessInvoiceDao;
     }
 
-    public void update(final UUID accountId, final CallContext context) throws AnalyticsRefreshException {
-        final Account account = getAccount(accountId, context);
-
-        // Recompute the account record
-        final BusinessAccountModelDao bac = businessAccountDao.createBusinessAccount(account, context);
-
-        // Recompute all invoice payments
-        final Collection<BusinessInvoicePaymentBaseModelDao> businessInvoicePayments = createBusinessInvoicePayments(account, context);
-
-        // Recompute all invoice and invoice items
-        final Map<BusinessInvoiceModelDao, Collection<BusinessInvoiceItemBaseModelDao>> businessInvoices = businessInvoiceDao.createBusinessInvoicesAndInvoiceItems(account, context);
-
-        sqlDao.inTransaction(new Transaction<Void, BusinessAnalyticsSqlDao>() {
-            @Override
-            public Void inTransaction(final BusinessAnalyticsSqlDao transactional, final TransactionStatus status) throws Exception {
-                updateInTransaction(bac, businessInvoices, businessInvoicePayments, transactional, context);
-                return null;
-            }
-        });
-    }
-
-    private void updateInTransaction(final BusinessAccountModelDao bac,
-                                     final Map<BusinessInvoiceModelDao, Collection<BusinessInvoiceItemBaseModelDao>> businessInvoices,
-                                     final Collection<BusinessInvoicePaymentBaseModelDao> businessInvoicePayments,
-                                     final BusinessAnalyticsSqlDao transactional,
-                                     final CallContext context) throws AnalyticsRefreshException {
+    public void updateInTransaction(final BusinessAccountModelDao bac,
+                                    final Collection<BusinessInvoicePaymentBaseModelDao> businessInvoicePayments,
+                                    final BusinessAnalyticsSqlDao transactional,
+                                    final CallContext context) throws AnalyticsRefreshException {
         rebuildInvoicePaymentsForAccountInTransaction(bac, businessInvoicePayments, transactional, context);
-
-        // Update invoice balance details in BIN
-        // Note: no need to explicitly update BAC as well, since BusinessInvoiceDao will take care of it
-        businessInvoiceDao.updateInTransaction(bac, businessInvoices, transactional, context);
+        // Invoice and payment details in BAC will be updated by BusinessInvoiceAndInvoicePaymentDao
     }
 
     private void rebuildInvoicePaymentsForAccountInTransaction(final BusinessAccountModelDao bac,
@@ -103,8 +69,9 @@ public class BusinessInvoicePaymentDao extends BusinessAnalyticsDaoBase {
         }
     }
 
-    private Collection<BusinessInvoicePaymentBaseModelDao> createBusinessInvoicePayments(final Account account,
-                                                                                         final CallContext context) throws AnalyticsRefreshException {
+    public Collection<BusinessInvoicePaymentBaseModelDao> createBusinessInvoicePayments(final Account account,
+                                                                                        final Map<BusinessInvoiceModelDao, Collection<BusinessInvoiceItemBaseModelDao>> businessInvoices,
+                                                                                        final CallContext context) throws AnalyticsRefreshException {
         final Collection<BusinessInvoicePaymentBaseModelDao> businessInvoicePayments = new LinkedList<BusinessInvoicePaymentBaseModelDao>();
 
         final Long accountRecordId = getAccountRecordId(account.getId(), context);
@@ -113,34 +80,50 @@ public class BusinessInvoicePaymentDao extends BusinessAnalyticsDaoBase {
 
         final Collection<InvoicePayment> invoicePayments = getAccountInvoicePayments(account.getId(), context);
         for (final InvoicePayment invoicePayment : invoicePayments) {
-            final Long invoicePaymentRecordId = getInvoicePaymentRecordId(invoicePayment.getId(), context);
-
-            final Invoice invoice = getInvoice(invoicePayment.getInvoiceId(), context);
-            final Payment payment = getPaymentWithPluginInfo(invoicePayment.getPaymentId(), context);
-            Refund refund = null;
-            if (invoicePayment.getPaymentCookieId() != null) {
-                refund = getRefundWithPluginInfo(invoicePayment.getPaymentCookieId(), context);
-            }
-
-            final PaymentMethod paymentMethod = getPaymentMethod(payment.getPaymentMethodId(), context);
-            final AuditLog creationAuditLog = getInvoicePaymentCreationAuditLog(invoicePayment.getId(), context);
-
-            final BusinessInvoicePaymentBaseModelDao businessInvoicePayment = BusinessInvoicePaymentBaseModelDao.create(account,
-                                                                                                                        accountRecordId,
-                                                                                                                        invoice,
-                                                                                                                        invoicePayment,
-                                                                                                                        invoicePaymentRecordId,
-                                                                                                                        payment,
-                                                                                                                        refund,
-                                                                                                                        paymentMethod,
-                                                                                                                        creationAuditLog,
-                                                                                                                        tenantRecordId,
-                                                                                                                        reportGroup);
+            final BusinessInvoicePaymentBaseModelDao businessInvoicePayment = createBusinessInvoicePayment(account,
+                                                                                                           invoicePayment,
+                                                                                                           businessInvoices,
+                                                                                                           accountRecordId,
+                                                                                                           tenantRecordId,
+                                                                                                           reportGroup,
+                                                                                                           context);
             if (businessInvoicePayment != null) {
                 businessInvoicePayments.add(businessInvoicePayment);
             }
         }
 
         return businessInvoicePayments;
+    }
+
+    private BusinessInvoicePaymentBaseModelDao createBusinessInvoicePayment(final Account account,
+                                                                            final InvoicePayment invoicePayment,
+                                                                            final Map<BusinessInvoiceModelDao, Collection<BusinessInvoiceItemBaseModelDao>> businessInvoices,
+                                                                            final Long accountRecordId,
+                                                                            final Long tenantRecordId,
+                                                                            @Nullable final ReportGroup reportGroup,
+                                                                            final CallContext context) throws AnalyticsRefreshException {
+        final Long invoicePaymentRecordId = getInvoicePaymentRecordId(invoicePayment.getId(), context);
+
+        final Payment payment = getPaymentWithPluginInfo(invoicePayment.getPaymentId(), context);
+        Refund refund = null;
+        if (invoicePayment.getPaymentCookieId() != null) {
+            refund = getRefundWithPluginInfo(invoicePayment.getPaymentCookieId(), context);
+        }
+
+        final Invoice invoice = getInvoice(invoicePayment.getInvoiceId(), context);
+        final PaymentMethod paymentMethod = getPaymentMethod(payment.getPaymentMethodId(), context);
+        final AuditLog creationAuditLog = getInvoicePaymentCreationAuditLog(invoicePayment.getId(), context);
+
+        return BusinessInvoicePaymentBaseModelDao.create(account,
+                                                         accountRecordId,
+                                                         invoice,
+                                                         invoicePayment,
+                                                         invoicePaymentRecordId,
+                                                         payment,
+                                                         refund,
+                                                         paymentMethod,
+                                                         creationAuditLog,
+                                                         tenantRecordId,
+                                                         reportGroup);
     }
 }

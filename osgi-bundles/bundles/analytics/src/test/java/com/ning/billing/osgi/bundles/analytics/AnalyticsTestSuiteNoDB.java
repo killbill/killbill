@@ -17,7 +17,10 @@
 package com.ning.billing.osgi.bundles.analytics;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
+
+import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -75,6 +78,7 @@ import com.google.common.collect.ImmutableList;
 
 public abstract class AnalyticsTestSuiteNoDB {
 
+    private static final DateTime INVOICE_CREATED_DATE = new DateTime(2016, 1, 22, 10, 56, 53, DateTimeZone.UTC);
     protected final Logger logger = LoggerFactory.getLogger(AnalyticsTestSuiteNoDB.class);
 
     protected final Long accountRecordId = 1L;
@@ -138,6 +142,77 @@ public abstract class AnalyticsTestSuiteNoDB {
         Assert.assertEquals(businessModelDaoBase.getAccountRecordId(), accountRecordId);
         Assert.assertEquals(businessModelDaoBase.getTenantRecordId(), tenantRecordId);
         Assert.assertEquals(businessModelDaoBase.getReportGroup(), reportGroup.toString());
+    }
+
+    protected Invoice createInvoice(final UUID invoiceId, final Integer invoiceNumber, final List<InvoiceItem> items) {
+        final Invoice invoice = Mockito.mock(Invoice.class);
+
+        Mockito.when(invoice.getId()).thenReturn(invoiceId);
+        Mockito.when(invoice.getNumberOfItems()).thenReturn(items.size());
+        Mockito.when(invoice.getInvoiceItems()).thenReturn(items);
+        Mockito.when(invoice.getNumberOfPayments()).thenReturn(0);
+        Mockito.when(invoice.getAccountId()).thenReturn(UUID.randomUUID());
+        Mockito.when(invoice.getInvoiceNumber()).thenReturn(invoiceNumber);
+        Mockito.when(invoice.getInvoiceDate()).thenReturn(new LocalDate(1954, 12, 1));
+        Mockito.when(invoice.getTargetDate()).thenReturn(new LocalDate(2017, 3, 4));
+        Mockito.when(invoice.getCurrency()).thenReturn(Currency.AUD);
+        Mockito.when(invoice.getPaidAmount()).thenReturn(BigDecimal.ZERO);
+        Mockito.when(invoice.getOriginalChargedAmount()).thenReturn(new BigDecimal("1922"));
+        Mockito.when(invoice.getChargedAmount()).thenReturn(new BigDecimal("100293"));
+        Mockito.when(invoice.getCBAAmount()).thenReturn(BigDecimal.TEN);
+        Mockito.when(invoice.getTotalAdjAmount()).thenReturn(new BigDecimal("192"));
+        Mockito.when(invoice.getCreditAdjAmount()).thenReturn(new BigDecimal("283"));
+        Mockito.when(invoice.getRefundAdjAmount()).thenReturn(new BigDecimal("384"));
+        Mockito.when(invoice.getBalance()).thenReturn(new BigDecimal("18376"));
+        Mockito.when(invoice.isMigrationInvoice()).thenReturn(false);
+        Mockito.when(invoice.getCreatedDate()).thenReturn(INVOICE_CREATED_DATE);
+
+        return invoice;
+    }
+
+    protected InvoiceItem createInvoiceItem(final UUID invoiceId, final InvoiceItemType type) {
+        return createInvoiceItem(invoiceId, type, BigDecimal.TEN);
+    }
+
+    protected InvoiceItem createInvoiceItem(final UUID invoiceId, final InvoiceItemType type, final BigDecimal amount) {
+        return createInvoiceItem(invoiceId, type, UUID.randomUUID(), new LocalDate(2013, 1, 2), new LocalDate(2013, 2, 5), amount, null);
+    }
+
+    protected InvoiceItem createInvoiceItem(final UUID invoiceId,
+                                            final InvoiceItemType invoiceItemType,
+                                            final BigDecimal amount,
+                                            final UUID linkedItemId) {
+        return createInvoiceItem(invoiceId, invoiceItemType, UUID.randomUUID(), new LocalDate(2013, 1, 2), new LocalDate(2013, 2, 5), amount, linkedItemId);
+    }
+
+    protected InvoiceItem createInvoiceItem(final UUID invoiceId,
+                                            final InvoiceItemType invoiceItemType,
+                                            final UUID subscriptionId,
+                                            final LocalDate startDate,
+                                            final LocalDate endDate,
+                                            final BigDecimal amount,
+                                            @Nullable final UUID linkedItemId) {
+        final UUID invoiceItemId = UUID.randomUUID();
+
+        final InvoiceItem invoiceItem = Mockito.mock(InvoiceItem.class);
+        Mockito.when(invoiceItem.getId()).thenReturn(invoiceItemId);
+        Mockito.when(invoiceItem.getInvoiceItemType()).thenReturn(invoiceItemType);
+        Mockito.when(invoiceItem.getInvoiceId()).thenReturn(invoiceId);
+        Mockito.when(invoiceItem.getAccountId()).thenReturn(UUID.randomUUID());
+        Mockito.when(invoiceItem.getStartDate()).thenReturn(startDate);
+        Mockito.when(invoiceItem.getEndDate()).thenReturn(endDate);
+        Mockito.when(invoiceItem.getAmount()).thenReturn(amount);
+        Mockito.when(invoiceItem.getCurrency()).thenReturn(Currency.EUR);
+        Mockito.when(invoiceItem.getDescription()).thenReturn(UUID.randomUUID().toString());
+        Mockito.when(invoiceItem.getBundleId()).thenReturn(UUID.randomUUID());
+        Mockito.when(invoiceItem.getSubscriptionId()).thenReturn(subscriptionId);
+        Mockito.when(invoiceItem.getPlanName()).thenReturn(UUID.randomUUID().toString());
+        Mockito.when(invoiceItem.getPhaseName()).thenReturn(UUID.randomUUID().toString());
+        Mockito.when(invoiceItem.getRate()).thenReturn(new BigDecimal("1203"));
+        Mockito.when(invoiceItem.getLinkedItemId()).thenReturn(linkedItemId);
+        Mockito.when(invoiceItem.getCreatedDate()).thenReturn(INVOICE_CREATED_DATE);
+
+        return invoiceItem;
     }
 
     @BeforeMethod(groups = "fast")
@@ -261,7 +336,7 @@ public abstract class AnalyticsTestSuiteNoDB {
         Mockito.when(invoicePayment.getCurrency()).thenReturn(Currency.MXN);
         Mockito.when(invoicePayment.getLinkedInvoicePaymentId()).thenReturn(UUID.randomUUID());
         Mockito.when(invoicePayment.getPaymentCookieId()).thenReturn(UUID.randomUUID());
-        Mockito.when(invoicePayment.getCreatedDate()).thenReturn(new DateTime(2016, 1, 22, 10, 56, 53, DateTimeZone.UTC));
+        Mockito.when(invoicePayment.getCreatedDate()).thenReturn(INVOICE_CREATED_DATE);
         final UUID invoicePaymentId = invoicePayment.getId();
 
         invoice = Mockito.mock(Invoice.class);
@@ -284,7 +359,7 @@ public abstract class AnalyticsTestSuiteNoDB {
         Mockito.when(invoice.getRefundAdjAmount()).thenReturn(new BigDecimal("384"));
         Mockito.when(invoice.getBalance()).thenReturn(new BigDecimal("18376"));
         Mockito.when(invoice.isMigrationInvoice()).thenReturn(false);
-        Mockito.when(invoice.getCreatedDate()).thenReturn(new DateTime(2016, 1, 22, 10, 56, 53, DateTimeZone.UTC));
+        Mockito.when(invoice.getCreatedDate()).thenReturn(INVOICE_CREATED_DATE);
 
         paymentAttempt = Mockito.mock(PaymentAttempt.class);
         Mockito.when(paymentAttempt.getId()).thenReturn(UUID.randomUUID());
