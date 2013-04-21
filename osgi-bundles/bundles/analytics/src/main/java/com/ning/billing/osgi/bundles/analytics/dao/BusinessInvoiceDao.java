@@ -19,9 +19,11 @@ package com.ning.billing.osgi.bundles.analytics.dao;
 import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -29,8 +31,6 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.osgi.service.log.LogService;
-import org.skife.jdbi.v2.Transaction;
-import org.skife.jdbi.v2.TransactionStatus;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.catalog.api.Currency;
@@ -46,6 +46,7 @@ import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceItemBase
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceItemBaseModelDao.BusinessInvoiceItemType;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessModelDaoBase.ReportGroup;
+import com.ning.billing.osgi.bundles.analytics.utils.BusinessInvoiceUtils;
 import com.ning.billing.util.audit.AuditLog;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TenantContext;
@@ -58,128 +59,38 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
 import com.google.common.collect.Collections2;
 
-public class BusinessInvoiceDao extends BusinessAnalyticsDaoBase {
+import static com.ning.billing.osgi.bundles.analytics.utils.BusinessInvoiceUtils.isAccountCreditItem;
+import static com.ning.billing.osgi.bundles.analytics.utils.BusinessInvoiceUtils.isCharge;
+import static com.ning.billing.osgi.bundles.analytics.utils.BusinessInvoiceUtils.isInvoiceAdjustmentItem;
+import static com.ning.billing.osgi.bundles.analytics.utils.BusinessInvoiceUtils.isInvoiceItemAdjustmentItem;
+import static com.ning.billing.osgi.bundles.analytics.utils.BusinessInvoiceUtils.isRevenueRecognizable;
 
-    private final BusinessAccountDao businessAccountDao;
+public class BusinessInvoiceDao extends BusinessAnalyticsDaoBase {
 
     public BusinessInvoiceDao(final OSGIKillbillLogService logService,
                               final OSGIKillbillAPI osgiKillbillAPI,
-                              final OSGIKillbillDataSource osgiKillbillDataSource,
-                              final BusinessAccountDao businessAccountDao) {
+                              final OSGIKillbillDataSource osgiKillbillDataSource) {
         super(logService, osgiKillbillAPI, osgiKillbillDataSource);
-        this.businessAccountDao = businessAccountDao;
-    }
-
-    public void update(final UUID accountId, final CallContext context) throws AnalyticsRefreshException {
-        final Account account = getAccount(accountId, context);
-
-        // Recompute the account record
-        final BusinessAccountModelDao bac = businessAccountDao.createBusinessAccount(account, context);
-
-        // Recompute all invoices and invoice items
-        final Map<BusinessInvoiceModelDao, Collection<BusinessInvoiceItemBaseModelDao>> businessInvoices = createBusinessInvoicesAndInvoiceItems(account, context);
-
-        // Delete and recreate invoice and invoice items in the transaction
-        sqlDao.inTransaction(new Transaction<Void, BusinessAnalyticsSqlDao>() {
-            @Override
-            public Void inTransaction(final BusinessAnalyticsSqlDao transactional, final TransactionStatus status) throws Exception {
-                updateInTransaction(bac, businessInvoices, transactional, context);
-                return null;
-            }
-        });
     }
 
     public void updateInTransaction(final BusinessAccountModelDao bac,
-                                    final Map<BusinessInvoiceModelDao, Collection<BusinessInvoiceItemBaseModelDao>> businessInvoices,
+                                    final Map<UUID, BusinessInvoiceModelDao> businessInvoices,
+                                    final Map<UUID, Collection<BusinessInvoiceItemBaseModelDao>> businessInvoiceItems,
                                     final BusinessAnalyticsSqlDao transactional,
                                     final CallContext context) throws AnalyticsRefreshException {
-        rebuildInvoicesForAccountInTransaction(bac, businessInvoices, transactional, context);
-
-        // Update invoice and payment details in BAC
-        businessAccountDao.updateInTransaction(bac, transactional, context);
-    }
-
-    public Map<BusinessInvoiceModelDao, Collection<BusinessInvoiceItemBaseModelDao>> createBusinessInvoicesAndInvoiceItems(final Account account,
-                                                                                                                           final CallContext context) throws AnalyticsRefreshException {
-        final Long accountRecordId = getAccountRecordId(account.getId(), context);
-        final Long tenantRecordId = getTenantRecordId(context);
-        final ReportGroup reportGroup = getReportGroup(account.getId(), context);
-
-        final Map<UUID, BusinessInvoiceModelDao> businessInvoices = new HashMap<UUID, BusinessInvoiceModelDao>();
-        final Map<UUID, Collection<BusinessInvoiceItemBaseModelDao>> businessInvoiceItems = new HashMap<UUID, Collection<BusinessInvoiceItemBaseModelDao>>();
-
-        // All invoice items across all invoices for that account
-        // We need to be able to reference items across multiple invoices
-        final Collection<InvoiceItem> allInvoiceItems = new LinkedList<InvoiceItem>();
-
-        // Lookup the invoices for that account
-        final Collection<Invoice> invoices = getInvoicesByAccountId(account.getId(), context);
-
-        // Create a convenient mapping invoice_id -> invoice
-        final Map<UUID, Invoice> invoiceIdToInvoiceMappings = new LinkedHashMap<UUID, Invoice>();
-
-        // Create the business invoices
-        for (final Invoice invoice : invoices) {
-            invoiceIdToInvoiceMappings.put(invoice.getId(), invoice);
-            allInvoiceItems.addAll(invoice.getInvoiceItems());
-
-            final Long invoiceRecordId = getInvoiceRecordId(invoice.getId(), context);
-            final AuditLog creationAuditLog = getInvoiceCreationAuditLog(invoice.getId(), context);
-            final BusinessInvoiceModelDao businessInvoice = new BusinessInvoiceModelDao(account,
-                                                                                        accountRecordId,
-                                                                                        invoice,
-                                                                                        invoiceRecordId,
-                                                                                        creationAuditLog,
-                                                                                        tenantRecordId,
-                                                                                        reportGroup);
-
-            businessInvoices.put(invoice.getId(), businessInvoice);
-        }
-
-        // Sanitize (cherry-pick, merge) the items
-        final Collection<InvoiceItem> sanitizedInvoiceItems = sanitizeInvoiceItems(allInvoiceItems);
-
-        // Create the business invoice items
-        for (final InvoiceItem invoiceItem : sanitizedInvoiceItems) {
-            final Invoice invoice = invoiceIdToInvoiceMappings.get(invoiceItem.getInvoiceId());
-            final BusinessInvoiceItemBaseModelDao businessInvoiceItem = createBusinessInvoiceItem(account,
-                                                                                                  invoice,
-                                                                                                  invoiceItem,
-                                                                                                  Collections2.filter(sanitizedInvoiceItems,
-                                                                                                                      new Predicate<InvoiceItem>() {
-                                                                                                                          @Override
-                                                                                                                          public boolean apply(final InvoiceItem input) {
-                                                                                                                              return !input.getId().equals(invoiceItem.getId());
-                                                                                                                          }
-                                                                                                                      }),
-                                                                                                  accountRecordId,
-                                                                                                  tenantRecordId,
-                                                                                                  reportGroup,
-                                                                                                  context);
-            if (businessInvoiceItem != null) {
-                if (businessInvoiceItems.get(invoice.getId()) == null) {
-                    businessInvoiceItems.put(invoice.getId(), new LinkedList<BusinessInvoiceItemBaseModelDao>());
-                }
-                businessInvoiceItems.get(invoice.getId()).add(businessInvoiceItem);
-            }
-        }
-
-        final Map<BusinessInvoiceModelDao, Collection<BusinessInvoiceItemBaseModelDao>> businessRecords = new HashMap<BusinessInvoiceModelDao, Collection<BusinessInvoiceItemBaseModelDao>>();
-        for (final BusinessInvoiceModelDao businessInvoiceModelDao : businessInvoices.values()) {
-            businessRecords.put(businessInvoiceModelDao, businessInvoiceItems.get(businessInvoiceModelDao.getInvoiceId()));
-        }
-
-        return businessRecords;
+        rebuildInvoicesForAccountInTransaction(bac, businessInvoices, businessInvoiceItems, transactional, context);
+        // Invoice and payment details in BAC will be updated by BusinessInvoiceAndInvoicePaymentDao
     }
 
     private void rebuildInvoicesForAccountInTransaction(final BusinessAccountModelDao account,
-                                                        final Map<BusinessInvoiceModelDao, Collection<BusinessInvoiceItemBaseModelDao>> businessInvoices,
+                                                        final Map<UUID, BusinessInvoiceModelDao> businessInvoices,
+                                                        final Map<UUID, Collection<BusinessInvoiceItemBaseModelDao>> businessInvoiceItems,
                                                         final BusinessAnalyticsSqlDao transactional,
                                                         final CallContext context) {
         deleteInvoicesAndInvoiceItemsForAccountInTransaction(transactional, account.getAccountRecordId(), account.getTenantRecordId(), context);
 
-        for (final BusinessInvoiceModelDao businessInvoice : businessInvoices.keySet()) {
-            final Collection<BusinessInvoiceItemBaseModelDao> invoiceItems = businessInvoices.get(businessInvoice);
+        for (final BusinessInvoiceModelDao businessInvoice : businessInvoices.values()) {
+            final Collection<BusinessInvoiceItemBaseModelDao> invoiceItems = businessInvoiceItems.get(businessInvoice.getInvoiceId());
             if (invoiceItems != null) {
                 createInvoiceInTransaction(transactional, businessInvoice, invoiceItems, context);
             }
@@ -210,6 +121,103 @@ public class BusinessInvoiceDao extends BusinessAnalyticsDaoBase {
         for (final BusinessInvoiceItemBaseModelDao invoiceItem : invoiceItems) {
             transactional.create(invoiceItem.getTableName(), invoiceItem, context);
         }
+    }
+
+    /**
+     * Create business invoices and invoice items to record. Note that these POJOs are incomplete
+     * (denormalized payment fields have not yet been populated)
+     *
+     * @param account current account refreshed
+     * @param context call context
+     * @return all business invoice and invoice items to create
+     * @throws AnalyticsRefreshException
+     */
+    public Map<BusinessInvoiceModelDao, Collection<BusinessInvoiceItemBaseModelDao>> createBusinessInvoicesAndInvoiceItems(final Account account,
+                                                                                                                           final CallContext context) throws AnalyticsRefreshException {
+        final Long accountRecordId = getAccountRecordId(account.getId(), context);
+        final Long tenantRecordId = getTenantRecordId(context);
+        final ReportGroup reportGroup = getReportGroup(account.getId(), context);
+
+        // Lookup the invoices for that account
+        final Collection<Invoice> invoices = getInvoicesByAccountId(account.getId(), context);
+
+        // All invoice items across all invoices for that accounr (we need to be able to reference items across multiple invoices)
+        final Collection<InvoiceItem> allInvoiceItems = new LinkedList<InvoiceItem>();
+        // Convenient mapping invoice_id -> invoice
+        final Map<UUID, Invoice> invoiceIdToInvoiceMappings = new LinkedHashMap<UUID, Invoice>();
+        for (final Invoice invoice : invoices) {
+            invoiceIdToInvoiceMappings.put(invoice.getId(), invoice);
+            allInvoiceItems.addAll(invoice.getInvoiceItems());
+        }
+
+        // Sanitize (cherry-pick, merge) the items
+        final Collection<InvoiceItem> sanitizedInvoiceItems = sanitizeInvoiceItems(allInvoiceItems);
+
+        // Create the business invoice items. These are incomplete (the denormalized invoice fields haven't been computed yet)
+        final Map<UUID, Collection<BusinessInvoiceItemBaseModelDao>> businessInvoiceItemsForInvoiceId = new HashMap<UUID, Collection<BusinessInvoiceItemBaseModelDao>>();
+        for (final InvoiceItem invoiceItem : sanitizedInvoiceItems) {
+            final Invoice invoice = invoiceIdToInvoiceMappings.get(invoiceItem.getInvoiceId());
+            final BusinessInvoiceItemBaseModelDao businessInvoiceItem = createBusinessInvoiceItem(account,
+                                                                                                  invoice,
+                                                                                                  invoiceItem,
+                                                                                                  Collections2.filter(sanitizedInvoiceItems,
+                                                                                                                      new Predicate<InvoiceItem>() {
+                                                                                                                          @Override
+                                                                                                                          public boolean apply(final InvoiceItem input) {
+                                                                                                                              return !input.getId().equals(invoiceItem.getId());
+                                                                                                                          }
+                                                                                                                      }),
+                                                                                                  accountRecordId,
+                                                                                                  tenantRecordId,
+                                                                                                  reportGroup,
+                                                                                                  context);
+            if (businessInvoiceItem != null) {
+                if (businessInvoiceItemsForInvoiceId.get(invoice.getId()) == null) {
+                    businessInvoiceItemsForInvoiceId.put(invoice.getId(), new LinkedList<BusinessInvoiceItemBaseModelDao>());
+                }
+                businessInvoiceItemsForInvoiceId.get(invoice.getId()).add(businessInvoiceItem);
+            }
+        }
+
+        // Now, create the business invoices
+        final Map<BusinessInvoiceModelDao, Collection<BusinessInvoiceItemBaseModelDao>> businessRecords = new HashMap<BusinessInvoiceModelDao, Collection<BusinessInvoiceItemBaseModelDao>>();
+        for (final Invoice invoice : invoices) {
+            final Collection<BusinessInvoiceItemBaseModelDao> businessInvoiceItems = businessInvoiceItemsForInvoiceId.get(invoice.getId());
+            if (businessInvoiceItems == null) {
+                continue;
+            }
+
+            final BusinessInvoiceModelDao businessInvoice = createBusinessInvoice(account, invoice, businessInvoiceItems, accountRecordId, tenantRecordId, reportGroup, context);
+            businessRecords.put(businessInvoice, businessInvoiceItems);
+        }
+
+        return businessRecords;
+    }
+
+    private BusinessInvoiceModelDao createBusinessInvoice(final Account account,
+                                                          final Invoice invoice,
+                                                          final Collection<BusinessInvoiceItemBaseModelDao> businessInvoiceItems,
+                                                          final Long accountRecordId,
+                                                          final Long tenantRecordId,
+                                                          @Nullable final ReportGroup reportGroup,
+                                                          final CallContext context) throws AnalyticsRefreshException {
+        final Long invoiceRecordId = getInvoiceRecordId(invoice.getId(), context);
+        final AuditLog creationAuditLog = getInvoiceCreationAuditLog(invoice.getId(), context);
+
+        final BigDecimal amountCharged = BusinessInvoiceUtils.computeInvoiceAmountCharged(businessInvoiceItems);
+        final BigDecimal originalAmountCharged = BusinessInvoiceUtils.computeInvoiceOriginalAmountCharged(businessInvoiceItems);
+        final BigDecimal amountCredited = BusinessInvoiceUtils.computeInvoiceAmountCredited(businessInvoiceItems);
+
+        return new BusinessInvoiceModelDao(account,
+                                           accountRecordId,
+                                           invoice,
+                                           amountCharged,
+                                           originalAmountCharged,
+                                           amountCredited,
+                                           invoiceRecordId,
+                                           creationAuditLog,
+                                           tenantRecordId,
+                                           reportGroup);
     }
 
     private BusinessInvoiceItemBaseModelDao createBusinessInvoiceItem(final Account account,
@@ -307,46 +315,13 @@ public class BusinessInvoiceDao extends BusinessAnalyticsDaoBase {
                                                       reportGroup);
     }
 
-    private Boolean isRevenueRecognizable(final InvoiceItem invoiceItem, final Collection<InvoiceItem> otherInvoiceItems) {
-        // All items are recognizable except user generated credit (CBA_ADJ and CREDIT_ADJ on their own invoice)
-        return !(InvoiceItemType.CBA_ADJ.equals(invoiceItem.getInvoiceItemType()) &&
-                 (otherInvoiceItems.size() == 1 &&
-                  InvoiceItemType.CREDIT_ADJ.equals(otherInvoiceItems.iterator().next().getInvoiceItemType()) &&
-                  otherInvoiceItems.iterator().next().getInvoiceId().equals(invoiceItem.getInvoiceId()) &&
-                  otherInvoiceItems.iterator().next().getAmount().compareTo(invoiceItem.getAmount().negate()) == 0));
-    }
-
-    // Invoice adjustments
-    @VisibleForTesting
-    boolean isInvoiceAdjustmentItem(final InvoiceItem invoiceItem, final Collection<InvoiceItem> otherInvoiceItems) {
-        // Either REFUND_ADJ
-        return InvoiceItemType.REFUND_ADJ.equals(invoiceItem.getInvoiceItemType()) ||
-               // Or invoice level credit, i.e. credit adj, but NOT on its on own invoice
-               // Note: the negative credit adj items (internal generation of account level credits) doesn't figure in analytics
-               (InvoiceItemType.CREDIT_ADJ.equals(invoiceItem.getInvoiceItemType()) &&
-                !(otherInvoiceItems.size() == 1 &&
-                  InvoiceItemType.CBA_ADJ.equals(otherInvoiceItems.iterator().next().getInvoiceItemType()) &&
-                  otherInvoiceItems.iterator().next().getInvoiceId().equals(invoiceItem.getInvoiceId()) &&
-                  otherInvoiceItems.iterator().next().getAmount().compareTo(invoiceItem.getAmount().negate()) == 0));
-    }
-
-    // Item adjustments
-    private boolean isInvoiceItemAdjustmentItem(final InvoiceItem invoiceItem) {
-        return InvoiceItemType.ITEM_ADJ.equals(invoiceItem.getInvoiceItemType());
-    }
-
-    // Account credits, gained or consumed
-    private boolean isAccountCreditItem(final InvoiceItem invoiceItem) {
-        return InvoiceItemType.CBA_ADJ.equals(invoiceItem.getInvoiceItemType());
-    }
-
-    // Regular line item (charges)
-    private boolean isCharge(final InvoiceItem invoiceItem) {
-        return InvoiceItemType.EXTERNAL_CHARGE.equals(invoiceItem.getInvoiceItemType()) ||
-               InvoiceItemType.FIXED.equals(invoiceItem.getInvoiceItemType()) ||
-               InvoiceItemType.RECURRING.equals(invoiceItem.getInvoiceItemType());
-    }
-
+    /**
+     * Filter and transform the original invoice items for Analytics purposes. We mainly
+     * merge REPAIR_ADJ items with reparation items (reparees) to create item adjustments.
+     *
+     * @param allInvoiceItems all items for the current account
+     * @return invoice items interesting for Analytics purposes
+     */
     @VisibleForTesting
     Collection<InvoiceItem> sanitizeInvoiceItems(final Collection<InvoiceItem> allInvoiceItems) {
         // Build a convenience mapping between items -> repair_adj items (inverse of linkedItemId)
@@ -390,10 +365,50 @@ public class BusinessInvoiceDao extends BusinessAnalyticsDaoBase {
             }
         }
 
+        // We now need to adjust the CBA_ADJ for the repair items
+        final Set<UUID> cbasToIgnore = new HashSet<UUID>();
+        final Collection<AdjustedCBAInvoiceItem> newCbasToAdd = new LinkedList<AdjustedCBAInvoiceItem>();
+        for (final InvoiceItem cbaInvoiceItem : allInvoiceItems) {
+            if (!InvoiceItemType.CBA_ADJ.equals(cbaInvoiceItem.getInvoiceItemType())) {
+                continue;
+            }
+
+            for (final InvoiceItem invoiceItem : allInvoiceItems) {
+                if (reparationInvoiceItemIdToRepairItemMappings.keySet().contains(invoiceItem.getId())) {
+                    final InvoiceItem repairInvoiceItem = reparationInvoiceItemIdToRepairItemMappings.get(invoiceItem.getId());
+                    final InvoiceItem reparationInvoiceItem = invoiceItem;
+                    // Au petit bonheur la chance... There is nothing else against to compare
+                    if (repairInvoiceItem.getAmount().negate().compareTo(cbaInvoiceItem.getAmount()) == 0) {
+                        cbasToIgnore.add(cbaInvoiceItem.getId());
+                        newCbasToAdd.add(new AdjustedCBAInvoiceItem(cbaInvoiceItem, cbaInvoiceItem.getAmount().add(reparationInvoiceItem.getAmount().negate()), reparationInvoiceItem.getId()));
+
+                        // Now, fiddle with the CBA used on the reparation invoice
+                        for (final InvoiceItem cbaUsedOnNextInvoiceItem : allInvoiceItems) {
+                            if (!InvoiceItemType.CBA_ADJ.equals(cbaUsedOnNextInvoiceItem.getInvoiceItemType()) ||
+                                !cbaUsedOnNextInvoiceItem.getInvoiceId().equals(reparationInvoiceItem.getInvoiceId())) {
+                                continue;
+                            }
+
+                            // Au petit bonheur la chance... There is nothing else against to compare. Take the first one again?
+                            cbasToIgnore.add(cbaUsedOnNextInvoiceItem.getId());
+                            newCbasToAdd.add(new AdjustedCBAInvoiceItem(cbaUsedOnNextInvoiceItem, cbaUsedOnNextInvoiceItem.getAmount().add(reparationInvoiceItem.getAmount()), reparationInvoiceItem.getId()));
+                            break;
+                        }
+
+                        // Break from the inner loop only
+                        break;
+                    }
+                }
+            }
+        }
+
+
         // Filter the invoice items for analytics
         final Collection<InvoiceItem> invoiceItemsForAnalytics = new LinkedList<InvoiceItem>();
         for (final InvoiceItem invoiceItem : allInvoiceItems) {
-            if (InvoiceItemType.REPAIR_ADJ.equals(invoiceItem.getInvoiceItemType())) {
+            if (cbasToIgnore.contains(invoiceItem.getId())) {
+                // We don't care
+            } else if (InvoiceItemType.REPAIR_ADJ.equals(invoiceItem.getInvoiceItemType())) {
                 // We don't care, we'll create a special item for it below
             } else if (reparationInvoiceItemIdToRepairItemMappings.keySet().contains(invoiceItem.getId())) {
                 // We do care - this is a reparation item. Create an item adjustment for it
@@ -404,8 +419,118 @@ public class BusinessInvoiceDao extends BusinessAnalyticsDaoBase {
                 invoiceItemsForAnalytics.add(invoiceItem);
             }
         }
+        invoiceItemsForAnalytics.addAll(newCbasToAdd);
 
         return invoiceItemsForAnalytics;
+    }
+
+    private class AdjustedCBAInvoiceItem implements InvoiceItem {
+
+        private final InvoiceItem cbaInvoiceItem;
+        private final BigDecimal amount;
+        private final UUID reparationItemId;
+
+        private AdjustedCBAInvoiceItem(final InvoiceItem cbaInvoiceItem,
+                                       final BigDecimal amount,
+                                       final UUID reparationItemId) {
+            this.cbaInvoiceItem = cbaInvoiceItem;
+            this.amount = amount;
+            this.reparationItemId = reparationItemId;
+        }
+
+        @Override
+        public InvoiceItemType getInvoiceItemType() {
+            return InvoiceItemType.CBA_ADJ;
+        }
+
+        @Override
+        public UUID getInvoiceId() {
+            return cbaInvoiceItem.getInvoiceId();
+        }
+
+        @Override
+        public UUID getAccountId() {
+            return cbaInvoiceItem.getAccountId();
+        }
+
+        @Override
+        public LocalDate getStartDate() {
+            return cbaInvoiceItem.getStartDate();
+        }
+
+        @Override
+        public LocalDate getEndDate() {
+            return cbaInvoiceItem.getStartDate();
+        }
+
+        @Override
+        public BigDecimal getAmount() {
+            return amount;
+        }
+
+        @Override
+        public Currency getCurrency() {
+            return cbaInvoiceItem.getCurrency();
+        }
+
+        @Override
+        public String getDescription() {
+            return cbaInvoiceItem.getDescription();
+        }
+
+        @Override
+        public UUID getBundleId() {
+            return cbaInvoiceItem.getBundleId();
+        }
+
+        @Override
+        public UUID getSubscriptionId() {
+            return cbaInvoiceItem.getSubscriptionId();
+        }
+
+        @Override
+        public String getPlanName() {
+            return cbaInvoiceItem.getPlanName();
+        }
+
+        @Override
+        public String getPhaseName() {
+            return cbaInvoiceItem.getPhaseName();
+        }
+
+        @Override
+        public BigDecimal getRate() {
+            return cbaInvoiceItem.getRate();
+        }
+
+        @Override
+        public UUID getLinkedItemId() {
+            return cbaInvoiceItem.getLinkedItemId();
+        }
+
+        @Override
+        public boolean matches(final Object other) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public UUID getId() {
+            return cbaInvoiceItem.getId();
+        }
+
+        public UUID getSecondId() {
+            return reparationItemId;
+        }
+
+        @Override
+        public DateTime getCreatedDate() {
+            return cbaInvoiceItem.getCreatedDate();
+        }
+
+        @Override
+        public DateTime getUpdatedDate() {
+            return cbaInvoiceItem.getUpdatedDate();
+        }
     }
 
     private class AdjustmentInvoiceItemForRepair implements InvoiceItem {

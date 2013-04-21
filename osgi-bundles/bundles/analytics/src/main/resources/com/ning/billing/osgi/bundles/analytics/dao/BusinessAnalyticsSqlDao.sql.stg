@@ -241,6 +241,7 @@ insert into bin (
 , amount_charged
 , original_amount_charged
 , amount_credited
+, amount_refunded
 , created_date
 , created_by
 , created_reason_code
@@ -263,6 +264,7 @@ insert into bin (
 , :amountCharged
 , :originalAmountCharged
 , :amountCredited
+, :amountRefunded
 , :createdDate
 , :createdBy
 , :createdReasonCode
@@ -292,6 +294,7 @@ insert into bia (
 , invoice_amount_charged
 , invoice_original_amount_charged
 , invoice_amount_credited
+, invoice_amount_refunded
 , item_type
 , revenue_recognizable
 , bundle_external_key
@@ -331,6 +334,7 @@ insert into bia (
 , :invoiceAmountCharged
 , :invoiceOriginalAmountCharged
 , :invoiceAmountCredited
+, :invoiceAmountRefunded
 , :itemType
 , :revenueRecognizable
 , :bundleExternalKey
@@ -374,6 +378,7 @@ insert into bii (
 , invoice_amount_charged
 , invoice_original_amount_charged
 , invoice_amount_credited
+, invoice_amount_refunded
 , item_type
 , revenue_recognizable
 , bundle_external_key
@@ -413,6 +418,7 @@ insert into bii (
 , :invoiceAmountCharged
 , :invoiceOriginalAmountCharged
 , :invoiceAmountCredited
+, :invoiceAmountRefunded
 , :itemType
 , :revenueRecognizable
 , :bundleExternalKey
@@ -456,6 +462,7 @@ insert into biia (
 , invoice_amount_charged
 , invoice_original_amount_charged
 , invoice_amount_credited
+, invoice_amount_refunded
 , item_type
 , revenue_recognizable
 , bundle_external_key
@@ -495,6 +502,7 @@ insert into biia (
 , :invoiceAmountCharged
 , :invoiceOriginalAmountCharged
 , :invoiceAmountCredited
+, :invoiceAmountRefunded
 , :itemType
 , :revenueRecognizable
 , :bundleExternalKey
@@ -538,6 +546,7 @@ insert into biic (
 , invoice_amount_charged
 , invoice_original_amount_charged
 , invoice_amount_credited
+, invoice_amount_refunded
 , item_type
 , revenue_recognizable
 , bundle_external_key
@@ -577,6 +586,7 @@ insert into biic (
 , :invoiceAmountCharged
 , :invoiceOriginalAmountCharged
 , :invoiceAmountCredited
+, :invoiceAmountRefunded
 , :itemType
 , :revenueRecognizable
 , :bundleExternalKey
@@ -619,6 +629,7 @@ insert into bip (
 , invoice_amount_charged
 , invoice_original_amount_charged
 , invoice_amount_credited
+, invoice_amount_refunded
 , invoice_payment_type
 , payment_id
 , payment_number
@@ -671,6 +682,7 @@ insert into bip (
 , :invoiceAmountCharged
 , :invoiceOriginalAmountCharged
 , :invoiceAmountCredited
+, :invoiceAmountRefunded
 , :invoicePaymentType
 , :paymentId
 , :paymentNumber
@@ -727,6 +739,7 @@ insert into bipr (
 , invoice_amount_charged
 , invoice_original_amount_charged
 , invoice_amount_credited
+, invoice_amount_refunded
 , invoice_payment_type
 , payment_id
 , refund_id
@@ -780,6 +793,7 @@ insert into bipr (
 , :invoiceAmountCharged
 , :invoiceOriginalAmountCharged
 , :invoiceAmountCredited
+, :invoiceAmountRefunded
 , :invoicePaymentType
 , :paymentId
 , :refundId
@@ -837,6 +851,7 @@ insert into bipc (
 , invoice_amount_charged
 , invoice_original_amount_charged
 , invoice_amount_credited
+, invoice_amount_refunded
 , invoice_payment_type
 , payment_id
 , payment_number
@@ -889,6 +904,7 @@ insert into bipc (
 , :invoiceAmountCharged
 , :invoiceOriginalAmountCharged
 , :invoiceAmountCredited
+, :invoiceAmountRefunded
 , :invoicePaymentType
 , :paymentId
 , :paymentNumber

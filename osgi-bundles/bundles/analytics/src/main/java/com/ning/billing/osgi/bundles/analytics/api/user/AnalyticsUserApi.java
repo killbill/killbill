@@ -35,8 +35,7 @@ import com.ning.billing.osgi.bundles.analytics.api.BusinessTag;
 import com.ning.billing.osgi.bundles.analytics.dao.AnalyticsDao;
 import com.ning.billing.osgi.bundles.analytics.dao.BusinessAccountDao;
 import com.ning.billing.osgi.bundles.analytics.dao.BusinessFieldDao;
-import com.ning.billing.osgi.bundles.analytics.dao.BusinessInvoiceDao;
-import com.ning.billing.osgi.bundles.analytics.dao.BusinessInvoicePaymentDao;
+import com.ning.billing.osgi.bundles.analytics.dao.BusinessInvoiceAndInvoicePaymentDao;
 import com.ning.billing.osgi.bundles.analytics.dao.BusinessOverdueStatusDao;
 import com.ning.billing.osgi.bundles.analytics.dao.BusinessSubscriptionTransitionDao;
 import com.ning.billing.osgi.bundles.analytics.dao.BusinessTagDao;
@@ -51,8 +50,7 @@ public class AnalyticsUserApi extends BusinessAnalyticsBase {
     private final AnalyticsDao analyticsDao;
     private final BusinessAccountDao bacDao;
     private final BusinessSubscriptionTransitionDao bstDao;
-    private final BusinessInvoiceDao binDao;
-    private final BusinessInvoicePaymentDao bipDao;
+    private final BusinessInvoiceAndInvoicePaymentDao binAndBipDao;
     private final BusinessOverdueStatusDao bosDao;
     private final BusinessFieldDao bFieldDao;
     private final BusinessTagDao bTagDao;
@@ -64,8 +62,7 @@ public class AnalyticsUserApi extends BusinessAnalyticsBase {
         this.analyticsDao = new AnalyticsDao(osgiKillbillAPI, osgiKillbillDataSource);
         this.bacDao = new BusinessAccountDao(logService, osgiKillbillAPI, osgiKillbillDataSource);
         this.bstDao = new BusinessSubscriptionTransitionDao(logService, osgiKillbillAPI, osgiKillbillDataSource, bacDao);
-        this.binDao = new BusinessInvoiceDao(logService, osgiKillbillAPI, osgiKillbillDataSource, bacDao);
-        this.bipDao = new BusinessInvoicePaymentDao(logService, osgiKillbillAPI, osgiKillbillDataSource, bacDao, binDao);
+        this.binAndBipDao = new BusinessInvoiceAndInvoicePaymentDao(logService, osgiKillbillAPI, osgiKillbillDataSource, bacDao);
         this.bosDao = new BusinessOverdueStatusDao(logService, osgiKillbillAPI, osgiKillbillDataSource);
         this.bFieldDao = new BusinessFieldDao(logService, osgiKillbillAPI, osgiKillbillDataSource);
         this.bTagDao = new BusinessTagDao(logService, osgiKillbillAPI, osgiKillbillDataSource);
@@ -103,8 +100,8 @@ public class AnalyticsUserApi extends BusinessAnalyticsBase {
     public void rebuildAnalyticsForAccount(final UUID accountId, final CallContext context) throws AnalyticsRefreshException {
         logService.log(LogService.LOG_INFO, "Starting rebuild of Analytics for account " + accountId);
 
-        // Refresh payments. This will automatically trigger a refresh of invoices and account
-        bipDao.update(accountId, context);
+        // Refresh invoices and payments. This will automatically trigger a refresh of account
+        binAndBipDao.update(accountId, context);
 
         // Refresh BST
         bstDao.update(accountId, context);

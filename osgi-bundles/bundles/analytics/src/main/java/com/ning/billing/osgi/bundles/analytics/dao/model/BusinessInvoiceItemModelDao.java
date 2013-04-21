@@ -62,4 +62,9 @@ public class BusinessInvoiceItemModelDao extends BusinessInvoiceItemBaseModelDao
     public String getTableName() {
         return INVOICE_ITEMS_TABLE_NAME;
     }
+
+    @Override
+    public BusinessInvoiceItemType getBusinessInvoiceItemType() {
+        return BusinessInvoiceItemType.CHARGE;
+    }
 }

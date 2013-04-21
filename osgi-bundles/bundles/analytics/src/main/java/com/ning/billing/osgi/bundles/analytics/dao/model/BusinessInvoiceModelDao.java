@@ -43,6 +43,7 @@ public class BusinessInvoiceModelDao extends BusinessModelDaoBase {
     private BigDecimal amountCharged;
     private BigDecimal originalAmountCharged;
     private BigDecimal amountCredited;
+    private BigDecimal amountRefunded;
 
     public BusinessInvoiceModelDao() { /* When reading from the database */ }
 
@@ -52,8 +53,6 @@ public class BusinessInvoiceModelDao extends BusinessModelDaoBase {
                                    final LocalDate invoiceDate,
                                    final LocalDate targetDate,
                                    final String currency,
-                                   final BigDecimal balance,
-                                   final BigDecimal amountPaid,
                                    final BigDecimal amountCharged,
                                    final BigDecimal originalAmountCharged,
                                    final BigDecimal amountCredited,
@@ -83,8 +82,6 @@ public class BusinessInvoiceModelDao extends BusinessModelDaoBase {
         this.invoiceDate = invoiceDate;
         this.targetDate = targetDate;
         this.currency = currency;
-        this.balance = balance;
-        this.amountPaid = amountPaid;
         this.amountCharged = amountCharged;
         this.originalAmountCharged = originalAmountCharged;
         this.amountCredited = amountCredited;
@@ -93,6 +90,9 @@ public class BusinessInvoiceModelDao extends BusinessModelDaoBase {
     public BusinessInvoiceModelDao(final Account account,
                                    final Long accountRecordId,
                                    final Invoice invoice,
+                                   final BigDecimal amountCharged,
+                                   final BigDecimal originalAmountCharged,
+                                   final BigDecimal amountCredited,
                                    final Long invoiceRecordId,
                                    @Nullable final AuditLog creationAuditLog,
                                    final Long tenantRecordId,
@@ -103,11 +103,9 @@ public class BusinessInvoiceModelDao extends BusinessModelDaoBase {
              invoice.getInvoiceDate(),
              invoice.getTargetDate(),
              invoice.getCurrency() == null ? null : invoice.getCurrency().toString(),
-             invoice.getBalance(),
-             invoice.getPaidAmount(),
-             invoice.getChargedAmount(),
-             invoice.getOriginalChargedAmount(),
-             invoice.getCreditAdjAmount(),
+             amountCharged,
+             originalAmountCharged,
+             amountCredited,
              invoice.getCreatedDate(),
              creationAuditLog != null ? creationAuditLog.getUserName() : null,
              creationAuditLog != null ? creationAuditLog.getReasonCode() : null,
@@ -118,6 +116,21 @@ public class BusinessInvoiceModelDao extends BusinessModelDaoBase {
              accountRecordId,
              tenantRecordId,
              reportGroup);
+    }
+
+    // Denormalized payment field
+    public void setBalance(final BigDecimal balance) {
+        this.balance = balance;
+    }
+
+    // Denormalized payment field
+    public void setAmountPaid(final BigDecimal amountPaid) {
+        this.amountPaid = amountPaid;
+    }
+
+    // Denormalized payment field
+    public void setAmountRefunded(final BigDecimal amountRefunded) {
+        this.amountRefunded = amountRefunded;
     }
 
     @Override
@@ -169,6 +182,10 @@ public class BusinessInvoiceModelDao extends BusinessModelDaoBase {
         return amountCredited;
     }
 
+    public BigDecimal getAmountRefunded() {
+        return amountRefunded;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
@@ -184,6 +201,7 @@ public class BusinessInvoiceModelDao extends BusinessModelDaoBase {
         sb.append(", amountCharged=").append(amountCharged);
         sb.append(", originalAmountCharged=").append(originalAmountCharged);
         sb.append(", amountCredited=").append(amountCredited);
+        sb.append(", amountRefunded=").append(amountRefunded);
         sb.append('}');
         return sb.toString();
     }
@@ -209,6 +227,9 @@ public class BusinessInvoiceModelDao extends BusinessModelDaoBase {
             return false;
         }
         if (amountPaid != null ? (amountPaid.compareTo(that.amountPaid) != 0) : that.amountPaid != null) {
+            return false;
+        }
+        if (amountRefunded != null ? (amountRefunded.compareTo(that.amountRefunded) != 0) : that.amountRefunded != null) {
             return false;
         }
         if (balance != null ? (balance.compareTo(that.balance) != 0) : that.balance != null) {
@@ -253,6 +274,7 @@ public class BusinessInvoiceModelDao extends BusinessModelDaoBase {
         result = 31 * result + (amountCharged != null ? amountCharged.hashCode() : 0);
         result = 31 * result + (originalAmountCharged != null ? originalAmountCharged.hashCode() : 0);
         result = 31 * result + (amountCredited != null ? amountCredited.hashCode() : 0);
+        result = 31 * result + (amountRefunded != null ? amountRefunded.hashCode() : 0);
         return result;
     }
 }

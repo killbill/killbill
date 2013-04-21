@@ -154,6 +154,7 @@ create table bin (
 , amount_charged numeric(10, 4) default 0
 , original_amount_charged numeric(10, 4) default 0
 , amount_credited numeric(10, 4) default 0
+, amount_refunded numeric(10, 4) default 0
 , created_date datetime default null
 , created_by varchar(50) default null
 , created_reason_code varchar(255) default null
@@ -190,6 +191,7 @@ create table bia (
 , invoice_amount_charged numeric(10, 4) default 0
 , invoice_original_amount_charged numeric(10, 4) default 0
 , invoice_amount_credited numeric(10, 4) default 0
+, invoice_amount_refunded numeric(10, 4) default 0
 , item_type char(50) default null
 , revenue_recognizable bool default true
 , bundle_external_key varchar(50) default null
@@ -240,6 +242,7 @@ create table bii (
 , invoice_amount_charged numeric(10, 4) default 0
 , invoice_original_amount_charged numeric(10, 4) default 0
 , invoice_amount_credited numeric(10, 4) default 0
+, invoice_amount_refunded numeric(10, 4) default 0
 , item_type char(50) default null
 , revenue_recognizable bool default true
 , bundle_external_key varchar(50) default null
@@ -290,6 +293,7 @@ create table biia (
 , invoice_amount_charged numeric(10, 4) default 0
 , invoice_original_amount_charged numeric(10, 4) default 0
 , invoice_amount_credited numeric(10, 4) default 0
+, invoice_amount_refunded numeric(10, 4) default 0
 , item_type char(50) default null
 , revenue_recognizable bool default true
 , bundle_external_key varchar(50) default null
@@ -340,6 +344,7 @@ create table biic (
 , invoice_amount_charged numeric(10, 4) default 0
 , invoice_original_amount_charged numeric(10, 4) default 0
 , invoice_amount_credited numeric(10, 4) default 0
+, invoice_amount_refunded numeric(10, 4) default 0
 , item_type char(50) default null
 , revenue_recognizable bool default true
 , bundle_external_key varchar(50) default null
@@ -389,6 +394,7 @@ create table bip (
 , invoice_amount_charged numeric(10, 4) default 0
 , invoice_original_amount_charged numeric(10, 4) default 0
 , invoice_amount_credited numeric(10, 4) default 0
+, invoice_amount_refunded numeric(10, 4) default 0
 , invoice_payment_type varchar(50) default null
 , payment_id char(36) default null
 , payment_number bigint default null
@@ -452,6 +458,7 @@ create table bipr (
 , invoice_amount_charged numeric(10, 4) default 0
 , invoice_original_amount_charged numeric(10, 4) default 0
 , invoice_amount_credited numeric(10, 4) default 0
+, invoice_amount_refunded numeric(10, 4) default 0
 , invoice_payment_type varchar(50) default null
 , payment_id char(36) default null
 , refund_id char(36) default null
@@ -516,6 +523,7 @@ create table bipc (
 , invoice_amount_charged numeric(10, 4) default 0
 , invoice_original_amount_charged numeric(10, 4) default 0
 , invoice_amount_credited numeric(10, 4) default 0
+, invoice_amount_refunded numeric(10, 4) default 0
 , invoice_payment_type varchar(50) default null
 , payment_id char(36) default null
 , payment_number bigint default null
