@@ -43,7 +43,7 @@ public class AnalyticsActivator extends KillbillActivatorBase {
         dispatcher.registerEventHandler(analyticsListener);
 
         final AnalyticsUserApi analyticsUserApi = new AnalyticsUserApi(logService, killbillAPI, dataSource);
-        final AnalyticsServlet analyticsServlet = new AnalyticsServlet(analyticsUserApi);
+        final AnalyticsServlet analyticsServlet = new AnalyticsServlet(analyticsUserApi, logService);
         registerServlet(context, analyticsServlet);
     }
 

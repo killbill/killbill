@@ -1,0 +1,74 @@
+
+.swatch {
+  width: 10px;
+  height: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  display: inline-block;
+  margin-right: 3px;
+  border-radius: 2px;
+}
+
+.legend {
+display: inline-block;
+vertical-align: top;
+}
+
+.labelLines {
+    margin-top: 200px;
+}
+
+.labelLayers {
+    margin-top: 350px;
+}
+
+.charts {
+display: inline-block;
+position: relative;
+background-color: white;
+}
+
+text {
+  font: 12px sans-serif;
+  pointer-events: none;
+}
+
+text.shadow {
+  stroke: #fff;
+  stroke-width: 3px;
+  stroke-opacity: .8;
+}
+
+
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 10000;
+}
+
+circle {
+  fill-opacity: .8;
+  stroke: #fff;
+}
+
+path {
+	stroke: none;
+	stroke-width: 1;
+	fill: none;
+}
+.axis {
+  shape-rendering: crispEdges;
+}
+.x.axis line {
+  stroke: lightgrey;
+}
+.x.axis .minor {
+  stroke-opacity: .5;
+}
+.x.axis path {
+  display: none;
+}
+.y.axis line, .y.axis path {
+  fill: none;
+  stroke: #000;
+}
