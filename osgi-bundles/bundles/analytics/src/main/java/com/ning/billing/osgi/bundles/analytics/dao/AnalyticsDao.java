@@ -24,8 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.skife.jdbi.v2.DBI;
-
 import com.ning.billing.ObjectType;
 import com.ning.billing.osgi.bundles.analytics.api.BusinessAccount;
 import com.ning.billing.osgi.bundles.analytics.api.BusinessField;
@@ -52,16 +50,14 @@ import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
-public class AnalyticsDao {
+public class AnalyticsDao extends BusinessAnalyticsDaoBase {
 
     private final OSGIKillbillAPI osgiKillbillAPI;
-    private final BusinessAnalyticsSqlDao sqlDao;
 
     public AnalyticsDao(final OSGIKillbillAPI osgiKillbillAPI,
                         final OSGIKillbillDataSource osgiKillbillDataSource) {
+        super(osgiKillbillDataSource);
         this.osgiKillbillAPI = osgiKillbillAPI;
-        final DBI dbi = BusinessDBIProvider.get(osgiKillbillDataSource.getDataSource());
-        sqlDao = dbi.onDemand(BusinessAnalyticsSqlDao.class);
     }
 
     public BusinessAccount getAccountById(final UUID accountId, final TenantContext context) {

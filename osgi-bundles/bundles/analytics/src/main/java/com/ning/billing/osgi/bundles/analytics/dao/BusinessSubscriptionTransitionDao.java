@@ -48,7 +48,7 @@ public class BusinessSubscriptionTransitionDao extends BusinessAnalyticsDaoBase 
                                              final BusinessAccountDao businessAccountDao) {
         super(osgiKillbillDataSource);
         this.businessAccountDao = businessAccountDao;
-        this.businessBundleSummaryDao = new BusinessBundleSummaryDao(logService, osgiKillbillAPI, osgiKillbillDataSource);
+        this.businessBundleSummaryDao = new BusinessBundleSummaryDao(osgiKillbillDataSource);
         bacFactory = new BusinessAccountFactory(logService, osgiKillbillAPI);
         bbsFactory = new BusinessBundleSummaryFactory(logService, osgiKillbillAPI);
         bstFactory = new BusinessSubscriptionTransitionFactory(logService, osgiKillbillAPI);
@@ -79,11 +79,11 @@ public class BusinessSubscriptionTransitionDao extends BusinessAnalyticsDaoBase 
         });
     }
 
-    public void updateInTransaction(final BusinessAccountModelDao bac,
-                                    final Collection<BusinessBundleSummaryModelDao> bbss,
-                                    final Collection<BusinessSubscriptionTransitionModelDao> bsts,
-                                    final BusinessAnalyticsSqlDao transactional,
-                                    final CallContext context) {
+    private void updateInTransaction(final BusinessAccountModelDao bac,
+                                     final Collection<BusinessBundleSummaryModelDao> bbss,
+                                     final Collection<BusinessSubscriptionTransitionModelDao> bsts,
+                                     final BusinessAnalyticsSqlDao transactional,
+                                     final CallContext context) {
         // Update the subscription transitions
         transactional.deleteByAccountRecordId(BusinessSubscriptionTransitionModelDao.SUBSCRIPTION_TABLE_NAME,
                                               bac.getAccountRecordId(),

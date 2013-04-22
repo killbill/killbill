@@ -20,15 +20,11 @@ import java.util.Collection;
 
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessBundleSummaryModelDao;
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.killbill.osgi.libs.killbill.OSGIKillbillAPI;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillDataSource;
-import com.ning.killbill.osgi.libs.killbill.OSGIKillbillLogService;
 
 public class BusinessBundleSummaryDao extends BusinessAnalyticsDaoBase {
 
-    public BusinessBundleSummaryDao(final OSGIKillbillLogService logService,
-                                    final OSGIKillbillAPI osgiKillbillAPI,
-                                    final OSGIKillbillDataSource osgiKillbillDataSource) {
+    public BusinessBundleSummaryDao(final OSGIKillbillDataSource osgiKillbillDataSource) {
         super(osgiKillbillDataSource);
     }
 

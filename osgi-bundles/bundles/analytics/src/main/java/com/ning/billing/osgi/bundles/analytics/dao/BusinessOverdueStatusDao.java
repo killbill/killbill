@@ -65,13 +65,18 @@ public class BusinessOverdueStatusDao extends BusinessAnalyticsDaoBase {
         });
     }
 
-    private void updateInTransaction(final Collection<BusinessOverdueStatusModelDao> businessOverdueStatuses, final BusinessAnalyticsSqlDao transactional, final CallContext context) {
+    private void updateInTransaction(final Collection<BusinessOverdueStatusModelDao> businessOverdueStatuses,
+                                     final BusinessAnalyticsSqlDao transactional,
+                                     final CallContext context) {
         if (businessOverdueStatuses.size() == 0) {
             return;
         }
 
         final BusinessOverdueStatusModelDao firstBst = businessOverdueStatuses.iterator().next();
-        transactional.deleteByAccountRecordId(firstBst.getTableName(), firstBst.getAccountRecordId(), firstBst.getTenantRecordId(), context);
+        transactional.deleteByAccountRecordId(firstBst.getTableName(),
+                                              firstBst.getAccountRecordId(),
+                                              firstBst.getTenantRecordId(),
+                                              context);
 
         for (final BusinessOverdueStatusModelDao bst : businessOverdueStatuses) {
             transactional.create(bst.getTableName(), bst, context);

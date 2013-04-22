@@ -53,14 +53,20 @@ public class BusinessFieldDao extends BusinessAnalyticsDaoBase {
         });
     }
 
-    private void updateInTransaction(final Collection<BusinessFieldModelDao> fieldModelDaos, final BusinessAnalyticsSqlDao transactional, final CallContext context) {
+    private void updateInTransaction(final Collection<BusinessFieldModelDao> fieldModelDaos,
+                                     final BusinessAnalyticsSqlDao transactional,
+                                     final CallContext context) {
+        // TODO We should delete first
         if (fieldModelDaos.size() == 0) {
             return;
         }
 
         // We assume all fieldModelDaos are for a single type
         final BusinessFieldModelDao firstFieldModelDao = fieldModelDaos.iterator().next();
-        transactional.deleteByAccountRecordId(firstFieldModelDao.getTableName(), firstFieldModelDao.getAccountRecordId(), firstFieldModelDao.getTenantRecordId(), context);
+        transactional.deleteByAccountRecordId(firstFieldModelDao.getTableName(),
+                                              firstFieldModelDao.getAccountRecordId(),
+                                              firstFieldModelDao.getTenantRecordId(),
+                                              context);
 
         for (final BusinessFieldModelDao fieldModelDao : fieldModelDaos) {
             transactional.create(fieldModelDao.getTableName(), fieldModelDao, context);

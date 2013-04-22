@@ -23,7 +23,6 @@ import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
 
 import com.ning.billing.osgi.bundles.analytics.AnalyticsRefreshException;
-import com.ning.billing.osgi.bundles.analytics.dao.factory.BusinessAccountFactory;
 import com.ning.billing.osgi.bundles.analytics.dao.factory.BusinessTagFactory;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessTagModelDao;
 import com.ning.billing.util.callcontext.CallContext;
@@ -33,14 +32,12 @@ import com.ning.killbill.osgi.libs.killbill.OSGIKillbillLogService;
 
 public class BusinessTagDao extends BusinessAnalyticsDaoBase {
 
-    private final BusinessAccountFactory bacFactory;
     private final BusinessTagFactory bTagFactory;
 
     public BusinessTagDao(final OSGIKillbillLogService logService,
                           final OSGIKillbillAPI osgiKillbillAPI,
                           final OSGIKillbillDataSource osgiKillbillDataSource) {
         super(osgiKillbillDataSource);
-        bacFactory = new BusinessAccountFactory(logService, osgiKillbillAPI);
         bTagFactory = new BusinessTagFactory(logService, osgiKillbillAPI);
     }
 
@@ -56,14 +53,20 @@ public class BusinessTagDao extends BusinessAnalyticsDaoBase {
         });
     }
 
-    private void updateInTransaction(final Collection<BusinessTagModelDao> tagModelDaos, final BusinessAnalyticsSqlDao transactional, final CallContext context) {
+    private void updateInTransaction(final Collection<BusinessTagModelDao> tagModelDaos,
+                                     final BusinessAnalyticsSqlDao transactional,
+                                     final CallContext context) {
+        // TODO We should delete first
         if (tagModelDaos.size() == 0) {
             return;
         }
 
         // We assume all tagModelDaos are for a single type
         final BusinessTagModelDao firstTagModelDao = tagModelDaos.iterator().next();
-        transactional.deleteByAccountRecordId(firstTagModelDao.getTableName(), firstTagModelDao.getAccountRecordId(), firstTagModelDao.getTenantRecordId(), context);
+        transactional.deleteByAccountRecordId(firstTagModelDao.getTableName(),
+                                              firstTagModelDao.getAccountRecordId(),
+                                              firstTagModelDao.getTenantRecordId(),
+                                              context);
 
         for (final BusinessTagModelDao tagModelDao : tagModelDaos) {
             transactional.create(tagModelDao.getTableName(), tagModelDao, context);
