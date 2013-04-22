@@ -39,6 +39,7 @@ import com.ning.billing.osgi.bundles.analytics.utils.BusinessInvoiceUtils;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillDataSource;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillLogService;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 
 public class TestBusinessInvoiceFactory extends AnalyticsTestSuiteNoDB {
@@ -238,9 +239,14 @@ public class TestBusinessInvoiceFactory extends AnalyticsTestSuiteNoDB {
         final UUID externalChargeSubscriptionId = UUID.randomUUID();
         final LocalDate externalStartDate = new LocalDate(2012, 1, 1);
         final BigDecimal externalChargeAmount = BigDecimal.TEN;
-        final InvoiceItem externalCharge = createInvoiceItem(UUID.randomUUID(), InvoiceItemType.EXTERNAL_CHARGE, externalChargeSubscriptionId, externalStartDate, null, externalChargeAmount, null);
+        final UUID otherInvoice3 = UUID.randomUUID();
+        final InvoiceItem externalCharge = createInvoiceItem(otherInvoice3, InvoiceItemType.EXTERNAL_CHARGE, externalChargeSubscriptionId, externalStartDate, null, externalChargeAmount, null);
 
-        final Collection<InvoiceItem> sanitizedInvoiceItems = invoiceDao.sanitizeInvoiceItems(ImmutableList.<InvoiceItem>of(recurring1, repair1, reparation1, recurring2, repair2, reparation2, externalCharge));
+        final ArrayListMultimap<UUID, InvoiceItem> allInvoiceItems = ArrayListMultimap.<UUID, InvoiceItem>create();
+        allInvoiceItems.putAll(originalInvoice1, ImmutableList.<InvoiceItem>of(recurring1, repair1, reparation1));
+        allInvoiceItems.putAll(originalInvoice2, ImmutableList.<InvoiceItem>of(recurring2, repair2, reparation2));
+        allInvoiceItems.put(otherInvoice3, externalCharge);
+        final Collection<InvoiceItem> sanitizedInvoiceItems = invoiceDao.sanitizeInvoiceItems(allInvoiceItems);
         Assert.assertEquals(sanitizedInvoiceItems.size(), 2 + 2 + 1);
         for (final InvoiceItem invoiceItem : sanitizedInvoiceItems) {
             if (invoiceItem.getId().equals(recurring1.getId())) {

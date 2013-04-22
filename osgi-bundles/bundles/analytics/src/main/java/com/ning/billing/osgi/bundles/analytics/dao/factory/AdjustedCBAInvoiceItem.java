@@ -28,16 +28,16 @@ import com.ning.billing.invoice.api.InvoiceItemType;
 
 public class AdjustedCBAInvoiceItem implements InvoiceItem {
 
-    private final InvoiceItem cbaInvoiceItem;
+    private final UUID invoiceId;
+    private final UUID accountId;
     private final BigDecimal amount;
-    private final UUID reparationItemId;
+    private final Currency currency;
 
-    public AdjustedCBAInvoiceItem(final InvoiceItem cbaInvoiceItem,
-                                  final BigDecimal amount,
-                                  final UUID reparationItemId) {
-        this.cbaInvoiceItem = cbaInvoiceItem;
+    public AdjustedCBAInvoiceItem(final UUID invoiceId, final UUID accountId, final BigDecimal amount, final Currency currency) {
+        this.invoiceId = invoiceId;
+        this.accountId = accountId;
         this.amount = amount;
-        this.reparationItemId = reparationItemId;
+        this.currency = currency;
     }
 
     @Override
@@ -47,22 +47,22 @@ public class AdjustedCBAInvoiceItem implements InvoiceItem {
 
     @Override
     public UUID getInvoiceId() {
-        return cbaInvoiceItem.getInvoiceId();
+        return invoiceId;
     }
 
     @Override
     public UUID getAccountId() {
-        return cbaInvoiceItem.getAccountId();
+        return accountId;
     }
 
     @Override
     public LocalDate getStartDate() {
-        return cbaInvoiceItem.getStartDate();
+        return null;
     }
 
     @Override
     public LocalDate getEndDate() {
-        return cbaInvoiceItem.getStartDate();
+        return null;
     }
 
     @Override
@@ -72,42 +72,42 @@ public class AdjustedCBAInvoiceItem implements InvoiceItem {
 
     @Override
     public Currency getCurrency() {
-        return cbaInvoiceItem.getCurrency();
+        return currency;
     }
 
     @Override
     public String getDescription() {
-        return cbaInvoiceItem.getDescription();
+        return null;
     }
 
     @Override
     public UUID getBundleId() {
-        return cbaInvoiceItem.getBundleId();
+        return null;
     }
 
     @Override
     public UUID getSubscriptionId() {
-        return cbaInvoiceItem.getSubscriptionId();
+        return null;
     }
 
     @Override
     public String getPlanName() {
-        return cbaInvoiceItem.getPlanName();
+        return null;
     }
 
     @Override
     public String getPhaseName() {
-        return cbaInvoiceItem.getPhaseName();
+        return null;
     }
 
     @Override
     public BigDecimal getRate() {
-        return cbaInvoiceItem.getRate();
+        return null;
     }
 
     @Override
     public UUID getLinkedItemId() {
-        return cbaInvoiceItem.getLinkedItemId();
+        return null;
     }
 
     @Override
@@ -117,20 +117,16 @@ public class AdjustedCBAInvoiceItem implements InvoiceItem {
 
     @Override
     public UUID getId() {
-        return cbaInvoiceItem.getId();
-    }
-
-    public UUID getSecondId() {
-        return reparationItemId;
+        return null;
     }
 
     @Override
     public DateTime getCreatedDate() {
-        return cbaInvoiceItem.getCreatedDate();
+        return null;
     }
 
     @Override
     public DateTime getUpdatedDate() {
-        return cbaInvoiceItem.getUpdatedDate();
+        return null;
     }
 }

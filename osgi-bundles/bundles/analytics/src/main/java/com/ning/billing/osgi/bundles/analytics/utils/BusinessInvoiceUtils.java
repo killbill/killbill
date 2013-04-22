@@ -43,7 +43,7 @@ public class BusinessInvoiceUtils {
                !repairedInvoiceItem.getId().equals(invoiceItem.getId());
     }
 
-    public static Boolean isRevenueRecognizable(final InvoiceItem invoiceItem, final Collection<InvoiceItem> otherInvoiceItems) {
+    public static boolean isRevenueRecognizable(final InvoiceItem invoiceItem, final Collection<InvoiceItem> otherInvoiceItems) {
         // All items are recognizable except user generated credit (CBA_ADJ and CREDIT_ADJ on their own invoice)
         return !(InvoiceItemType.CBA_ADJ.equals(invoiceItem.getInvoiceItemType()) &&
                  (otherInvoiceItems.size() == 1 &&

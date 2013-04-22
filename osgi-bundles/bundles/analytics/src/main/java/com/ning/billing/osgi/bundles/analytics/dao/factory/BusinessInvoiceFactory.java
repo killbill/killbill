@@ -19,11 +19,9 @@ package com.ning.billing.osgi.bundles.analytics.dao.factory;
 import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -31,6 +29,7 @@ import javax.annotation.Nullable;
 import org.osgi.service.log.LogService;
 
 import com.ning.billing.account.api.Account;
+import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
@@ -93,12 +92,12 @@ public class BusinessInvoiceFactory extends BusinessFactoryBase {
         final Collection<Invoice> invoices = getInvoicesByAccountId(account.getId(), context);
 
         // All invoice items across all invoices for that account (we need to be able to reference items across multiple invoices)
-        final Collection<InvoiceItem> allInvoiceItems = new LinkedList<InvoiceItem>();
+        final Multimap<UUID, InvoiceItem> allInvoiceItems = ArrayListMultimap.<UUID, InvoiceItem>create();
         // Convenient mapping invoiceId -> invoice
         final Map<UUID, Invoice> invoiceIdToInvoiceMappings = new LinkedHashMap<UUID, Invoice>();
         for (final Invoice invoice : invoices) {
             invoiceIdToInvoiceMappings.put(invoice.getId(), invoice);
-            allInvoiceItems.addAll(invoice.getInvoiceItems());
+            allInvoiceItems.get(invoice.getId()).addAll(invoice.getInvoiceItems());
         }
 
         // *** MAGIC HAPPENS HERE ***
@@ -115,7 +114,7 @@ public class BusinessInvoiceFactory extends BusinessFactoryBase {
                                                                                   new Predicate<InvoiceItem>() {
                                                                                       @Override
                                                                                       public boolean apply(final InvoiceItem input) {
-                                                                                          return !input.getId().equals(invoiceItem.getId());
+                                                                                          return input.getId() != null && !input.getId().equals(invoiceItem.getId());
                                                                                       }
                                                                                   });
             final BusinessInvoiceItemBaseModelDao businessInvoiceItem = createBusinessInvoiceItem(account,
@@ -204,8 +203,8 @@ public class BusinessInvoiceFactory extends BusinessFactoryBase {
             planPhase = getPlanPhaseFromInvoiceItem(invoiceItem, context);
         }
 
-        final Long invoiceItemRecordId = getInvoiceItemRecordId(invoiceItem.getId(), context);
-        final AuditLog creationAuditLog = getInvoiceItemCreationAuditLog(invoiceItem.getId(), context);
+        final Long invoiceItemRecordId = invoiceItem.getId() != null ? getInvoiceItemRecordId(invoiceItem.getId(), context) : null;
+        final AuditLog creationAuditLog = invoiceItem.getId() != null ? getInvoiceItemCreationAuditLog(invoiceItem.getId(), context) : null;
 
         return createBusinessInvoiceItem(account,
                                          invoice,
@@ -284,27 +283,27 @@ public class BusinessInvoiceFactory extends BusinessFactoryBase {
      * @return invoice items interesting for Analytics purposes
      */
     @VisibleForTesting
-    Collection<InvoiceItem> sanitizeInvoiceItems(final Collection<InvoiceItem> allInvoiceItems) {
+    Collection<InvoiceItem> sanitizeInvoiceItems(final Multimap<UUID, InvoiceItem> allInvoiceItems) {
         // First, find all reparee items, to be able to merge REPAIR_ADJ and reparee items into ITEM_ADJ items
-        final Map<UUID, InvoiceItem> repareeInvoiceItemIdToRepairItemMappings = findRepareeInvoiceItems(allInvoiceItems);
+        final Map<InvoiceItem, InvoiceItem> repareeInvoiceItemToRepairItemMappings = findRepareeInvoiceItems(allInvoiceItems.values());
 
         // Second, since we are going to rebalance some items (the reparee items are going to be on a previous invoice),
         // we need to rebalance CBA_ADJ items. In order to simplify the process, we merge all items per invoice and revenueRecognizable
         // status (this information should be enough for financial and analytics reporting purposes).
-        final Collection<AdjustedCBAInvoiceItem> mergedCBAItems = buildMergedCBAItems(allInvoiceItems, repareeInvoiceItemIdToRepairItemMappings);
+        final Collection<AdjustedCBAInvoiceItem> mergedCBAItems = buildMergedCBAItems(allInvoiceItems, repareeInvoiceItemToRepairItemMappings);
 
         // Filter the invoice items for analytics
         final Collection<InvoiceItem> invoiceItemsForAnalytics = new LinkedList<InvoiceItem>();
-        for (final InvoiceItem invoiceItem : allInvoiceItems) {
+        for (final InvoiceItem invoiceItem : allInvoiceItems.values()) {
             if (InvoiceItemType.CBA_ADJ.equals(invoiceItem.getInvoiceItemType())) {
                 // We don't care, we'll merge them on all invoices
             } else if (InvoiceItemType.REPAIR_ADJ.equals(invoiceItem.getInvoiceItemType())) {
                 // We don't care, we'll create a special item for it below
-            } else if (repareeInvoiceItemIdToRepairItemMappings.keySet().contains(invoiceItem.getId())) {
+            } else if (repareeInvoiceItemToRepairItemMappings.keySet().contains(invoiceItem)) {
                 // We do care - this is a reparation item. Create an item adjustment for it
-                final InvoiceItem repairInvoiceItem = repareeInvoiceItemIdToRepairItemMappings.get(invoiceItem.getId());
-                final InvoiceItem reparationInvoiceItem = invoiceItem;
-                invoiceItemsForAnalytics.add(new AdjustmentInvoiceItemForRepair(repairInvoiceItem, reparationInvoiceItem));
+                final InvoiceItem repairInvoiceItem = repareeInvoiceItemToRepairItemMappings.get(invoiceItem);
+                final InvoiceItem repareeInvoiceItem = invoiceItem;
+                invoiceItemsForAnalytics.add(new AdjustmentInvoiceItemForRepair(repairInvoiceItem, repareeInvoiceItem));
             } else {
                 invoiceItemsForAnalytics.add(invoiceItem);
             }
@@ -320,7 +319,7 @@ public class BusinessInvoiceFactory extends BusinessFactoryBase {
      * @param allInvoiceItems all invoice items, across all invoices
      * @return a mapping reparee invoice item id to REPAIR_ADJ item
      */
-    private Map<UUID, InvoiceItem> findRepareeInvoiceItems(final Collection<InvoiceItem> allInvoiceItems) {
+    private Map<InvoiceItem, InvoiceItem> findRepareeInvoiceItems(final Collection<InvoiceItem> allInvoiceItems) {
         // Build a convenience mapping between items -> repair_adj items (inverse of linkedItemId)
         final Map<UUID, InvoiceItem> repairedInvoiceItemIdToRepairInvoiceItemMappings = new HashMap<UUID, InvoiceItem>();
         for (final InvoiceItem invoiceItem : allInvoiceItems) {
@@ -330,7 +329,7 @@ public class BusinessInvoiceFactory extends BusinessFactoryBase {
         }
 
         // Now find the "reparee" items, i.e. the ones which correspond to the repaired items
-        final Map<UUID, InvoiceItem> repareeInvoiceItemIdToRepairItemMappings = new LinkedHashMap<UUID, InvoiceItem>();
+        final Map<InvoiceItem, InvoiceItem> repareeInvoiceItemToRepairItemMappings = new LinkedHashMap<InvoiceItem, InvoiceItem>();
         for (final InvoiceItem repairedInvoiceItem : allInvoiceItems) {
             // Skip non-repaired items
             if (!repairedInvoiceItemIdToRepairInvoiceItemMappings.keySet().contains(repairedInvoiceItem.getId())) {
@@ -350,54 +349,99 @@ public class BusinessInvoiceFactory extends BusinessFactoryBase {
             }
 
             if (repareeItem != null) {
-                repareeInvoiceItemIdToRepairItemMappings.put(repareeItem.getId(), repairedInvoiceItemIdToRepairInvoiceItemMappings.get(repairedInvoiceItem.getId()));
+                repareeInvoiceItemToRepairItemMappings.put(repareeItem, repairedInvoiceItemIdToRepairInvoiceItemMappings.get(repairedInvoiceItem.getId()));
             } else {
                 logService.log(LogService.LOG_ERROR, "Could not find the reparee item for the repair item id " + repairedInvoiceItem.getId() + " - this should never happen!");
             }
         }
 
-        return repareeInvoiceItemIdToRepairItemMappings;
+        return repareeInvoiceItemToRepairItemMappings;
     }
 
-    private Collection<AdjustedCBAInvoiceItem> buildMergedCBAItems(final Collection<InvoiceItem> allInvoiceItems,
-                                                                   final Map<UUID, InvoiceItem> repareeInvoiceItemIdToRepairItemMappings) {
-        // We now need to adjust the CBA_ADJ for the repair items
-        final Set<UUID> cbasToIgnore = new HashSet<UUID>();
-        final Collection<AdjustedCBAInvoiceItem> newCbasToAdd = new LinkedList<AdjustedCBAInvoiceItem>();
-        for (final InvoiceItem cbaInvoiceItem : allInvoiceItems) {
-            if (!InvoiceItemType.CBA_ADJ.equals(cbaInvoiceItem.getInvoiceItemType())) {
+    private Collection<AdjustedCBAInvoiceItem> buildMergedCBAItems(final Multimap<UUID, InvoiceItem> allInvoiceItems,
+                                                                   final Map<InvoiceItem, InvoiceItem> repareeInvoiceItemToRepairItemMappings) {
+        final Map<UUID, BigDecimal> cbaPerInvoice = new HashMap<UUID, BigDecimal>();
+
+        // Adjust the CBAs in case of repair.
+        // On the new invoice (with the reparee item), we need to add the amount of the reparee to the CBA amount.
+        // On the original invoice (with the repair item), we need to substract the amount of the reparee to the CBA amount.
+        for (final InvoiceItem repareeInvoiceItem : repareeInvoiceItemToRepairItemMappings.keySet()) {
+            // The reparee item was on a new invoice
+            if (cbaPerInvoice.get(repareeInvoiceItem.getInvoiceId()) == null) {
+                cbaPerInvoice.put(repareeInvoiceItem.getInvoiceId(), BigDecimal.ZERO);
+            }
+            final BigDecimal currentCBAForNewInvoice = cbaPerInvoice.get(repareeInvoiceItem.getInvoiceId());
+            final BigDecimal adjustedCBAForNewInvoice = currentCBAForNewInvoice.add(repareeInvoiceItem.getAmount());
+            cbaPerInvoice.put(repareeInvoiceItem.getInvoiceId(), adjustedCBAForNewInvoice);
+
+            // The repair item was on the original invoice
+            final InvoiceItem repairInvoiceItem = repareeInvoiceItemToRepairItemMappings.get(repareeInvoiceItem);
+            if (cbaPerInvoice.get(repairInvoiceItem.getInvoiceId()) == null) {
+                cbaPerInvoice.put(repairInvoiceItem.getInvoiceId(), BigDecimal.ZERO);
+            }
+            final BigDecimal currentCBAForOriginalInvoice = cbaPerInvoice.get(repairInvoiceItem.getInvoiceId());
+            final BigDecimal adjustedCBAForOriginalInvoice = currentCBAForOriginalInvoice.add(repareeInvoiceItem.getAmount().negate());
+            cbaPerInvoice.put(repairInvoiceItem.getInvoiceId(), adjustedCBAForOriginalInvoice);
+        }
+
+        // Now, we just combine the other CBA items
+        final Collection<AdjustedCBAInvoiceItem> mergedCBAs = new LinkedList<AdjustedCBAInvoiceItem>();
+        for (final UUID invoiceId : allInvoiceItems.keySet()) {
+            if (allInvoiceItems.get(invoiceId) == null) {
                 continue;
             }
 
-            for (final InvoiceItem invoiceItem : allInvoiceItems) {
-                if (repareeInvoiceItemIdToRepairItemMappings.keySet().contains(invoiceItem.getId())) {
-                    final InvoiceItem repairInvoiceItem = repareeInvoiceItemIdToRepairItemMappings.get(invoiceItem.getId());
-                    final InvoiceItem reparationInvoiceItem = invoiceItem;
-                    // Au petit bonheur la chance... There is nothing else against to compare
-                    if (repairInvoiceItem.getAmount().negate().compareTo(cbaInvoiceItem.getAmount()) == 0) {
-                        cbasToIgnore.add(cbaInvoiceItem.getId());
-                        newCbasToAdd.add(new AdjustedCBAInvoiceItem(cbaInvoiceItem, cbaInvoiceItem.getAmount().add(reparationInvoiceItem.getAmount().negate()), reparationInvoiceItem.getId()));
-
-                        // Now, fiddle with the CBA used on the reparation invoice
-                        for (final InvoiceItem cbaUsedOnNextInvoiceItem : allInvoiceItems) {
-                            if (!InvoiceItemType.CBA_ADJ.equals(cbaUsedOnNextInvoiceItem.getInvoiceItemType()) ||
-                                !cbaUsedOnNextInvoiceItem.getInvoiceId().equals(reparationInvoiceItem.getInvoiceId())) {
-                                continue;
-                            }
-
-                            // Au petit bonheur la chance... There is nothing else against to compare. Take the first one again?
-                            cbasToIgnore.add(cbaUsedOnNextInvoiceItem.getId());
-                            newCbasToAdd.add(new AdjustedCBAInvoiceItem(cbaUsedOnNextInvoiceItem, cbaUsedOnNextInvoiceItem.getAmount().add(reparationInvoiceItem.getAmount()), reparationInvoiceItem.getId()));
-                            break;
-                        }
-
-                        // Break from the inner loop only
-                        break;
-                    }
+            // Only adjust CBA items on invoices having CBA already. Otherwise, don't do anything (e.g. for unpaid repaired invoices).
+            final Collection<InvoiceItem> cbaItemsForInvoice = Collections2.filter(allInvoiceItems.get(invoiceId), new Predicate<InvoiceItem>() {
+                @Override
+                public boolean apply(final InvoiceItem invoiceItem) {
+                    return InvoiceItemType.CBA_ADJ.equals(invoiceItem.getInvoiceItemType());
                 }
+            });
+            if (cbaItemsForInvoice.size() == 0) {
+                continue;
+            }
+
+            BigDecimal revenueRecognizableCBA = cbaPerInvoice.get(invoiceId);
+            if (revenueRecognizableCBA == null) {
+                revenueRecognizableCBA = BigDecimal.ZERO;
+            }
+            BigDecimal nonRevenueRecognizableCBA = BigDecimal.ZERO;
+
+            UUID accountId = null;
+            Currency currency = null;
+            for (final InvoiceItem invoiceItem : cbaItemsForInvoice) {
+                final Collection<InvoiceItem> otherInvoiceItems = Collections2.filter(allInvoiceItems.values(),
+                                                                                      new Predicate<InvoiceItem>() {
+                                                                                          @Override
+                                                                                          public boolean apply(final InvoiceItem input) {
+                                                                                              return !input.getId().equals(invoiceItem.getId());
+                                                                                          }
+                                                                                      });
+                final Boolean isRevenueRecognizable = isRevenueRecognizable(invoiceItem, otherInvoiceItems);
+                if (isRevenueRecognizable) {
+                    revenueRecognizableCBA = revenueRecognizableCBA.add(invoiceItem.getAmount());
+                } else {
+                    nonRevenueRecognizableCBA = nonRevenueRecognizableCBA.add(invoiceItem.getAmount());
+                }
+
+                // These should be the same across all items
+                if (accountId == null) {
+                    accountId = invoiceItem.getAccountId();
+                }
+                if (currency == null) {
+                    currency = invoiceItem.getCurrency();
+                }
+            }
+
+            if (revenueRecognizableCBA.compareTo(BigDecimal.ZERO) != 0) {
+                mergedCBAs.add(new AdjustedCBAInvoiceItem(invoiceId, accountId, revenueRecognizableCBA, currency));
+            }
+            if (nonRevenueRecognizableCBA.compareTo(BigDecimal.ZERO) != 0) {
+                mergedCBAs.add(new AdjustedCBAInvoiceItem(invoiceId, accountId, nonRevenueRecognizableCBA, currency));
             }
         }
 
-        return newCbasToAdd;
+        return mergedCBAs;
     }
 }
