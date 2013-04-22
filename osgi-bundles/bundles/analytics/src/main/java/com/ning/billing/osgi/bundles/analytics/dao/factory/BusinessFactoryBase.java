@@ -14,18 +14,16 @@
  * under the License.
  */
 
-package com.ning.billing.osgi.bundles.analytics.dao;
+package com.ning.billing.osgi.bundles.analytics.dao.factory;
 
-import org.skife.jdbi.v2.DBI;
+import com.ning.billing.osgi.bundles.analytics.BusinessAnalyticsBase;
+import com.ning.killbill.osgi.libs.killbill.OSGIKillbillAPI;
+import com.ning.killbill.osgi.libs.killbill.OSGIKillbillLogService;
 
-import com.ning.killbill.osgi.libs.killbill.OSGIKillbillDataSource;
+public class BusinessFactoryBase extends BusinessAnalyticsBase {
 
-public class BusinessAnalyticsDaoBase {
-
-    protected final BusinessAnalyticsSqlDao sqlDao;
-
-    public BusinessAnalyticsDaoBase(final OSGIKillbillDataSource osgiKillbillDataSource) {
-        final DBI dbi = BusinessDBIProvider.get(osgiKillbillDataSource.getDataSource());
-        sqlDao = dbi.onDemand(BusinessAnalyticsSqlDao.class);
+    public BusinessFactoryBase(final OSGIKillbillLogService logService,
+                               final OSGIKillbillAPI osgiKillbillAPI) {
+        super(logService, osgiKillbillAPI);
     }
 }

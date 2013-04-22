@@ -17,35 +17,32 @@
 package com.ning.billing.osgi.bundles.analytics.dao;
 
 import java.util.Collection;
-import java.util.LinkedList;
 import java.util.UUID;
 
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
 
-import com.ning.billing.account.api.Account;
 import com.ning.billing.osgi.bundles.analytics.AnalyticsRefreshException;
+import com.ning.billing.osgi.bundles.analytics.dao.factory.BusinessFieldFactory;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessFieldModelDao;
-import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessModelDaoBase.ReportGroup;
-import com.ning.billing.util.audit.AuditLog;
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.customfield.CustomField;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillAPI;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillDataSource;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillLogService;
 
 public class BusinessFieldDao extends BusinessAnalyticsDaoBase {
 
+    private final BusinessFieldFactory bFieldFactory;
+
     public BusinessFieldDao(final OSGIKillbillLogService logService,
                             final OSGIKillbillAPI osgiKillbillAPI,
                             final OSGIKillbillDataSource osgiKillbillDataSource) {
-        super(logService, osgiKillbillAPI, osgiKillbillDataSource);
+        super(osgiKillbillDataSource);
+        bFieldFactory = new BusinessFieldFactory(logService, osgiKillbillAPI);
     }
 
     public void update(final UUID accountId, final CallContext context) throws AnalyticsRefreshException {
-        final Account account = getAccount(accountId, context);
-
-        final Collection<BusinessFieldModelDao> fieldModelDaos = createBusinessFields(account, context);
+        final Collection<BusinessFieldModelDao> fieldModelDaos = bFieldFactory.createBusinessFields(accountId, context);
 
         sqlDao.inTransaction(new Transaction<Void, BusinessAnalyticsSqlDao>() {
             @Override
@@ -68,29 +65,5 @@ public class BusinessFieldDao extends BusinessAnalyticsDaoBase {
         for (final BusinessFieldModelDao fieldModelDao : fieldModelDaos) {
             transactional.create(fieldModelDao.getTableName(), fieldModelDao, context);
         }
-    }
-
-    private Collection<BusinessFieldModelDao> createBusinessFields(final Account account, final CallContext context) throws AnalyticsRefreshException {
-        final Long accountRecordId = getAccountRecordId(account.getId(), context);
-        final Long tenantRecordId = getTenantRecordId(context);
-        final ReportGroup reportGroup = getReportGroup(account.getId(), context);
-
-        final Collection<CustomField> fields = getFieldsForAccount(account.getId(), context);
-
-        final Collection<BusinessFieldModelDao> fieldModelDaos = new LinkedList<BusinessFieldModelDao>();
-        for (final CustomField field : fields) {
-            final Long customFieldRecordId = getFieldRecordId(field.getId(), context);
-            final AuditLog creationAuditLog = getFieldCreationAuditLog(field.getId(), context);
-            final BusinessFieldModelDao fieldModelDao = BusinessFieldModelDao.create(account,
-                                                                                     accountRecordId,
-                                                                                     field,
-                                                                                     customFieldRecordId,
-                                                                                     creationAuditLog,
-                                                                                     tenantRecordId,
-                                                                                     reportGroup);
-            fieldModelDaos.add(fieldModelDao);
-        }
-
-        return fieldModelDaos;
     }
 }

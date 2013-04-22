@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.osgi.bundles.analytics.dao;
+package com.ning.billing.osgi.bundles.analytics.dao.factory;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -48,9 +48,9 @@ import com.ning.killbill.osgi.libs.killbill.OSGIKillbillLogService;
 
 import com.google.common.collect.ImmutableList;
 
-public class TestBusinessBundleSummaryDao extends AnalyticsTestSuiteNoDB {
+public class TestBusinessBundleSummaryFactory extends AnalyticsTestSuiteNoDB {
 
-    private BusinessBundleSummaryDao bundleSummaryDao;
+    private BusinessBundleSummaryFactory bundleSummaryDao;
 
     @Override
     @BeforeMethod(groups = "fast")
@@ -71,7 +71,7 @@ public class TestBusinessBundleSummaryDao extends AnalyticsTestSuiteNoDB {
             }
         }).when(osgiKillbillLogService).log(Mockito.anyInt(), Mockito.anyString());
 
-        bundleSummaryDao = new BusinessBundleSummaryDao(osgiKillbillLogService, null, osgiKillbillDataSource);
+        bundleSummaryDao = new BusinessBundleSummaryFactory(osgiKillbillLogService, null);
     }
 
     @Test(groups = "fast")

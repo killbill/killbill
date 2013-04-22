@@ -17,36 +17,35 @@
 package com.ning.billing.osgi.bundles.analytics.dao;
 
 import java.util.Collection;
-import java.util.LinkedList;
 import java.util.UUID;
 
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
 
-import com.ning.billing.account.api.Account;
 import com.ning.billing.osgi.bundles.analytics.AnalyticsRefreshException;
-import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessModelDaoBase.ReportGroup;
+import com.ning.billing.osgi.bundles.analytics.dao.factory.BusinessAccountFactory;
+import com.ning.billing.osgi.bundles.analytics.dao.factory.BusinessTagFactory;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessTagModelDao;
-import com.ning.billing.util.audit.AuditLog;
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.tag.Tag;
-import com.ning.billing.util.tag.TagDefinition;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillAPI;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillDataSource;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillLogService;
 
 public class BusinessTagDao extends BusinessAnalyticsDaoBase {
 
+    private final BusinessAccountFactory bacFactory;
+    private final BusinessTagFactory bTagFactory;
+
     public BusinessTagDao(final OSGIKillbillLogService logService,
                           final OSGIKillbillAPI osgiKillbillAPI,
                           final OSGIKillbillDataSource osgiKillbillDataSource) {
-        super(logService, osgiKillbillAPI, osgiKillbillDataSource);
+        super(osgiKillbillDataSource);
+        bacFactory = new BusinessAccountFactory(logService, osgiKillbillAPI);
+        bTagFactory = new BusinessTagFactory(logService, osgiKillbillAPI);
     }
 
     public void update(final UUID accountId, final CallContext context) throws AnalyticsRefreshException {
-        final Account account = getAccount(accountId, context);
-
-        final Collection<BusinessTagModelDao> tagModelDaos = createBusinessTags(account, context);
+        final Collection<BusinessTagModelDao> tagModelDaos = bTagFactory.createBusinessTags(accountId, context);
 
         sqlDao.inTransaction(new Transaction<Void, BusinessAnalyticsSqlDao>() {
             @Override
@@ -69,31 +68,5 @@ public class BusinessTagDao extends BusinessAnalyticsDaoBase {
         for (final BusinessTagModelDao tagModelDao : tagModelDaos) {
             transactional.create(tagModelDao.getTableName(), tagModelDao, context);
         }
-    }
-
-    private Collection<BusinessTagModelDao> createBusinessTags(final Account account, final CallContext context) throws AnalyticsRefreshException {
-        final Long accountRecordId = getAccountRecordId(account.getId(), context);
-        final Long tenantRecordId = getTenantRecordId(context);
-        final ReportGroup reportGroup = getReportGroup(account.getId(), context);
-
-        final Collection<Tag> tags = getTagsForAccount(account.getId(), context);
-
-        final Collection<BusinessTagModelDao> tagModelDaos = new LinkedList<BusinessTagModelDao>();
-        for (final Tag tag : tags) {
-            final Long tagRecordId = getTagRecordId(tag.getId(), context);
-            final TagDefinition tagDefinition = getTagDefinition(tag.getTagDefinitionId(), context);
-            final AuditLog creationAuditLog = getTagCreationAuditLog(tag.getId(), context);
-            final BusinessTagModelDao tagModelDao = BusinessTagModelDao.create(account,
-                                                                               accountRecordId,
-                                                                               tag,
-                                                                               tagRecordId,
-                                                                               tagDefinition,
-                                                                               creationAuditLog,
-                                                                               tenantRecordId,
-                                                                               reportGroup);
-            tagModelDaos.add(tagModelDao);
-        }
-
-        return tagModelDaos;
     }
 }

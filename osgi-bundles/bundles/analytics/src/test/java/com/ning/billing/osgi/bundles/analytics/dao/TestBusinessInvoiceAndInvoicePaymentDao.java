@@ -125,6 +125,7 @@ public class TestBusinessInvoiceAndInvoicePaymentDao extends AnalyticsTestSuiteN
 
         // Setup the mocks
         // TODO this is really fragile - we need to extract a mock library for testing Kill Bill
+        Mockito.when(osgiKillbillApi.getAccountUserApi().getAccountById(account.getId(), callContext)).thenReturn(account);
         Mockito.when(osgiKillbillApi.getInvoiceUserApi().getInvoicesByAccount(account.getId(), callContext)).thenReturn(ImmutableList.<Invoice>of(invoice349, invoice570));
         Mockito.when(osgiKillbillApi.getInvoiceUserApi().getInvoice(invoice349Id, callContext)).thenReturn(invoice349);
         Mockito.when(osgiKillbillApi.getInvoiceUserApi().getInvoice(invoice570Id, callContext)).thenReturn(invoice570);
@@ -140,7 +141,7 @@ public class TestBusinessInvoiceAndInvoicePaymentDao extends AnalyticsTestSuiteN
         final Map<UUID, BusinessInvoiceModelDao> invoices = new HashMap<UUID, BusinessInvoiceModelDao>();
         final Map<UUID, Collection<BusinessInvoiceItemBaseModelDao>> invoiceItems = new HashMap<UUID, Collection<BusinessInvoiceItemBaseModelDao>>();
         final Map<UUID, Collection<BusinessInvoicePaymentBaseModelDao>> invoicePayments = new HashMap<UUID, Collection<BusinessInvoicePaymentBaseModelDao>>();
-        dao.createBusinessPojos(account, invoices, invoiceItems, invoicePayments, callContext);
+        dao.createBusinessPojos(account.getId(), invoices, invoiceItems, invoicePayments, callContext);
 
         /*
          * Expected Business invoice 349:

@@ -17,37 +17,32 @@
 package com.ning.billing.osgi.bundles.analytics.dao;
 
 import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
 import org.osgi.service.log.LogService;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
 
 import com.ning.billing.ObjectType;
-import com.ning.billing.account.api.Account;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.osgi.bundles.analytics.AnalyticsRefreshException;
-import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessModelDaoBase.ReportGroup;
+import com.ning.billing.osgi.bundles.analytics.dao.factory.BusinessOverdueStatusFactory;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessOverdueStatusModelDao;
-import com.ning.billing.util.audit.AuditLog;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillAPI;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillDataSource;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillLogService;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-
 public class BusinessOverdueStatusDao extends BusinessAnalyticsDaoBase {
+
+    private final LogService logService;
+    private final BusinessOverdueStatusFactory bosFactory;
 
     public BusinessOverdueStatusDao(final OSGIKillbillLogService logService,
                                     final OSGIKillbillAPI osgiKillbillAPI,
                                     final OSGIKillbillDataSource osgiKillbillDataSource) {
-        super(logService, osgiKillbillAPI, osgiKillbillDataSource);
+        super(osgiKillbillDataSource);
+        this.logService = logService;
+        bosFactory = new BusinessOverdueStatusFactory(logService, osgiKillbillAPI);
     }
 
     public void update(final UUID accountId, final ObjectType objectType, final CallContext context) throws AnalyticsRefreshException {
@@ -59,14 +54,7 @@ public class BusinessOverdueStatusDao extends BusinessAnalyticsDaoBase {
     }
 
     private void updateForBundle(final UUID accountId, final CallContext context) throws AnalyticsRefreshException {
-        final Account account = getAccount(accountId, context);
-
-        final Collection<SubscriptionBundle> bundles = getSubscriptionBundlesForAccount(accountId, context);
-        final Collection<BusinessOverdueStatusModelDao> businessOverdueStatuses = new LinkedList<BusinessOverdueStatusModelDao>();
-        for (final SubscriptionBundle bundle : bundles) {
-            // Recompute all blocking states for that bundle
-            businessOverdueStatuses.addAll(createBusinessOverdueStatuses(account, bundle, context));
-        }
+        final Collection<BusinessOverdueStatusModelDao> businessOverdueStatuses = bosFactory.createBusinessOverdueStatuses(accountId, context);
 
         sqlDao.inTransaction(new Transaction<Void, BusinessAnalyticsSqlDao>() {
             @Override
@@ -88,40 +76,5 @@ public class BusinessOverdueStatusDao extends BusinessAnalyticsDaoBase {
         for (final BusinessOverdueStatusModelDao bst : businessOverdueStatuses) {
             transactional.create(bst.getTableName(), bst, context);
         }
-    }
-
-    private Collection<BusinessOverdueStatusModelDao> createBusinessOverdueStatuses(final Account account,
-                                                                                    final SubscriptionBundle subscriptionBundle,
-                                                                                    final CallContext context) throws AnalyticsRefreshException {
-        final Collection<BusinessOverdueStatusModelDao> businessOverdueStatuses = new LinkedList<BusinessOverdueStatusModelDao>();
-
-        final List<BlockingState> blockingStatesOrdered = getBlockingHistory(subscriptionBundle.getId(), context);
-        if (blockingStatesOrdered.size() == 0) {
-            return businessOverdueStatuses;
-        }
-
-        final Long accountRecordId = getAccountRecordId(account.getId(), context);
-        final Long tenantRecordId = getTenantRecordId(context);
-        final ReportGroup reportGroup = getReportGroup(account.getId(), context);
-
-        final List<BlockingState> blockingStates = Lists.reverse(ImmutableList.<BlockingState>copyOf(blockingStatesOrdered));
-        DateTime previousStartDate = null;
-        for (final BlockingState state : blockingStates) {
-            final Long blockingStateRecordId = getBlockingStateRecordId(state.getId(), context);
-            final AuditLog creationAuditLog = getBlockingStateCreationAuditLog(state.getId(), context);
-            final BusinessOverdueStatusModelDao overdueStatus = new BusinessOverdueStatusModelDao(account,
-                                                                                                  accountRecordId,
-                                                                                                  subscriptionBundle,
-                                                                                                  state,
-                                                                                                  blockingStateRecordId,
-                                                                                                  previousStartDate,
-                                                                                                  creationAuditLog,
-                                                                                                  tenantRecordId,
-                                                                                                  reportGroup);
-            businessOverdueStatuses.add(overdueStatus);
-            previousStartDate = state.getTimestamp();
-        }
-
-        return businessOverdueStatuses;
     }
 }
