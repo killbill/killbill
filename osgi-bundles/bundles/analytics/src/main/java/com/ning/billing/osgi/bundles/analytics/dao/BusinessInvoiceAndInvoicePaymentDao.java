@@ -19,7 +19,6 @@ package com.ning.billing.osgi.bundles.analytics.dao;
 import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.Map;
 import java.util.UUID;
 
@@ -41,7 +40,9 @@ import com.ning.killbill.osgi.libs.killbill.OSGIKillbillDataSource;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillLogService;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Multimap;
 
 /**
  * Wrapper around BusinessInvoiceDao and BusinessInvoicePaymentDao.
@@ -77,8 +78,8 @@ public class BusinessInvoiceAndInvoicePaymentDao extends BusinessAnalyticsDaoBas
 
         // Recompute invoice, invoice items and invoice payments records
         final Map<UUID, BusinessInvoiceModelDao> invoices = new HashMap<UUID, BusinessInvoiceModelDao>();
-        final Map<UUID, Collection<BusinessInvoiceItemBaseModelDao>> invoiceItems = new HashMap<UUID, Collection<BusinessInvoiceItemBaseModelDao>>();
-        final Map<UUID, Collection<BusinessInvoicePaymentBaseModelDao>> invoicePayments = new HashMap<UUID, Collection<BusinessInvoicePaymentBaseModelDao>>();
+        final Multimap<UUID, BusinessInvoiceItemBaseModelDao> invoiceItems = ArrayListMultimap.<UUID, BusinessInvoiceItemBaseModelDao>create();
+        final Multimap<UUID, BusinessInvoicePaymentBaseModelDao> invoicePayments = ArrayListMultimap.<UUID, BusinessInvoicePaymentBaseModelDao>create();
         createBusinessPojos(accountId, invoices, invoiceItems, invoicePayments, context);
 
         // Delete and recreate all items in the transaction
@@ -94,8 +95,8 @@ public class BusinessInvoiceAndInvoicePaymentDao extends BusinessAnalyticsDaoBas
     @VisibleForTesting
     void createBusinessPojos(final UUID accountId,
                              final Map<UUID, BusinessInvoiceModelDao> invoices,
-                             final Map<UUID, Collection<BusinessInvoiceItemBaseModelDao>> invoiceItems,
-                             final Map<UUID, Collection<BusinessInvoicePaymentBaseModelDao>> invoicePayments,
+                             final Multimap<UUID, BusinessInvoiceItemBaseModelDao> invoiceItems,
+                             final Multimap<UUID, BusinessInvoicePaymentBaseModelDao> invoicePayments,
                              final CallContext context) throws AnalyticsRefreshException {
         // Recompute all invoices and invoice items. Invoices will have their denormalized payment fields missing,
         // and items won't have neither invoice nor payment denormalized fields populated
@@ -107,17 +108,9 @@ public class BusinessInvoiceAndInvoicePaymentDao extends BusinessAnalyticsDaoBas
         // Transform the results
         for (final BusinessInvoiceModelDao businessInvoice : businessInvoices.keySet()) {
             invoices.put(businessInvoice.getInvoiceId(), businessInvoice);
-            for (final BusinessInvoiceItemBaseModelDao businessInvoiceItem : businessInvoices.get(businessInvoice)) {
-                if (invoiceItems.get(businessInvoice.getInvoiceId()) == null) {
-                    invoiceItems.put(businessInvoice.getInvoiceId(), new LinkedList<BusinessInvoiceItemBaseModelDao>());
-                }
-                invoiceItems.get(businessInvoice.getInvoiceId()).add(businessInvoiceItem);
-            }
+            invoiceItems.get(businessInvoice.getInvoiceId()).addAll(businessInvoices.get(businessInvoice));
         }
         for (final BusinessInvoicePaymentBaseModelDao businessInvoicePayment : businessInvoicePayments) {
-            if (invoicePayments.get(businessInvoicePayment.getInvoiceId()) == null) {
-                invoicePayments.put(businessInvoicePayment.getInvoiceId(), new LinkedList<BusinessInvoicePaymentBaseModelDao>());
-            }
             invoicePayments.get(businessInvoicePayment.getInvoiceId()).add(businessInvoicePayment);
         }
 
@@ -126,8 +119,8 @@ public class BusinessInvoiceAndInvoicePaymentDao extends BusinessAnalyticsDaoBas
     }
 
     private void populatedMissingDenormalizedFields(final Map<UUID, BusinessInvoiceModelDao> businessInvoices,
-                                                    final Map<UUID, Collection<BusinessInvoiceItemBaseModelDao>> businessInvoiceItems,
-                                                    final Map<UUID, Collection<BusinessInvoicePaymentBaseModelDao>> businessInvoicePayments) {
+                                                    final Multimap<UUID, BusinessInvoiceItemBaseModelDao> businessInvoiceItems,
+                                                    final Multimap<UUID, BusinessInvoicePaymentBaseModelDao> businessInvoicePayments) {
         // First, populated missing payment fields in invoice
         for (final BusinessInvoiceModelDao businessInvoice : businessInvoices.values()) {
             final BigDecimal balance = BusinessInvoiceUtils.computeInvoiceBalance(businessInvoiceItems.get(businessInvoice.getInvoiceId()),
@@ -171,8 +164,8 @@ public class BusinessInvoiceAndInvoicePaymentDao extends BusinessAnalyticsDaoBas
      */
     private void updateInTransaction(final BusinessAccountModelDao bac,
                                      final Map<UUID, BusinessInvoiceModelDao> invoices,
-                                     final Map<UUID, Collection<BusinessInvoiceItemBaseModelDao>> invoiceItems,
-                                     final Map<UUID, Collection<BusinessInvoicePaymentBaseModelDao>> invoicePayments,
+                                     final Multimap<UUID, BusinessInvoiceItemBaseModelDao> invoiceItems,
+                                     final Multimap<UUID, BusinessInvoicePaymentBaseModelDao> invoicePayments,
                                      final BusinessAnalyticsSqlDao transactional,
                                      final CallContext context) {
         // Update invoice and invoice items tables

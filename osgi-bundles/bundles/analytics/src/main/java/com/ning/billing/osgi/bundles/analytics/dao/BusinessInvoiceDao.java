@@ -26,6 +26,8 @@ import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceModelDao
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillDataSource;
 
+import com.google.common.collect.Multimap;
+
 public class BusinessInvoiceDao extends BusinessAnalyticsDaoBase {
 
     public BusinessInvoiceDao(final OSGIKillbillDataSource osgiKillbillDataSource) {
@@ -43,7 +45,7 @@ public class BusinessInvoiceDao extends BusinessAnalyticsDaoBase {
      */
     public void updateInTransaction(final BusinessAccountModelDao bac,
                                     final Map<UUID, BusinessInvoiceModelDao> businessInvoices,
-                                    final Map<UUID, Collection<BusinessInvoiceItemBaseModelDao>> businessInvoiceItems,
+                                    final Multimap<UUID, BusinessInvoiceItemBaseModelDao> businessInvoiceItems,
                                     final BusinessAnalyticsSqlDao transactional,
                                     final CallContext context) {
         deleteInvoicesAndInvoiceItemsForAccountInTransaction(transactional, bac.getAccountRecordId(), bac.getTenantRecordId(), context);

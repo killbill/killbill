@@ -28,7 +28,20 @@ import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceItemBase
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceItemBaseModelDao.BusinessInvoiceItemType;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoicePaymentBaseModelDao;
 
+/**
+ * Utilities to manipulate invoice and invoice items.
+ */
 public class BusinessInvoiceUtils {
+
+    public static boolean isRepareeItemForRepairedItem(final InvoiceItem repairedInvoiceItem, final InvoiceItem invoiceItem) {
+        return repairedInvoiceItem.getInvoiceItemType().equals(invoiceItem.getInvoiceItemType()) &&
+               repairedInvoiceItem.getSubscriptionId().equals(invoiceItem.getSubscriptionId()) &&
+               repairedInvoiceItem.getStartDate().compareTo(invoiceItem.getStartDate()) == 0 &&
+               // FIXED items have a null end date
+               ((repairedInvoiceItem.getEndDate() == null && invoiceItem.getEndDate() == null) ||
+                (repairedInvoiceItem.getEndDate() != null && invoiceItem.getEndDate() != null && !repairedInvoiceItem.getEndDate().isBefore(invoiceItem.getEndDate()))) &&
+               !repairedInvoiceItem.getId().equals(invoiceItem.getId());
+    }
 
     public static Boolean isRevenueRecognizable(final InvoiceItem invoiceItem, final Collection<InvoiceItem> otherInvoiceItems) {
         // All items are recognizable except user generated credit (CBA_ADJ and CREDIT_ADJ on their own invoice)
@@ -69,8 +82,8 @@ public class BusinessInvoiceUtils {
                InvoiceItemType.RECURRING.equals(invoiceItem.getInvoiceItemType());
     }
 
-    public static BigDecimal computeInvoiceBalance(@Nullable final Collection<BusinessInvoiceItemBaseModelDao> businessInvoiceItems,
-                                                   @Nullable final Collection<BusinessInvoicePaymentBaseModelDao> businessInvoicePayments) {
+    public static BigDecimal computeInvoiceBalance(@Nullable final Iterable<BusinessInvoiceItemBaseModelDao> businessInvoiceItems,
+                                                   @Nullable final Iterable<BusinessInvoicePaymentBaseModelDao> businessInvoicePayments) {
         return computeInvoiceAmountCharged(businessInvoiceItems)
                 .add(computeInvoiceAmountCredited(businessInvoiceItems))
                 .add(
@@ -79,7 +92,7 @@ public class BusinessInvoiceUtils {
                     );
     }
 
-    public static BigDecimal computeInvoiceAmountCharged(@Nullable final Collection<BusinessInvoiceItemBaseModelDao> businessInvoiceItems) {
+    public static BigDecimal computeInvoiceAmountCharged(@Nullable final Iterable<BusinessInvoiceItemBaseModelDao> businessInvoiceItems) {
         BigDecimal amountCharged = BigDecimal.ZERO;
         if (businessInvoiceItems == null) {
             return amountCharged;
@@ -95,7 +108,7 @@ public class BusinessInvoiceUtils {
         return amountCharged;
     }
 
-    public static BigDecimal computeInvoiceOriginalAmountCharged(@Nullable final Collection<BusinessInvoiceItemBaseModelDao> businessInvoiceItems) {
+    public static BigDecimal computeInvoiceOriginalAmountCharged(@Nullable final Iterable<BusinessInvoiceItemBaseModelDao> businessInvoiceItems) {
         BigDecimal amountCharged = BigDecimal.ZERO;
         if (businessInvoiceItems == null) {
             return amountCharged;
@@ -110,7 +123,7 @@ public class BusinessInvoiceUtils {
         return amountCharged;
     }
 
-    public static BigDecimal computeInvoiceAmountCredited(@Nullable final Collection<BusinessInvoiceItemBaseModelDao> businessInvoiceItems) {
+    public static BigDecimal computeInvoiceAmountCredited(@Nullable final Iterable<BusinessInvoiceItemBaseModelDao> businessInvoiceItems) {
         BigDecimal amountCredited = BigDecimal.ZERO;
         if (businessInvoiceItems == null) {
             return amountCredited;
@@ -124,7 +137,7 @@ public class BusinessInvoiceUtils {
         return amountCredited;
     }
 
-    public static BigDecimal computeInvoiceAmountPaid(@Nullable final Collection<BusinessInvoicePaymentBaseModelDao> businessInvoicePayments) {
+    public static BigDecimal computeInvoiceAmountPaid(@Nullable final Iterable<BusinessInvoicePaymentBaseModelDao> businessInvoicePayments) {
         BigDecimal amountPaid = BigDecimal.ZERO;
         if (businessInvoicePayments == null) {
             return amountPaid;
@@ -138,7 +151,7 @@ public class BusinessInvoiceUtils {
         return amountPaid;
     }
 
-    public static BigDecimal computeInvoiceAmountRefunded(@Nullable final Collection<BusinessInvoicePaymentBaseModelDao> businessInvoicePayments) {
+    public static BigDecimal computeInvoiceAmountRefunded(@Nullable final Iterable<BusinessInvoicePaymentBaseModelDao> businessInvoicePayments) {
         BigDecimal amountRefunded = BigDecimal.ZERO;
         if (businessInvoicePayments == null) {
             return amountRefunded;

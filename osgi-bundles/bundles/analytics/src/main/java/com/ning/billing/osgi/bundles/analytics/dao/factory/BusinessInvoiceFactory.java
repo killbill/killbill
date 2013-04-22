@@ -28,12 +28,9 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import org.joda.time.DateTime;
-import org.joda.time.LocalDate;
 import org.osgi.service.log.LogService;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
@@ -55,12 +52,15 @@ import com.ning.killbill.osgi.libs.killbill.OSGIKillbillLogService;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.Multimap;
 
 import static com.ning.billing.osgi.bundles.analytics.utils.BusinessInvoiceUtils.isAccountCreditItem;
 import static com.ning.billing.osgi.bundles.analytics.utils.BusinessInvoiceUtils.isCharge;
 import static com.ning.billing.osgi.bundles.analytics.utils.BusinessInvoiceUtils.isInvoiceAdjustmentItem;
 import static com.ning.billing.osgi.bundles.analytics.utils.BusinessInvoiceUtils.isInvoiceItemAdjustmentItem;
+import static com.ning.billing.osgi.bundles.analytics.utils.BusinessInvoiceUtils.isRepareeItemForRepairedItem;
 import static com.ning.billing.osgi.bundles.analytics.utils.BusinessInvoiceUtils.isRevenueRecognizable;
 
 public class BusinessInvoiceFactory extends BusinessFactoryBase {
@@ -71,8 +71,10 @@ public class BusinessInvoiceFactory extends BusinessFactoryBase {
     }
 
     /**
-     * Create business invoices and invoice items to record. Note that these POJOs are incomplete
-     * (denormalized payment fields have not yet been populated)
+     * Create current business invoices and invoice items.
+     * <p/>
+     * Note that these POJOs are incomplete (denormalized payment fields have not yet been populated, and denormalized
+     * invoice fields in business invoice items have not been populated either).
      *
      * @param accountId current accountId refreshed
      * @param context   call context
@@ -90,45 +92,48 @@ public class BusinessInvoiceFactory extends BusinessFactoryBase {
         // Lookup the invoices for that account
         final Collection<Invoice> invoices = getInvoicesByAccountId(account.getId(), context);
 
-        // All invoice items across all invoices for that accounr (we need to be able to reference items across multiple invoices)
+        // All invoice items across all invoices for that account (we need to be able to reference items across multiple invoices)
         final Collection<InvoiceItem> allInvoiceItems = new LinkedList<InvoiceItem>();
-        // Convenient mapping invoice_id -> invoice
+        // Convenient mapping invoiceId -> invoice
         final Map<UUID, Invoice> invoiceIdToInvoiceMappings = new LinkedHashMap<UUID, Invoice>();
         for (final Invoice invoice : invoices) {
             invoiceIdToInvoiceMappings.put(invoice.getId(), invoice);
             allInvoiceItems.addAll(invoice.getInvoiceItems());
         }
 
+        // *** MAGIC HAPPENS HERE ***
         // Sanitize (cherry-pick, merge) the items
         final Collection<InvoiceItem> sanitizedInvoiceItems = sanitizeInvoiceItems(allInvoiceItems);
+        // *** MAGIC HAPPENS HERE ***
 
-        // Create the business invoice items. These are incomplete (the denormalized invoice fields haven't been computed yet)
-        final Map<UUID, Collection<BusinessInvoiceItemBaseModelDao>> businessInvoiceItemsForInvoiceId = new HashMap<UUID, Collection<BusinessInvoiceItemBaseModelDao>>();
+        // Create the business invoice items. These are incomplete: the denormalized invoice fields can't be computed yet,
+        // since we need all business invoice items to do it.
+        final Multimap<UUID, BusinessInvoiceItemBaseModelDao> businessInvoiceItemsForInvoiceId = ArrayListMultimap.<UUID, BusinessInvoiceItemBaseModelDao>create();
         for (final InvoiceItem invoiceItem : sanitizedInvoiceItems) {
             final Invoice invoice = invoiceIdToInvoiceMappings.get(invoiceItem.getInvoiceId());
+            final Collection<InvoiceItem> otherInvoiceItems = Collections2.filter(sanitizedInvoiceItems,
+                                                                                  new Predicate<InvoiceItem>() {
+                                                                                      @Override
+                                                                                      public boolean apply(final InvoiceItem input) {
+                                                                                          return !input.getId().equals(invoiceItem.getId());
+                                                                                      }
+                                                                                  });
             final BusinessInvoiceItemBaseModelDao businessInvoiceItem = createBusinessInvoiceItem(account,
                                                                                                   invoice,
                                                                                                   invoiceItem,
-                                                                                                  Collections2.filter(sanitizedInvoiceItems,
-                                                                                                                      new Predicate<InvoiceItem>() {
-                                                                                                                          @Override
-                                                                                                                          public boolean apply(final InvoiceItem input) {
-                                                                                                                              return !input.getId().equals(invoiceItem.getId());
-                                                                                                                          }
-                                                                                                                      }),
+                                                                                                  otherInvoiceItems,
                                                                                                   accountRecordId,
                                                                                                   tenantRecordId,
                                                                                                   reportGroup,
                                                                                                   context);
             if (businessInvoiceItem != null) {
-                if (businessInvoiceItemsForInvoiceId.get(invoice.getId()) == null) {
-                    businessInvoiceItemsForInvoiceId.put(invoice.getId(), new LinkedList<BusinessInvoiceItemBaseModelDao>());
-                }
                 businessInvoiceItemsForInvoiceId.get(invoice.getId()).add(businessInvoiceItem);
             }
         }
 
-        // Now, create the business invoices
+        // Now, create the business invoices. We needed the final business invoice items to compute the various invoice amounts. At this point,
+        // we could go back and populate the denormalized invoice amounts in the various items, but since we need to do a second pass later
+        // to populate the denormalized payment fields, we'll hold off for now.
         final Map<BusinessInvoiceModelDao, Collection<BusinessInvoiceItemBaseModelDao>> businessRecords = new HashMap<BusinessInvoiceModelDao, Collection<BusinessInvoiceItemBaseModelDao>>();
         for (final Invoice invoice : invoices) {
             final Collection<BusinessInvoiceItemBaseModelDao> businessInvoiceItems = businessInvoiceItemsForInvoiceId.get(invoice.getId());
@@ -136,7 +141,13 @@ public class BusinessInvoiceFactory extends BusinessFactoryBase {
                 continue;
             }
 
-            final BusinessInvoiceModelDao businessInvoice = createBusinessInvoice(account, invoice, businessInvoiceItems, accountRecordId, tenantRecordId, reportGroup, context);
+            final BusinessInvoiceModelDao businessInvoice = createBusinessInvoice(account,
+                                                                                  invoice,
+                                                                                  businessInvoiceItems,
+                                                                                  accountRecordId,
+                                                                                  tenantRecordId,
+                                                                                  reportGroup,
+                                                                                  context);
             businessRecords.put(businessInvoice, businessInvoiceItems);
         }
 
@@ -266,13 +277,50 @@ public class BusinessInvoiceFactory extends BusinessFactoryBase {
 
     /**
      * Filter and transform the original invoice items for Analytics purposes. We mainly
-     * merge REPAIR_ADJ items with reparation items (reparees) to create item adjustments.
+     * merge REPAIR_ADJ items with reparation items (reparees) to create item adjustments
+     * and merge CBA items.
      *
      * @param allInvoiceItems all items for the current account
      * @return invoice items interesting for Analytics purposes
      */
     @VisibleForTesting
     Collection<InvoiceItem> sanitizeInvoiceItems(final Collection<InvoiceItem> allInvoiceItems) {
+        // First, find all reparee items, to be able to merge REPAIR_ADJ and reparee items into ITEM_ADJ items
+        final Map<UUID, InvoiceItem> repareeInvoiceItemIdToRepairItemMappings = findRepareeInvoiceItems(allInvoiceItems);
+
+        // Second, since we are going to rebalance some items (the reparee items are going to be on a previous invoice),
+        // we need to rebalance CBA_ADJ items. In order to simplify the process, we merge all items per invoice and revenueRecognizable
+        // status (this information should be enough for financial and analytics reporting purposes).
+        final Collection<AdjustedCBAInvoiceItem> mergedCBAItems = buildMergedCBAItems(allInvoiceItems, repareeInvoiceItemIdToRepairItemMappings);
+
+        // Filter the invoice items for analytics
+        final Collection<InvoiceItem> invoiceItemsForAnalytics = new LinkedList<InvoiceItem>();
+        for (final InvoiceItem invoiceItem : allInvoiceItems) {
+            if (InvoiceItemType.CBA_ADJ.equals(invoiceItem.getInvoiceItemType())) {
+                // We don't care, we'll merge them on all invoices
+            } else if (InvoiceItemType.REPAIR_ADJ.equals(invoiceItem.getInvoiceItemType())) {
+                // We don't care, we'll create a special item for it below
+            } else if (repareeInvoiceItemIdToRepairItemMappings.keySet().contains(invoiceItem.getId())) {
+                // We do care - this is a reparation item. Create an item adjustment for it
+                final InvoiceItem repairInvoiceItem = repareeInvoiceItemIdToRepairItemMappings.get(invoiceItem.getId());
+                final InvoiceItem reparationInvoiceItem = invoiceItem;
+                invoiceItemsForAnalytics.add(new AdjustmentInvoiceItemForRepair(repairInvoiceItem, reparationInvoiceItem));
+            } else {
+                invoiceItemsForAnalytics.add(invoiceItem);
+            }
+        }
+        invoiceItemsForAnalytics.addAll(mergedCBAItems);
+
+        return invoiceItemsForAnalytics;
+    }
+
+    /**
+     * Find all reparee items
+     *
+     * @param allInvoiceItems all invoice items, across all invoices
+     * @return a mapping reparee invoice item id to REPAIR_ADJ item
+     */
+    private Map<UUID, InvoiceItem> findRepareeInvoiceItems(final Collection<InvoiceItem> allInvoiceItems) {
         // Build a convenience mapping between items -> repair_adj items (inverse of linkedItemId)
         final Map<UUID, InvoiceItem> repairedInvoiceItemIdToRepairInvoiceItemMappings = new HashMap<UUID, InvoiceItem>();
         for (final InvoiceItem invoiceItem : allInvoiceItems) {
@@ -281,39 +329,38 @@ public class BusinessInvoiceFactory extends BusinessFactoryBase {
             }
         }
 
-        // Now find the "reparation" items, i.e. the ones which correspond to the repaired items
-        final Map<UUID, InvoiceItem> reparationInvoiceItemIdToRepairItemMappings = new LinkedHashMap<UUID, InvoiceItem>();
+        // Now find the "reparee" items, i.e. the ones which correspond to the repaired items
+        final Map<UUID, InvoiceItem> repareeInvoiceItemIdToRepairItemMappings = new LinkedHashMap<UUID, InvoiceItem>();
         for (final InvoiceItem repairedInvoiceItem : allInvoiceItems) {
             // Skip non-repaired items
             if (!repairedInvoiceItemIdToRepairInvoiceItemMappings.keySet().contains(repairedInvoiceItem.getId())) {
                 continue;
             }
 
-            InvoiceItem reparationItem = null;
+            InvoiceItem repareeItem = null;
             for (final InvoiceItem invoiceItem : allInvoiceItems) {
-                // Try to find the matching "reparation" item
-                if (repairedInvoiceItem.getInvoiceItemType().equals(invoiceItem.getInvoiceItemType()) &&
-                    repairedInvoiceItem.getSubscriptionId().equals(invoiceItem.getSubscriptionId()) &&
-                    repairedInvoiceItem.getStartDate().compareTo(invoiceItem.getStartDate()) == 0 &&
-                    // FIXED items have a null end date
-                    ((repairedInvoiceItem.getEndDate() == null && invoiceItem.getEndDate() == null) ||
-                     (repairedInvoiceItem.getEndDate() != null && invoiceItem.getEndDate() != null && !repairedInvoiceItem.getEndDate().isBefore(invoiceItem.getEndDate()))) &&
-                    !repairedInvoiceItem.getId().equals(invoiceItem.getId())) {
-                    if (reparationItem == null) {
-                        reparationItem = invoiceItem;
+                // Try to find the matching "reparee" item
+                if (isRepareeItemForRepairedItem(repairedInvoiceItem, invoiceItem)) {
+                    if (repareeItem == null) {
+                        repareeItem = invoiceItem;
                     } else {
-                        logService.log(LogService.LOG_ERROR, "Found multiple reparation items matching the repair item id " + repairedInvoiceItem.getId() + " - this should never happen!");
+                        logService.log(LogService.LOG_ERROR, "Found multiple reparee items matching the repair item id " + repairedInvoiceItem.getId() + " - this should never happen!");
                     }
                 }
             }
 
-            if (reparationItem != null) {
-                reparationInvoiceItemIdToRepairItemMappings.put(reparationItem.getId(), repairedInvoiceItemIdToRepairInvoiceItemMappings.get(repairedInvoiceItem.getId()));
+            if (repareeItem != null) {
+                repareeInvoiceItemIdToRepairItemMappings.put(repareeItem.getId(), repairedInvoiceItemIdToRepairInvoiceItemMappings.get(repairedInvoiceItem.getId()));
             } else {
-                logService.log(LogService.LOG_ERROR, "Could not find the reparation item for the repair item id " + repairedInvoiceItem.getId() + " - this should never happen!");
+                logService.log(LogService.LOG_ERROR, "Could not find the reparee item for the repair item id " + repairedInvoiceItem.getId() + " - this should never happen!");
             }
         }
 
+        return repareeInvoiceItemIdToRepairItemMappings;
+    }
+
+    private Collection<AdjustedCBAInvoiceItem> buildMergedCBAItems(final Collection<InvoiceItem> allInvoiceItems,
+                                                                   final Map<UUID, InvoiceItem> repareeInvoiceItemIdToRepairItemMappings) {
         // We now need to adjust the CBA_ADJ for the repair items
         final Set<UUID> cbasToIgnore = new HashSet<UUID>();
         final Collection<AdjustedCBAInvoiceItem> newCbasToAdd = new LinkedList<AdjustedCBAInvoiceItem>();
@@ -323,8 +370,8 @@ public class BusinessInvoiceFactory extends BusinessFactoryBase {
             }
 
             for (final InvoiceItem invoiceItem : allInvoiceItems) {
-                if (reparationInvoiceItemIdToRepairItemMappings.keySet().contains(invoiceItem.getId())) {
-                    final InvoiceItem repairInvoiceItem = reparationInvoiceItemIdToRepairItemMappings.get(invoiceItem.getId());
+                if (repareeInvoiceItemIdToRepairItemMappings.keySet().contains(invoiceItem.getId())) {
+                    final InvoiceItem repairInvoiceItem = repareeInvoiceItemIdToRepairItemMappings.get(invoiceItem.getId());
                     final InvoiceItem reparationInvoiceItem = invoiceItem;
                     // Au petit bonheur la chance... There is nothing else against to compare
                     if (repairInvoiceItem.getAmount().negate().compareTo(cbaInvoiceItem.getAmount()) == 0) {
@@ -351,242 +398,6 @@ public class BusinessInvoiceFactory extends BusinessFactoryBase {
             }
         }
 
-
-        // Filter the invoice items for analytics
-        final Collection<InvoiceItem> invoiceItemsForAnalytics = new LinkedList<InvoiceItem>();
-        for (final InvoiceItem invoiceItem : allInvoiceItems) {
-            if (cbasToIgnore.contains(invoiceItem.getId())) {
-                // We don't care
-            } else if (InvoiceItemType.REPAIR_ADJ.equals(invoiceItem.getInvoiceItemType())) {
-                // We don't care, we'll create a special item for it below
-            } else if (reparationInvoiceItemIdToRepairItemMappings.keySet().contains(invoiceItem.getId())) {
-                // We do care - this is a reparation item. Create an item adjustment for it
-                final InvoiceItem repairInvoiceItem = reparationInvoiceItemIdToRepairItemMappings.get(invoiceItem.getId());
-                final InvoiceItem reparationInvoiceItem = invoiceItem;
-                invoiceItemsForAnalytics.add(new AdjustmentInvoiceItemForRepair(repairInvoiceItem, reparationInvoiceItem));
-            } else {
-                invoiceItemsForAnalytics.add(invoiceItem);
-            }
-        }
-        invoiceItemsForAnalytics.addAll(newCbasToAdd);
-
-        return invoiceItemsForAnalytics;
-    }
-
-    private class AdjustedCBAInvoiceItem implements InvoiceItem {
-
-        private final InvoiceItem cbaInvoiceItem;
-        private final BigDecimal amount;
-        private final UUID reparationItemId;
-
-        private AdjustedCBAInvoiceItem(final InvoiceItem cbaInvoiceItem,
-                                       final BigDecimal amount,
-                                       final UUID reparationItemId) {
-            this.cbaInvoiceItem = cbaInvoiceItem;
-            this.amount = amount;
-            this.reparationItemId = reparationItemId;
-        }
-
-        @Override
-        public InvoiceItemType getInvoiceItemType() {
-            return InvoiceItemType.CBA_ADJ;
-        }
-
-        @Override
-        public UUID getInvoiceId() {
-            return cbaInvoiceItem.getInvoiceId();
-        }
-
-        @Override
-        public UUID getAccountId() {
-            return cbaInvoiceItem.getAccountId();
-        }
-
-        @Override
-        public LocalDate getStartDate() {
-            return cbaInvoiceItem.getStartDate();
-        }
-
-        @Override
-        public LocalDate getEndDate() {
-            return cbaInvoiceItem.getStartDate();
-        }
-
-        @Override
-        public BigDecimal getAmount() {
-            return amount;
-        }
-
-        @Override
-        public Currency getCurrency() {
-            return cbaInvoiceItem.getCurrency();
-        }
-
-        @Override
-        public String getDescription() {
-            return cbaInvoiceItem.getDescription();
-        }
-
-        @Override
-        public UUID getBundleId() {
-            return cbaInvoiceItem.getBundleId();
-        }
-
-        @Override
-        public UUID getSubscriptionId() {
-            return cbaInvoiceItem.getSubscriptionId();
-        }
-
-        @Override
-        public String getPlanName() {
-            return cbaInvoiceItem.getPlanName();
-        }
-
-        @Override
-        public String getPhaseName() {
-            return cbaInvoiceItem.getPhaseName();
-        }
-
-        @Override
-        public BigDecimal getRate() {
-            return cbaInvoiceItem.getRate();
-        }
-
-        @Override
-        public UUID getLinkedItemId() {
-            return cbaInvoiceItem.getLinkedItemId();
-        }
-
-        @Override
-        public boolean matches(final Object other) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public UUID getId() {
-            return cbaInvoiceItem.getId();
-        }
-
-        public UUID getSecondId() {
-            return reparationItemId;
-        }
-
-        @Override
-        public DateTime getCreatedDate() {
-            return cbaInvoiceItem.getCreatedDate();
-        }
-
-        @Override
-        public DateTime getUpdatedDate() {
-            return cbaInvoiceItem.getUpdatedDate();
-        }
-    }
-
-    private class AdjustmentInvoiceItemForRepair implements InvoiceItem {
-
-        private final InvoiceItem repairInvoiceItem;
-        private final InvoiceItem reparationInvoiceItem;
-
-        private AdjustmentInvoiceItemForRepair(final InvoiceItem repairInvoiceItem,
-                                               final InvoiceItem reparationInvoiceItem) {
-            this.repairInvoiceItem = repairInvoiceItem;
-            this.reparationInvoiceItem = reparationInvoiceItem;
-        }
-
-        @Override
-        public InvoiceItemType getInvoiceItemType() {
-            return InvoiceItemType.ITEM_ADJ;
-        }
-
-        @Override
-        public UUID getInvoiceId() {
-            return repairInvoiceItem.getInvoiceId();
-        }
-
-        @Override
-        public UUID getAccountId() {
-            return repairInvoiceItem.getAccountId();
-        }
-
-        @Override
-        public LocalDate getStartDate() {
-            return repairInvoiceItem.getStartDate();
-        }
-
-        @Override
-        public LocalDate getEndDate() {
-            return repairInvoiceItem.getStartDate();
-        }
-
-        @Override
-        public BigDecimal getAmount() {
-            return reparationInvoiceItem.getAmount().add(repairInvoiceItem.getAmount());
-        }
-
-        @Override
-        public Currency getCurrency() {
-            return repairInvoiceItem.getCurrency();
-        }
-
-        @Override
-        public String getDescription() {
-            return null;
-        }
-
-        @Override
-        public UUID getBundleId() {
-            return null;
-        }
-
-        @Override
-        public UUID getSubscriptionId() {
-            return null;
-        }
-
-        @Override
-        public String getPlanName() {
-            return null;
-        }
-
-        @Override
-        public String getPhaseName() {
-            return null;
-        }
-
-        @Override
-        public BigDecimal getRate() {
-            return null;
-        }
-
-        @Override
-        public UUID getLinkedItemId() {
-            return repairInvoiceItem.getLinkedItemId();
-        }
-
-        @Override
-        public boolean matches(final Object other) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public UUID getId() {
-            // We pretend to be the repair, the reparation item record id
-            // will be available as secondId
-            return repairInvoiceItem.getId();
-        }
-
-        public UUID getSecondId() {
-            return reparationInvoiceItem.getId();
-        }
-
-        @Override
-        public DateTime getCreatedDate() {
-            return repairInvoiceItem.getCreatedDate();
-        }
-
-        @Override
-        public DateTime getUpdatedDate() {
-            return repairInvoiceItem.getUpdatedDate();
-        }
+        return newCbasToAdd;
     }
 }

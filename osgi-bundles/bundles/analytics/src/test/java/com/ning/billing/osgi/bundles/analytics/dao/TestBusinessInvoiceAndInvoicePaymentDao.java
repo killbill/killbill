@@ -18,7 +18,6 @@ package com.ning.billing.osgi.bundles.analytics.dao;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -45,7 +44,9 @@ import com.ning.killbill.osgi.libs.killbill.OSGIKillbillAPI;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillDataSource;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillLogService;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Multimap;
 
 public class TestBusinessInvoiceAndInvoicePaymentDao extends AnalyticsTestSuiteNoDB {
 
@@ -139,8 +140,8 @@ public class TestBusinessInvoiceAndInvoicePaymentDao extends AnalyticsTestSuiteN
 
         // Compute the pojos
         final Map<UUID, BusinessInvoiceModelDao> invoices = new HashMap<UUID, BusinessInvoiceModelDao>();
-        final Map<UUID, Collection<BusinessInvoiceItemBaseModelDao>> invoiceItems = new HashMap<UUID, Collection<BusinessInvoiceItemBaseModelDao>>();
-        final Map<UUID, Collection<BusinessInvoicePaymentBaseModelDao>> invoicePayments = new HashMap<UUID, Collection<BusinessInvoicePaymentBaseModelDao>>();
+        final Multimap<UUID, BusinessInvoiceItemBaseModelDao> invoiceItems = ArrayListMultimap.<UUID, BusinessInvoiceItemBaseModelDao>create();
+        final Multimap<UUID, BusinessInvoicePaymentBaseModelDao> invoicePayments = ArrayListMultimap.<UUID, BusinessInvoicePaymentBaseModelDao>create();
         dao.createBusinessPojos(account.getId(), invoices, invoiceItems, invoicePayments, callContext);
 
         /*
