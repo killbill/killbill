@@ -715,6 +715,8 @@
                                     <exclude>**/*.xml</exclude>
                                     <exclude>**/*.stg</exclude>
                                     <exclude>**/*.sql</exclude>
+                                    <exclude>**/*.js</exclude>
+                                    <exclude>**/*.css</exclude>
                                     <exclude>**/*.properties</exclude>
                                     <exclude>**/*.dont-let-git-remove-this-directory</exclude>
                                     <exclude>**/test-output/**</exclude>
