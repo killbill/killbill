@@ -23,7 +23,6 @@ import org.osgi.service.log.LogService;
 
 import com.ning.billing.ObjectType;
 import com.ning.billing.osgi.bundles.analytics.AnalyticsRefreshException;
-import com.ning.billing.osgi.bundles.analytics.BusinessAnalyticsBase;
 import com.ning.billing.osgi.bundles.analytics.api.BusinessAccount;
 import com.ning.billing.osgi.bundles.analytics.api.BusinessField;
 import com.ning.billing.osgi.bundles.analytics.api.BusinessInvoice;
@@ -45,10 +44,10 @@ import com.ning.killbill.osgi.libs.killbill.OSGIKillbillAPI;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillDataSource;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillLogService;
 
-public class AnalyticsUserApi extends BusinessAnalyticsBase {
+public class AnalyticsUserApi {
 
+    private final LogService logService;
     private final AnalyticsDao analyticsDao;
-    private final BusinessAccountDao bacDao;
     private final BusinessSubscriptionTransitionDao bstDao;
     private final BusinessInvoiceAndInvoicePaymentDao binAndBipDao;
     private final BusinessOverdueStatusDao bosDao;
@@ -58,9 +57,10 @@ public class AnalyticsUserApi extends BusinessAnalyticsBase {
     public AnalyticsUserApi(final OSGIKillbillLogService logService,
                             final OSGIKillbillAPI osgiKillbillAPI,
                             final OSGIKillbillDataSource osgiKillbillDataSource) {
-        super(logService, osgiKillbillAPI);
+        this.logService = logService;
         this.analyticsDao = new AnalyticsDao(osgiKillbillAPI, osgiKillbillDataSource);
-        this.bacDao = new BusinessAccountDao(logService, osgiKillbillAPI, osgiKillbillDataSource);
+
+        final BusinessAccountDao bacDao = new BusinessAccountDao(logService, osgiKillbillAPI, osgiKillbillDataSource);
         this.bstDao = new BusinessSubscriptionTransitionDao(logService, osgiKillbillAPI, osgiKillbillDataSource, bacDao);
         this.binAndBipDao = new BusinessInvoiceAndInvoicePaymentDao(logService, osgiKillbillAPI, osgiKillbillDataSource, bacDao);
         this.bosDao = new BusinessOverdueStatusDao(logService, osgiKillbillAPI, osgiKillbillDataSource);
