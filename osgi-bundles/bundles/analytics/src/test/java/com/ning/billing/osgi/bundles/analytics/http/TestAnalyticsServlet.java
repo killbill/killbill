@@ -23,8 +23,6 @@ import java.io.Writer;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.joda.time.LocalDate;
 import org.testng.Assert;
@@ -35,7 +33,6 @@ import com.ning.billing.osgi.bundles.analytics.json.XY;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.Resources;
-import com.sun.xml.internal.messaging.saaj.util.ByteOutputStream;
 
 public class TestAnalyticsServlet {
 
