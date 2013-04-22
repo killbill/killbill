@@ -139,7 +139,7 @@ public abstract class BusinessFactoryBase {
         boolean isTestAccount = false;
         boolean isPartnerAccount = false;
 
-        final List<Tag> tagForAccount = tagUserApi.getTagsForObject(accountId, ObjectType.TAG, context);
+        final List<Tag> tagForAccount = tagUserApi.getTagsForObject(accountId, ObjectType.ACCOUNT, context);
         for (final Tag tag : tagForAccount) {
             if (ControlTagType.TEST.getId().equals(tag.getTagDefinitionId())) {
                 isTestAccount = true;
