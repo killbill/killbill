@@ -19,9 +19,11 @@ package com.ning.billing.osgi.bundles.analytics.dao.factory;
 import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -319,7 +321,8 @@ public class BusinessInvoiceFactory extends BusinessFactoryBase {
      * @param allInvoiceItems all invoice items, across all invoices
      * @return a mapping reparee invoice item id to REPAIR_ADJ item
      */
-    private Map<InvoiceItem, InvoiceItem> findRepareeInvoiceItems(final Collection<InvoiceItem> allInvoiceItems) {
+    @VisibleForTesting
+    Map<InvoiceItem, InvoiceItem> findRepareeInvoiceItems(final Collection<InvoiceItem> allInvoiceItems) {
         // Build a convenience mapping between items -> repair_adj items (inverse of linkedItemId)
         final Map<UUID, InvoiceItem> repairedInvoiceItemIdToRepairInvoiceItemMappings = new HashMap<UUID, InvoiceItem>();
         for (final InvoiceItem invoiceItem : allInvoiceItems) {
@@ -358,30 +361,52 @@ public class BusinessInvoiceFactory extends BusinessFactoryBase {
         return repareeInvoiceItemToRepairItemMappings;
     }
 
-    private Collection<AdjustedCBAInvoiceItem> buildMergedCBAItems(final Multimap<UUID, InvoiceItem> allInvoiceItems,
-                                                                   final Map<InvoiceItem, InvoiceItem> repareeInvoiceItemToRepairItemMappings) {
-        final Map<UUID, BigDecimal> cbaPerInvoice = new HashMap<UUID, BigDecimal>();
+    @VisibleForTesting
+    Collection<AdjustedCBAInvoiceItem> buildMergedCBAItems(final Multimap<UUID, InvoiceItem> allInvoiceItems,
+                                                           final Map<InvoiceItem, InvoiceItem> repareeInvoiceItemToRepairItemMappings) {
+        // Build a black list of invoices for which we should not adjust the CBA when rebalancing the reparee item.
+        final Set<UUID> repairInvoiceBlackList = new HashSet<UUID>();
+        for (final InvoiceItem repairInvoiceItem : repareeInvoiceItemToRepairItemMappings.values()) {
+            boolean shouldBlackList = true;
+            // Only adjust CBA items on invoices having CBA already. Otherwise, don't do anything (e.g. for unpaid repaired invoices).
+            for (final InvoiceItem invoiceItem : allInvoiceItems.get(repairInvoiceItem.getInvoiceId())) {
+                if (invoiceItem.getInvoiceItemType().equals(InvoiceItemType.CBA_ADJ) &&
+                    invoiceItem.getAmount().compareTo(repairInvoiceItem.getAmount().negate()) == 0) {
+                    shouldBlackList = false;
+                }
+            }
+            if (shouldBlackList) {
+                // We can't blacklist the reparee invoice because it might have been repaired...
+                repairInvoiceBlackList.add(repairInvoiceItem.getInvoiceId());
+            }
+        }
+
+        final Map<UUID, BigDecimal> cbaAdjustmentPerInvoice = new HashMap<UUID, BigDecimal>();
 
         // Adjust the CBAs in case of repair.
-        // On the new invoice (with the reparee item), we need to add the amount of the reparee to the CBA amount.
         // On the original invoice (with the repair item), we need to substract the amount of the reparee to the CBA amount.
+        // On the new invoice (with the reparee item), we need to add the amount of the reparee to the CBA amount.
         for (final InvoiceItem repareeInvoiceItem : repareeInvoiceItemToRepairItemMappings.keySet()) {
-            // The reparee item was on a new invoice
-            if (cbaPerInvoice.get(repareeInvoiceItem.getInvoiceId()) == null) {
-                cbaPerInvoice.put(repareeInvoiceItem.getInvoiceId(), BigDecimal.ZERO);
-            }
-            final BigDecimal currentCBAForNewInvoice = cbaPerInvoice.get(repareeInvoiceItem.getInvoiceId());
-            final BigDecimal adjustedCBAForNewInvoice = currentCBAForNewInvoice.add(repareeInvoiceItem.getAmount());
-            cbaPerInvoice.put(repareeInvoiceItem.getInvoiceId(), adjustedCBAForNewInvoice);
-
             // The repair item was on the original invoice
             final InvoiceItem repairInvoiceItem = repareeInvoiceItemToRepairItemMappings.get(repareeInvoiceItem);
-            if (cbaPerInvoice.get(repairInvoiceItem.getInvoiceId()) == null) {
-                cbaPerInvoice.put(repairInvoiceItem.getInvoiceId(), BigDecimal.ZERO);
+            if (repairInvoiceBlackList.contains(repairInvoiceItem.getInvoiceId())) {
+                continue;
             }
-            final BigDecimal currentCBAForOriginalInvoice = cbaPerInvoice.get(repairInvoiceItem.getInvoiceId());
+
+            if (cbaAdjustmentPerInvoice.get(repairInvoiceItem.getInvoiceId()) == null) {
+                cbaAdjustmentPerInvoice.put(repairInvoiceItem.getInvoiceId(), BigDecimal.ZERO);
+            }
+            final BigDecimal currentCBAForOriginalInvoice = cbaAdjustmentPerInvoice.get(repairInvoiceItem.getInvoiceId());
             final BigDecimal adjustedCBAForOriginalInvoice = currentCBAForOriginalInvoice.add(repareeInvoiceItem.getAmount().negate());
-            cbaPerInvoice.put(repairInvoiceItem.getInvoiceId(), adjustedCBAForOriginalInvoice);
+            cbaAdjustmentPerInvoice.put(repairInvoiceItem.getInvoiceId(), adjustedCBAForOriginalInvoice);
+
+            // The reparee item was on a new invoice
+            if (cbaAdjustmentPerInvoice.get(repareeInvoiceItem.getInvoiceId()) == null) {
+                cbaAdjustmentPerInvoice.put(repareeInvoiceItem.getInvoiceId(), BigDecimal.ZERO);
+            }
+            final BigDecimal currentCBAForNewInvoice = cbaAdjustmentPerInvoice.get(repareeInvoiceItem.getInvoiceId());
+            final BigDecimal adjustedCBAForNewInvoice = currentCBAForNewInvoice.add(repareeInvoiceItem.getAmount());
+            cbaAdjustmentPerInvoice.put(repareeInvoiceItem.getInvoiceId(), adjustedCBAForNewInvoice);
         }
 
         // Now, we just combine the other CBA items
@@ -391,7 +416,6 @@ public class BusinessInvoiceFactory extends BusinessFactoryBase {
                 continue;
             }
 
-            // Only adjust CBA items on invoices having CBA already. Otherwise, don't do anything (e.g. for unpaid repaired invoices).
             final Collection<InvoiceItem> cbaItemsForInvoice = Collections2.filter(allInvoiceItems.get(invoiceId), new Predicate<InvoiceItem>() {
                 @Override
                 public boolean apply(final InvoiceItem invoiceItem) {
@@ -402,7 +426,7 @@ public class BusinessInvoiceFactory extends BusinessFactoryBase {
                 continue;
             }
 
-            BigDecimal revenueRecognizableCBA = cbaPerInvoice.get(invoiceId);
+            BigDecimal revenueRecognizableCBA = cbaAdjustmentPerInvoice.get(invoiceId);
             if (revenueRecognizableCBA == null) {
                 revenueRecognizableCBA = BigDecimal.ZERO;
             }
