@@ -399,7 +399,16 @@ public abstract class BusinessFactoryBase {
         final PaymentApi paymentApi = getPaymentUserApi();
 
         try {
+            // Try to get the payment information, with plugin information
             return paymentApi.getPayment(paymentId, true, context);
+        } catch (PaymentApiException e) {
+            logService.log(LogService.LOG_INFO, "Error retrieving payment with plugin info for id " + paymentId, e);
+        }
+
+        try {
+            // If we come here, it is possible that the plugin couldn't answer about the payment, maybe
+            // because it was deleted in the gateway. Try to return the Kill Bill specific info only
+            return paymentApi.getPayment(paymentId, false, context);
         } catch (PaymentApiException e) {
             logService.log(LogService.LOG_WARNING, "Error retrieving payment for id " + paymentId, e);
             throw new AnalyticsRefreshException(e);
