@@ -154,45 +154,6 @@
 
 
       /**
-      * Create the 'y' scale for the stack graph
-      *
-      * Extract min/max for each x value across all layers
-      *
-      */
-      this.getYScaleValue = function(dataLayers, h) {
-
-          var tmp = [];
-          for (var i = 0; i < dataLayers.length; i++) {
-              tmp.push(dataLayers[i].values)
-          }
-
-          var sumValues = [];
-          for (var i = 0; i < tmp[0].length; i++) {
-              var max = 0;
-              for (var j = 0; j < tmp.length; j++) {
-                    max = max + tmp[j][i].y;
-              }
-              sumValues.push(max);
-          }
-          var minValue = 0;
-          var maxValue = 0;
-          for (var i = 0; i < sumValues.length; i++) {
-              if (sumValues[i] < minValue) {
-                  minValue = sumValues[i];
-              }
-              if (sumValues[i] > maxValue) {
-                  maxValue = sumValues[i];
-              }
-          }
-          if (minValue > 0) {
-              minValue = 0;
-          }
-          return d3.scale.linear().domain([minValue,  maxValue]).range([h, 0]);
-      }
-
-
-
-      /**
       * Add on the path the name of the line -- not used anymore as we are using external labels
       */
       this.addPathLabel = function(graph, lineId, positionPercent) {
@@ -321,6 +282,44 @@
      }
 
      /**
+     * Create the 'y' scale for the stack graph
+     *
+     * Extract min/max for each x value across all layers
+     *
+     */
+     this.getLayerScaleValue = function() {
+
+         var tmp = [];
+         for (var i = 0; i < this.data.length; i++) {
+             tmp.push(this.data[i].values)
+         }
+
+         var sumValues = [];
+         for (var i = 0; i < tmp[0].length; i++) {
+             var max = 0;
+             for (var j = 0; j < tmp.length; j++) {
+                   max = max + tmp[j][i].y;
+             }
+             sumValues.push(max);
+         }
+         var minValue = 0;
+         var maxValue = 0;
+         for (var i = 0; i < sumValues.length; i++) {
+             if (sumValues[i] < minValue) {
+                 minValue = sumValues[i];
+             }
+             if (sumValues[i] > maxValue) {
+                 maxValue = sumValues[i];
+             }
+         }
+         if (minValue > 0) {
+             minValue = 0;
+         }
+         return d3.scale.linear().domain([minValue,  maxValue]).range([heigth, 0]);
+     }
+
+
+     /**
      * All all layers on the graph
      */
      this.addLayers = function(stack, area, dataLayers) {
@@ -350,7 +349,7 @@
      this.drawStackLayers = function() {
 
         var scaleX = this.getScaleDate();
-        var scaleY = this.getYScaleValue(this.data, this.heigth);
+        var scaleY = this.getLayerScaleValue();
 
           var stack = d3.layout.stack()
               .offset("zero")
@@ -393,7 +392,14 @@
      /**
      * Create the 'y' scale for line graphs (non stacked)
      */
-     this.getScaleValue = function(dataYs, h) {
+     this.getScaleValue = function() {
+
+         var dataYs = [];
+         for (var k=0; k<this.data.length; k++) {
+             var dataY = this.extractKeyOrValueFromDataLayer(this.data[k], 'y');
+             dataYs.push(dataY);
+         }
+
           var minValue = 0;
           var maxValue = 0;
           for (var i=0; i<dataYs.length; i++) {
@@ -409,7 +415,7 @@
           if (minValue > 0) {
               minValue = 0;
           }
-          return d3.scale.linear().domain([minValue, maxValue]).range([h, 0]);
+          return d3.scale.linear().domain([minValue, maxValue]).range([this.heigth, 0]);
       }
 
       /**
@@ -444,7 +450,7 @@
       this.drawLines = function() {
 
           var scaleX = this.getScaleDate();
-          var scaleY = this.getYScaleValue(this.data, this.heigth);
+          var scaleY = this.getScaleValue();
 
           for (var k=0; k<this.data.length; k++) {
               var dataY = this.extractKeyOrValueFromDataLayer(this.data[k], 'y');
