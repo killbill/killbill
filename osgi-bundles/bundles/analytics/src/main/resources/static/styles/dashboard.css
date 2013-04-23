@@ -13,14 +13,6 @@ display: inline-block;
 vertical-align: top;
 }
 
-.labelLines {
-    margin-top: 200px;
-}
-
-.labelLayers {
-    margin-top: 350px;
-}
-
 .charts {
 display: inline-block;
 position: relative;
