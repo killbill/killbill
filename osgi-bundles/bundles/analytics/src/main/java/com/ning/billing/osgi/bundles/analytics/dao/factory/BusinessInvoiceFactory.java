@@ -55,6 +55,7 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 
 import static com.ning.billing.osgi.bundles.analytics.utils.BusinessInvoiceUtils.isAccountCreditItem;
@@ -189,20 +190,37 @@ public class BusinessInvoiceFactory extends BusinessFactoryBase {
                                                                       final Long tenantRecordId,
                                                                       @Nullable final ReportGroup reportGroup,
                                                                       final TenantContext context) throws AnalyticsRefreshException {
+        // For convenience, populate empty columns using the linked item
+        final InvoiceItem linkedInvoiceItem = Iterables.find(otherInvoiceItems, new Predicate<InvoiceItem>() {
+            @Override
+            public boolean apply(final InvoiceItem input) {
+                return invoiceItem.getLinkedItemId() != null && invoiceItem.getLinkedItemId().equals(input.getId());
+            }
+        }, null);
+
         SubscriptionBundle bundle = null;
         // Subscription and bundle could be null for e.g. credits or adjustments
         if (invoiceItem.getBundleId() != null) {
             bundle = getSubscriptionBundle(invoiceItem.getBundleId(), context);
+        }
+        if (bundle == null && linkedInvoiceItem != null && linkedInvoiceItem.getBundleId() != null) {
+            bundle = getSubscriptionBundle(linkedInvoiceItem.getBundleId(), context);
         }
 
         Plan plan = null;
         if (Strings.emptyToNull(invoiceItem.getPlanName()) != null) {
             plan = getPlanFromInvoiceItem(invoiceItem, context);
         }
+        if (plan == null && linkedInvoiceItem != null && Strings.emptyToNull(linkedInvoiceItem.getPlanName()) != null) {
+            plan = getPlanFromInvoiceItem(linkedInvoiceItem, context);
+        }
 
         PlanPhase planPhase = null;
         if (invoiceItem.getSubscriptionId() != null && Strings.emptyToNull(invoiceItem.getPhaseName()) != null) {
             planPhase = getPlanPhaseFromInvoiceItem(invoiceItem, context);
+        }
+        if (planPhase == null && linkedInvoiceItem != null && linkedInvoiceItem.getSubscriptionId() != null && Strings.emptyToNull(linkedInvoiceItem.getPhaseName()) != null) {
+            planPhase = getPlanPhaseFromInvoiceItem(linkedInvoiceItem, context);
         }
 
         final Long invoiceItemRecordId = invoiceItem.getId() != null ? getInvoiceItemRecordId(invoiceItem.getId(), context) : null;
