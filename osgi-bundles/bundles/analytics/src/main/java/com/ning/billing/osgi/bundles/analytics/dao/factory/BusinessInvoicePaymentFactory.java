@@ -18,7 +18,6 @@ package com.ning.billing.osgi.bundles.analytics.dao.factory;
 
 import java.util.Collection;
 import java.util.LinkedList;
-import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -27,8 +26,6 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.osgi.bundles.analytics.AnalyticsRefreshException;
-import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceItemBaseModelDao;
-import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoicePaymentBaseModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessModelDaoBase.ReportGroup;
 import com.ning.billing.payment.api.Payment;
@@ -48,7 +45,6 @@ public class BusinessInvoicePaymentFactory extends BusinessFactoryBase {
 
 
     public Collection<BusinessInvoicePaymentBaseModelDao> createBusinessInvoicePayments(final UUID accountId,
-                                                                                        final Map<BusinessInvoiceModelDao, Collection<BusinessInvoiceItemBaseModelDao>> businessInvoices,
                                                                                         final CallContext context) throws AnalyticsRefreshException {
         final Account account = getAccount(accountId, context);
 
@@ -62,7 +58,6 @@ public class BusinessInvoicePaymentFactory extends BusinessFactoryBase {
         for (final InvoicePayment invoicePayment : invoicePayments) {
             final BusinessInvoicePaymentBaseModelDao businessInvoicePayment = createBusinessInvoicePayment(account,
                                                                                                            invoicePayment,
-                                                                                                           businessInvoices,
                                                                                                            accountRecordId,
                                                                                                            tenantRecordId,
                                                                                                            reportGroup,
@@ -77,7 +72,6 @@ public class BusinessInvoicePaymentFactory extends BusinessFactoryBase {
 
     private BusinessInvoicePaymentBaseModelDao createBusinessInvoicePayment(final Account account,
                                                                             final InvoicePayment invoicePayment,
-                                                                            final Map<BusinessInvoiceModelDao, Collection<BusinessInvoiceItemBaseModelDao>> businessInvoices,
                                                                             final Long accountRecordId,
                                                                             final Long tenantRecordId,
                                                                             @Nullable final ReportGroup reportGroup,

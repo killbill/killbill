@@ -103,7 +103,7 @@ public class BusinessInvoiceAndInvoicePaymentDao extends BusinessAnalyticsDaoBas
         final Map<BusinessInvoiceModelDao, Collection<BusinessInvoiceItemBaseModelDao>> businessInvoices = binFactory.createBusinessInvoicesAndInvoiceItems(accountId, context);
 
         // Recompute all invoice payments (without denormalized payment fields populated)
-        final Collection<BusinessInvoicePaymentBaseModelDao> businessInvoicePayments = bipFactory.createBusinessInvoicePayments(accountId, businessInvoices, context);
+        final Collection<BusinessInvoicePaymentBaseModelDao> businessInvoicePayments = bipFactory.createBusinessInvoicePayments(accountId, context);
 
         // Transform the results
         for (final BusinessInvoiceModelDao businessInvoice : businessInvoices.keySet()) {
