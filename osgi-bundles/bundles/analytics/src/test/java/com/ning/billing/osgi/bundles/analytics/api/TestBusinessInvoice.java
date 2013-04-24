@@ -16,8 +16,6 @@
 
 package com.ning.billing.osgi.bundles.analytics.api;
 
-import java.math.BigDecimal;
-
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -31,16 +29,9 @@ public class TestBusinessInvoice extends AnalyticsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testConstructor() throws Exception {
-        final BigDecimal balance = BigDecimal.ONE;
-        final BigDecimal amountPaid = BigDecimal.TEN;
-        final BigDecimal amountCharged = BigDecimal.ZERO;
-        final BigDecimal originalAmountCharged = BigDecimal.ONE;
         final BusinessInvoiceModelDao invoiceModelDao = new BusinessInvoiceModelDao(account,
                                                                                     accountRecordId,
                                                                                     invoice,
-                                                                                    amountPaid,
-                                                                                    amountCharged,
-                                                                                    originalAmountCharged,
                                                                                     invoiceRecordId,
                                                                                     auditLog,
                                                                                     tenantRecordId,

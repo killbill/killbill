@@ -53,9 +53,12 @@ public class BusinessInvoiceModelDao extends BusinessModelDaoBase {
                                    final LocalDate invoiceDate,
                                    final LocalDate targetDate,
                                    final String currency,
+                                   final BigDecimal balance,
+                                   final BigDecimal amountPaid,
                                    final BigDecimal amountCharged,
                                    final BigDecimal originalAmountCharged,
                                    final BigDecimal amountCredited,
+                                   final BigDecimal amountRefunded,
                                    final DateTime createdDate,
                                    final String createdBy,
                                    final String createdReasonCode,
@@ -82,17 +85,17 @@ public class BusinessInvoiceModelDao extends BusinessModelDaoBase {
         this.invoiceDate = invoiceDate;
         this.targetDate = targetDate;
         this.currency = currency;
+        this.balance = balance;
+        this.amountPaid = amountPaid;
         this.amountCharged = amountCharged;
         this.originalAmountCharged = originalAmountCharged;
         this.amountCredited = amountCredited;
+        this.amountRefunded = amountRefunded;
     }
 
     public BusinessInvoiceModelDao(final Account account,
                                    final Long accountRecordId,
                                    final Invoice invoice,
-                                   final BigDecimal amountCharged,
-                                   final BigDecimal originalAmountCharged,
-                                   final BigDecimal amountCredited,
                                    final Long invoiceRecordId,
                                    @Nullable final AuditLog creationAuditLog,
                                    final Long tenantRecordId,
@@ -103,9 +106,12 @@ public class BusinessInvoiceModelDao extends BusinessModelDaoBase {
              invoice.getInvoiceDate(),
              invoice.getTargetDate(),
              invoice.getCurrency() == null ? null : invoice.getCurrency().toString(),
-             amountCharged,
-             originalAmountCharged,
-             amountCredited,
+             invoice.getBalance(),
+             invoice.getPaidAmount(),
+             invoice.getChargedAmount(),
+             invoice.getOriginalChargedAmount(),
+             invoice.getCreditedAmount(),
+             invoice.getRefundedAmount(),
              invoice.getCreatedDate(),
              creationAuditLog != null ? creationAuditLog.getUserName() : null,
              creationAuditLog != null ? creationAuditLog.getReasonCode() : null,
@@ -116,21 +122,6 @@ public class BusinessInvoiceModelDao extends BusinessModelDaoBase {
              accountRecordId,
              tenantRecordId,
              reportGroup);
-    }
-
-    // Denormalized payment field
-    public void setBalance(final BigDecimal balance) {
-        this.balance = balance;
-    }
-
-    // Denormalized payment field
-    public void setAmountPaid(final BigDecimal amountPaid) {
-        this.amountPaid = amountPaid;
-    }
-
-    // Denormalized payment field
-    public void setAmountRefunded(final BigDecimal amountRefunded) {
-        this.amountRefunded = amountRefunded;
     }
 
     @Override

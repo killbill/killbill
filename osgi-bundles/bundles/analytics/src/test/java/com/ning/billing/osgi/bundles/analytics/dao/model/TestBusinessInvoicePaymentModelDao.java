@@ -104,12 +104,12 @@ public class TestBusinessInvoicePaymentModelDao extends AnalyticsTestSuiteNoDB {
         Assert.assertEquals(invoicePaymentModelDao.getInvoiceDate(), invoice.getInvoiceDate());
         Assert.assertEquals(invoicePaymentModelDao.getInvoiceTargetDate(), invoice.getTargetDate());
         Assert.assertEquals(invoicePaymentModelDao.getInvoiceCurrency(), invoice.getCurrency().toString());
-        Assert.assertNull(invoicePaymentModelDao.getInvoiceBalance());
-        Assert.assertNull(invoicePaymentModelDao.getInvoiceAmountPaid());
-        Assert.assertNull(invoicePaymentModelDao.getInvoiceAmountCharged());
-        Assert.assertNull(invoicePaymentModelDao.getInvoiceOriginalAmountCharged());
-        Assert.assertNull(invoicePaymentModelDao.getInvoiceAmountCredited());
-        Assert.assertNull(invoicePaymentModelDao.getInvoiceAmountRefunded());
+        Assert.assertEquals(invoicePaymentModelDao.getInvoiceBalance(), invoice.getBalance());
+        Assert.assertEquals(invoicePaymentModelDao.getInvoiceAmountPaid(), invoice.getPaidAmount());
+        Assert.assertEquals(invoicePaymentModelDao.getInvoiceAmountCharged(), invoice.getChargedAmount());
+        Assert.assertEquals(invoicePaymentModelDao.getInvoiceOriginalAmountCharged(), invoice.getOriginalChargedAmount());
+        Assert.assertEquals(invoicePaymentModelDao.getInvoiceAmountCredited(), invoice.getCreditedAmount());
+        Assert.assertEquals(invoicePaymentModelDao.getInvoiceAmountRefunded(), invoice.getRefundedAmount());
         Assert.assertEquals(invoicePaymentModelDao.getInvoicePaymentType(), invoicePayment.getType().toString());
         Assert.assertEquals(invoicePaymentModelDao.getPaymentNumber(), (Long) payment.getPaymentNumber().longValue());
         Assert.assertEquals(invoicePaymentModelDao.getLinkedInvoicePaymentId(), invoicePayment.getLinkedInvoicePaymentId());

@@ -16,32 +16,15 @@
 
 package com.ning.billing.osgi.bundles.analytics.utils;
 
-import java.math.BigDecimal;
 import java.util.Collection;
-
-import javax.annotation.Nullable;
 
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
-import com.ning.billing.invoice.api.InvoicePayment.InvoicePaymentType;
-import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceItemBaseModelDao;
-import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceItemBaseModelDao.BusinessInvoiceItemType;
-import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoicePaymentBaseModelDao;
 
 /**
  * Utilities to manipulate invoice and invoice items.
  */
 public class BusinessInvoiceUtils {
-
-    public static boolean isRepareeItemForRepairedItem(final InvoiceItem repairedInvoiceItem, final InvoiceItem invoiceItem) {
-        return repairedInvoiceItem.getInvoiceItemType().equals(invoiceItem.getInvoiceItemType()) &&
-               repairedInvoiceItem.getSubscriptionId().equals(invoiceItem.getSubscriptionId()) &&
-               repairedInvoiceItem.getStartDate().compareTo(invoiceItem.getStartDate()) == 0 &&
-               // FIXED items have a null end date
-               ((repairedInvoiceItem.getEndDate() == null && invoiceItem.getEndDate() == null) ||
-                (repairedInvoiceItem.getEndDate() != null && invoiceItem.getEndDate() != null && !repairedInvoiceItem.getEndDate().isBefore(invoiceItem.getEndDate()))) &&
-               !repairedInvoiceItem.getId().equals(invoiceItem.getId());
-    }
 
     public static boolean isRevenueRecognizable(final InvoiceItem invoiceItem, final Collection<InvoiceItem> otherInvoiceItems) {
         // All items are recognizable except user generated credit (CBA_ADJ and CREDIT_ADJ on their own invoice)
@@ -67,7 +50,7 @@ public class BusinessInvoiceUtils {
 
     // Item adjustments
     public static boolean isInvoiceItemAdjustmentItem(final InvoiceItem invoiceItem) {
-        return InvoiceItemType.ITEM_ADJ.equals(invoiceItem.getInvoiceItemType());
+        return InvoiceItemType.ITEM_ADJ.equals(invoiceItem.getInvoiceItemType()) || InvoiceItemType.REPAIR_ADJ.equals(invoiceItem.getInvoiceItemType());
     }
 
     // Account credits, gained or consumed
@@ -80,89 +63,5 @@ public class BusinessInvoiceUtils {
         return InvoiceItemType.EXTERNAL_CHARGE.equals(invoiceItem.getInvoiceItemType()) ||
                InvoiceItemType.FIXED.equals(invoiceItem.getInvoiceItemType()) ||
                InvoiceItemType.RECURRING.equals(invoiceItem.getInvoiceItemType());
-    }
-
-    public static BigDecimal computeInvoiceBalance(@Nullable final Iterable<BusinessInvoiceItemBaseModelDao> businessInvoiceItems,
-                                                   @Nullable final Iterable<BusinessInvoicePaymentBaseModelDao> businessInvoicePayments) {
-        return computeInvoiceAmountCharged(businessInvoiceItems)
-                .add(computeInvoiceAmountCredited(businessInvoiceItems))
-                .add(
-                        computeInvoiceAmountPaid(businessInvoicePayments).negate()
-                                .add(computeInvoiceAmountRefunded(businessInvoicePayments).negate())
-                    );
-    }
-
-    public static BigDecimal computeInvoiceAmountCharged(@Nullable final Iterable<BusinessInvoiceItemBaseModelDao> businessInvoiceItems) {
-        BigDecimal amountCharged = BigDecimal.ZERO;
-        if (businessInvoiceItems == null) {
-            return amountCharged;
-        }
-
-        for (final BusinessInvoiceItemBaseModelDao businessInvoiceItem : businessInvoiceItems) {
-            if (BusinessInvoiceItemType.CHARGE.equals(businessInvoiceItem.getBusinessInvoiceItemType()) ||
-                BusinessInvoiceItemType.INVOICE_ADJUSTMENT.equals(businessInvoiceItem.getBusinessInvoiceItemType()) ||
-                BusinessInvoiceItemType.INVOICE_ITEM_ADJUSTMENT.equals(businessInvoiceItem.getBusinessInvoiceItemType())) {
-                amountCharged = amountCharged.add(businessInvoiceItem.getAmount());
-            }
-        }
-        return amountCharged;
-    }
-
-    public static BigDecimal computeInvoiceOriginalAmountCharged(@Nullable final Iterable<BusinessInvoiceItemBaseModelDao> businessInvoiceItems) {
-        BigDecimal amountCharged = BigDecimal.ZERO;
-        if (businessInvoiceItems == null) {
-            return amountCharged;
-        }
-
-        for (final BusinessInvoiceItemBaseModelDao businessInvoiceItem : businessInvoiceItems) {
-            if (BusinessInvoiceItemType.CHARGE.equals(businessInvoiceItem.getBusinessInvoiceItemType()) &&
-                businessInvoiceItem.getCreatedDate().equals(businessInvoiceItem.getInvoiceCreatedDate())) {
-                amountCharged = amountCharged.add(businessInvoiceItem.getAmount());
-            }
-        }
-        return amountCharged;
-    }
-
-    public static BigDecimal computeInvoiceAmountCredited(@Nullable final Iterable<BusinessInvoiceItemBaseModelDao> businessInvoiceItems) {
-        BigDecimal amountCredited = BigDecimal.ZERO;
-        if (businessInvoiceItems == null) {
-            return amountCredited;
-        }
-
-        for (final BusinessInvoiceItemBaseModelDao businessInvoiceItem : businessInvoiceItems) {
-            if (BusinessInvoiceItemType.ACCOUNT_CREDIT.equals(businessInvoiceItem.getBusinessInvoiceItemType())) {
-                amountCredited = amountCredited.add(businessInvoiceItem.getAmount());
-            }
-        }
-        return amountCredited;
-    }
-
-    public static BigDecimal computeInvoiceAmountPaid(@Nullable final Iterable<BusinessInvoicePaymentBaseModelDao> businessInvoicePayments) {
-        BigDecimal amountPaid = BigDecimal.ZERO;
-        if (businessInvoicePayments == null) {
-            return amountPaid;
-        }
-
-        for (final BusinessInvoicePaymentBaseModelDao businessInvoicePayment : businessInvoicePayments) {
-            if (InvoicePaymentType.ATTEMPT.toString().equals(businessInvoicePayment.getInvoicePaymentType())) {
-                amountPaid = amountPaid.add(businessInvoicePayment.getAmount());
-            }
-        }
-        return amountPaid;
-    }
-
-    public static BigDecimal computeInvoiceAmountRefunded(@Nullable final Iterable<BusinessInvoicePaymentBaseModelDao> businessInvoicePayments) {
-        BigDecimal amountRefunded = BigDecimal.ZERO;
-        if (businessInvoicePayments == null) {
-            return amountRefunded;
-        }
-
-        for (final BusinessInvoicePaymentBaseModelDao businessInvoicePayment : businessInvoicePayments) {
-            if (InvoicePaymentType.REFUND.toString().equals(businessInvoicePayment.getInvoicePaymentType()) ||
-                InvoicePaymentType.CHARGED_BACK.toString().equals(businessInvoicePayment.getInvoicePaymentType())) {
-                amountRefunded = amountRefunded.add(businessInvoicePayment.getAmount());
-            }
-        }
-        return amountRefunded;
     }
 }

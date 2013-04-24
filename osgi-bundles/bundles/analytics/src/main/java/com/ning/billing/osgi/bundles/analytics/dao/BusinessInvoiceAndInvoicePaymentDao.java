@@ -16,7 +16,6 @@
 
 package com.ning.billing.osgi.bundles.analytics.dao;
 
-import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -33,7 +32,6 @@ import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessAccountModelDao
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceItemBaseModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoicePaymentBaseModelDao;
-import com.ning.billing.osgi.bundles.analytics.utils.BusinessInvoiceUtils;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillAPI;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillDataSource;
@@ -98,11 +96,10 @@ public class BusinessInvoiceAndInvoicePaymentDao extends BusinessAnalyticsDaoBas
                              final Multimap<UUID, BusinessInvoiceItemBaseModelDao> invoiceItems,
                              final Multimap<UUID, BusinessInvoicePaymentBaseModelDao> invoicePayments,
                              final CallContext context) throws AnalyticsRefreshException {
-        // Recompute all invoices and invoice items. Invoices will have their denormalized payment fields missing,
-        // and items won't have neither invoice nor payment denormalized fields populated
+        // Recompute all invoices and invoice items
         final Map<BusinessInvoiceModelDao, Collection<BusinessInvoiceItemBaseModelDao>> businessInvoices = binFactory.createBusinessInvoicesAndInvoiceItems(accountId, context);
 
-        // Recompute all invoice payments (without denormalized payment fields populated)
+        // Recompute all invoice payments
         final Collection<BusinessInvoicePaymentBaseModelDao> businessInvoicePayments = bipFactory.createBusinessInvoicePayments(accountId, context);
 
         // Transform the results
@@ -112,43 +109,6 @@ public class BusinessInvoiceAndInvoicePaymentDao extends BusinessAnalyticsDaoBas
         }
         for (final BusinessInvoicePaymentBaseModelDao businessInvoicePayment : businessInvoicePayments) {
             invoicePayments.get(businessInvoicePayment.getInvoiceId()).add(businessInvoicePayment);
-        }
-
-        // Populate missing fields
-        populatedMissingDenormalizedFields(invoices, invoiceItems, invoicePayments);
-    }
-
-    private void populatedMissingDenormalizedFields(final Map<UUID, BusinessInvoiceModelDao> businessInvoices,
-                                                    final Multimap<UUID, BusinessInvoiceItemBaseModelDao> businessInvoiceItems,
-                                                    final Multimap<UUID, BusinessInvoicePaymentBaseModelDao> businessInvoicePayments) {
-        // First, populated missing payment fields in invoice
-        for (final BusinessInvoiceModelDao businessInvoice : businessInvoices.values()) {
-            final BigDecimal balance = BusinessInvoiceUtils.computeInvoiceBalance(businessInvoiceItems.get(businessInvoice.getInvoiceId()),
-                                                                                  businessInvoicePayments.get(businessInvoice.getInvoiceId()));
-            businessInvoice.setBalance(balance);
-
-            final BigDecimal amountPaid = BusinessInvoiceUtils.computeInvoiceAmountPaid(businessInvoicePayments.get(businessInvoice.getInvoiceId()));
-            businessInvoice.setAmountPaid(amountPaid);
-
-            final BigDecimal amountRefunded = BusinessInvoiceUtils.computeInvoiceAmountRefunded(businessInvoicePayments.get(businessInvoice.getInvoiceId()));
-            businessInvoice.setAmountRefunded(amountRefunded);
-        }
-
-        // At this point, all of the invoice objects are fully populated. Use them to update the invoice items and payment objects
-        for (final UUID invoiceId : businessInvoices.keySet()) {
-            final Collection<BusinessInvoiceItemBaseModelDao> invoiceItemsForInvoice = businessInvoiceItems.get(invoiceId);
-            if (invoiceItemsForInvoice != null) {
-                for (final BusinessInvoiceItemBaseModelDao businessInvoiceItem : invoiceItemsForInvoice) {
-                    businessInvoiceItem.populateDenormalizedInvoiceFields(businessInvoices.get(invoiceId));
-                }
-            }
-
-            final Collection<BusinessInvoicePaymentBaseModelDao> invoicePaymentsForInvoice = businessInvoicePayments.get(invoiceId);
-            if (invoicePaymentsForInvoice != null) {
-                for (final BusinessInvoicePaymentBaseModelDao businessInvoicePayment : invoicePaymentsForInvoice) {
-                    businessInvoicePayment.populateDenormalizedInvoiceFields(businessInvoices.get(invoiceId));
-                }
-            }
         }
     }
 

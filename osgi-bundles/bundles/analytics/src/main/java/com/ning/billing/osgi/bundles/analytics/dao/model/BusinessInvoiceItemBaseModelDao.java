@@ -167,6 +167,12 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
                                            final LocalDate invoiceDate,
                                            final LocalDate invoiceTargetDate,
                                            final String invoiceCurrency,
+                                           final BigDecimal invoiceBalance,
+                                           final BigDecimal invoiceAmountPaid,
+                                           final BigDecimal invoiceAmountCharged,
+                                           final BigDecimal invoiceOriginalAmountCharged,
+                                           final BigDecimal invoiceAmountCredited,
+                                           final BigDecimal invoiceAmountRefunded,
                                            final String itemType,
                                            final Boolean revenueRecognizable,
                                            final String bundleExternalKey,
@@ -210,6 +216,12 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
         this.invoiceDate = invoiceDate;
         this.invoiceTargetDate = invoiceTargetDate;
         this.invoiceCurrency = invoiceCurrency;
+        this.invoiceBalance = invoiceBalance;
+        this.invoiceAmountPaid = invoiceAmountPaid;
+        this.invoiceAmountCharged = invoiceAmountCharged;
+        this.invoiceOriginalAmountCharged = invoiceOriginalAmountCharged;
+        this.invoiceAmountCredited = invoiceAmountCredited;
+        this.invoiceAmountRefunded = invoiceAmountRefunded;
         this.itemType = itemType;
         this.revenueRecognizable = revenueRecognizable;
         this.bundleExternalKey = bundleExternalKey;
@@ -248,6 +260,12 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
              invoice.getInvoiceDate(),
              invoice.getTargetDate(),
              invoice.getCurrency() == null ? null : invoice.getCurrency().toString(),
+             invoice.getBalance(),
+             invoice.getPaidAmount(),
+             invoice.getChargedAmount(),
+             invoice.getOriginalChargedAmount(),
+             invoice.getCreditedAmount(),
+             invoice.getRefundedAmount(),
              invoiceItem.getInvoiceItemType().toString(),
              revenueRecognizable,
              bundle == null ? null : bundle.getExternalKey(),
@@ -273,15 +291,6 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
              accountRecordId,
              tenantRecordId,
              reportGroup);
-    }
-
-    public void populateDenormalizedInvoiceFields(final BusinessInvoiceModelDao businessInvoice) {
-        invoiceBalance = businessInvoice.getBalance();
-        invoiceAmountPaid = businessInvoice.getAmountPaid();
-        invoiceAmountCharged = businessInvoice.getAmountCharged();
-        invoiceOriginalAmountCharged = businessInvoice.getOriginalAmountCharged();
-        invoiceAmountCredited = businessInvoice.getAmountCredited();
-        invoiceAmountRefunded = businessInvoice.getAmountRefunded();
     }
 
     public Long getInvoiceItemRecordId() {

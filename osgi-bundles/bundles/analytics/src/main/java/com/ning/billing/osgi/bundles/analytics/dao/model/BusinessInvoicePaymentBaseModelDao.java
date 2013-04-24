@@ -157,6 +157,12 @@ public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDa
                                               final UUID linkedInvoicePaymentId,
                                               final BigDecimal amount,
                                               final String currency,
+                                              final BigDecimal invoiceBalance,
+                                              final BigDecimal invoiceAmountPaid,
+                                              final BigDecimal invoiceAmountCharged,
+                                              final BigDecimal invoiceOriginalAmountCharged,
+                                              final BigDecimal invoiceAmountCredited,
+                                              final BigDecimal invoiceAmountRefunded,
                                               final String pluginName,
                                               final DateTime pluginCreatedDate,
                                               final DateTime pluginEffectiveDate,
@@ -207,6 +213,12 @@ public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDa
         this.invoiceDate = invoiceDate;
         this.invoiceTargetDate = invoiceTargetDate;
         this.invoiceCurrency = invoiceCurrency;
+        this.invoiceBalance = invoiceBalance;
+        this.invoiceAmountPaid = invoiceAmountPaid;
+        this.invoiceAmountCharged = invoiceAmountCharged;
+        this.invoiceOriginalAmountCharged = invoiceOriginalAmountCharged;
+        this.invoiceAmountCredited = invoiceAmountCredited;
+        this.invoiceAmountRefunded = invoiceAmountRefunded;
         this.invoicePaymentType = invoicePaymentType;
         this.paymentId = paymentId;
         this.refundId = refundId;
@@ -264,6 +276,12 @@ public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDa
              invoicePayment.getLinkedInvoicePaymentId(),
              invoicePayment.getAmount(),
              invoicePayment.getCurrency() == null ? null : invoicePayment.getCurrency().toString(),
+             invoice.getBalance(),
+             invoice.getPaidAmount(),
+             invoice.getChargedAmount(),
+             invoice.getOriginalChargedAmount(),
+             invoice.getCreditedAmount(),
+             invoice.getRefundedAmount(),
              paymentMethod != null ? paymentMethod.getPluginName() : DEFAULT_PLUGIN_NAME,
              refund != null ? (refund.getPluginDetail() != null ? refund.getPluginDetail().getCreatedDate() : null) : (payment.getPaymentInfoPlugin() != null ? payment.getPaymentInfoPlugin().getCreatedDate() : null),
              refund != null ? (refund.getPluginDetail() != null ? refund.getPluginDetail().getEffectiveDate() : null) : (payment.getPaymentInfoPlugin() != null ? payment.getPaymentInfoPlugin().getEffectiveDate() : null),
@@ -296,15 +314,6 @@ public abstract class BusinessInvoicePaymentBaseModelDao extends BusinessModelDa
              accountRecordId,
              tenantRecordId,
              reportGroup);
-    }
-
-    public void populateDenormalizedInvoiceFields(final BusinessInvoiceModelDao businessInvoice) {
-        invoiceBalance = businessInvoice.getBalance();
-        invoiceAmountPaid = businessInvoice.getAmountPaid();
-        invoiceAmountCharged = businessInvoice.getAmountCharged();
-        invoiceOriginalAmountCharged = businessInvoice.getOriginalAmountCharged();
-        invoiceAmountCredited = businessInvoice.getAmountCredited();
-        invoiceAmountRefunded = businessInvoice.getAmountRefunded();
     }
 
     public Long getInvoicePaymentRecordId() {
