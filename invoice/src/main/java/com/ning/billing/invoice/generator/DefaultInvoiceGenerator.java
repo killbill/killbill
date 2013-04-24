@@ -118,11 +118,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         // Add repair items based on what is left in existing items
         addRepairItems(existingItems, proposedItems);
 
-        // Go through each invoice and if balance is negative, generate CBA of opposite amount -- which could happen if there was some repair
-        // TODO Should this be merged with existing CBA logic in the dao layer ?
-        generateCBAForExistingInvoices(accountId, existingInvoices, proposedItems, targetCurrency);
-
-        // Finally add thos new items on the new invoice
+        // Finally add this new items on the new invoice
         invoice.addInvoiceItems(proposedItems);
 
         return proposedItems.size() != 0 ?  invoice : null;
@@ -171,12 +167,60 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                 final BigDecimal existingAdjustedPositiveAmount = getAdjustedPositiveAmount(existingItems, existingItem.getId());
                 final BigDecimal amountNegated = existingItem.getAmount() == null ? null : existingItem.getAmount().subtract(existingAdjustedPositiveAmount).negate();
                 if (amountNegated != null && amountNegated.compareTo(BigDecimal.ZERO) < 0) {
-                    final RepairAdjInvoiceItem repairItem = new RepairAdjInvoiceItem(existingItem.getInvoiceId(), existingItem.getAccountId(), existingItem.getStartDate(), existingItem.getEndDate(), amountNegated, existingItem.getCurrency(), existingItem.getId());
-                    proposedItems.add(repairItem);
+                    final RepairAdjInvoiceItem candidateRepairItem = new RepairAdjInvoiceItem(existingItem.getInvoiceId(), existingItem.getAccountId(), existingItem.getStartDate(), existingItem.getEndDate(), amountNegated, existingItem.getCurrency(), existingItem.getId());
+                    addRepairItem(existingItem, candidateRepairItem, proposedItems);
                 }
             }
         }
     }
+
+    void addRepairItem(final InvoiceItem repairedItem, final RepairAdjInvoiceItem candidateRepairItem, final List<InvoiceItem> proposedItems) {
+
+        final boolean withPartialRepair = false; //(System.getProperty("InvoiceWithPartialRepair") != null);
+
+        if (!withPartialRepair) {
+            proposedItems.add(candidateRepairItem);
+            return;
+        }
+
+        InvoiceItem repareeItem = null;
+        for (final InvoiceItem cur : proposedItems) {
+            if (isRepareeItemForRepairedItem(repairedItem, cur)) {
+                if (repareeItem == null) {
+                    repareeItem = cur;
+                } else {
+                    log.warn("Found multiple reparee item for repaired invoice item " + repairedItem.getId());
+                }
+            }
+        }
+
+        if (repareeItem == null) {
+            log.warn("Could not find reparee item for repaired invoice item " + repairedItem.getId());
+            // Default to no partial repair logic
+            proposedItems.add(candidateRepairItem);
+            return;
+        }
+
+        final BigDecimal partialRepairAmount = candidateRepairItem.getAmount().add(repareeItem.getAmount());
+        if (partialRepairAmount.compareTo(BigDecimal.ZERO) < 0) {
+            final RepairAdjInvoiceItem repairItem = new RepairAdjInvoiceItem(candidateRepairItem.getInvoiceId(), candidateRepairItem.getAccountId(), repareeItem.getEndDate(), candidateRepairItem.getEndDate(), partialRepairAmount, candidateRepairItem.getCurrency(), candidateRepairItem.getLinkedItemId());
+            proposedItems.remove(repareeItem);
+            proposedItems.add(repairItem);
+        }
+
+    }
+
+    private static boolean isRepareeItemForRepairedItem(final InvoiceItem repairedInvoiceItem, final InvoiceItem invoiceItem) {
+        return repairedInvoiceItem.getInvoiceItemType().equals(invoiceItem.getInvoiceItemType()) &&
+               repairedInvoiceItem.getSubscriptionId().equals(invoiceItem.getSubscriptionId()) &&
+               repairedInvoiceItem.getStartDate().compareTo(invoiceItem.getStartDate()) == 0 &&
+               // FIXED items have a null end date
+               ((repairedInvoiceItem.getEndDate() == null && invoiceItem.getEndDate() == null) ||
+                (repairedInvoiceItem.getEndDate() != null && invoiceItem.getEndDate() != null && !repairedInvoiceItem.getEndDate().isBefore(invoiceItem.getEndDate()))) &&
+               !repairedInvoiceItem.getId().equals(invoiceItem.getId());
+    }
+
+
 
     // We check to see if there are any adjustments that point to the item we are trying to repair
     // If we did any CREDIT_ADJ or REFUND_ADJ, then we unfortunately we can't know what is the intent
