@@ -60,7 +60,7 @@ public class BusinessInvoiceModelDao extends EntityBase {
     }
 
     public BusinessInvoiceModelDao(final String accountKey, final Invoice invoice) {
-        this(invoice.getAccountId(), accountKey, invoice.getChargedAmount(), invoice.getCreditAdjAmount(), invoice.getPaidAmount(), invoice.getBalance(),
+        this(invoice.getAccountId(), accountKey, invoice.getChargedAmount(), invoice.getCreditedAmount(), invoice.getPaidAmount(), invoice.getBalance(),
              invoice.getCreatedDate(), invoice.getCurrency(), invoice.getInvoiceDate(), invoice.getId(), invoice.getInvoiceNumber(), invoice.getTargetDate(),
              invoice.getUpdatedDate());
     }

@@ -238,7 +238,6 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
 
         // Verify the adjusted invoice balance
         final BigDecimal adjustedInvoiceBalance = invoiceUserApi.getInvoice(invoiceId, callContext).getBalance();
-        // Note! The invoice code will round (see InvoiceItemList)
         verifyAdjustedInvoiceBalance(invoiceBalance, creditAmount, adjustedInvoiceBalance);
 
         // Verify the adjusted account balance
@@ -282,7 +281,6 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
 
         // Verify the adjusted invoice balance
         final BigDecimal adjustedInvoiceBalance = invoiceUserApi.getInvoice(invoiceId, callContext).getBalance();
-        // Note! The invoice code will round (see InvoiceItemList)
         verifyAdjustedInvoiceBalance(invoiceBalance, invoiceItem.getAmount(), adjustedInvoiceBalance);
 
         // Verify the adjusted account balance
@@ -318,7 +316,6 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
 
         // Verify the adjusted invoice balance
         final BigDecimal adjustedInvoiceBalance = invoiceUserApi.getInvoice(invoiceId, callContext).getBalance();
-        // Note! The invoice code will round (see InvoiceItemList)
         verifyAdjustedInvoiceBalance(invoiceBalance, adjAmount, adjustedInvoiceBalance);
 
         // Verify the adjusted account balance
@@ -340,8 +337,7 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
     }
 
     private void verifyAdjustedInvoiceBalance(final BigDecimal invoiceBalance, final BigDecimal adjAmount, final BigDecimal adjustedInvoiceBalance) {
-        Assert.assertEquals(adjustedInvoiceBalance.compareTo(invoiceBalance.add(adjAmount.negate().setScale(InvoicingConfiguration.getNumberOfDecimals(),
-                                                                                                            InvoicingConfiguration.getRoundingMode()))
+        Assert.assertEquals(adjustedInvoiceBalance.compareTo(invoiceBalance.add(adjAmount.negate())
                                                                            .setScale(InvoicingConfiguration.getNumberOfDecimals(),
                                                                                      InvoicingConfiguration.getRoundingMode())), 0);
     }

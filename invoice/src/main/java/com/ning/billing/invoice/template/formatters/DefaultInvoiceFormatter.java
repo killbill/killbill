@@ -188,11 +188,6 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
     }
 
     @Override
-    public BigDecimal getCBAAmount() {
-        return round(Objects.firstNonNull(invoice.getCBAAmount(), BigDecimal.ZERO));
-    }
-
-    @Override
     public BigDecimal getBalance() {
         return round(Objects.firstNonNull(invoice.getBalance(), BigDecimal.ZERO));
     }
@@ -287,17 +282,12 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
     }
 
     @Override
-    public BigDecimal getTotalAdjAmount() {
-        return round(Objects.firstNonNull(invoice.getTotalAdjAmount(), BigDecimal.ZERO));
+    public BigDecimal getCreditedAmount() {
+        return round(Objects.firstNonNull(invoice.getCreditedAmount(), BigDecimal.ZERO));
     }
 
     @Override
-    public BigDecimal getCreditAdjAmount() {
-        return round(Objects.firstNonNull(invoice.getCreditAdjAmount(), BigDecimal.ZERO));
-    }
-
-    @Override
-    public BigDecimal getRefundAdjAmount() {
-        return round(Objects.firstNonNull(invoice.getRefundAdjAmount(), BigDecimal.ZERO));
+    public BigDecimal getRefundedAmount() {
+        return round(Objects.firstNonNull(invoice.getRefundedAmount(), BigDecimal.ZERO));
     }
 }

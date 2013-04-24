@@ -31,6 +31,7 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
+import com.ning.billing.invoice.calculator.InvoiceCalculatorUtils;
 import com.ning.billing.invoice.dao.InvoiceItemModelDao;
 import com.ning.billing.invoice.dao.InvoiceModelDao;
 import com.ning.billing.invoice.dao.InvoicePaymentModelDao;
@@ -41,7 +42,7 @@ import com.google.common.collect.Collections2;
 
 public class DefaultInvoice extends EntityBase implements Invoice {
 
-    private final InvoiceItemList invoiceItems = new InvoiceItemList();
+    private final List<InvoiceItem> invoiceItems = new ArrayList<InvoiceItem>();
     private final List<InvoicePayment> payments = new ArrayList<InvoicePayment>();
     private final UUID accountId;
     private final Integer invoiceNumber;
@@ -179,48 +180,32 @@ public class DefaultInvoice extends EntityBase implements Invoice {
 
     @Override
     public BigDecimal getPaidAmount() {
-        BigDecimal amountPaid = BigDecimal.ZERO;
-        for (final InvoicePayment payment : payments) {
-            if (payment.getAmount() != null) {
-                amountPaid = amountPaid.add(payment.getAmount());
-            }
-        }
-        return amountPaid;
+        return InvoiceCalculatorUtils.computeInvoiceAmountPaid(payments);
     }
 
     @Override
     public BigDecimal getOriginalChargedAmount() {
-        return invoiceItems.getOriginalChargedAmount();
+        return InvoiceCalculatorUtils.computeInvoiceOriginalAmountCharged(createdDate, invoiceItems);
     }
 
     @Override
     public BigDecimal getChargedAmount() {
-        return invoiceItems.getChargedAmount();
+        return InvoiceCalculatorUtils.computeInvoiceAmountCharged(invoiceItems);
     }
 
     @Override
-    public BigDecimal getCBAAmount() {
-        return invoiceItems.getCBAAmount();
+    public BigDecimal getCreditedAmount() {
+        return InvoiceCalculatorUtils.computeInvoiceAmountCredited(invoiceItems);
     }
 
     @Override
-    public BigDecimal getTotalAdjAmount() {
-        return invoiceItems.getTotalAdjAmount();
-    }
-
-    @Override
-    public BigDecimal getCreditAdjAmount() {
-        return invoiceItems.getCreditAdjAmount();
-    }
-
-    @Override
-    public BigDecimal getRefundAdjAmount() {
-        return invoiceItems.getRefundAdjAmount();
+    public BigDecimal getRefundedAmount() {
+        return InvoiceCalculatorUtils.computeInvoiceAmountRefunded(payments);
     }
 
     @Override
     public BigDecimal getBalance() {
-        return invoiceItems.getBalance(getPaidAmount());
+        return InvoiceCalculatorUtils.computeInvoiceBalance(invoiceItems, payments);
     }
 
     @Override

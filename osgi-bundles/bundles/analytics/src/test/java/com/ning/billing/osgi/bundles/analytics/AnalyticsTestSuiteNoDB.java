@@ -159,10 +159,8 @@ public abstract class AnalyticsTestSuiteNoDB {
         Mockito.when(invoice.getPaidAmount()).thenReturn(BigDecimal.ZERO);
         Mockito.when(invoice.getOriginalChargedAmount()).thenReturn(new BigDecimal("1922"));
         Mockito.when(invoice.getChargedAmount()).thenReturn(new BigDecimal("100293"));
-        Mockito.when(invoice.getCBAAmount()).thenReturn(BigDecimal.TEN);
-        Mockito.when(invoice.getTotalAdjAmount()).thenReturn(new BigDecimal("192"));
-        Mockito.when(invoice.getCreditAdjAmount()).thenReturn(new BigDecimal("283"));
-        Mockito.when(invoice.getRefundAdjAmount()).thenReturn(new BigDecimal("384"));
+        Mockito.when(invoice.getCreditedAmount()).thenReturn(new BigDecimal("283"));
+        Mockito.when(invoice.getRefundedAmount()).thenReturn(new BigDecimal("384"));
         Mockito.when(invoice.getBalance()).thenReturn(new BigDecimal("18376"));
         Mockito.when(invoice.isMigrationInvoice()).thenReturn(false);
         Mockito.when(invoice.getCreatedDate()).thenReturn(INVOICE_CREATED_DATE);
@@ -353,10 +351,8 @@ public abstract class AnalyticsTestSuiteNoDB {
         Mockito.when(invoice.getPaidAmount()).thenReturn(BigDecimal.ZERO);
         Mockito.when(invoice.getOriginalChargedAmount()).thenReturn(new BigDecimal("1922"));
         Mockito.when(invoice.getChargedAmount()).thenReturn(new BigDecimal("100293"));
-        Mockito.when(invoice.getCBAAmount()).thenReturn(BigDecimal.TEN);
-        Mockito.when(invoice.getTotalAdjAmount()).thenReturn(new BigDecimal("192"));
-        Mockito.when(invoice.getCreditAdjAmount()).thenReturn(new BigDecimal("283"));
-        Mockito.when(invoice.getRefundAdjAmount()).thenReturn(new BigDecimal("384"));
+        Mockito.when(invoice.getCreditedAmount()).thenReturn(new BigDecimal("283"));
+        Mockito.when(invoice.getRefundedAmount()).thenReturn(new BigDecimal("384"));
         Mockito.when(invoice.getBalance()).thenReturn(new BigDecimal("18376"));
         Mockito.when(invoice.isMigrationInvoice()).thenReturn(false);
         Mockito.when(invoice.getCreatedDate()).thenReturn(INVOICE_CREATED_DATE);

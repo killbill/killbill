@@ -88,7 +88,6 @@ public class TestBundleTimelineJson extends JaxrsTestSuiteNoDB {
         final UUID accountId = UUID.randomUUID();
         final UUID invoiceId = UUID.randomUUID();
         final BigDecimal invoiceAmount = BigDecimal.TEN;
-        final BigDecimal cba = BigDecimal.ONE;
         final BigDecimal creditAdj = BigDecimal.ONE;
         final BigDecimal refundAdj = BigDecimal.ONE;
         final LocalDate invoiceDate = clock.getUTCToday();
@@ -96,7 +95,7 @@ public class TestBundleTimelineJson extends JaxrsTestSuiteNoDB {
         final String invoiceNumber = UUID.randomUUID().toString();
         final BigDecimal balance = BigDecimal.ZERO;
 
-        return new InvoiceJsonSimple(invoiceAmount, cba, creditAdj, refundAdj, invoiceId.toString(), invoiceDate,
+        return new InvoiceJsonSimple(invoiceAmount, creditAdj, refundAdj, invoiceId.toString(), invoiceDate,
                                      targetDate, invoiceNumber, balance, accountId.toString(), null);
     }
 

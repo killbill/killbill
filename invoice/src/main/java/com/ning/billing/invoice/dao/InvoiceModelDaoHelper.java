@@ -18,36 +18,44 @@ package com.ning.billing.invoice.dao;
 
 import java.math.BigDecimal;
 
-import com.ning.billing.invoice.model.InvoiceItemList;
+import javax.annotation.Nullable;
+
+import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.invoice.api.InvoicePayment;
+import com.ning.billing.invoice.calculator.InvoiceCalculatorUtils;
+import com.ning.billing.invoice.model.DefaultInvoicePayment;
+import com.ning.billing.invoice.model.InvoiceItemFactory;
+
+import com.google.common.base.Function;
+import com.google.common.collect.Iterables;
 
 public class InvoiceModelDaoHelper {
 
     private InvoiceModelDaoHelper() {}
 
     public static BigDecimal getBalance(final InvoiceModelDao invoiceModelDao) {
-        final InvoiceItemList invoiceItems = new InvoiceItemList(invoiceModelDao.getInvoiceItems());
-        return invoiceItems.getBalance(getPaidAmount(invoiceModelDao));
+        return InvoiceCalculatorUtils.computeInvoiceBalance(
+                Iterables.transform(invoiceModelDao.getInvoiceItems(), new Function<InvoiceItemModelDao, InvoiceItem>() {
+                    @Override
+                    public InvoiceItem apply(final InvoiceItemModelDao input) {
+                        return InvoiceItemFactory.fromModelDao(input);
+                    }
+                }),
+                Iterables.transform(invoiceModelDao.getInvoicePayments(), new Function<InvoicePaymentModelDao, InvoicePayment>() {
+                    @Nullable
+                    @Override
+                    public InvoicePayment apply(final InvoicePaymentModelDao input) {
+                        return new DefaultInvoicePayment(input);
+                    }
+                }));
     }
 
     public static BigDecimal getCBAAmount(final InvoiceModelDao invoiceModelDao) {
-        final InvoiceItemList invoiceItems = new InvoiceItemList(invoiceModelDao.getInvoiceItems());
-        return invoiceItems.getCBAAmount();
-    }
-
-    public static BigDecimal getPaidAmount(final InvoiceModelDao invoiceModelDao) {
-        // Compute payments
-        BigDecimal amountPaid = BigDecimal.ZERO;
-        for (final InvoicePaymentModelDao payment : invoiceModelDao.getInvoicePayments()) {
-            if (payment.getAmount() != null) {
-                amountPaid = amountPaid.add(payment.getAmount());
+        return InvoiceCalculatorUtils.computeInvoiceAmountCredited(Iterables.transform(invoiceModelDao.getInvoiceItems(), new Function<InvoiceItemModelDao, InvoiceItem>() {
+            @Override
+            public InvoiceItem apply(final InvoiceItemModelDao input) {
+                return InvoiceItemFactory.fromModelDao(input);
             }
-        }
-
-        return amountPaid;
-    }
-
-    public static BigDecimal getChargedAmount(final InvoiceModelDao invoiceModelDao) {
-        final InvoiceItemList invoiceItems = new InvoiceItemList(invoiceModelDao.getInvoiceItems());
-        return invoiceItems.getChargedAmount();
+        }));
     }
 }

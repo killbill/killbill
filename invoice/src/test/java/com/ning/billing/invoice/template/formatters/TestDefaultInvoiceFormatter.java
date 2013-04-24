@@ -27,7 +27,6 @@ import org.joda.time.LocalDate;
 import org.skife.config.ConfigurationObjectFactory;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.api.Currency;
@@ -35,10 +34,12 @@ import com.ning.billing.invoice.InvoiceTestSuiteNoDB;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
+import com.ning.billing.invoice.api.InvoicePayment.InvoicePaymentType;
 import com.ning.billing.invoice.api.formatters.InvoiceFormatter;
 import com.ning.billing.invoice.model.CreditAdjInvoiceItem;
 import com.ning.billing.invoice.model.CreditBalanceAdjInvoiceItem;
 import com.ning.billing.invoice.model.DefaultInvoice;
+import com.ning.billing.invoice.model.DefaultInvoicePayment;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.invoice.model.RefundAdjInvoiceItem;
 import com.ning.billing.invoice.model.RepairAdjInvoiceItem;
@@ -80,7 +81,7 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
 
         // Check the scenario
         Assert.assertEquals(invoice.getBalance().doubleValue(), 10.00);
-        Assert.assertEquals(invoice.getCBAAmount().doubleValue(), 0.00);
+        Assert.assertEquals(invoice.getCreditedAmount().doubleValue(), 0.00);
 
         // Verify the merge
         final InvoiceFormatter formatter = new DefaultInvoiceFormatter(config, invoice, Locale.US);
@@ -119,7 +120,7 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
                                                                                                          fixedItem.getCurrency());
         final RefundAdjInvoiceItem refundAdjInvoiceItem = new RefundAdjInvoiceItem(fixedItem.getInvoiceId(), fixedItem.getAccountId(),
                                                                                    fixedItem.getStartDate(), BigDecimal.ONE.negate(), fixedItem.getCurrency());
-        final Invoice invoice = new DefaultInvoice(fixedItem.getInvoiceId(), fixedItem.getAccountId(), null,
+        final DefaultInvoice invoice = new DefaultInvoice(fixedItem.getInvoiceId(), fixedItem.getAccountId(), null,
                                                    new LocalDate(), new LocalDate(), Currency.USD, false);
         invoice.addInvoiceItem(fixedItem);
         invoice.addInvoiceItem(repairAdjInvoiceItem);
@@ -127,10 +128,12 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
         invoice.addInvoiceItem(creditAdjInvoiceItem);
         invoice.addInvoiceItem(creditBalanceAdjInvoiceItem2);
         invoice.addInvoiceItem(refundAdjInvoiceItem);
+        invoice.addPayment(new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, UUID.randomUUID(), invoice.getId(), clock.getUTCNow(), BigDecimal.TEN, Currency.USD));
+        invoice.addPayment(new DefaultInvoicePayment(InvoicePaymentType.REFUND, UUID.randomUUID(), invoice.getId(), clock.getUTCNow(), BigDecimal.ONE.negate(), Currency.USD));
         // Check the scenario
-        Assert.assertEquals(invoice.getBalance().doubleValue(), 9.00);
-        Assert.assertEquals(invoice.getCBAAmount().doubleValue(), 11.00);
-        Assert.assertEquals(invoice.getRefundAdjAmount().doubleValue(), -1.00);
+        Assert.assertEquals(invoice.getBalance().doubleValue(), 0.00);
+        Assert.assertEquals(invoice.getCreditedAmount().doubleValue(), 11.00);
+        Assert.assertEquals(invoice.getRefundedAmount().doubleValue(), -1.00);
 
         // Verify the merge
         final InvoiceFormatter formatter = new DefaultInvoiceFormatter(config, invoice, Locale.US);

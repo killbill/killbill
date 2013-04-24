@@ -26,8 +26,6 @@ import org.testng.annotations.Test;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.InvoiceTestSuiteNoDB;
 import com.ning.billing.invoice.api.InvoiceItemType;
-import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.clock.ClockMock;
 
 public class TestExternalChargeInvoiceItem extends InvoiceTestSuiteNoDB {
 

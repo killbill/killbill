@@ -39,7 +39,6 @@ public class TestInvoiceJsonWithItems extends JaxrsTestSuiteNoDB {
     @Test(groups = "fast")
     public void testJson() throws Exception {
         final BigDecimal amount = BigDecimal.TEN;
-        final BigDecimal cba = BigDecimal.ONE;
         final BigDecimal creditAdj = BigDecimal.ONE;
         final BigDecimal refundAdj = BigDecimal.ONE;
         final String invoiceId = UUID.randomUUID().toString();
@@ -50,11 +49,10 @@ public class TestInvoiceJsonWithItems extends JaxrsTestSuiteNoDB {
         final String accountId = UUID.randomUUID().toString();
         final InvoiceItemJsonSimple invoiceItemJsonSimple = createInvoiceItemJson();
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
-        final InvoiceJsonWithItems invoiceJsonWithItems = new InvoiceJsonWithItems(amount, cba, creditAdj, refundAdj, invoiceId, invoiceDate,
+        final InvoiceJsonWithItems invoiceJsonWithItems = new InvoiceJsonWithItems(amount, creditAdj, refundAdj, invoiceId, invoiceDate,
                                                                                    targetDate, invoiceNumber, balance, accountId,
                                                                                    ImmutableList.<InvoiceItemJsonSimple>of(invoiceItemJsonSimple), auditLogs);
         Assert.assertEquals(invoiceJsonWithItems.getAmount(), amount);
-        Assert.assertEquals(invoiceJsonWithItems.getCBA(), cba);
         Assert.assertEquals(invoiceJsonWithItems.getCreditAdj(), creditAdj);
         Assert.assertEquals(invoiceJsonWithItems.getRefundAdj(), refundAdj);
         Assert.assertEquals(invoiceJsonWithItems.getInvoiceId(), invoiceId);

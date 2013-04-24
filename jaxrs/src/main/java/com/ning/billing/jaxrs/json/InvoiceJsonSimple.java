@@ -39,12 +39,10 @@ public class InvoiceJsonSimple extends JsonBase {
     private final BigDecimal balance;
     private final BigDecimal creditAdj;
     private final BigDecimal refundAdj;
-    private final BigDecimal cba;
     private final String accountId;
 
     @JsonCreator
     public InvoiceJsonSimple(@JsonProperty("amount") final BigDecimal amount,
-                             @JsonProperty("cba") final BigDecimal cba,
                              @JsonProperty("creditAdj") final BigDecimal creditAdj,
                              @JsonProperty("refundAdj") final BigDecimal refundAdj,
                              @JsonProperty("invoiceId") @Nullable final String invoiceId,
@@ -56,7 +54,6 @@ public class InvoiceJsonSimple extends JsonBase {
                              @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(auditLogs);
         this.amount = amount;
-        this.cba = cba;
         this.creditAdj = creditAdj;
         this.refundAdj = refundAdj;
         this.invoiceId = invoiceId;
@@ -68,7 +65,7 @@ public class InvoiceJsonSimple extends JsonBase {
     }
 
     public InvoiceJsonSimple(final Invoice input, final List<AuditLog> auditLogs) {
-        this(input.getChargedAmount(), input.getCBAAmount(), input.getCreditAdjAmount(), input.getRefundAdjAmount(),
+        this(input.getChargedAmount(), input.getCreditedAmount(), input.getRefundedAmount(),
              input.getId().toString(), input.getInvoiceDate(), input.getTargetDate(), String.valueOf(input.getInvoiceNumber()),
              input.getBalance(), input.getAccountId().toString(), toAuditLogJson(auditLogs));
     }
@@ -79,10 +76,6 @@ public class InvoiceJsonSimple extends JsonBase {
 
     public BigDecimal getAmount() {
         return amount;
-    }
-
-    public BigDecimal getCBA() {
-        return cba;
     }
 
     public BigDecimal getCreditAdj() {
@@ -139,10 +132,6 @@ public class InvoiceJsonSimple extends JsonBase {
               (balance != null && that.balance != null && balance.compareTo(that.balance) == 0))) {
             return false;
         }
-        if (!((cba == null && that.cba == null) ||
-              (cba != null && that.cba != null && cba.compareTo(that.cba) == 0))) {
-            return false;
-        }
         if (!((creditAdj == null && that.creditAdj == null) ||
               (creditAdj != null && that.creditAdj != null && creditAdj.compareTo(that.creditAdj) == 0))) {
             return false;
@@ -172,7 +161,6 @@ public class InvoiceJsonSimple extends JsonBase {
     @Override
     public int hashCode() {
         int result = amount != null ? amount.hashCode() : 0;
-        result = 31 * result + (cba != null ? cba.hashCode() : 0);
         result = 31 * result + (creditAdj != null ? creditAdj.hashCode() : 0);
         result = 31 * result + (refundAdj != null ? refundAdj.hashCode() : 0);
         result = 31 * result + (invoiceId != null ? invoiceId.hashCode() : 0);

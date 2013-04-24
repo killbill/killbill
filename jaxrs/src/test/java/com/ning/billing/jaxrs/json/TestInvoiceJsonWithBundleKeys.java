@@ -38,7 +38,6 @@ public class TestInvoiceJsonWithBundleKeys extends JaxrsTestSuiteNoDB {
     @Test(groups = "fast")
     public void testJson() throws Exception {
         final BigDecimal amount = BigDecimal.TEN;
-        final BigDecimal cba = BigDecimal.ONE;
         final BigDecimal creditAdj = BigDecimal.ONE;
         final BigDecimal refundAdj = BigDecimal.ONE;
         final String invoiceId = UUID.randomUUID().toString();
@@ -51,11 +50,10 @@ public class TestInvoiceJsonWithBundleKeys extends JaxrsTestSuiteNoDB {
         final CreditJson creditJson = createCreditJson();
         final List<CreditJson> credits = ImmutableList.<CreditJson>of(creditJson);
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
-        final InvoiceJsonWithBundleKeys invoiceJsonSimple = new InvoiceJsonWithBundleKeys(amount, cba, creditAdj, refundAdj, invoiceId, invoiceDate,
+        final InvoiceJsonWithBundleKeys invoiceJsonSimple = new InvoiceJsonWithBundleKeys(amount, creditAdj, refundAdj, invoiceId, invoiceDate,
                                                                                           targetDate, invoiceNumber, balance, accountId, bundleKeys,
                                                                                           credits, auditLogs);
         Assert.assertEquals(invoiceJsonSimple.getAmount(), amount);
-        Assert.assertEquals(invoiceJsonSimple.getCBA(), cba);
         Assert.assertEquals(invoiceJsonSimple.getCreditAdj(), creditAdj);
         Assert.assertEquals(invoiceJsonSimple.getRefundAdj(), refundAdj);
         Assert.assertEquals(invoiceJsonSimple.getInvoiceId(), invoiceId);
@@ -77,9 +75,8 @@ public class TestInvoiceJsonWithBundleKeys extends JaxrsTestSuiteNoDB {
     public void testFromInvoice() throws Exception {
         final Invoice invoice = Mockito.mock(Invoice.class);
         Mockito.when(invoice.getChargedAmount()).thenReturn(BigDecimal.TEN);
-        Mockito.when(invoice.getCBAAmount()).thenReturn(BigDecimal.ONE);
-        Mockito.when(invoice.getCreditAdjAmount()).thenReturn(BigDecimal.ONE);
-        Mockito.when(invoice.getRefundAdjAmount()).thenReturn(BigDecimal.ONE);
+        Mockito.when(invoice.getCreditedAmount()).thenReturn(BigDecimal.ONE);
+        Mockito.when(invoice.getRefundedAmount()).thenReturn(BigDecimal.ONE);
         Mockito.when(invoice.getId()).thenReturn(UUID.randomUUID());
         Mockito.when(invoice.getInvoiceDate()).thenReturn(clock.getUTCToday());
         Mockito.when(invoice.getTargetDate()).thenReturn(clock.getUTCToday());
@@ -92,9 +89,8 @@ public class TestInvoiceJsonWithBundleKeys extends JaxrsTestSuiteNoDB {
 
         final InvoiceJsonWithBundleKeys invoiceJsonWithBundleKeys = new InvoiceJsonWithBundleKeys(invoice, bundleKeys, credits, null);
         Assert.assertEquals(invoiceJsonWithBundleKeys.getAmount(), invoice.getChargedAmount());
-        Assert.assertEquals(invoiceJsonWithBundleKeys.getCBA(), invoice.getCBAAmount());
-        Assert.assertEquals(invoiceJsonWithBundleKeys.getCreditAdj(), invoice.getCreditAdjAmount());
-        Assert.assertEquals(invoiceJsonWithBundleKeys.getRefundAdj(), invoice.getRefundAdjAmount());
+        Assert.assertEquals(invoiceJsonWithBundleKeys.getCreditAdj(), invoice.getCreditedAmount());
+        Assert.assertEquals(invoiceJsonWithBundleKeys.getRefundAdj(), invoice.getRefundedAmount());
         Assert.assertEquals(invoiceJsonWithBundleKeys.getInvoiceId(), invoice.getId().toString());
         Assert.assertEquals(invoiceJsonWithBundleKeys.getInvoiceDate(), invoice.getInvoiceDate());
         Assert.assertEquals(invoiceJsonWithBundleKeys.getTargetDate(), invoice.getTargetDate());

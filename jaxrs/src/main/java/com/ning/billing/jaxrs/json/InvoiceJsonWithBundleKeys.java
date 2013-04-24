@@ -36,7 +36,6 @@ public class InvoiceJsonWithBundleKeys extends InvoiceJsonSimple {
 
     @JsonCreator
     public InvoiceJsonWithBundleKeys(@JsonProperty("amount") final BigDecimal amount,
-                                     @JsonProperty("cba") final BigDecimal cba,
                                      @JsonProperty("creditAdj") final BigDecimal creditAdj,
                                      @JsonProperty("refundAdj") final BigDecimal refundAdj,
                                      @JsonProperty("invoiceId") final String invoiceId,
@@ -48,7 +47,7 @@ public class InvoiceJsonWithBundleKeys extends InvoiceJsonSimple {
                                      @JsonProperty("externalBundleKeys") final String bundleKeys,
                                      @JsonProperty("credits") final List<CreditJson> credits,
                                      @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
-        super(amount, cba, creditAdj, refundAdj, invoiceId, invoiceDate, targetDate, invoiceNumber, balance, accountId, auditLogs);
+        super(amount, creditAdj, refundAdj, invoiceId, invoiceDate, targetDate, invoiceNumber, balance, accountId, auditLogs);
         this.bundleKeys = bundleKeys;
         this.credits = credits;
     }

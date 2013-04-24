@@ -27,7 +27,6 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.mockito.Mockito;
 import org.slf4j.Logger;
@@ -52,8 +51,6 @@ import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment.InvoicePaymentType;
-import com.ning.billing.invoice.model.CreditBalanceAdjInvoiceItem;
-import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.DefaultInvoicePayment;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
@@ -906,7 +903,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         assertEquals(invoice2.getBalance().compareTo(ZERO), 0);
 
         // ensure that the account has a credit balance
-        final BigDecimal creditBalance = invoice1.getCBAAmount().add(invoice2.getCBAAmount());
+        final BigDecimal creditBalance = invoice1.getCreditedAmount().add(invoice2.getCreditedAmount());
         assertTrue(creditBalance.compareTo(FIVE) == 0);
     }
 
@@ -1008,9 +1005,9 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
     private void printDetailInvoice(final Invoice invoice) {
         log.info("--------------------  START DETAIL ----------------------");
         log.info("Invoice " + invoice.getId() + ": BALANCE = " + invoice.getBalance()
-                 + ", CBA = " + invoice.getCBAAmount()
+                 + ", CBA = " + invoice.getCreditedAmount()
                  + ", CHARGE_AMOUNT = " + invoice.getChargedAmount()
-                 + ", ADJ_AMOUNT = " + invoice.getCreditAdjAmount());
+                 + ", ADJ_AMOUNT = " + invoice.getCreditedAmount());
 
         for (final InvoiceItem cur : invoice.getInvoiceItems()) {
             log.info(cur.toString());

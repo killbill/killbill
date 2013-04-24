@@ -23,7 +23,6 @@ import java.util.UUID;
 
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.model.CreditBalanceAdjInvoiceItem;
-import com.ning.billing.invoice.model.InvoiceItemList;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.entity.EntityPersistenceException;
@@ -51,8 +50,7 @@ public class CBADao {
     public BigDecimal getAccountCBAFromTransaction(final List<InvoiceModelDao> invoices) {
         BigDecimal cba = BigDecimal.ZERO;
         for (final InvoiceModelDao cur : invoices) {
-            final InvoiceItemList invoiceItems = new InvoiceItemList(cur.getInvoiceItems());
-            cba = cba.add(invoiceItems.getCBAAmount());
+            cba = cba.add(InvoiceModelDaoHelper.getCBAAmount(cur));
         }
         return cba;
     }

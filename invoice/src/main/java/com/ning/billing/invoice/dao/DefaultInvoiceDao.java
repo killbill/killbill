@@ -17,9 +17,6 @@
 package com.ning.billing.invoice.dao;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -39,16 +36,12 @@ import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.invoice.api.InvoicePayment.InvoicePaymentType;
 import com.ning.billing.invoice.api.user.DefaultInvoiceAdjustmentEvent;
-import com.ning.billing.invoice.model.CreditAdjInvoiceItem;
-import com.ning.billing.invoice.model.CreditBalanceAdjInvoiceItem;
-import com.ning.billing.invoice.model.InvoiceItemList;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.dao.NonEntityDao;
-import com.ning.billing.util.entity.EntityPersistenceException;
 import com.ning.billing.util.entity.dao.EntityDaoBase;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
@@ -57,12 +50,6 @@ import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.svcsapi.bus.InternalBus.EventBusException;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Objects;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableMap.Builder;
-import com.google.common.collect.Ordering;
 import com.google.inject.Inject;
 
 public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, InvoiceApiException> implements InvoiceDao {
