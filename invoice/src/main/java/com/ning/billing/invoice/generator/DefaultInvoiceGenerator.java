@@ -84,7 +84,7 @@ import com.google.inject.Inject;
  *           -15 (repair)
  *
  * The current version of the code uses partial repair logic but is able to deal with 'full repair' scenarii.
- *           
+ *
  */
 
 public class DefaultInvoiceGenerator implements InvoiceGenerator {
