@@ -121,7 +121,7 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         verifyExternalChargeOnExistingInvoice(invoiceBalance, null, externalChargeAmount, externalChargeInvoiceItem);
     }
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", enabled= false)
     public void testOriginalAmountCharged() throws Exception {
 
         final Invoice initialInvoice = invoiceUserApi.getInvoice(invoiceId, callContext);

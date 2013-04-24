@@ -1059,10 +1059,10 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         invoiceUtil.createInvoice(invoice2, true, internalCallContext);
 
         final InvoiceModelDao savedInvoice1 = invoiceDao.getById(invoice1.getId(), internalCallContext);
-        assertEquals(InvoiceModelDaoHelper.getBalance(savedInvoice1), ZERO);
+        assertEquals(InvoiceModelDaoHelper.getBalance(savedInvoice1), FIVE);
 
         final InvoiceModelDao savedInvoice2 = invoiceDao.getById(invoice2.getId(), internalCallContext);
-        assertEquals(InvoiceModelDaoHelper.getBalance(savedInvoice2), FIFTEEN);
+        assertEquals(InvoiceModelDaoHelper.getBalance(savedInvoice2), TEN);
     }
 
     @Test(groups = "slow")
