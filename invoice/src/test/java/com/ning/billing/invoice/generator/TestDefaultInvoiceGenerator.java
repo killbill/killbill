@@ -898,10 +898,6 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
         // ensure that the account balance is correct
         assertEquals(invoice2.getBalance().compareTo(FIVE), 0);
-
-        // ensure that the account has a credit balance
-        final BigDecimal creditBalance = invoice1.getCreditedAmount().add(invoice2.getCreditedAmount());
-        assertTrue(creditBalance.compareTo(FIVE) == 0);
     }
 
     private void distributeItems(final List<Invoice> invoices) {
