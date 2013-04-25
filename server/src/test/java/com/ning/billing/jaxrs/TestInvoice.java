@@ -184,7 +184,7 @@ public class TestInvoice extends TestJaxrsBase {
 
         // Verify the new invoice balance is zero
         final InvoiceJsonSimple adjustedInvoice = getInvoice(invoice.getInvoiceId());
-        assertEquals(adjustedInvoice.getAmount().compareTo(BigDecimal.ZERO), 1);
+        assertEquals(adjustedInvoice.getAmount().compareTo(BigDecimal.ZERO), 0);
     }
 
     @Test(groups = "slow")
@@ -208,7 +208,7 @@ public class TestInvoice extends TestJaxrsBase {
 
         // Verify the new invoice balance
         final InvoiceJsonSimple adjustedInvoice = getInvoice(invoice.getInvoiceId());
-        final BigDecimal adjustedInvoiceBalance = invoice.getBalance().add(adjustedAmount.negate().setScale(2, RoundingMode.HALF_UP));
+        final BigDecimal adjustedInvoiceBalance = invoice.getBalance().add(adjustedAmount.negate()).setScale(2, BigDecimal.ROUND_HALF_UP);
         assertEquals(adjustedInvoice.getBalance().compareTo(adjustedInvoiceBalance), 0);
     }
 
