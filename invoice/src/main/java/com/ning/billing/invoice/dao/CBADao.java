@@ -59,10 +59,11 @@ public class CBADao {
 
     public void doCBAComplexity(final UUID accountId, final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final InternalCallContext context) throws EntityPersistenceException, InvoiceApiException {
 
-        final List<InvoiceModelDao> invoiceItemModelDaos = invoiceDaoHelper.getAllInvoicesByAccountFromTransaction(accountId, entitySqlDaoWrapperFactory, context);
+        List<InvoiceModelDao> invoiceItemModelDaos = invoiceDaoHelper.getAllInvoicesByAccountFromTransaction(accountId, entitySqlDaoWrapperFactory, context);
         for (InvoiceModelDao cur : invoiceItemModelDaos) {
             addCBAIfNeeded(entitySqlDaoWrapperFactory, cur, context);
         }
+        invoiceItemModelDaos = invoiceDaoHelper.getAllInvoicesByAccountFromTransaction(accountId, entitySqlDaoWrapperFactory, context);
         useExistingCBAFromTransaction(invoiceItemModelDaos, entitySqlDaoWrapperFactory, context);
     }
 

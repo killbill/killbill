@@ -216,27 +216,22 @@ public class TestBundleTransfer extends TestIntegrationBase {
         busHandler.pushExpectedEvent(NextEvent.CANCEL);
         busHandler.pushExpectedEvent(NextEvent.TRANSFER);
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
-        busHandler.pushExpectedEvent(NextEvent.INVOICE);
         busHandler.pushExpectedEvent(NextEvent.PAYMENT);
         transferApi.transferBundle(account.getId(), newAccount.getId(), "mycutebundle", clock.getUTCNow(), false, true, callContext);
         assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
 
         List<Invoice> invoices =invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
-        assertEquals(invoices.size(), 3);
+        assertEquals(invoices.size(), 2);
 
 
         // CHECK OLD ACCOUNTS ITEMS
         ImmutableList<ExpectedInvoiceItemCheck> toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
                 new ExpectedInvoiceItemCheck(new LocalDate(2012,5,1), new LocalDate(2012,5,9), InvoiceItemType.RECURRING, new BigDecimal("66.66")),
-                new ExpectedInvoiceItemCheck(new LocalDate(2012,5,1), new LocalDate(2012,5,9), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-66.66")),
-                new ExpectedInvoiceItemCheck(new LocalDate(2012,5,3), new LocalDate(2012,5,3), InvoiceItemType.CBA_ADJ, new BigDecimal("66.66")));
+                new ExpectedInvoiceItemCheck(new LocalDate(2012,5,3), new LocalDate(2012,5,9), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-49.99")),
+                new ExpectedInvoiceItemCheck(new LocalDate(2012,5,3), new LocalDate(2012,5,3), InvoiceItemType.CBA_ADJ, new BigDecimal("49.99")));
         invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, toBeChecked);
 
-        toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
-                new ExpectedInvoiceItemCheck(new LocalDate(2012,5,1), new LocalDate(2012,5,3), InvoiceItemType.RECURRING, new BigDecimal("16.67")),
-                new ExpectedInvoiceItemCheck(new LocalDate(2012,5,3), new LocalDate(2012,5,3), InvoiceItemType.CBA_ADJ, new BigDecimal("-16.67")));
-        invoiceChecker.checkInvoice(invoices.get(2).getId(), callContext, toBeChecked);
 
         // CHECK NEW ACCOUNT ITEMS
         invoices =invoiceUserApi.getInvoicesByAccount(newAccount.getId(), callContext);

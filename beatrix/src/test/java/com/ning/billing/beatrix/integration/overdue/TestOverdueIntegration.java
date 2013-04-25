@@ -174,16 +174,13 @@ public class TestOverdueIntegration extends TestOverdueBase {
         invoiceChecker.checkRepairedInvoice(account.getId(), 3,
                                             callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")),
                                             // We paid up to 07-31, hence the adjustment
-                                            new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-249.95")),
-                                            new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 23), new LocalDate(2012, 7, 23), InvoiceItemType.CBA_ADJ, new BigDecimal("249.95")));
+                                            new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 10), new LocalDate(2012, 7, 31), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-166.64")),
+                                            new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 23), new LocalDate(2012, 7, 23), InvoiceItemType.CBA_ADJ, new BigDecimal("166.64")));
         invoiceChecker.checkInvoice(account.getId(), 4, callContext,
-                                    // Note the end date here is not 07-25, but 07-10. The overdue configuration disabled invoicing between 07-10 and 07-23 (e.g. the bundle
-                                    // was inaccessible, hence we didn't want to charge the customer for that period, even though the account was overdue).
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 10), InvoiceItemType.RECURRING, new BigDecimal("83.31")),
                                     // Item for the upgraded recurring plan
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 23), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("154.85")),
                                     // Credits consumed
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 23), new LocalDate(2012, 7, 23), InvoiceItemType.CBA_ADJ, new BigDecimal("-238.16")));
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 23), new LocalDate(2012, 7, 23), InvoiceItemType.CBA_ADJ, new BigDecimal("-154.85")));
         invoiceChecker.checkChargedThroughDate(baseSubscription.getId(), new LocalDate(2012, 7, 31), callContext);
 
         // Verify the account balance: 249.95 - 74.99 - 154.85
@@ -270,16 +267,13 @@ public class TestOverdueIntegration extends TestOverdueBase {
         invoiceChecker.checkRepairedInvoice(account.getId(), 3,
                                             callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")),
                                             // We paid up to 07-31, hence the adjustment
-                                            new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-249.95")),
-                                            new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 25), new LocalDate(2012, 7, 25), InvoiceItemType.CBA_ADJ, new BigDecimal("249.95")));
+                                            new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 15), new LocalDate(2012, 7, 31), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-124.97")),
+                                            new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 25), new LocalDate(2012, 7, 25), InvoiceItemType.CBA_ADJ, new BigDecimal("124.97")));
         invoiceChecker.checkInvoice(account.getId(), 4, callContext,
-                                    // Note the end date here is not 07-25, but 07-15. The overdue configuration disabled invoicing between 07-15 and 07-25 (e.g. the bundle
-                                    // was inaccessible, hence we didn't want to charge the customer for that period, even though the account was overdue).
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 15), InvoiceItemType.RECURRING, new BigDecimal("124.98")),
                                     // Item for the upgraded recurring plan
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 25), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("116.09")),
                                     // Credits consumed
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 25), new LocalDate(2012, 7, 25), InvoiceItemType.CBA_ADJ, new BigDecimal("-241.07")));
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 25), new LocalDate(2012, 7, 25), InvoiceItemType.CBA_ADJ, new BigDecimal("-116.09")));
         invoiceChecker.checkChargedThroughDate(baseSubscription.getId(), new LocalDate(2012, 7, 31), callContext);
 
         // Verify the account balance: 249.95 - 124.98 - 116.09

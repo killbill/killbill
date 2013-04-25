@@ -94,7 +94,7 @@ public class BeatrixIntegrationModule extends AbstractModule {
     @Override
     protected void configure() {
 
-        loadSystemPropertiesFromClasspath("/resource.properties");
+        loadSystemPropertiesFromClasspath("/beatrix.properties");
 
         bind(Lifecycle.class).to(SubsetDefaultLifecycle.class).asEagerSingleton();
 
