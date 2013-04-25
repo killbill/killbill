@@ -30,9 +30,11 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.osgi.bundles.analytics.AnalyticsRefreshException;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceItemBaseModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceItemBaseModelDao.BusinessInvoiceItemType;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceItemBaseModelDao.ItemSource;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessModelDaoBase.ReportGroup;
 import com.ning.billing.util.audit.AuditLog;
@@ -237,7 +239,7 @@ public class BusinessInvoiceFactory extends BusinessFactoryBase {
             return null;
         }
 
-        final Boolean revenueRecognizable = isRevenueRecognizable(invoiceItem, otherInvoiceItems);
+        final ItemSource itemSource = getItemSource(invoiceItem, otherInvoiceItems, businessInvoiceItemType);
 
         // Unused for now
         final Long secondInvoiceItemRecordId = null;
@@ -246,7 +248,7 @@ public class BusinessInvoiceFactory extends BusinessFactoryBase {
                                                       accountRecordId,
                                                       invoice,
                                                       invoiceItem,
-                                                      revenueRecognizable,
+                                                      itemSource,
                                                       businessInvoiceItemType,
                                                       invoiceItemRecordId,
                                                       secondInvoiceItemRecordId,
@@ -256,5 +258,27 @@ public class BusinessInvoiceFactory extends BusinessFactoryBase {
                                                       creationAuditLog,
                                                       tenantRecordId,
                                                       reportGroup);
+    }
+
+    private ItemSource getItemSource(final InvoiceItem invoiceItem, final Collection<InvoiceItem> otherInvoiceItems, final BusinessInvoiceItemType businessInvoiceItemType) {
+        final ItemSource itemSource;
+        if (BusinessInvoiceItemType.ACCOUNT_CREDIT.equals(businessInvoiceItemType) && !isRevenueRecognizable(invoiceItem, otherInvoiceItems)) {
+            // Non recognizable account credits
+            itemSource = ItemSource.user;
+        } else if (BusinessInvoiceItemType.INVOICE_ADJUSTMENT.equals(businessInvoiceItemType)) {
+            // Invoice adjustments
+            itemSource = ItemSource.user;
+        } else if (BusinessInvoiceItemType.INVOICE_ITEM_ADJUSTMENT.equals(businessInvoiceItemType) && !InvoiceItemType.REPAIR_ADJ.equals(invoiceItem.getInvoiceItemType())) {
+            // Item adjustments (but not repairs)
+            itemSource = ItemSource.user;
+        } else if (BusinessInvoiceItemType.CHARGE.equals(businessInvoiceItemType) && InvoiceItemType.EXTERNAL_CHARGE.equals(invoiceItem.getInvoiceItemType())) {
+            // External charges
+            itemSource = ItemSource.user;
+        } else {
+            // System generated item
+            itemSource = null;
+        }
+
+        return itemSource;
     }
 }

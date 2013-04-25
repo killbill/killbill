@@ -79,7 +79,7 @@ public class TestBusinessSnapshot extends AnalyticsTestSuiteNoDB {
                                                                                                                accountRecordId,
                                                                                                                invoice,
                                                                                                                invoiceItem,
-                                                                                                               recognizable,
+                                                                                                               itemSource,
                                                                                                                invoiceItemType,
                                                                                                                invoiceItemRecordId,
                                                                                                                secondInvoiceItemRecordId,

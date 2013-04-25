@@ -29,7 +29,7 @@ public class TestBusinessInvoiceItemModelDao extends AnalyticsTestSuiteNoDB {
                                                                                                 accountRecordId,
                                                                                                 invoice,
                                                                                                 invoiceItem,
-                                                                                                recognizable,
+                                                                                                itemSource,
                                                                                                 invoiceItemRecordId,
                                                                                                 secondInvoiceItemRecordId,
                                                                                                 null,
@@ -54,7 +54,7 @@ public class TestBusinessInvoiceItemModelDao extends AnalyticsTestSuiteNoDB {
                                                                                                 accountRecordId,
                                                                                                 invoice,
                                                                                                 invoiceItem,
-                                                                                                recognizable,
+                                                                                                itemSource,
                                                                                                 invoiceItemRecordId,
                                                                                                 secondInvoiceItemRecordId,
                                                                                                 bundle,
@@ -92,7 +92,6 @@ public class TestBusinessInvoiceItemModelDao extends AnalyticsTestSuiteNoDB {
         Assert.assertEquals(invoiceItemModelDao.getInvoiceAmountCredited(), invoice.getCreditedAmount());
         Assert.assertEquals(invoiceItemModelDao.getInvoiceAmountRefunded(), invoice.getRefundedAmount());
         Assert.assertEquals(invoiceItemModelDao.getItemType(), invoiceItem.getInvoiceItemType().toString());
-        //Assert.assertEquals(invoiceItemModelDao.getRevenueRecognizable(), /* TODO */);
         Assert.assertEquals(invoiceItemModelDao.getStartDate(), invoiceItem.getStartDate());
         Assert.assertEquals(invoiceItemModelDao.getAmount(), invoiceItem.getAmount());
         Assert.assertEquals(invoiceItemModelDao.getCurrency(), invoiceItem.getCurrency().toString());

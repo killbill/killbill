@@ -30,7 +30,7 @@ public class TestBusinessInvoiceItem extends AnalyticsTestSuiteNoDB {
                                                                                                                accountRecordId,
                                                                                                                invoice,
                                                                                                                invoiceItem,
-                                                                                                               recognizable,
+                                                                                                               itemSource,
                                                                                                                invoiceItemType,
                                                                                                                invoiceItemRecordId,
                                                                                                                secondInvoiceItemRecordId,
@@ -56,7 +56,7 @@ public class TestBusinessInvoiceItem extends AnalyticsTestSuiteNoDB {
         Assert.assertEquals(businessInvoiceItem.getInvoiceOriginalAmountCharged(), invoiceItemBaseModelDao.getInvoiceOriginalAmountCharged());
         Assert.assertEquals(businessInvoiceItem.getInvoiceAmountCredited(), invoiceItemBaseModelDao.getInvoiceAmountCredited());
         Assert.assertEquals(businessInvoiceItem.getItemType(), invoiceItemBaseModelDao.getItemType());
-        Assert.assertEquals(businessInvoiceItem.getRecognizable(), invoiceItemBaseModelDao.getRevenueRecognizable());
+        Assert.assertEquals(businessInvoiceItem.getItemSource(), invoiceItemBaseModelDao.getItemSource());
         Assert.assertEquals(businessInvoiceItem.getBundleExternalKey(), invoiceItemBaseModelDao.getBundleExternalKey());
         Assert.assertEquals(businessInvoiceItem.getProductName(), invoiceItemBaseModelDao.getProductName());
         Assert.assertEquals(businessInvoiceItem.getProductType(), invoiceItemBaseModelDao.getProductType());

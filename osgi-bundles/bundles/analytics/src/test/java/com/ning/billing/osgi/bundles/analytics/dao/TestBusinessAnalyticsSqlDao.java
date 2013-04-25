@@ -176,7 +176,7 @@ public class TestBusinessAnalyticsSqlDao extends AnalyticsTestSuiteWithEmbeddedD
                                                                                                                    accountRecordId,
                                                                                                                    invoice,
                                                                                                                    invoiceItem,
-                                                                                                                   recognizable,
+                                                                                                                   itemSource,
                                                                                                                    // ITEM_ADJ
                                                                                                                    invoiceItemType,
                                                                                                                    invoiceItemRecordId,

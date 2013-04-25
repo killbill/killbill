@@ -32,6 +32,8 @@ import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.util.audit.AuditLog;
 
+import com.google.common.annotations.VisibleForTesting;
+
 public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBase {
 
     protected static final String INVOICE_ADJUSTMENTS_TABLE_NAME = "bia";
@@ -57,7 +59,7 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
     private BigDecimal invoiceAmountCredited;
     private BigDecimal invoiceAmountRefunded;
     private String itemType;
-    private Boolean revenueRecognizable;
+    private String itemSource;
     private String bundleExternalKey;
     private String productName;
     private String productType;
@@ -78,13 +80,22 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
         CHARGE
     }
 
+    // See ddl.sql
+    @VisibleForTesting
+    public static final String DEFAULT_ITEM_SOURCE = "system";
+
+    // See ddl.sql
+    public enum ItemSource {
+        user
+    }
+
     public abstract BusinessInvoiceItemType getBusinessInvoiceItemType();
 
     public static BusinessInvoiceItemBaseModelDao create(final Account account,
                                                          final Long accountRecordId,
                                                          final Invoice invoice,
                                                          final InvoiceItem invoiceItem,
-                                                         final Boolean revenueRecognizable,
+                                                         @Nullable final ItemSource itemSource,
                                                          final BusinessInvoiceItemType businessInvoiceItemType,
                                                          final Long invoiceItemRecordId,
                                                          final Long secondInvoiceItemRecordId,
@@ -99,7 +110,7 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
                                                          accountRecordId,
                                                          invoice,
                                                          invoiceItem,
-                                                         revenueRecognizable,
+                                                         itemSource,
                                                          invoiceItemRecordId,
                                                          secondInvoiceItemRecordId,
                                                          bundle,
@@ -113,7 +124,7 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
                                                    accountRecordId,
                                                    invoice,
                                                    invoiceItem,
-                                                   revenueRecognizable,
+                                                   itemSource,
                                                    invoiceItemRecordId,
                                                    secondInvoiceItemRecordId,
                                                    bundle,
@@ -127,7 +138,7 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
                                                              accountRecordId,
                                                              invoice,
                                                              invoiceItem,
-                                                             revenueRecognizable,
+                                                             itemSource,
                                                              invoiceItemRecordId,
                                                              secondInvoiceItemRecordId,
                                                              bundle,
@@ -141,7 +152,7 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
                                                          accountRecordId,
                                                          invoice,
                                                          invoiceItem,
-                                                         revenueRecognizable,
+                                                         itemSource,
                                                          invoiceItemRecordId,
                                                          secondInvoiceItemRecordId,
                                                          bundle,
@@ -174,7 +185,7 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
                                            final BigDecimal invoiceAmountCredited,
                                            final BigDecimal invoiceAmountRefunded,
                                            final String itemType,
-                                           final Boolean revenueRecognizable,
+                                           @Nullable final ItemSource itemSource,
                                            final String bundleExternalKey,
                                            final String productName,
                                            final String productType,
@@ -223,7 +234,7 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
         this.invoiceAmountCredited = invoiceAmountCredited;
         this.invoiceAmountRefunded = invoiceAmountRefunded;
         this.itemType = itemType;
-        this.revenueRecognizable = revenueRecognizable;
+        this.itemSource = itemSource == null ? DEFAULT_ITEM_SOURCE : itemSource.toString();
         this.bundleExternalKey = bundleExternalKey;
         this.productName = productName;
         this.productType = productType;
@@ -242,7 +253,7 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
                                            final Long accountRecordId,
                                            final Invoice invoice,
                                            final InvoiceItem invoiceItem,
-                                           final Boolean revenueRecognizable,
+                                           @Nullable final ItemSource itemSource,
                                            final Long invoiceItemRecordId,
                                            final Long secondInvoiceItemRecordId,
                                            @Nullable final SubscriptionBundle bundle,
@@ -267,7 +278,7 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
              invoice.getCreditedAmount(),
              invoice.getRefundedAmount(),
              invoiceItem.getInvoiceItemType().toString(),
-             revenueRecognizable,
+             itemSource,
              bundle == null ? null : bundle.getExternalKey(),
              (plan != null && plan.getProduct() != null) ? plan.getProduct().getName() : null,
              (plan != null && plan.getProduct() != null) ? plan.getProduct().getCatalogName() : null,
@@ -357,8 +368,8 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
         return itemType;
     }
 
-    public Boolean getRevenueRecognizable() {
-        return revenueRecognizable;
+    public String getItemSource() {
+        return itemSource;
     }
 
     public String getBundleExternalKey() {
@@ -429,7 +440,7 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
         sb.append(", invoiceAmountCredited=").append(invoiceAmountCredited);
         sb.append(", invoiceAmountRefunded=").append(invoiceAmountRefunded);
         sb.append(", itemType='").append(itemType).append('\'');
-        sb.append(", revenueRecognizable=").append(revenueRecognizable);
+        sb.append(", itemSource=").append(itemSource);
         sb.append(", bundleExternalKey='").append(bundleExternalKey).append('\'');
         sb.append(", productName='").append(productName).append('\'');
         sb.append(", productType='").append(productType).append('\'');
@@ -535,7 +546,7 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
         if (productType != null ? !productType.equals(that.productType) : that.productType != null) {
             return false;
         }
-        if (revenueRecognizable != null ? !revenueRecognizable.equals(that.revenueRecognizable) : that.revenueRecognizable != null) {
+        if (itemSource != null ? !itemSource.equals(that.itemSource) : that.itemSource != null) {
             return false;
         }
         if (secondInvoiceItemRecordId != null ? !secondInvoiceItemRecordId.equals(that.secondInvoiceItemRecordId) : that.secondInvoiceItemRecordId != null) {
@@ -570,7 +581,7 @@ public abstract class BusinessInvoiceItemBaseModelDao extends BusinessModelDaoBa
         result = 31 * result + (invoiceAmountCredited != null ? invoiceAmountCredited.hashCode() : 0);
         result = 31 * result + (invoiceAmountRefunded != null ? invoiceAmountRefunded.hashCode() : 0);
         result = 31 * result + (itemType != null ? itemType.hashCode() : 0);
-        result = 31 * result + (revenueRecognizable != null ? revenueRecognizable.hashCode() : 0);
+        result = 31 * result + (itemSource != null ? itemSource.hashCode() : 0);
         result = 31 * result + (bundleExternalKey != null ? bundleExternalKey.hashCode() : 0);
         result = 31 * result + (productName != null ? productName.hashCode() : 0);
         result = 31 * result + (productType != null ? productType.hashCode() : 0);

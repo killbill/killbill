@@ -39,7 +39,7 @@ public class BusinessInvoiceItem extends BusinessEntityBase {
     private final BigDecimal invoiceOriginalAmountCharged;
     private final BigDecimal invoiceAmountCredited;
     private final String itemType;
-    private final Boolean recognizable;
+    private final String itemSource;
     private final String bundleExternalKey;
     private final String productName;
     private final String productType;
@@ -75,7 +75,7 @@ public class BusinessInvoiceItem extends BusinessEntityBase {
         this.invoiceOriginalAmountCharged = businessInvoiceItemBaseModelDao.getInvoiceOriginalAmountCharged();
         this.invoiceAmountCredited = businessInvoiceItemBaseModelDao.getInvoiceAmountCredited();
         this.itemType = businessInvoiceItemBaseModelDao.getItemType();
-        this.recognizable = businessInvoiceItemBaseModelDao.getRevenueRecognizable();
+        this.itemSource = businessInvoiceItemBaseModelDao.getItemSource();
         this.bundleExternalKey = businessInvoiceItemBaseModelDao.getBundleExternalKey();
         this.productName = businessInvoiceItemBaseModelDao.getProductName();
         this.productType = businessInvoiceItemBaseModelDao.getProductType();
@@ -142,8 +142,8 @@ public class BusinessInvoiceItem extends BusinessEntityBase {
         return itemType;
     }
 
-    public Boolean getRecognizable() {
-        return recognizable;
+    public String getItemSource() {
+        return itemSource;
     }
 
     public String getBundleExternalKey() {
@@ -211,7 +211,7 @@ public class BusinessInvoiceItem extends BusinessEntityBase {
         sb.append(", invoiceOriginalAmountCharged=").append(invoiceOriginalAmountCharged);
         sb.append(", invoiceAmountCredited=").append(invoiceAmountCredited);
         sb.append(", itemType='").append(itemType).append('\'');
-        sb.append(", recognizable=").append(recognizable);
+        sb.append(", itemSource=").append(itemSource);
         sb.append(", bundleExternalKey='").append(bundleExternalKey).append('\'');
         sb.append(", productName='").append(productName).append('\'');
         sb.append(", productType='").append(productType).append('\'');
@@ -311,7 +311,7 @@ public class BusinessInvoiceItem extends BusinessEntityBase {
         if (productType != null ? !productType.equals(that.productType) : that.productType != null) {
             return false;
         }
-        if (recognizable != null ? !recognizable.equals(that.recognizable) : that.recognizable != null) {
+        if (itemSource != null ? !itemSource.equals(that.itemSource) : that.itemSource != null) {
             return false;
         }
         if (slug != null ? !slug.equals(that.slug) : that.slug != null) {
@@ -340,7 +340,7 @@ public class BusinessInvoiceItem extends BusinessEntityBase {
         result = 31 * result + (invoiceOriginalAmountCharged != null ? invoiceOriginalAmountCharged.hashCode() : 0);
         result = 31 * result + (invoiceAmountCredited != null ? invoiceAmountCredited.hashCode() : 0);
         result = 31 * result + (itemType != null ? itemType.hashCode() : 0);
-        result = 31 * result + (recognizable != null ? recognizable.hashCode() : 0);
+        result = 31 * result + (itemSource != null ? itemSource.hashCode() : 0);
         result = 31 * result + (bundleExternalKey != null ? bundleExternalKey.hashCode() : 0);
         result = 31 * result + (productName != null ? productName.hashCode() : 0);
         result = 31 * result + (productType != null ? productType.hashCode() : 0);

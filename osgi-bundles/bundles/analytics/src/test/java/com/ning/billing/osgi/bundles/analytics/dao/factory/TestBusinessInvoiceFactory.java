@@ -33,6 +33,7 @@ import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.osgi.bundles.analytics.AnalyticsTestSuiteNoDB;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceItemBaseModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceItemBaseModelDao.ItemSource;
 import com.ning.billing.osgi.bundles.analytics.utils.BusinessInvoiceUtils;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillDataSource;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillLogService;
@@ -101,7 +102,7 @@ public class TestBusinessInvoiceFactory extends AnalyticsTestSuiteNoDB {
         // We treat these as NOT recognizable account credits
         Assert.assertEquals(businessCreditItem.getAmount().compareTo(new BigDecimal("10")), 0);
         Assert.assertEquals(businessCreditItem.getItemType(), InvoiceItemType.CBA_ADJ.toString());
-        Assert.assertFalse(businessCreditItem.getRevenueRecognizable());
+        Assert.assertEquals(businessCreditItem.getItemSource(), ItemSource.user.toString());
 
         // Invoice adjustment, not to be mixed with credits!
         final BusinessInvoiceItemBaseModelDao businessInvoiceAdjustmentItem = invoiceFactory.createBusinessInvoiceItem(account,
@@ -118,8 +119,7 @@ public class TestBusinessInvoiceFactory extends AnalyticsTestSuiteNoDB {
                                                                                                                        reportGroup);
         Assert.assertEquals(businessInvoiceAdjustmentItem.getAmount().compareTo(new BigDecimal("-10")), 0);
         Assert.assertEquals(businessInvoiceAdjustmentItem.getItemType(), InvoiceItemType.CREDIT_ADJ.toString());
-        // Recognizable by default
-        Assert.assertTrue(businessInvoiceAdjustmentItem.getRevenueRecognizable());
+        Assert.assertEquals(businessInvoiceAdjustmentItem.getItemSource(), ItemSource.user.toString());
 
         // Invoice adjustment via refund
         final BusinessInvoiceItemBaseModelDao businessRefundInvoiceAdjustmentItem = invoiceFactory.createBusinessInvoiceItem(account,
@@ -136,8 +136,7 @@ public class TestBusinessInvoiceFactory extends AnalyticsTestSuiteNoDB {
                                                                                                                              reportGroup);
         Assert.assertEquals(businessRefundInvoiceAdjustmentItem.getAmount().compareTo(new BigDecimal("-10")), 0);
         Assert.assertEquals(businessRefundInvoiceAdjustmentItem.getItemType(), InvoiceItemType.REFUND_ADJ.toString());
-        // Recognizable by default
-        Assert.assertTrue(businessRefundInvoiceAdjustmentItem.getRevenueRecognizable());
+        Assert.assertEquals(businessRefundInvoiceAdjustmentItem.getItemSource(), ItemSource.user.toString());
 
         // Item adjustment
         final BusinessInvoiceItemBaseModelDao businessInvoiceItemAdjustmentItem = invoiceFactory.createBusinessInvoiceItem(account,
@@ -154,8 +153,7 @@ public class TestBusinessInvoiceFactory extends AnalyticsTestSuiteNoDB {
                                                                                                                            reportGroup);
         Assert.assertEquals(businessInvoiceItemAdjustmentItem.getAmount().compareTo(new BigDecimal("-10")), 0);
         Assert.assertEquals(businessInvoiceItemAdjustmentItem.getItemType(), InvoiceItemType.ITEM_ADJ.toString());
-        // Recognizable by default
-        Assert.assertTrue(businessInvoiceItemAdjustmentItem.getRevenueRecognizable());
+        Assert.assertEquals(businessInvoiceItemAdjustmentItem.getItemSource(), ItemSource.user.toString());
 
         // System generated account credit
         final BusinessInvoiceItemBaseModelDao businessCBAItem = invoiceFactory.createBusinessInvoiceItem(account,
@@ -174,8 +172,7 @@ public class TestBusinessInvoiceFactory extends AnalyticsTestSuiteNoDB {
                                                                                                          reportGroup);
         Assert.assertEquals(businessCBAItem.getAmount().compareTo(new BigDecimal("10")), 0);
         Assert.assertEquals(businessCBAItem.getItemType(), InvoiceItemType.CBA_ADJ.toString());
-        // Recognizable by default
-        Assert.assertTrue(businessCBAItem.getRevenueRecognizable());
+        Assert.assertEquals(businessCBAItem.getItemSource(), BusinessInvoiceItemBaseModelDao.DEFAULT_ITEM_SOURCE);
     }
 
     @Test(groups = "fast")
