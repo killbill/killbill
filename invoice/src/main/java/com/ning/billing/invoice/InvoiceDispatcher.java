@@ -22,7 +22,11 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.UUID;
+
+import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -42,6 +46,7 @@ import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.invoice.api.InvoicePayment;
+import com.ning.billing.invoice.api.user.DefaultInvoiceAdjustmentEvent;
 import com.ning.billing.invoice.api.user.DefaultInvoiceCreationEvent;
 import com.ning.billing.invoice.api.user.DefaultNullInvoiceEvent;
 import com.ning.billing.invoice.dao.InvoiceDao;
@@ -56,7 +61,8 @@ import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.events.BusInternalEvent;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
-import com.ning.billing.util.events.InvoiceCreationInternalEvent;
+import com.ning.billing.util.events.InvoiceAdjustmentInternalEvent;
+import com.ning.billing.util.events.InvoiceInternalEvent;
 import com.ning.billing.util.globallocker.GlobalLock;
 import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.globallocker.GlobalLocker.LockerType;
@@ -70,7 +76,6 @@ import com.ning.billing.util.svcsapi.bus.InternalBus.EventBusException;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
-import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -188,15 +193,20 @@ public class InvoiceDispatcher {
                 }
             } else {
                 log.info("Generated invoice {} with {} items for accountId {} and targetDate {} (targetDateTime {})", new Object[]{invoice.getId(), invoice.getNumberOfItems(),
-                        accountId, targetDate, targetDateTime});
+                                                                                                                                   accountId, targetDate, targetDateTime});
                 if (!dryRun) {
-                    // We need to check whether this is just a 'shell' invoice or a real invoice with items on it
-                    final boolean isRealInvoiceWithItems = Collections2.filter(invoice.getInvoiceItems(), new Predicate<InvoiceItem>() {
+
+                    // Extract the set of invoiceId for which we see items that don't belong to current generated invoice
+                    final Set<UUID> adjustedUniqueOtherInvoiceId = new TreeSet<UUID>();
+                    adjustedUniqueOtherInvoiceId.addAll(Collections2.transform(invoice.getInvoiceItems(), new Function<InvoiceItem, UUID>() {
+                        @Nullable
                         @Override
-                        public boolean apply(final InvoiceItem input) {
-                            return input.getInvoiceId().equals(invoice.getId());
+                        public UUID apply(@Nullable final InvoiceItem input) {
+                            return input.getInvoiceId();
                         }
-                    }).size() > 0;
+                    }));
+                    final boolean isRealInvoiceWithItems = adjustedUniqueOtherInvoiceId.remove(invoice.getId());
+
 
                     final InvoiceModelDao invoiceModelDao = new InvoiceModelDao(invoice);
                     final List<InvoiceItemModelDao> invoiceItemModelDaos = ImmutableList.<InvoiceItemModelDao>copyOf(Collections2.transform(invoice.getInvoiceItems(),
@@ -222,13 +232,22 @@ public class InvoiceDispatcher {
                     final List<InvoiceItem> recurringInvoiceItems = invoice.getInvoiceItems(RecurringInvoiceItem.class);
                     setChargedThroughDates(dateAndTimeZoneContext, fixedPriceInvoiceItems, recurringInvoiceItems, context);
 
-                    final InvoiceCreationInternalEvent event = new DefaultInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
-                                                                                               invoice.getBalance(), invoice.getCurrency(),
-                                                                                               context.getUserToken(),
-                                                                                               context.getAccountRecordId(),
-                                                                                               context.getTenantRecordId());
 
+                    final List<InvoiceInternalEvent> events = new ArrayList<InvoiceInternalEvent>();
                     if (isRealInvoiceWithItems) {
+                        events.add(new DefaultInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
+                                                                   invoice.getBalance(), invoice.getCurrency(),
+                                                                   context.getUserToken(),
+                                                                   context.getAccountRecordId(),
+                                                                   context.getTenantRecordId()));
+                    }
+                    for (UUID cur : adjustedUniqueOtherInvoiceId) {
+                        final InvoiceAdjustmentInternalEvent event = new DefaultInvoiceAdjustmentEvent(cur, invoice.getAccountId(), context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
+                        events.add(event);
+                    }
+
+
+                    for (InvoiceInternalEvent event : events) {
                         postEvent(event, accountId, context);
                     }
                 }
@@ -321,6 +340,7 @@ public class InvoiceDispatcher {
             this.referenceTime = effectiveDateTime != null ? effectiveDateTime.toLocalTime() : null;
             this.accountTimeZone = accountTimeZone;
         }
+
         public LocalDate computeTargetDate(final DateTime targetDateTime) {
             return new LocalDate(targetDateTime, accountTimeZone);
         }
