@@ -21,12 +21,22 @@ import java.util.Collection;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
+
 /**
  * Utilities to manipulate invoice and invoice items.
  */
 public class BusinessInvoiceUtils {
 
-    public static boolean isRevenueRecognizable(final InvoiceItem invoiceItem, final Collection<InvoiceItem> otherInvoiceItems) {
+    public static boolean isRevenueRecognizable(final InvoiceItem invoiceItem, final Collection<InvoiceItem> otherInvoiceItemsOnAllInvoices) {
+        final Collection<InvoiceItem> otherInvoiceItems = Collections2.filter(otherInvoiceItemsOnAllInvoices, new Predicate<InvoiceItem>() {
+            @Override
+            public boolean apply(final InvoiceItem input) {
+                return input.getInvoiceId().equals(invoiceItem.getInvoiceId());
+            }
+        });
+
         // All items are recognizable except user generated credit (CBA_ADJ and CREDIT_ADJ on their own invoice)
         return !(InvoiceItemType.CBA_ADJ.equals(invoiceItem.getInvoiceItemType()) &&
                  (otherInvoiceItems.size() == 1 &&
