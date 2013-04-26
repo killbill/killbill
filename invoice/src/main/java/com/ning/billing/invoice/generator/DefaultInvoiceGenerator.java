@@ -242,7 +242,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                // to catalog checks (the rate check is a lame check for versioned catalogs).
                Objects.firstNonNull(repairedInvoiceItem.getPlanName(), "").equals(Objects.firstNonNull(invoiceItem.getPlanName(), "")) &&
                Objects.firstNonNull(repairedInvoiceItem.getPhaseName(), "").equals(Objects.firstNonNull(invoiceItem.getPhaseName(), "")) &&
-               Objects.firstNonNull(repairedInvoiceItem.getRate(), "").equals(Objects.firstNonNull(invoiceItem.getRate(), ""));
+               Objects.firstNonNull(repairedInvoiceItem.getRate(), BigDecimal.ZERO).compareTo(Objects.firstNonNull(invoiceItem.getRate(), BigDecimal.ZERO)) == 0;
     }
 
 
