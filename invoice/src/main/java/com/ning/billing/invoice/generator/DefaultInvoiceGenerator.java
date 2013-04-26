@@ -52,6 +52,8 @@ import com.ning.billing.util.svcapi.junction.BillingEvent;
 import com.ning.billing.util.svcapi.junction.BillingEventSet;
 import com.ning.billing.util.svcapi.junction.BillingModeType;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
@@ -220,16 +222,27 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
      * @param invoiceItem         any invoice item to compare to
      * @return true if invoiceItem is the reparee for that repaired invoice item
      */
-    private boolean isRepareeItemForRepairedItem(final InvoiceItem repairedInvoiceItem, final InvoiceItem invoiceItem) {
-        return repairedInvoiceItem.getInvoiceItemType().equals(invoiceItem.getInvoiceItemType()) &&
+    @VisibleForTesting
+    boolean isRepareeItemForRepairedItem(final InvoiceItem repairedInvoiceItem, final InvoiceItem invoiceItem) {
+        return !repairedInvoiceItem.getId().equals(invoiceItem.getId()) &&
+               repairedInvoiceItem.getInvoiceItemType().equals(invoiceItem.getInvoiceItemType()) &&
+               // We assume the items are correctly created, so that the subscription id check implicitly
+               // verifies that account id and bundle id matches
                repairedInvoiceItem.getSubscriptionId().equals(invoiceItem.getSubscriptionId()) &&
+               // The reparee item is the "portion used" of the repaired item, hence it will have the same start date
                repairedInvoiceItem.getStartDate().compareTo(invoiceItem.getStartDate()) == 0 &&
-               // FIXED items have a null end date
+               // Similarly, check the "portion used" is less than the original service end date. The check
+               // is strict, otherwise there wouldn't be anything to repair
                ((repairedInvoiceItem.getEndDate() == null && invoiceItem.getEndDate() == null) ||
                 (repairedInvoiceItem.getEndDate() != null && invoiceItem.getEndDate() != null &&
-                 // We need to look for stricly after otherwsie we could return thew new item for that period in case of a complete repair
                  repairedInvoiceItem.getEndDate().isAfter(invoiceItem.getEndDate()))) &&
-               !repairedInvoiceItem.getId().equals(invoiceItem.getId());
+               // Finally, for the tricky part... In case of complete repairs, the new item will always meet all of the
+               // following conditions: same type, subscription, start date. Depending on the catalog configuration, the end
+               // date check could also match (e.g. repair from annual to monthly). For that scenario, we need to default
+               // to catalog checks (the rate check is a lame check for versioned catalogs).
+               Objects.firstNonNull(repairedInvoiceItem.getPlanName(), "").equals(Objects.firstNonNull(invoiceItem.getPlanName(), "")) &&
+               Objects.firstNonNull(repairedInvoiceItem.getPhaseName(), "").equals(Objects.firstNonNull(invoiceItem.getPhaseName(), "")) &&
+               Objects.firstNonNull(repairedInvoiceItem.getRate(), "").equals(Objects.firstNonNull(invoiceItem.getRate(), ""));
     }
 
 

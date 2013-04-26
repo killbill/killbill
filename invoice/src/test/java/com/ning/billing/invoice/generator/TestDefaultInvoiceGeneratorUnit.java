@@ -26,17 +26,15 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.InvoiceTestSuiteNoDB;
-import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
-import com.ning.billing.invoice.model.CreditBalanceAdjInvoiceItem;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.invoice.model.RepairAdjInvoiceItem;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 
 public class TestDefaultInvoiceGeneratorUnit extends InvoiceTestSuiteNoDB {
 
@@ -257,7 +255,41 @@ public class TestDefaultInvoiceGeneratorUnit extends InvoiceTestSuiteNoDB {
         assertEquals(newItem2.getInvoiceItemType(), InvoiceItemType.REPAIR_ADJ);
         assertEquals(newItem2.getAmount(), item1.getAmount().negate());
         assertEquals(newItem2.getLinkedItemId(), item1.getId());
-
     }
 
+    @Test(groups = "fast")
+    public void testShouldFindRepareeForPartialRepairs() throws Exception {
+        final LocalDate startDate = new LocalDate(2012, 5, 1);
+        final LocalDate endDate = new LocalDate(2012, 6, 1);
+        // Repaired item
+        final InvoiceItem silver = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, BigDecimal.TEN, BigDecimal.TEN, currency);
+
+        // Reparee item
+        final LocalDate actualEndDateSilver = new LocalDate(2012, 5, 10);
+        final InvoiceItem actualSilver = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, actualEndDateSilver, new BigDecimal("3"), BigDecimal.TEN, currency);
+
+        // New item
+        final InvoiceItem gold = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, "new-" + planName, phaseName, actualEndDateSilver, endDate, BigDecimal.TEN, new BigDecimal("15"), currency);
+
+        assertFalse(((DefaultInvoiceGenerator) generator).isRepareeItemForRepairedItem(silver, silver));
+        assertFalse(((DefaultInvoiceGenerator) generator).isRepareeItemForRepairedItem(silver, gold));
+        assertTrue(((DefaultInvoiceGenerator) generator).isRepareeItemForRepairedItem(silver, actualSilver));
+    }
+
+    @Test(groups = "fast")
+    public void testShouldntFindRepareeForFullRepairs() throws Exception {
+        final LocalDate startDate = new LocalDate(2012, 5, 1);
+        final LocalDate endDate = new LocalDate(2013, 5, 1);
+        // Repaired item
+        final InvoiceItem annual = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, BigDecimal.TEN, BigDecimal.TEN, currency);
+
+        // There is no reparee - full repair
+
+        // New item
+        final LocalDate endDate2 = new LocalDate(2012, 6, 1);
+        final InvoiceItem monthly = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, "new-" + planName, phaseName, startDate, endDate2, BigDecimal.TEN, BigDecimal.TEN, currency);
+
+        assertFalse(((DefaultInvoiceGenerator) generator).isRepareeItemForRepairedItem(annual, annual));
+        assertFalse(((DefaultInvoiceGenerator) generator).isRepareeItemForRepairedItem(annual, monthly));
+    }
 }
