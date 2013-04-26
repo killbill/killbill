@@ -20,7 +20,7 @@
     <parent>
         <groupId>com.ning.billing</groupId>
         <artifactId>killbill</artifactId>
-        <version>0.1.69-SNAPSHOT</version>
+        <version>0.1.69</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>killbill-tenant</artifactId>
