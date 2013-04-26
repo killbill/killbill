@@ -182,14 +182,6 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
      * @param proposedItems       the list of proposed items
      */
     void addRepairItem(final InvoiceItem repairedItem, final RepairAdjInvoiceItem candidateRepairItem, final List<InvoiceItem> proposedItems) {
-
-        final boolean withPartialRepair = true; // (System.getProperty("InvoiceWithPartialRepair") != null);
-
-        if (!withPartialRepair) {
-            proposedItems.add(candidateRepairItem);
-            return;
-        }
-
         InvoiceItem repareeItem = null;
         for (final InvoiceItem cur : proposedItems) {
             if (isRepareeItemForRepairedItem(repairedItem, cur)) {
@@ -250,7 +242,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
     // If we did any CREDIT_ADJ or REFUND_ADJ, then we unfortunately we can't know what is the intent
     // was as it applies to the full Invoice, so we ignore it. That might result in an extra positive CBA
     // that would have to be corrected manually. This is the best we can do, and administrators should always
-    // use ITEM_ADJUSTEMNT rather than CREDIT_ADJ or REFUND_ADJ when possible.
+    // use ITEM_ADJUSTMENT rather than CREDIT_ADJ or REFUND_ADJ when possible.
     //
     BigDecimal getAdjustedPositiveAmount(final List<InvoiceItem> existingItems, final UUID linkedItemId) {
         BigDecimal totalAdjustedOnItem = BigDecimal.ZERO;
