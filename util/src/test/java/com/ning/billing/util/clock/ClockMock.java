@@ -81,7 +81,7 @@ public class ClockMock implements Clock {
     }
 
     public synchronized void setDeltaFromReality(final long delta) {
-        resetDeltaFromReality();
+        // The name of the method is misleading - don't reset it here
         addDeltaFromReality(delta);
     }
 
