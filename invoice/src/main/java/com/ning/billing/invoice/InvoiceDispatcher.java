@@ -62,7 +62,6 @@ import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.events.BusInternalEvent;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 import com.ning.billing.util.events.InvoiceAdjustmentInternalEvent;
-import com.ning.billing.util.events.InvoiceCreationInternalEvent;
 import com.ning.billing.util.events.InvoiceInternalEvent;
 import com.ning.billing.util.globallocker.GlobalLock;
 import com.ning.billing.util.globallocker.GlobalLocker;
@@ -77,7 +76,6 @@ import com.ning.billing.util.svcsapi.bus.InternalBus.EventBusException;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
-import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -195,7 +193,7 @@ public class InvoiceDispatcher {
                 }
             } else {
                 log.info("Generated invoice {} with {} items for accountId {} and targetDate {} (targetDateTime {})", new Object[]{invoice.getId(), invoice.getNumberOfItems(),
-                        accountId, targetDate, targetDateTime});
+                                                                                                                                   accountId, targetDate, targetDateTime});
                 if (!dryRun) {
 
                     // Extract the set of invoiceId for which we see items that don't belong to current generated invoice
@@ -238,10 +236,10 @@ public class InvoiceDispatcher {
                     final List<InvoiceInternalEvent> events = new ArrayList<InvoiceInternalEvent>();
                     if (isRealInvoiceWithItems) {
                         events.add(new DefaultInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
-                                                        invoice.getBalance(), invoice.getCurrency(),
-                                                        context.getUserToken(),
-                                                        context.getAccountRecordId(),
-                                                        context.getTenantRecordId()));
+                                                                   invoice.getBalance(), invoice.getCurrency(),
+                                                                   context.getUserToken(),
+                                                                   context.getAccountRecordId(),
+                                                                   context.getTenantRecordId()));
                     }
                     for (UUID cur : adjustedUniqueOtherInvoiceId) {
                         final InvoiceAdjustmentInternalEvent event = new DefaultInvoiceAdjustmentEvent(cur, invoice.getAccountId(), context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
@@ -342,6 +340,7 @@ public class InvoiceDispatcher {
             this.referenceTime = effectiveDateTime != null ? effectiveDateTime.toLocalTime() : null;
             this.accountTimeZone = accountTimeZone;
         }
+
         public LocalDate computeTargetDate(final DateTime targetDateTime) {
             return new LocalDate(targetDateTime, accountTimeZone);
         }

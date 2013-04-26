@@ -44,7 +44,6 @@ import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.entitlement.api.EntitlementService;
 import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
 import com.ning.billing.invoice.api.InvoiceService;
-import com.ning.billing.invoice.generator.DefaultInvoiceGenerator;
 import com.ning.billing.invoice.generator.DefaultInvoiceGeneratorWithSwitchRepairLogic;
 import com.ning.billing.invoice.generator.InvoiceGenerator;
 import com.ning.billing.invoice.glue.DefaultInvoiceModule;
@@ -146,6 +145,7 @@ public class BeatrixIntegrationModule extends AbstractModule {
     }
 
     private static final class DefaultInvoiceModuleWithSwitchRepairLogic extends DefaultInvoiceModule {
+
         public DefaultInvoiceModuleWithSwitchRepairLogic(final ConfigSource configSource) {
             super(configSource);
         }
