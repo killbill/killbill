@@ -33,7 +33,13 @@ import com.ning.billing.catalog.api.Duration;
 import com.ning.billing.catalog.api.TimeUnit;
 
 public class ClockMock implements Clock {
+
     private MutablePeriod delta = new MutablePeriod();
+
+
+    private DateTime mockDateTime = now();
+
+
     private static final Logger log = LoggerFactory.getLogger(ClockMock.class);
 
     @Override
@@ -57,12 +63,16 @@ public class ClockMock implements Clock {
     }
 
     private DateTime adjust(final DateTime now) {
-        return now.plus(delta);
+        //return now.plus(delta);
+        return mockDateTime;
     }
 
     public synchronized void setTime(final DateTime time) {
         final DateTime prev = getUTCNow();
         delta = new MutablePeriod(now(), time);
+
+        mockDateTime = time;
+
         logChange(prev);
     }
 
@@ -71,6 +81,7 @@ public class ClockMock implements Clock {
     }
 
     public synchronized void addDays(final int days) {
+
         adjustTo(Days.days(days));
     }
 
@@ -87,6 +98,7 @@ public class ClockMock implements Clock {
     }
 
     public synchronized void reset() {
+        mockDateTime = now();
         delta = new MutablePeriod();
     }
 
@@ -97,7 +109,10 @@ public class ClockMock implements Clock {
 
     private void adjustTo(final ReadablePeriod period) {
         final DateTime prev = getUTCNow();
+
+        //deltaFromDelta
         delta.add(period);
+        mockDateTime =  mockDateTime.plus(period);
         logChange(prev);
     }
 
@@ -120,6 +135,9 @@ public class ClockMock implements Clock {
     public synchronized void setDeltaFromReality(final Duration duration, final long epsilon) {
         final DateTime prev = getUTCNow();
         delta.addMillis((int) epsilon);
+
+        mockDateTime = mockDateTime.plus(epsilon);
+
         addDeltaFromReality(duration);
         logChange(prev);
 
