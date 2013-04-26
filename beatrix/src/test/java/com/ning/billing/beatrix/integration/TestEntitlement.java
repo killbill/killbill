@@ -90,7 +90,7 @@ public class TestEntitlement extends TestIntegrationBase {
         //
         // FORCE AN IMMEDIATE CHANGE OF THE BILLING PERIOD
         //
-        busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE);
+        busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.INVOICE_ADJUSTMENT);
         assertTrue(bpSubscription.changePlanWithPolicy(productName, BillingPeriod.MONTHLY, planSetName, clock.getUTCNow(), ActionPolicy.IMMEDIATE, callContext));
         assertEquals(entitlementUserApi.getSubscriptionFromId(bpSubscription.getId(), callContext).getCurrentPlan().getBillingPeriod(), BillingPeriod.MONTHLY);
 
@@ -115,7 +115,7 @@ public class TestEntitlement extends TestIntegrationBase {
         //
         // FORCE ANOTHER CHANGE
         //
-        busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE);
+        busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.INVOICE_ADJUSTMENT);
         assertTrue(bpSubscription.changePlanWithPolicy(productName, BillingPeriod.ANNUAL, planSetName, clock.getUTCNow(), ActionPolicy.IMMEDIATE, callContext));
         assertEquals(entitlementUserApi.getSubscriptionFromId(bpSubscription.getId(), callContext).getCurrentPlan().getBillingPeriod(), BillingPeriod.ANNUAL);
         assertTrue(busHandler.isCompleted(DELAY));

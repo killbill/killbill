@@ -216,6 +216,7 @@ public class TestBundleTransfer extends TestIntegrationBase {
         busHandler.pushExpectedEvent(NextEvent.CANCEL);
         busHandler.pushExpectedEvent(NextEvent.TRANSFER);
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
+        busHandler.pushExpectedEvent(NextEvent.INVOICE_ADJUSTMENT);
         busHandler.pushExpectedEvent(NextEvent.PAYMENT);
         transferApi.transferBundle(account.getId(), newAccount.getId(), "mycutebundle", clock.getUTCNow(), false, true, callContext);
         assertTrue(busHandler.isCompleted(DELAY));
