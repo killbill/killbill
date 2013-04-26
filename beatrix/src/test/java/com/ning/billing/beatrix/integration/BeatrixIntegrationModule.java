@@ -44,6 +44,9 @@ import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.entitlement.api.EntitlementService;
 import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
 import com.ning.billing.invoice.api.InvoiceService;
+import com.ning.billing.invoice.generator.DefaultInvoiceGenerator;
+import com.ning.billing.invoice.generator.DefaultInvoiceGeneratorWithSwitchRepairLogic;
+import com.ning.billing.invoice.generator.InvoiceGenerator;
 import com.ning.billing.invoice.glue.DefaultInvoiceModule;
 import com.ning.billing.junction.glue.DefaultJunctionModule;
 import com.ning.billing.lifecycle.KillbillService;
@@ -91,6 +94,7 @@ public class BeatrixIntegrationModule extends AbstractModule {
         this.configSource = configSource;
     }
 
+
     @Override
     protected void configure() {
 
@@ -112,7 +116,7 @@ public class BeatrixIntegrationModule extends AbstractModule {
         install(new AnalyticsModule(configSource));
         install(new CatalogModule(configSource));
         install(new DefaultEntitlementModule(configSource));
-        install(new DefaultInvoiceModule(configSource));
+        install(new DefaultInvoiceModuleWithSwitchRepairLogic(configSource));
         install(new TemplateModule());
         install(new PaymentPluginMockModule(configSource));
         install(new DefaultJunctionModule(configSource));
@@ -140,6 +144,18 @@ public class BeatrixIntegrationModule extends AbstractModule {
         bind(BeatrixListener.class).asEagerSingleton();
         bind(DefaultBeatrixService.class).asEagerSingleton();
     }
+
+    private static final class DefaultInvoiceModuleWithSwitchRepairLogic extends DefaultInvoiceModule {
+        public DefaultInvoiceModuleWithSwitchRepairLogic(final ConfigSource configSource) {
+            super(configSource);
+        }
+
+        protected void installInvoiceGenerator() {
+            bind(InvoiceGenerator.class).to(DefaultInvoiceGeneratorWithSwitchRepairLogic.class).asEagerSingleton();
+            bind(DefaultInvoiceGeneratorWithSwitchRepairLogic.class).asEagerSingleton();
+        }
+    }
+
 
     private static final class PaymentPluginMockModule extends PaymentModule {
 

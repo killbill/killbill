@@ -355,7 +355,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
      * @param repairedItem  the repaired item
      * @param proposedItems the list of existing items
      */
-    private void removeProposedRepareeForPartialrepair(final InvoiceItem repairedItem, final List<InvoiceItem> proposedItems) {
+    protected void removeProposedRepareeForPartialrepair(final InvoiceItem repairedItem, final List<InvoiceItem> proposedItems) {
         final Iterator<InvoiceItem> it = proposedItems.iterator();
         while (it.hasNext()) {
             final InvoiceItem cur = it.next();
