@@ -432,9 +432,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         // AND THEN CHECK NEW INVOICE
         toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 7, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")),
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 10), new LocalDate(2012, 6, 10), InvoiceItemType.CBA_ADJ, new BigDecimal("-249.95")));
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 11), new LocalDate(2012, 6, 11), InvoiceItemType.CBA_ADJ, new BigDecimal("-249.95")));
         invoiceChecker.checkInvoice(invoices.get(3).getId(), callContext, toBeChecked);
     }
-
-
 }
