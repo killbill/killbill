@@ -220,7 +220,7 @@ public class TestJaxrsBase extends KillbillClient {
     public void beforeMethod() throws Exception {
         super.beforeMethod();
         busHandler.reset();
-        clock.reset();
+        clock.resetDeltaFromReality();
         clock.setDay(new LocalDate(2012, 8, 25));
     }
 

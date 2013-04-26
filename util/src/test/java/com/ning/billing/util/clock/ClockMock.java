@@ -21,7 +21,6 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.Days;
 import org.joda.time.LocalDate;
 import org.joda.time.Months;
-import org.joda.time.MutablePeriod;
 import org.joda.time.Period;
 import org.joda.time.ReadablePeriod;
 import org.joda.time.Weeks;
@@ -29,18 +28,16 @@ import org.joda.time.Years;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ning.billing.catalog.api.Duration;
-import com.ning.billing.catalog.api.TimeUnit;
-
 public class ClockMock implements Clock {
 
-    private MutablePeriod delta = new MutablePeriod();
-
-
-    private DateTime mockDateTime = now();
-
-
     private static final Logger log = LoggerFactory.getLogger(ClockMock.class);
+
+    private DateTime mockDateTime;
+    private long initialDeltaMillis;
+
+    public ClockMock() {
+        reset();
+    }
 
     @Override
     public synchronized DateTime getNow(final DateTimeZone tz) {
@@ -49,7 +46,7 @@ public class ClockMock implements Clock {
 
     @Override
     public synchronized DateTime getUTCNow() {
-        return truncate(adjust(now()));
+        return truncate(mockDateTime.plus(System.currentTimeMillis() - initialDeltaMillis));
     }
 
     @Override
@@ -62,26 +59,12 @@ public class ClockMock implements Clock {
         return new LocalDate(getUTCNow(), timeZone);
     }
 
-    private DateTime adjust(final DateTime now) {
-        //return now.plus(delta);
-        return mockDateTime;
-    }
-
-    public synchronized void setTime(final DateTime time) {
-        final DateTime prev = getUTCNow();
-        delta = new MutablePeriod(now(), time);
-
-        mockDateTime = time;
-
-        logChange(prev);
-    }
-
-    public synchronized void setDay(final LocalDate date) {
-        setTime(date.toDateTimeAtStartOfDay(DateTimeZone.UTC));
+    @Override
+    public String toString() {
+        return getUTCNow().toString();
     }
 
     public synchronized void addDays(final int days) {
-
         adjustTo(Days.days(days));
     }
 
@@ -97,22 +80,41 @@ public class ClockMock implements Clock {
         adjustTo(Years.years(years));
     }
 
-    public synchronized void reset() {
-        mockDateTime = now();
-        delta = new MutablePeriod();
+    public synchronized void setDeltaFromReality(final long delta) {
+        resetDeltaFromReality();
+        addDeltaFromReality(delta);
     }
 
-    @Override
-    public String toString() {
-        return getUTCNow().toString();
+    public synchronized void addDeltaFromReality(final long delta) {
+        adjustTo(new Period(delta));
+    }
+
+    public synchronized void setDay(final LocalDate date) {
+        setTime(date.toDateTimeAtStartOfDay(DateTimeZone.UTC));
+    }
+
+    public synchronized void setTime(final DateTime time) {
+        final DateTime prev = getUTCNow();
+        reset(time);
+        logChange(prev);
+    }
+
+    public synchronized void resetDeltaFromReality() {
+        reset();
+    }
+
+    private synchronized void reset() {
+        reset(realNow());
+    }
+
+    private void reset(final DateTime time) {
+        mockDateTime = time;
+        initialDeltaMillis = System.currentTimeMillis();
     }
 
     private void adjustTo(final ReadablePeriod period) {
         final DateTime prev = getUTCNow();
-
-        //deltaFromDelta
-        delta.add(period);
-        mockDateTime =  mockDateTime.plus(period);
+        mockDateTime = mockDateTime.plus(period);
         logChange(prev);
     }
 
@@ -121,60 +123,11 @@ public class ClockMock implements Clock {
         log.info(String.format("            ************      ADJUSTING CLOCK FROM %s to %s     ********************", prev, now));
     }
 
-    private DateTime now() {
-        return new DateTime(DateTimeZone.UTC);
-    }
-
     private DateTime truncate(final DateTime time) {
         return time.minus(time.getMillisOfSecond());
     }
 
-    //
-    //Backward compatibility stuff
-    //
-    public synchronized void setDeltaFromReality(final Duration duration, final long epsilon) {
-        final DateTime prev = getUTCNow();
-        delta.addMillis((int) epsilon);
-
-        mockDateTime = mockDateTime.plus(epsilon);
-
-        addDeltaFromReality(duration);
-        logChange(prev);
-
-    }
-
-    public synchronized void addDeltaFromReality(final Duration delta) {
-        adjustTo(periodFromDuration(delta));
-    }
-
-    public synchronized void setDeltaFromReality(final long delta) {
-        adjustTo(new Period(delta));
-    }
-
-    public synchronized void addDeltaFromReality(final long delta) {
-        adjustTo(new Period(delta));
-    }
-
-    public synchronized void resetDeltaFromReality() {
-        reset();
-    }
-
-    public ReadablePeriod periodFromDuration(final Duration duration) {
-        if (duration.getUnit() != TimeUnit.UNLIMITED) {
-            return new Period();
-        }
-
-        switch (duration.getUnit()) {
-            case DAYS:
-                return Days.days(duration.getNumber());
-            case MONTHS:
-                return Months.months(duration.getNumber());
-            case YEARS:
-                return Years.years(duration.getNumber());
-            case UNLIMITED:
-                return Years.years(100);
-            default:
-                return new Period();
-        }
+    private DateTime realNow() {
+        return new DateTime(DateTimeZone.UTC);
     }
 }
