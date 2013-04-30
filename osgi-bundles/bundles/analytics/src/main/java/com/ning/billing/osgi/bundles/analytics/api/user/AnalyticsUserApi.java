@@ -19,9 +19,6 @@ package com.ning.billing.osgi.bundles.analytics.api.user;
 import java.util.Collection;
 import java.util.UUID;
 
-import org.osgi.service.log.LogService;
-
-import com.ning.billing.ObjectType;
 import com.ning.billing.osgi.bundles.analytics.AnalyticsRefreshException;
 import com.ning.billing.osgi.bundles.analytics.api.BusinessAccount;
 import com.ning.billing.osgi.bundles.analytics.api.BusinessField;
@@ -31,13 +28,8 @@ import com.ning.billing.osgi.bundles.analytics.api.BusinessOverdueStatus;
 import com.ning.billing.osgi.bundles.analytics.api.BusinessSnapshot;
 import com.ning.billing.osgi.bundles.analytics.api.BusinessSubscriptionTransition;
 import com.ning.billing.osgi.bundles.analytics.api.BusinessTag;
+import com.ning.billing.osgi.bundles.analytics.dao.AllBusinessObjectsDao;
 import com.ning.billing.osgi.bundles.analytics.dao.AnalyticsDao;
-import com.ning.billing.osgi.bundles.analytics.dao.BusinessAccountDao;
-import com.ning.billing.osgi.bundles.analytics.dao.BusinessFieldDao;
-import com.ning.billing.osgi.bundles.analytics.dao.BusinessInvoiceAndInvoicePaymentDao;
-import com.ning.billing.osgi.bundles.analytics.dao.BusinessOverdueStatusDao;
-import com.ning.billing.osgi.bundles.analytics.dao.BusinessSubscriptionTransitionDao;
-import com.ning.billing.osgi.bundles.analytics.dao.BusinessTagDao;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillAPI;
@@ -46,26 +38,14 @@ import com.ning.killbill.osgi.libs.killbill.OSGIKillbillLogService;
 
 public class AnalyticsUserApi {
 
-    private final LogService logService;
     private final AnalyticsDao analyticsDao;
-    private final BusinessSubscriptionTransitionDao bstDao;
-    private final BusinessInvoiceAndInvoicePaymentDao binAndBipDao;
-    private final BusinessOverdueStatusDao bosDao;
-    private final BusinessFieldDao bFieldDao;
-    private final BusinessTagDao bTagDao;
+    private final AllBusinessObjectsDao allBusinessObjectsDao;
 
     public AnalyticsUserApi(final OSGIKillbillLogService logService,
                             final OSGIKillbillAPI osgiKillbillAPI,
                             final OSGIKillbillDataSource osgiKillbillDataSource) {
-        this.logService = logService;
         this.analyticsDao = new AnalyticsDao(logService, osgiKillbillAPI, osgiKillbillDataSource);
-
-        final BusinessAccountDao bacDao = new BusinessAccountDao(logService, osgiKillbillAPI, osgiKillbillDataSource);
-        this.bstDao = new BusinessSubscriptionTransitionDao(logService, osgiKillbillAPI, osgiKillbillDataSource, bacDao);
-        this.binAndBipDao = new BusinessInvoiceAndInvoicePaymentDao(logService, osgiKillbillAPI, osgiKillbillDataSource, bacDao);
-        this.bosDao = new BusinessOverdueStatusDao(logService, osgiKillbillAPI, osgiKillbillDataSource);
-        this.bFieldDao = new BusinessFieldDao(logService, osgiKillbillAPI, osgiKillbillDataSource);
-        this.bTagDao = new BusinessTagDao(logService, osgiKillbillAPI, osgiKillbillDataSource);
+        this.allBusinessObjectsDao = new AllBusinessObjectsDao(logService, osgiKillbillAPI, osgiKillbillDataSource);
     }
 
     public BusinessSnapshot getBusinessSnapshot(final UUID accountId, final TenantContext context) {
@@ -98,23 +78,7 @@ public class AnalyticsUserApi {
     }
 
     public void rebuildAnalyticsForAccount(final UUID accountId, final CallContext context) throws AnalyticsRefreshException {
-        logService.log(LogService.LOG_INFO, "Starting rebuild of Analytics for account " + accountId);
-
-        // Refresh invoices and payments. This will automatically trigger a refresh of account
-        binAndBipDao.update(accountId, context);
-
-        // Refresh BST
-        bstDao.update(accountId, context);
-
-        // Refresh tags
-        bTagDao.update(accountId, context);
-
-        // Refresh fields
-        bFieldDao.update(accountId, context);
-
-        // Refresh BOS (bundles only for now)
-        bosDao.update(accountId, ObjectType.BUNDLE, context);
-
-        logService.log(LogService.LOG_INFO, "Finished rebuild of Analytics for account " + accountId);
+        // TODO Should we take the account lock?
+        allBusinessObjectsDao.update(accountId, context);
     }
 }
