@@ -149,6 +149,9 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         // Remove from both lists the items in common
         removeMatchingInvoiceItems(existingItems, proposedItems);
 
+        // We don't want the Fixed items to be repaired -- as they are setup fees that should be paid
+        removeRemainingFixedItemsFromExisting(existingItems);
+
         // Add repair items based on what is left in existing items
         addRepairItems(existingItems, proposedItems);
 
@@ -156,6 +159,16 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         invoice.addInvoiceItems(proposedItems);
 
         return proposedItems.size() != 0 ? invoice : null;
+    }
+
+    private void removeRemainingFixedItemsFromExisting(final List<InvoiceItem> existingItems) {
+        final Iterator<InvoiceItem> it = existingItems.iterator();
+        while (it.hasNext()) {
+            final InvoiceItem cur = it.next();
+            if (cur.getInvoiceItemType() == InvoiceItemType.FIXED) {
+                it.remove();
+            }
+        }
     }
 
     /**
@@ -424,8 +437,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                 return cur;
             }
         }
-        log.warn("Cannot find repaired invoice item " + repairedInvoiceItemId);
-        return null;
+        throw new IllegalStateException("Cannot find repaired invoice item " + repairedInvoiceItemId);
     }
 
 
