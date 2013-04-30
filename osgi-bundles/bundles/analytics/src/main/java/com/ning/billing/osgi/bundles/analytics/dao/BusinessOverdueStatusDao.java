@@ -40,7 +40,7 @@ public class BusinessOverdueStatusDao extends BusinessAnalyticsDaoBase {
     public BusinessOverdueStatusDao(final OSGIKillbillLogService logService,
                                     final OSGIKillbillAPI osgiKillbillAPI,
                                     final OSGIKillbillDataSource osgiKillbillDataSource) {
-        super(osgiKillbillDataSource);
+        super(logService, osgiKillbillDataSource);
         this.logService = logService;
         bosFactory = new BusinessOverdueStatusFactory(logService, osgiKillbillAPI);
     }
@@ -54,6 +54,8 @@ public class BusinessOverdueStatusDao extends BusinessAnalyticsDaoBase {
     }
 
     private void updateForBundle(final UUID accountId, final CallContext context) throws AnalyticsRefreshException {
+        logService.log(LogService.LOG_INFO, "Starting rebuild of Analytics overdue states for account " + accountId);
+
         final Collection<BusinessOverdueStatusModelDao> businessOverdueStatuses = bosFactory.createBusinessOverdueStatuses(accountId, context);
 
         sqlDao.inTransaction(new Transaction<Void, BusinessAnalyticsSqlDao>() {
@@ -63,6 +65,8 @@ public class BusinessOverdueStatusDao extends BusinessAnalyticsDaoBase {
                 return null;
             }
         });
+
+        logService.log(LogService.LOG_INFO, "Finished rebuild of Analytics overdue states for account " + accountId);
     }
 
     private void updateInTransaction(final Collection<BusinessOverdueStatusModelDao> businessOverdueStatuses,

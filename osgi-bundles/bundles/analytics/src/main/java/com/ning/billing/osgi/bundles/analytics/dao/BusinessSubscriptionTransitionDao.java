@@ -19,6 +19,7 @@ package com.ning.billing.osgi.bundles.analytics.dao;
 import java.util.Collection;
 import java.util.UUID;
 
+import org.osgi.service.log.LogService;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
 
@@ -46,15 +47,17 @@ public class BusinessSubscriptionTransitionDao extends BusinessAnalyticsDaoBase 
                                              final OSGIKillbillAPI osgiKillbillAPI,
                                              final OSGIKillbillDataSource osgiKillbillDataSource,
                                              final BusinessAccountDao businessAccountDao) {
-        super(osgiKillbillDataSource);
+        super(logService, osgiKillbillDataSource);
         this.businessAccountDao = businessAccountDao;
-        this.businessBundleSummaryDao = new BusinessBundleSummaryDao(osgiKillbillDataSource);
+        this.businessBundleSummaryDao = new BusinessBundleSummaryDao(logService, osgiKillbillDataSource);
         bacFactory = new BusinessAccountFactory(logService, osgiKillbillAPI);
         bbsFactory = new BusinessBundleSummaryFactory(logService, osgiKillbillAPI);
         bstFactory = new BusinessSubscriptionTransitionFactory(logService, osgiKillbillAPI);
     }
 
     public void update(final UUID accountId, final CallContext context) throws AnalyticsRefreshException {
+        logService.log(LogService.LOG_INFO, "Starting rebuild of Analytics subscriptions for account " + accountId);
+
         // Recompute the account record
         final BusinessAccountModelDao bac = bacFactory.createBusinessAccount(accountId, context);
 
@@ -77,6 +80,8 @@ public class BusinessSubscriptionTransitionDao extends BusinessAnalyticsDaoBase 
                 return null;
             }
         });
+
+        logService.log(LogService.LOG_INFO, "Finished rebuild of Analytics subscriptions for account " + accountId);
     }
 
     private void updateInTransaction(final BusinessAccountModelDao bac,

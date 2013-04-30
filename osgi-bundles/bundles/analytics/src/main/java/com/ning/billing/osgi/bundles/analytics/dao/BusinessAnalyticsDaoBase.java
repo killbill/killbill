@@ -19,13 +19,16 @@ package com.ning.billing.osgi.bundles.analytics.dao;
 import org.skife.jdbi.v2.DBI;
 
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillDataSource;
+import com.ning.killbill.osgi.libs.killbill.OSGIKillbillLogService;
 
 public class BusinessAnalyticsDaoBase {
 
+    protected final OSGIKillbillLogService logService;
     protected final BusinessAnalyticsSqlDao sqlDao;
 
-    public BusinessAnalyticsDaoBase(final OSGIKillbillDataSource osgiKillbillDataSource) {
+    public BusinessAnalyticsDaoBase(final OSGIKillbillLogService logService, final OSGIKillbillDataSource osgiKillbillDataSource) {
         final DBI dbi = BusinessDBIProvider.get(osgiKillbillDataSource.getDataSource());
         sqlDao = dbi.onDemand(BusinessAnalyticsSqlDao.class);
+        this.logService = logService;
     }
 }

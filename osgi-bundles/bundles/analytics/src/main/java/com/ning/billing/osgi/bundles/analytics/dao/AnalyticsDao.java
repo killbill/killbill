@@ -44,6 +44,7 @@ import com.ning.billing.util.api.RecordIdApi;
 import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillAPI;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillDataSource;
+import com.ning.killbill.osgi.libs.killbill.OSGIKillbillLogService;
 
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
@@ -54,9 +55,10 @@ public class AnalyticsDao extends BusinessAnalyticsDaoBase {
 
     private final OSGIKillbillAPI osgiKillbillAPI;
 
-    public AnalyticsDao(final OSGIKillbillAPI osgiKillbillAPI,
+    public AnalyticsDao(final OSGIKillbillLogService logService,
+                        final OSGIKillbillAPI osgiKillbillAPI,
                         final OSGIKillbillDataSource osgiKillbillDataSource) {
-        super(osgiKillbillDataSource);
+        super(logService, osgiKillbillDataSource);
         this.osgiKillbillAPI = osgiKillbillAPI;
     }
 
