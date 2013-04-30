@@ -21,6 +21,12 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletionService;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.Executors;
 
 import javax.annotation.Nullable;
 
@@ -59,9 +65,12 @@ import static com.ning.billing.osgi.bundles.analytics.utils.BusinessInvoiceUtils
 
 public class BusinessInvoiceFactory extends BusinessFactoryBase {
 
+    private final Executor executor;
+
     public BusinessInvoiceFactory(final OSGIKillbillLogService logService,
                                   final OSGIKillbillAPI osgiKillbillAPI) {
         super(logService, osgiKillbillAPI);
+        executor = Executors.newFixedThreadPool(20);
     }
 
     /**
@@ -93,26 +102,33 @@ public class BusinessInvoiceFactory extends BusinessFactoryBase {
         }
 
         // Create the business invoice items
+        final CompletionService<BusinessInvoiceItemBaseModelDao> completionService = new ExecutorCompletionService<BusinessInvoiceItemBaseModelDao>(executor);
         final Multimap<UUID, BusinessInvoiceItemBaseModelDao> businessInvoiceItemsForInvoiceId = ArrayListMultimap.<UUID, BusinessInvoiceItemBaseModelDao>create();
         for (final InvoiceItem invoiceItem : allInvoiceItems.values()) {
-            final Invoice invoice = invoiceIdToInvoiceMappings.get(invoiceItem.getInvoiceId());
-            final Collection<InvoiceItem> otherInvoiceItems = Collections2.filter(allInvoiceItems.values(),
-                                                                                  new Predicate<InvoiceItem>() {
-                                                                                      @Override
-                                                                                      public boolean apply(final InvoiceItem input) {
-                                                                                          return input.getId() != null && !input.getId().equals(invoiceItem.getId());
-                                                                                      }
-                                                                                  });
-            final BusinessInvoiceItemBaseModelDao businessInvoiceItem = createBusinessInvoiceItem(account,
-                                                                                                  invoice,
-                                                                                                  invoiceItem,
-                                                                                                  otherInvoiceItems,
-                                                                                                  accountRecordId,
-                                                                                                  tenantRecordId,
-                                                                                                  reportGroup,
-                                                                                                  context);
-            if (businessInvoiceItem != null) {
-                businessInvoiceItemsForInvoiceId.get(invoice.getId()).add(businessInvoiceItem);
+            completionService.submit(new Callable<BusinessInvoiceItemBaseModelDao>() {
+                @Override
+                public BusinessInvoiceItemBaseModelDao call() throws Exception {
+                    return createBusinessInvoiceItem(invoiceItem,
+                                                     allInvoiceItems,
+                                                     invoiceIdToInvoiceMappings,
+                                                     account,
+                                                     accountRecordId,
+                                                     tenantRecordId,
+                                                     reportGroup,
+                                                     context);
+                }
+            });
+        }
+        for (int i = 0; i < allInvoiceItems.values().size(); ++i) {
+            try {
+                final BusinessInvoiceItemBaseModelDao businessInvoiceItemModelDao = completionService.take().get();
+                if (businessInvoiceItemModelDao != null) {
+                    businessInvoiceItemsForInvoiceId.get(businessInvoiceItemModelDao.getInvoiceId()).add(businessInvoiceItemModelDao);
+                }
+            } catch (InterruptedException e) {
+                throw new AnalyticsRefreshException(e);
+            } catch (ExecutionException e) {
+                throw new AnalyticsRefreshException(e);
             }
         }
 
@@ -134,6 +150,32 @@ public class BusinessInvoiceFactory extends BusinessFactoryBase {
         }
 
         return businessRecords;
+    }
+
+    private BusinessInvoiceItemBaseModelDao createBusinessInvoiceItem(final InvoiceItem invoiceItem,
+                                                                      final Multimap<UUID, InvoiceItem> allInvoiceItems,
+                                                                      final Map<UUID, Invoice> invoiceIdToInvoiceMappings,
+                                                                      final Account account,
+                                                                      final Long accountRecordId,
+                                                                      final Long tenantRecordId,
+                                                                      final ReportGroup reportGroup,
+                                                                      final CallContext context) throws AnalyticsRefreshException {
+        final Invoice invoice = invoiceIdToInvoiceMappings.get(invoiceItem.getInvoiceId());
+        final Collection<InvoiceItem> otherInvoiceItems = Collections2.filter(allInvoiceItems.values(),
+                                                                              new Predicate<InvoiceItem>() {
+                                                                                  @Override
+                                                                                  public boolean apply(final InvoiceItem input) {
+                                                                                      return input.getId() != null && !input.getId().equals(invoiceItem.getId());
+                                                                                  }
+                                                                              });
+        return createBusinessInvoiceItem(account,
+                                         invoice,
+                                         invoiceItem,
+                                         otherInvoiceItems,
+                                         accountRecordId,
+                                         tenantRecordId,
+                                         reportGroup,
+                                         context);
     }
 
     private BusinessInvoiceModelDao createBusinessInvoice(final Account account,

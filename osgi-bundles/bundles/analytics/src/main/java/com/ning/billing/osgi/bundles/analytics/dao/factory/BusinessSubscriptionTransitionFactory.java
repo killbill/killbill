@@ -20,6 +20,12 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletionService;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.Executors;
 
 import javax.annotation.Nullable;
 
@@ -39,45 +45,82 @@ import com.ning.killbill.osgi.libs.killbill.OSGIKillbillLogService;
 
 public class BusinessSubscriptionTransitionFactory extends BusinessFactoryBase {
 
+    private final Executor executor;
+
     public BusinessSubscriptionTransitionFactory(final OSGIKillbillLogService logService,
                                                  final OSGIKillbillAPI osgiKillbillAPI) {
         super(logService, osgiKillbillAPI);
+        executor = Executors.newFixedThreadPool(20);
     }
 
     public Collection<BusinessSubscriptionTransitionModelDao> createBusinessSubscriptionTransitions(final UUID accountId,
                                                                                                     final Long accountRecordId,
                                                                                                     final Long tenantRecordId,
                                                                                                     final CallContext context) throws AnalyticsRefreshException {
+        // We build bsts for each subscription in parallel - we don't care about the overall ordering but we do care about ordering for
+        // a given subscription (we'd like the generated record ids to be sequential).
+        final CompletionService<Collection<BusinessSubscriptionTransitionModelDao>> completionService = new ExecutorCompletionService<Collection<BusinessSubscriptionTransitionModelDao>>(executor);
+
         final Account account = getAccount(accountId, context);
         final ReportGroup reportGroup = getReportGroup(account.getId(), context);
 
-        final Collection<BusinessSubscriptionTransitionModelDao> bsts = new LinkedList<BusinessSubscriptionTransitionModelDao>();
-
+        int nbSubscriptions = 0;
         final List<SubscriptionBundle> bundles = getSubscriptionBundlesForAccount(account.getId(), context);
         for (final SubscriptionBundle bundle : bundles) {
             final Collection<Subscription> subscriptions = getSubscriptionsForBundle(bundle.getId(), context);
+            nbSubscriptions += subscriptions.size();
+
             for (final Subscription subscription : subscriptions) {
-                final List<SubscriptionTransition> transitions = subscription.getAllTransitions();
-
-                BusinessSubscription prevNextSubscription = null;
-
-                // Ordered for us by entitlement
-                for (final SubscriptionTransition transition : transitions) {
-                    final BusinessSubscription nextSubscription = getBusinessSubscriptionFromTransition(account, transition);
-                    final BusinessSubscriptionTransitionModelDao bst = createBusinessSubscriptionTransition(account,
-                                                                                                            accountRecordId,
-                                                                                                            bundle,
-                                                                                                            transition,
-                                                                                                            prevNextSubscription,
-                                                                                                            nextSubscription,
-                                                                                                            tenantRecordId,
-                                                                                                            reportGroup,
-                                                                                                            context);
-                    if (bst != null) {
-                        bsts.add(bst);
-                        prevNextSubscription = nextSubscription;
+                completionService.submit(new Callable<Collection<BusinessSubscriptionTransitionModelDao>>() {
+                    @Override
+                    public Collection<BusinessSubscriptionTransitionModelDao> call() throws Exception {
+                        return buildTransitionsForSubscription(account, bundle, subscription, accountRecordId, tenantRecordId, reportGroup, context);
                     }
-                }
+                });
+            }
+        }
+
+        final Collection<BusinessSubscriptionTransitionModelDao> bsts = new LinkedList<BusinessSubscriptionTransitionModelDao>();
+        for (int i = 0; i < nbSubscriptions; ++i) {
+            try {
+                bsts.addAll(completionService.take().get());
+            } catch (InterruptedException e) {
+                throw new AnalyticsRefreshException(e);
+            } catch (ExecutionException e) {
+                throw new AnalyticsRefreshException(e);
+            }
+        }
+        return bsts;
+    }
+
+    private Collection<BusinessSubscriptionTransitionModelDao> buildTransitionsForSubscription(final Account account,
+                                                                                               final SubscriptionBundle bundle,
+                                                                                               final Subscription subscription,
+                                                                                               final Long accountRecordId,
+                                                                                               final Long tenantRecordId,
+                                                                                               @Nullable final ReportGroup reportGroup,
+                                                                                               final CallContext context) throws AnalyticsRefreshException {
+        final Collection<BusinessSubscriptionTransitionModelDao> bsts = new LinkedList<BusinessSubscriptionTransitionModelDao>();
+
+        final List<SubscriptionTransition> transitions = subscription.getAllTransitions();
+
+        BusinessSubscription prevNextSubscription = null;
+
+        // Ordered for us by entitlement
+        for (final SubscriptionTransition transition : transitions) {
+            final BusinessSubscription nextSubscription = getBusinessSubscriptionFromTransition(account, transition);
+            final BusinessSubscriptionTransitionModelDao bst = createBusinessSubscriptionTransition(account,
+                                                                                                    accountRecordId,
+                                                                                                    bundle,
+                                                                                                    transition,
+                                                                                                    prevNextSubscription,
+                                                                                                    nextSubscription,
+                                                                                                    tenantRecordId,
+                                                                                                    reportGroup,
+                                                                                                    context);
+            if (bst != null) {
+                bsts.add(bst);
+                prevNextSubscription = nextSubscription;
             }
         }
 

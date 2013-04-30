@@ -49,6 +49,7 @@ public class BusinessTagFactory extends BusinessFactoryBase {
         final Collection<Tag> tags = getTagsForAccount(account.getId(), context);
 
         final Collection<BusinessTagModelDao> tagModelDaos = new LinkedList<BusinessTagModelDao>();
+        // We process tags sequentially: in practice, an account will be associated with a dozen tags at most
         for (final Tag tag : tags) {
             final Long tagRecordId = getTagRecordId(tag.getId(), context);
             final TagDefinition tagDefinition = getTagDefinition(tag.getTagDefinitionId(), context);

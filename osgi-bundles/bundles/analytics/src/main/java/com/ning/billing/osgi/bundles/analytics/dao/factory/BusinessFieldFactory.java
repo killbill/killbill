@@ -48,6 +48,7 @@ public class BusinessFieldFactory extends BusinessFactoryBase {
         final Collection<CustomField> fields = getFieldsForAccount(account.getId(), context);
 
         final Collection<BusinessFieldModelDao> fieldModelDaos = new LinkedList<BusinessFieldModelDao>();
+        // We process custom fields sequentially: in practice, an account will be associated with a dozen fields at most
         for (final CustomField field : fields) {
             final Long customFieldRecordId = getFieldRecordId(field.getId(), context);
             final AuditLog creationAuditLog = getFieldCreationAuditLog(field.getId(), context);
