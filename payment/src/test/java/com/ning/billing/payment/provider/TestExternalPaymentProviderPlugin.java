@@ -57,8 +57,6 @@ public class TestExternalPaymentProviderPlugin extends PaymentTestSuiteNoDB {
         final PaymentInfoPlugin paymentInfoPlugin = plugin.processPayment(accountId, paymentId, paymentMethodId, amount, Currency.BRL, callContext);
 
         Assert.assertEquals(paymentInfoPlugin.getAmount(), amount);
-        Assert.assertEquals(Seconds.secondsBetween(paymentInfoPlugin.getCreatedDate(), clock.getUTCNow()).getSeconds(), 0);
-        Assert.assertEquals(Seconds.secondsBetween(paymentInfoPlugin.getEffectiveDate(), clock.getUTCNow()).getSeconds(), 0);
         Assert.assertNull(paymentInfoPlugin.getGatewayError());
         Assert.assertNull(paymentInfoPlugin.getGatewayErrorCode());
         Assert.assertEquals(paymentInfoPlugin.getStatus(), PaymentPluginStatus.PROCESSED);

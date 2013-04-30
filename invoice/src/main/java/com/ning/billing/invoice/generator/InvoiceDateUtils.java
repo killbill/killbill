@@ -33,19 +33,39 @@ public class InvoiceDateUtils {
     private static final int ROUNDING_METHOD = InvoicingConfiguration.getRoundingMode();
     private static final int NUMBER_OF_DECIMALS = InvoicingConfiguration.getNumberOfDecimals();
 
-    public static BigDecimal calculateProRationBeforeFirstBillingPeriod(final LocalDate startDate, final LocalDate nextBillingCycleDate,
-                                                                        final BillingPeriod billingPeriod) {
-        final LocalDate previousBillingCycleDate = nextBillingCycleDate.plusMonths(-billingPeriod.getNumberOfMonths());
 
+    /**
+     *
+     * Called internally to calculate proration or when we recalculate approximate repair amount
+     *
+     * @param startDate                 start date of the prorated interval
+     * @param endDate                   end date of the prorated interval
+     * @param previousBillingCycleDate  start date of the period
+     * @param nextBillingCycleDate      end date of the period
+     * @return
+     */
+    public static BigDecimal calculateProrationBetweenDates(final LocalDate startDate, final LocalDate endDate, final LocalDate previousBillingCycleDate, final LocalDate nextBillingCycleDate) {
         final int daysBetween = Days.daysBetween(previousBillingCycleDate, nextBillingCycleDate).getDays();
+        return calculateProrationBetweenDates(startDate, endDate, daysBetween);
+    }
+
+    public static BigDecimal calculateProrationBetweenDates(final LocalDate startDate, final LocalDate endDate, int daysBetween) {
         if (daysBetween <= 0) {
             return BigDecimal.ZERO;
         }
 
         final BigDecimal daysInPeriod = new BigDecimal(daysBetween);
-        final BigDecimal days = new BigDecimal(Days.daysBetween(startDate, nextBillingCycleDate).getDays());
+        final BigDecimal days = new BigDecimal(Days.daysBetween(startDate, endDate).getDays());
 
         return days.divide(daysInPeriod, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+    }
+
+
+    public static BigDecimal calculateProRationBeforeFirstBillingPeriod(final LocalDate startDate, final LocalDate nextBillingCycleDate,
+                                                                        final BillingPeriod billingPeriod) {
+        final LocalDate previousBillingCycleDate = nextBillingCycleDate.plusMonths(-billingPeriod.getNumberOfMonths());
+
+        return calculateProrationBetweenDates(startDate, nextBillingCycleDate, previousBillingCycleDate, nextBillingCycleDate);
     }
 
     public static int calculateNumberOfWholeBillingPeriods(final LocalDate startDate, final LocalDate endDate, final BillingPeriod billingPeriod) {
@@ -129,15 +149,12 @@ public class InvoiceDateUtils {
         }
     }
 
+
     public static BigDecimal calculateProRationAfterLastBillingCycleDate(final LocalDate endDate, final LocalDate previousBillThroughDate,
                                                                          final BillingPeriod billingPeriod) {
         // Note: assumption is that previousBillThroughDate is correctly aligned with the billing cycle day
         final LocalDate nextBillThroughDate = previousBillThroughDate.plusMonths(billingPeriod.getNumberOfMonths());
-        final BigDecimal daysInPeriod = new BigDecimal(Days.daysBetween(previousBillThroughDate, nextBillThroughDate).getDays());
-
-        final BigDecimal days = new BigDecimal(Days.daysBetween(previousBillThroughDate, endDate).getDays());
-
-        return days.divide(daysInPeriod, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+        return calculateProrationBetweenDates(previousBillThroughDate, endDate, previousBillThroughDate, nextBillThroughDate);
     }
 
  /*
