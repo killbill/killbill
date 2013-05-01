@@ -44,6 +44,7 @@ import com.ning.billing.util.api.RecordIdApi;
 import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillAPI;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillDataSource;
+import com.ning.killbill.osgi.libs.killbill.OSGIKillbillLogService;
 
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
@@ -54,9 +55,10 @@ public class AnalyticsDao extends BusinessAnalyticsDaoBase {
 
     private final OSGIKillbillAPI osgiKillbillAPI;
 
-    public AnalyticsDao(final OSGIKillbillAPI osgiKillbillAPI,
+    public AnalyticsDao(final OSGIKillbillLogService logService,
+                        final OSGIKillbillAPI osgiKillbillAPI,
                         final OSGIKillbillDataSource osgiKillbillDataSource) {
-        super(osgiKillbillDataSource);
+        super(logService, osgiKillbillDataSource);
         this.osgiKillbillAPI = osgiKillbillAPI;
     }
 
@@ -148,6 +150,7 @@ public class AnalyticsDao extends BusinessAnalyticsDaoBase {
 
         final List<BusinessFieldModelDao> businessFieldModelDaos = new LinkedList<BusinessFieldModelDao>();
         businessFieldModelDaos.addAll(sqlDao.getAccountFieldsByAccountRecordId(accountRecordId, tenantRecordId, context));
+        businessFieldModelDaos.addAll(sqlDao.getBundleFieldsByAccountRecordId(accountRecordId, tenantRecordId, context));
         businessFieldModelDaos.addAll(sqlDao.getInvoiceFieldsByAccountRecordId(accountRecordId, tenantRecordId, context));
         businessFieldModelDaos.addAll(sqlDao.getInvoicePaymentFieldsByAccountRecordId(accountRecordId, tenantRecordId, context));
 
@@ -165,6 +168,7 @@ public class AnalyticsDao extends BusinessAnalyticsDaoBase {
 
         final List<BusinessTagModelDao> businessTagModelDaos = new LinkedList<BusinessTagModelDao>();
         businessTagModelDaos.addAll(sqlDao.getAccountTagsByAccountRecordId(accountRecordId, tenantRecordId, context));
+        businessTagModelDaos.addAll(sqlDao.getBundleTagsByAccountRecordId(accountRecordId, tenantRecordId, context));
         businessTagModelDaos.addAll(sqlDao.getInvoiceTagsByAccountRecordId(accountRecordId, tenantRecordId, context));
         businessTagModelDaos.addAll(sqlDao.getInvoicePaymentTagsByAccountRecordId(accountRecordId, tenantRecordId, context));
 

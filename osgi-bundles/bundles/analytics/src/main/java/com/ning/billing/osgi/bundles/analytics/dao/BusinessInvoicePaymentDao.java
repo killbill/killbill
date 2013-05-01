@@ -20,11 +20,12 @@ import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessAccountModelDao
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoicePaymentBaseModelDao;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillDataSource;
+import com.ning.killbill.osgi.libs.killbill.OSGIKillbillLogService;
 
 public class BusinessInvoicePaymentDao extends BusinessAnalyticsDaoBase {
 
-    public BusinessInvoicePaymentDao(final OSGIKillbillDataSource osgiKillbillDataSource) {
-        super(osgiKillbillDataSource);
+    public BusinessInvoicePaymentDao(final OSGIKillbillLogService logService, final OSGIKillbillDataSource osgiKillbillDataSource) {
+        super(logService, osgiKillbillDataSource);
     }
 
     /**

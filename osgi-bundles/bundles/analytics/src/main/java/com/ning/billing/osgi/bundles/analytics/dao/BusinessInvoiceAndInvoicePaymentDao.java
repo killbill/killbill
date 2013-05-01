@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import org.osgi.service.log.LogService;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
 
@@ -61,16 +62,18 @@ public class BusinessInvoiceAndInvoicePaymentDao extends BusinessAnalyticsDaoBas
                                                final OSGIKillbillAPI osgiKillbillAPI,
                                                final OSGIKillbillDataSource osgiKillbillDataSource,
                                                final BusinessAccountDao businessAccountDao) {
-        super(osgiKillbillDataSource);
+        super(logService, osgiKillbillDataSource);
         this.businessAccountDao = businessAccountDao;
-        this.businessInvoiceDao = new BusinessInvoiceDao(osgiKillbillDataSource);
-        this.businessInvoicePaymentDao = new BusinessInvoicePaymentDao(osgiKillbillDataSource);
+        this.businessInvoiceDao = new BusinessInvoiceDao(logService, osgiKillbillDataSource);
+        this.businessInvoicePaymentDao = new BusinessInvoicePaymentDao(logService, osgiKillbillDataSource);
         bacFactory = new BusinessAccountFactory(logService, osgiKillbillAPI);
         binFactory = new BusinessInvoiceFactory(logService, osgiKillbillAPI);
         bipFactory = new BusinessInvoicePaymentFactory(logService, osgiKillbillAPI);
     }
 
     public void update(final UUID accountId, final CallContext context) throws AnalyticsRefreshException {
+        logService.log(LogService.LOG_INFO, "Starting rebuild of Analytics invoices and payments for account " + accountId);
+
         // Recompute the account record
         final BusinessAccountModelDao bac = bacFactory.createBusinessAccount(accountId, context);
 
@@ -88,6 +91,8 @@ public class BusinessInvoiceAndInvoicePaymentDao extends BusinessAnalyticsDaoBas
                 return null;
             }
         });
+
+        logService.log(LogService.LOG_INFO, "Finished rebuild of Analytics invoices and payments for account " + accountId);
     }
 
     @VisibleForTesting

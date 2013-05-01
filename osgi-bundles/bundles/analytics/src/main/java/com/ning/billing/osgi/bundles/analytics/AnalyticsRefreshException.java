@@ -16,14 +16,12 @@
 
 package com.ning.billing.osgi.bundles.analytics;
 
-import com.ning.billing.BillingExceptionBase;
-
 public class AnalyticsRefreshException extends Exception {
 
     public AnalyticsRefreshException() {
     }
 
-    public AnalyticsRefreshException(final BillingExceptionBase e) {
+    public AnalyticsRefreshException(final Exception e) {
         super(e);
     }
 

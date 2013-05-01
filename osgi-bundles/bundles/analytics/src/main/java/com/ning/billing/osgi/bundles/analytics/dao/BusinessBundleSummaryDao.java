@@ -21,11 +21,12 @@ import java.util.Collection;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessBundleSummaryModelDao;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillDataSource;
+import com.ning.killbill.osgi.libs.killbill.OSGIKillbillLogService;
 
 public class BusinessBundleSummaryDao extends BusinessAnalyticsDaoBase {
 
-    public BusinessBundleSummaryDao(final OSGIKillbillDataSource osgiKillbillDataSource) {
-        super(osgiKillbillDataSource);
+    public BusinessBundleSummaryDao(final OSGIKillbillLogService logService, final OSGIKillbillDataSource osgiKillbillDataSource) {
+        super(logService, osgiKillbillDataSource);
     }
 
     public void updateInTransaction(final Collection<BusinessBundleSummaryModelDao> bbss,

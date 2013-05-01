@@ -18,6 +18,7 @@ package com.ning.billing.osgi.bundles.analytics.dao;
 
 import java.util.UUID;
 
+import org.osgi.service.log.LogService;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
 
@@ -36,11 +37,13 @@ public class BusinessAccountDao extends BusinessAnalyticsDaoBase {
     public BusinessAccountDao(final OSGIKillbillLogService logService,
                               final OSGIKillbillAPI osgiKillbillAPI,
                               final OSGIKillbillDataSource osgiKillbillDataSource) {
-        super(osgiKillbillDataSource);
+        super(logService, osgiKillbillDataSource);
         bacFactory = new BusinessAccountFactory(logService, osgiKillbillAPI);
     }
 
     public void update(final UUID accountId, final CallContext context) throws AnalyticsRefreshException {
+        logService.log(LogService.LOG_INFO, "Starting rebuild of Analytics account for account " + accountId);
+
         // Recompute the account record
         final BusinessAccountModelDao bac = bacFactory.createBusinessAccount(accountId, context);
 
@@ -51,6 +54,8 @@ public class BusinessAccountDao extends BusinessAnalyticsDaoBase {
                 return null;
             }
         });
+
+        logService.log(LogService.LOG_INFO, "Finished rebuild of Analytics account for account " + accountId);
     }
 
     // Note: computing the BusinessAccountModelDao object is fairly expensive, hence should be done outside of the transaction

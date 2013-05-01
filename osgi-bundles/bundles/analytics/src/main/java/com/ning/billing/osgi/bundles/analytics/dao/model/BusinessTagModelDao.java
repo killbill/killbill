@@ -31,10 +31,11 @@ import com.ning.billing.util.tag.TagDefinition;
 public abstract class BusinessTagModelDao extends BusinessModelDaoBase {
 
     protected static final String ACCOUNT_TAGS_TABLE_NAME = "bac_tags";
+    protected static final String BUNDLE_TAGS_TABLE_NAME = "bbu_tags";
     protected static final String INVOICE_PAYMENT_TAGS_TABLE_NAME = "bip_tags";
     protected static final String INVOICE_TAGS_TABLE_NAME = "bin_tags";
 
-    public static final String[] ALL_TAGS_TABLE_NAMES = new String[]{ACCOUNT_TAGS_TABLE_NAME, INVOICE_PAYMENT_TAGS_TABLE_NAME, INVOICE_TAGS_TABLE_NAME};
+    public static final String[] ALL_TAGS_TABLE_NAMES = new String[]{ACCOUNT_TAGS_TABLE_NAME, BUNDLE_TAGS_TABLE_NAME, INVOICE_PAYMENT_TAGS_TABLE_NAME, INVOICE_TAGS_TABLE_NAME};
 
     private Long tagRecordId;
     private String name;
@@ -56,6 +57,15 @@ public abstract class BusinessTagModelDao extends BusinessModelDaoBase {
                                                   creationAuditLog,
                                                   tenantRecordId,
                                                   reportGroup);
+        } else if (ObjectType.BUNDLE.equals(tag.getObjectType())) {
+            return new BusinessBundleTagModelDao(account,
+                                                 accountRecordId,
+                                                 tag,
+                                                 tagRecordId,
+                                                 tagDefinition,
+                                                 creationAuditLog,
+                                                 tenantRecordId,
+                                                 reportGroup);
         } else if (ObjectType.INVOICE_PAYMENT.equals(tag.getObjectType())) {
             return new BusinessInvoicePaymentTagModelDao(account,
                                                          accountRecordId,

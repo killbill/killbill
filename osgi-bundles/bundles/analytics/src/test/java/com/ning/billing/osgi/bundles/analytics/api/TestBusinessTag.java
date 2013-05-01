@@ -22,6 +22,7 @@ import org.testng.annotations.Test;
 import com.ning.billing.ObjectType;
 import com.ning.billing.osgi.bundles.analytics.AnalyticsTestSuiteNoDB;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessAccountTagModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessBundleTagModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoicePaymentTagModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceTagModelDao;
 
@@ -40,6 +41,21 @@ public class TestBusinessTag extends AnalyticsTestSuiteNoDB {
         final BusinessTag businessTag = BusinessTag.create(businessAccountTagModelDao);
         verifyBusinessTag(businessTag);
         Assert.assertEquals(businessTag.getObjectType(), ObjectType.ACCOUNT);
+    }
+
+    @Test(groups = "fast")
+    public void testConstructorBundle() throws Exception {
+        final BusinessBundleTagModelDao businessBundleTagModelDao = new BusinessBundleTagModelDao(account,
+                                                                                                  accountRecordId,
+                                                                                                  tag,
+                                                                                                  tagRecordId,
+                                                                                                  tagDefinition,
+                                                                                                  auditLog,
+                                                                                                  tenantRecordId,
+                                                                                                  reportGroup);
+        final BusinessTag businessTag = BusinessTag.create(businessBundleTagModelDao);
+        verifyBusinessTag(businessTag);
+        Assert.assertEquals(businessTag.getObjectType(), ObjectType.BUNDLE);
     }
 
     @Test(groups = "fast")

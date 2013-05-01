@@ -22,6 +22,7 @@ import org.testng.annotations.Test;
 import com.ning.billing.ObjectType;
 import com.ning.billing.osgi.bundles.analytics.AnalyticsTestSuiteNoDB;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessAccountFieldModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessBundleFieldModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceFieldModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoicePaymentFieldModelDao;
 
@@ -39,6 +40,20 @@ public class TestBusinessField extends AnalyticsTestSuiteNoDB {
         final BusinessField businessField = BusinessField.create(businessAccountFieldModelDao);
         verifyBusinessField(businessField);
         Assert.assertEquals(businessField.getObjectType(), ObjectType.ACCOUNT);
+    }
+
+    @Test(groups = "fast")
+    public void testConstructorBundle() throws Exception {
+        final BusinessBundleFieldModelDao businessBundleFieldModelDao = new BusinessBundleFieldModelDao(account,
+                                                                                                        accountRecordId,
+                                                                                                        customField,
+                                                                                                        fieldRecordId,
+                                                                                                        auditLog,
+                                                                                                        tenantRecordId,
+                                                                                                        reportGroup);
+        final BusinessField businessField = BusinessField.create(businessBundleFieldModelDao);
+        verifyBusinessField(businessField);
+        Assert.assertEquals(businessField.getObjectType(), ObjectType.BUNDLE);
     }
 
     @Test(groups = "fast")

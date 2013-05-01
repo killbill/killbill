@@ -18,6 +18,7 @@ package com.ning.billing.osgi.bundles.analytics.api;
 
 import com.ning.billing.ObjectType;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessAccountFieldModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessBundleFieldModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessFieldModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceFieldModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoicePaymentFieldModelDao;
@@ -45,6 +46,8 @@ public class BusinessField extends BusinessEntityBase {
     public static BusinessField create(final BusinessFieldModelDao businessFieldModelDao) {
         if (businessFieldModelDao instanceof BusinessAccountFieldModelDao) {
             return new BusinessField(ObjectType.ACCOUNT, businessFieldModelDao);
+        } else if (businessFieldModelDao instanceof BusinessBundleFieldModelDao) {
+            return new BusinessField(ObjectType.BUNDLE, businessFieldModelDao);
         } else if (businessFieldModelDao instanceof BusinessInvoiceFieldModelDao) {
             return new BusinessField(ObjectType.INVOICE, businessFieldModelDao);
         } else if (businessFieldModelDao instanceof BusinessInvoicePaymentFieldModelDao) {

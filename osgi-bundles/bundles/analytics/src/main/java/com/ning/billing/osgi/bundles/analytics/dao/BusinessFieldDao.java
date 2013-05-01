@@ -19,6 +19,7 @@ package com.ning.billing.osgi.bundles.analytics.dao;
 import java.util.Collection;
 import java.util.UUID;
 
+import org.osgi.service.log.LogService;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
 
@@ -37,11 +38,13 @@ public class BusinessFieldDao extends BusinessAnalyticsDaoBase {
     public BusinessFieldDao(final OSGIKillbillLogService logService,
                             final OSGIKillbillAPI osgiKillbillAPI,
                             final OSGIKillbillDataSource osgiKillbillDataSource) {
-        super(osgiKillbillDataSource);
+        super(logService, osgiKillbillDataSource);
         bFieldFactory = new BusinessFieldFactory(logService, osgiKillbillAPI);
     }
 
     public void update(final UUID accountId, final CallContext context) throws AnalyticsRefreshException {
+        logService.log(LogService.LOG_INFO, "Starting rebuild of Analytics custom fields for account " + accountId);
+
         final Collection<BusinessFieldModelDao> fieldModelDaos = bFieldFactory.createBusinessFields(accountId, context);
 
         sqlDao.inTransaction(new Transaction<Void, BusinessAnalyticsSqlDao>() {
@@ -51,6 +54,8 @@ public class BusinessFieldDao extends BusinessAnalyticsDaoBase {
                 return null;
             }
         });
+
+        logService.log(LogService.LOG_INFO, "Finished rebuild of Analytics custom fields for account " + accountId);
     }
 
     private void updateInTransaction(final Collection<BusinessFieldModelDao> fieldModelDaos,

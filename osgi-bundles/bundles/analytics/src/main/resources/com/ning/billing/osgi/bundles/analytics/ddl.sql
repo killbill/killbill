@@ -616,6 +616,28 @@ create index bac_tags_account_id on bac_tags(account_id);
 create index bac_tags_account_record_id on bac_tags(account_record_id);
 create index bac_tags_tenant_account_record_id on bac_tags(tenant_record_id, account_record_id);
 
+drop table if exists bbu_tags;
+create table bbu_tags (
+  record_id int(11) unsigned not null auto_increment
+, tag_record_id int(11) unsigned default null
+, bundle_id char(36) default null
+, name varchar(50) default null
+, created_date datetime default null
+, created_by varchar(50) default null
+, created_reason_code varchar(255) default null
+, created_comments varchar(255) default null
+, account_id char(36) default null
+, account_name varchar(100) default null
+, account_external_key varchar(50) default null
+, account_record_id int(11) unsigned default null
+, tenant_record_id int(11) unsigned default null
+, report_group enum('default', 'test', 'partner') not null
+, primary key(record_id)
+);
+create index bbu_tags_account_id on bbu_tags(account_id);
+create index bbu_tags_account_record_id on bbu_tags(account_record_id);
+create index bbu_tags_tenant_account_record_id on bbu_tags(tenant_record_id, account_record_id);
+
 drop table if exists bin_tags;
 create table bin_tags (
   record_id int(11) unsigned not null auto_increment
@@ -681,6 +703,29 @@ create table bac_fields (
 create index bac_fields_account_id on bac_fields(account_id);
 create index bac_fields_account_record_id on bac_fields(account_record_id);
 create index bac_fields_tenant_account_record_id on bac_fields(tenant_record_id, account_record_id);
+
+drop table if exists bbu_fields;
+create table bbu_fields (
+  record_id int(11) unsigned not null auto_increment
+, custom_field_record_id int(11) unsigned default null
+, bundle_id char(36) default null
+, name varchar(50) default null
+, value varchar(255) default null
+, created_date datetime default null
+, created_by varchar(50) default null
+, created_reason_code varchar(255) default null
+, created_comments varchar(255) default null
+, account_id char(36) default null
+, account_name varchar(100) default null
+, account_external_key varchar(50) default null
+, account_record_id int(11) unsigned default null
+, tenant_record_id int(11) unsigned default null
+, report_group enum('default', 'test', 'partner') not null
+, primary key(record_id)
+);
+create index bbu_fields_account_id on bbu_fields(account_id);
+create index bbu_fields_account_record_id on bbu_fields(account_record_id);
+create index bbu_fields_tenant_account_record_id on bbu_fields(tenant_record_id, account_record_id);
 
 drop table if exists bin_fields;
 create table bin_fields (

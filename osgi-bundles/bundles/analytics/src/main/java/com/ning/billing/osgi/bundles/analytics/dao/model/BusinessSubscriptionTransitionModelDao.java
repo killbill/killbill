@@ -192,6 +192,10 @@ public class BusinessSubscriptionTransitionModelDao extends BusinessModelDaoBase
         return SUBSCRIPTION_TABLE_NAME;
     }
 
+    public void setNextEndDate(final DateTime nextEndDate) {
+        this.nextEndDate = nextEndDate;
+    }
+
     public Long getSubscriptionEventRecordId() {
         return subscriptionEventRecordId;
     }

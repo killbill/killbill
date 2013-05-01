@@ -18,6 +18,7 @@ package com.ning.billing.osgi.bundles.analytics.api;
 
 import com.ning.billing.ObjectType;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessAccountTagModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessBundleTagModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoicePaymentTagModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceTagModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessTagModelDao;
@@ -43,6 +44,8 @@ public class BusinessTag extends BusinessEntityBase {
     public static BusinessTag create(final BusinessTagModelDao businessTagModelDao) {
         if (businessTagModelDao instanceof BusinessAccountTagModelDao) {
             return new BusinessTag(ObjectType.ACCOUNT, businessTagModelDao);
+        } else if (businessTagModelDao instanceof BusinessBundleTagModelDao) {
+            return new BusinessTag(ObjectType.BUNDLE, businessTagModelDao);
         } else if (businessTagModelDao instanceof BusinessInvoiceTagModelDao) {
             return new BusinessTag(ObjectType.INVOICE, businessTagModelDao);
         } else if (businessTagModelDao instanceof BusinessInvoicePaymentTagModelDao) {
