@@ -17,6 +17,7 @@
 package com.ning.billing.osgi.bundles.analytics.dao.factory;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -121,6 +122,18 @@ public class BusinessSubscriptionTransitionFactory extends BusinessFactoryBase {
             if (bst != null) {
                 bsts.add(bst);
                 prevNextSubscription = nextSubscription;
+            }
+        }
+
+        // We can now fix the next end date (the last next_end date will be set by the catalog by using the phase name)
+        final Iterator<BusinessSubscriptionTransitionModelDao> bstIterator = bsts.iterator();
+        if (bstIterator.hasNext()) {
+            BusinessSubscriptionTransitionModelDao prevBst = bstIterator.next();
+
+            while (bstIterator.hasNext()) {
+                final BusinessSubscriptionTransitionModelDao nextBst = bstIterator.next();
+                prevBst.setNextEndDate(nextBst.getNextStartDate());
+                prevBst = nextBst;
             }
         }
 
