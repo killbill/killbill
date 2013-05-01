@@ -1014,6 +1014,38 @@ insert into bac_tags (
 );
 >>
 
+createBbuTags() ::= <<
+insert into bbu_tags (
+  tag_record_id
+, bundle_id
+, name
+, created_date
+, created_by
+, created_reason_code
+, created_comments
+, account_id
+, account_name
+, account_external_key
+, account_record_id
+, tenant_record_id
+, report_group
+) values (
+  :tagRecordId
+, :bundleId
+, :name
+, :createdDate
+, :createdBy
+, :createdReasonCode
+, :createdComments
+, :accountId
+, :accountName
+, :accountExternalKey
+, :accountRecordId
+, :tenantRecordId
+, :reportGroup
+);
+>>
+
 createBinTags() ::= <<
 insert into bin_tags (
   tag_record_id
@@ -1095,6 +1127,40 @@ insert into bac_fields (
 , report_group
 ) values (
   :customFieldRecordId
+, :name
+, :value
+, :createdDate
+, :createdBy
+, :createdReasonCode
+, :createdComments
+, :accountId
+, :accountName
+, :accountExternalKey
+, :accountRecordId
+, :tenantRecordId
+, :reportGroup
+);
+>>
+
+createBbuFields() ::= <<
+insert into bbu_fields (
+  custom_field_record_id
+, bundle_id
+, name
+, value
+, created_date
+, created_by
+, created_reason_code
+, created_comments
+, account_id
+, account_name
+, account_external_key
+, account_record_id
+, tenant_record_id
+, report_group
+) values (
+  :customFieldRecordId
+, :bundleId
 , :name
 , :value
 , :createdDate
@@ -1260,6 +1326,11 @@ getAccountFieldsByAccountRecordId() ::= <<
 ;
 >>
 
+getBundleFieldsByAccountRecordId() ::= <<
+<SELECT_STAR_FROM_TABLE("bbu_fields")>
+;
+>>
+
 getInvoiceFieldsByAccountRecordId() ::= <<
 <SELECT_STAR_FROM_TABLE("bin_fields")>
 ;
@@ -1272,6 +1343,11 @@ getInvoicePaymentFieldsByAccountRecordId() ::= <<
 
 getAccountTagsByAccountRecordId() ::= <<
 <SELECT_STAR_FROM_TABLE("bac_tags")>
+;
+>>
+
+getBundleTagsByAccountRecordId() ::= <<
+<SELECT_STAR_FROM_TABLE("bbu_tags")>
 ;
 >>
 

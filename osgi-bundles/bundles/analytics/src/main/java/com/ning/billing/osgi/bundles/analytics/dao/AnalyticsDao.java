@@ -150,6 +150,7 @@ public class AnalyticsDao extends BusinessAnalyticsDaoBase {
 
         final List<BusinessFieldModelDao> businessFieldModelDaos = new LinkedList<BusinessFieldModelDao>();
         businessFieldModelDaos.addAll(sqlDao.getAccountFieldsByAccountRecordId(accountRecordId, tenantRecordId, context));
+        businessFieldModelDaos.addAll(sqlDao.getBundleFieldsByAccountRecordId(accountRecordId, tenantRecordId, context));
         businessFieldModelDaos.addAll(sqlDao.getInvoiceFieldsByAccountRecordId(accountRecordId, tenantRecordId, context));
         businessFieldModelDaos.addAll(sqlDao.getInvoicePaymentFieldsByAccountRecordId(accountRecordId, tenantRecordId, context));
 
@@ -167,6 +168,7 @@ public class AnalyticsDao extends BusinessAnalyticsDaoBase {
 
         final List<BusinessTagModelDao> businessTagModelDaos = new LinkedList<BusinessTagModelDao>();
         businessTagModelDaos.addAll(sqlDao.getAccountTagsByAccountRecordId(accountRecordId, tenantRecordId, context));
+        businessTagModelDaos.addAll(sqlDao.getBundleTagsByAccountRecordId(accountRecordId, tenantRecordId, context));
         businessTagModelDaos.addAll(sqlDao.getInvoiceTagsByAccountRecordId(accountRecordId, tenantRecordId, context));
         businessTagModelDaos.addAll(sqlDao.getInvoicePaymentTagsByAccountRecordId(accountRecordId, tenantRecordId, context));
 

@@ -31,7 +31,9 @@ import com.ning.billing.osgi.bundles.analytics.AnalyticsTestSuiteWithEmbeddedDB;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessAccountFieldModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessAccountModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessAccountTagModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessBundleFieldModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessBundleSummaryModelDao;
+import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessBundleTagModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessFieldModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceFieldModelDao;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceItemBaseModelDao;
@@ -102,6 +104,28 @@ public class TestBusinessAnalyticsSqlDao extends AnalyticsTestSuiteWithEmbeddedD
         // Delete and verify it doesn't exist anymore
         analyticsSqlDao.deleteByAccountRecordId(businessFieldModelDao.getTableName(), accountRecordId, tenantRecordId, callContext);
         Assert.assertEquals(analyticsSqlDao.getAccountFieldsByAccountRecordId(accountRecordId, tenantRecordId, callContext).size(), 0);
+    }
+
+    @Test(groups = "slow")
+    public void testSqlDaoForBundleField() throws Exception {
+        final BusinessFieldModelDao businessFieldModelDao = new BusinessBundleFieldModelDao(account,
+                                                                                            accountRecordId,
+                                                                                            customField,
+                                                                                            fieldRecordId,
+                                                                                            auditLog,
+                                                                                            tenantRecordId,
+                                                                                            reportGroup);
+        // Check the record doesn't exist yet
+        Assert.assertEquals(analyticsSqlDao.getBundleFieldsByAccountRecordId(accountRecordId, tenantRecordId, callContext).size(), 0);
+
+        // Create and check we can retrieve it
+        analyticsSqlDao.create(businessFieldModelDao.getTableName(), businessFieldModelDao, callContext);
+        Assert.assertEquals(analyticsSqlDao.getBundleFieldsByAccountRecordId(accountRecordId, tenantRecordId, callContext).size(), 1);
+        Assert.assertEquals(analyticsSqlDao.getBundleFieldsByAccountRecordId(accountRecordId, tenantRecordId, callContext).get(0), businessFieldModelDao);
+
+        // Delete and verify it doesn't exist anymore
+        analyticsSqlDao.deleteByAccountRecordId(businessFieldModelDao.getTableName(), accountRecordId, tenantRecordId, callContext);
+        Assert.assertEquals(analyticsSqlDao.getBundleFieldsByAccountRecordId(accountRecordId, tenantRecordId, callContext).size(), 0);
     }
 
     @Test(groups = "slow")
@@ -374,6 +398,29 @@ public class TestBusinessAnalyticsSqlDao extends AnalyticsTestSuiteWithEmbeddedD
         // Delete and verify it doesn't exist anymore
         analyticsSqlDao.deleteByAccountRecordId(businessTagModelDao.getTableName(), accountRecordId, tenantRecordId, callContext);
         Assert.assertEquals(analyticsSqlDao.getAccountTagsByAccountRecordId(accountRecordId, tenantRecordId, callContext).size(), 0);
+    }
+
+    @Test(groups = "slow")
+    public void testSqlDaoForBundleTag() throws Exception {
+        final BusinessTagModelDao businessTagModelDao = new BusinessBundleTagModelDao(account,
+                                                                                      accountRecordId,
+                                                                                      tag,
+                                                                                      tagRecordId,
+                                                                                      tagDefinition,
+                                                                                      auditLog,
+                                                                                      tenantRecordId,
+                                                                                      reportGroup);
+        // Check the record doesn't exist yet
+        Assert.assertEquals(analyticsSqlDao.getBundleTagsByAccountRecordId(accountRecordId, tenantRecordId, callContext).size(), 0);
+
+        // Create and check we can retrieve it
+        analyticsSqlDao.create(businessTagModelDao.getTableName(), businessTagModelDao, callContext);
+        Assert.assertEquals(analyticsSqlDao.getBundleTagsByAccountRecordId(accountRecordId, tenantRecordId, callContext).size(), 1);
+        Assert.assertEquals(analyticsSqlDao.getBundleTagsByAccountRecordId(accountRecordId, tenantRecordId, callContext).get(0), businessTagModelDao);
+
+        // Delete and verify it doesn't exist anymore
+        analyticsSqlDao.deleteByAccountRecordId(businessTagModelDao.getTableName(), accountRecordId, tenantRecordId, callContext);
+        Assert.assertEquals(analyticsSqlDao.getBundleTagsByAccountRecordId(accountRecordId, tenantRecordId, callContext).size(), 0);
     }
 
     @Test(groups = "slow")

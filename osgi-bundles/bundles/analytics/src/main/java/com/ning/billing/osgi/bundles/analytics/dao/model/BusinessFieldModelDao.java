@@ -30,10 +30,11 @@ import com.ning.billing.util.customfield.CustomField;
 public abstract class BusinessFieldModelDao extends BusinessModelDaoBase {
 
     protected static final String ACCOUNT_FIELDS_TABLE_NAME = "bac_fields";
+    protected static final String BUNDLE_FIELDS_TABLE_NAME = "bbu_fields";
     protected static final String INVOICE_FIELDS_TABLE_NAME = "bin_fields";
     protected static final String INVOICE_PAYMENT_FIELDS_TABLE_NAME = "bip_fields";
 
-    public static final String[] ALL_FIELDS_TABLE_NAMES = new String[]{ACCOUNT_FIELDS_TABLE_NAME, INVOICE_FIELDS_TABLE_NAME, INVOICE_PAYMENT_FIELDS_TABLE_NAME};
+    public static final String[] ALL_FIELDS_TABLE_NAMES = new String[]{ACCOUNT_FIELDS_TABLE_NAME, BUNDLE_FIELDS_TABLE_NAME, INVOICE_FIELDS_TABLE_NAME, INVOICE_PAYMENT_FIELDS_TABLE_NAME};
 
     private Long customFieldRecordId;
     private String name;
@@ -54,6 +55,14 @@ public abstract class BusinessFieldModelDao extends BusinessModelDaoBase {
                                                     creationAuditLog,
                                                     tenantRecordId,
                                                     reportGroup);
+        } else if (ObjectType.BUNDLE.equals(customField.getObjectType())) {
+            return new BusinessBundleFieldModelDao(account,
+                                                   accountRecordId,
+                                                   customField,
+                                                   customFieldRecordId,
+                                                   creationAuditLog,
+                                                   tenantRecordId,
+                                                   reportGroup);
         } else if (ObjectType.INVOICE_PAYMENT.equals(customField.getObjectType())) {
             return new BusinessInvoiceFieldModelDao(account,
                                                     accountRecordId,
