@@ -46,19 +46,22 @@ import com.ning.killbill.osgi.libs.killbill.OSGIKillbillLogService;
 
 public class BusinessSubscriptionTransitionFactory extends BusinessFactoryBase {
 
+    private static final int NB_THREADS = 20;
+
     private final Executor executor;
 
     public BusinessSubscriptionTransitionFactory(final OSGIKillbillLogService logService,
                                                  final OSGIKillbillAPI osgiKillbillAPI) {
         super(logService, osgiKillbillAPI);
-        executor = Executors.newFixedThreadPool(20);
+        executor = Executors.newFixedThreadPool(NB_THREADS);
     }
 
     public Collection<BusinessSubscriptionTransitionModelDao> createBusinessSubscriptionTransitions(final UUID accountId,
                                                                                                     final Long accountRecordId,
                                                                                                     final Long tenantRecordId,
                                                                                                     final CallContext context) throws AnalyticsRefreshException {
-        // We build bsts for each subscription in parallel - we don't care about the overall ordering but we do care about ordering for
+        // We build bsts for each subscription in parallel as large accounts may have 50,000+ bundles
+        // We don't care about the overall ordering but we do care about ordering for
         // a given subscription (we'd like the generated record ids to be sequential).
         final CompletionService<Collection<BusinessSubscriptionTransitionModelDao>> completionService = new ExecutorCompletionService<Collection<BusinessSubscriptionTransitionModelDao>>(executor);
 

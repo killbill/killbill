@@ -65,12 +65,14 @@ import static com.ning.billing.osgi.bundles.analytics.utils.BusinessInvoiceUtils
 
 public class BusinessInvoiceFactory extends BusinessFactoryBase {
 
+    private static final int NB_THREADS = 20;
+
     private final Executor executor;
 
     public BusinessInvoiceFactory(final OSGIKillbillLogService logService,
                                   final OSGIKillbillAPI osgiKillbillAPI) {
         super(logService, osgiKillbillAPI);
-        executor = Executors.newFixedThreadPool(20);
+        executor = Executors.newFixedThreadPool(NB_THREADS);
     }
 
     /**
@@ -102,6 +104,7 @@ public class BusinessInvoiceFactory extends BusinessFactoryBase {
         }
 
         // Create the business invoice items
+        // We build them in parallel as invoice items are directly proportional to subscriptions (@see BusinessSubscriptionTransitionFactory)
         final CompletionService<BusinessInvoiceItemBaseModelDao> completionService = new ExecutorCompletionService<BusinessInvoiceItemBaseModelDao>(executor);
         final Multimap<UUID, BusinessInvoiceItemBaseModelDao> businessInvoiceItemsForInvoiceId = ArrayListMultimap.<UUID, BusinessInvoiceItemBaseModelDao>create();
         for (final InvoiceItem invoiceItem : allInvoiceItems.values()) {
