@@ -25,7 +25,8 @@ import com.ning.killbill.osgi.libs.killbill.OSGIKillbillLogService;
 
 public class BusinessBundleSummaryDao extends BusinessAnalyticsDaoBase {
 
-    public BusinessBundleSummaryDao(final OSGIKillbillLogService logService, final OSGIKillbillDataSource osgiKillbillDataSource) {
+    public BusinessBundleSummaryDao(final OSGIKillbillLogService logService,
+                                    final OSGIKillbillDataSource osgiKillbillDataSource) {
         super(logService, osgiKillbillDataSource);
     }
 

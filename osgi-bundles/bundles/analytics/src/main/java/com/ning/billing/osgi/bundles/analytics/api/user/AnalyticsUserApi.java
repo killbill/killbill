@@ -18,6 +18,7 @@ package com.ning.billing.osgi.bundles.analytics.api.user;
 
 import java.util.Collection;
 import java.util.UUID;
+import java.util.concurrent.Executor;
 
 import com.ning.billing.osgi.bundles.analytics.AnalyticsRefreshException;
 import com.ning.billing.osgi.bundles.analytics.api.BusinessAccount;
@@ -43,9 +44,10 @@ public class AnalyticsUserApi {
 
     public AnalyticsUserApi(final OSGIKillbillLogService logService,
                             final OSGIKillbillAPI osgiKillbillAPI,
-                            final OSGIKillbillDataSource osgiKillbillDataSource) {
+                            final OSGIKillbillDataSource osgiKillbillDataSource,
+                            final Executor executor) {
         this.analyticsDao = new AnalyticsDao(logService, osgiKillbillAPI, osgiKillbillDataSource);
-        this.allBusinessObjectsDao = new AllBusinessObjectsDao(logService, osgiKillbillAPI, osgiKillbillDataSource);
+        this.allBusinessObjectsDao = new AllBusinessObjectsDao(logService, osgiKillbillAPI, osgiKillbillDataSource, executor);
     }
 
     public BusinessSnapshot getBusinessSnapshot(final UUID accountId, final TenantContext context) {

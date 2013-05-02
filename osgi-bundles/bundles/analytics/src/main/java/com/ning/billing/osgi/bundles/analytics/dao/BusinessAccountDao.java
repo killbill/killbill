@@ -17,6 +17,7 @@
 package com.ning.billing.osgi.bundles.analytics.dao;
 
 import java.util.UUID;
+import java.util.concurrent.Executor;
 
 import org.osgi.service.log.LogService;
 import org.skife.jdbi.v2.Transaction;
@@ -36,9 +37,10 @@ public class BusinessAccountDao extends BusinessAnalyticsDaoBase {
 
     public BusinessAccountDao(final OSGIKillbillLogService logService,
                               final OSGIKillbillAPI osgiKillbillAPI,
-                              final OSGIKillbillDataSource osgiKillbillDataSource) {
+                              final OSGIKillbillDataSource osgiKillbillDataSource,
+                              final Executor executor) {
         super(logService, osgiKillbillDataSource);
-        bacFactory = new BusinessAccountFactory(logService, osgiKillbillAPI);
+        bacFactory = new BusinessAccountFactory(logService, osgiKillbillAPI, executor);
     }
 
     public void update(final UUID accountId, final CallContext context) throws AnalyticsRefreshException {

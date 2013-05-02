@@ -17,6 +17,7 @@
 package com.ning.billing.osgi.bundles.analytics;
 
 import java.util.Hashtable;
+import java.util.concurrent.Executor;
 
 import javax.servlet.Servlet;
 import javax.servlet.http.HttpServlet;
@@ -39,10 +40,12 @@ public class AnalyticsActivator extends KillbillActivatorBase {
     public void start(final BundleContext context) throws Exception {
         super.start(context);
 
-        analyticsListener = new AnalyticsListener(logService, killbillAPI, dataSource);
+        final Executor executor = BusinessExecutor.create(logService);
+
+        analyticsListener = new AnalyticsListener(logService, killbillAPI, dataSource, executor);
         dispatcher.registerEventHandler(analyticsListener);
 
-        final AnalyticsUserApi analyticsUserApi = new AnalyticsUserApi(logService, killbillAPI, dataSource);
+        final AnalyticsUserApi analyticsUserApi = new AnalyticsUserApi(logService, killbillAPI, dataSource, executor);
         final AnalyticsServlet analyticsServlet = new AnalyticsServlet(analyticsUserApi, logService);
         registerServlet(context, analyticsServlet);
     }

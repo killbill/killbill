@@ -26,7 +26,6 @@ import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorCompletionService;
-import java.util.concurrent.Executors;
 
 import javax.annotation.Nullable;
 
@@ -46,14 +45,13 @@ import com.ning.killbill.osgi.libs.killbill.OSGIKillbillLogService;
 
 public class BusinessSubscriptionTransitionFactory extends BusinessFactoryBase {
 
-    private static final int NB_THREADS = 20;
-
     private final Executor executor;
 
     public BusinessSubscriptionTransitionFactory(final OSGIKillbillLogService logService,
-                                                 final OSGIKillbillAPI osgiKillbillAPI) {
+                                                 final OSGIKillbillAPI osgiKillbillAPI,
+                                                 final Executor executor) {
         super(logService, osgiKillbillAPI);
-        executor = Executors.newFixedThreadPool(NB_THREADS);
+        this.executor = executor;
     }
 
     public Collection<BusinessSubscriptionTransitionModelDao> createBusinessSubscriptionTransitions(final UUID accountId,

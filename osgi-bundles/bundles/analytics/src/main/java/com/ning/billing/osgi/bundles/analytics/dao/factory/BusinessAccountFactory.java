@@ -20,6 +20,12 @@ import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletionService;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.catalog.api.ProductCategory;
@@ -37,9 +43,13 @@ import com.ning.killbill.osgi.libs.killbill.OSGIKillbillLogService;
 
 public class BusinessAccountFactory extends BusinessFactoryBase {
 
+    private final Executor executor;
+
     public BusinessAccountFactory(final OSGIKillbillLogService logService,
-                                  final OSGIKillbillAPI osgiKillbillAPI) {
+                                  final OSGIKillbillAPI osgiKillbillAPI,
+                                  final Executor executor) {
         super(logService, osgiKillbillAPI);
+        this.executor = executor;
     }
 
     public BusinessAccountModelDao createBusinessAccount(final UUID accountId,
@@ -72,15 +82,34 @@ public class BusinessAccountFactory extends BusinessFactoryBase {
             }
         }
 
+        // We fetch the subscriptions in parallel as these can be very large on a per account basis (@see BusinessSubscriptionTransitionFactory)
+        final CompletionService<Void> completionService = new ExecutorCompletionService<Void>(executor);
         final List<SubscriptionBundle> bundles = getSubscriptionBundlesForAccount(account.getId(), context);
-        int nbActiveBundles = 0;
+        final AtomicInteger nbActiveBundles = new AtomicInteger(0);
         for (final SubscriptionBundle bundle : bundles) {
-            final Collection<Subscription> subscriptionsForBundle = getSubscriptionsForBundle(bundle.getId(), context);
-            for (final Subscription subscription : subscriptionsForBundle) {
-                if (ProductCategory.BASE.equals(subscription.getCategory()) &&
-                    !(subscription.getEndDate() != null && !subscription.getEndDate().isAfterNow())) {
-                    nbActiveBundles++;
+            completionService.submit(new Callable<Void>() {
+                @Override
+                public Void call() throws Exception {
+                    final Collection<Subscription> subscriptionsForBundle = getSubscriptionsForBundle(bundle.getId(), context);
+                    for (final Subscription subscription : subscriptionsForBundle) {
+                        if (ProductCategory.BASE.equals(subscription.getCategory()) &&
+                            !(subscription.getEndDate() != null && !subscription.getEndDate().isAfterNow())) {
+                            nbActiveBundles.incrementAndGet();
+                            break;
+                        }
+                    }
+
+                    return null;
                 }
+            });
+        }
+        for (final SubscriptionBundle ignored : bundles) {
+            try {
+                completionService.take().get();
+            } catch (InterruptedException e) {
+                throw new AnalyticsRefreshException(e);
+            } catch (ExecutionException e) {
+                throw new AnalyticsRefreshException(e);
             }
         }
 
@@ -93,7 +122,7 @@ public class BusinessAccountFactory extends BusinessFactoryBase {
                                            accountBalance,
                                            lastInvoice,
                                            lastPayment,
-                                           nbActiveBundles,
+                                           nbActiveBundles.get(),
                                            creationAuditLog,
                                            tenantRecordId,
                                            reportGroup);

@@ -20,6 +20,11 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletionService;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorCompletionService;
 
 import org.joda.time.DateTime;
 
@@ -39,18 +44,40 @@ import com.google.common.collect.Lists;
 
 public class BusinessOverdueStatusFactory extends BusinessFactoryBase {
 
+    private final Executor executor;
+
     public BusinessOverdueStatusFactory(final OSGIKillbillLogService logService,
-                                        final OSGIKillbillAPI osgiKillbillAPI) {
+                                        final OSGIKillbillAPI osgiKillbillAPI,
+                                        final Executor executor) {
         super(logService, osgiKillbillAPI);
+        this.executor = executor;
     }
 
     public Collection<BusinessOverdueStatusModelDao> createBusinessOverdueStatuses(final UUID accountId,
                                                                                    final CallContext context) throws AnalyticsRefreshException {
+        // We fetch the bundles in parallel as these can be very large on a per account basis (@see BusinessSubscriptionTransitionFactory)
+        // We don't care about the overall ordering but we do care about ordering for
+        // a given bundle (we'd like the generated record ids to be sequential).
+        final CompletionService<Collection<BusinessOverdueStatusModelDao>> completionService = new ExecutorCompletionService<Collection<BusinessOverdueStatusModelDao>>(executor);
         final Collection<SubscriptionBundle> bundles = getSubscriptionBundlesForAccount(accountId, context);
         final Collection<BusinessOverdueStatusModelDao> businessOverdueStatuses = new LinkedList<BusinessOverdueStatusModelDao>();
         for (final SubscriptionBundle bundle : bundles) {
-            // Recompute all blocking states for that bundle
-            businessOverdueStatuses.addAll(createBusinessOverdueStatusesForBundle(accountId, bundle, context));
+            completionService.submit(new Callable<Collection<BusinessOverdueStatusModelDao>>() {
+                @Override
+                public Collection<BusinessOverdueStatusModelDao> call() throws Exception {
+                    // Recompute all blocking states for that bundle
+                    return createBusinessOverdueStatusesForBundle(accountId, bundle, context);
+                }
+            });
+        }
+        for (final SubscriptionBundle ignored : bundles) {
+            try {
+                businessOverdueStatuses.addAll(completionService.take().get());
+            } catch (InterruptedException e) {
+                throw new AnalyticsRefreshException(e);
+            } catch (ExecutionException e) {
+                throw new AnalyticsRefreshException(e);
+            }
         }
 
         return businessOverdueStatuses;

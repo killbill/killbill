@@ -17,6 +17,7 @@
 package com.ning.billing.osgi.bundles.analytics.dao;
 
 import java.util.UUID;
+import java.util.concurrent.Executor;
 
 import org.osgi.service.log.LogService;
 
@@ -38,13 +39,14 @@ public class AllBusinessObjectsDao {
 
     public AllBusinessObjectsDao(final OSGIKillbillLogService logService,
                                  final OSGIKillbillAPI osgiKillbillAPI,
-                                 final OSGIKillbillDataSource osgiKillbillDataSource) {
+                                 final OSGIKillbillDataSource osgiKillbillDataSource,
+                                 final Executor executor) {
         this.logService = logService;
 
-        final BusinessAccountDao bacDao = new BusinessAccountDao(logService, osgiKillbillAPI, osgiKillbillDataSource);
-        this.bstDao = new BusinessSubscriptionTransitionDao(logService, osgiKillbillAPI, osgiKillbillDataSource, bacDao);
-        this.binAndBipDao = new BusinessInvoiceAndInvoicePaymentDao(logService, osgiKillbillAPI, osgiKillbillDataSource, bacDao);
-        this.bosDao = new BusinessOverdueStatusDao(logService, osgiKillbillAPI, osgiKillbillDataSource);
+        final BusinessAccountDao bacDao = new BusinessAccountDao(logService, osgiKillbillAPI, osgiKillbillDataSource, executor);
+        this.bstDao = new BusinessSubscriptionTransitionDao(logService, osgiKillbillAPI, osgiKillbillDataSource, bacDao, executor);
+        this.binAndBipDao = new BusinessInvoiceAndInvoicePaymentDao(logService, osgiKillbillAPI, osgiKillbillDataSource, bacDao, executor);
+        this.bosDao = new BusinessOverdueStatusDao(logService, osgiKillbillAPI, osgiKillbillDataSource, executor);
         this.bFieldDao = new BusinessFieldDao(logService, osgiKillbillAPI, osgiKillbillDataSource);
         this.bTagDao = new BusinessTagDao(logService, osgiKillbillAPI, osgiKillbillDataSource);
     }

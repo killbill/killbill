@@ -22,6 +22,11 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletionService;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorCompletionService;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.catalog.api.ProductCategory;
@@ -42,9 +47,13 @@ import com.google.common.collect.Ordering;
 
 public class BusinessBundleSummaryFactory extends BusinessFactoryBase {
 
+    private final Executor executor;
+
     public BusinessBundleSummaryFactory(final OSGIKillbillLogService logService,
-                                        final OSGIKillbillAPI osgiKillbillAPI) {
+                                        final OSGIKillbillAPI osgiKillbillAPI,
+                                        final Executor executor) {
         super(logService, osgiKillbillAPI);
+        this.executor = executor;
     }
 
     public Collection<BusinessBundleSummaryModelDao> createBusinessBundleSummaries(final UUID accountId,
@@ -59,17 +68,33 @@ public class BusinessBundleSummaryFactory extends BusinessFactoryBase {
         final Map<UUID, BusinessSubscriptionTransitionModelDao> bstForBundle = new LinkedHashMap<UUID, BusinessSubscriptionTransitionModelDao>();
         filterBstsForBasePlans(bsts, rankForBundle, bstForBundle);
 
+        // We fetch the bundles in parallel as these can be very large on a per account basis (@see BusinessSubscriptionTransitionFactory)
+        final CompletionService<BusinessBundleSummaryModelDao> completionService = new ExecutorCompletionService<BusinessBundleSummaryModelDao>(executor);
         final Collection<BusinessBundleSummaryModelDao> bbss = new LinkedList<BusinessBundleSummaryModelDao>();
         for (final BusinessSubscriptionTransitionModelDao bst : bstForBundle.values()) {
-            final BusinessBundleSummaryModelDao bbs = buildBBS(account,
-                                                               accountRecordId,
-                                                               bst,
-                                                               rankForBundle.get(bst.getBundleId()),
-                                                               tenantRecordId,
-                                                               reportGroup,
-                                                               context);
-            bbss.add(bbs);
+            completionService.submit(new Callable<BusinessBundleSummaryModelDao>() {
+                @Override
+                public BusinessBundleSummaryModelDao call() throws Exception {
+                    return buildBBS(account,
+                                    accountRecordId,
+                                    bst,
+                                    rankForBundle.get(bst.getBundleId()),
+                                    tenantRecordId,
+                                    reportGroup,
+                                    context);
+                }
+            });
         }
+        for (final BusinessSubscriptionTransitionModelDao ignored : bstForBundle.values()) {
+            try {
+                bbss.add(completionService.take().get());
+            } catch (InterruptedException e) {
+                throw new AnalyticsRefreshException(e);
+            } catch (ExecutionException e) {
+                throw new AnalyticsRefreshException(e);
+            }
+        }
+
         return bbss;
     }
 
