@@ -306,6 +306,23 @@ order by <recordIdField("t.")> ASC
 ;
 >>
 
+getAuditLogsViaHistoryForTargetRecordId(historyTableName) ::= <<
+select
+  <auditTableFields("t.")>
+from <auditTableName()> t
+join (
+  select
+    <recordIdField("h.")> record_id
+  from <historyTableName> h
+  where <targetRecordIdField("h.")> = :targetRecordId
+  <AND_CHECK_TENANT("h.")>
+) history_record_ids on t.target_record_id = history_record_ids.record_id
+where t.table_name = :tableName
+<AND_CHECK_TENANT("t.")>
+order by <recordIdField("t.")> ASC
+;
+>>
+
 test() ::= <<
 select
 <allTableFields("t.")>

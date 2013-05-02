@@ -16,7 +16,6 @@
 
 package com.ning.billing.util.audit.dao;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -29,16 +28,19 @@ import com.ning.billing.util.audit.AuditLog;
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.dao.AuditSqlDao;
+import com.ning.billing.util.dao.NonEntitySqlDao;
 import com.ning.billing.util.dao.TableName;
 
 import com.google.common.collect.ImmutableList;
 
 public class DefaultAuditDao implements AuditDao {
 
+    private final NonEntitySqlDao nonEntitySqlDao;
     private final AuditSqlDao auditSqlDao;
 
     @Inject
     public DefaultAuditDao(final IDBI dbi) {
+        this.nonEntitySqlDao = dbi.onDemand(NonEntitySqlDao.class);
         this.auditSqlDao = dbi.onDemand(AuditSqlDao.class);
     }
 
@@ -52,8 +54,7 @@ public class DefaultAuditDao implements AuditDao {
     }
 
     private List<AuditLog> doGetAuditLogsForId(final TableName tableName, final UUID objectId, final AuditLevel auditLevel, final InternalTenantContext context) {
-        // Look at the table and gather all record_id for that objectId
-        final Long recordId = auditSqlDao.getRecordIdForTable(tableName.getTableName().toLowerCase(), objectId.toString(), context);
+        final Long recordId = nonEntitySqlDao.getRecordIdFromObject(objectId.toString(), tableName.getTableName());
         if (recordId == null) {
             return ImmutableList.<AuditLog>of();
         } else {
@@ -62,31 +63,31 @@ public class DefaultAuditDao implements AuditDao {
     }
 
     private List<AuditLog> doGetAuditLogsViaHistoryForId(final TableName tableName, final UUID objectId, final AuditLevel auditLevel, final InternalTenantContext context) {
-        final List<AuditLog> auditLogs = new ArrayList<AuditLog>();
-
-        Long targetRecordId = auditSqlDao.getRecordIdForTable(tableName.getTableName().toLowerCase(), objectId.toString(), context);
-
-        // Look at the history table and gather all the history_record_id for that objectId
-        final List<Long> recordIds = auditSqlDao.getHistoryRecordIdsForTable(tableName.getHistoryTableName().getTableName().toLowerCase(),
-                                                                             targetRecordId, context);
-        if (recordIds == null) {
-            return auditLogs;
-        } else {
-            for (final Long recordId : recordIds) {
-                auditLogs.addAll(getAuditLogsForRecordId(tableName.getHistoryTableName(), recordId, auditLevel, context));
-            }
-
-            return auditLogs;
+        final TableName historyTableName = tableName.getHistoryTableName();
+        if (historyTableName == null) {
+            throw new IllegalStateException("History table shouldn't be null for " + tableName);
         }
+
+        final Long targetRecordId = nonEntitySqlDao.getRecordIdFromObject(objectId.toString(), tableName.getTableName());
+        final List<AuditLog> allAuditLogs = auditSqlDao.getAuditLogsViaHistoryForTargetRecordId(historyTableName,
+                                                                                                historyTableName.getTableName().toLowerCase(),
+                                                                                                targetRecordId,
+                                                                                                context);
+        return buildAuditLogs(auditLevel, allAuditLogs);
     }
 
     private List<AuditLog> getAuditLogsForRecordId(final TableName tableName, final Long targetRecordId, final AuditLevel auditLevel, final InternalTenantContext context) {
         final List<AuditLog> allAuditLogs = auditSqlDao.getAuditLogsForTargetRecordId(tableName, targetRecordId, context);
+        return buildAuditLogs(auditLevel, allAuditLogs);
+    }
+
+    private List<AuditLog> buildAuditLogs(final AuditLevel auditLevel, final List<AuditLog> auditLogs) {
+        // TODO Do the filtering in the query
         if (AuditLevel.FULL.equals(auditLevel)) {
-            return allAuditLogs;
-        } else if (AuditLevel.MINIMAL.equals(auditLevel) && allAuditLogs.size() > 0) {
-            if (ChangeType.INSERT.equals(allAuditLogs.get(0).getChangeType())) {
-                return ImmutableList.<AuditLog>of(allAuditLogs.get(0));
+            return auditLogs;
+        } else if (AuditLevel.MINIMAL.equals(auditLevel) && auditLogs.size() > 0) {
+            if (ChangeType.INSERT.equals(auditLogs.get(0).getChangeType())) {
+                return ImmutableList.<AuditLog>of(auditLogs.get(0));
             } else {
                 // We may be coming here via the history code path - only a single mapped history record id
                 // will be for the initial INSERT
@@ -95,7 +96,7 @@ public class DefaultAuditDao implements AuditDao {
         } else if (AuditLevel.NONE.equals(auditLevel)) {
             return ImmutableList.<AuditLog>of();
         } else {
-            return allAuditLogs;
+            return auditLogs;
         }
     }
 }

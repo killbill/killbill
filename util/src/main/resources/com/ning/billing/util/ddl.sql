@@ -182,6 +182,7 @@ CREATE TABLE audit_log (
 CREATE INDEX audit_log_fetch_target_record_id ON audit_log(table_name, target_record_id);
 CREATE INDEX audit_log_user_name ON audit_log(created_by);
 CREATE INDEX audit_log_tenant_account_record_id ON audit_log(tenant_record_id, account_record_id);
+CREATE INDEX audit_log_via_history ON audit_log(target_record_id, table_name, tenant_record_id);
 
 
 DROP TABLE IF EXISTS bus_events;

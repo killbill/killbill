@@ -49,19 +49,8 @@ public interface AuditSqlDao {
                                                         @BindBean final InternalTenantContext context);
 
     @SqlQuery
-    public Long getRecordId(@Bind("id") final String id, @BindBean final InternalTenantContext context);
-
-    @SqlQuery
-    public Long getRecordIdForTable(@Define("tableName") final String tableName,
-                                    @Bind("id") final String id,
-                                    @BindBean final InternalTenantContext context);
-
-    @SqlQuery
-    public List<Long> getHistoryRecordIdsForTable(@Define("historyTableName") final String historyTableName,
-                                                  @Bind("targetRecordId") final Long targetRecordId,
-                                                  @BindBean final InternalTenantContext context);
-
-    @SqlQuery
-    public Long getHistoryRecordId(@Bind("recordId") final Long recordId,
-                                   @BindBean final InternalTenantContext context);
+    public List<AuditLog> getAuditLogsViaHistoryForTargetRecordId(@BindBean final TableName tableName,
+                                                                  @Define("historyTableName") final String historyTableName,
+                                                                  @Bind("targetRecordId") final long targetRecordId,
+                                                                  @BindBean final InternalTenantContext context);
 }
