@@ -58,13 +58,14 @@ layout: default
             <p>The tables <strong>bin</strong> (Business Invoices), <strong>bia</strong> (Business Invoice Adjustments), <strong>biia</strong> (Business Invoice Item adjustments), <strong>biic</strong> (Business Invoice Item Credits) and <strong>bii</strong> (Business Invoice Items) maintain information about invoices posted by account.</p>
             <p>Definitions:
                 <ul>
-                    <li><b>invoice_balance</b>: invoice_amount_charged + invoice_amount_credited - (invoice_amount_paid + invoice_amount_refunded)</li>
+                    <li><b>invoice_balance</b>: invoice_amount_charged + invoice_amount_credited + invoice_amount_adjusted_for_account_credit - (invoice_amount_paid + invoice_amount_refunded)</li>
                     <li><b>invoice_amount_charged</b>: sum of all bii, bia and biia items for that invoice</li>
                     <li><b>invoice_amount_credited</b>: sum of all biic items for that invoice (positive if granted, negative if used)</li>
                     <li><b>invoice_amount_paid</b>: sum of all bip items for that invoice</li>
                     <li><b>invoice_amount_refunded</b>: sum of all bipc and bipr items for that invoice</li>
                     <li><b>invoice_original_amount_charged</b>: sum of all bii items for that invoice at the time of invoice creation</li>
                 </ul>
+                Note that <b>invoice_amount_adjusted_for_account_credit</b> is an internal adjustment that applies for account level credits only (CREDIT_ADJ items on their own invoices) and is not represented in Analytics. The full details of the computations can be found in <a href="https://github.com/killbill/killbill/blob/master/invoice/src/main/java/com/ning/billing/invoice/calculator/InvoiceCalculatorUtils.java">InvoiceCalculatorUtils.java</a>.
             </p>
             <p>A few remarks:
                 <ul>
