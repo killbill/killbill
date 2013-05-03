@@ -473,4 +473,47 @@ public class TestTransfer extends EntitlementTestSuiteWithEmbeddedDB {
         final List<Subscription> subscriptions = entitlementApi.getSubscriptionsForBundle(newBundle.getId(), callContext);
         assertEquals(subscriptions.size(), 1);
     }
+
+    @Test(groups = "slow")
+    public void testTransferWithUncancel() throws Exception {
+
+        final UUID newAccountId = UUID.randomUUID();
+
+        final String baseProduct = "Shotgun";
+        final BillingPeriod baseTerm = BillingPeriod.MONTHLY;
+        final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
+
+        // CREATE BP
+        Subscription baseSubscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList);
+
+        testListener.pushExpectedEvent(NextEvent.PHASE);
+        clock.addDays(30);
+        assertTrue(testListener.isCompleted(3000));
+
+        // SET CTD TO TRIGGER CANCELLATION EOT
+        final DateTime ctd = baseSubscription.getStartDate().plusDays(30).plusMonths(1);
+        entitlementInternalApi.setChargedThroughDate(baseSubscription.getId(), ctd, internalCallContext);
+
+
+        // CANCEL BP
+        baseSubscription = entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
+        baseSubscription.cancel(clock.getUTCNow(), callContext);
+
+        // MOVE CLOCK one day AHEAD AND UNCANCEL BP
+        clock.addDays(1);
+        testListener.pushExpectedEvent(NextEvent.UNCANCEL);
+        baseSubscription.uncancel(callContext);
+        assertTrue(testListener.isCompleted(3000));
+
+        // MOVE CLOCK one day AHEAD AND UNCANCEL BP
+        clock.addDays(1);
+        final DateTime transferRequestedDate = clock.getUTCNow();
+        testListener.pushExpectedEvent(NextEvent.TRANSFER);
+        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getExternalKey(), transferRequestedDate, true, false, callContext);
+        assertTrue(testListener.isCompleted(3000));
+
+        final SubscriptionBundle newBundle = entitlementApi.getBundleForAccountAndKey(newAccountId, bundle.getExternalKey(), callContext);
+        final List<Subscription> subscriptions = entitlementApi.getSubscriptionsForBundle(newBundle.getId(), callContext);
+        assertEquals(subscriptions.size(), 1);
+    }
 }

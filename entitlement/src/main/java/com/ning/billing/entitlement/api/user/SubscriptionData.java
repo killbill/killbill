@@ -383,11 +383,23 @@ public class SubscriptionData extends EntityBase implements Subscription {
         if (transitions == null || event == null) {
             return null;
         }
+        SubscriptionTransitionData prev = null;
         for (final SubscriptionTransition cur : transitions) {
-            if (((SubscriptionTransitionData) cur).getId().equals(event.getId())) {
-                final SubscriptionTransitionData withSeq = new SubscriptionTransitionData((SubscriptionTransitionData)cur, seqId);
+            final SubscriptionTransitionData curData = (SubscriptionTransitionData) cur;
+            if (curData.getId().equals(event.getId())) {
+
+                final SubscriptionTransitionData withSeq = new SubscriptionTransitionData(curData, seqId);
                 return withSeq;
             }
+            if (curData.getTotalOrdering() < event.getTotalOrdering()) {
+                prev = curData;
+            }
+        }
+        // Since UNCANCEL are not part of the transitions, we compute a new 'UNCANCEL' transition based on the event right before that UNCANCEL
+        // This is used to be able to send a bus event for uncancellation
+        if (prev != null && event.getType() == EventType.API_USER && ((ApiEvent) event).getEventType() == ApiEventType.UNCANCEL) {
+             final SubscriptionTransitionData withSeq = new SubscriptionTransitionData((SubscriptionTransitionData)prev, EventType.API_USER, ApiEventType.UNCANCEL, seqId);
+            return withSeq;
         }
         return null;
     }
@@ -587,7 +599,6 @@ public class SubscriptionData extends EntityBase implements Subscription {
                     nextPhaseName = null;
                     break;
                 case UNCANCEL:
-                    break;
                 default:
                     throw new EntitlementError(String.format(
                             "Unexpected UserEvent type = %s", userEV
