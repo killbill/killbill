@@ -90,6 +90,8 @@ public class AnalyticsListener implements OSGIKillbillEventHandler {
             case SUBSCRIPTION_CREATION:
             case SUBSCRIPTION_CHANGE:
             case SUBSCRIPTION_CANCEL:
+            case SUBSCRIPTION_PHASE:
+            case SUBSCRIPTION_UNCANCEL:
                 handleSubscriptionEvent(killbillEvent, callContext);
                 break;
             case OVERDUE_CHANGE:
