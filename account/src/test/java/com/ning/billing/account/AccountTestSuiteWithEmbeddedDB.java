@@ -74,6 +74,7 @@ public abstract class AccountTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
         super.beforeMethod();
+        controllerDispatcher.clearAll();
         bus.start();
     }
 

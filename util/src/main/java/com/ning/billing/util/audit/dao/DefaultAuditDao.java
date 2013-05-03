@@ -26,22 +26,28 @@ import org.skife.jdbi.v2.IDBI;
 import com.ning.billing.util.api.AuditLevel;
 import com.ning.billing.util.audit.AuditLog;
 import com.ning.billing.util.audit.ChangeType;
+import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.dao.AuditSqlDao;
+import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.dao.NonEntitySqlDao;
 import com.ning.billing.util.dao.TableName;
+import com.ning.billing.util.entity.dao.EntitySqlDao;
+import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
+import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
+import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 
 import com.google.common.collect.ImmutableList;
 
 public class DefaultAuditDao implements AuditDao {
 
     private final NonEntitySqlDao nonEntitySqlDao;
-    private final AuditSqlDao auditSqlDao;
+    private final EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao;
 
     @Inject
-    public DefaultAuditDao(final IDBI dbi) {
+    public DefaultAuditDao(final IDBI dbi, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao) {
         this.nonEntitySqlDao = dbi.onDemand(NonEntitySqlDao.class);
-        this.auditSqlDao = dbi.onDemand(AuditSqlDao.class);
+        this.transactionalSqlDao = new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, cacheControllerDispatcher, nonEntityDao);
     }
 
     @Override
@@ -69,15 +75,27 @@ public class DefaultAuditDao implements AuditDao {
         }
 
         final Long targetRecordId = nonEntitySqlDao.getRecordIdFromObject(objectId.toString(), tableName.getTableName());
-        final List<AuditLog> allAuditLogs = auditSqlDao.getAuditLogsViaHistoryForTargetRecordId(historyTableName,
-                                                                                                historyTableName.getTableName().toLowerCase(),
-                                                                                                targetRecordId,
-                                                                                                context);
+        final List<AuditLog> allAuditLogs = transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<AuditLog>>() {
+            @Override
+            public List<AuditLog> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                return entitySqlDaoWrapperFactory.become(EntitySqlDao.class).getAuditLogsViaHistoryForTargetRecordId(historyTableName,
+                                                                                                                     historyTableName.getTableName().toLowerCase(),
+                                                                                                                     targetRecordId,
+                                                                                                                     context);
+            }
+        });
         return buildAuditLogs(auditLevel, allAuditLogs);
     }
 
     private List<AuditLog> getAuditLogsForRecordId(final TableName tableName, final Long targetRecordId, final AuditLevel auditLevel, final InternalTenantContext context) {
-        final List<AuditLog> allAuditLogs = auditSqlDao.getAuditLogsForTargetRecordId(tableName, targetRecordId, context);
+        final List<AuditLog> allAuditLogs = transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<AuditLog>>() {
+            @Override
+            public List<AuditLog> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                return entitySqlDaoWrapperFactory.become(EntitySqlDao.class).getAuditLogsForTargetRecordId(tableName,
+                                                                                                           targetRecordId,
+                                                                                                           context);
+            }
+        });
         return buildAuditLogs(auditLevel, allAuditLogs);
     }
 

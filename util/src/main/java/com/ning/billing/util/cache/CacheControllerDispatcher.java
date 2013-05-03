@@ -16,38 +16,35 @@
 
 package com.ning.billing.util.cache;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 import javax.inject.Inject;
 
 import com.ning.billing.util.cache.Cachable.CacheType;
 
-import com.google.inject.name.Named;
-
+// Kill Bill generic cache dispatcher
 public class CacheControllerDispatcher {
 
-    private final Map<CacheType, CacheController<?,?>> caches;
+    private final Map<CacheType, CacheController<Object, Object>> caches;
 
     @Inject
-    public CacheControllerDispatcher(@Named(Cachable.RECORD_ID_CACHE_NAME) final CacheController<UUID, Long> recordIdCacheController,
-                                     @Named(Cachable.ACCOUNT_RECORD_ID_CACHE_NAME) final CacheController<UUID, Long> accountRecordIdCacheController,
-                                     @Named(Cachable.TENANT_RECORD_ID_CACHE_NAME) final CacheController<UUID, Long> tenantRecordIdCacheController) {
-        caches = new HashMap<CacheType, CacheController<?, ?>>();
-        caches.put(recordIdCacheController.getType(), recordIdCacheController);
-        caches.put(accountRecordIdCacheController.getType(), accountRecordIdCacheController);
-        caches.put(tenantRecordIdCacheController.getType(), tenantRecordIdCacheController);
+    public CacheControllerDispatcher(final Map<CacheType, CacheController<Object, Object>> caches) {
+        this.caches = caches;
     }
 
     // Test only
     public CacheControllerDispatcher() {
-        caches = new HashMap<CacheType, CacheController<?, ?>>();
+        caches = new HashMap<CacheType, CacheController<Object, Object>>();
     }
 
-    public <K,V> CacheController<K, V> getCacheController(CacheType cacheType) {
-        // STEPH Not the prettiest thing..
-        return  CacheController.class.cast(caches.get(cacheType));
+    public CacheController<Object, Object> getCacheController(final CacheType cacheType) {
+        return caches.get(cacheType);
+    }
+
+    public void clearAll() {
+        for (final CacheController<Object, Object> cacheController : caches.values()) {
+            cacheController.removeAll();
+        }
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2010-2012 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -16,30 +16,33 @@
 
 package com.ning.billing.util.cache;
 
-import java.util.UUID;
-
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import org.skife.jdbi.v2.IDBI;
 
-import com.ning.billing.ObjectType;
 import com.ning.billing.util.cache.Cachable.CacheType;
+import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.dao.AuditSqlDao;
 import com.ning.billing.util.dao.NonEntityDao;
+import com.ning.billing.util.dao.TableName;
 
 import net.sf.ehcache.loader.CacheLoader;
 
 @Singleton
-public class AccountRecordIdCacheLoader extends BaseCacheLoader implements CacheLoader {
+public class AuditLogCacheLoader extends BaseCacheLoader implements CacheLoader {
+
+    private final AuditSqlDao auditSqlDao;
 
     @Inject
-    public AccountRecordIdCacheLoader(final IDBI dbi, final NonEntityDao nonEntityDao) {
+    public AuditLogCacheLoader(final IDBI dbi, final NonEntityDao nonEntityDao) {
         super(dbi, nonEntityDao);
+        this.auditSqlDao = dbi.onDemand(AuditSqlDao.class);
     }
 
     @Override
     public CacheType getCacheType() {
-        return CacheType.ACCOUNT_RECORD_ID;
+        return CacheType.AUDIT_LOG;
     }
 
     @Override
@@ -53,9 +56,11 @@ public class AccountRecordIdCacheLoader extends BaseCacheLoader implements Cache
             throw new IllegalArgumentException("Unexpected key type of " + argument.getClass().getName());
         }
 
-        final String objectId = (String) key;
-        final ObjectType objectType = ((CacheLoaderArgument) argument).getObjectType();
+        final Object[] args = ((CacheLoaderArgument) argument).getArgs();
+        final TableName tableName = (TableName) args[0];
+        final Long targetRecordId = (Long) args[1];
+        final InternalTenantContext internalTenantContext = (InternalTenantContext) args[2];
 
-        return nonEntityDao.retrieveAccountRecordIdFromObject(UUID.fromString(objectId), objectType, null);
+        return auditSqlDao.getAuditLogsForTargetRecordId(tableName, targetRecordId, internalTenantContext);
     }
 }

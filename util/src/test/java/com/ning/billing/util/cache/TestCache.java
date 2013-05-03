@@ -18,24 +18,16 @@ package com.ning.billing.util.cache;
 
 import java.util.UUID;
 
-import javax.inject.Inject;
-
 import org.testng.Assert;
-import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import com.ning.billing.ObjectType;
-import com.ning.billing.mock.glue.MockDbHelperModule;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.cache.Cachable.CacheType;
-import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
-import com.ning.billing.util.glue.CacheModule;
-import com.ning.billing.util.glue.ClockModule;
-import com.ning.billing.util.glue.NonEntityDaoModule;
 import com.ning.billing.util.tag.dao.TagModelDao;
 import com.ning.billing.util.tag.dao.TagSqlDao;
 
@@ -72,7 +64,8 @@ public class TestCache extends UtilTestSuiteWithEmbeddedDB {
         final CacheController<Object, Object> cache = controlCacheDispatcher.getCacheController(CacheType.RECORD_ID);
         Object result = null;
         if (cache != null) {
-            result =  cache.get(tagId.toString(), ObjectType.TAG);
+            // Keys are upper cased by convention
+            result = cache.get(tagId.toString().toUpperCase(), new CacheLoaderArgument(ObjectType.TAG));
         }
         return (Long) result;
     }

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-  ~ Copyright 2010-2012 Ning, Inc.
+  ~ Copyright 2010-2013 Ning, Inc.
   ~
   ~ Ning licenses this file to you under the Apache License, version 2.0
   ~ (the "License"); you may not use this file except in compliance with the
@@ -17,17 +17,17 @@
   -->
 
 <ehcache xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:noNamespaceSchemaLocation="ehcache.xsd" >
+         xsi:noNamespaceSchemaLocation="ehcache.xsd">
 
-  <defaultCache
-      maxElementsInMemory="0"
-      maxElementsOnDisk="0"
-      eternal="false"
-      timeToIdleSeconds="0"
-      timeToLiveSeconds="0"
-      overflowToDisk="false"
-      statistics="true"
-      />
+    <defaultCache
+            maxElementsInMemory="0"
+            maxElementsOnDisk="0"
+            eternal="false"
+            timeToIdleSeconds="0"
+            timeToLiveSeconds="0"
+            overflowToDisk="false"
+            statistics="true"
+            />
 
     <cache name="record-id"
            maxElementsInMemory="100000"
@@ -35,10 +35,12 @@
            eternal="true"
            overflowToDisk="false"
            diskPersistent="false"
-           memoryStoreEvictionPolicy="LFU">
+           memoryStoreEvictionPolicy="LFU"
+           statistics="true"
+            >
         <cacheEventListenerFactory
                 class="com.ning.billing.util.cache.ExpirationListenerFactory"
-                properties="" />
+                properties=""/>
     </cache>
 
     <cache name="tenant-record-id"
@@ -47,10 +49,12 @@
            eternal="true"
            overflowToDisk="false"
            diskPersistent="false"
-           memoryStoreEvictionPolicy="LFU">
+           memoryStoreEvictionPolicy="LFU"
+           statistics="true"
+            >
         <cacheEventListenerFactory
                 class="com.ning.billing.util.cache.ExpirationListenerFactory"
-                properties="" />
+                properties=""/>
     </cache>
 
     <cache name="account-record-id"
@@ -59,10 +63,42 @@
            eternal="true"
            overflowToDisk="false"
            diskPersistent="false"
-           memoryStoreEvictionPolicy="LFU">
+           memoryStoreEvictionPolicy="LFU"
+           statistics="true"
+            >
         <cacheEventListenerFactory
                 class="com.ning.billing.util.cache.ExpirationListenerFactory"
-                properties="" />
+                properties=""/>
+    </cache>
+
+    <cache name="audit-log"
+           maxElementsInMemory="500000"
+           maxElementsOnDisk="0"
+           timeToIdleSeconds="600"
+           timeToLiveSeconds="600"
+           overflowToDisk="false"
+           diskPersistent="false"
+           memoryStoreEvictionPolicy="LFU"
+           statistics="true"
+            >
+        <cacheEventListenerFactory
+                class="com.ning.billing.util.cache.ExpirationListenerFactory"
+                properties=""/>
+    </cache>
+
+    <cache name="audit-log-via-history"
+           maxElementsInMemory="500000"
+           maxElementsOnDisk="0"
+           timeToIdleSeconds="600"
+           timeToLiveSeconds="600"
+           overflowToDisk="false"
+           diskPersistent="false"
+           memoryStoreEvictionPolicy="LFU"
+           statistics="true"
+            >
+        <cacheEventListenerFactory
+                class="com.ning.billing.util.cache.ExpirationListenerFactory"
+                properties=""/>
     </cache>
 </ehcache>
 

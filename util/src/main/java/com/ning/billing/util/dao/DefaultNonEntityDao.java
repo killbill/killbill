@@ -25,6 +25,7 @@ import org.skife.jdbi.v2.IDBI;
 
 import com.ning.billing.ObjectType;
 import com.ning.billing.util.cache.CacheController;
+import com.ning.billing.util.cache.CacheLoaderArgument;
 
 public class DefaultNonEntityDao implements NonEntityDao {
 
@@ -52,8 +53,6 @@ public class DefaultNonEntityDao implements NonEntityDao {
     }
 
     public Long retrieveAccountRecordIdFromObject(@Nullable final UUID objectId, final ObjectType objectType, @Nullable final CacheController<Object, Object> cache) {
-
-
         return containedCall.withCaching(new OperationRetrieval<Long>() {
             @Override
             public Long doRetrieve(final UUID objectId, final ObjectType objectType) {
@@ -73,7 +72,6 @@ public class DefaultNonEntityDao implements NonEntityDao {
             }
         }, objectId, objectType, cache);
     }
-
 
     public Long retrieveTenantRecordIdFromObject(@Nullable final UUID objectId, final ObjectType objectType, @Nullable final CacheController<Object, Object> cache) {
 
@@ -110,18 +108,16 @@ public class DefaultNonEntityDao implements NonEntityDao {
         public T doRetrieve(final UUID objectId, final ObjectType objectType);
     }
 
-
     // 'cache' will be null for the CacheLoader classes -- or if cache is not configured.
     private class WithCaching {
-        private Long withCaching(final OperationRetrieval<Long> op, @Nullable final UUID objectId, final ObjectType objectType, @Nullable final CacheController<Object, Object> cache) {
 
+        private Long withCaching(final OperationRetrieval<Long> op, @Nullable final UUID objectId, final ObjectType objectType, @Nullable final CacheController<Object, Object> cache) {
             if (objectId == null) {
                 return null;
             }
 
             if (cache != null) {
-                final Long cachedResult = (Long) cache.get(objectId.toString(), objectType);
-                return cachedResult;
+                return (Long) cache.get(objectId.toString(), new CacheLoaderArgument(objectType));
             }
             return op.doRetrieve(objectId, objectType);
         }

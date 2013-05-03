@@ -87,7 +87,7 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
     @BeforeClass(groups = "slow")
     public void beforeClass() throws Exception {
         super.beforeClass();
-        entitySqlDaoTransactionalJdbiWrapper = new EntitySqlDaoTransactionalJdbiWrapper(getDBI(), clock, cacheControllerDispatcher, nonEntityDao);
+        entitySqlDaoTransactionalJdbiWrapper = new EntitySqlDaoTransactionalJdbiWrapper(getDBI(), clock, controlCacheDispatcher, nonEntityDao);
     }
 
     @Override

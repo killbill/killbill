@@ -16,33 +16,20 @@
 
 package com.ning.billing.util.cache;
 
-import java.util.Collection;
-import java.util.Map;
-
-import com.ning.billing.ObjectType;
-import com.ning.billing.util.cache.Cachable.CacheType;
-
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.Element;
 
 public class EhCacheBasedCacheController<K, V> implements CacheController<K, V> {
 
     private final Cache cache;
-    private final CacheType cacheType;
 
-    public EhCacheBasedCacheController(final Cache cache, final CacheType cacheType) {
+    public EhCacheBasedCacheController(final Cache cache) {
         this.cache = cache;
-        this.cacheType = cacheType;
     }
 
     @Override
-    public CacheType getType() {
-        return cacheType;
-    }
-
-    @Override
-    public V get(final K key, final ObjectType objectType) {
-        final Element element = cache.getWithLoader(key, null, objectType);
+    public V get(final K key, final CacheLoaderArgument cacheLoaderArgument) {
+        final Element element = cache.getWithLoader(key, null, cacheLoaderArgument);
         if (element == null) {
             return null;
         }
@@ -57,5 +44,10 @@ public class EhCacheBasedCacheController<K, V> implements CacheController<K, V> 
     @Override
     public int size() {
         return cache.getSize();
+    }
+
+    @Override
+    public void removeAll() {
+        cache.removeAll();
     }
 }
