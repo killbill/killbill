@@ -34,16 +34,18 @@ public class PluginDispatcher<T> {
 
     private final TimeUnit DEEFAULT_PLUGIN_TIMEOUT_UNIT = TimeUnit.SECONDS;
 
+    private final long timeoutSeconds;
     private final ExecutorService executor;
 
-    public PluginDispatcher(final ExecutorService executor) {
+    public PluginDispatcher(final long tiemoutSeconds, final ExecutorService executor) {
+        this.timeoutSeconds = tiemoutSeconds;
         this.executor = executor;
     }
 
+
     public T dispatchWithAccountLock(final Callable<T> task)
             throws PaymentApiException, TimeoutException {
-        final long DEFAULT_PLUGIN_TIMEOUT_SEC = 30;
-        return dispatchWithAccountLockAndTimeout(task, DEFAULT_PLUGIN_TIMEOUT_SEC, DEEFAULT_PLUGIN_TIMEOUT_UNIT);
+        return dispatchWithAccountLockAndTimeout(task, timeoutSeconds, DEEFAULT_PLUGIN_TIMEOUT_UNIT);
     }
 
     public T dispatchWithAccountLockAndTimeout(final Callable<T> task, final long timeout, final TimeUnit unit)

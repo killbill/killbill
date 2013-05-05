@@ -30,6 +30,7 @@ import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -135,6 +136,27 @@ public class PaymentResource extends JaxRsResourceBase {
 
         return Response.status(Status.OK).entity(paymentJsonSimple).build();
     }
+
+    @PUT
+    @Path("/{paymentId:" + UUID_PATTERN + "}")
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    public Response retryFailedPayment(@PathParam(ID_PARAM_NAME) final String paymentIdString,
+                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                   @HeaderParam(HDR_REASON) final String reason,
+                                   @HeaderParam(HDR_COMMENT) final String comment,
+                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException {
+
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+
+        final UUID paymentId = UUID.fromString(paymentIdString);
+        final Payment payment = paymentApi.getPayment(paymentId, false, callContext);
+        final Account account = accountApi.getAccountById(payment.getAccountId(), callContext);
+        final Payment newPayment = paymentApi.retryPayment(account, paymentId, callContext);
+
+        return Response.status(Status.OK).entity(new PaymentJsonSimple(newPayment)).build();
+    }
+
 
     @GET
     @Path("/{paymentId:" + UUID_PATTERN + "}/" + REFUNDS)

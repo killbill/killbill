@@ -52,6 +52,17 @@ public interface PaymentApi {
 
 
     /**
+     *
+     * @param account   the account
+     * @param paymentId the payment id
+     * @param context
+     * @return
+     * @throws PaymentApiException
+     */
+    public Payment retryPayment(Account account, UUID paymentId, CallContext context)
+            throws PaymentApiException;
+
+    /**
      * Create a refund for a given payment. The associated invoice is not adjusted.
      *
      * @param account      account to refund
