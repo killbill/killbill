@@ -392,11 +392,17 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
         // We need to invalidate the caches. There is a small window of doom here where caches will be stale.
         // TODO Knowledge on how the key is constructed is also in AuditSqlDao
         if (tableName.getHistoryTableName() != null) {
-            final String key = buildCacheKey(ImmutableMap.<Integer, Object>of(0, tableName.getHistoryTableName(), 1, tableName.getHistoryTableName(), 2, entityRecordId));
-            cacheControllerDispatcher.getCacheController(CacheType.AUDIT_LOG_VIA_HISTORY).remove(key);
+            final CacheController<Object, Object> cacheController = cacheControllerDispatcher.getCacheController(CacheType.AUDIT_LOG_VIA_HISTORY);
+            if (cacheController != null) {
+                final String key = buildCacheKey(ImmutableMap.<Integer, Object>of(0, tableName.getHistoryTableName(), 1, tableName.getHistoryTableName(), 2, entityRecordId));
+                cacheController.remove(key);
+            }
         } else {
-            final String key = buildCacheKey(ImmutableMap.<Integer, Object>of(0, tableName, 1, entityRecordId));
-            cacheControllerDispatcher.getCacheController(CacheType.AUDIT_LOG).remove(key);
+            final CacheController<Object, Object> cacheController = cacheControllerDispatcher.getCacheController(CacheType.AUDIT_LOG);
+            if (cacheController != null) {
+                final String key = buildCacheKey(ImmutableMap.<Integer, Object>of(0, tableName, 1, entityRecordId));
+                cacheController.remove(key);
+            }
         }
     }
 
