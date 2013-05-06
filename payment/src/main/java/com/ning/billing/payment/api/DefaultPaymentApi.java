@@ -29,6 +29,7 @@ import com.ning.billing.payment.core.PaymentMethodProcessor;
 import com.ning.billing.payment.core.PaymentProcessor;
 import com.ning.billing.payment.core.RefundProcessor;
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.TenantContext;
 
@@ -64,6 +65,13 @@ public class DefaultPaymentApi implements PaymentApi {
     public Payment createExternalPayment(final Account account, final UUID invoiceId, final BigDecimal amount, final CallContext context) throws PaymentApiException {
         return paymentProcessor.createPayment(account, invoiceId, amount,
                                               internalCallContextFactory.createInternalCallContext(account.getId(), context), true, true);
+    }
+
+    @Override
+    public Payment retryPayment(final Account account, final UUID paymentId, final CallContext context) throws PaymentApiException {
+        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), context);
+        paymentProcessor.retryPaymentFromApi(paymentId, internalCallContext);
+        return getPayment(paymentId, false, context);
     }
 
     @Override

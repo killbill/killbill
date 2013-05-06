@@ -102,12 +102,17 @@ public class SubscriptionTransitionData implements SubscriptionTransition {
     }
 
     public SubscriptionTransitionData(final SubscriptionTransitionData input, int remainingEventsForUserOperation) {
+       this(input, input.getEventType(), input.getApiEventType(), remainingEventsForUserOperation);
+    }
+
+    public SubscriptionTransitionData(final SubscriptionTransitionData input, final EventType eventType,
+                                      final ApiEventType apiEventType, int remainingEventsForUserOperation) {
         super();
         this.eventId = input.getId();
         this.subscriptionId = input.getSubscriptionId();
         this.bundleId = input.getBundleId();
-        this.eventType = input.getEventType();
-        this.apiEventType = input.getApiEventType();
+        this.eventType = eventType;
+        this.apiEventType = apiEventType;
         this.requestedTransitionTime = input.getRequestedTransitionTime();
         this.effectiveTransitionTime = input.getEffectiveTransitionTime();
         this.previousEventId = input.getPreviousEventId();

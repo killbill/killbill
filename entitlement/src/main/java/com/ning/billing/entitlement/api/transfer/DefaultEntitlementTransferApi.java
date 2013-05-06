@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.Catalog;
@@ -128,7 +130,6 @@ public class DefaultEntitlementTransferApi extends EntitlementApiBase implements
                 }
                 break;
             case CANCEL:
-            case UNCANCEL:
                 break;
 
             default:

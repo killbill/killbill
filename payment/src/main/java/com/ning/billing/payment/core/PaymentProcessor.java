@@ -113,8 +113,8 @@ public class PaymentProcessor extends ProcessorBase {
         this.autoPayoffRetryService = autoPayoffRetryService;
         this.clock = clock;
         this.paymentConfig = paymentConfig;
-        this.paymentPluginDispatcher = new PluginDispatcher<Payment>(executor);
-        this.voidPluginDispatcher = new PluginDispatcher<Void>(executor);
+        this.paymentPluginDispatcher = new PluginDispatcher<Payment>(paymentConfig.getPaymentTimeoutSeconds(), executor);
+        this.voidPluginDispatcher = new PluginDispatcher<Void>(paymentConfig.getPaymentTimeoutSeconds(), executor);
     }
 
     public Payment getPayment(final UUID paymentId, final boolean withPluginInfo, final InternalTenantContext context) throws PaymentApiException {
@@ -328,6 +328,13 @@ public class PaymentProcessor extends ProcessorBase {
         retryFailedPaymentInternal(paymentId, context, PaymentStatus.PAYMENT_FAILURE);
     }
 
+    public void retryPaymentFromApi(final UUID paymentId, final InternalCallContext context) {
+        log.info("Retrying payment " + paymentId + " time = " + clock.getUTCNow());
+        retryFailedPaymentInternal(paymentId, context, PaymentStatus.UNKNOWN,
+                                   PaymentStatus.AUTO_PAY_OFF,
+                                   PaymentStatus.PAYMENT_FAILURE,
+                                   PaymentStatus.PLUGIN_FAILURE);
+    }
 
     private void retryFailedPaymentInternal(final UUID paymentId, final InternalCallContext context, final PaymentStatus... expectedPaymentStates) {
 
@@ -386,7 +393,7 @@ public class PaymentProcessor extends ProcessorBase {
         } catch (AccountApiException e) {
             log.error(String.format("Failed to retry payment for paymentId %s", paymentId), e);
         } catch (PaymentApiException e) {
-            log.info(String.format("Failed to retry payment for paymentId %s", paymentId));
+            log.info(String.format("Failed to retry payment for paymentId %s", paymentId), e);
         } catch (TimeoutException e) {
             log.warn(String.format("Retry for payment %s timedout", paymentId));
             // STEPH we should throw some exception so NotificationQ does not clear status and retries us

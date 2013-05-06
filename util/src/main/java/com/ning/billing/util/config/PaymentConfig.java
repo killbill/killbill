@@ -48,6 +48,11 @@ public interface PaymentConfig extends KillbillConfig {
     @Description("Maximum number of retries for failed payments")
     public int getPluginFailureRetryMaxAttempts();
 
+    @Config("killbill.payment.timeout.seconds")
+    @Default("90")
+    @Description("Timeout for each payment attempt")
+    public int getPaymentTimeoutSeconds();
+
     @Config("killbill.payment.off")
     @Default("false")
     @Description("Whether the payment subsystem is off")

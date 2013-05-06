@@ -324,8 +324,14 @@ public class DefaultEntitlementDao implements EntitlementDao {
             @Override
             public List<EntitlementEvent> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
                 final List<EntitlementEventModelDao> models = entitySqlDaoWrapperFactory.become(EntitlementEventSqlDao.class).getEventsForSubscription(subscriptionId.toString(), context);
-
-                return new ArrayList<EntitlementEvent>(Collections2.transform(models, new Function<EntitlementEventModelDao, EntitlementEvent>() {
+                // Remove UNCANCEL events early on as they are not representative of a state transition but are just markers
+                final Collection<EntitlementEventModelDao> filteredModels = Collections2.filter(models, new Predicate<EntitlementEventModelDao>() {
+                    @Override
+                    public boolean apply(@Nullable final EntitlementEventModelDao input) {
+                        return input.getUserType() != ApiEventType.UNCANCEL;
+                    }
+                });
+                return new ArrayList<EntitlementEvent>(Collections2.transform(filteredModels, new Function<EntitlementEventModelDao, EntitlementEvent>() {
                     @Override
                     public EntitlementEvent apply(@Nullable final EntitlementEventModelDao input) {
                         return EntitlementEventModelDao.toEntitlementEvent(input);

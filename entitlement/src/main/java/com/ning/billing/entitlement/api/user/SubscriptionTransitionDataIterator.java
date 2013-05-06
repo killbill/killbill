@@ -98,10 +98,8 @@ public class SubscriptionTransitionDataIterator implements Iterator<Subscription
     }
 
     private boolean shouldSkipForBillingEvents(final SubscriptionTransitionData input) {
-        // Junction system knows about all events except for MIGRATE_ENTITLEMENT and UNCANCEL-- which is a NO event as it undo
-        // something that should have happened in the future.
-        return (input.getTransitionType() == SubscriptionTransitionType.MIGRATE_ENTITLEMENT ||
-                input.getTransitionType() == SubscriptionTransitionType.UNCANCEL);
+        // Junction system knows about all events except for MIGRATE_ENTITLEMENT
+        return input.getTransitionType() == SubscriptionTransitionType.MIGRATE_ENTITLEMENT;
     }
 
 

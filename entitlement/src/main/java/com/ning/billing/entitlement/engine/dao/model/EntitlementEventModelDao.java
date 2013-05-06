@@ -56,7 +56,9 @@ public class EntitlementEventModelDao extends EntityBase implements EntityModelD
     private long currentVersion;
     private boolean isActive;
 
-    public EntitlementEventModelDao() { /* For the DAO mapper */ }
+    public EntitlementEventModelDao() {
+    /* For the DAO mapper */
+    }
 
     public EntitlementEventModelDao(final UUID id, final long totalOrdering, final EventType eventType, final ApiEventType userType,
                                     final DateTime requestedDate, final DateTime effectiveDate, final UUID subscriptionId,
