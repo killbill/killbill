@@ -51,7 +51,7 @@ import com.google.inject.name.Names;
 
 public class PaymentModule extends AbstractModule {
 
-    private static final int PLUGIN_NB_THREADS = 3;
+    private static final int PLUGIN_NB_THREADS = 10;
     private static final String PLUGIN_THREAD_PREFIX = "Plugin-th-";
 
     public static final String PLUGIN_EXECUTOR_NAMED = "PluginExecutor";
