@@ -52,8 +52,6 @@ public abstract class UtilTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
     @Inject
     protected InternalCallContextFactory internalCallContextFactory;
     @Inject
-    protected CacheControllerDispatcher cacheControllerDispatcher;
-    @Inject
     protected DefaultCustomFieldUserApi customFieldUserApi;
     @Inject
     protected CustomFieldDao customFieldDao;
@@ -76,8 +74,9 @@ public abstract class UtilTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
 
     @Override
     @BeforeMethod(groups = "slow")
-    public void beforeMethod() throws Exception  {
+    public void beforeMethod() throws Exception {
         super.beforeMethod();
+        controlCacheDispatcher.clearAll();
         eventBus.start();
     }
 

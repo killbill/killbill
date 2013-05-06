@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -16,13 +16,15 @@
 
 package com.ning.billing.util.cache;
 
-public interface CacheController<K, V> {
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-    public V get(K key, CacheLoaderArgument objectType);
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.PARAMETER})
+public @interface CachableKey {
 
-    public boolean remove(K key);
-
-    public int size();
-
-    void removeAll();
+    // Position (start at 1)
+    public int value();
 }

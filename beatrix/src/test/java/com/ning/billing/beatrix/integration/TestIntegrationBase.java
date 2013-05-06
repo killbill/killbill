@@ -85,6 +85,7 @@ import com.ning.billing.payment.api.TestPaymentMethodPluginBase;
 import com.ning.billing.payment.provider.MockPaymentProviderPlugin;
 import com.ning.billing.util.api.RecordIdApi;
 import com.ning.billing.util.api.TagUserApi;
+import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.config.OSGIConfig;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
@@ -205,6 +206,9 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     @Inject
     protected RecordIdApi recordIdApi;
 
+    @javax.inject.Inject
+    protected CacheControllerDispatcher controlCacheDispatcher;
+
     protected TestApiListener busHandler;
 
     private boolean isListenerFailed;
@@ -255,6 +259,8 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
         log.warn("\n");
         log.warn("RESET TEST FRAMEWORK\n\n");
+
+        controlCacheDispatcher.clearAll();
 
         clock.resetDeltaFromReality();
         resetTestListenerStatus();

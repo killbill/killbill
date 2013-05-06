@@ -27,9 +27,9 @@ import com.ning.billing.dbi.MysqlTestingHelper;
 
 public class GuicyKillbillTestWithEmbeddedDBModule extends GuicyKillbillTestModule {
 
-    private final static Logger log = LoggerFactory.getLogger(GuicyKillbillTestWithEmbeddedDBModule.class);
+    private static final Logger log = LoggerFactory.getLogger(GuicyKillbillTestWithEmbeddedDBModule.class);
 
-    private static DBTestingHelper instance = getDBTestingHelper();
+    private static final DBTestingHelper instance = getDBTestingHelper();
 
     public static synchronized DBTestingHelper getDBTestingHelper() {
         if (instance == null) {

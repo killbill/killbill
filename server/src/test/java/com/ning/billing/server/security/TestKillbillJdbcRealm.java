@@ -33,7 +33,6 @@ import com.ning.billing.jaxrs.TestJaxrsBase;
 import com.ning.billing.tenant.api.DefaultTenant;
 import com.ning.billing.tenant.dao.DefaultTenantDao;
 import com.ning.billing.tenant.dao.TenantModelDao;
-import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.dao.DefaultNonEntityDao;
 
 import com.jolbox.bonecp.BoneCPConfig;
@@ -51,8 +50,7 @@ public class TestKillbillJdbcRealm extends TestJaxrsBase {
         super.beforeMethod();
 
         // Create the tenant
-        final CacheControllerDispatcher controllerDispatcher = new CacheControllerDispatcher();
-        final DefaultTenantDao tenantDao = new DefaultTenantDao(getDBI(), clock, controllerDispatcher, new DefaultNonEntityDao(getDBI()));
+        final DefaultTenantDao tenantDao = new DefaultTenantDao(getDBI(), clock, cacheControllerDispatcher, new DefaultNonEntityDao(getDBI()));
         tenant = new DefaultTenant(UUID.randomUUID(), null, null, UUID.randomUUID().toString(),
                                    UUID.randomUUID().toString(), UUID.randomUUID().toString());
         tenantDao.create(new TenantModelDao(tenant), internalCallContext);

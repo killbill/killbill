@@ -25,9 +25,9 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import org.skife.jdbi.v2.Binding;
 import org.skife.jdbi.v2.StatementContext;
@@ -41,9 +41,12 @@ import com.ning.billing.ObjectType;
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.cache.Cachable;
 import com.ning.billing.util.cache.Cachable.CacheType;
+import com.ning.billing.util.cache.CachableKey;
 import com.ning.billing.util.cache.CacheController;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
+import com.ning.billing.util.cache.CacheLoaderArgument;
 import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.dao.EntityAudit;
 import com.ning.billing.util.dao.EntityHistoryModelDao;
@@ -51,11 +54,13 @@ import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.dao.NonEntitySqlDao;
 import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.Entity;
-import com.ning.billing.util.tag.dao.TagSqlDao;
 
 import com.google.common.base.Objects;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 
 /**
  * Wraps an instance of EntitySqlDao, performing extra work around each method (Sql query)
@@ -65,6 +70,8 @@ import com.google.common.collect.ImmutableList.Builder;
  * @param <E> Entity associated with M
  */
 public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, M extends EntityModelDao<E>, E extends Entity> implements InvocationHandler {
+
+    public static final String CACHE_KEY_SEPARATOR = "::";
 
     private final Logger logger = LoggerFactory.getLogger(EntitySqlDaoWrapperInvocationHandler.class);
 
@@ -169,14 +176,36 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
 
     private Object invokeWithCaching(final Cachable cachableAnnotation, final Method method, final Object[] args)
             throws IllegalAccessException, InvocationTargetException, ClassNotFoundException, InstantiationException {
-
         final ObjectType objectType = getObjectType();
         final CacheType cacheType = cachableAnnotation.value();
         final CacheController<Object, Object> cache = cacheControllerDispatcher.getCacheController(cacheType);
         Object result = null;
         if (cache != null) {
-            // STEPH : Assume first argument is the key for the cache, this is a bit fragile...
-            result = cache.get(args[0], objectType);
+            // Find all arguments marked with @CachableKey
+            final Map<Integer, Object> keyPieces = new LinkedHashMap<Integer, Object>();
+            final Annotation[][] annotations = method.getParameterAnnotations();
+            for (int i = 0; i < annotations.length; i++) {
+                for (int j = 0; j < annotations[i].length; j++) {
+                    final Annotation annotation = annotations[i][j];
+                    if (CachableKey.class.equals(annotation.annotationType())) {
+                        // CachableKey position starts at 1
+                        keyPieces.put(((CachableKey) annotation).value() - 1, args[i]);
+                        break;
+                    }
+                }
+            }
+
+            // Build the Cache key
+            final String cacheKey = buildCacheKey(keyPieces);
+
+            final InternalTenantContext internalTenantContext = (InternalTenantContext) Iterables.find(ImmutableList.copyOf(args), new Predicate<Object>() {
+                @Override
+                public boolean apply(final Object input) {
+                    return input instanceof InternalTenantContext;
+                }
+            }, null);
+            final CacheLoaderArgument cacheLoaderArgument = new CacheLoaderArgument(objectType, args, internalTenantContext);
+            result = cache.get(cacheKey, cacheLoaderArgument);
         }
         if (result == null) {
             result = method.invoke(sqlDao, args);
@@ -198,17 +227,23 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
         int foundIndexForEntitySqlDao = -1;
         // If the sqlDaoClass implements multiple interfaces, first figure out which one is the EntitySqlDao
         for (int i = 0; i < sqlDaoClass.getGenericInterfaces().length; i++) {
-            if (EntitySqlDao.class.getName().equals(((Class) ((java.lang.reflect.ParameterizedType) sqlDaoClass.getGenericInterfaces()[0]).getRawType()).getName())) {
+            final Type type = sqlDaoClass.getGenericInterfaces()[0];
+            if (!(type instanceof java.lang.reflect.ParameterizedType)) {
+                // AuditSqlDao for example won't extend EntitySqlDao
+                return null;
+            }
+
+            if (EntitySqlDao.class.getName().equals(((Class) ((java.lang.reflect.ParameterizedType) type).getRawType()).getName())) {
                 foundIndexForEntitySqlDao = i;
                 break;
             }
         }
         // Find out from the parameters of the EntitySqlDao which one is the EntityModelDao, and extract his (sub)type to finally return the ObjectType
         if (foundIndexForEntitySqlDao >= 0) {
-            Type[] types = ((java.lang.reflect.ParameterizedType) sqlDaoClass.getGenericInterfaces()[foundIndexForEntitySqlDao]).getActualTypeArguments();
+            final Type[] types = ((java.lang.reflect.ParameterizedType) sqlDaoClass.getGenericInterfaces()[foundIndexForEntitySqlDao]).getActualTypeArguments();
             int foundIndexForEntityModelDao = -1;
             for (int i = 0; i < types.length; i++) {
-                Class clz = ((Class) types[i]);
+                final Class clz = ((Class) types[i]);
                 if (EntityModelDao.class.getName().equals(((Class) ((java.lang.reflect.ParameterizedType) clz.getGenericInterfaces()[0]).getRawType()).getName())) {
                     foundIndexForEntityModelDao = i;
                     break;
@@ -216,11 +251,11 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
             }
 
             if (foundIndexForEntityModelDao >= 0) {
-                String modelClassName = ((Class) types[foundIndexForEntityModelDao]).getName();
+                final String modelClassName = ((Class) types[foundIndexForEntityModelDao]).getName();
 
-                Class<? extends EntityModelDao<?>> clz = (Class<? extends EntityModelDao<?>>) Class.forName(modelClassName);
+                final Class<? extends EntityModelDao<?>> clz = (Class<? extends EntityModelDao<?>>) Class.forName(modelClassName);
 
-                EntityModelDao<?> modelDao = (EntityModelDao<?>) clz.newInstance();
+                final EntityModelDao<?> modelDao = (EntityModelDao<?>) clz.newInstance();
                 return modelDao.getTableName().getObjectType();
             }
         }
@@ -272,7 +307,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
             historyRecordId = entityRecordId;
         }
 
-        insertAudits(tableName, historyRecordId, changeType, context);
+        insertAudits(tableName, entityRecordId, historyRecordId, changeType, context);
     }
 
     private List<String> retrieveEntityIdsFromArguments(final Method method, final Object[] args) {
@@ -349,9 +384,40 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
         return nonEntityDao.retrieveLastHistoryRecordIdFromTransaction(entityRecordId, entityModelDao.getHistoryTableName(), transactional);
     }
 
-    private void insertAudits(final TableName tableName, final Long historyRecordId, final ChangeType changeType, final InternalCallContext context) {
+    private void insertAudits(final TableName tableName, final Long entityRecordId, final Long historyRecordId, final ChangeType changeType, final InternalCallContext context) {
         final TableName destinationTableName = Objects.firstNonNull(tableName.getHistoryTableName(), tableName);
         final EntityAudit audit = new EntityAudit(destinationTableName, historyRecordId, changeType, clock.getUTCNow());
         sqlDao.insertAuditFromTransaction(audit, context);
+
+        // We need to invalidate the caches. There is a small window of doom here where caches will be stale.
+        // TODO Knowledge on how the key is constructed is also in AuditSqlDao
+        if (tableName.getHistoryTableName() != null) {
+            final CacheController<Object, Object> cacheController = cacheControllerDispatcher.getCacheController(CacheType.AUDIT_LOG_VIA_HISTORY);
+            if (cacheController != null) {
+                final String key = buildCacheKey(ImmutableMap.<Integer, Object>of(0, tableName.getHistoryTableName(), 1, tableName.getHistoryTableName(), 2, entityRecordId));
+                cacheController.remove(key);
+            }
+        } else {
+            final CacheController<Object, Object> cacheController = cacheControllerDispatcher.getCacheController(CacheType.AUDIT_LOG);
+            if (cacheController != null) {
+                final String key = buildCacheKey(ImmutableMap.<Integer, Object>of(0, tableName, 1, entityRecordId));
+                cacheController.remove(key);
+            }
+        }
+    }
+
+    private String buildCacheKey(final Map<Integer, Object> keyPieces) {
+        final StringBuilder cacheKey = new StringBuilder();
+        for (int i = 0; i < keyPieces.size(); i++) {
+            // To normalize the arguments and avoid casing issues, we make all pieces of the key uppercase.
+            // Since the database engine may be case insensitive and we use arguments of the SQL method call
+            // to build the key, the key has to be case insensitive as well.
+            final String str = String.valueOf(keyPieces.get(i)).toUpperCase();
+            cacheKey.append(str);
+            if (i < keyPieces.size() - 1) {
+                cacheKey.append(CACHE_KEY_SEPARATOR);
+            }
+        }
+        return cacheKey.toString();
     }
 }

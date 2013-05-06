@@ -58,6 +58,7 @@ import com.ning.billing.server.listeners.KillbillGuiceListener;
 import com.ning.billing.server.modules.KillbillServerModule;
 import com.ning.billing.tenant.glue.TenantModule;
 import com.ning.billing.usage.glue.UsageModule;
+import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.config.PaymentConfig;
 import com.ning.billing.util.email.EmailModule;
 import com.ning.billing.util.email.templates.TemplateModule;
@@ -93,6 +94,9 @@ public class TestJaxrsBase extends KillbillClient {
 
     @Inject
     protected OSGIServiceRegistration<Servlet> servletRouter;
+
+    @Inject
+    protected CacheControllerDispatcher cacheControllerDispatcher;
 
     protected static TestKillbillGuiceListener listener;
 
@@ -219,6 +223,7 @@ public class TestJaxrsBase extends KillbillClient {
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
         super.beforeMethod();
+        cacheControllerDispatcher.clearAll();
         busHandler.reset();
         clock.resetDeltaFromReality();
         clock.setDay(new LocalDate(2012, 8, 25));

@@ -38,7 +38,7 @@ import com.ning.billing.util.tag.dao.TagModelDao;
 
 public class TestDefaultAuditDao extends UtilTestSuiteWithEmbeddedDB {
 
-    private UUID tagId;
+    private TagModelDao tag;
 
     @Test(groups = "slow")
     public void testRetrieveAuditsDirectly() throws Exception {
@@ -60,9 +60,23 @@ public class TestDefaultAuditDao extends UtilTestSuiteWithEmbeddedDB {
         addTag();
 
         for (final AuditLevel level : AuditLevel.values()) {
-            final List<AuditLog> auditLogs = auditDao.getAuditLogsForId(TableName.TAG, tagId, level, internalCallContext);
+            final List<AuditLog> auditLogs = auditDao.getAuditLogsForId(TableName.TAG, tag.getId(), level, internalCallContext);
             verifyAuditLogsForTag(auditLogs, level);
         }
+    }
+
+    @Test(groups = "slow")
+    public void testVerifyAuditCachesAreCleared() throws Exception {
+        addTag();
+        final List<AuditLog> firstAuditLogs = auditDao.getAuditLogsForId(TableName.TAG, tag.getId(), AuditLevel.FULL, internalCallContext);
+        Assert.assertEquals(firstAuditLogs.size(), 1);
+        Assert.assertEquals(firstAuditLogs.get(0).getChangeType(), ChangeType.INSERT);
+
+        tagDao.deleteTag(tag.getObjectId(), tag.getObjectType(), tag.getTagDefinitionId(), internalCallContext);
+        final List<AuditLog> secondAuditLogs = auditDao.getAuditLogsForId(TableName.TAG, tag.getId(), AuditLevel.FULL, internalCallContext);
+        Assert.assertEquals(secondAuditLogs.size(), 2);
+        Assert.assertEquals(secondAuditLogs.get(0).getChangeType(), ChangeType.INSERT);
+        Assert.assertEquals(secondAuditLogs.get(1).getChangeType(), ChangeType.DELETE);
     }
 
     private void addTag() throws TagDefinitionApiException, TagApiException {
@@ -75,14 +89,13 @@ public class TestDefaultAuditDao extends UtilTestSuiteWithEmbeddedDB {
         // Create a tag
         final UUID objectId = UUID.randomUUID();
 
-        final Tag tag = new DescriptiveTag(tagDefinition.getId(), ObjectType.ACCOUNT, objectId, clock.getUTCNow());
+        final Tag theTag = new DescriptiveTag(tagDefinition.getId(), ObjectType.ACCOUNT, objectId, clock.getUTCNow());
 
-        tagDao.create(new TagModelDao(tag), internalCallContext);
+        tagDao.create(new TagModelDao(theTag), internalCallContext);
         final List<TagModelDao> tags = tagDao.getTagsForObject(objectId, ObjectType.ACCOUNT, internalCallContext);
         Assert.assertEquals(tags.size(), 1);
-        final TagModelDao savedTag = tags.get(0);
-        Assert.assertEquals(savedTag.getTagDefinitionId(), tagDefinition.getId());
-        tagId = savedTag.getId();
+        tag = tags.get(0);
+        Assert.assertEquals(tag.getTagDefinitionId(), tagDefinition.getId());
     }
 
     private void verifyAuditLogsForTag(final List<AuditLog> auditLogs, final AuditLevel level) {

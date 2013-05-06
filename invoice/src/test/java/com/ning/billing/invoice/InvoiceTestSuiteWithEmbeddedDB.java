@@ -121,6 +121,7 @@ public abstract class InvoiceTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
         super.beforeMethod();
+        controllerDispatcher.clearAll();
         bus.start();
         restartInvoiceService(invoiceService);
     }

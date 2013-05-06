@@ -97,6 +97,7 @@ public abstract class OverdueTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
         super.beforeMethod();
+        cacheControllerDispatcher.clearAll();
         bus.register(listener);
         bus.start();
 

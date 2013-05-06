@@ -23,6 +23,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 
 import org.skife.jdbi.v2.Query;
 import org.skife.jdbi.v2.SQLStatement;
@@ -75,7 +76,8 @@ public @interface EntitySqlDaoStringTemplate {
                                 if (sqlObjectType.getGenericInterfaces()[i] instanceof ParameterizedType) {
                                     final ParameterizedType type = (ParameterizedType) sqlObjectType.getGenericInterfaces()[i];
                                     for (int j = 0; j < type.getActualTypeArguments().length; j++) {
-                                        final Class modelClazz = (Class) type.getActualTypeArguments()[j];
+                                        final Type modelType = type.getActualTypeArguments()[j];
+                                        final Class modelClazz = (Class) modelType;
                                         if (Entity.class.isAssignableFrom(modelClazz)) {
                                             query.registerMapper(new LowerToCamelBeanMapperFactory(modelClazz));
                                         }

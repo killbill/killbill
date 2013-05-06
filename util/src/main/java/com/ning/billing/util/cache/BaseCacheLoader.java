@@ -23,6 +23,7 @@ import javax.inject.Inject;
 
 import org.skife.jdbi.v2.IDBI;
 
+import com.ning.billing.util.cache.Cachable.CacheType;
 import com.ning.billing.util.dao.NonEntityDao;
 
 import net.sf.ehcache.CacheException;
@@ -44,9 +45,10 @@ public abstract class BaseCacheLoader implements CacheLoader {
         this.cacheLoaderStatus = Status.STATUS_UNINITIALISED;
     }
 
+    public abstract CacheType getCacheType();
+
     @Override
     public abstract Object load(final Object key, final Object argument);
-
 
     @Override
     public Object load(final Object key) throws CacheException {
