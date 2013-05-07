@@ -24,11 +24,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 
+import org.skife.config.TimeSpan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -90,6 +92,7 @@ public class PaymentProcessor extends ProcessorBase {
 
     private static final Logger log = LoggerFactory.getLogger(PaymentProcessor.class);
 
+
     @Inject
     public PaymentProcessor(final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry,
                             final PaymentMethodProcessor paymentMethodProcessor,
@@ -113,8 +116,9 @@ public class PaymentProcessor extends ProcessorBase {
         this.autoPayoffRetryService = autoPayoffRetryService;
         this.clock = clock;
         this.paymentConfig = paymentConfig;
-        this.paymentPluginDispatcher = new PluginDispatcher<Payment>(paymentConfig.getPaymentTimeoutSeconds(), executor);
-        this.voidPluginDispatcher = new PluginDispatcher<Void>(paymentConfig.getPaymentTimeoutSeconds(), executor);
+        final long paymentPluginTimeoutSec = TimeUnit.SECONDS.convert(paymentConfig.getPaymentPluginTimeout().getPeriod(), paymentConfig.getPaymentPluginTimeout().getUnit());
+        this.paymentPluginDispatcher = new PluginDispatcher<Payment>(paymentPluginTimeoutSec, executor);
+        this.voidPluginDispatcher = new PluginDispatcher<Void>(paymentPluginTimeoutSec, executor);
     }
 
     public Payment getPayment(final UUID paymentId, final boolean withPluginInfo, final InternalTenantContext context) throws PaymentApiException {
@@ -276,6 +280,13 @@ public class PaymentProcessor extends ProcessorBase {
                 // If we crash before plugin thread completes, we may end up with a UNKNOWN Payment
                 // We would like to return an error so the Bus can retry but we are limited by Guava bug
                 // swallowing exception
+                return null;
+            }
+        } catch (RuntimeException e) {
+            log.error("Failure when dispatching payment for invoice " + invoiceId , e);
+            if (isInstantPayment) {
+                throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, invoiceId);
+            } else {
                 return null;
             }
         }

@@ -21,6 +21,7 @@ import java.util.List;
 import org.skife.config.Config;
 import org.skife.config.Default;
 import org.skife.config.Description;
+import org.skife.config.TimeSpan;
 
 public interface PaymentConfig extends KillbillConfig {
 
@@ -48,10 +49,15 @@ public interface PaymentConfig extends KillbillConfig {
     @Description("Maximum number of retries for failed payments")
     public int getPluginFailureRetryMaxAttempts();
 
-    @Config("killbill.payment.timeout.seconds")
-    @Default("90")
+    @Config("killbill.payment.plugin.timeout")
+    @Default("90s")
     @Description("Timeout for each payment attempt")
-    public int getPaymentTimeoutSeconds();
+    public TimeSpan getPaymentPluginTimeout();
+
+    @Config("killbill.payment.plugin.threads.nb")
+    @Default("10")
+    @Description("Number of threads for plugin executor dispatcher")
+    public int getPaymentPluginThreadNb();
 
     @Config("killbill.payment.off")
     @Default("false")

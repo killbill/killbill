@@ -51,7 +51,6 @@ import com.google.inject.name.Names;
 
 public class PaymentModule extends AbstractModule {
 
-    private static final int PLUGIN_NB_THREADS = 10;
     private static final String PLUGIN_THREAD_PREFIX = "Plugin-th-";
 
     public static final String PLUGIN_EXECUTOR_NAMED = "PluginExecutor";
@@ -78,8 +77,8 @@ public class PaymentModule extends AbstractModule {
         bind(AutoPayRetryServiceScheduler.class).asEagerSingleton();
     }
 
-    protected void installProcessors() {
-        final ExecutorService pluginExecutorService = Executors.newFixedThreadPool(PLUGIN_NB_THREADS, new ThreadFactory() {
+    protected void installProcessors(final PaymentConfig paymentConfig) {
+        final ExecutorService pluginExecutorService = Executors.newFixedThreadPool(paymentConfig.getPaymentPluginThreadNb(), new ThreadFactory() {
 
             @Override
             public Thread newThread(final Runnable r) {
@@ -109,7 +108,7 @@ public class PaymentModule extends AbstractModule {
         bind(PaymentService.class).to(DefaultPaymentService.class).asEagerSingleton();
         installPaymentProviderPlugins(paymentConfig);
         installPaymentDao();
-        installProcessors();
+        installProcessors(paymentConfig);
         installRetryEngines();
     }
 }
