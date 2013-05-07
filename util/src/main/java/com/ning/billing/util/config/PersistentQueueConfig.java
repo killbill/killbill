@@ -18,7 +18,11 @@ package com.ning.billing.util.config;
 
 public interface PersistentQueueConfig {
 
+    public int getPrefetchAmount();
+
     public long getSleepTimeMs();
 
     public boolean isProcessingOff();
+
+    public int getNbThreads();
 }
