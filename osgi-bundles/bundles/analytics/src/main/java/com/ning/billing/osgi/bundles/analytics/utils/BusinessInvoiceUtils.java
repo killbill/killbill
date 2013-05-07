@@ -46,7 +46,14 @@ public class BusinessInvoiceUtils {
     }
 
     // Invoice adjustments
-    public static boolean isInvoiceAdjustmentItem(final InvoiceItem invoiceItem, final Collection<InvoiceItem> otherInvoiceItems) {
+    public static boolean isInvoiceAdjustmentItem(final InvoiceItem invoiceItem, final Collection<InvoiceItem> otherInvoiceItemsOnAllInvoices) {
+        final Collection<InvoiceItem> otherInvoiceItems = Collections2.filter(otherInvoiceItemsOnAllInvoices, new Predicate<InvoiceItem>() {
+            @Override
+            public boolean apply(final InvoiceItem input) {
+                return input.getInvoiceId().equals(invoiceItem.getInvoiceId());
+            }
+        });
+
         // Either REFUND_ADJ
         return InvoiceItemType.REFUND_ADJ.equals(invoiceItem.getInvoiceItemType()) ||
                // Or invoice level credit, i.e. credit adj, but NOT on its on own invoice
