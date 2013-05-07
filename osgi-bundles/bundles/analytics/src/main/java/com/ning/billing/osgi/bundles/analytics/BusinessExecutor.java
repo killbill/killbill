@@ -29,9 +29,12 @@ import org.osgi.service.log.LogService;
 
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillLogService;
 
+import com.google.common.annotations.VisibleForTesting;
+
 public class BusinessExecutor extends ThreadPoolExecutor {
 
-    private static final Integer NB_THREADS = Integer.valueOf(System.getProperty("com.ning.billing.osgi.bundles.analytics.nb_threads", "100"));
+    @VisibleForTesting
+    static final Integer NB_THREADS = Integer.valueOf(System.getProperty("com.ning.billing.osgi.bundles.analytics.nb_threads", "100"));
 
     private final OSGIKillbillLogService logService;
 
@@ -52,7 +55,8 @@ public class BusinessExecutor extends ThreadPoolExecutor {
                             final BlockingQueue<Runnable> workQueue,
                             final ThreadFactory threadFactory,
                             final OSGIKillbillLogService logService) {
-        super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, threadFactory);
+        // Note: we don't use the default rejection handler here (AbortPolicy) as we always want the tasks to be executed
+        super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, threadFactory, new CallerRunsPolicy());
         this.logService = logService;
     }
 
