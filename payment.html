@@ -1,0 +1,70 @@
+---
+layout: default
+---
+
+<div class="row">
+    <div class="span3 bs-docs-sidebar">
+        <ul class="nav nav-list bs-docs-sidenav affix">
+            <li><a href="#payment_overview">Overview</a></li>
+            <li><a href="#payment_states">Payment States</a></li>
+            <li><a href="#payment_retries">Payment States</a></li>
+        </ul>
+    </div>
+
+    <div class="span12">
+        <section id="payment_overview">
+            <div class="page-header">
+                <h1>Overview</h1>
+            </div>
+
+
+            <p>Kill Bill provides a framework to register payment plugins. Those payment plugins must be OSGI compliant plugins. They can be written either in:
+                <ul>
+                    <li>java; in which case there are just a standard OSGI java plugin which must register a service implementing the <a href="https://github.com/killbill/killbill/blob/master/api/src/main/java/com/ning/billing/payment/plugin/api/PaymentPluginApi.java" <code>PaymentPluginApi.</code></a></li>
+                    <li>ruby; in which case they must use the <a href="https://github.com/killbill/killbill-plugin-framework-ruby">Killbill</a> gem which provides a jruby bridge between java and ruby so that plugins can be written purely in ruby. Those plugins must inherit the <a href="https://github.com/killbill/killbill-plugin-framework-ruby/blob/master/lib/killbill/payment.rb">Payment</a> class to provide the specific plugin code functionality.</li>
+                </ul>
+            </p>
+            
+            <p>The main reason to provide a way to write ruby payment plugin is to be able to reuse the <a href="http://activemerchant.org/">Active Merchant </a> gem. There are examples of payment plugin codes written in ruby.
+                <ul>
+                    <li><a href="https://github.com/killbill/killbill-litle-plugin">Litle plugin</a></li>
+                    <li><a href="https://github.com/killbill/killbill-paypal-express-plugin">Paypal plugin</a></li>
+                </ul>
+            </p>
+            
+            <p>The Kill Bill payment code will detect all the payment plugins registered in the system and decide which plugin to use when a charge, refund, .. operation needs to happen. The dispatching is based on the payment methods associated with each account. Each account should have one default payment method active at a given time, and that payment method will have a link that points to a specific plugin to use. For instance one account could have a Paypal payment method that would point to the paypal plugin.
+            </p>            
+        </section>
+                                      
+        <section id="payment_states">
+            <div class="page-header">
+                <h1>Payment States</h1>
+            </div>
+            
+            <p>A payment is represented in Kill Bill with a payment row in the <code>payments</code> table; each time a payment is made the code will create a record in the <code>payment_attempts</code> table and update the <code>payment</code> record. Both the payment and the payment_attempt have a status. The payment status is the payment_attempt status of the last attempt except when the last payment_attempt is in an UNKNOWN state, in which case the payment status is the status of the last payment_attempt status not in UNKNOWN state; if there is only one attempt and it is in an UNKNOWN state, the payment status also shows an UNKNOWN state. The various state are:
+                <ul>
+                       <li><code>SUCCESS</code>: The payment attempt succeeded. This is a terminal state.</li>
+                       <li><code>UNKNOWN</code>: The payment attempt did not complete; for instance the system crashed while we were making the call; we are left in an unknown state. There is no automatic retry for that case, but if we issue another attempt manually, the system may heal itself.</li>
+                       <li><code>AUTO_PAY_OFF</code>: The account associated with the payment is in AUTO_PAY_OFF and so any payment attempt made on that account will result in AUTO_PAY_OFF state.</li>
+                       <li><code>PAYMENT_FAILURE</code>: The payment completed but failed because the payment method used to issue that payment is not valid.</li>
+                       <li><code>PAYMENT_FAILURE_ABORTED</code>: The payment completed but failed because the payment method used to issue that payment is not valid. This case is similar to the previous one except it is a terminal state which occurs after we issued all the retries for that payment.</li>
+                       <li><code>PLUGIN_FAILURE</code>: There was some exception coming back from the payment plugin. This state is similar to UNKNOWN in the sense we are left in an unknown state.</li>
+                       <li><code>PLUGIN_FAILURE_ABORTED</code>: This state is similar to the previous one except this is terminal state, and there will be no more retries.</li>
+                </ul>    
+            </p>            
+        </section>
+        
+        <section id="payment_retries">
+               <div class="page-header">
+                   <h1>Payment Retries</h1>
+               </div>
+            
+               <p>The Kill Bill payment code is responsible for retrying the failed payments in the following states:
+                   <li><code>PAYMENT_FAILURE</code>: There is a configuration parameter which specifies how many retries should happen for that state and what is the delay between each retry. The property <code>killbill.payment.retry.days</code> specifies a comma separated list of days specifying the delay between each retry. Note that if there is a configuration file specifying overdue states, one should arrange to align those payment retries with the overdue states. If after all the retries were made and the payment is still not successful both the last attempt and payment status transition to PAYMENT_FAILURE_ABORTED.
+                   <li><code>PLUGIN_FAILURE</code>: There are 3 configuration parameters which specify the retry strategy for that state. The property <code>killbill.payment.failure.retry.start.sec</code> specifies the number of seconds that should elapse before we do the first retry. The property <code>killbill.payment.failure.retry.multiplier</code> specifies the multiplier that should be applied in between each attempt to implement some exponential retry strategy. Finally the property <code>killbill.payment.failure.retry.max.attempts</code> specifies how many attempts should be retried in that state. If the payment keep stays in that state after we reached the maximum number of attempts, both the last attempt and payment status transition to PLUGIN_FAILURE_ABORTED.
+                    <li><code>AUTO_PAY_OFF</code>: All the attempts that were in AUTO_PAY_OFF will be retried when we remove the AUTO_PAY_OFF on the account.
+               </p>
+
+        </section>
+    </div>
+</div>
