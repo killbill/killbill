@@ -180,7 +180,8 @@ public class PaymentProcessor extends ProcessorBase {
                                                                                                            // Payments left in AUTO_PAY_OFF or for which we did not retry enough
                                                                                                            return (in.getPaymentStatus() == PaymentStatus.AUTO_PAY_OFF ||
                                                                                                                    in.getPaymentStatus() == PaymentStatus.PAYMENT_FAILURE ||
-                                                                                                                   in.getPaymentStatus() == PaymentStatus.PLUGIN_FAILURE);
+                                                                                                                   in.getPaymentStatus() == PaymentStatus.PLUGIN_FAILURE ||
+                                                                                                                   in.getPaymentStatus() == PaymentStatus.UNKNOWN);
                                                                                                        }
                                                                                                    });
                                                                                                    // Insert one retry event for each payment left in AUTO_PAY_OFF
@@ -193,6 +194,7 @@ public class PaymentProcessor extends ProcessorBase {
                                                                                                                scheduleRetryOnPaymentFailure(cur.getId(), context);
                                                                                                                break;
                                                                                                            case PLUGIN_FAILURE:
+                                                                                                               case UNKNOWN:
                                                                                                                scheduleRetryOnPluginFailure(cur.getId(), context);
                                                                                                                break;
                                                                                                            default:
@@ -342,7 +344,7 @@ public class PaymentProcessor extends ProcessorBase {
 
             final PaymentModelDao payment = paymentDao.getPayment(paymentId, context);
             if (payment == null) {
-                log.error("Invalid retry for non existnt paymentId {}", paymentId);
+                log.error("Invalid retry for non existent paymentId {}", paymentId);
                 return;
             }
 
@@ -381,6 +383,7 @@ public class PaymentProcessor extends ProcessorBase {
                                                                                                        }
                                                                                                        if (invoice.getBalance().compareTo(BigDecimal.ZERO) <= 0) {
                                                                                                            log.info("Aborted retry for payment {} because invoice has been paid", paymentId);
+                                                                                                           setTerminalStateOnRetryWithAccountLocked(account, invoice, payment, invoice.getBalance(), "Paid invoice", context);
                                                                                                            return null;
                                                                                                        }
                                                                                                        processRetryPaymentWithAccountLocked(plugin, account, invoice, payment, invoice.getBalance(), context);
@@ -421,6 +424,32 @@ public class PaymentProcessor extends ProcessorBase {
         return processPaymentWithAccountLocked(plugin, account, invoice, savedPayment, attempt, isInstantPayment, context);
     }
 
+    private Payment setTerminalStateOnRetryWithAccountLocked(final Account account, final Invoice invoice, final PaymentModelDao payment, final BigDecimal requestedAmount, final String terminalStateReason, final InternalCallContext context) {
+
+        final PaymentStatus paymentStatus;
+        switch(payment.getPaymentStatus()) {
+            case PAYMENT_FAILURE:
+                paymentStatus = PaymentStatus.PAYMENT_FAILURE_ABORTED;
+                break;
+
+            case PLUGIN_FAILURE:
+            case UNKNOWN:
+                paymentStatus = PaymentStatus.PLUGIN_FAILURE_ABORTED;
+                break;
+
+            case AUTO_PAY_OFF:
+            default:
+                throw new IllegalStateException("Unexpected payment status for retry " + payment.getPaymentStatus());
+        }
+        final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(account.getId(), invoice.getId(), payment.getId(), clock.getUTCNow(), requestedAmount);
+        paymentDao.insertNewAttemptForPayment(payment.getId(), attempt, context);
+        paymentDao.updateStatusAndEffectiveDateForPaymentWithAttempt(payment.getId(), paymentStatus, clock.getUTCNow(), attempt.getId(), null, terminalStateReason,  context);
+
+        final List<PaymentAttemptModelDao> allAttempts = paymentDao.getAttemptsForPayment(payment.getId(), context);
+        return new DefaultPayment(payment, null, allAttempts, Collections.<RefundModelDao>emptyList());
+
+    }
+
     private Payment processRetryPaymentWithAccountLocked(final PaymentPluginApi plugin, final Account account, final Invoice invoice, final PaymentModelDao payment,
                                                          final BigDecimal requestedAmount, final InternalCallContext context) throws PaymentApiException {
         final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(account.getId(), invoice.getId(), payment.getId(), clock.getUTCNow(), requestedAmount);
@@ -445,8 +474,13 @@ public class PaymentProcessor extends ProcessorBase {
         PaymentStatus paymentStatus;
         final PaymentInfoPlugin paymentPluginInfo;
         try {
-
-            paymentPluginInfo = plugin.processPayment(account.getId(), paymentInput.getId(), paymentInput.getPaymentMethodId(), attemptInput.getRequestedAmount(), account.getCurrency(), context.toCallContext());
+            try {
+                paymentPluginInfo = plugin.processPayment(account.getId(), paymentInput.getId(), paymentInput.getPaymentMethodId(), attemptInput.getRequestedAmount(), account.getCurrency(), context.toCallContext());
+            } catch (RuntimeException e) {
+                // Handle case of plugin RuntimeException to be handled the same as a Plugin failure (PaymentPluginApiException)
+                final String formatError = String.format("Plugin threw RuntimeException for payment %s", paymentInput.getId());
+                throw new PaymentPluginApiException(formatError, e);
+            }
             switch (paymentPluginInfo.getStatus()) {
                 case PROCESSED:
                     // Update Payment/PaymentAttempt status
