@@ -90,12 +90,12 @@ public class DefaultNoOpPaymentMethodPlugin implements PaymentMethodPlugin {
     }
 
     @Override
-    public String getCCExprirationMonth() {
+    public String getCCExpirationMonth() {
         return null;
     }
 
     @Override
-    public String getCCExprirationYear() {
+    public String getCCExpirationYear() {
         return null;
     }
 

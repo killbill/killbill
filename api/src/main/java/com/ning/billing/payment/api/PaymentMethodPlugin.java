@@ -68,13 +68,13 @@ public interface PaymentMethodPlugin {
      *
      * @return the credit card expiration month
      */
-    public String getCCExprirationMonth();
+    public String getCCExpirationMonth();
 
     /**
      *
      * @return the credit card expiration year
      */
-    public String getCCExprirationYear();
+    public String getCCExpirationYear();
 
     /**
      *

@@ -139,13 +139,13 @@ public class PaymentMethodJson {
                     }
 
                     @Override
-                    public String getCCExprirationMonth() {
+                    public String getCCExpirationMonth() {
                         // N/A
                         return null;
                     }
 
                     @Override
-                    public String getCCExprirationYear() {
+                    public String getCCExpirationYear() {
                         // N/A
                         return null;
                     }

@@ -54,12 +54,12 @@ public class TestPaymentMethodPluginBase implements PaymentMethodPlugin {
     }
 
     @Override
-    public String getCCExprirationMonth() {
+    public String getCCExpirationMonth() {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public String getCCExprirationYear() {
+    public String getCCExpirationYear() {
         throw new UnsupportedOperationException();
     }
 
