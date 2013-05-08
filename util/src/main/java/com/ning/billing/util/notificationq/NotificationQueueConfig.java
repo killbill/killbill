@@ -40,4 +40,9 @@ public interface NotificationQueueConfig extends PersistentQueueConfig {
     @Default("false")
     @Description("Whether to turn off the notification queue")
     public boolean isProcessingOff();
+
+    @Config("killbill.billing.util.notificationq.notification.nbThreads")
+    @Default("1")
+    @Description("Number of threads to use")
+    public int getNbThreads();
 }

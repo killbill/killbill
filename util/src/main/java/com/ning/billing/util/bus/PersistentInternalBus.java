@@ -16,8 +16,8 @@
 
 package com.ning.billing.util.bus;
 
-import java.util.Collections;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -49,7 +49,6 @@ import com.google.inject.Inject;
 public class PersistentInternalBus extends PersistentQueueBase implements InternalBus {
 
     private static final long DELTA_IN_PROCESSING_TIME_MS = 1000L * 60L * 5L; // 5 minutes
-    private static final int MAX_BUS_EVENTS = 1;
 
     private static final Logger log = LoggerFactory.getLogger(PersistentInternalBus.class);
 
@@ -145,19 +144,18 @@ public class PersistentInternalBus extends PersistentQueueBase implements Intern
         final Date now = clock.getUTCNow().toDate();
         final Date nextAvailable = clock.getUTCNow().plus(DELTA_IN_PROCESSING_TIME_MS).toDate();
 
-        final BusEventEntry input = dao.getNextBusEventEntry(MAX_BUS_EVENTS, hostname, now, context);
-        if (input == null) {
-            return Collections.emptyList();
+        final List<BusEventEntry> entries = dao.getNextBusEventEntries(config.getPrefetchAmount(), hostname, now, context);
+        final List<BusEventEntry> claimedEntries = new LinkedList<BusEventEntry>();
+        for (final BusEventEntry entry : entries) {
+            // We need to re-hydrate the context with the record ids from the BusEventEntry
+            final InternalCallContext rehydratedContext = internalCallContextFactory.createInternalCallContext(entry.getTenantRecordId(), entry.getAccountRecordId(), context);
+            final boolean claimed = (dao.claimBusEvent(hostname, nextAvailable, entry.getId(), now, rehydratedContext) == 1);
+            if (claimed) {
+                dao.insertClaimedHistory(hostname, now, entry.getId(), rehydratedContext);
+                claimedEntries.add(entry);
+            }
         }
-
-        // We need to re-hydrate the context with the record ids from the BusEventEntry
-        final InternalCallContext rehydratedContext = internalCallContextFactory.createInternalCallContext(input.getTenantRecordId(), input.getAccountRecordId(), context);
-        final boolean claimed = (dao.claimBusEvent(hostname, nextAvailable, input.getId(), now, rehydratedContext) == 1);
-        if (claimed) {
-            dao.insertClaimedHistory(hostname, now, input.getId(), rehydratedContext);
-            return Collections.singletonList(input);
-        }
-        return Collections.emptyList();
+        return claimedEntries;
     }
 
     @Override

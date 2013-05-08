@@ -19,6 +19,7 @@ package com.ning.billing.util.bus.dao;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -46,10 +47,10 @@ public interface PersistentBusSqlDao extends Transactional<PersistentBusSqlDao>,
 
     @SqlQuery
     @Mapper(PersistentBusSqlMapper.class)
-    public BusEventEntry getNextBusEventEntry(@Bind("max") int max,
-                                              @Bind("owner") String owner,
-                                              @Bind("now") Date now,
-                                              @BindBean final InternalTenantContext context);
+    public List<BusEventEntry> getNextBusEventEntries(@Bind("max") int max,
+                                                      @Bind("owner") String owner,
+                                                      @Bind("now") Date now,
+                                                      @BindBean final InternalTenantContext context);
 
     @SqlUpdate
     public int claimBusEvent(@Bind("owner") String owner,

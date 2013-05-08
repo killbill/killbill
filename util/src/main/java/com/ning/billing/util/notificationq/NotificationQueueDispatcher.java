@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.annotation.Nullable;
@@ -34,7 +33,6 @@ import org.joda.time.DateTime;
 import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.weakref.jmx.Managed;
 
 import com.ning.billing.util.Hostname;
 import com.ning.billing.util.callcontext.CallOrigin;
@@ -58,7 +56,6 @@ public class NotificationQueueDispatcher extends PersistentQueueBase {
     public static final int CLAIM_TIME_MS = (5 * 60 * 1000); // 5 minutes
 
     private static final String NOTIFICATION_THREAD_NAME = "Notification-queue-dispatch";
-    private static final int NB_THREADS = 1;
 
     private final NotificationQueueConfig config;
     private final String hostname;
@@ -92,7 +89,7 @@ public class NotificationQueueDispatcher extends PersistentQueueBase {
                 });
                 return th;
             }
-        }), NB_THREADS, config);
+        }), config.getNbThreads(), config);
 
         this.clock = clock;
         this.config = config;

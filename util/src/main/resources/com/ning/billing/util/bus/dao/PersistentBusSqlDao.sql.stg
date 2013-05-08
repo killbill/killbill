@@ -3,7 +3,7 @@ group PersistentBusSqlDao;
 CHECK_TENANT() ::= "tenant_record_id = :tenantRecordId"
 AND_CHECK_TENANT() ::= "AND <CHECK_TENANT()>"
 
-getNextBusEventEntry() ::= <<
+getNextBusEventEntries() ::= <<
     select
       record_id
       , class_name

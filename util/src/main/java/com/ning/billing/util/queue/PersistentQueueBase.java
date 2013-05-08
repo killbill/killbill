@@ -37,7 +37,7 @@ public abstract class PersistentQueueBase implements QueueLifecycle {
     private final int nbThreads;
     private final Executor executor;
     private final String svcQName;
-    private final PersistentQueueConfig config;
+    protected final PersistentQueueConfig config;
     private boolean isProcessingEvents;
     private int curActiveThreads;
 

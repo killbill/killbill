@@ -30,7 +30,11 @@ import com.ning.billing.osgi.api.config.PluginRubyConfig;
 import com.ning.killbill.osgi.libs.killbill.KillbillActivatorBase;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillEventDispatcher.OSGIKillbillEventHandler;
 
+import com.google.common.base.Objects;
+
 public class JRubyActivator extends KillbillActivatorBase {
+
+    private static final String jrubyPluginsConfDir = System.getProperty("com.ning.billing.osgi.bundles.jruby.conf.dir");
 
     private JRubyPlugin plugin = null;
 
@@ -61,6 +65,8 @@ public class JRubyActivator extends KillbillActivatorBase {
                 final Map<String, Object> killbillServices = retrieveKillbillApis(context);
                 killbillServices.put("root", rubyConfig.getPluginVersionRoot().getAbsolutePath());
                 killbillServices.put("logger", logService);
+                // Default to the plugin root dir if no jruby plugins specific configuration directory was specified
+                killbillServices.put("conf_dir", Objects.firstNonNull(jrubyPluginsConfDir, rubyConfig.getPluginVersionRoot().getAbsolutePath()));
                 plugin.instantiatePlugin(killbillServices);
 
                 logService.log(LogService.LOG_INFO, "Starting JRuby plugin " + plugin.getPluginMainClass());

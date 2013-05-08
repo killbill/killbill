@@ -24,6 +24,11 @@ import com.ning.billing.util.config.PersistentQueueConfig;
 
 public interface PersistentBusConfig extends PersistentQueueConfig {
 
+    @Config("killbill.billing.util.persistent.bus.prefetch")
+    @Default("5")
+    @Description("Number of bus events to fetch from the database at once")
+    public int getPrefetchAmount();
+
     @Override
     @Config("killbill.billing.util.persistent.bus.sleep")
     @Default("3000")
