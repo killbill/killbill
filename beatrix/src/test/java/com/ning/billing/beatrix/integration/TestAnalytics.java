@@ -71,7 +71,7 @@ public class TestAnalytics extends TestIntegrationBase {
     private Plan subscriptionPlan;
 
     @Override
-    @BeforeMethod(groups = "slow")
+    @BeforeMethod(groups = "slow", enabled=false)
     public void beforeMethod() throws Exception {
         super.beforeMethod();
         final String configXml = "<overdueConfig>" +
@@ -130,7 +130,7 @@ public class TestAnalytics extends TestIntegrationBase {
     }
 
     @Override
-    @AfterMethod(groups = "slow")
+    @AfterMethod(groups = "slow", enabled=false)
     public void afterMethod() throws Exception {
         super.afterMethod();
         busService.getBus().unregister(analyticsListener);
@@ -138,7 +138,7 @@ public class TestAnalytics extends TestIntegrationBase {
         paymentPlugin.clear();
     }
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", enabled=false)
     public void testVerifyRefresh() throws Exception {
         // Create a tag
         final TagDefinition tagDefinition = tagUserApi.create(UUID.randomUUID().toString().substring(0, 10), UUID.randomUUID().toString(), callContext);
@@ -153,7 +153,7 @@ public class TestAnalytics extends TestIntegrationBase {
         Assert.assertEquals(tagsForAccount.get(0).getName(), tagDefinition.getName());
     }
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", enabled=false)
     public void testCreateAndCancelSubscription() throws Exception {
 
         // Create a bundle
@@ -190,7 +190,7 @@ public class TestAnalytics extends TestIntegrationBase {
         verifyBSTWithTrialAndEvergreenPhasesAndCancellationAndSystemCancellation(account, bundle, subscription);
     }
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", enabled=false)
     public void testCreateAndUpdateSubscription() throws Exception {
 
         // Update some fields
@@ -209,7 +209,7 @@ public class TestAnalytics extends TestIntegrationBase {
         verifyChangePlan(account, bundle, subscription);
     }
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", enabled=false)
     public void testOverdue() throws Exception {
 
         paymentPlugin.makeAllInvoicesFailWithError(true);
