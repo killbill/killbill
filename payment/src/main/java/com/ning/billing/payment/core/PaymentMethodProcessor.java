@@ -51,7 +51,6 @@ import com.ning.billing.util.svcapi.tag.TagInternalApi;
 import com.ning.billing.util.svcsapi.bus.InternalBus;
 
 import com.google.common.base.Function;
-import com.google.common.base.Objects;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -103,6 +102,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                         accountInternalApi.updatePaymentMethod(account.getId(), pm.getId(), context);
                     }
                 } catch (PaymentPluginApiException e) {
+                    log.warn("Error adding payment method " + pm.getId() + " for plugin " + paymentPluginServiceName, e);
                     // STEPH all errors should also take a pluginName
                     throw new PaymentApiException(ErrorCode.PAYMENT_ADD_PAYMENT_METHOD, account.getId(), e.getErrorMessage());
                 } catch (AccountApiException e) {
@@ -139,6 +139,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                 final PaymentPluginApi pluginApi = pluginRegistry.getServiceForName(paymentMethodModelDao.getPluginName());
                 paymentMethodPlugin = pluginApi.getPaymentMethodDetail(paymentMethodModelDao.getAccountId(), paymentMethodModelDao.getId(), context.toTenantContext());
             } catch (PaymentPluginApiException e) {
+                log.warn("Error retrieving payment method " + paymentMethodModelDao.getId() + " from plugin " + paymentMethodModelDao.getPluginName(), e);
                 throw new PaymentApiException(ErrorCode.PAYMENT_GET_PAYMENT_METHODS, paymentMethodModelDao.getAccountId(), paymentMethodModelDao.getId());
             }
         } else {
@@ -213,6 +214,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                     paymentDao.deletedPaymentMethod(paymentMethodId, context);
                     return null;
                 } catch (PaymentPluginApiException e) {
+                    log.warn("Error deleting payment method " + paymentMethodId, e);
                     throw new PaymentApiException(ErrorCode.PAYMENT_DEL_PAYMENT_METHOD, account.getId(), e.getErrorMessage());
                 } catch (AccountApiException e) {
                     throw new PaymentApiException(e);
@@ -282,6 +284,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                 return ImmutableList.<PaymentMethod>of();
             }
         } catch (PaymentPluginApiException e) {
+            log.warn("Error refreshing payment methods for account " + account.getId() + " and plugin " + pluginName, e);
             throw new PaymentApiException(ErrorCode.PAYMENT_REFRESH_PAYMENT_METHOD, account.getId(), e.getErrorMessage());
         }
 
@@ -316,6 +319,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                 try {
                     pluginApi.resetPaymentMethods(account.getId(), pluginPmsWithId);
                 } catch (PaymentPluginApiException e) {
+                    log.warn("Error resetting payment methods for account " + account.getId() + " and plugin " + pluginName, e);
                     throw new PaymentApiException(ErrorCode.PAYMENT_REFRESH_PAYMENT_METHOD, account.getId(), e.getErrorMessage());
                 }
 
