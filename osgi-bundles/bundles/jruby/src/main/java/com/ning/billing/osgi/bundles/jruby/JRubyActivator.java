@@ -38,6 +38,9 @@ public class JRubyActivator extends KillbillActivatorBase {
 
     private JRubyPlugin plugin = null;
 
+    private final static String KILLBILL_PLUGIN_JPAYMENT = "Killbill::Plugin::JPayment";
+    private final static String KILLBILL_PLUGIN_JNOTIFICATION = "Killbill::Plugin::JNotification";
+
     public void start(final BundleContext context) throws Exception {
 
         super.start(context);
@@ -52,12 +55,17 @@ public class JRubyActivator extends KillbillActivatorBase {
                 final PluginRubyConfig rubyConfig = retrievePluginRubyConfig(context);
 
                 // Setup JRuby
+                final String pluginMain;
                 final ScriptingContainer scriptingContainer = setupScriptingContainer(rubyConfig);
                 if (PluginType.NOTIFICATION.equals(rubyConfig.getPluginType())) {
                     plugin = new JRubyNotificationPlugin(rubyConfig, scriptingContainer, context, logService);
                     dispatcher.registerEventHandler((OSGIKillbillEventHandler) plugin);
+                    pluginMain = KILLBILL_PLUGIN_JNOTIFICATION;
                 } else if (PluginType.PAYMENT.equals(rubyConfig.getPluginType())) {
                     plugin = new JRubyPaymentPlugin(rubyConfig, scriptingContainer, context, logService);
+                    pluginMain = KILLBILL_PLUGIN_JPAYMENT;
+                } else {
+                    throw new IllegalStateException("Unsupported plugin type " + rubyConfig.getPluginType());
                 }
 
                 // Validate and instantiate the plugin
@@ -67,7 +75,7 @@ public class JRubyActivator extends KillbillActivatorBase {
                 killbillServices.put("logger", logService);
                 // Default to the plugin root dir if no jruby plugins specific configuration directory was specified
                 killbillServices.put("conf_dir", Objects.firstNonNull(jrubyPluginsConfDir, rubyConfig.getPluginVersionRoot().getAbsolutePath()));
-                plugin.instantiatePlugin(killbillServices);
+                plugin.instantiatePlugin(killbillServices, pluginMain);
 
                 logService.log(LogService.LOG_INFO, "Starting JRuby plugin " + plugin.getPluginMainClass());
                 plugin.startPlugin(context);

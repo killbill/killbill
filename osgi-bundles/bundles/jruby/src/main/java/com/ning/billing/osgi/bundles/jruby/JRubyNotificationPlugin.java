@@ -16,13 +16,17 @@
 
 package com.ning.billing.osgi.bundles.jruby;
 
+import org.jruby.Ruby;
 import org.jruby.embed.ScriptingContainer;
 import org.jruby.javasupport.JavaEmbedUtils;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.log.LogService;
 
 import com.ning.billing.beatrix.bus.api.ExtBusEvent;
+import com.ning.billing.notification.plugin.api.NotificationPluginApi;
 import com.ning.billing.osgi.api.config.PluginRubyConfig;
+import com.ning.billing.payment.plugin.api.PaymentPluginApi;
+import com.ning.billing.payment.plugin.api.PaymentPluginApiException;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillEventDispatcher.OSGIKillbillEventHandler;
 
 public class JRubyNotificationPlugin extends JRubyPlugin implements OSGIKillbillEventHandler {
@@ -39,8 +43,17 @@ public class JRubyNotificationPlugin extends JRubyPlugin implements OSGIKillbill
 
     @Override
     public void handleKillbillEvent(final ExtBusEvent killbillEvent) {
-        checkValidNotificationPlugin();
-        checkPluginIsRunning();
-        pluginInstance.callMethod("on_event", JavaEmbedUtils.javaToRuby(getRuntime(), killbillEvent));
+
+        try {
+            callWithRuntimeAndChecking(new PluginCallback(VALIDATION_PLUGIN_TYPE.NOTIFICATION) {
+                @Override
+                public Void doCall(final Ruby runtime) throws PaymentPluginApiException {
+                    ((NotificationPluginApi) pluginInstance).onEvent(killbillEvent);
+                    return null;
+                }
+            });
+        } catch (PaymentPluginApiException e) {
+            throw new IllegalStateException("Unexpected PaymentApiException for notification plugin");
+        }
     }
 }

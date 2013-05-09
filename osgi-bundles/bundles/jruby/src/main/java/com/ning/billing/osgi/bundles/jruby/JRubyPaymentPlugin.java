@@ -24,8 +24,6 @@ import java.util.UUID;
 
 import org.jruby.Ruby;
 import org.jruby.embed.ScriptingContainer;
-import org.jruby.javasupport.JavaEmbedUtils;
-import org.jruby.runtime.builtin.IRubyObject;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.log.LogService;
@@ -70,9 +68,9 @@ public class JRubyPaymentPlugin extends JRubyPlugin implements PaymentPluginApi 
 
 
     @Override
-    public PaymentInfoPlugin processPayment(final UUID kbAccountId, final UUID kbPaymentId, final UUID kbPaymentMethodId, final BigDecimal amount, final Currency currency,  final CallContext context) throws PaymentPluginApiException {
+    public PaymentInfoPlugin processPayment(final UUID kbAccountId, final UUID kbPaymentId, final UUID kbPaymentMethodId, final BigDecimal amount, final Currency currency, final CallContext context) throws PaymentPluginApiException {
 
-        return callWithRuntimeAndChecking(new PluginCallback() {
+        return callWithRuntimeAndChecking(new PluginCallback(VALIDATION_PLUGIN_TYPE.PAYMENT) {
             @Override
             public PaymentInfoPlugin doCall(final Ruby runtime) throws PaymentPluginApiException {
                 return ((PaymentPluginApi) pluginInstance).processPayment(kbAccountId, kbPaymentId, kbPaymentMethodId, amount, currency, context);
@@ -83,7 +81,7 @@ public class JRubyPaymentPlugin extends JRubyPlugin implements PaymentPluginApi 
     @Override
     public PaymentInfoPlugin getPaymentInfo(final UUID kbAccountId, final UUID kbPaymentId, final TenantContext context) throws PaymentPluginApiException {
 
-        return callWithRuntimeAndChecking(new PluginCallback()  {
+        return callWithRuntimeAndChecking(new PluginCallback(VALIDATION_PLUGIN_TYPE.PAYMENT) {
             @Override
             public PaymentInfoPlugin doCall(final Ruby runtime) throws PaymentPluginApiException {
                 return ((PaymentPluginApi) pluginInstance).getPaymentInfo(kbAccountId, kbPaymentId, context);
@@ -94,7 +92,7 @@ public class JRubyPaymentPlugin extends JRubyPlugin implements PaymentPluginApi 
     @Override
     public RefundInfoPlugin processRefund(final UUID kbAccountId, final UUID kbPaymentId, final BigDecimal refundAmount, final Currency currency, final CallContext context) throws PaymentPluginApiException {
 
-        return callWithRuntimeAndChecking(new PluginCallback()  {
+        return callWithRuntimeAndChecking(new PluginCallback(VALIDATION_PLUGIN_TYPE.PAYMENT) {
             @Override
             public RefundInfoPlugin doCall(final Ruby runtime) throws PaymentPluginApiException {
                 return ((PaymentPluginApi) pluginInstance).processRefund(kbAccountId, kbPaymentId, refundAmount, currency, context);
@@ -105,7 +103,7 @@ public class JRubyPaymentPlugin extends JRubyPlugin implements PaymentPluginApi 
 
     @Override
     public List<RefundInfoPlugin> getRefundInfo(final UUID kbAccountId, final UUID kbPaymentId, final TenantContext context) throws PaymentPluginApiException {
-        return callWithRuntimeAndChecking(new PluginCallback()  {
+        return callWithRuntimeAndChecking(new PluginCallback(VALIDATION_PLUGIN_TYPE.PAYMENT) {
             @Override
             public List<RefundInfoPlugin> doCall(final Ruby runtime) throws PaymentPluginApiException {
                 return ((PaymentPluginApi) pluginInstance).getRefundInfo(kbAccountId, kbPaymentId, context);
@@ -116,9 +114,9 @@ public class JRubyPaymentPlugin extends JRubyPlugin implements PaymentPluginApi 
     @Override
     public void addPaymentMethod(final UUID kbAccountId, final UUID kbPaymentMethodId, final PaymentMethodPlugin paymentMethodProps, final boolean setDefault, final CallContext context) throws PaymentPluginApiException {
 
-        callWithRuntimeAndChecking(new PluginCallback() {
+        callWithRuntimeAndChecking(new PluginCallback(VALIDATION_PLUGIN_TYPE.PAYMENT) {
             @Override
-            public Void doCall(final Ruby runtime) throws PaymentPluginApiException  {
+            public Void doCall(final Ruby runtime) throws PaymentPluginApiException {
                 ((PaymentPluginApi) pluginInstance).addPaymentMethod(kbAccountId, kbPaymentMethodId, paymentMethodProps, Boolean.valueOf(setDefault), context);
                 return null;
             }
@@ -128,9 +126,9 @@ public class JRubyPaymentPlugin extends JRubyPlugin implements PaymentPluginApi 
     @Override
     public void deletePaymentMethod(final UUID kbAccountId, final UUID kbPaymentMethodId, final CallContext context) throws PaymentPluginApiException {
 
-        callWithRuntimeAndChecking(new PluginCallback() {
+        callWithRuntimeAndChecking(new PluginCallback(VALIDATION_PLUGIN_TYPE.PAYMENT) {
             @Override
-            public Void doCall(final Ruby runtime) throws PaymentPluginApiException  {
+            public Void doCall(final Ruby runtime) throws PaymentPluginApiException {
                 ((PaymentPluginApi) pluginInstance).deletePaymentMethod(kbAccountId, kbPaymentMethodId, context);
                 return null;
             }
@@ -140,7 +138,7 @@ public class JRubyPaymentPlugin extends JRubyPlugin implements PaymentPluginApi 
     @Override
     public PaymentMethodPlugin getPaymentMethodDetail(final UUID kbAccountId, final UUID kbPaymentMethodId, final TenantContext context) throws PaymentPluginApiException {
 
-        return callWithRuntimeAndChecking(new PluginCallback()  {
+        return callWithRuntimeAndChecking(new PluginCallback(VALIDATION_PLUGIN_TYPE.PAYMENT) {
             @Override
             public PaymentMethodPlugin doCall(final Ruby runtime) throws PaymentPluginApiException {
                 return ((PaymentPluginApi) pluginInstance).getPaymentMethodDetail(kbAccountId, kbPaymentMethodId, context);
@@ -151,7 +149,7 @@ public class JRubyPaymentPlugin extends JRubyPlugin implements PaymentPluginApi 
     @Override
     public void setDefaultPaymentMethod(final UUID kbAccountId, final UUID kbPaymentMethodId, final CallContext context) throws PaymentPluginApiException {
 
-        callWithRuntimeAndChecking(new PluginCallback()  {
+        callWithRuntimeAndChecking(new PluginCallback(VALIDATION_PLUGIN_TYPE.PAYMENT) {
             @Override
             public Void doCall(final Ruby runtime) throws PaymentPluginApiException {
                 ((PaymentPluginApi) pluginInstance).setDefaultPaymentMethod(kbAccountId, kbPaymentMethodId, context);
@@ -162,7 +160,7 @@ public class JRubyPaymentPlugin extends JRubyPlugin implements PaymentPluginApi 
 
     @Override
     public List<PaymentMethodInfoPlugin> getPaymentMethods(final UUID kbAccountId, final boolean refreshFromGateway, final CallContext context) throws PaymentPluginApiException {
-        return callWithRuntimeAndChecking(new PluginCallback() {
+        return callWithRuntimeAndChecking(new PluginCallback(VALIDATION_PLUGIN_TYPE.PAYMENT) {
             @Override
             public List<PaymentMethodInfoPlugin> doCall(final Ruby runtime) throws PaymentPluginApiException {
                 return ((PaymentPluginApi) pluginInstance).getPaymentMethods(kbAccountId, Boolean.valueOf(refreshFromGateway), context);
@@ -173,38 +171,14 @@ public class JRubyPaymentPlugin extends JRubyPlugin implements PaymentPluginApi 
     @Override
     public void resetPaymentMethods(final UUID kbAccountId, final List<PaymentMethodInfoPlugin> paymentMethods) throws PaymentPluginApiException {
 
-        callWithRuntimeAndChecking(new PluginCallback() {
+        callWithRuntimeAndChecking(new PluginCallback(VALIDATION_PLUGIN_TYPE.PAYMENT) {
             @Override
-            public Void doCall(final Ruby runtime) throws PaymentPluginApiException  {
+            public Void doCall(final Ruby runtime) throws PaymentPluginApiException {
                 ((PaymentPluginApi) pluginInstance).resetPaymentMethods(kbAccountId, paymentMethods);
                 return null;
             }
         });
     }
 
-    private abstract class PluginCallback {
 
-        public abstract <T> T doCall(final Ruby runtime) throws PaymentPluginApiException;
-
-        public boolean checkValidPaymentPlugin() {
-            return true;
-        }
-    }
-
-    private <T> T callWithRuntimeAndChecking(PluginCallback cb) throws PaymentPluginApiException {
-        try {
-            checkPluginIsRunning();
-
-            if (cb.checkValidPaymentPlugin()) {
-                checkValidPaymentPlugin();
-            }
-
-            final Ruby runtime = getRuntime();
-            return cb.doCall(runtime);
-
-        } catch (RuntimeException e) {
-            // TODO STEPH not sure what ruby can throw
-            throw e;
-        }
-    }
 }

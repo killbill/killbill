@@ -30,11 +30,16 @@ import org.jruby.runtime.builtin.IRubyObject;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.log.LogService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.ning.billing.osgi.api.config.PluginRubyConfig;
+import com.ning.billing.payment.plugin.api.PaymentPluginApiException;
 
 // Bridge between the OSGI bundle and the ruby plugin
 public abstract class JRubyPlugin {
+
+    private final static Logger log = LoggerFactory.getLogger(JRubyPlugin.class);
 
     // Killbill gem base classes
     private static final String KILLBILL_PLUGIN_BASE = "Killbill::Plugin::PluginBase";
@@ -82,7 +87,7 @@ public abstract class JRubyPlugin {
         return pluginLibdir;
     }
 
-    public void instantiatePlugin(final Map<String, Object> killbillApis) {
+    public void instantiatePlugin(final Map<String, Object> killbillApis, final String pluginMain) {
         checkValidPlugin();
 
         // Register all killbill APIs
@@ -93,7 +98,7 @@ public abstract class JRubyPlugin {
         // Don't put any code here!
 
         // Start the plugin
-        pluginInstance = (RubyObject) container.runScriptlet("Killbill::Plugin::JPayment.new(" + KILLBILL_PLUGIN_CLASS_NAME + "," + KILLBILL_SERVICES + ")");
+        pluginInstance = (RubyObject) container.runScriptlet(pluginMain + ".new(" + KILLBILL_PLUGIN_CLASS_NAME + "," + KILLBILL_SERVICES + ")");
     }
 
     public void startPlugin(final BundleContext context) {
@@ -130,7 +135,7 @@ public abstract class JRubyPlugin {
     }
 
     protected void checkPluginIsRunning() {
-        if (pluginInstance == null || ! (Boolean) pluginInstance.callMethod("is_active").toJava(Boolean.class)) {
+        if (pluginInstance == null || !(Boolean) pluginInstance.callMethod("is_active").toJava(Boolean.class)) {
             throw new IllegalStateException(String.format("Plugin %s didn't start properly", pluginMainClass));
         }
     }
@@ -194,10 +199,10 @@ public abstract class JRubyPlugin {
                    .append("end\n");
             builder.append("begin\n")
                    .append("require '").append(pluginGemName).append("'\n")
-                   .append("rescue LoadError\n")
-                   // Could be useful for debugging
-                   //.append("warn \"WARN: unable to require ").append(pluginGemName).append("\"\n")
-                   .append("end\n");
+                    .append("rescue LoadError\n")
+                            // Could be useful for debugging
+                            //.append("warn \"WARN: unable to require ").append(pluginGemName).append("\"\n")
+                    .append("end\n");
             // Load the extra require file, if specified
             if (rubyRequire != null) {
                 builder.append("begin\n")
@@ -217,5 +222,49 @@ public abstract class JRubyPlugin {
 
     protected Ruby getRuntime() {
         return pluginInstance.getMetaClass().getRuntime();
+    }
+
+    public enum VALIDATION_PLUGIN_TYPE {
+        NOTIFICATION,
+        PAYMENT,
+        NONE
+    }
+
+    protected abstract class PluginCallback {
+
+        private final VALIDATION_PLUGIN_TYPE pluginType;
+
+        public PluginCallback(final VALIDATION_PLUGIN_TYPE pluginType) {
+            this.pluginType = pluginType;
+        }
+
+        public abstract <T> T doCall(final Ruby runtime) throws PaymentPluginApiException;
+
+        public VALIDATION_PLUGIN_TYPE getPluginType() {
+            return pluginType;
+        }
+    }
+
+    protected <T> T callWithRuntimeAndChecking(final PluginCallback cb) throws PaymentPluginApiException {
+        try {
+            checkPluginIsRunning();
+
+            switch(cb.getPluginType()) {
+                case NOTIFICATION:
+                    checkValidNotificationPlugin();
+                    break;
+                case PAYMENT:
+                    checkValidPaymentPlugin();
+                    break;
+                default:
+                    break;
+            }
+
+            final Ruby runtime = getRuntime();
+            return cb.doCall(runtime);
+        } catch (RuntimeException e) {
+            log.warn("RuntimeException in jruby plugin ", e);
+            throw e;
+        }
     }
 }

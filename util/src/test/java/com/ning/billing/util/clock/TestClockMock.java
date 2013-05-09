@@ -38,7 +38,7 @@ public class TestClockMock extends UtilTestSuiteNoDB {
 
         final DateTime startingTime = new DateTime(DateTimeZone.UTC);
         // Lame, but required due to the truncation magic
-        Awaitility.await().atMost(999, MILLISECONDS).until(new Callable<Boolean>() {
+        Awaitility.await().atMost(1001, MILLISECONDS).until(new Callable<Boolean>() {
             @Override
             public Boolean call() throws Exception {
                 return clock.getUTCNow().isAfter(startingTime);
