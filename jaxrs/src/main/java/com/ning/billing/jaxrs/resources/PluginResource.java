@@ -35,6 +35,9 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
 import com.ning.billing.util.api.AuditUserApi;
@@ -48,6 +51,8 @@ import com.google.inject.name.Named;
 @Singleton
 @Path(JaxrsResource.PLUGINS_PATH + "{subResources:.*}")
 public class PluginResource extends JaxRsResourceBase {
+
+    private static final Logger log = LoggerFactory.getLogger(PluginResource.class);
 
     private final HttpServlet osgiServlet;
 
@@ -119,6 +124,9 @@ public class PluginResource extends JaxRsResourceBase {
         osgiServlet.service(new OSGIServletRequestWrapper(request), new OSGIServletResponseWrapper(response));
 
         if (response.isCommitted()) {
+            if (response.getStatus() >= 400) {
+                log.warn("{} responded {}", request.getPathInfo(), response.getStatus());
+            }
             // Jersey will want to return 204, but the servlet should have done the right thing already
             return null;
         } else {
