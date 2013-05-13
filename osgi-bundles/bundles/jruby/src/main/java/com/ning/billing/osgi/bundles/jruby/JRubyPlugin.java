@@ -39,7 +39,7 @@ import com.ning.billing.payment.plugin.api.PaymentPluginApiException;
 // Bridge between the OSGI bundle and the ruby plugin
 public abstract class JRubyPlugin {
 
-    private final static Logger log = LoggerFactory.getLogger(JRubyPlugin.class);
+    private static final Logger log = LoggerFactory.getLogger(JRubyPlugin.class);
 
     // Killbill gem base classes
     private static final String KILLBILL_PLUGIN_BASE = "Killbill::Plugin::PluginBase";
