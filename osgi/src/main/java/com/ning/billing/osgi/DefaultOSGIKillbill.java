@@ -17,8 +17,6 @@
 package com.ning.billing.osgi;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.sql.DataSource;
 
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.analytics.api.sanity.AnalyticsSanityApi;
@@ -34,7 +32,6 @@ import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.junction.api.JunctionApi;
 import com.ning.billing.osgi.api.OSGIKillbill;
 import com.ning.billing.osgi.api.config.PluginConfigServiceApi;
-import com.ning.billing.osgi.glue.DefaultOSGIModule;
 import com.ning.billing.overdue.OverdueUserApi;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.tenant.api.TenantUserApi;
