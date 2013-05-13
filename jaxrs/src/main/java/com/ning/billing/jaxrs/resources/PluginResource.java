@@ -118,7 +118,12 @@ public class PluginResource extends JaxRsResourceBase {
         prepareOSGIRequest(request, servletContext, servletConfig);
         osgiServlet.service(new OSGIServletRequestWrapper(request), new OSGIServletResponseWrapper(response));
 
-        return Response.status(response.getStatus()).build();
+        if (response.isCommitted()) {
+            // Jersey will want to return 204, but the servlet should have done the right thing already
+            return null;
+        } else {
+            return Response.status(response.getStatus()).build();
+        }
     }
 
     private void prepareOSGIRequest(final HttpServletRequest request, final ServletContext servletContext, final ServletConfig servletConfig) {
