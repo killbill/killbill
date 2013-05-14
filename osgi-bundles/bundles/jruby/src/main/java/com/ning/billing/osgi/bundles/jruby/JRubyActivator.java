@@ -17,14 +17,13 @@
 package com.ning.billing.osgi.bundles.jruby;
 
 import java.io.File;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.jruby.embed.ScriptingContainer;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.log.LogService;
 
@@ -63,13 +62,12 @@ public class JRubyActivator extends KillbillActivatorBase {
 
                 // Setup JRuby
                 final String pluginMain;
-                final ScriptingContainer scriptingContainer = setupScriptingContainer(rubyConfig);
                 if (PluginType.NOTIFICATION.equals(rubyConfig.getPluginType())) {
-                    plugin = new JRubyNotificationPlugin(rubyConfig, scriptingContainer, context, logService);
+                    plugin = new JRubyNotificationPlugin(rubyConfig, context, logService);
                     dispatcher.registerEventHandler((OSGIKillbillEventHandler) plugin);
                     pluginMain = KILLBILL_PLUGIN_JNOTIFICATION;
                 } else if (PluginType.PAYMENT.equals(rubyConfig.getPluginType())) {
-                    plugin = new JRubyPaymentPlugin(rubyConfig, scriptingContainer, context, logService);
+                    plugin = new JRubyPaymentPlugin(rubyConfig, context, logService);
                     pluginMain = KILLBILL_PLUGIN_JPAYMENT;
                 } else {
                     throw new IllegalStateException("Unsupported plugin type " + rubyConfig.getPluginType());
@@ -88,9 +86,6 @@ public class JRubyActivator extends KillbillActivatorBase {
         // Default to the plugin root dir if no jruby plugins specific configuration directory was specified
         killbillServices.put("conf_dir", Objects.firstNonNull(JRUBY_PLUGINS_CONF_DIR, rubyConfig.getPluginVersionRoot().getAbsolutePath()));
 
-        // Initial start
-        doStartPlugin(pluginMain, context, killbillServices);
-
         // Setup the restart mechanism. This is useful for hotswapping plugin code
         // The principle is similar to the one in Phusion Passenger:
         // http://www.modrails.com/documentation/Users%20guide%20Apache.html#_redeploying_restarting_the_ruby_on_rails_application
@@ -106,19 +101,28 @@ public class JRubyActivator extends KillbillActivatorBase {
             return;
         }
 
+        final AtomicBoolean firstStart = new AtomicBoolean(true);
         // TODO Switch to failsafe once in killbill-commons
         restartFuture = Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(new Runnable() {
             long lastRestartMillis = System.currentTimeMillis();
 
             @Override
             public void run() {
+                if (firstStart.get()) {
+                    // Initial start
+                    logService.log(LogService.LOG_INFO, "Starting JRuby plugin " + rubyConfig.getRubyMainClass());
+                    doStartPlugin(pluginMain, context, killbillServices);
+                    firstStart.set(false);
+                    return;
+                }
+
                 final File restartFile = new File(tmpDirPath + "/" + RESTART_FILE_NAME);
                 if (!restartFile.isFile()) {
                     return;
                 }
 
                 if (restartFile.lastModified() > lastRestartMillis) {
-                    logService.log(LogService.LOG_INFO, "Restarting JRuby plugin " + plugin.getPluginMainClass());
+                    logService.log(LogService.LOG_INFO, "Restarting JRuby plugin " + rubyConfig.getRubyMainClass());
 
                     doStopPlugin(context);
                     doStartPlugin(pluginMain, context, killbillServices);
@@ -126,21 +130,12 @@ public class JRubyActivator extends KillbillActivatorBase {
                     lastRestartMillis = restartFile.lastModified();
                 }
             }
-        }, JRUBY_PLUGINS_RESTART_DELAY_SECS, JRUBY_PLUGINS_RESTART_DELAY_SECS, TimeUnit.SECONDS);
+        }, 0, JRUBY_PLUGINS_RESTART_DELAY_SECS, TimeUnit.SECONDS);
     }
 
     private PluginRubyConfig retrievePluginRubyConfig(final BundleContext context) {
         final PluginConfigServiceApi pluginConfigServiceApi = killbillAPI.getPluginConfigServiceApi();
         return pluginConfigServiceApi.getPluginRubyConfig(context.getBundle().getBundleId());
-    }
-
-    private ScriptingContainer setupScriptingContainer(final PluginRubyConfig rubyConfig) {
-        final ScriptingContainer scriptingContainer = new ScriptingContainer();
-
-        // Set the load paths instead of adding, to avoid looking at the filesystem
-        scriptingContainer.setLoadPaths(Collections.<String>singletonList(rubyConfig.getRubyLoadDir()));
-
-        return scriptingContainer;
     }
 
     public void stop(final BundleContext context) throws Exception {
@@ -157,13 +152,13 @@ public class JRubyActivator extends KillbillActivatorBase {
     }
 
     private void doStartPlugin(final String pluginMain, final BundleContext context, final Map<String, Object> killbillServices) {
-        logService.log(LogService.LOG_INFO, "Starting JRuby plugin " + plugin.getPluginMainClass());
         plugin.instantiatePlugin(killbillServices, pluginMain);
         plugin.startPlugin(context);
     }
 
     private void doStopPlugin(final BundleContext context) {
         plugin.stopPlugin(context);
+        plugin.unInstantiatePlugin();
     }
 
     // We make the explicit registration in the start method by hand as this would be called too early
