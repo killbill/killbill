@@ -33,7 +33,7 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.payment.api.Payment;
-import com.ning.billing.payment.api.Payment.PaymentAttempt;
+import com.ning.billing.payment.api.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.payment.glue.DefaultPaymentService;

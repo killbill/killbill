@@ -20,9 +20,8 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.BlockingState;
-import com.ning.billing.util.entity.Entity;
+import com.ning.billing.junction.api.Type;
 import com.ning.billing.util.entity.EntityBase;
 
 
@@ -33,7 +32,7 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
     private static BlockingState clearState = null;
 
     private final UUID blockingId;
-    private final Blockable.Type type;
+    private final Type type;
     private final String stateName;
     private final String service;
     private final boolean blockChange;
@@ -52,7 +51,7 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
     public DefaultBlockingState(final UUID id,
                                 final UUID blockingId,
                                 final String stateName,
-                                final Blockable.Type type,
+                                final Type type,
                                 final String service,
                                 final boolean blockChange,
                                 final boolean blockEntitlement,
@@ -72,7 +71,7 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
 
     public DefaultBlockingState(final UUID blockingId,
                                  final String stateName,
-                                 final Blockable.Type type,
+                                 final Type type,
                                  final String service,
                                  final boolean blockChange,
                                  final boolean blockEntitlement,
@@ -103,7 +102,7 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
     }
 
     @Override
-    public Blockable.Type getType() {
+    public Type getType() {
         return type;
     }
 

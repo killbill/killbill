@@ -30,8 +30,8 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionStatusDryRun;
-import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.BlockingApiException;
+import com.ning.billing.junction.api.Type;
 import com.ning.billing.junction.block.BlockingChecker;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
@@ -133,7 +133,7 @@ public class BlockingEntitlementUserApi implements EntitlementUserApi {
             throws EntitlementUserApiException {
         try {
             final InternalTenantContext internalContext = internalCallContextFactory.createInternalTenantContext(context);
-            checker.checkBlockedChange(accountId, Blockable.Type.ACCOUNT, internalContext);
+            checker.checkBlockedChange(accountId, Type.ACCOUNT, internalContext);
             return new BlockingSubscriptionBundle(entitlementUserApi.createBundleForAccount(accountId, bundleKey, context), blockingApi, internalContext);
         } catch (BlockingApiException e) {
             throw new EntitlementUserApiException(e, e.getCode(), e.getMessage());
@@ -145,7 +145,7 @@ public class BlockingEntitlementUserApi implements EntitlementUserApi {
                                            final CallContext context) throws EntitlementUserApiException {
         try {
             final InternalTenantContext internalContext = internalCallContextFactory.createInternalTenantContext(context);
-            checker.checkBlockedChange(bundleId, Blockable.Type.SUBSCRIPTION_BUNDLE, internalContext);
+            checker.checkBlockedChange(bundleId, Type.SUBSCRIPTION_BUNDLE, internalContext);
             return new BlockingSubscription(entitlementUserApi.createSubscription(bundleId, spec, requestedDate, context), blockingApi, checker,  internalContext, internalCallContextFactory);
         } catch (BlockingApiException e) {
             throw new EntitlementUserApiException(e, e.getCode(), e.getMessage());

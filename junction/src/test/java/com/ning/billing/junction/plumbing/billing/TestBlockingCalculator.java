@@ -42,8 +42,7 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.junction.JunctionTestSuiteNoDB;
-import com.ning.billing.junction.api.Blockable;
-import com.ning.billing.junction.api.Blockable.Type;
+import com.ning.billing.junction.api.Type;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.junction.dao.MockBlockingStateDao;
 import com.ning.billing.junction.plumbing.billing.BlockingCalculator.DisabledDuration;
@@ -115,8 +114,8 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         billingEvents.add(D);
 
         final List<BlockingState> blockingStates = new ArrayList<BlockingState>();
-        blockingStates.add(new DefaultBlockingState(UUID.randomUUID(), bundleId1, DISABLED_BUNDLE, Blockable.Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now, null));
-        blockingStates.add(new DefaultBlockingState(UUID.randomUUID(), bundleId1, CLEAR_BUNDLE, Blockable.Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now.plusDays(2), null));
+        blockingStates.add(new DefaultBlockingState(UUID.randomUUID(), bundleId1, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now, null));
+        blockingStates.add(new DefaultBlockingState(UUID.randomUUID(), bundleId1, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now.plusDays(2), null));
 
         setBlockingStates(bundleId1, blockingStates);
 

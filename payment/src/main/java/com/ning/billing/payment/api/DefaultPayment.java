@@ -180,7 +180,7 @@ public class DefaultPayment extends EntityBase implements Payment {
         if (attempts == null || attempts.size() == 0) {
             return Collections.emptyList();
         }
-        return new ArrayList<Payment.PaymentAttempt>(Collections2.transform(attempts, new Function<PaymentAttemptModelDao, PaymentAttempt>() {
+        return new ArrayList<PaymentAttempt>(Collections2.transform(attempts, new Function<PaymentAttemptModelDao, PaymentAttempt>() {
             @Override
             public PaymentAttempt apply(final PaymentAttemptModelDao input) {
                 return new PaymentAttempt() {

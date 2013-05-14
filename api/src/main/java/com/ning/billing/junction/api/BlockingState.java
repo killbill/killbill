@@ -29,7 +29,7 @@ public interface BlockingState extends Entity, Comparable<BlockingState> {
 
     public String getStateName();
 
-    public Blockable.Type getType();
+    public Type getType();
 
     public DateTime getTimestamp();
 

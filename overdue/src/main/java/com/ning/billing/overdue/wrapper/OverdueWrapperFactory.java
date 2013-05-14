@@ -25,6 +25,7 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.api.Blockable;
+import com.ning.billing.junction.api.Type;
 import com.ning.billing.overdue.applicator.OverdueStateApplicator;
 import com.ning.billing.overdue.calculator.BillingStateCalculatorBundle;
 import com.ning.billing.overdue.config.DefaultOverdueState;
@@ -73,7 +74,7 @@ public class OverdueWrapperFactory {
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends Blockable> OverdueWrapper<T> createOverdueWrapperFor(final Blockable.Type type, final UUID id, final InternalTenantContext context) throws OverdueException {
+    public <T extends Blockable> OverdueWrapper<T> createOverdueWrapperFor(final Type type, final UUID id, final InternalTenantContext context) throws OverdueException {
         try {
             switch (type) {
                 case SUBSCRIPTION_BUNDLE: {

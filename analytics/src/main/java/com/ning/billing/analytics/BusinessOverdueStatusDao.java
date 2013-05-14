@@ -33,13 +33,12 @@ import com.ning.billing.analytics.dao.BusinessOverdueStatusSqlDao;
 import com.ning.billing.analytics.model.BusinessOverdueStatusModelDao;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.junction.api.JunctionApi;
+import com.ning.billing.junction.api.Type;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
-import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -64,8 +63,8 @@ public class BusinessOverdueStatusDao {
         this.junctionApi = junctionApi;
     }
 
-    public void overdueStatusChanged(final Blockable.Type objectType, final UUID objectId, final InternalCallContext context) {
-        if (Blockable.Type.SUBSCRIPTION_BUNDLE.equals(objectType)) {
+    public void overdueStatusChanged(final Type objectType, final UUID objectId, final InternalCallContext context) {
+        if (Type.SUBSCRIPTION_BUNDLE.equals(objectType)) {
             overdueStatusChangedForBundle(objectId, context);
         } else {
             log.info("Ignoring overdue status change for object id {} (type {})", objectId.toString(), objectType.toString());

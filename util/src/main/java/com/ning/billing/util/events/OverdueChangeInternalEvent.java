@@ -18,13 +18,13 @@ package com.ning.billing.util.events;
 
 import java.util.UUID;
 
-import com.ning.billing.junction.api.Blockable;
+import com.ning.billing.junction.api.Type;
 
 
 public interface OverdueChangeInternalEvent extends BusInternalEvent {
     UUID getOverdueObjectId();
 
-    Blockable.Type getOverdueObjectType();
+    Type getOverdueObjectType();
 
     String getPreviousOverdueStateName();
 

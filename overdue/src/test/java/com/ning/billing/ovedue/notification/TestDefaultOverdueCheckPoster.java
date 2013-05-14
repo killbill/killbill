@@ -29,6 +29,7 @@ import org.testng.annotations.Test;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.api.Blockable;
+import com.ning.billing.junction.api.Type;
 import com.ning.billing.overdue.OverdueTestSuiteWithEmbeddedDB;
 import com.ning.billing.overdue.service.DefaultOverdueService;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
@@ -87,7 +88,7 @@ public class TestDefaultOverdueCheckPoster extends OverdueTestSuiteWithEmbeddedD
         final DateTime futureNotificationTime = testReferenceTime.plusDays(nbDaysInFuture);
         poster.insertOverdueCheckNotification(overdueable, futureNotificationTime, internalCallContext);
 
-        final OverdueCheckNotificationKey notificationKey = new OverdueCheckNotificationKey(overdueable.getId(), Blockable.Type.get(overdueable));
+        final OverdueCheckNotificationKey notificationKey = new OverdueCheckNotificationKey(overdueable.getId(), Type.get(overdueable));
         final List<Notification> notificationsForKey = getNotificationsForOverdueable(overdueable);
         Assert.assertEquals(notificationsForKey.size(), 1);
         Assert.assertEquals(notificationsForKey.get(0).getNotificationKey(), objectMapper.writeValueAsString(notificationKey));

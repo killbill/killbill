@@ -63,7 +63,7 @@ import com.ning.billing.analytics.model.BusinessInvoicePaymentModelDao;
 import com.ning.billing.analytics.model.BusinessOverdueStatusModelDao;
 import com.ning.billing.analytics.model.BusinessSubscriptionTransitionModelDao;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.junction.api.Blockable.Type;
+import com.ning.billing.junction.api.Type;
 import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.util.callcontext.CallContext;

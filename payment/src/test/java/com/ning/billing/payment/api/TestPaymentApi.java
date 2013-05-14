@@ -35,7 +35,6 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.payment.MockRecurringInvoiceItem;
 import com.ning.billing.payment.PaymentTestSuiteNoDB;
-import com.ning.billing.payment.api.Payment.PaymentAttempt;
 import com.ning.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
 import com.ning.billing.payment.provider.MockPaymentProviderPlugin;
 

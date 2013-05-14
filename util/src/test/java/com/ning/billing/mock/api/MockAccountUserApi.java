@@ -38,24 +38,24 @@ public class MockAccountUserApi implements AccountUserApi {
 
     private final CopyOnWriteArrayList<Account> accounts = new CopyOnWriteArrayList<Account>();
 
-    public Account createAccount(final UUID id,
-                                 final String externalKey,
-                                 final String email,
-                                 final String name,
-                                 final int firstNameLength,
-                                 final Currency currency,
-                                 final int billCycleDayLocal,
-                                 final UUID paymentMethodId,
-                                 final DateTimeZone timeZone,
-                                 final String locale,
-                                 final String address1,
-                                 final String address2,
-                                 final String companyName,
-                                 final String city,
-                                 final String stateOrProvince,
-                                 final String country,
-                                 final String postalCode,
-                                 final String phone) {
+    public Account createAccountFromParams(final UUID id,
+                                           final String externalKey,
+                                           final String email,
+                                           final String name,
+                                           final int firstNameLength,
+                                           final Currency currency,
+                                           final int billCycleDayLocal,
+                                           final UUID paymentMethodId,
+                                           final DateTimeZone timeZone,
+                                           final String locale,
+                                           final String address1,
+                                           final String address2,
+                                           final String companyName,
+                                           final String city,
+                                           final String stateOrProvince,
+                                           final String country,
+                                           final String postalCode,
+                                           final String phone) {
         final Account result = new MockAccountBuilder(id)
                 .externalKey(externalKey)
                 .email(email)

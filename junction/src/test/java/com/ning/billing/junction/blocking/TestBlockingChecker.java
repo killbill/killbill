@@ -28,9 +28,9 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.JunctionTestSuiteNoDB;
-import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.BlockingApiException;
 import com.ning.billing.junction.api.BlockingState;
+import com.ning.billing.junction.api.Type;
 import com.ning.billing.junction.dao.MockBlockingStateDao;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.TenantContext;
@@ -71,18 +71,18 @@ public class TestBlockingChecker extends JunctionTestSuiteNoDB {
     }
 
     private void setStateBundle(final boolean bC, final boolean bE, final boolean bB) {
-        final BlockingState bundleState = new DefaultBlockingState(bundle.getId(), "state", Blockable.Type.SUBSCRIPTION_BUNDLE, "test-service", bC, bE, bB);
+        final BlockingState bundleState = new DefaultBlockingState(bundle.getId(), "state", Type.SUBSCRIPTION_BUNDLE, "test-service", bC, bE, bB);
         Mockito.when(bundle.getBlockingState()).thenReturn(bundleState);
         blockingStateDao.setBlockingState(bundleState, clock, internalCallContext);
     }
 
     private void setStateAccount(final boolean bC, final boolean bE, final boolean bB) {
-        final BlockingState accountState = new DefaultBlockingState(account.getId(), "state", Blockable.Type.SUBSCRIPTION_BUNDLE, "test-service", bC, bE, bB);
+        final BlockingState accountState = new DefaultBlockingState(account.getId(), "state", Type.SUBSCRIPTION_BUNDLE, "test-service", bC, bE, bB);
         blockingStateDao.setBlockingState(accountState, clock, internalCallContext);
     }
 
     private void setStateSubscription(final boolean bC, final boolean bE, final boolean bB) {
-        final BlockingState subscriptionState = new DefaultBlockingState(subscription.getId(), "state", Blockable.Type.SUBSCRIPTION_BUNDLE, "test-service", bC, bE, bB);
+        final BlockingState subscriptionState = new DefaultBlockingState(subscription.getId(), "state", Type.SUBSCRIPTION_BUNDLE, "test-service", bC, bE, bB);
         Mockito.when(subscription.getBlockingState()).thenReturn(subscriptionState);
         blockingStateDao.setBlockingState(subscriptionState, clock, internalCallContext);
     }

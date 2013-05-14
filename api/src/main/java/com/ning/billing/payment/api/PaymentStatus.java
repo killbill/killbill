@@ -32,5 +32,5 @@ public enum PaymentStatus {
     /* Exception from plugin, we already retried a maximum of time */
     PLUGIN_FAILURE_ABORTED,
     /* Payment Subsystem is off */
-    PAYMENT_SYSTEM_OFF
+    PAYMENT_SYSTEM_OFF;
 }

@@ -21,7 +21,7 @@ import java.util.UUID;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.junction.api.Blockable;
+import com.ning.billing.junction.api.Type;
 import com.ning.billing.ovedue.notification.OverdueCheckNotificationKey;
 import com.ning.billing.util.jackson.ObjectMapper;
 
@@ -34,7 +34,7 @@ public class TestOverdueNotificationKeyJson {
     @Test(groups = "fast")
     public void testOverdueNotificationKeyJson() throws Exception {
         final UUID uuid = UUID.randomUUID();
-        final Blockable.Type type = Blockable.Type.SUBSCRIPTION;
+        final Type type = Type.SUBSCRIPTION;
 
         final OverdueCheckNotificationKey e = new OverdueCheckNotificationKey(uuid, type);
 
@@ -53,6 +53,6 @@ public class TestOverdueNotificationKeyJson {
         final Class<?> claz = Class.forName(OverdueCheckNotificationKey.class.getName());
         final OverdueCheckNotificationKey obj = (OverdueCheckNotificationKey) mapper.readValue(json, claz);
         assertEquals(obj.getUuidKey().toString(), uuidString);
-        assertEquals(obj.getType(), Blockable.Type.SUBSCRIPTION_BUNDLE);
+        assertEquals(obj.getType(), Type.SUBSCRIPTION_BUNDLE);
     }
 }

@@ -26,7 +26,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.junction.JunctionTestSuiteWithEmbeddedDB;
-import com.ning.billing.junction.api.Blockable.Type;
+import com.ning.billing.junction.api.Type;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 

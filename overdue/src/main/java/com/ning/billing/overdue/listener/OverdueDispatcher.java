@@ -23,10 +23,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ning.billing.BillingExceptionBase;
-import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.junction.api.Blockable;
-import com.ning.billing.junction.api.Blockable.Type;
+import com.ning.billing.junction.api.Type;
 import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
@@ -61,7 +59,7 @@ public class OverdueDispatcher {
         }
     }
 
-    public void processOverdue(final Blockable.Type type, final UUID blockableId, final InternalCallContext context) {
+    public void processOverdue(final Type type, final UUID blockableId, final InternalCallContext context) {
         try {
             factory.createOverdueWrapperFor(type, blockableId, context).refresh(context);
         } catch (BillingExceptionBase e) {
@@ -69,7 +67,7 @@ public class OverdueDispatcher {
         }
     }
 
-    public void clearOverdue(final Blockable.Type type, final UUID blockableId, final InternalCallContext context) {
+    public void clearOverdue(final Type type, final UUID blockableId, final InternalCallContext context) {
         try {
             factory.createOverdueWrapperFor(type, blockableId, context).clear(context);
         } catch (BillingExceptionBase e) {

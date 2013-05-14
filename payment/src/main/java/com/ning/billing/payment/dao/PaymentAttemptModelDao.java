@@ -23,7 +23,7 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.payment.api.Payment.PaymentAttempt;
+import com.ning.billing.payment.api.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.EntityBase;

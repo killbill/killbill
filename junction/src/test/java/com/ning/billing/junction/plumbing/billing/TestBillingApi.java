@@ -43,13 +43,12 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
-import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.JunctionTestSuiteNoDB;
-import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.BlockingState;
+import com.ning.billing.junction.api.Type;
 import com.ning.billing.junction.dao.MockBlockingStateDao;
 import com.ning.billing.mock.MockEffectiveSubscriptionEvent;
 import com.ning.billing.mock.MockSubscription;
@@ -185,8 +184,8 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
         final Account account = createAccount(32);
 
         final List<BlockingState> blockingStates = new ArrayList<BlockingState>();
-        blockingStates.add(new DefaultBlockingState(UUID.randomUUID(), bunId, DISABLED_BUNDLE, Blockable.Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now.plusDays(1), null));
-        blockingStates.add(new DefaultBlockingState(UUID.randomUUID(), bunId, CLEAR_BUNDLE, Blockable.Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now.plusDays(2), null));
+        blockingStates.add(new DefaultBlockingState(UUID.randomUUID(), bunId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now.plusDays(1), null));
+        blockingStates.add(new DefaultBlockingState(UUID.randomUUID(), bunId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now.plusDays(2), null));
 
         ((MockBlockingStateDao) blockingStateDao).setBlockingStates(bunId, blockingStates);
         final SortedSet<BillingEvent> events = billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), internalCallContext);

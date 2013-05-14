@@ -36,7 +36,7 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.api.Blockable;
-import com.ning.billing.junction.api.Blockable.Type;
+import com.ning.billing.junction.api.Type;
 import com.ning.billing.junction.api.BlockingApiException;
 import com.ning.billing.ovedue.notification.OverdueCheckPoster;
 import com.ning.billing.overdue.OverdueApiException;
@@ -163,14 +163,14 @@ public class OverdueStateApplicator<T extends Blockable> {
     }
 
     private OverdueChangeInternalEvent createOverdueEvent(final T overdueable, final String previousOverdueStateName, final String nextOverdueStateName, final InternalCallContext context) throws BlockingApiException {
-        return new DefaultOverdueChangeEvent(overdueable.getId(), Blockable.Type.get(overdueable), previousOverdueStateName, nextOverdueStateName, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
+        return new DefaultOverdueChangeEvent(overdueable.getId(), Type.get(overdueable), previousOverdueStateName, nextOverdueStateName, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
     }
 
     protected void storeNewState(final T blockable, final OverdueState<T> nextOverdueState, final InternalCallContext context) throws OverdueException {
         try {
             blockingApi.setBlockingState(new DefaultBlockingState(blockable.getId(),
                                                                   nextOverdueState.getName(),
-                                                                  Blockable.Type.get(blockable),
+                                                                  Type.get(blockable),
                                                                   OverdueService.OVERDUE_SERVICE_NAME,
                                                                   blockChanges(nextOverdueState),
                                                                   blockEntitlement(nextOverdueState),
@@ -260,7 +260,7 @@ public class OverdueStateApplicator<T extends Blockable> {
 
         // Retrieve the account
         final Account account;
-        final Type overdueableType = Blockable.Type.get(overdueable);
+        final Type overdueableType = Type.get(overdueable);
         try {
             if (Type.SUBSCRIPTION.equals(overdueableType)) {
                 final UUID bundleId = ((Subscription) overdueable).getBundleId();

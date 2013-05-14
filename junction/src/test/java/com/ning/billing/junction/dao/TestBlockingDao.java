@@ -25,8 +25,8 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.JunctionTestSuiteWithEmbeddedDB;
-import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.BlockingState;
+import com.ning.billing.junction.api.Type;
 import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 
 public class TestBlockingDao extends JunctionTestSuiteWithEmbeddedDB {
@@ -41,12 +41,12 @@ public class TestBlockingDao extends JunctionTestSuiteWithEmbeddedDB {
         final boolean blockEntitlement = false;
         final boolean blockBilling = false;
 
-        final BlockingState state1 = new DefaultBlockingState(uuid, overdueStateName, Blockable.Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement, blockBilling);
+        final BlockingState state1 = new DefaultBlockingState(uuid, overdueStateName, Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement, blockBilling);
         blockingStateDao.setBlockingState(state1, clock, internalCallContext);
         clock.setDeltaFromReality(1000 * 3600 * 24);
 
         final String overdueStateName2 = "NoReallyThisCantGoOn";
-        final BlockingState state2 = new DefaultBlockingState(uuid, overdueStateName2, Blockable.Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement, blockBilling);
+        final BlockingState state2 = new DefaultBlockingState(uuid, overdueStateName2, Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement, blockBilling);
         blockingStateDao.setBlockingState(state2, clock, internalCallContext);
 
         final SubscriptionBundle bundle = Mockito.mock(SubscriptionBundle.class);
@@ -65,12 +65,12 @@ public class TestBlockingDao extends JunctionTestSuiteWithEmbeddedDB {
         final boolean blockEntitlement = false;
         final boolean blockBilling = false;
 
-        final BlockingState state1 = new DefaultBlockingState(uuid, overdueStateName, Blockable.Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement, blockBilling);
+        final BlockingState state1 = new DefaultBlockingState(uuid, overdueStateName, Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement, blockBilling);
         blockingStateDao.setBlockingState(state1, clock, internalCallContext);
         clock.setDeltaFromReality(1000 * 3600 * 24);
 
         final String overdueStateName2 = "NoReallyThisCantGoOn";
-        final BlockingState state2 = new DefaultBlockingState(uuid, overdueStateName2, Blockable.Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement, blockBilling);
+        final BlockingState state2 = new DefaultBlockingState(uuid, overdueStateName2, Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement, blockBilling);
         blockingStateDao.setBlockingState(state2, clock, internalCallContext);
 
         final SubscriptionBundle bundle = Mockito.mock(SubscriptionBundle.class);
