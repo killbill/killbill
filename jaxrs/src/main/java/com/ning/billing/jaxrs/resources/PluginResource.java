@@ -16,11 +16,16 @@
 
 package com.ning.billing.jaxrs.resources;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.Charset;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
+import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
@@ -44,6 +49,7 @@ import com.ning.billing.util.api.AuditUserApi;
 import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.api.TagUserApi;
 
+import com.google.common.io.ByteStreams;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -53,6 +59,7 @@ import com.google.inject.name.Named;
 public class PluginResource extends JaxRsResourceBase {
 
     private static final Logger log = LoggerFactory.getLogger(PluginResource.class);
+    private static final Charset UTF_8 = Charset.forName("UTF-8");
 
     private final HttpServlet osgiServlet;
 
@@ -121,7 +128,7 @@ public class PluginResource extends JaxRsResourceBase {
     private Response serviceViaOSGIPlugin(final HttpServletRequest request, final HttpServletResponse response,
                                           final ServletContext servletContext, final ServletConfig servletConfig) throws ServletException, IOException {
         prepareOSGIRequest(request, servletContext, servletConfig);
-        osgiServlet.service(new OSGIServletRequestWrapper(request), new OSGIServletResponseWrapper(response));
+        osgiServlet.service(new OSGIServletRequestWrapper(request, createInputStream(request)), new OSGIServletResponseWrapper(response));
 
         if (response.isCommitted()) {
             if (response.getStatus() >= 400) {
@@ -134,16 +141,45 @@ public class PluginResource extends JaxRsResourceBase {
         }
     }
 
+    private InputStream createInputStream(final HttpServletRequest request) throws IOException {
+        // /!\ Kludge alert (pierre) /!\
+        // This is awful... But because of various servlet filters we have in place, include Shiro,
+        // the request parameters and/or body at this point have already been looked at.
+        // We can't use @FormParam in PluginResource because we don't know the form parameter names
+        // in advance.
+        // So... We just stick them back in :-)
+        // TODO Support x-www-form-urlencoded vs multipart/form-data
+        final ByteArrayOutputStream out = new ByteArrayOutputStream();
+        for (final String key : request.getParameterMap().keySet()) {
+            out.write((key + "=").getBytes(UTF_8));
+
+            int idx = 0;
+            for (final String value : request.getParameterMap().get(key)) {
+                if (idx > 0) {
+                    out.write("&".getBytes(UTF_8));
+                }
+                idx++;
+                out.write(value.getBytes(UTF_8));
+            }
+        }
+        ByteStreams.copy(request.getInputStream(), out);
+
+        return new ByteArrayInputStream(out.toByteArray());
+    }
+
     private void prepareOSGIRequest(final HttpServletRequest request, final ServletContext servletContext, final ServletConfig servletConfig) {
         request.setAttribute("killbill.osgi.servletContext", servletContext);
         request.setAttribute("killbill.osgi.servletConfig", servletConfig);
     }
 
-    // Request wrapper to hide the /plugins prefix to OSGI bundles
+    // Request wrapper to hide the /plugins prefix to OSGI bundles and fiddle with the input stream
     private static final class OSGIServletRequestWrapper extends HttpServletRequestWrapper {
 
-        public OSGIServletRequestWrapper(final HttpServletRequest request) {
+        private final InputStream inputStream;
+
+        public OSGIServletRequestWrapper(final HttpServletRequest request, final InputStream inputStream) {
             super(request);
+            this.inputStream = inputStream;
         }
 
         @Override
@@ -159,6 +195,25 @@ public class PluginResource extends JaxRsResourceBase {
         @Override
         public String getServletPath() {
             return super.getServletPath().replace(JaxrsResource.PLUGINS_PATH, "");
+        }
+
+        @Override
+        public ServletInputStream getInputStream() throws IOException {
+            return new ServletInputStreamWrapper(inputStream);
+        }
+    }
+
+    private static final class ServletInputStreamWrapper extends ServletInputStream {
+
+        private final InputStream inputStream;
+
+        public ServletInputStreamWrapper(final InputStream inputStream) {
+            this.inputStream = inputStream;
+        }
+
+        @Override
+        public int read() throws IOException {
+            return inputStream.read();
         }
     }
 
