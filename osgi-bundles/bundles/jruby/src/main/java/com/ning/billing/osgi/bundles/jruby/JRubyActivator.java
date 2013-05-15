@@ -19,7 +19,6 @@ package com.ning.billing.osgi.bundles.jruby;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -27,6 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.log.LogService;
 
+import com.ning.billing.commons.concurrent.Executors;
 import com.ning.billing.osgi.api.config.PluginConfig.PluginType;
 import com.ning.billing.osgi.api.config.PluginConfigServiceApi;
 import com.ning.billing.osgi.api.config.PluginRubyConfig;
@@ -102,8 +102,8 @@ public class JRubyActivator extends KillbillActivatorBase {
         }
 
         final AtomicBoolean firstStart = new AtomicBoolean(true);
-        // TODO Switch to failsafe once in killbill-commons
-        restartFuture = Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(new Runnable() {
+        restartFuture = Executors.newSingleThreadScheduledExecutor("jruby-restarter-" + pluginMain)
+                                 .scheduleWithFixedDelay(new Runnable() {
             long lastRestartMillis = System.currentTimeMillis();
 
             @Override

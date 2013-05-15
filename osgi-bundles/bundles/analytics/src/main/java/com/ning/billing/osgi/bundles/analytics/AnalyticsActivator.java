@@ -40,7 +40,7 @@ public class AnalyticsActivator extends KillbillActivatorBase {
     public void start(final BundleContext context) throws Exception {
         super.start(context);
 
-        final Executor executor = BusinessExecutor.create(logService);
+        final Executor executor = BusinessExecutor.newCachedThreadPool();
 
         analyticsListener = new AnalyticsListener(logService, killbillAPI, dataSource, executor);
         dispatcher.registerEventHandler(analyticsListener);
