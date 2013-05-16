@@ -61,7 +61,7 @@
 
           // Bottom, shared, X axis
           var xAxisCanvasGroup = graphStructure.createCanvasGroup(canvas, translateX, translateY);
-          lastGraph.createXAxis(xAxisCanvasGroup, 2 * (canvasHeightGraph + input.betweenGraphMargin));
+          lastGraph.createXAxis(xAxisCanvasGroup, dataForAllReports.length * (canvasHeightGraph + input.betweenGraphMargin));
         }
 
         // Get the data for a set of reports
