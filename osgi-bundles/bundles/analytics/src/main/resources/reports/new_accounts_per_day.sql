@@ -4,6 +4,7 @@ select
 , count(*) as count
 from bac
 where created_date > date_sub(curdate(), interval 90 day)
+and created_date <= curdate()
 group by 1
 order by 1 asc
 ;

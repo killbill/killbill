@@ -4,6 +4,7 @@ select
 , count(*) as count
 from bst
 where next_start_date > date_sub(curdate(), interval 90 day)
+and next_start_date <= curdate()
 and event = 'CANCEL_BASE'
 group by 1
 order by 1 asc
