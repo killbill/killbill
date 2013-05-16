@@ -38,6 +38,7 @@ import com.ning.billing.osgi.bundles.analytics.AnalyticsRefreshException;
 import com.ning.billing.osgi.bundles.analytics.api.BusinessSnapshot;
 import com.ning.billing.osgi.bundles.analytics.api.user.AnalyticsUserApi;
 import com.ning.billing.osgi.bundles.analytics.json.NamedXYTimeSeries;
+import com.ning.billing.osgi.bundles.analytics.reports.ReportsUserApi;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.UserType;
@@ -65,13 +66,18 @@ public class AnalyticsServlet extends HttpServlet {
     private final static String QUERY_END_DATE = "endDate";
     private final static String QUERY_PRODUCTS = "products";
 
+    private static final String REPORTS = "reports";
+    private static final String REPORTS_QUERY_NAME = "name";
+
     private static final ObjectMapper mapper = ObjectMapperProvider.get();
 
     private final AnalyticsUserApi analyticsUserApi;
+    private final ReportsUserApi reportsUserApi;
     private final LogService logService;
 
-    public AnalyticsServlet(final AnalyticsUserApi analyticsUserApi, final LogService logService) {
+    public AnalyticsServlet(final AnalyticsUserApi analyticsUserApi, final ReportsUserApi reportsUserApi, final LogService logService) {
         this.analyticsUserApi = analyticsUserApi;
+        this.reportsUserApi = reportsUserApi;
         this.logService = logService;
     }
 
@@ -111,6 +117,8 @@ public class AnalyticsServlet extends HttpServlet {
 
         } else if (uriOperationInfo.startsWith(STATIC_RESOURCES)) {
             doHandleStaticResource(uriOperationInfo, resp);
+        } else if (uriOperationInfo.startsWith(REPORTS)) {
+            doHandleReports(req, resp);
         } else {
             final UUID kbAccountId = getKbAccountId(req, resp);
             final CallContext context = createCallContext(req, resp);
@@ -160,6 +168,21 @@ public class AnalyticsServlet extends HttpServlet {
         return res;
     }
 
+    private void doHandleReports(final HttpServletRequest req, final HttpServletResponse resp) throws ServletException, IOException {
+        final String[] reportNames = req.getParameterValues(REPORTS_QUERY_NAME);
+        if (reportNames == null || reportNames.length == 0) {
+            resp.sendError(404);
+            return;
+        }
+
+        // TODO PIERRE Switch to an equivalent of StreamingOutputStream?
+        final List<NamedXYTimeSeries> result = reportsUserApi.getTimeSeriesDataForReport(reportNames);
+
+        resp.getOutputStream().write(mapper.writeValueAsBytes(result));
+        resp.setContentType("application/json");
+        setCrossSiteScriptingHeaders(resp);
+        resp.setStatus(HttpServletResponse.SC_OK);
+    }
 
     private void doHandlePlanTransitionsOverTime(final HttpServletRequest req, final HttpServletResponse resp) throws ServletException, IOException {
 

@@ -17,6 +17,7 @@
 package com.ning.billing.osgi.bundles.analytics;
 
 import java.util.concurrent.Executor;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy;
 import java.util.concurrent.TimeUnit;
 
@@ -40,8 +41,8 @@ public class BusinessExecutor {
 
     }
 
-    public static Executor newSingleThreadScheduledExecutor() {
-        return Executors.newSingleThreadScheduledExecutor("osgi-analytics-reports",
+    public static ScheduledExecutorService newSingleThreadScheduledExecutor(final String name) {
+        return Executors.newSingleThreadScheduledExecutor(name,
                                                           new CallerRunsPolicy());
     }
 }

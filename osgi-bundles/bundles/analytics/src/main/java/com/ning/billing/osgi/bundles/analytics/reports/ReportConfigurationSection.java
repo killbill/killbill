@@ -14,31 +14,23 @@
  * under the License.
  */
 
-package com.ning.billing.osgi.bundles.analytics.json;
+package com.ning.billing.osgi.bundles.analytics.reports;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+public interface ReportConfigurationSection {
 
-public class XY {
-
-    private final String x;
-    private final Float y;
-
-    @JsonCreator
-    public XY(@JsonProperty("x") final String x, @JsonProperty("y") final Float y) {
-        this.x = x;
-        this.y = y;
+    public static enum Frequency {
+        HOURLY,
+        DAILY
     }
 
-    public XY(final String x, final Integer y) {
-        this(x, new Float(y.doubleValue()));
-    }
+    public String getStoredProcedureName();
 
-    public String getX() {
-        return x;
-    }
+    public Frequency getFrequency();
 
-    public Float getY() {
-        return y;
-    }
+    // For DAILY only
+    public Integer getRefreshTimeOfTheDayGMT();
+
+    public String getTableName();
+
+    public String getPrettyName();
 }

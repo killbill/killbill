@@ -27,6 +27,9 @@ import org.osgi.framework.BundleContext;
 import com.ning.billing.osgi.api.OSGIPluginProperties;
 import com.ning.billing.osgi.bundles.analytics.api.user.AnalyticsUserApi;
 import com.ning.billing.osgi.bundles.analytics.http.AnalyticsServlet;
+import com.ning.billing.osgi.bundles.analytics.reports.ReportsConfiguration;
+import com.ning.billing.osgi.bundles.analytics.reports.ReportsUserApi;
+import com.ning.billing.osgi.bundles.analytics.reports.scheduler.JobsScheduler;
 import com.ning.killbill.osgi.libs.killbill.KillbillActivatorBase;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillEventDispatcher.OSGIKillbillEventHandler;
 
@@ -35,6 +38,7 @@ public class AnalyticsActivator extends KillbillActivatorBase {
     public static final String PLUGIN_NAME = "killbill-analytics";
 
     private OSGIKillbillEventHandler analyticsListener;
+    private JobsScheduler jobsScheduler;
 
     @Override
     public void start(final BundleContext context) throws Exception {
@@ -45,9 +49,22 @@ public class AnalyticsActivator extends KillbillActivatorBase {
         analyticsListener = new AnalyticsListener(logService, killbillAPI, dataSource, executor);
         dispatcher.registerEventHandler(analyticsListener);
 
+        jobsScheduler = new JobsScheduler(logService, dataSource);
+        final ReportsConfiguration reportsConfiguration = new ReportsConfiguration(logService, jobsScheduler);
+        reportsConfiguration.initialize();
+
         final AnalyticsUserApi analyticsUserApi = new AnalyticsUserApi(logService, killbillAPI, dataSource, executor);
-        final AnalyticsServlet analyticsServlet = new AnalyticsServlet(analyticsUserApi, logService);
+        final ReportsUserApi reportsUserApi = new ReportsUserApi(dataSource, reportsConfiguration);
+        final AnalyticsServlet analyticsServlet = new AnalyticsServlet(analyticsUserApi, reportsUserApi, logService);
         registerServlet(context, analyticsServlet);
+    }
+
+    @Override
+    public void stop(final BundleContext context) throws Exception {
+        if (jobsScheduler != null) {
+            jobsScheduler.shutdownNow();
+        }
+        super.stop(context);
     }
 
     @Override
