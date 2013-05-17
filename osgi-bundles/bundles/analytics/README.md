@@ -44,3 +44,4 @@ The dashboard system is controlled by query parameters:
  * AVERAGE\_MONTHLY: average the values on a monthly basis
  * SUM\_WEEKLY: sum all values on a weekly basis
  * SUM\_MONTHLY: sum all values on a monthly basis
+* To filter pivots from a report, use *!* for exclusions and *$* for inclusions. For example, report1=payments_per_day$AUD$EUR will graph the payments for AUD and EUR only, whereas report1=payments_per_day!AUD!EUR will graph all payments but the ones in AUD and EUR.

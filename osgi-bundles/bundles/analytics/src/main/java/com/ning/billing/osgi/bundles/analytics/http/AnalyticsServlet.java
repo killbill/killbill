@@ -173,8 +173,8 @@ public class AnalyticsServlet extends HttpServlet {
     }
 
     private void doHandleReports(final HttpServletRequest req, final HttpServletResponse resp) throws ServletException, IOException {
-        final String[] reportNames = req.getParameterValues(REPORTS_QUERY_NAME);
-        if (reportNames == null || reportNames.length == 0) {
+        final String[] rawReportNames = req.getParameterValues(REPORTS_QUERY_NAME);
+        if (rawReportNames == null || rawReportNames.length == 0) {
             resp.sendError(404);
             return;
         }
@@ -185,7 +185,7 @@ public class AnalyticsServlet extends HttpServlet {
         final SmootherType smootherType = Smoother.fromString(Strings.emptyToNull(req.getParameter(REPORTS_SMOOTHER_NAME)));
 
         // TODO PIERRE Switch to an equivalent of StreamingOutputStream?
-        final List<NamedXYTimeSeries> result = reportsUserApi.getTimeSeriesDataForReport(reportNames, startDate, endDate, smootherType);
+        final List<NamedXYTimeSeries> result = reportsUserApi.getTimeSeriesDataForReport(rawReportNames, startDate, endDate, smootherType);
 
         resp.getOutputStream().write(mapper.writeValueAsBytes(result));
         resp.setContentType("application/json");

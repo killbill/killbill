@@ -16,6 +16,7 @@
 
 package com.ning.billing.osgi.bundles.analytics.reports;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -67,18 +68,24 @@ public class ReportsUserApi {
         dbiThreadsExecutor.shutdownNow();
     }
 
-    public List<NamedXYTimeSeries> getTimeSeriesDataForReport(final String[] reportNames,
+    public List<NamedXYTimeSeries> getTimeSeriesDataForReport(final String[] rawReportNames,
                                                               @Nullable final LocalDate startDate,
                                                               @Nullable final LocalDate endDate,
                                                               @Nullable final SmootherType smootherType) {
         // Mapping of report name -> pivots -> data
         final Map<String, Map<String, List<XY>>> dataForReports = new ConcurrentHashMap<String, Map<String, List<XY>>>();
 
+        // Parse the reports
+        final List<ReportSpecification> reportSpecifications = new ArrayList<ReportSpecification>();
+        for (final String rawReportName : rawReportNames) {
+            reportSpecifications.add(new ReportSpecification(rawReportName));
+        }
+
         // Fetch the data
-        fetchData(reportNames, dataForReports);
+        fetchData(reportSpecifications, dataForReports);
 
         // Filter the data first
-        filterValues(dataForReports, startDate, endDate);
+        filterValues(reportSpecifications, dataForReports, startDate, endDate);
 
         // Normalize and sort the data
         normalizeAndSortXValues(dataForReports, startDate, endDate);
@@ -113,9 +120,10 @@ public class ReportsUserApi {
         return results;
     }
 
-    private void fetchData(final String[] reportNames, final Map<String, Map<String, List<XY>>> dataForReports) {
+    private void fetchData(final List<ReportSpecification> reportSpecifications, final Map<String, Map<String, List<XY>>> dataForReports) {
         final List<Future> jobs = new LinkedList<Future>();
-        for (final String reportName : reportNames) {
+        for (final ReportSpecification reportSpecification : reportSpecifications) {
+            final String reportName = reportSpecification.getReportName();
             final String tableName = reportsConfiguration.getTableNameForReport(reportName);
             if (tableName != null) {
                 jobs.add(dbiThreadsExecutor.submit(new Runnable() {
@@ -139,12 +147,36 @@ public class ReportsUserApi {
         }
     }
 
-    private void filterValues(final Map<String, Map<String, List<XY>>> dataForReports, @Nullable final LocalDate startDate, @Nullable final LocalDate endDate) {
+    private void filterValues(final List<ReportSpecification> reportSpecifications,
+                              final Map<String, Map<String, List<XY>>> dataForReports,
+                              @Nullable final LocalDate startDate,
+                              @Nullable final LocalDate endDate) {
         if (startDate == null && endDate == null) {
             return;
         }
 
-        for (final Map<String, List<XY>> dataForReport : dataForReports.values()) {
+        for (final ReportSpecification reportSpecification : reportSpecifications) {
+            final String reportName = reportSpecification.getReportName();
+            final Map<String, List<XY>> dataForReport = dataForReports.get(reportName);
+            if (dataForReport == null) {
+                throw new IllegalArgumentException();
+            }
+
+            // Handle the exclusion list
+            Iterables.removeAll(dataForReport.keySet(), reportSpecification.getPivotNamesToExclude());
+
+            // Handle the inclusion list
+            if (reportSpecification.getPivotNamesToInclude().size() > 0) {
+                Iterables.removeIf(dataForReport.keySet(),
+                                   new Predicate<String>() {
+                                       @Override
+                                       public boolean apply(final String pivotName) {
+                                           return !reportSpecification.getPivotNamesToInclude().contains(pivotName);
+                                       }
+                                   });
+            }
+
+            // Handle the dates filter
             for (final List<XY> dataForPivot : dataForReport.values()) {
                 Iterables.removeIf(dataForPivot,
                                    new Predicate<XY>() {
