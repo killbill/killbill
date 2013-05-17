@@ -19,12 +19,17 @@ package com.ning.billing.osgi.bundles.analytics.reports;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.annotation.Nullable;
+
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
@@ -34,7 +39,11 @@ import com.ning.billing.osgi.bundles.analytics.json.NamedXYTimeSeries;
 import com.ning.billing.osgi.bundles.analytics.json.XY;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillDataSource;
 
+import com.google.common.collect.Ordering;
+
 public class ReportsUserApi {
+
+    private static final String NO_PIVOT = "____NO_PIVOT____";
 
     private final IDBI dbi;
     private final ReportsConfiguration reportsConfiguration;
@@ -46,49 +55,87 @@ public class ReportsUserApi {
     }
 
     public List<NamedXYTimeSeries> getTimeSeriesDataForReport(final String[] reportNames) {
-        final Map<String, List<XY>> dataForReports = new LinkedHashMap<String, List<XY>>();
+        return getTimeSeriesDataForReport(reportNames, null, null);
+    }
+
+    public List<NamedXYTimeSeries> getTimeSeriesDataForReport(final String[] reportNames, @Nullable final LocalDate startDate, @Nullable final LocalDate endDate) {
+        // Mapping of report name -> pivots -> data
+        final Map<String, Map<String, List<XY>>> dataForReports = new LinkedHashMap<String, Map<String, List<XY>>>();
 
         // TODO parallel
         for (final String reportName : reportNames) {
             final String tableName = reportsConfiguration.getTableNameForReport(reportName);
             if (tableName != null) {
-                final List<XY> data = getData(tableName);
+                final Map<String, List<XY>> data = getData(tableName);
                 dataForReports.put(reportName, data);
             }
         }
 
         normalizeXValues(dataForReports);
+        filterValues(dataForReports, startDate, endDate);
 
         final List<NamedXYTimeSeries> results = new LinkedList<NamedXYTimeSeries>();
         for (final String reportName : dataForReports.keySet()) {
-            results.add(new NamedXYTimeSeries(reportsConfiguration.getPrettyNameForReport(reportName), dataForReports.get(reportName)));
+            // Sort the pivots by name for a consistent display in the dashboard
+            for (final String pivotName : Ordering.natural().sortedCopy(dataForReports.get(reportName).keySet())) {
+                final String timeSeriesName;
+                if (NO_PIVOT.equals(pivotName)) {
+                    timeSeriesName = reportsConfiguration.getPrettyNameForReport(reportName);
+                } else {
+                    timeSeriesName = String.format("%s (%s)", reportsConfiguration.getPrettyNameForReport(reportName), pivotName);
+                }
+
+                final List<XY> timeSeries = dataForReports.get(reportName).get(pivotName);
+                results.add(new NamedXYTimeSeries(timeSeriesName, timeSeries));
+            }
         }
         return results;
     }
 
-    private void normalizeXValues(final Map<String, List<XY>> dataForReports) {
+    private void filterValues(final Map<String, Map<String, List<XY>>> dataForReports, @Nullable final LocalDate startDate, @Nullable final LocalDate endDate) {
+        for (final Map<String, List<XY>> dataForReport : dataForReports.values()) {
+            for (final List<XY> dataForPivot : dataForReport.values()) {
+                final Iterator<XY> iterator = dataForPivot.iterator();
+                while (iterator.hasNext()) {
+                    final XY xy = iterator.next();
+                    if (startDate != null && new DateTime(xy.getX(), DateTimeZone.UTC).toLocalDate().isBefore(startDate) ||
+                        endDate != null && new DateTime(xy.getX(), DateTimeZone.UTC).toLocalDate().isAfter(endDate)) {
+                        iterator.remove();
+                    }
+                }
+            }
+        }
+    }
+
+    private void normalizeXValues(final Map<String, Map<String, List<XY>>> dataForReports) {
         final Set<String> xValues = new HashSet<String>();
-        for (final List<XY> dataForReport : dataForReports.values()) {
-            for (final XY xy : dataForReport) {
-                xValues.add(xy.getX());
+        for (final Map<String, List<XY>> dataForReport : dataForReports.values()) {
+            for (final List<XY> dataForPivot : dataForReport.values()) {
+                for (final XY xy : dataForPivot) {
+                    xValues.add(xy.getX());
+                }
             }
         }
 
-        for (final List<XY> dataForReport : dataForReports.values()) {
-            for (final String x : xValues) {
-                if (!hasX(dataForReport, x)) {
-                    dataForReport.add(new XY(x, 0));
+        for (final Map<String, List<XY>> dataForReport : dataForReports.values()) {
+            for (final List<XY> dataForPivot : dataForReport.values()) {
+                for (final String x : xValues) {
+                    if (!hasX(dataForPivot, x)) {
+                        dataForPivot.add(new XY(x, 0));
+                    }
                 }
             }
         }
 
         for (final String reportName : dataForReports.keySet()) {
-            Collections.sort(dataForReports.get(reportName), new Comparator<XY>() {
-                @Override
-                public int compare(final XY o1, final XY o2) {
-                    return new LocalDate(o1.getX()).compareTo(new LocalDate(o2.getX()));
-                }
-            });
+            for (final String pivotName : dataForReports.get(reportName).keySet()) {
+                Collections.sort(dataForReports.get(reportName).get(pivotName), new Comparator<XY>() {
+                    @Override
+                    public int compare(final XY o1, final XY o2) {
+                        return new DateTime(o1.getX(), DateTimeZone.UTC).compareTo(new DateTime(o2.getX(), DateTimeZone.UTC));
+                    }
+                });
+            }
         }
     }
 
@@ -101,13 +148,13 @@ public class ReportsUserApi {
         return false;
     }
 
-    private List<XY> getData(final String tableName) {
-        final List<XY> timeSeries = new LinkedList<XY>();
+    private Map<String, List<XY>> getData(final String tableName) {
+        final Map<String, List<XY>> timeSeries = new LinkedHashMap<String, List<XY>>();
 
         Handle handle = null;
         try {
             handle = dbi.open();
-            final List<Map<String, Object>> results = handle.select("select day, count from " + tableName);
+            final List<Map<String, Object>> results = handle.select("select * from " + tableName);
             for (final Map<String, Object> row : results) {
                 if (row.get("day") == null || row.get("count") == null) {
                     continue;
@@ -115,7 +162,20 @@ public class ReportsUserApi {
 
                 final String date = row.get("day").toString();
                 final Float value = Float.valueOf(row.get("count").toString());
-                timeSeries.add(new XY(date, value));
+
+                if (row.keySet().size() == 2) {
+                    // No pivot
+                    if (timeSeries.get(NO_PIVOT) == null) {
+                        timeSeries.put(NO_PIVOT, new LinkedList<XY>());
+                    }
+                    timeSeries.get(NO_PIVOT).add(new XY(date, value));
+                } else if (row.get("pivot") != null) {
+                    final String pivot = row.get("pivot").toString();
+                    if (timeSeries.get(pivot) == null) {
+                        timeSeries.put(pivot, new LinkedList<XY>());
+                    }
+                    timeSeries.get(pivot).add(new XY(date, value));
+                }
             }
         } finally {
             if (handle != null) {

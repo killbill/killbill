@@ -45,6 +45,7 @@ import com.ning.billing.util.callcontext.UserType;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Objects;
+import com.google.common.base.Strings;
 import com.google.common.io.Resources;
 
 public class AnalyticsServlet extends HttpServlet {
@@ -175,8 +176,11 @@ public class AnalyticsServlet extends HttpServlet {
             return;
         }
 
+        final LocalDate startDate = Strings.emptyToNull(req.getParameter(QUERY_START_DATE)) != null ? DATE_FORMAT.parseLocalDate(req.getParameter(QUERY_START_DATE)) : null;
+        final LocalDate endDate = Strings.emptyToNull(req.getParameter(QUERY_END_DATE)) != null ? DATE_FORMAT.parseLocalDate(req.getParameter(QUERY_END_DATE)) : null;
+
         // TODO PIERRE Switch to an equivalent of StreamingOutputStream?
-        final List<NamedXYTimeSeries> result = reportsUserApi.getTimeSeriesDataForReport(reportNames);
+        final List<NamedXYTimeSeries> result = reportsUserApi.getTimeSeriesDataForReport(reportNames, startDate, endDate);
 
         resp.getOutputStream().write(mapper.writeValueAsBytes(result));
         resp.setContentType("application/json");
