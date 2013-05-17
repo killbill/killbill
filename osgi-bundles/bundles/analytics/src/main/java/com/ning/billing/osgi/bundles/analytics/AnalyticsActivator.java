@@ -39,6 +39,7 @@ public class AnalyticsActivator extends KillbillActivatorBase {
 
     private OSGIKillbillEventHandler analyticsListener;
     private JobsScheduler jobsScheduler;
+    private ReportsUserApi reportsUserApi;
 
     @Override
     public void start(final BundleContext context) throws Exception {
@@ -54,7 +55,7 @@ public class AnalyticsActivator extends KillbillActivatorBase {
         reportsConfiguration.initialize();
 
         final AnalyticsUserApi analyticsUserApi = new AnalyticsUserApi(logService, killbillAPI, dataSource, executor);
-        final ReportsUserApi reportsUserApi = new ReportsUserApi(dataSource, reportsConfiguration);
+        reportsUserApi = new ReportsUserApi(dataSource, reportsConfiguration);
         final AnalyticsServlet analyticsServlet = new AnalyticsServlet(analyticsUserApi, reportsUserApi, logService);
         registerServlet(context, analyticsServlet);
     }
@@ -63,6 +64,9 @@ public class AnalyticsActivator extends KillbillActivatorBase {
     public void stop(final BundleContext context) throws Exception {
         if (jobsScheduler != null) {
             jobsScheduler.shutdownNow();
+        }
+        if (reportsUserApi != null) {
+            reportsUserApi.shutdownNow();
         }
         super.stop(context);
     }

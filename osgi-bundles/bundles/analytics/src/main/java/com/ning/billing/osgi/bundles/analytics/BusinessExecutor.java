@@ -16,7 +16,7 @@
 
 package com.ning.billing.osgi.bundles.analytics;
 
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy;
 import java.util.concurrent.TimeUnit;
@@ -28,13 +28,17 @@ import com.google.common.annotations.VisibleForTesting;
 public class BusinessExecutor {
 
     @VisibleForTesting
-    static final Integer NB_THREADS = Integer.valueOf(System.getProperty("com.ning.billing.osgi.bundles.analytics.nb_threads", "100"));
+    static final Integer NB_THREADS = Integer.valueOf(System.getProperty("com.ning.billing.osgi.bundles.analytics.refresh.nb_threads", "100"));
 
-    public static Executor newCachedThreadPool() {
+    public static ExecutorService newCachedThreadPool() {
+        return newCachedThreadPool(NB_THREADS, "osgi-analytics-refresh");
+    }
+
+    public static ExecutorService newCachedThreadPool(final int nbThreads, final String name) {
         // Note: we don't use the default rejection handler here (AbortPolicy) as we always want the tasks to be executed
         return Executors.newCachedThreadPool(0,
-                                             NB_THREADS,
-                                             "osgi-analytics-refresh",
+                                             nbThreads,
+                                             name,
                                              60L,
                                              TimeUnit.SECONDS,
                                              new CallerRunsPolicy());

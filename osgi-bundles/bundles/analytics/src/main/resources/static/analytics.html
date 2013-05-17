@@ -79,13 +79,15 @@
 
         // The URL structure is expected to be in the form: analytics.html?report1=new_trials_per_day&report1=cancellations_per_day&report2=conversions_per_day
         $(document).ready(function() {
+          // Set (sane?) default values for from and to if unspecified. This is to make sure all graphs will share the exact same X axis (the server will normalize the data)
+          var now = new Date();
           var from = $.url().param('startDate');
           if (!from) {
-            from = '';
+            from = now.getFullYear() + '-' + (now.getMonth() - 3) + '-' + now.getDay();
           }
           var to = $.url().param('endDate');
           if (!to) {
-            to = '';
+            to = now.getFullYear() + '-' + (now.getMonth() + 3) + '-' + now.getDay();
           }
 
           // Map of position (starting from the top) to an array of reports

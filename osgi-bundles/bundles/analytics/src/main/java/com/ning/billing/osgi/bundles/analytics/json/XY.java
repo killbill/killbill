@@ -16,6 +16,9 @@
 
 package com.ning.billing.osgi.bundles.analytics.json;
 
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -24,18 +27,31 @@ public class XY {
     private final String x;
     private final Float y;
 
+    private final DateTime xDate;
+
     @JsonCreator
     public XY(@JsonProperty("x") final String x, @JsonProperty("y") final Float y) {
         this.x = x;
         this.y = y;
+        this.xDate = new DateTime(x, DateTimeZone.UTC);
     }
 
     public XY(final String x, final Integer y) {
         this(x, new Float(y.doubleValue()));
     }
 
+    public XY(final DateTime xDate, final Float y) {
+        this.x = xDate.toString();
+        this.y = y;
+        this.xDate = xDate;
+    }
+
     public String getX() {
         return x;
+    }
+
+    public DateTime getxDate() {
+        return xDate;
     }
 
     public Float getY() {

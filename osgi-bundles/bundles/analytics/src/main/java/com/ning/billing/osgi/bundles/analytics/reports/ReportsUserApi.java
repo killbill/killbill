@@ -18,13 +18,14 @@ package com.ning.billing.osgi.bundles.analytics.reports;
 
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 import javax.annotation.Nullable;
 
@@ -34,16 +35,22 @@ import org.joda.time.LocalDate;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
 
+import com.ning.billing.osgi.bundles.analytics.BusinessExecutor;
 import com.ning.billing.osgi.bundles.analytics.dao.BusinessDBIProvider;
 import com.ning.billing.osgi.bundles.analytics.json.NamedXYTimeSeries;
 import com.ning.billing.osgi.bundles.analytics.json.XY;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillDataSource;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 
 public class ReportsUserApi {
 
+    private static final Integer NB_THREADS = Integer.valueOf(System.getProperty("com.ning.billing.osgi.bundles.analytics.dashboard.nb_threads", "10"));
     private static final String NO_PIVOT = "____NO_PIVOT____";
+
+    private final ExecutorService dbiThreadsExecutor = BusinessExecutor.newCachedThreadPool(NB_THREADS, "osgi-analytics-dashboard");
 
     private final IDBI dbi;
     private final ReportsConfiguration reportsConfiguration;
@@ -54,26 +61,26 @@ public class ReportsUserApi {
         dbi = BusinessDBIProvider.get(osgiKillbillDataSource.getDataSource());
     }
 
-    public List<NamedXYTimeSeries> getTimeSeriesDataForReport(final String[] reportNames) {
-        return getTimeSeriesDataForReport(reportNames, null, null);
+    public void shutdownNow() {
+        dbiThreadsExecutor.shutdownNow();
     }
 
-    public List<NamedXYTimeSeries> getTimeSeriesDataForReport(final String[] reportNames, @Nullable final LocalDate startDate, @Nullable final LocalDate endDate) {
+    public List<NamedXYTimeSeries> getTimeSeriesDataForReport(final String[] reportNames,
+                                                              @Nullable final LocalDate startDate,
+                                                              @Nullable final LocalDate endDate) {
         // Mapping of report name -> pivots -> data
-        final Map<String, Map<String, List<XY>>> dataForReports = new LinkedHashMap<String, Map<String, List<XY>>>();
+        final Map<String, Map<String, List<XY>>> dataForReports = new ConcurrentHashMap<String, Map<String, List<XY>>>();
 
-        // TODO parallel
-        for (final String reportName : reportNames) {
-            final String tableName = reportsConfiguration.getTableNameForReport(reportName);
-            if (tableName != null) {
-                final Map<String, List<XY>> data = getData(tableName);
-                dataForReports.put(reportName, data);
-            }
-        }
+        // Fetch the data
+        fetchData(reportNames, dataForReports);
 
-        normalizeXValues(dataForReports);
+        // Filter the data first
         filterValues(dataForReports, startDate, endDate);
 
+        // Normalize the data
+        normalizeXValues(dataForReports, startDate, endDate);
+
+        // Build the named timeseries
         final List<NamedXYTimeSeries> results = new LinkedList<NamedXYTimeSeries>();
         for (final String reportName : dataForReports.keySet()) {
             // Sort the pivots by name for a consistent display in the dashboard
@@ -89,63 +96,123 @@ public class ReportsUserApi {
                 results.add(new NamedXYTimeSeries(timeSeriesName, timeSeries));
             }
         }
+
         return results;
     }
 
-    private void filterValues(final Map<String, Map<String, List<XY>>> dataForReports, @Nullable final LocalDate startDate, @Nullable final LocalDate endDate) {
-        for (final Map<String, List<XY>> dataForReport : dataForReports.values()) {
-            for (final List<XY> dataForPivot : dataForReport.values()) {
-                final Iterator<XY> iterator = dataForPivot.iterator();
-                while (iterator.hasNext()) {
-                    final XY xy = iterator.next();
-                    if (startDate != null && new DateTime(xy.getX(), DateTimeZone.UTC).toLocalDate().isBefore(startDate) ||
-                        endDate != null && new DateTime(xy.getX(), DateTimeZone.UTC).toLocalDate().isAfter(endDate)) {
-                        iterator.remove();
+    private void fetchData(final String[] reportNames, final Map<String, Map<String, List<XY>>> dataForReports) {
+        final List<Future> jobs = new LinkedList<Future>();
+        for (final String reportName : reportNames) {
+            final String tableName = reportsConfiguration.getTableNameForReport(reportName);
+            if (tableName != null) {
+                jobs.add(dbiThreadsExecutor.submit(new Runnable() {
+                    @Override
+                    public void run() {
+                        final Map<String, List<XY>> data = getData(tableName);
+                        dataForReports.put(reportName, data);
                     }
-                }
+                }));
+            }
+        }
+
+        for (final Future job : jobs) {
+            try {
+                job.get();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            } catch (ExecutionException e) {
+                throw new RuntimeException(e);
             }
         }
     }
 
-    private void normalizeXValues(final Map<String, Map<String, List<XY>>> dataForReports) {
-        final Set<String> xValues = new HashSet<String>();
-        for (final Map<String, List<XY>> dataForReport : dataForReports.values()) {
-            for (final List<XY> dataForPivot : dataForReport.values()) {
-                for (final XY xy : dataForPivot) {
-                    xValues.add(xy.getX());
-                }
-            }
+    private void filterValues(final Map<String, Map<String, List<XY>>> dataForReports, @Nullable final LocalDate startDate, @Nullable final LocalDate endDate) {
+        if (startDate == null && endDate == null) {
+            return;
         }
 
         for (final Map<String, List<XY>> dataForReport : dataForReports.values()) {
             for (final List<XY> dataForPivot : dataForReport.values()) {
-                for (final String x : xValues) {
-                    if (!hasX(dataForPivot, x)) {
-                        dataForPivot.add(new XY(x, 0));
+                Iterables.removeIf(dataForPivot,
+                                   new Predicate<XY>() {
+                                       @Override
+                                       public boolean apply(final XY xy) {
+                                           return startDate != null && xy.getxDate().toLocalDate().isBefore(startDate) ||
+                                                  endDate != null && xy.getxDate().toLocalDate().isAfter(endDate);
+                                       }
+                                   });
+            }
+        }
+    }
+
+    // TODO PIERRE Naive implementation
+    private void normalizeXValues(final Map<String, Map<String, List<XY>>> dataForReports, @Nullable final LocalDate startDate, @Nullable final LocalDate endDate) {
+        DateTime minDate = null;
+        if (startDate != null) {
+            minDate = startDate.toDateTimeAtStartOfDay(DateTimeZone.UTC);
+        }
+
+        DateTime maxDate = null;
+        if (endDate != null) {
+            maxDate = endDate.toDateTimeAtStartOfDay(DateTimeZone.UTC);
+        }
+
+        // If no min and/or max was specified, infer them from the data
+        if (minDate == null || maxDate == null) {
+            for (final Map<String, List<XY>> dataForReport : dataForReports.values()) {
+                for (final List<XY> dataForPivot : dataForReport.values()) {
+                    for (final XY xy : dataForPivot) {
+                        if (minDate == null || xy.getxDate().isBefore(minDate)) {
+                            minDate = xy.getxDate();
+                        }
+                        if (maxDate == null || xy.getxDate().isAfter(maxDate)) {
+                            maxDate = xy.getxDate();
+                        }
                     }
                 }
             }
         }
 
+        if (minDate == null || maxDate == null) {
+            throw new IllegalStateException();
+        }
+
+        // Add 0 for missing days
+        DateTime curDate = minDate;
+        while (maxDate.isAfter(curDate)) {
+            for (final Map<String, List<XY>> dataForReport : dataForReports.values()) {
+                for (final List<XY> dataForPivot : dataForReport.values()) {
+                    addMissingValueForDateIfNeeded(curDate, dataForPivot);
+                }
+            }
+            curDate = curDate.plusDays(1);
+        }
+
+        // Sort the data for the dashboard
         for (final String reportName : dataForReports.keySet()) {
             for (final String pivotName : dataForReports.get(reportName).keySet()) {
-                Collections.sort(dataForReports.get(reportName).get(pivotName), new Comparator<XY>() {
-                    @Override
-                    public int compare(final XY o1, final XY o2) {
-                        return new DateTime(o1.getX(), DateTimeZone.UTC).compareTo(new DateTime(o2.getX(), DateTimeZone.UTC));
-                    }
-                });
+                Collections.sort(dataForReports.get(reportName).get(pivotName),
+                                 new Comparator<XY>() {
+                                     @Override
+                                     public int compare(final XY o1, final XY o2) {
+                                         return o1.getxDate().compareTo(o2.getxDate());
+                                     }
+                                 });
             }
         }
     }
 
-    private boolean hasX(final List<XY> values, final String x) {
-        for (final XY xy : values) {
-            if (xy.getX().equals(x)) {
-                return true;
+    private void addMissingValueForDateIfNeeded(final DateTime curDate, final List<XY> dataForPivot) {
+        final XY valueForCurrentDate = Iterables.tryFind(dataForPivot, new Predicate<XY>() {
+            @Override
+            public boolean apply(final XY xy) {
+                return xy.getxDate().compareTo(curDate) == 0;
             }
+        }).orNull();
+
+        if (valueForCurrentDate == null) {
+            dataForPivot.add(new XY(curDate, (float) 0));
         }
-        return false;
     }
 
     private Map<String, List<XY>> getData(final String tableName) {
