@@ -41,6 +41,6 @@ The dashboard system is controlled by query parameters:
 * **startDate** and **endDate**: dates to filter the data on the server side. For example: startDate=2012-08-01&endDate=2013-10-01
 * **smooth1**, **smooth2**, etc.: smoothing function to apply for data in a given slot. Currently support smoothing functions are:
  * AVERAGE\_WEEKLY: average the values on a weekly basis
- * AVERAGE\_MONTHLY: average the values on the monthly basis
+ * AVERAGE\_MONTHLY: average the values on a monthly basis
  * SUM\_WEEKLY: sum all values on a weekly basis
  * SUM\_MONTHLY: sum all values on a monthly basis
