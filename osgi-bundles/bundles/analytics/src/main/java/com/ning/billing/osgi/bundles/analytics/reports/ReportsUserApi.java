@@ -39,6 +39,8 @@ import com.ning.billing.osgi.bundles.analytics.BusinessExecutor;
 import com.ning.billing.osgi.bundles.analytics.dao.BusinessDBIProvider;
 import com.ning.billing.osgi.bundles.analytics.json.NamedXYTimeSeries;
 import com.ning.billing.osgi.bundles.analytics.json.XY;
+import com.ning.billing.osgi.bundles.analytics.reports.analysis.Smoother;
+import com.ning.billing.osgi.bundles.analytics.reports.analysis.Smoother.SmootherType;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillDataSource;
 
 import com.google.common.base.Predicate;
@@ -67,7 +69,8 @@ public class ReportsUserApi {
 
     public List<NamedXYTimeSeries> getTimeSeriesDataForReport(final String[] reportNames,
                                                               @Nullable final LocalDate startDate,
-                                                              @Nullable final LocalDate endDate) {
+                                                              @Nullable final LocalDate endDate,
+                                                              @Nullable final SmootherType smootherType) {
         // Mapping of report name -> pivots -> data
         final Map<String, Map<String, List<XY>>> dataForReports = new ConcurrentHashMap<String, Map<String, List<XY>>>();
 
@@ -77,10 +80,20 @@ public class ReportsUserApi {
         // Filter the data first
         filterValues(dataForReports, startDate, endDate);
 
-        // Normalize the data
-        normalizeXValues(dataForReports, startDate, endDate);
+        // Normalize and sort the data
+        normalizeAndSortXValues(dataForReports, startDate, endDate);
 
-        // Build the named timeseries
+        // Smooth the data if needed and build the named timeseries
+        if (smootherType != null) {
+            final Smoother smoother = smootherType.createSmoother(dataForReports);
+            smoother.smooth();
+            return buildNamedXYTimeSeries(smoother.getDataForReports());
+        } else {
+            return buildNamedXYTimeSeries(dataForReports);
+        }
+    }
+
+    private List<NamedXYTimeSeries> buildNamedXYTimeSeries(final Map<String, Map<String, List<XY>>> dataForReports) {
         final List<NamedXYTimeSeries> results = new LinkedList<NamedXYTimeSeries>();
         for (final String reportName : dataForReports.keySet()) {
             // Sort the pivots by name for a consistent display in the dashboard
@@ -146,7 +159,7 @@ public class ReportsUserApi {
     }
 
     // TODO PIERRE Naive implementation
-    private void normalizeXValues(final Map<String, Map<String, List<XY>>> dataForReports, @Nullable final LocalDate startDate, @Nullable final LocalDate endDate) {
+    private void normalizeAndSortXValues(final Map<String, Map<String, List<XY>>> dataForReports, @Nullable final LocalDate startDate, @Nullable final LocalDate endDate) {
         DateTime minDate = null;
         if (startDate != null) {
             minDate = startDate.toDateTimeAtStartOfDay(DateTimeZone.UTC);

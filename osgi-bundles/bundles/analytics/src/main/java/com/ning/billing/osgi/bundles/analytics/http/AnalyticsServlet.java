@@ -39,6 +39,8 @@ import com.ning.billing.osgi.bundles.analytics.api.BusinessSnapshot;
 import com.ning.billing.osgi.bundles.analytics.api.user.AnalyticsUserApi;
 import com.ning.billing.osgi.bundles.analytics.json.NamedXYTimeSeries;
 import com.ning.billing.osgi.bundles.analytics.reports.ReportsUserApi;
+import com.ning.billing.osgi.bundles.analytics.reports.analysis.Smoother;
+import com.ning.billing.osgi.bundles.analytics.reports.analysis.Smoother.SmootherType;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.UserType;
@@ -69,6 +71,7 @@ public class AnalyticsServlet extends HttpServlet {
 
     private static final String REPORTS = "reports";
     private static final String REPORTS_QUERY_NAME = "name";
+    private static final String REPORTS_SMOOTHER_NAME = "smooth";
 
     private static final ObjectMapper mapper = ObjectMapperProvider.get();
 
@@ -179,8 +182,10 @@ public class AnalyticsServlet extends HttpServlet {
         final LocalDate startDate = Strings.emptyToNull(req.getParameter(QUERY_START_DATE)) != null ? DATE_FORMAT.parseLocalDate(req.getParameter(QUERY_START_DATE)) : null;
         final LocalDate endDate = Strings.emptyToNull(req.getParameter(QUERY_END_DATE)) != null ? DATE_FORMAT.parseLocalDate(req.getParameter(QUERY_END_DATE)) : null;
 
+        final SmootherType smootherType = Smoother.fromString(Strings.emptyToNull(req.getParameter(REPORTS_SMOOTHER_NAME)));
+
         // TODO PIERRE Switch to an equivalent of StreamingOutputStream?
-        final List<NamedXYTimeSeries> result = reportsUserApi.getTimeSeriesDataForReport(reportNames, startDate, endDate);
+        final List<NamedXYTimeSeries> result = reportsUserApi.getTimeSeriesDataForReport(reportNames, startDate, endDate, smootherType);
 
         resp.getOutputStream().write(mapper.writeValueAsBytes(result));
         resp.setContentType("application/json");

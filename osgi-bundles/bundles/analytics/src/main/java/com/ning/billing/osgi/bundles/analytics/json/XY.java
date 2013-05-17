@@ -18,8 +18,10 @@ package com.ning.billing.osgi.bundles.analytics.json;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class XY {
@@ -46,10 +48,15 @@ public class XY {
         this.xDate = xDate;
     }
 
+    public XY(final LocalDate xDate, final Float y) {
+        this(xDate.toDateTimeAtStartOfDay(DateTimeZone.UTC), y);
+    }
+
     public String getX() {
         return x;
     }
 
+    @JsonIgnore
     public DateTime getxDate() {
         return xDate;
     }

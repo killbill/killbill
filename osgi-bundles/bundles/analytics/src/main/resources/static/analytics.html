@@ -65,8 +65,11 @@
         }
 
         // Get the data for a set of reports
-        function doGetData(position, reports, from, to, fn) {
+        function doGetData(position, reports, from, to, smoothFunction, fn) {
           var request_url = "http://" + $VAR_SERVER + ":" + $VAR_PORT + "/plugins/killbill-analytics/reports?startDate=" + from + "&endDate=" + to + "&name=" + reports.join("&name=");
+          if (smoothFunction) {
+            request_url = request_url + "&smooth=" + smoothFunction;
+          }
 
           return $.ajax({
             type: "GET",
@@ -92,6 +95,8 @@
 
           // Map of position (starting from the top) to an array of reports
           var reports = {}
+          // Map of position (starting from the top) to a smoothing function
+          var smoothFunctions = {}
           for (var i = 1; i < 10; i++) {
             var reportsI = $.url().param('report' + i);
             if (!reportsI) {
@@ -102,6 +107,8 @@
             } else {
               reports[i] = [reportsI];
             }
+
+            smoothFunctions[i] = $.url().param('smooth' + i);
           }
 
           // Set sane defaults
@@ -116,7 +123,7 @@
           var futuresData = {}
           for (var position in reports) {
             // Fetch the data
-            var future = doGetData(position, reports[position], from, to, function(zePosition, reports, reportsData) {
+            var future = doGetData(position, reports[position], from, to, smoothFunctions[position], function(zePosition, reports, reportsData) {
               console.log(typeof reportsData);
               if (!(reportsData instanceof Array) || reportsData.length == 0) {
                 futuresData[zePosition] = [ { "name": "No data", "values": [] } ];
