@@ -19,6 +19,7 @@ package com.ning.billing.osgi.bundles.analytics;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -50,7 +51,7 @@ public class TestBusinessExecutor extends AnalyticsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testRejectionPolicy() throws Exception {
-        final BusinessExecutor executor = BusinessExecutor.create(logService);
+        final Executor executor = BusinessExecutor.newCachedThreadPool();
         final CompletionService<Integer> completionService = new ExecutorCompletionService<Integer>(executor);
 
         final int totalTasksSize = BusinessExecutor.NB_THREADS * 50;

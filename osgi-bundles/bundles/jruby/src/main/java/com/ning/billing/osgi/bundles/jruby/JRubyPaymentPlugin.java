@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.UUID;
 
 import org.jruby.Ruby;
-import org.jruby.embed.ScriptingContainer;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.log.LogService;
@@ -44,9 +43,8 @@ public class JRubyPaymentPlugin extends JRubyPlugin implements PaymentPluginApi 
 
     private volatile ServiceRegistration<PaymentPluginApi> paymentInfoPluginRegistration;
 
-    public JRubyPaymentPlugin(final PluginRubyConfig config, final ScriptingContainer container,
-                              final BundleContext bundleContext, final LogService logger) {
-        super(config, container, bundleContext, logger);
+    public JRubyPaymentPlugin(final PluginRubyConfig config, final BundleContext bundleContext, final LogService logger) {
+        super(config, bundleContext, logger);
     }
 
     @Override
@@ -62,10 +60,11 @@ public class JRubyPaymentPlugin extends JRubyPlugin implements PaymentPluginApi 
 
     @Override
     public void stopPlugin(final BundleContext context) {
-        paymentInfoPluginRegistration.unregister();
+        if (paymentInfoPluginRegistration != null) {
+            paymentInfoPluginRegistration.unregister();
+        }
         super.stopPlugin(context);
     }
-
 
     @Override
     public PaymentInfoPlugin processPayment(final UUID kbAccountId, final UUID kbPaymentId, final UUID kbPaymentMethodId, final BigDecimal amount, final Currency currency, final CallContext context) throws PaymentPluginApiException {

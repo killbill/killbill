@@ -66,7 +66,7 @@ function start() {
     mkdir -p $LOG_DIR
 
     local opts=`build_properties`
-    local start_cmd="mvn $opts -Dlogback.configurationFile=$LOG -Dning.jmx.http.port=$PORT -Dxn.host.external.port=$PORT -DjettyPort=$PORT -Dxn.server.port=$PORT jetty:run"
+    local start_cmd="mvn $opts -Dlogback.configurationFile=$LOG jetty:run"
 
     local debug_opts_eclipse=
     if [ ! -z $DEBUG ]; then
@@ -76,7 +76,7 @@ function start() {
             debug_opts_eclipse=$DEBUG_OPTS_ECLIPSE
         fi
     fi
-    export MAVEN_OPTS="$MAVEN_OPTS -Duser.timezone=UTC $debug_opts_eclipse"
+    export MAVEN_OPTS="$MAVEN_OPTS $debug_opts_eclipse"
 
     echo "Starting IRS MAVEN_OPTS = $MAVEN_OPTS"
     echo "$start_cmd"
