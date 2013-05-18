@@ -43,7 +43,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <killbill-commons.version>0.1.5</killbill-commons.version>
-        <slf4j.version>1.7.2</slf4j.version>
+        <slf4j.version>1.7.5</slf4j.version>
         <ehcache.version>2.6.2</ehcache.version>
     </properties>
     <modules>
