@@ -40,7 +40,7 @@ import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.entitlement.api.user.SubscriptionState;
 import com.ning.billing.mock.MockPlan;
 
 public class TestDefaultAnalyticsUserApi extends AnalyticsTestSuiteWithEmbeddedDB {
@@ -77,7 +77,7 @@ public class TestDefaultAnalyticsUserApi extends AnalyticsTestSuiteWithEmbeddedD
                 clock.getUTCNow(),
                 BusinessSubscriptionEvent.subscriptionCreated(plan.getName(), catalog, clock.getUTCNow(), clock.getUTCNow()),
                 null,
-                new BusinessSubscription("DEFAULT", plan.getName(), phase.getName(), Currency.USD, clock.getUTCNow(), Subscription.SubscriptionState.ACTIVE, catalog)
+                new BusinessSubscription("DEFAULT", plan.getName(), phase.getName(), Currency.USD, clock.getUTCNow(), SubscriptionState.ACTIVE, catalog)
         );
         subscriptionTransitionSqlDao.createTransition(transition, internalCallContext);
 

@@ -106,7 +106,7 @@ public class TestTagApi extends TestIntegrationBase {
         // Create a new tag definition
         //
         busHandler.pushExpectedEvents(NextEvent.TAG_DEFINITION);
-        final TagDefinition tagDefinition = tagUserApi.create("foo", "foo desc", callContext);
+        final TagDefinition tagDefinition = tagUserApi.createTagDefinition("foo", "foo desc", callContext);
         assertTrue(busHandler.isCompleted(DELAY));
 
         //

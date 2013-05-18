@@ -25,7 +25,7 @@ import org.joda.time.DateTime;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.invoice.api.InvoicePayment;
-import com.ning.billing.invoice.api.InvoicePayment.InvoicePaymentType;
+import com.ning.billing.invoice.api.InvoicePaymentType;
 import com.ning.billing.invoice.model.InvoicingConfiguration;
 
 import com.google.common.base.Predicate;

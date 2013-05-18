@@ -21,5 +21,5 @@ public enum UserType {
     ADMIN,
     CUSTOMER,
     MIGRATION,
-    TEST
+    TEST;
 }

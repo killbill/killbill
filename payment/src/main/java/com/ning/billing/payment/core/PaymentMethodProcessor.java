@@ -34,7 +34,7 @@ import com.ning.billing.payment.api.DefaultPaymentMethod;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.PaymentMethod;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
-import com.ning.billing.payment.api.PaymentMethodPlugin.PaymentMethodKVInfo;
+import com.ning.billing.payment.api.PaymentMethodKVInfo;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.dao.PaymentMethodModelDao;
 import com.ning.billing.payment.plugin.api.PaymentMethodInfoPlugin;

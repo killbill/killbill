@@ -70,7 +70,7 @@ public class DefaultTagUserApi implements TagUserApi {
     }
 
     @Override
-    public TagDefinition create(final String definitionName, final String description, final CallContext context) throws TagDefinitionApiException {
+    public TagDefinition createTagDefinition(final String definitionName, final String description, final CallContext context) throws TagDefinitionApiException {
         final TagDefinitionModelDao tagDefinitionModelDao = tagDefinitionDao.create(definitionName, description, internalCallContextFactory.createInternalCallContext(context));
         return new DefaultTagDefinition(tagDefinitionModelDao, TagModelDaoHelper.isControlTag(tagDefinitionModelDao.getName()));
     }

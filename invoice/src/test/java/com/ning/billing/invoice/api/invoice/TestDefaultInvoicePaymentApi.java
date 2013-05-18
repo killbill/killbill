@@ -30,7 +30,7 @@ import com.ning.billing.invoice.InvoiceTestSuiteWithEmbeddedDB;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoicePayment;
-import com.ning.billing.invoice.api.InvoicePayment.InvoicePaymentType;
+import com.ning.billing.invoice.api.InvoicePaymentType;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

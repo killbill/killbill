@@ -29,7 +29,9 @@ import com.ning.billing.payment.plugin.api.PaymentInfoPlugin;
 import com.ning.billing.payment.plugin.api.PaymentMethodInfoPlugin;
 import com.ning.billing.payment.plugin.api.PaymentPluginApiException;
 import com.ning.billing.payment.plugin.api.PaymentPluginApiWithTestControl;
+import com.ning.billing.payment.plugin.api.PaymentPluginStatus;
 import com.ning.billing.payment.plugin.api.RefundInfoPlugin;
+import com.ning.billing.payment.plugin.api.RefundPluginStatus;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TenantContext;
 

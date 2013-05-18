@@ -22,12 +22,6 @@ import org.joda.time.DateTime;
 
 public interface RefundInfoPlugin {
 
-    public enum RefundPluginStatus {
-        UNDEFINED,
-        PROCESSED,
-        ERROR
-    }
-
     /**
      * @return refund amount
      */

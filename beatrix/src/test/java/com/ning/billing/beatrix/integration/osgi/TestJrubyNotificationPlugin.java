@@ -16,11 +16,18 @@
 
 package com.ning.billing.beatrix.integration.osgi;
 
+import java.util.List;
+
+import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
+import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.beatrix.osgi.SetupBundleWithAssertion;
+import com.ning.billing.util.tag.Tag;
+
+import static org.testng.Assert.assertTrue;
 
 public class TestJrubyNotificationPlugin extends TestOSGIBase {
 
@@ -44,6 +51,13 @@ public class TestJrubyNotificationPlugin extends TestOSGIBase {
     public void testOnEventForAccountCreation() throws Exception {
 
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(4));
+        busHandler.pushExpectedEvents(NextEvent.TAG_DEFINITION, NextEvent.TAG);
+        // notification will do a bunch of things and also create a tag
+        assertTrue(busHandler.isCompleted(2 * DELAY));
+
+        final List<Tag> tags = tagUserApi.getTagsForAccount(account.getId(), callContext);
+        Assert.assertEquals(tags.size(), 1);
+        //final Tag tag = tags.get(0);
     }
 
 }

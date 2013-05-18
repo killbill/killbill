@@ -25,7 +25,7 @@ import org.joda.time.DateTime;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.payment.api.PaymentMethod;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
-import com.ning.billing.payment.api.PaymentMethodPlugin.PaymentMethodKVInfo;
+import com.ning.billing.payment.api.PaymentMethodKVInfo;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -200,7 +200,7 @@ public class PaymentMethodJson {
                     @Override
                     public List<PaymentMethodKVInfo> getProperties() {
                         if (pluginInfo.getProperties() != null) {
-                            final List<PaymentMethodKVInfo> result = new LinkedList<PaymentMethodPlugin.PaymentMethodKVInfo>();
+                            final List<PaymentMethodKVInfo> result = new LinkedList<PaymentMethodKVInfo>();
                             for (final PaymentMethodProperties cur : pluginInfo.getProperties()) {
                                 result.add(new PaymentMethodKVInfo(cur.getKey(), cur.getValue(), cur.isUpdatable));
                             }

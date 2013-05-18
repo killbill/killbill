@@ -16,9 +16,7 @@
 
 package com.ning.billing.analytics.dao;
 
-import java.io.IOException;
 import java.math.BigDecimal;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.UUID;
 
@@ -38,14 +36,13 @@ import com.ning.billing.analytics.model.BusinessSubscriptionEvent;
 import com.ning.billing.analytics.model.BusinessSubscriptionTransitionModelDao;
 import com.ning.billing.analytics.utils.Rounder;
 import com.ning.billing.catalog.api.Catalog;
-import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.entitlement.api.user.SubscriptionState;
 import com.ning.billing.mock.MockPlan;
 
 public class TestAnalyticsDao extends AnalyticsTestSuiteWithEmbeddedDB {
@@ -80,8 +77,8 @@ public class TestAnalyticsDao extends AnalyticsTestSuiteWithEmbeddedDB {
 
     private void setupBusinessSubscriptionTransition() {
         final DateTime requestedTimestamp = clock.getUTCNow();
-        final BusinessSubscription prevSubscription = new BusinessSubscription(null, plan.getName(), phase.getName(), Currency.USD, clock.getUTCNow(), Subscription.SubscriptionState.ACTIVE, catalog);
-        final BusinessSubscription nextSubscription = new BusinessSubscription(null, plan.getName(), phase.getName(), Currency.USD, clock.getUTCNow(), Subscription.SubscriptionState.CANCELLED, catalog);
+        final BusinessSubscription prevSubscription = new BusinessSubscription(null, plan.getName(), phase.getName(), Currency.USD, clock.getUTCNow(), SubscriptionState.ACTIVE, catalog);
+        final BusinessSubscription nextSubscription = new BusinessSubscription(null, plan.getName(), phase.getName(), Currency.USD, clock.getUTCNow(), SubscriptionState.CANCELLED, catalog);
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionCancelled(plan.getName(), catalog, requestedTimestamp, requestedTimestamp);
 
         transition = new BusinessSubscriptionTransitionModelDao(TOTAL_ORDERING, BUNDLE_ID, EXTERNAL_KEY, ACCOUNT_ID, ACCOUNT_KEY,

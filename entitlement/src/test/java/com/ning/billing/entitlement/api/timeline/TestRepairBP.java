@@ -46,7 +46,7 @@ import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline.ExistingEv
 import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline.NewEvent;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
+import com.ning.billing.entitlement.api.user.SubscriptionState;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.api.user.SubscriptionEvents;
 import com.ning.billing.entitlement.api.user.TestEntitlementHelper.TestWithException;

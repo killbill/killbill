@@ -34,17 +34,6 @@ import com.ning.billing.util.entity.Entity;
 
 public interface Subscription extends Entity, Blockable {
 
-    public enum SubscriptionState {
-        ACTIVE,
-        CANCELLED
-    }
-
-    public enum SubscriptionSourceType {
-        NATIVE,
-        MIGRATED,
-        TRANSFERED
-    }
-
     public boolean cancel(final DateTime requestedDate, final CallContext context)
         throws EntitlementUserApiException;
 

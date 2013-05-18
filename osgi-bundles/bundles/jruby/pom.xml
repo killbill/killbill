@@ -34,6 +34,9 @@
         <dependency>
             <groupId>com.ning.billing</groupId>
             <artifactId>killbill-api</artifactId>
+<!--
+            <scope>provided</scope>
+            -->
         </dependency>
         <dependency>
             <groupId>com.ning.billing</groupId>
@@ -110,7 +113,54 @@
                         <Export-Package />
                         <Private-Package>com.ning.billing.osgi.bundles.jruby.*</Private-Package>
                         <!-- Optional resolution because exported by the Felix system bundle -->
-                        <Import-Package>*;resolution:=optional,org.joda.time;org.joda.time.format;resolution:=optional,com.ning.billing.osgi.api,javax.management;javax.management.*;javax.crypto;javax.crypto.*;javax.net;javax.net.*;javax.net.ssl;javax.net.ssl.*;javax.security;javax.security.*;javax.security.cert;javax.security.cert.*;javax.security.auth;javax.security.auth.*;javax.security.auth.x500;javax.security.auth.x500.*;resolution:=optional</Import-Package>
+                        <Import-Package>*;resolution:=optional,
+                            com.ning.billing.account.api;
+                            com.ning.billing.analytics.api.sanity;
+                            com.ning.billing.analytics.api.user;
+                            com.ning.billing.beatrix.bus.api;
+                            com.ning.billing.catalog.api;
+                            com.ning.billing.entitlement.api;
+                            com.ning.billing.entitlement.api.migration;
+                            com.ning.billing.entitlement.api.timeline;
+                            com.ning.billing.entitlement.api.transfer;
+                            com.ning.billing.entitlement.api.user;
+                            com.ning.billing.invoice.api;
+                            com.ning.billing.junction.api;
+                            com.ning.billing;
+                            com.ning.billing.osgi.api;
+                            com.ning.billing.osgi.api.config;
+                            com.ning.billing.overdue;
+                            com.ning.billing.payment.api;
+                            com.ning.billing.payment.plugin.api;
+                            com.ning.billing.tenant.api;
+                            com.ning.billing.usage.api;
+                            com.ning.billing.util.api;
+                            com.ning.billing.util.audit;
+                            com.ning.billing.util.callcontext;
+                            com.ning.billing.util.customfield;
+                            com.ning.billing.notification.plugin;
+                            com.ning.billing.util.email;
+                            com.ning.billing.util.entity;
+                            com.ning.billing.util.tag;
+                            com.ning.billing.util.template;
+                            com.ning.billing.util.template.translation;resolution:=optional,
+                            org.joda.time;org.joda.time.format;resolution:=optional,
+                            javax.management;
+                            javax.management.*;
+                            javax.crypto;
+                            javax.crypto.*;
+                            javax.net;
+                            javax.net.*;
+                            javax.net.ssl;
+                            javax.net.ssl.*;
+                            javax.security;
+                            javax.security.*;
+                            javax.security.cert;
+                            javax.security.cert.*;
+                            javax.security.auth;
+                            javax.security.auth.*;
+                            javax.security.auth.x500;
+                            javax.security.auth.x500.*;resolution:=optional</Import-Package>
                     </instructions>
                 </configuration>
                 <executions>

@@ -23,7 +23,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.payment.PaymentTestSuiteNoDB;
-import com.ning.billing.payment.api.PaymentMethodPlugin.PaymentMethodKVInfo;
+import com.ning.billing.payment.api.PaymentMethodKVInfo;
 
 import com.google.common.collect.ImmutableList;
 

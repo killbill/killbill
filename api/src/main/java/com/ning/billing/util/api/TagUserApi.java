@@ -41,7 +41,7 @@ public interface TagUserApi {
      * @return the newly created tag definition
      * @throws TagDefinitionApiException
      */
-    public TagDefinition create(String definitionName, String description, CallContext context) throws TagDefinitionApiException;
+    public TagDefinition createTagDefinition(String definitionName, String description, CallContext context) throws TagDefinitionApiException;
 
     /**
      * @param tagDefinitionId The UUID for that tagDefinition

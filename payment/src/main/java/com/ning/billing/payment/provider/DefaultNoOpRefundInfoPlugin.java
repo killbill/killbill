@@ -21,6 +21,7 @@ import java.math.BigDecimal;
 import org.joda.time.DateTime;
 
 import com.ning.billing.payment.plugin.api.RefundInfoPlugin;
+import com.ning.billing.payment.plugin.api.RefundPluginStatus;
 
 public class DefaultNoOpRefundInfoPlugin implements RefundInfoPlugin {
 

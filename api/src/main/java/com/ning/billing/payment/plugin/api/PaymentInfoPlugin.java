@@ -22,12 +22,6 @@ import org.joda.time.DateTime;
 
 public interface PaymentInfoPlugin {
 
-    public enum PaymentPluginStatus {
-        UNDEFINED,
-        PROCESSED,
-        ERROR
-    }
-
     /**
      * @return payment amount
      */

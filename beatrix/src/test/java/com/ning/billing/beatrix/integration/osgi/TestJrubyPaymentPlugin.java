@@ -28,21 +28,24 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import com.ning.billing.account.api.Account;
 import com.ning.billing.beatrix.osgi.SetupBundleWithAssertion;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.osgi.api.OSGIServiceRegistration;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.payment.plugin.api.PaymentInfoPlugin;
-import com.ning.billing.payment.plugin.api.PaymentInfoPlugin.PaymentPluginStatus;
+import com.ning.billing.payment.plugin.api.PaymentPluginStatus;
 import com.ning.billing.payment.plugin.api.PaymentMethodInfoPlugin;
 import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 import com.ning.billing.payment.plugin.api.RefundInfoPlugin;
-import com.ning.billing.payment.plugin.api.RefundInfoPlugin.RefundPluginStatus;
+import com.ning.billing.payment.plugin.api.RefundPluginStatus;
 
 public class TestJrubyPaymentPlugin extends TestOSGIBase {
 
     private final String BUNDLE_TEST_RESOURCE_PREFIX = "killbill-payment-test";
     private final String BUNDLE_TEST_RESOURCE = BUNDLE_TEST_RESOURCE_PREFIX + ".tar.gz";
+
+    private Account account;
 
     @Inject
     private OSGIServiceRegistration<PaymentPluginApi> paymentPluginApiOSGIServiceRegistration;
@@ -67,8 +70,10 @@ public class TestJrubyPaymentPlugin extends TestOSGIBase {
 
         PaymentPluginApi api = getTestPluginPaymentApi();
 
+        account = createAccountWithNonOsgiPaymentMethod(getAccountData(4));
+
         final DateTime beforeCall = new DateTime().toDateTime(DateTimeZone.UTC).minusSeconds(1);
-        PaymentInfoPlugin res = api.processPayment(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), BigDecimal.TEN, Currency.USD,  callContext);
+        PaymentInfoPlugin res = api.processPayment(account.getId(), UUID.randomUUID(), UUID.randomUUID(), BigDecimal.TEN, Currency.USD,  callContext);
         final DateTime afterCall = new DateTime().toDateTime(DateTimeZone.UTC).plusSeconds(1);
 
 
@@ -185,7 +190,19 @@ public class TestJrubyPaymentPlugin extends TestOSGIBase {
 
 
     private PaymentPluginApi getTestPluginPaymentApi() {
-        PaymentPluginApi result = paymentPluginApiOSGIServiceRegistration.getServiceForName(BUNDLE_TEST_RESOURCE_PREFIX);
+        int retry = 5;
+
+        // It is expected to have a nul result if the initialization of Killbill went faster than the registration of the plugin services
+        PaymentPluginApi result = null;
+        do {
+            result = paymentPluginApiOSGIServiceRegistration.getServiceForName(BUNDLE_TEST_RESOURCE_PREFIX);
+            if (result == null) {
+                try {
+                    log.info("Waiting for Killbill initialization to complete time = " + clock.getUTCNow());
+                    Thread.sleep(1000);
+                } catch (InterruptedException ignore) {}
+            }
+        } while (result == null && retry-- > 0);
         Assert.assertNotNull(result);
         return result;
     }

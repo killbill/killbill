@@ -71,9 +71,4 @@ public interface InvoicePayment extends Entity {
      */
     UUID getPaymentCookieId();
 
-    public enum InvoicePaymentType {
-        ATTEMPT,
-        CHARGED_BACK,
-        REFUND
-    }
 }

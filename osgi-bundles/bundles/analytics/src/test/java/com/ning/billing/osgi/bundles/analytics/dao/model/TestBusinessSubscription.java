@@ -25,7 +25,7 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
+import com.ning.billing.entitlement.api.user.SubscriptionState;
 import com.ning.billing.osgi.bundles.analytics.AnalyticsTestSuiteNoDB;
 
 public class TestBusinessSubscription extends AnalyticsTestSuiteNoDB {

@@ -36,6 +36,7 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.entitlement.api.user.SubscriptionState;
 import com.ning.billing.mock.MockPlan;
 import com.ning.billing.mock.MockSubscription;
 
@@ -130,7 +131,7 @@ public class TestBusinessSubscription extends AnalyticsTestSuiteNoDB {
         Mockito.when(catalog.findPhase(Mockito.anyString(), Mockito.<DateTime>any(), Mockito.<DateTime>any())).thenReturn(phase);
         Mockito.when(catalogService.getFullCatalog()).thenReturn(catalog);
 
-        isubscription = new MockSubscription(Subscription.SubscriptionState.ACTIVE, plan, phase);
+        isubscription = new MockSubscription(SubscriptionState.ACTIVE, plan, phase);
         subscription = new BusinessSubscription(isubscription, USD, catalog);
     }
 
@@ -167,7 +168,7 @@ public class TestBusinessSubscription extends AnalyticsTestSuiteNoDB {
         Assert.assertEquals(subscription, subscription);
         Assert.assertTrue(subscription.equals(subscription));
 
-        final Subscription otherSubscription = new MockSubscription(Subscription.SubscriptionState.CANCELLED, plan, phase);
+        final Subscription otherSubscription = new MockSubscription(SubscriptionState.CANCELLED, plan, phase);
         Assert.assertTrue(!subscription.equals(new BusinessSubscription(otherSubscription, USD, catalog)));
     }
 }

@@ -20,16 +20,13 @@ import java.math.BigDecimal;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import com.ning.billing.ObjectType;
 import com.ning.billing.api.TestApiListener.NextEvent;
-import com.ning.billing.beatrix.integration.BeatrixIntegrationModule;
 import com.ning.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 import com.ning.billing.util.tag.ControlTagType;

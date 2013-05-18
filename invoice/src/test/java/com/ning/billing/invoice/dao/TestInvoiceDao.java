@@ -51,7 +51,7 @@ import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.invoice.api.InvoicePayment;
-import com.ning.billing.invoice.api.InvoicePayment.InvoicePaymentType;
+import com.ning.billing.invoice.api.InvoicePaymentType;
 import com.ning.billing.invoice.model.CreditAdjInvoiceItem;
 import com.ning.billing.invoice.model.CreditBalanceAdjInvoiceItem;
 import com.ning.billing.invoice.model.DefaultInvoice;
@@ -67,7 +67,6 @@ import com.ning.billing.util.svcapi.junction.BillingModeType;
 
 import com.google.common.collect.ImmutableMap;
 
-import static com.ning.billing.invoice.TestInvoiceHelper.FIFTEEN;
 import static com.ning.billing.invoice.TestInvoiceHelper.FIVE;
 import static com.ning.billing.invoice.TestInvoiceHelper.TEN;
 import static com.ning.billing.invoice.TestInvoiceHelper.TWENTY;

@@ -35,11 +35,11 @@ public abstract class DefaultSubscriptionEvent extends DefaultBusInternalEvent i
     private final UUID eventId;
     private final DateTime requestedTransitionTime;
     private final DateTime effectiveTransitionTime;
-    private final Subscription.SubscriptionState previousState;
+    private final SubscriptionState previousState;
     private final String previousPriceList;
     private final String previousPlan;
     private final String previousPhase;
-    private final Subscription.SubscriptionState nextState;
+    private final SubscriptionState nextState;
     private final String nextPriceList;
     private final String nextPlan;
     private final String nextPhase;
@@ -76,11 +76,11 @@ public abstract class DefaultSubscriptionEvent extends DefaultBusInternalEvent i
                                     @JsonProperty("bundleId") final UUID bundleId,
                                     @JsonProperty("requestedTransitionTime") final DateTime requestedTransitionTime,
                                     @JsonProperty("effectiveTransitionTime") final DateTime effectiveTransitionTime,
-                                    @JsonProperty("previousState") final Subscription.SubscriptionState previousState,
+                                    @JsonProperty("previousState") final SubscriptionState previousState,
                                     @JsonProperty("previousPlan") final String previousPlan,
                                     @JsonProperty("previousPhase") final String previousPhase,
                                     @JsonProperty("previousPriceList") final String previousPriceList,
-                                    @JsonProperty("nextState") final Subscription.SubscriptionState nextState,
+                                    @JsonProperty("nextState") final SubscriptionState nextState,
                                     @JsonProperty("nextPlan") final String nextPlan,
                                     @JsonProperty("nextPhase") final String nextPhase,
                                     @JsonProperty("nextPriceList") final String nextPriceList,
@@ -134,7 +134,7 @@ public abstract class DefaultSubscriptionEvent extends DefaultBusInternalEvent i
     }
 
     @Override
-    public Subscription.SubscriptionState getPreviousState() {
+    public SubscriptionState getPreviousState() {
         return previousState;
     }
 
@@ -159,7 +159,7 @@ public abstract class DefaultSubscriptionEvent extends DefaultBusInternalEvent i
     }
 
     @Override
-    public Subscription.SubscriptionState getNextState() {
+    public SubscriptionState getNextState() {
         return nextState;
     }
 

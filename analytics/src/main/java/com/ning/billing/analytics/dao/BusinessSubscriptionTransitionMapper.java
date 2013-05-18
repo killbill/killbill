@@ -31,7 +31,7 @@ import com.ning.billing.analytics.model.BusinessSubscriptionEvent;
 import com.ning.billing.analytics.model.BusinessSubscriptionTransitionModelDao;
 import com.ning.billing.catalog.api.ProductCategory;
 
-import static com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
+import com.ning.billing.entitlement.api.user.SubscriptionState;
 
 public class BusinessSubscriptionTransitionMapper implements ResultSetMapper<BusinessSubscriptionTransitionModelDao> {
 

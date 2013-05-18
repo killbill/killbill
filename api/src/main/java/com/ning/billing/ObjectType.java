@@ -17,32 +17,22 @@
 package com.ning.billing;
 
 public enum ObjectType {
-    ACCOUNT("account"),
-    ACCOUNT_EMAIL("account email"),
-    BLOCKING_STATES("blocking state"),
-    BUNDLE("subscription bundle"),
-    CUSTOM_FIELD("custom field"),
-    INVOICE("invoice"),
-    PAYMENT("payment"),
-    INVOICE_ITEM("invoice item"),
-    INVOICE_PAYMENT("invoice payment"),
-    SUBSCRIPTION("subscription"),
-    SUBSCRIPTION_EVENT("subscription event"),
-    PAYMENT_ATTEMPT("payment attempt"),
-    PAYMENT_METHOD("payment method"),
-    REFUND("refund"),
-    TAG("tag"),
-    TAG_DEFINITION("tag definition"),
-    TENANT("tenant"),
-    TENANT_KVS("tenant kvs");
-
-    private final String objectName;
-
-    ObjectType(final String objectName) {
-        this.objectName = objectName;
-    }
-
-    public String getObjectName() {
-        return objectName;
-    }
+    ACCOUNT,
+    ACCOUNT_EMAIL,
+    BLOCKING_STATES,
+    BUNDLE,
+    CUSTOM_FIELD,
+    INVOICE,
+    PAYMENT,
+    INVOICE_ITEM,
+    INVOICE_PAYMENT,
+    SUBSCRIPTION,
+    SUBSCRIPTION_EVENT,
+    PAYMENT_ATTEMPT,
+    PAYMENT_METHOD,
+    REFUND,
+    TAG,
+    TAG_DEFINITION,
+    TENANT,
+    TENANT_KVS;
 }

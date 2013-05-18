@@ -47,6 +47,7 @@ import com.ning.billing.entitlement.api.user.DefaultEffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.entitlement.api.user.SubscriptionState;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
@@ -156,7 +157,7 @@ public class TestAnalyticsService extends AnalyticsTestSuiteWithEmbeddedDB {
                 null,
                 null,
                 null,
-                Subscription.SubscriptionState.ACTIVE,
+                SubscriptionState.ACTIVE,
                 plan,
                 phase,
                 priceList,

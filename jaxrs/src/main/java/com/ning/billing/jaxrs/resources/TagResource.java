@@ -91,7 +91,7 @@ public class TagResource extends JaxRsResourceBase {
                                         @HeaderParam(HDR_REASON) final String reason,
                                         @HeaderParam(HDR_COMMENT) final String comment,
                                         @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException {
-        final TagDefinition createdTagDef = tagUserApi.create(json.getName(), json.getDescription(), context.createContext(createdBy, reason, comment, request));
+        final TagDefinition createdTagDef = tagUserApi.createTagDefinition(json.getName(), json.getDescription(), context.createContext(createdBy, reason, comment, request));
         return uriBuilder.buildResponse(TagResource.class, "getTagDefinition", createdTagDef.getId());
     }
 

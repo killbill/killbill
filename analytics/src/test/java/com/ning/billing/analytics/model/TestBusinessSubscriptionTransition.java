@@ -36,6 +36,7 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.entitlement.api.user.SubscriptionState;
 import com.ning.billing.mock.MockPlan;
 import com.ning.billing.mock.MockSubscription;
 
@@ -64,8 +65,8 @@ public class TestBusinessSubscriptionTransition extends AnalyticsTestSuiteNoDB {
         final Product product = new MockProduct("platinium", "subscription", ProductCategory.BASE);
         final Plan plan = new MockPlan("platinum-monthly", product);
         final PlanPhase phase = new MockPhase(PhaseType.EVERGREEN, plan, MockDuration.UNLIMITED(), 25.95);
-        final Subscription prevISubscription = new MockSubscription(Subscription.SubscriptionState.ACTIVE, plan, phase);
-        final Subscription nextISubscription = new MockSubscription(Subscription.SubscriptionState.CANCELLED, plan, phase);
+        final Subscription prevISubscription = new MockSubscription(SubscriptionState.ACTIVE, plan, phase);
+        final Subscription nextISubscription = new MockSubscription(SubscriptionState.CANCELLED, plan, phase);
 
         Mockito.when(catalog.findPlan(Mockito.anyString(), Mockito.<DateTime>any())).thenReturn(plan);
         Mockito.when(catalog.findPhase(Mockito.anyString(), Mockito.<DateTime>any(), Mockito.<DateTime>any())).thenReturn(phase);

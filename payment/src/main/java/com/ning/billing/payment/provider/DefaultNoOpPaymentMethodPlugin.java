@@ -19,6 +19,7 @@ package com.ning.billing.payment.provider;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.payment.api.PaymentMethodKVInfo;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
 
 public class DefaultNoOpPaymentMethodPlugin implements PaymentMethodPlugin {

@@ -21,7 +21,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
-import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
+import com.ning.billing.entitlement.api.user.SubscriptionState;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;

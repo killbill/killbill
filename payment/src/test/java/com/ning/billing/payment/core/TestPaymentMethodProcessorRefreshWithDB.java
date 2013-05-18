@@ -26,7 +26,7 @@ import org.testng.annotations.Test;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.payment.PaymentTestSuiteWithEmbeddedDB;
 import com.ning.billing.payment.api.PaymentMethod;
-import com.ning.billing.payment.api.PaymentMethodPlugin.PaymentMethodKVInfo;
+import com.ning.billing.payment.api.PaymentMethodKVInfo;
 import com.ning.billing.payment.dao.PaymentMethodModelDao;
 import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 import com.ning.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;

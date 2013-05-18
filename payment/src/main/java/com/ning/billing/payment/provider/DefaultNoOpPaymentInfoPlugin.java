@@ -21,6 +21,7 @@ import java.math.BigDecimal;
 import org.joda.time.DateTime;
 
 import com.ning.billing.payment.plugin.api.PaymentInfoPlugin;
+import com.ning.billing.payment.plugin.api.PaymentPluginStatus;
 
 public class DefaultNoOpPaymentInfoPlugin implements PaymentInfoPlugin {
 

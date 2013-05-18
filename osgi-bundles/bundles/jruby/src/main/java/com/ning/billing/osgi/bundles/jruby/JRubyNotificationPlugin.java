@@ -53,7 +53,7 @@ public class JRubyNotificationPlugin extends JRubyPlugin implements OSGIKillbill
                 }
             });
         } catch (PaymentPluginApiException e) {
-            throw new IllegalStateException("Unexpected PaymentApiException for notification plugin");
+            throw new IllegalStateException("Unexpected PaymentApiException for notification plugin", e);
         }
     }
 }

@@ -25,6 +25,7 @@ import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoicePayment;
+import com.ning.billing.invoice.api.InvoicePaymentType;
 import com.ning.billing.invoice.dao.InvoicePaymentModelDao;
 import com.ning.billing.util.entity.EntityBase;
 

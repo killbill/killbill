@@ -40,62 +40,62 @@ public class TestPaymentMethodPluginBase implements PaymentMethodPlugin {
 
     @Override
     public String getType() {
-        throw new UnsupportedOperationException();
+        return "CreditCard";
     }
 
     @Override
     public String getCCName() {
-        throw new UnsupportedOperationException();
+        return "Bozo";
     }
 
     @Override
     public String getCCType() {
-        throw new UnsupportedOperationException();
+        return "Visa";
     }
 
     @Override
     public String getCCExpirationMonth() {
-        throw new UnsupportedOperationException();
+        return "12";
     }
 
     @Override
     public String getCCExpirationYear() {
-        throw new UnsupportedOperationException();
+        return "2013";
     }
 
     @Override
     public String getCCLast4() {
-        throw new UnsupportedOperationException();
+        return "4365";
     }
 
     @Override
     public String getAddress1() {
-        throw new UnsupportedOperationException();
+        return "34, street Foo";
     }
 
     @Override
     public String getAddress2() {
-        throw new UnsupportedOperationException();
+        return null;
     }
 
     @Override
     public String getCity() {
-        throw new UnsupportedOperationException();
+        return "SF";
     }
 
     @Override
     public String getState() {
-        throw new UnsupportedOperationException();
+        return "CA";
     }
 
     @Override
     public String getZip() {
-        throw new UnsupportedOperationException();
+        return "95321";
     }
 
     @Override
     public String getCountry() {
-        throw new UnsupportedOperationException();
+        return "Zimbawe";
     }
 
     @Override

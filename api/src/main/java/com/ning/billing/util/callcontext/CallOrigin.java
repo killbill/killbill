@@ -19,5 +19,5 @@ package com.ning.billing.util.callcontext;
 public enum CallOrigin {
     INTERNAL,
     EXTERNAL,
-    TEST
+    TEST;
 }

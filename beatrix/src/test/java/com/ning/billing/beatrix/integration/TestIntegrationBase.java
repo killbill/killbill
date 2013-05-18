@@ -80,6 +80,7 @@ import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
 import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentApiException;
+import com.ning.billing.payment.api.PaymentMethodKVInfo;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.payment.api.TestPaymentMethodPluginBase;
 import com.ning.billing.payment.provider.MockPaymentProviderPlugin;

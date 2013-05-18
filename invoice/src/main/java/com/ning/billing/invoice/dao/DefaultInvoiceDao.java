@@ -34,7 +34,7 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItemType;
-import com.ning.billing.invoice.api.InvoicePayment.InvoicePaymentType;
+import com.ning.billing.invoice.api.InvoicePaymentType;
 import com.ning.billing.invoice.api.user.DefaultInvoiceAdjustmentEvent;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.util.cache.CacheControllerDispatcher;

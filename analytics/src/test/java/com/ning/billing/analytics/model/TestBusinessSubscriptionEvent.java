@@ -33,6 +33,7 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.entitlement.api.user.SubscriptionState;
 import com.ning.billing.mock.MockPlan;
 import com.ning.billing.mock.MockSubscription;
 
@@ -58,7 +59,7 @@ public class TestBusinessSubscriptionEvent extends AnalyticsTestSuiteNoDB {
         Mockito.when(catalog.findPhase(Mockito.anyString(), Mockito.<DateTime>any(), Mockito.<DateTime>any())).thenReturn(phase);
         Mockito.when(catalogService.getFullCatalog()).thenReturn(catalog);
 
-        subscription = new MockSubscription(Subscription.SubscriptionState.ACTIVE, plan, phase);
+        subscription = new MockSubscription(SubscriptionState.ACTIVE, plan, phase);
     }
 
     @Test(groups = "fast")
@@ -105,7 +106,7 @@ public class TestBusinessSubscriptionEvent extends AnalyticsTestSuiteNoDB {
         Assert.assertEquals(event.getCategory(), product.getCategory());
         Assert.assertEquals(event.toString(), "SYSTEM_CHANGE_BASE");
 
-        subscription = new MockSubscription(Subscription.SubscriptionState.CANCELLED, plan, phase);
+        subscription = new MockSubscription(SubscriptionState.CANCELLED, plan, phase);
         event = BusinessSubscriptionEvent.subscriptionPhaseChanged(subscription.getCurrentPlan().getName(), subscription.getState(), catalog, now, now);
         // The subscription is cancelled, it's a system cancellation
         Assert.assertEquals(event.getEventType(), BusinessSubscriptionEvent.EventType.SYSTEM_CANCEL);

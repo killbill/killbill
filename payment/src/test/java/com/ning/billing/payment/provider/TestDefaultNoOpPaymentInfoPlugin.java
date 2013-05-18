@@ -24,9 +24,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.payment.PaymentTestSuiteNoDB;
-import com.ning.billing.payment.plugin.api.PaymentInfoPlugin.PaymentPluginStatus;
-import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.payment.plugin.api.PaymentPluginStatus;
 
 public class TestDefaultNoOpPaymentInfoPlugin extends PaymentTestSuiteNoDB {
 
