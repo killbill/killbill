@@ -97,14 +97,14 @@ public abstract class JRubyPlugin {
         pluginInstance = (RubyObject) container.runScriptlet(pluginMain + ".new(" + KILLBILL_PLUGIN_CLASS_NAME + "," + KILLBILL_SERVICES + ")");
     }
 
-    public void startPlugin(final BundleContext context) {
+    public synchronized void startPlugin(final BundleContext context) {
         checkPluginIsStopped();
         pluginInstance.callMethod(START_PLUGIN_RUBY_METHOD_NAME);
         checkPluginIsRunning();
         registerHttpServlet();
     }
 
-    public void stopPlugin(final BundleContext context) {
+    public synchronized void stopPlugin(final BundleContext context) {
         checkPluginIsRunning();
         unregisterHttpServlet();
         pluginInstance.callMethod(STOP_PLUGIN_RUBY_METHOD_NAME);

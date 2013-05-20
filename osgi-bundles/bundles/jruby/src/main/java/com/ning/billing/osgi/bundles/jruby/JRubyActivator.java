@@ -100,21 +100,15 @@ public class JRubyActivator extends KillbillActivatorBase {
             logService.log(LogService.LOG_WARNING, tmpDirPath + " is not a directory, the restart mechanism is disabled");
             return;
         }
+        // Start the plugin synchronously and schedule the restart logic
+        doStartPlugin(pluginMain, context, killbillServices);
 
-        final AtomicBoolean firstStart = new AtomicBoolean(true);
         restartFuture = Executors.newSingleThreadScheduledExecutor("jruby-restarter-" + pluginMain)
                                  .scheduleWithFixedDelay(new Runnable() {
             long lastRestartMillis = System.currentTimeMillis();
 
             @Override
             public void run() {
-                if (firstStart.get()) {
-                    // Initial start
-                    logService.log(LogService.LOG_INFO, "Starting JRuby plugin " + rubyConfig.getRubyMainClass());
-                    doStartPlugin(pluginMain, context, killbillServices);
-                    firstStart.set(false);
-                    return;
-                }
 
                 final File restartFile = new File(tmpDirPath + "/" + RESTART_FILE_NAME);
                 if (!restartFile.isFile()) {
@@ -130,7 +124,7 @@ public class JRubyActivator extends KillbillActivatorBase {
                     lastRestartMillis = restartFile.lastModified();
                 }
             }
-        }, 0, JRUBY_PLUGINS_RESTART_DELAY_SECS, TimeUnit.SECONDS);
+        }, JRUBY_PLUGINS_RESTART_DELAY_SECS, JRUBY_PLUGINS_RESTART_DELAY_SECS, TimeUnit.SECONDS);
     }
 
     private PluginRubyConfig retrievePluginRubyConfig(final BundleContext context) {
@@ -151,14 +145,18 @@ public class JRubyActivator extends KillbillActivatorBase {
         }, this.getClass().getClassLoader());
     }
 
-    private void doStartPlugin(final String pluginMain, final BundleContext context, final Map<String, Object> killbillServices) {
+    private void  doStartPlugin(final String pluginMain, final BundleContext context, final Map<String, Object> killbillServices) {
+        logService.log(LogService.LOG_INFO, "Starting JRuby plugin " + pluginMain);
         plugin.instantiatePlugin(killbillServices, pluginMain);
         plugin.startPlugin(context);
+        logService.log(LogService.LOG_INFO, "JRuby plugin " + pluginMain + " started");
     }
 
     private void doStopPlugin(final BundleContext context) {
+        logService.log(LogService.LOG_INFO, "Stopping JRuby plugin " + context.getBundle().getSymbolicName());
         plugin.stopPlugin(context);
         plugin.unInstantiatePlugin();
+        logService.log(LogService.LOG_INFO, "Stopped JRuby plugin " + context.getBundle().getSymbolicName());
     }
 
     // We make the explicit registration in the start method by hand as this would be called too early
