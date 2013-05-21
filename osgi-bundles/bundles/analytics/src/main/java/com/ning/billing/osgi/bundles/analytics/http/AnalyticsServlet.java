@@ -52,6 +52,8 @@ import com.google.common.io.Resources;
 
 public class AnalyticsServlet extends HttpServlet {
 
+    public static final String SERVER_IP = System.getProperty("com.ning.core.server.ip", "127.0.0.1");
+    public static final String SERVER_PORT = System.getProperty("com.ning.core.server.port", "8080");
     public static DateTimeFormatter DATE_FORMAT = DateTimeFormat.forPattern("yyyy-MM-dd");
 
 
@@ -277,9 +279,8 @@ public class AnalyticsServlet extends HttpServlet {
             Resources.copy(resourceUrl, out);
             String inputHtml = new String(out.toByteArray());
 
-            // TODO STEPH we need to extract real ip port on which http sever is listening to
-            String tmp1 = inputHtml.replace("$VAR_SERVER", "\"127.0.0.1\"");
-            String tmp2 = tmp1.replace("$VAR_PORT", "\"8080\"");
+            String tmp1 = inputHtml.replace("$VAR_SERVER", "\"" + SERVER_IP + "\"");
+            String tmp2 = tmp1.replace("$VAR_PORT", "\"" + SERVER_PORT + "\"");
             resp.getOutputStream().write(tmp2.getBytes());
             resp.setContentType("text/html");
         }
