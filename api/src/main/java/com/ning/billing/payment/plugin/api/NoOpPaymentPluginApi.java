@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.payment.plugin.api;
 
 public interface NoOpPaymentPluginApi extends PaymentPluginApi {
