@@ -1,0 +1,405 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--
+  ~ Copyright 2010-2013 Ning, Inc.
+  ~
+  ~ Ning licenses this file to you under the Apache License, version 2.0
+  ~ (the "License"); you may not use this file except in compliance with the
+  ~ License.  You may obtain a copy of the License at:
+  ~
+  ~    http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  ~ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+  ~ License for the specific language governing permissions and limitations
+  ~ under the License.
+  -->
+
+<catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="CatalogSchema.xsd ">
+
+    <effectiveDate>2013-02-08T00:00:00+00:00</effectiveDate>
+    <catalogName>SpyCarAdvanced</catalogName>
+
+    <currencies>
+        <currency>USD</currency>
+        <currency>GBP</currency>
+    </currencies>
+
+    <products>
+        <product name="Standard">
+            <category>BASE</category>
+        </product>
+        <product name="Sports">
+            <category>BASE</category>
+            <available>
+                <addonProduct>OilSlick</addonProduct>
+                <addonProduct>RemoteControl</addonProduct>
+            </available>
+        </product>
+        <product name="Super">
+            <category>BASE</category>
+            <included> 
+                <addonProduct>OilSlick</addonProduct>
+            </included>
+            <available>
+                <addonProduct>RemoteControl</addonProduct>
+            </available>
+        </product>
+        <product name="OilSlick">
+            <category>ADD_ON</category>
+        </product>
+        <product name="RemoteControl">
+            <category>ADD_ON</category>
+        </product>
+    </products>
+
+    <rules>
+        <changePolicy>
+            <changePolicyCase> 
+                <phaseType>TRIAL</phaseType>
+                <policy>IMMEDIATE</policy>
+            </changePolicyCase>
+            <changePolicyCase> 
+                <fromProduct>Standard</fromProduct>
+                <toProduct>Sports</toProduct>
+                <policy>IMMEDIATE</policy>
+            </changePolicyCase>
+            <changePolicyCase> 
+                <toProduct>Super</toProduct>
+                <policy>IMMEDIATE</policy>
+            </changePolicyCase>
+            <changePolicyCase> 
+                <policy>END_OF_TERM</policy>
+            </changePolicyCase>
+        </changePolicy>
+        <changeAlignment>
+            <changeAlignmentCase>
+                <toProductCategory>ADD_ON</toProductCategory>
+                <alignment>START_OF_BUNDLE</alignment>
+            </changeAlignmentCase>
+            <changeAlignmentCase>
+                <fromPriceList>SpecialDiscount</fromPriceList>
+                <toPriceList>SpecialDiscount</toPriceList>
+                <alignment>CHANGE_OF_PRICELIST</alignment>
+            </changeAlignmentCase>
+            <changeAlignmentCase>
+                <alignment>START_OF_SUBSCRIPTION</alignment>
+            </changeAlignmentCase>
+        </changeAlignment>
+        <cancelPolicy>
+            <cancelPolicyCase>
+                <productCategory>BASE</productCategory>
+                <policy>END_OF_TERM</policy>
+            </cancelPolicyCase>
+            <cancelPolicyCase>
+                <productCategory>ADD_ON</productCategory>
+                <policy>IMMEDIATE</policy>
+            </cancelPolicyCase>
+            <cancelPolicyCase>
+                <policy>END_OF_TERM</policy>
+            </cancelPolicyCase>
+        </cancelPolicy>
+        <createAlignment>
+            <createAlignmentCase>
+                <product>OilSlick</product>
+                <alignment>START_OF_BUNDLE</alignment>
+            </createAlignmentCase>
+            <createAlignmentCase>
+                <product>RemoteControl</product>
+                <alignment>START_OF_SUBSCRIPTION</alignment>
+            </createAlignmentCase>
+            <createAlignmentCase>
+                <alignment>START_OF_BUNDLE</alignment>
+            </createAlignmentCase>
+        </createAlignment>
+        <billingAlignment>
+            <billingAlignmentCase>
+                <productCategory>ADD_ON</productCategory>
+                <alignment>BUNDLE</alignment>
+            </billingAlignmentCase>
+            <billingAlignmentCase>
+                <billingPeriod>ANNUAL</billingPeriod>
+                <alignment>ACCOUNT</alignment>
+            </billingAlignmentCase>
+            <billingAlignmentCase>
+                <billingPeriod>ANNUAL</billingPeriod>
+                <alignment>SUBSCRIPTION</alignment>
+            </billingAlignmentCase>
+            <billingAlignmentCase>
+                <alignment>ACCOUNT</alignment>
+            </billingAlignmentCase>
+        </billingAlignment>
+        <priceList>
+           <priceListCase>
+                <fromPriceList>SpecialDiscount</fromPriceList>
+                <toPriceList>DEFAULT</toPriceList>
+            </priceListCase>
+           <priceListCase>
+                <fromPriceList>CIA</fromPriceList>
+                <toPriceList>CIA</toPriceList>
+            </priceListCase>
+           <priceListCase>
+                <toPriceList>DEFAULT</toPriceList>
+            </priceListCase>
+        </priceList>
+    </rules>
+
+    <plans>
+        <plan name="standard-monthly">
+            <product>Standard</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>DAYS</unit>
+                        <number>30</number>
+                    </duration>
+                    <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
+                    <fixedPrice> <!-- empty price implies $0 -->
+                    </fixedPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price>
+                        <currency>GBP</currency>
+                        <value>75.00</value>
+                    </price>
+                    <price>
+                        <currency>USD</currency>
+                        <value>100.00</value>
+                    </price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="sports-monthly">
+            <product>Sports</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>DAYS</unit>
+                        <number>30</number>
+                    </duration>
+                    <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
+                    <fixedPrice> <!-- empty price implies $0 -->
+                    </fixedPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price>
+                        <currency>GBP</currency>
+                        <value>375.00</value>
+                    </price>
+                    <price>
+                        <currency>USD</currency>
+                        <value>500.00</value>
+                    </price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="super-monthly">
+            <product>Super</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>DAYS</unit>
+                        <number>30</number>
+                    </duration>
+                    <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
+                    <fixedPrice> <!-- empty price implies $0 -->
+                    </fixedPrice>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price>
+                        <currency>GBP</currency>
+                        <value>750.00</value>
+                    </price>
+                    <price>
+                        <currency>USD</currency>
+                        <value>1000.00</value>
+                    </price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="discount-standard-monthly">
+            <product>Standard</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>DAYS</unit>
+                        <number>30</number>
+                    </duration>
+                    <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
+                    <fixedPrice> <!-- empty price implies $0 -->
+                    </fixedPrice>
+                </phase>
+                <phase type="DISCOUNT">
+                    <duration>
+                        <unit>MONTHS</unit>
+                        <number>3</number>
+                    </duration>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>50.00</value>
+                        </price>
+                        <price>
+                            <currency>USD</currency>
+                            <value>66.00</value>
+                        </price>
+                    </recurringPrice>                
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price>
+                        <currency>GBP</currency>
+                        <value>75.00</value>
+                    </price>
+                    <price>
+                        <currency>USD</currency>
+                        <value>100.00</value>
+                    </price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="discount-sports-monthly">
+            <product>Sports</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>DAYS</unit>
+                        <number>30</number>
+                    </duration>
+                    <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
+                    <fixedPrice> <!-- empty price implies $0 -->
+                    </fixedPrice>
+                </phase>
+                <phase type="DISCOUNT">
+                    <duration>
+                        <unit>MONTHS</unit>
+                        <number>3</number>
+                    </duration>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>250.00</value>
+                        </price>
+                        <price>
+                            <currency>USD</currency>
+                            <value>333.00</value>
+                        </price>
+                    </recurringPrice>                
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price>
+                        <currency>GBP</currency>
+                        <value>375.00</value>
+                    </price>
+                    <price>
+                        <currency>USD</currency>
+                        <value>500.00</value>
+                    </price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+        <plan name="discount-super-monthly">
+            <product>Super</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>DAYS</unit>
+                        <number>30</number>
+                    </duration>
+                    <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
+                    <fixedPrice> <!-- empty price implies $0 -->
+                    </fixedPrice>
+                </phase>
+                <phase type="DISCOUNT">
+                    <duration>
+                        <unit>MONTHS</unit>
+                        <number>3</number>
+                    </duration>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>500.00</value>
+                        </price>
+                        <price>
+                            <currency>USD</currency>
+                            <value>666.00</value>
+                        </price>
+                    </recurringPrice>                
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <billingPeriod>MONTHLY</billingPeriod>
+                <recurringPrice>
+                    <price>
+                        <currency>GBP</currency>
+                        <value>750.00</value>
+                    </price>
+                    <price>
+                        <currency>USD</currency>
+                        <value>1000.00</value>
+                    </price>
+                </recurringPrice>
+            </finalPhase>
+        </plan>
+    </plans>
+    <priceLists>
+        <defaultPriceList name="DEFAULT">
+            <plans>
+                <plan>standard-monthly</plan>
+                <plan>sports-monthly</plan>
+                <plan>super-monthly</plan>
+            </plans>
+        </defaultPriceList>
+       <childPriceList name="SpecialDiscount">
+            <plans>
+                <plan>discount-standard-monthly</plan>
+                <plan>discount-sports-monthly</plan>
+                <plan>discount-super-monthly</plan>
+            </plans>
+        </childPriceList>
+       <childPriceList name="CIA">
+            <plans>
+                <plan>discount-standard-monthly</plan>
+                <plan>discount-sports-monthly</plan>
+                <plan>discount-super-monthly</plan>
+            </plans>
+        </childPriceList>
+    </priceLists>
+    
+</catalog>
