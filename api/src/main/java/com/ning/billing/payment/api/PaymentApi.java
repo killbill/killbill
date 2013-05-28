@@ -240,4 +240,16 @@ public interface PaymentApi {
     public List<PaymentMethod> refreshPaymentMethods(String pluginName, Account account, CallContext context)
             throws PaymentApiException;
 
+    /**
+     * Refresh all payment methods across all plugins
+     * <p/>
+     * This call is not atomic.
+     *
+     * @param account the account
+     * @param context the call context
+     * @return the list of payment methods for that account
+     * @throws PaymentApiException
+     */
+    public List<PaymentMethod> refreshPaymentMethods(Account account, CallContext context)
+            throws PaymentApiException;
 }

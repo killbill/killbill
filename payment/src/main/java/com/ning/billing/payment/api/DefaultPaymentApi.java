@@ -18,6 +18,7 @@ package com.ning.billing.payment.api;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -187,5 +188,18 @@ public class DefaultPaymentApi implements PaymentApi {
     public List<PaymentMethod> refreshPaymentMethods(final String pluginName, final Account account, final CallContext context)
             throws PaymentApiException {
         return methodProcessor.refreshPaymentMethods(pluginName, account, internalCallContextFactory.createInternalCallContext(account.getId(), context));
+    }
+
+    @Override
+    public List<PaymentMethod> refreshPaymentMethods(final Account account, final CallContext context)
+            throws PaymentApiException {
+        final InternalCallContext callContext = internalCallContextFactory.createInternalCallContext(account.getId(), context);
+
+        final List<PaymentMethod> paymentMethods = new LinkedList<PaymentMethod>();
+        for (final String pluginName : methodProcessor.getAvailablePlugins()) {
+            paymentMethods.addAll(methodProcessor.refreshPaymentMethods(pluginName, account, callContext));
+        }
+
+        return paymentMethods;
     }
 }
