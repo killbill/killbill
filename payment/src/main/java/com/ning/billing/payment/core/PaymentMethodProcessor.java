@@ -303,7 +303,6 @@ public class PaymentMethodProcessor extends ProcessorBase {
                 final List<PaymentMethodInfoPlugin> pluginPmsWithId = new ArrayList<PaymentMethodInfoPlugin>();
                 final List<PaymentMethodModelDao> finalPaymentMethods = new ArrayList<PaymentMethodModelDao>();
                 for (final PaymentMethodInfoPlugin cur : pluginPms) {
-
                     // If the kbPaymentId is NULL, the plugin does not know about it, so we create a new UUID
                     final UUID paymentMethodId = cur.getPaymentMethodId() != null ? cur.getPaymentMethodId() : UUID.randomUUID();
                     final PaymentMethod input = new DefaultPaymentMethod(paymentMethodId, account.getId(), pluginName);
@@ -313,6 +312,9 @@ public class PaymentMethodProcessor extends ProcessorBase {
 
                     pluginPmsWithId.add(new DefaultPaymentMethodInfoPlugin(cur, paymentMethodId));
 
+                    // Note: we do not unset the default payment method in Kill Bill even if isDefault is false here.
+                    // Some gateways don't support the concept of "default" payment methods, in that case the plugin
+                    // will always return false - it's Kill Bill in that case which is responsible to manage default payment methods
                     if (cur.isDefault()) {
                         defaultPaymentMethodId = paymentMethodId;
                     }
