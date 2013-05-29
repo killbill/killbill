@@ -164,7 +164,7 @@ public class MockPaymentDao implements PaymentDao {
     }
 
     @Override
-    public List<PaymentMethodModelDao> refreshPaymentMethods(final UUID accountId, final List<PaymentMethodModelDao> paymentMethods, final InternalCallContext context) {
+    public List<PaymentMethodModelDao> refreshPaymentMethods(final UUID accountId, final String pluginName, final List<PaymentMethodModelDao> paymentMethods, final InternalCallContext context) {
         return ImmutableList.<PaymentMethodModelDao>of();
     }
 

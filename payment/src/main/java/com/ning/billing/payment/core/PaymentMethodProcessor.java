@@ -319,6 +319,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                 }
 
                 final List<PaymentMethodModelDao> refreshedPaymentMethods = paymentDao.refreshPaymentMethods(account.getId(),
+                                                                                                             pluginName,
                                                                                                              finalPaymentMethods,
                                                                                                              context);
                 try {

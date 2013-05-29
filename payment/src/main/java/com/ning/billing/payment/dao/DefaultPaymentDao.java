@@ -16,9 +16,8 @@
 
 package com.ning.billing.payment.dao;
 
-import java.util.HashSet;
+import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 import javax.inject.Inject;
@@ -39,6 +38,8 @@ import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
 
 public class DefaultPaymentDao implements PaymentDao {
 
@@ -295,16 +296,25 @@ public class DefaultPaymentDao implements PaymentDao {
     }
 
     @Override
-    public List<PaymentMethodModelDao> refreshPaymentMethods(final UUID accountId, final List<PaymentMethodModelDao> newPaymentMethods, final InternalCallContext context) {
+    public List<PaymentMethodModelDao> refreshPaymentMethods(final UUID accountId, final String pluginName,
+                                                             final List<PaymentMethodModelDao> newPaymentMethods, final InternalCallContext context) {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<PaymentMethodModelDao>>() {
 
             @Override
             public List<PaymentMethodModelDao> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
                 final PaymentMethodSqlDao transactional = entitySqlDaoWrapperFactory.become(PaymentMethodSqlDao.class);
-                final List<PaymentMethodModelDao> existingPaymentMethods = transactional.getByAccountId(accountId.toString(), context);
+                final List<PaymentMethodModelDao> allPaymentMethodsForAccount = transactional.getByAccountId(accountId.toString(), context);
+
+                // Consider only the payment methods for the plugin we are refreshing
+                final Collection<PaymentMethodModelDao> existingPaymentMethods = Collections2.filter(allPaymentMethodsForAccount,
+                                                                                                     new Predicate<PaymentMethodModelDao>() {
+                                                                                                         @Override
+                                                                                                         public boolean apply(final PaymentMethodModelDao paymentMethod) {
+                                                                                                             return pluginName.equals(paymentMethod.getPluginName());
+                                                                                                         }
+                                                                                                     });
 
                 for (final PaymentMethodModelDao finalPaymentMethod : newPaymentMethods) {
-
                     PaymentMethodModelDao foundExistingPaymentMethod = null;
                     for (final PaymentMethodModelDao existingPaymentMethod : existingPaymentMethods) {
                         if (existingPaymentMethod.equals(finalPaymentMethod)) {
@@ -329,11 +339,10 @@ public class DefaultPaymentDao implements PaymentDao {
 
                 // Finally, all payment methods left in the existingPaymentMethods should be marked as deleted
                 for (final PaymentMethodModelDao existingPaymentMethod : existingPaymentMethods) {
-                        deletedPaymentMethodInTransaction(entitySqlDaoWrapperFactory, existingPaymentMethod.getId(), context);
+                    deletedPaymentMethodInTransaction(entitySqlDaoWrapperFactory, existingPaymentMethod.getId(), context);
                 }
                 return transactional.getByAccountId(accountId.toString(), context);
             }
         });
     }
-
 }
