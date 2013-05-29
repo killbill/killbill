@@ -10,6 +10,7 @@ select
 , sum(recognized_amount) recognized_amount
 from recognized_revenue
 where effective_date = last_day(effective_date)
+and effective_date < recognized_date
 group by 1
 ;
 
