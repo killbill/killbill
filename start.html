@@ -31,15 +31,15 @@ layout: default
              <p>Kill Bill as a system, is composed of several components:
                  <ul>
                      <li>The core billing platform itself, which is embedded in a web server to offer a <a href="http://kill-bill.org/api.html">REST api.</a> When we refer to Kill Bill in that documentation this is what we are referring to, unless explicitly specified</li>
-                     <li>KAUI, the Killbill Admin UI, which is a rails app, and communicate to the core billing platform using the REST api</li>
-                     <li>A set of client libraries (ruby, php) that are still under development</li>
+                     <li>KAUI, the Kill Bill Admin UI, which is a Rails mountable engine, and communicates to the core billing platform using the REST api</li>
+                     <li>A set of client libraries (Ruby, PHP) that are still under development</li>
                  </ul>
              </p>
              <br/>
              <p>Let's go through a common (web) use case of Kill Bill. One would create a custom webapp, which would contain the application's specific business logic, and have that webapp interact with Kill Bill using the REST API. In that use case, the custom webapp would:
                 <ul>
-                    <li>Offer a way for customers to select a plan from the Kill Bill catalog, which would result in the creation a Subscription in kill Bill</li>
-                    <li>Offer a form for customers to enter their CC information-- or any other payment method. Here depending on the payment gateway, and also on PCI compliance, the flow would differ</li>
+                    <li>Offer a way for customers to select a plan from the Kill Bill catalog, which would result in the creation a Subscription in Kill Bill</li>
+                    <li>Offer a form for customers to enter their CC information -- or any other payment method. Here depending on the payment gateway, and also on PCI compliance, the flow would differ</li>
                     <li>Offer a way for customers to review/change their subscriptions</li>
                     <li>Offer a way for customers to review/change their payment methods</li>                                
                 </ul>
@@ -163,7 +163,20 @@ etc/jetty-webapps.xml</pre>
             <div class="page-header">
                 <h1>Kaui</h1>
             </div>
-            <p>Kaui, the Kill Bill Admin UI, is provided as a Rails mountable engine, so you can easily integrate it with existing internal tools in your company.</p>
+            <p>Kill Bill itself doesn't provide a UI to manage your accounts and subscriptions. All interactions with the core
+                platform is expected to be done via the REST API and/or the Java APIs (if you decide to embed Kill Bill).
+            </p>
+
+            <p>Kaui (the Kill Bill Admin UI) is a UI on top of Kill Bill. It is provided as a Rails mountable engine, so you can easily
+                integrate it with existing internal tools in your company, or simply use it as a standalone application.
+                Note that you don't have to use Kaui in order to use Kill Bill.
+            </p>
+
+            <p>
+                Besides Rails, we provide modules for other Web Frameworks. For example, Drupal users may want to use
+                the <a href="https://github.com/killbill/killbill-drupal-plugin">Kill Bill Drupal plugin</a> instead.
+                Checkout our <a href="https://github.com/killbill/">GitHub page</a> for other alternatives.
+            </p>
 
             <section id="kaui_new_rails_app">
                 <div class="page-header">
