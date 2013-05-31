@@ -70,13 +70,17 @@ ddl = %x[ruby -e "$(#{curl} -skSfL http://kill-bill.org/schema)"]
 
 ohai "Creating MySQL database #{KILLBILL_MYSQL_DATABASE} and user #{KILLBILL_MYSQL_USER} with password #{KILLBILL_MYSQL_PASSWORD}... Enter your MySQL root password when prompted"
 
-db_exists = (1 == (%x[mysql -u root -p -N -s -e "select count(schema_name) from information_schema.schemata where schema_name = '#{KILLBILL_MYSQL_DATABASE}'"]).chomp.to_i)
+db_exists = (0 < (%x[mysql -u root -p -N -s -e "select count(schema_name) from information_schema.schemata where schema_name = '#{KILLBILL_MYSQL_DATABASE}'"]).chomp.to_i)
 abort "Database #{KILLBILL_MYSQL_DATABASE} already exists! Cowardly aborting installation, drop it first and re-run this script" if db_exists
+
+user_exists = (0 < (%x[mysql -u root -p -N -s -e "select count(User) from mysql.user where User = '#{KILLBILL_MYSQL_USER}'"]).chomp.to_i)
+abort "User #{KILLBILL_MYSQL_USER} already exists! Cowardly aborting installation, drop it first and re-run this script" if user_exists
 
 system mysql, "-u", "root", "-p", "-e", <<CMD
 create database #{KILLBILL_MYSQL_DATABASE};
 create user #{KILLBILL_MYSQL_USER};
 grant all on #{KILLBILL_MYSQL_DATABASE}.* to #{KILLBILL_MYSQL_USER}@localhost identified by '#{KILLBILL_MYSQL_PASSWORD}';
+flush privileges;
 use #{KILLBILL_MYSQL_DATABASE};
 #{ddl}
 CMD
