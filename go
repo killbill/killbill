@@ -86,14 +86,12 @@ use #{KILLBILL_MYSQL_DATABASE};
 CMD
 
 maven_metadata = (get "http://search.maven.org/solrsearch/select?q=g:%22com.ning.billing%22%20AND%20a:%22killbill-server%22%20AND%20p:%22war%22&rows=20&wt=json")
-# TODO Pierre required? Could we work around it?
 begin
-require 'json'
-latest_version = JSON.parse(maven_metadata)["response"]["docs"][0]["latestVersion"]
+  require 'json'
+  latest_version = JSON.parse(maven_metadata)["response"]["docs"][0]["latestVersion"]
 rescue => e
-latest_version = maven_metadata.scan(/"latestVersion":"([0-9\.]*)"/).first.first
+  latest_version = maven_metadata.scan(/"latestVersion":"([0-9\.]*)"/).first.first
 end
-
 
 killbill_war = "killbill-server-#{latest_version}-jetty-console.war"
 
