@@ -1,4 +1,4 @@
-#!/System/Library/Frameworks/Ruby.framework/Versions/1.8/usr/bin/ruby
+#!/usr/bin/env ruby
 #
 # Killbill quick installer, inspired by the awesome Homebrew installer
 #
@@ -41,7 +41,7 @@ def find_cmd(cmd)
   name = cmd.upcase
   if ENV[name] and File.executable? ENV[name]
     ENV[name]
-  elsif Kernel.system "/usr/bin/which -s #{cmd}"
+  elsif Kernel.system "/usr/bin/which  #{cmd} > /dev/null"
     cmd
   else
     s = `xcrun -find #{cmd} 2>/dev/null`.chomp
@@ -66,7 +66,7 @@ abort "Don't run this as root!" if Process.uid == 0
 
 # TODO Pierre versioned schema!
 ohai "Downloading the latest DDL schema from github..."
-ddl = %x[ruby -e "$(#{curl} -skSfL http://killbilling.org/schema)"]
+ddl = %x[ruby -e "$(#{curl} -skSfL http://kill-bill.org/schema)"]
 
 ohai "Creating MySQL database #{KILLBILL_MYSQL_DATABASE} and user #{KILLBILL_MYSQL_USER} with password #{KILLBILL_MYSQL_PASSWORD}... Enter your MySQL root password when prompted"
 system mysql, "-u", "root", "-p", "-e", <<CMD
@@ -79,8 +79,14 @@ CMD
 
 maven_metadata = (get "http://search.maven.org/solrsearch/select?q=g:%22com.ning.billing%22%20AND%20a:%22killbill-server%22%20AND%20p:%22war%22&rows=20&wt=json")
 # TODO Pierre required? Could we work around it?
+begin
 require 'json'
 latest_version = JSON.parse(maven_metadata)["response"]["docs"][0]["latestVersion"]
+rescue => e
+latest_version = maven_metadata.scan(/"latestVersion":"([0-9\.]*)"/).first.first
+end
+
+
 killbill_war = "killbill-server-#{latest_version}-jetty-console.war"
 
 ohai "Downloading #{killbill_war}..."
