@@ -104,7 +104,7 @@ props = {
   "com.ning.jetty.jdbi.user" => KILLBILL_MYSQL_USER,
   "com.ning.jetty.jdbi.password" => KILLBILL_MYSQL_PASSWORD
 }
-launcher = "java -Xms512m "
+launcher = "java -server -XX:+UseConcMarkSweepGC -Xms512m -Xmx1024m -XX:MaxPermSize=512m "
 props.each { |key, value| launcher << "-D#{key}=#{value} " }
 launcher = "#{launcher} -jar #{killbill_war}"
 
