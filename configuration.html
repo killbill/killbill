@@ -5,6 +5,7 @@ layout: default
 <div class="row">
     <div class="span3 bs-docs-sidebar">
         <ul class="nav nav-list bs-docs-sidenav affix">
+            <li><a href="#config_introduction">Overview</a></li>
             <li><a href="#cache_config">Cache config</a></li>
             <li><a href="#catalog_config">Catalog config</a></li>
             <li><a href="#email_config">Email config</a></li>
@@ -20,6 +21,32 @@ layout: default
     </div>
 
     <div class="span12">
+        <section id="config_introduction">
+            <div class="page-header">
+                <h1>Overview</h1>
+            </div>
+            <p>Kill Bill configuration is done principally via Java System Properties. These can be set on the command line
+                (e.g. <code>java -Dkey1=value1 -Dkey2=value2 -jar killbill-server-jetty-console.war</code>) or in
+                Java Properties files (e.g. <strong>start.ini</strong> if you are using Jetty). Some containers
+                use custom formats (for example, System Properties in GlassFish would be placed in
+                <strong>domains/domain1/config/domain.xml</strong>), please refer to your container documentation for more information.
+            </p>
+
+            <p>Various specific subcomponents are configured using XML files, including:
+            <ul>
+                <li><a href="http://ehcache.org/">EhCache</a></li>
+                <li><a href="./catalog.html">Catalog</a></li>
+                <li>Overdue</li>
+            </ul>
+            In this case, you would use System Properties to specify the path to the XML file. For example, set
+            <code>-Dkillbill.catalog.uri=file:///Users/acme/catalog/AcmeCatalog.xml</code> to specify that the catalog configuration
+            is located at <strong>/Users/acme/catalog/AcmeCatalog.xml</strong>.
+            </p>
+
+            <p>This page lists all the System Properties you can set in Kill Bill. For component specific configuration (e.g. catalog),
+            see the appropriate sections in the User Manual.</p>
+        </section>
+
         <section id="cache_config">
             <div class="page-header">
                 <h1>Cache system properties</h1>
