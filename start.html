@@ -68,6 +68,89 @@ layout: default
                     <li>Show you how to start killbill</li>
                 </ul>
             </p>
+            </br>
+            <p>After the system has started you can experiment by following the simple scenario below. Note that each call creating an object in the system returns its URI, and so the curls below are using the UUID that was returned at the time the demo was created. You would need to replace the UUID with the one returned in each call if you were to follow that demo:
+                <ul>
+                     <li>The default behavior of Kill Bill is to run with authorization. In that mode, one needs to first create a tenant and specify the credentials that will be required subsequently on each call:
+                      <pre>curl -X POST \
+            -H 'Content-Type: application/json' \
+            -H 'X-Killbill-CreatedBy: admin' \
+            -d '{"apiKey": "bob", "apiSecret": "lazar"}' \
+            http://127.0.0.1:8080/1.0/kb/tenants
+
+{"uri":"/1.0/kb/tenants/e5383188-1a13-4cd7-8778-ad43f2e9529f"}
+                      </pre>
+                     </li>
+                     <li>
+                         At this point one can retrieve a simple version of the default catalog shipped with the demo:
+                           <pre>curl -ubob:lazar \
+            -H "Content-Type: application/json" \
+            http://127.0.0.1:8080/1.0/kb/catalog/simpleCatalog
+
+{"name":"SpyCarBasic","products":[{"type":"BASE","name":"Standard","plans":[{"name":"standard-monthly","phases":[{"type":"TRIAL","prices":{}},{"type":"EVERGREEN","prices":{"USD":100.00,"GBP":75.00}}]}],"included":[],"available":[]},{"type":"BASE","name":"Sports","plans":[{"name":"sports-monthly","phases":[{"type":"TRIAL","prices":{}},{"type":"EVERGREEN","prices":{"USD":500.00,"GBP":375.00}}]}],"included":[],"available":[]},{"type":"BASE","name":"Super","plans":[{"name":"super-monthly","phases":[{"type":"TRIAL","prices":{}},{"type":"EVERGREEN","prices":{"USD":1000.00,"GBP":750.00}}]}],"included":[],"available":[]}]}
+                           </pre>
+                     </li>
+                     
+                     <li>
+                        The next step will be to create an account:
+                        <pre>curl -ubob:lazar \
+           -X POST \
+           -H "Content-Type: application/json" \            
+           -H "X-Killbill-CreatedBy: creator" \
+           --data-binary '{"name":"john","email":"john@foo.com","externalKey":"xfgrdsda","currency":"USD"}' \
+           http://127.0.0.1:8080/1.0/kb/accounts
+           
+{"uri":"/1.0/kb/accounts/8cd1fe2e-33ba-4300-b0bc-bb7b5faa9122"}
+                         </pre>
+                     </li>
+                     <li>
+                        Now we can attach a payment method. Since that demo does not have any real payment plugin attached to it, we will chose the default external payment method plugin that comes up configured in the system. That default payment plugin does not require and payment method details such as CC info, and so the pluginInfo parameter is an empty map:
+
+                        <pre>curl -ubob:lazar \
+            -X POST \
+            -H "Content-Type: application/json" \            
+            -H "X-Killbill-CreatedBy: creator" \
+            --data-binary '{"accountId":"8cd1fe2e-33ba-4300-b0bc-bb7b5faa9122","pluginName":"__EXTERNAL_PAYMENT__","pluginInfo":{}}' \
+            "http://127.0.0.1:8080/1.0/kb/accounts/8cd1fe2e-33ba-4300-b0bc-bb7b5faa9122/paymentMethods?isDefault=true"
+            
+{"uri":"http://127.0.0.1:8080/1.0/kb/paymentMethods/bd7c050a-0e52-4982-bbc5-0dae39494e5c"}
+                     </li>
+                     <li>
+                        Now we will create a SubscriptionBundle on that account. This is required in oder to create the Subscription:
+                     <pre>curl -ubob:lazar \
+               -X POST \
+               -H "Content-Type: application/json" \
+               -H "X-Killbill-CreatedBy: creator" \
+               --data-binary '{"accountId":"8cd1fe2e-33ba-4300-b0bc-bb7b5faa9122","externalKey":"myBundleName"}' \
+               "http://127.0.0.1:8080/1.0/kb/bundles"
+
+{"uri":"/1.0/kb/bundles/ddd1879c-0e43-45e0-bf1c-e3ada6981ad0"}
+                    </pre>                     
+                     </li>
+                     <li>
+                        The last step will be to create a subscription based on the default demo catalog:
+                     <pre>curl -ubob:lazar \
+               -X POST \
+               -H "Content-Type: application/json" \
+               -H "X-Killbill-CreatedBy: creator" \
+                --data-binary '{"bundleId":"ddd1879c-0e43-45e0-bf1c-e3ada6981ad0","productName":"Standard","productCategory":"BASE","billingPeriod":"MONTHLY","priceList":"DEFAULT"}' \
+                   "http://127.0.0.1:8080/1.0/kb/subscriptions"
+
+{"uri":"/1.0/kb/subscriptions/89924c29-56f2-4587-8fa8-c09d8e5c389f"}
+                    </pre>                                         
+                  </li>
+                  <li>
+                      At this point, it is interesting to verify that the system immediately invoiced for the subscription that was created. Because the subscription is using a Plan with Trail phase of $0, there is no associated payment.
+                      <pre>curl -ubob:lazar \
+             -H "Content-Type: application/json" \
+             -H "X-Killbill-CreatedBy: creator" \
+             "http://127.0.0.1:8080/1.0/kb/invoices?accountId=8cd1fe2e-33ba-4300-b0bc-bb7b5faa9122"
+
+[{"amount":0.00,"creditAdj":0.00,"refundAdj":0.00,"invoiceId":"eae1814a-a041-4974-80d4-426f83b04fbb","invoiceDate":"2013-05-31","targetDate":"2013-05-31","invoiceNumber":"1","balance":0.00,"accountId":"8cd1fe2e-33ba-4300-b0bc-bb7b5faa9122","auditLogs":null}]
+                      </pre>
+                  </li>
+                 </ul>                
+            </p>
         </section>
         
         <section id="prod_deployment">
