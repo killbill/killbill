@@ -58,7 +58,7 @@ public class TestAccountJson extends JaxrsTestSuiteNoDB {
                                                         country, locale, phone, isMigrated, isNotifiedForInvoice);
         Assert.assertEquals(accountJson.getAccountId(), accountId);
         Assert.assertEquals(accountJson.getName(), name);
-        Assert.assertEquals(accountJson.getLength(), length);
+        Assert.assertEquals(accountJson.getFirstNameLength(), length);
         Assert.assertEquals(accountJson.getExternalKey(), externalKey);
         Assert.assertEquals(accountJson.getEmail(), email);
         Assert.assertEquals(accountJson.getBillCycleDayLocal(), billCycleDayLocal);

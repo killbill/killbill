@@ -16,23 +16,25 @@
 
 package com.ning.billing.jaxrs.json;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.InternationalPrice;
 import com.ning.billing.catalog.api.Listing;
 
-public class PlanDetailJason {
+public class PlanDetailJson {
     final String productName;
     final String planName;
     final BillingPeriod billingPeriod;
     final String priceListName;
     final InternationalPrice finalPhasePrice;
 
-    public PlanDetailJason(@JsonProperty("product") final String productName,
-                           @JsonProperty("plan") final String planName,
-                           @JsonProperty("final_phase_billing_period") final BillingPeriod billingPeriod,
-                           @JsonProperty("priceList") final String priceListName,
-                           @JsonProperty("final_phase_recurring_price") final InternationalPrice finalPhasePrice) {
+    @JsonCreator
+    public PlanDetailJson(@JsonProperty("product") final String productName,
+                          @JsonProperty("plan") final String planName,
+                          @JsonProperty("final_phase_billing_period") final BillingPeriod billingPeriod,
+                          @JsonProperty("priceList") final String priceListName,
+                          @JsonProperty("final_phase_recurring_price") final InternationalPrice finalPhasePrice) {
         this.productName = productName;
         this.planName = planName;
         this.billingPeriod = billingPeriod;
@@ -40,7 +42,7 @@ public class PlanDetailJason {
         this.finalPhasePrice = finalPhasePrice;
     }
 
-    public PlanDetailJason(final Listing listing) {
+    public PlanDetailJson(final Listing listing) {
         this(listing.getPlan().getProduct().getName(), listing.getPlan().getName(), listing.getPlan().getBillingPeriod(),
              listing.getPriceList().getName(), listing.getPlan().getFinalPhase().getRecurringPrice());
     }
@@ -74,7 +76,7 @@ public class PlanDetailJason {
             return false;
         }
 
-        final PlanDetailJason that = (PlanDetailJason) o;
+        final PlanDetailJson that = (PlanDetailJson) o;
 
         if (billingPeriod != that.billingPeriod) {
             return false;

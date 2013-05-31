@@ -32,7 +32,7 @@ import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Listing;
 import com.ning.billing.catalog.api.StaticCatalog;
 import com.ning.billing.jaxrs.json.CatalogJsonSimple;
-import com.ning.billing.jaxrs.json.PlanDetailJason;
+import com.ning.billing.jaxrs.json.PlanDetailJson;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
 import com.ning.billing.util.api.AuditUserApi;
@@ -98,9 +98,9 @@ public class CatalogResource extends JaxRsResourceBase {
                                        @javax.ws.rs.core.Context final HttpServletRequest request) throws CatalogApiException {
         final StaticCatalog catalog = catalogService.getCurrentCatalog();
         final List<Listing> listings = catalog.getAvailableAddonListings(baseProductName);
-        final List<PlanDetailJason> details = new ArrayList<PlanDetailJason>();
+        final List<PlanDetailJson> details = new ArrayList<PlanDetailJson>();
         for (final Listing listing : listings) {
-            details.add(new PlanDetailJason(listing));
+            details.add(new PlanDetailJson(listing));
         }
         return Response.status(Status.OK).entity(details).build();
     }
@@ -111,9 +111,9 @@ public class CatalogResource extends JaxRsResourceBase {
     public Response getAvailableBasePlans(@javax.ws.rs.core.Context final HttpServletRequest request) throws CatalogApiException {
         final StaticCatalog catalog = catalogService.getCurrentCatalog();
         final List<Listing> listings = catalog.getAvailableBasePlanListings();
-        final List<PlanDetailJason> details = new ArrayList<PlanDetailJason>();
+        final List<PlanDetailJson> details = new ArrayList<PlanDetailJson>();
         for (final Listing listing : listings) {
-            details.add(new PlanDetailJason(listing));
+            details.add(new PlanDetailJson(listing));
         }
         return Response.status(Status.OK).entity(details).build();
     }

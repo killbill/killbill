@@ -26,6 +26,7 @@ import org.joda.time.LocalDate;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class InvoiceItemJsonSimple extends JsonBase {
@@ -44,6 +45,7 @@ public class InvoiceItemJsonSimple extends JsonBase {
     private final BigDecimal amount;
     private final Currency currency;
 
+    @JsonCreator
     public InvoiceItemJsonSimple(@JsonProperty("invoiceItemId") final String invoiceItemId,
                                  @JsonProperty("invoiceId") final String invoiceId,
                                  @JsonProperty("linkedInvoiceItemId") final String linkedInvoiceItemId,

@@ -31,7 +31,7 @@ import com.google.common.base.Objects;
 public class AccountJson extends AccountJsonSimple {
 
     protected final String name;
-    protected final Integer length;
+    protected final Integer firstNameLength;
     protected final String email;
     protected final Integer billCycleDayLocal;
     protected final String currency;
@@ -52,7 +52,7 @@ public class AccountJson extends AccountJsonSimple {
     public AccountJson(final Account account) {
         super(account.getId().toString(), account.getExternalKey());
         this.name = account.getName();
-        this.length = account.getFirstNameLength();
+        this.firstNameLength = account.getFirstNameLength();
         this.email = account.getEmail();
         this.billCycleDayLocal = account.getBillCycleDayLocal();
         this.currency = account.getCurrency() != null ? account.getCurrency().toString() : null;
@@ -120,12 +120,12 @@ public class AccountJson extends AccountJsonSimple {
 
             @Override
             public Integer getFirstNameLength() {
-                if (length == null && name == null) {
+                if (firstNameLength == null && name == null) {
                     return 0;
-                } else if (length == null) {
+                } else if (firstNameLength == null) {
                     return name.length();
                 } else {
-                    return length;
+                    return firstNameLength;
                 }
             }
 
@@ -183,13 +183,13 @@ public class AccountJson extends AccountJsonSimple {
     @JsonCreator
     public AccountJson(@JsonProperty("accountId") final String accountId,
                        @JsonProperty("name") final String name,
-                       @JsonProperty("firstNameLength") final Integer length,
+                       @JsonProperty("firstNameLength") final Integer firstNameLength,
                        @JsonProperty("externalKey") final String externalKey,
                        @JsonProperty("email") final String email,
                        @JsonProperty("billCycleDayLocal") final Integer billCycleDayLocal,
                        @JsonProperty("currency") final String currency,
                        @JsonProperty("paymentMethodId") final String paymentMethodId,
-                       @JsonProperty("timezone") final String timeZone,
+                       @JsonProperty("timeZone") final String timeZone,
                        @JsonProperty("address1") final String address1,
                        @JsonProperty("address2") final String address2,
                        @JsonProperty("postalCode") final String postalCode,
@@ -203,7 +203,7 @@ public class AccountJson extends AccountJsonSimple {
                        @JsonProperty("isNotifiedForInvoices") final Boolean isNotifiedForInvoices) {
         super(accountId, externalKey);
         this.name = name;
-        this.length = length;
+        this.firstNameLength = firstNameLength;
         this.email = email;
         this.billCycleDayLocal = billCycleDayLocal;
         this.currency = currency;
@@ -226,8 +226,8 @@ public class AccountJson extends AccountJsonSimple {
         return name;
     }
 
-    public Integer getLength() {
-        return length;
+    public Integer getFirstNameLength() {
+        return firstNameLength;
     }
 
     public String getEmail() {
@@ -301,7 +301,7 @@ public class AccountJson extends AccountJsonSimple {
         final StringBuilder sb = new StringBuilder();
         sb.append("AccountJson");
         sb.append("{name='").append(name).append('\'');
-        sb.append(", length=").append(length);
+        sb.append(", firstNameLength=").append(firstNameLength);
         sb.append(", email='").append(email).append('\'');
         sb.append(", billCycleDayJson=").append(billCycleDayLocal);
         sb.append(", currency='").append(currency).append('\'');
@@ -375,7 +375,7 @@ public class AccountJson extends AccountJsonSimple {
         if (isNotifiedForInvoices != null ? !isNotifiedForInvoices.equals(that.isNotifiedForInvoices) : that.isNotifiedForInvoices != null) {
             return false;
         }
-        if (length != null ? !length.equals(that.length) : that.length != null) {
+        if (firstNameLength != null ? !firstNameLength.equals(that.firstNameLength) : that.firstNameLength != null) {
             return false;
         }
         if (locale != null ? !locale.equals(that.locale) : that.locale != null) {
@@ -407,7 +407,7 @@ public class AccountJson extends AccountJsonSimple {
     public int hashCode() {
         int result = super.hashCode();
         result = 31 * result + (name != null ? name.hashCode() : 0);
-        result = 31 * result + (length != null ? length.hashCode() : 0);
+        result = 31 * result + (firstNameLength != null ? firstNameLength.hashCode() : 0);
         result = 31 * result + (email != null ? email.hashCode() : 0);
         result = 31 * result + (billCycleDayLocal != null ? billCycleDayLocal.hashCode() : 0);
         result = 31 * result + (currency != null ? currency.hashCode() : 0);

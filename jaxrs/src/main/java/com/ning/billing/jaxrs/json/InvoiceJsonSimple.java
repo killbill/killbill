@@ -32,6 +32,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class InvoiceJsonSimple extends JsonBase {
 
     private final BigDecimal amount;
+    private final String currency;
     private final String invoiceId;
     private final LocalDate invoiceDate;
     private final LocalDate targetDate;
@@ -43,6 +44,7 @@ public class InvoiceJsonSimple extends JsonBase {
 
     @JsonCreator
     public InvoiceJsonSimple(@JsonProperty("amount") final BigDecimal amount,
+                             @JsonProperty("currency") final String currency,
                              @JsonProperty("creditAdj") final BigDecimal creditAdj,
                              @JsonProperty("refundAdj") final BigDecimal refundAdj,
                              @JsonProperty("invoiceId") @Nullable final String invoiceId,
@@ -54,6 +56,7 @@ public class InvoiceJsonSimple extends JsonBase {
                              @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(auditLogs);
         this.amount = amount;
+        this.currency = currency;
         this.creditAdj = creditAdj;
         this.refundAdj = refundAdj;
         this.invoiceId = invoiceId;
@@ -65,7 +68,7 @@ public class InvoiceJsonSimple extends JsonBase {
     }
 
     public InvoiceJsonSimple(final Invoice input, final List<AuditLog> auditLogs) {
-        this(input.getChargedAmount(), input.getCreditedAmount(), input.getRefundedAmount(),
+        this(input.getChargedAmount(), input.getCurrency().toString(), input.getCreditedAmount(), input.getRefundedAmount(),
              input.getId().toString(), input.getInvoiceDate(), input.getTargetDate(), String.valueOf(input.getInvoiceNumber()),
              input.getBalance(), input.getAccountId().toString(), toAuditLogJson(auditLogs));
     }
@@ -108,6 +111,10 @@ public class InvoiceJsonSimple extends JsonBase {
 
     public String getAccountId() {
         return accountId;
+    }
+
+    public String getCurrency() {
+        return currency;
     }
 
     @Override
