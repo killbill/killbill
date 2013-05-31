@@ -101,6 +101,7 @@ ohai "Downloading #{killbill_war}..."
 system curl, "-O", "http://search.maven.org/remotecontent?filepath=com/ning/billing/killbill-server/#{latest_version}/#{killbill_war}"
 
 props = {
+  "ANTLR_USE_DIRECT_CLASS_LOADING" => "true",
   "com.ning.jetty.jdbi.url" => "jdbc:mysql://127.0.0.1:3306/#{KILLBILL_MYSQL_DATABASE}",
   "com.ning.jetty.jdbi.user" => KILLBILL_MYSQL_USER,
   "com.ning.jetty.jdbi.password" => KILLBILL_MYSQL_PASSWORD
