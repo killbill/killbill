@@ -8,7 +8,7 @@ layout: default
             <li><a href="catalog-intro.html">Introduction</a></li>
             <li><a href="catalog-basic.html">Basic Catalog tutorial</a></li>
             <li><a href="catalog-advanced.html">Advanced Catalog tutorial</a></li>
-		  </ul>
+        </ul>
     </div>
 
     <div class="span12">
@@ -17,8 +17,15 @@ layout: default
                 <h1>Overview</h1>
             </div>
             <p>The catalog is the central configuration object of Kill Bill for all of your Business rules. It contains what the customer buys (products), how the customer pays for a product (plans), change rules, prices, etc.</p>
+
+            <p>
+                In practice, the catalog is an XML file (see an example <a
+                    href="https://github.com/killbill/killbill/blob/master/catalog/src/test/resources/SpyCarBasic.xml">here</a>).
+                Please refer to the <a
+                    href="./configuration.html#catalog_config">Catalog Configuration</a> documentation to make Kill Bill use your own catalog.
+            </p>
+
             <p>The catalog is one of the most complex yet powerful tools provided by Kill Bill. See the links on the left to get you started on writing your own catalog.</p>
-            <!-- {% include catalog.textile %} -->
         </section>
     </div>
 </div>
