@@ -69,23 +69,29 @@ ohai "Downloading the latest DDL schema from github..."
 ddl = %x[ruby -e "$(#{curl} -skSfL http://kill-bill.org/schema)"]
 
 ohai "Creating MySQL database #{KILLBILL_MYSQL_DATABASE} and user #{KILLBILL_MYSQL_USER} with password #{KILLBILL_MYSQL_PASSWORD}... Enter your MySQL root password when prompted"
+
+db_exists = (0 < (%x[mysql -u root -p -N -s -e "select count(schema_name) from information_schema.schemata where schema_name = '#{KILLBILL_MYSQL_DATABASE}'"]).chomp.to_i)
+abort "Database #{KILLBILL_MYSQL_DATABASE} already exists! Cowardly aborting installation, drop it first and re-run this script" if db_exists
+
+user_exists = (0 < (%x[mysql -u root -p -N -s -e "select count(User) from mysql.user where User = '#{KILLBILL_MYSQL_USER}'"]).chomp.to_i)
+abort "User #{KILLBILL_MYSQL_USER} already exists! Cowardly aborting installation, drop it first and re-run this script" if user_exists
+
 system mysql, "-u", "root", "-p", "-e", <<CMD
 create database #{KILLBILL_MYSQL_DATABASE};
 create user #{KILLBILL_MYSQL_USER};
 grant all on #{KILLBILL_MYSQL_DATABASE}.* to #{KILLBILL_MYSQL_USER}@localhost identified by '#{KILLBILL_MYSQL_PASSWORD}';
+flush privileges;
 use #{KILLBILL_MYSQL_DATABASE};
 #{ddl}
 CMD
 
 maven_metadata = (get "http://search.maven.org/solrsearch/select?q=g:%22com.ning.billing%22%20AND%20a:%22killbill-server%22%20AND%20p:%22war%22&rows=20&wt=json")
-# TODO Pierre required? Could we work around it?
 begin
-require 'json'
-latest_version = JSON.parse(maven_metadata)["response"]["docs"][0]["latestVersion"]
+  require 'json'
+  latest_version = JSON.parse(maven_metadata)["response"]["docs"][0]["latestVersion"]
 rescue => e
-latest_version = maven_metadata.scan(/"latestVersion":"([0-9\.]*)"/).first.first
+  latest_version = maven_metadata.scan(/"latestVersion":"([0-9\.]*)"/).first.first
 end
-
 
 killbill_war = "killbill-server-#{latest_version}-jetty-console.war"
 
@@ -93,11 +99,12 @@ ohai "Downloading #{killbill_war}..."
 system curl, "-O", "http://search.maven.org/remotecontent?filepath=com/ning/billing/killbill-server/#{latest_version}/#{killbill_war}"
 
 props = {
+  "ANTLR_USE_DIRECT_CLASS_LOADING" => "true",
   "com.ning.jetty.jdbi.url" => "jdbc:mysql://127.0.0.1:3306/#{KILLBILL_MYSQL_DATABASE}",
   "com.ning.jetty.jdbi.user" => KILLBILL_MYSQL_USER,
   "com.ning.jetty.jdbi.password" => KILLBILL_MYSQL_PASSWORD
 }
-launcher = "java -Xms512m "
+launcher = "java -server -XX:+UseConcMarkSweepGC -Xms512m -Xmx1024m -XX:MaxPermSize=512m "
 props.each { |key, value| launcher << "-D#{key}=#{value} " }
 launcher = "#{launcher} -jar #{killbill_war}"
 

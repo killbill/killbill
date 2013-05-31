@@ -1,0 +1,103 @@
+---
+layout: default
+---
+
+<div class="row">
+    <div class="span3 bs-docs-sidebar">
+        <ul class="nav nav-list bs-docs-sidenav affix">
+            <li><a href="#tenant_introduction">Overview</a></li>
+            <li><a href="#tenant_creation">Creating a tenant</a></li>
+        </ul>
+    </div>
+
+    <div class="span12">
+        <section id="tenant_introduction">
+            <div class="page-header">
+                <h1>Overview</h1>
+            </div>
+            <p>
+                Kill Bill supports multi-tenancy, meaning you can run multiple logical instances of Kill Bill with a single
+                server and database. For example, say you own two online stores, each of them having different catalogs, users, etc.
+                You could configure a tenant for each of them, which would make the data from one store invisible to the other.
+            </p>
+
+            <p>
+                In practice, a tenant is a simple attribute that Kill Bill tracks along each object in the database (accounts,
+                subscriptions, invoices, etc.). When multi-tenancy is enabled, you would create a username/password for each
+                tenant and perform all REST calls using HTTP Basic Auth: Kill Bill would then automatically look up the tenant
+                associated with your username as part of each request.
+            </p>
+
+            <p>Multi-tenancy is an advanced feature. You can turn it off by removing the
+                <strong>shiro.ini</strong> file from the Kill Bill war. We suggest though that it you let it enabled and create
+                a tenant even if you have a single use case for Kill Bill. That way, you will be able to add another tenant
+                if need be later on (going from multi-tenancy disabled to multi-tenancy enabled is much harder and will
+                involve manual and error prone data changes).
+            </p>
+        </section>
+
+        <section id="tenant_creation">
+            <div class="page-header">
+                <h1>Creating a tenant</h1>
+            </div>
+            <p>
+                When multi-tenancy is enabled, each tenant needs to identify itself when using the /1.0
+                API via HTTP Basic authentication. For example, trying to access all tag definitions without being authenticated
+                would return a <strong>401 Unauthorized</strong> error:
+<pre>
+ ~> curl -v http://127.0.0.1:8080/1.0/kb/tagDefinitions
+ * About to connect() to 127.0.0.1 port 8080 (#0)
+ * Trying 127.0.0.1... connected
+ * Connected to 127.0.0.1 (127.0.0.1) port 8080 (#0)
+ > GET /1.0/kb/tagDefinitions HTTP/1.1
+ > User-Agent: curl/7.21.4 (universal-apple-darwin11.0) libcurl/7.21.4 OpenSSL/0.9.8r zlib/1.2.5
+ > Host: 127.0.0.1:8080
+ > Accept: */*
+ >
+ < HTTP/1.1 401 Unauthorized
+ < WWW-Authenticate: BASIC realm="application"
+ < Content-Length: 0
+ < Server: Jetty(8.1.2.v20120308)
+ <
+ * Connection #0 to host 127.0.0.1 left intact
+ * Closing connection #0</pre>
+            </p>
+
+            <p>
+                To create your tenant, post your username (<strong>apiKey</strong>) and password
+                (<strong>apiSecret</strong>) to the
+                <code>/1.0/kb/tenants</code> endpoint (the header <strong>X-Killbill-CreatedBy</strong> is required and
+                used for auditing purposes).
+
+                For example, to create the a tenant with the credentials bob/lazar:
+<pre>
+ ~> curl -v -XPOST \
+ -H'Content-Type: application/json' \
+ -H'X-Killbill-CreatedBy: admin' \
+ -d'{"apiKey": "bob", "apiSecret": "lazar"}' \
+ http://127.0.0.1:8080/1.0/kb/tenants
+ * About to connect() to 127.0.0.1 port 8080 (#0)
+ * Trying 127.0.0.1... connected
+ * Connected to 127.0.0.1 (127.0.0.1) port 8080 (#0)
+ > POST /1.0/kb/tenants HTTP/1.1
+ > User-Agent: curl/7.21.4 (universal-apple-darwin11.0) libcurl/7.21.4 OpenSSL/0.9.8r zlib/1.2.5
+ > Host: 127.0.0.1:8080
+ > Accept: */*
+ > Content-Type: application/json
+ > X-Killbill-CreatedBy: admin
+ > Content-Length: 39
+ >
+ < HTTP/1.1 201 Created
+ < Location: http://127.0.0.1:8080/1.0/kb/tenants/f07bc7d5-00e8-48bd-8b43-ef8537219171
+ < Content-Type: application/json
+ < Transfer-Encoding: chunked
+ < Server: Jetty(8.1.2.v20120308)
+ <
+ * Connection #0 to host 127.0.0.1 left intact
+ * Closing connection #0
+ {"uri":"/1.0/kb/tenants/f07bc7d5-00e8-48bd-8b43-ef8537219171"}</pre>
+
+            You can now access the API using basic auth, e.g. <code>curl -v http://127.0.0.1:8080/1.0/kb/tagDefinitions -ubob:lazar</code>
+        </section>
+    </div>
+</div>
