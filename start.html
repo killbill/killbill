@@ -140,7 +140,7 @@ layout: default
                     </pre>                                         
                   </li>
                   <li>
-                      At this point, it is interesting to verify that the system immediately invoiced for the subscription that was created. Because the subscription is using a Plan with Trail phase of $0, there is no associated payment.
+                      At this point, it is interesting to verify that the system immediately invoiced for the subscription that was created. Because the subscription is using a Plan with trial phase of $0, there is no associated payment:
                       <pre>curl -ubob:lazar \
              -H "Content-Type: application/json" \
              -H "X-Killbill-CreatedBy: creator" \
