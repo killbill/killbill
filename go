@@ -70,6 +70,9 @@ ddl = %x[ruby -e "$(#{curl} -skSfL http://kill-bill.org/schema)"]
 
 ohai "Creating MySQL database #{KILLBILL_MYSQL_DATABASE} and user #{KILLBILL_MYSQL_USER} with password #{KILLBILL_MYSQL_PASSWORD}... Enter your MySQL root password when prompted"
 
+# Make sure privileges are flushed before...
+system mysql, "-u", "root", "-p", "-e", "flush privileges"
+
 db_exists = (0 < (%x[mysql -u root -p -N -s -e "select count(schema_name) from information_schema.schemata where schema_name = '#{KILLBILL_MYSQL_DATABASE}'"]).chomp.to_i)
 abort "Database #{KILLBILL_MYSQL_DATABASE} already exists! Cowardly aborting installation, drop it first and re-run this script" if db_exists
 
