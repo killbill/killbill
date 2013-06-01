@@ -89,7 +89,7 @@ maven_metadata = (get "http://search.maven.org/solrsearch/select?q=g:%22com.ning
 begin
   require 'json'
   latest_version = JSON.parse(maven_metadata)["response"]["docs"][0]["latestVersion"]
-rescue => e
+rescue LoadError
   latest_version = maven_metadata.scan(/"latestVersion":"([0-9\.]*)"/).first.first
 end
 
