@@ -95,7 +95,7 @@ layout: default
                         The next step will be to create an account:
                         <pre>curl -ubob:lazar \
            -X POST \
-           -H "Content-Type: application/json" \            
+           -H "Content-Type: application/json" \
            -H "X-Killbill-CreatedBy: creator" \
            --data-binary '{"name":"john","email":"john@foo.com","externalKey":"xfgrdsda","currency":"USD"}' \
            http://127.0.0.1:8080/1.0/kb/accounts
@@ -108,7 +108,7 @@ layout: default
 
                         <pre>curl -ubob:lazar \
             -X POST \
-            -H "Content-Type: application/json" \            
+            -H "Content-Type: application/json" \
             -H "X-Killbill-CreatedBy: creator" \
             --data-binary '{"accountId":"8cd1fe2e-33ba-4300-b0bc-bb7b5faa9122","pluginName":"__EXTERNAL_PAYMENT__","pluginInfo":{}}' \
             "http://127.0.0.1:8080/1.0/kb/accounts/8cd1fe2e-33ba-4300-b0bc-bb7b5faa9122/paymentMethods?isDefault=true"
