@@ -99,7 +99,7 @@ layout: default
            -H "X-Killbill-CreatedBy: creator" \
            --data-binary '{"name":"john","email":"john@foo.com","externalKey":"xfgrdsda","currency":"USD"}' \
            http://127.0.0.1:8080/1.0/kb/accounts
-           
+
 {"uri":"/1.0/kb/accounts/8cd1fe2e-33ba-4300-b0bc-bb7b5faa9122"}
                          </pre>
                      </li>
@@ -110,7 +110,7 @@ layout: default
             -X POST \
             -H "Content-Type: application/json" \
             -H "X-Killbill-CreatedBy: creator" \
-            --data-binary '{"accountId":"8cd1fe2e-33ba-4300-b0bc-bb7b5faa9122","pluginName":"__EXTERNAL_PAYMENT__","pluginInfo":{}}' \
+            --data-binary '{"pluginName":"__EXTERNAL_PAYMENT__","pluginInfo":{}}' \
             "http://127.0.0.1:8080/1.0/kb/accounts/8cd1fe2e-33ba-4300-b0bc-bb7b5faa9122/paymentMethods?isDefault=true"
             
 {"uri":"http://127.0.0.1:8080/1.0/kb/paymentMethods/bd7c050a-0e52-4982-bbc5-0dae39494e5c"}
