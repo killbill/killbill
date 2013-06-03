@@ -285,7 +285,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
             pluginPms = pluginApi.getPaymentMethods(account.getId(), true, context.toCallContext());
             // The method should never return null by convention, but let's not trust the plugin...
             if (pluginPms == null) {
-                log.warn("No payment methods defined on the account {} for plugin {}", account.getId(), pluginName);
+                log.debug("No payment methods defined on the account {} for plugin {}", account.getId(), pluginName);
                 return ImmutableList.<PaymentMethod>of();
             }
         } catch (PaymentPluginApiException e) {

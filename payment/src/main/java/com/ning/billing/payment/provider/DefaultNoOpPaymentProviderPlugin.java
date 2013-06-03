@@ -28,9 +28,9 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.payment.plugin.api.NoOpPaymentPluginApi;
 import com.ning.billing.payment.plugin.api.PaymentInfoPlugin;
-import com.ning.billing.payment.plugin.api.PaymentPluginStatus;
 import com.ning.billing.payment.plugin.api.PaymentMethodInfoPlugin;
 import com.ning.billing.payment.plugin.api.PaymentPluginApiException;
+import com.ning.billing.payment.plugin.api.PaymentPluginStatus;
 import com.ning.billing.payment.plugin.api.RefundInfoPlugin;
 import com.ning.billing.payment.plugin.api.RefundPluginStatus;
 import com.ning.billing.util.callcontext.CallContext;
@@ -151,7 +151,7 @@ public class DefaultNoOpPaymentProviderPlugin implements NoOpPaymentPluginApi {
 
     @Override
     public List<PaymentMethodInfoPlugin> getPaymentMethods(final UUID kbAccountId, final boolean refreshFromGateway, final CallContext context) {
-        return null;
+        return ImmutableList.<PaymentMethodInfoPlugin>of();
     }
 
     @Override
