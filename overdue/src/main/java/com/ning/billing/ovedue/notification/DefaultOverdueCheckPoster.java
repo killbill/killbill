@@ -46,7 +46,7 @@ import com.google.inject.Inject;
 
 public class DefaultOverdueCheckPoster implements OverdueCheckPoster {
 
-    private static final Logger log = LoggerFactory.getLogger(DefaultOverdueCheckNotifier.class);
+    private static final Logger log = LoggerFactory.getLogger(DefaultOverdueCheckPoster.class);
 
     private final NotificationQueueService notificationQueueService;
     private final EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao;
@@ -93,11 +93,11 @@ public class DefaultOverdueCheckPoster implements OverdueCheckPoster {
                     }
 
                     if (shouldInsertNewNotification) {
-                        log.info("Queuing overdue check notification. Overdueable id: {}, timestamp: {}", overdueable.getId().toString(), futureNotificationTime.toString());
+                        log.debug("Queuing overdue check notification. Overdueable id: {}, timestamp: {}", overdueable.getId().toString(), futureNotificationTime.toString());
                         final OverdueCheckNotificationKey notificationKey = new OverdueCheckNotificationKey(overdueable.getId(), Type.get(overdueable));
                         checkOverdueQueue.recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory, futureNotificationTime, notificationKey, context);
                     } else {
-                        log.info("Skipping queuing overdue check notification. Overdueable id: {}, timestamp: {}", overdueable.getId().toString(), futureNotificationTime.toString());
+                        log.debug("Skipping queuing overdue check notification. Overdueable id: {}, timestamp: {}", overdueable.getId().toString(), futureNotificationTime.toString());
                     }
 
                     return null;
