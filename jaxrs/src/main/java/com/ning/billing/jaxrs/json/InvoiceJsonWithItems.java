@@ -37,6 +37,7 @@ public class InvoiceJsonWithItems extends InvoiceJsonSimple {
 
     @JsonCreator
     public InvoiceJsonWithItems(@JsonProperty("amount") final BigDecimal amount,
+                                @JsonProperty("currency") final String currency,
                                 @JsonProperty("creditAdj") final BigDecimal creditAdj,
                                 @JsonProperty("refundAdj") final BigDecimal refundAdj,
                                 @JsonProperty("invoiceId") final String invoiceId,
@@ -47,7 +48,7 @@ public class InvoiceJsonWithItems extends InvoiceJsonSimple {
                                 @JsonProperty("accountId") final String accountId,
                                 @JsonProperty("items") final List<InvoiceItemJsonSimple> items,
                                 @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
-        super(amount, creditAdj, refundAdj, invoiceId, invoiceDate, targetDate, invoiceNumber, balance, accountId, auditLogs);
+        super(amount, currency, creditAdj, refundAdj, invoiceId, invoiceDate, targetDate, invoiceNumber, balance, accountId, auditLogs);
         this.items = new ArrayList<InvoiceItemJsonSimple>(items);
     }
 

@@ -35,13 +35,13 @@ public class AccountJsonWithBalance extends AccountJson {
     @JsonCreator
     public AccountJsonWithBalance(@JsonProperty("accountId") final String accountId,
                                   @JsonProperty("name") final String name,
-                                  @JsonProperty("firstNameLength") final Integer length,
+                                  @JsonProperty("firstNameLength") final Integer firstNameLength,
                                   @JsonProperty("externalKey") final String externalKey,
                                   @JsonProperty("email") final String email,
                                   @JsonProperty("billCycleDayLocal") final Integer billCycleDayLocal,
                                   @JsonProperty("currency") final String currency,
                                   @JsonProperty("paymentMethodId") final String paymentMethodId,
-                                  @JsonProperty("timezone") final String timeZone,
+                                  @JsonProperty("timeZone") final String timeZone,
                                   @JsonProperty("address1") final String address1,
                                   @JsonProperty("address2") final String address2,
                                   @JsonProperty("postalCode") final String postalCode,
@@ -54,7 +54,7 @@ public class AccountJsonWithBalance extends AccountJson {
                                   @JsonProperty("isMigrated") final Boolean isMigrated,
                                   @JsonProperty("isNotifiedForInvoices") final Boolean isNotifiedForInvoices,
                                   @JsonProperty("accountBalance") final BigDecimal accountBalance) {
-        super(accountId, name, length, externalKey, email, billCycleDayLocal, currency, paymentMethodId, timeZone,
+        super(accountId, name, firstNameLength, externalKey, email, billCycleDayLocal, currency, paymentMethodId, timeZone,
               address1, address2, postalCode, company, city, state, country, locale, phone, isMigrated, isNotifiedForInvoices);
         this.accountBalance = accountBalance;
     }

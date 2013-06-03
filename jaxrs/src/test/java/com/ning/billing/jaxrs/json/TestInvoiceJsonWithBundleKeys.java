@@ -26,6 +26,7 @@ import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.jaxrs.JaxrsTestSuiteNoDB;
 
@@ -50,7 +51,7 @@ public class TestInvoiceJsonWithBundleKeys extends JaxrsTestSuiteNoDB {
         final CreditJson creditJson = createCreditJson();
         final List<CreditJson> credits = ImmutableList.<CreditJson>of(creditJson);
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
-        final InvoiceJsonWithBundleKeys invoiceJsonSimple = new InvoiceJsonWithBundleKeys(amount, creditAdj, refundAdj, invoiceId, invoiceDate,
+        final InvoiceJsonWithBundleKeys invoiceJsonSimple = new InvoiceJsonWithBundleKeys(amount, Currency.USD.toString(), creditAdj, refundAdj, invoiceId, invoiceDate,
                                                                                           targetDate, invoiceNumber, balance, accountId, bundleKeys,
                                                                                           credits, auditLogs);
         Assert.assertEquals(invoiceJsonSimple.getAmount(), amount);
@@ -83,6 +84,8 @@ public class TestInvoiceJsonWithBundleKeys extends JaxrsTestSuiteNoDB {
         Mockito.when(invoice.getInvoiceNumber()).thenReturn(Integer.MAX_VALUE);
         Mockito.when(invoice.getBalance()).thenReturn(BigDecimal.ZERO);
         Mockito.when(invoice.getAccountId()).thenReturn(UUID.randomUUID());
+        Mockito.when(invoice.getCurrency()).thenReturn(Currency.MXN);
+
 
         final String bundleKeys = UUID.randomUUID().toString();
         final List<CreditJson> credits = ImmutableList.<CreditJson>of(createCreditJson());

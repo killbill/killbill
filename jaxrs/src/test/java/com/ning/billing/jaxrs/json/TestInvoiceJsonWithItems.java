@@ -49,7 +49,7 @@ public class TestInvoiceJsonWithItems extends JaxrsTestSuiteNoDB {
         final String accountId = UUID.randomUUID().toString();
         final InvoiceItemJsonSimple invoiceItemJsonSimple = createInvoiceItemJson();
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
-        final InvoiceJsonWithItems invoiceJsonWithItems = new InvoiceJsonWithItems(amount, creditAdj, refundAdj, invoiceId, invoiceDate,
+        final InvoiceJsonWithItems invoiceJsonWithItems = new InvoiceJsonWithItems(amount, Currency.USD.toString(), creditAdj, refundAdj, invoiceId, invoiceDate,
                                                                                    targetDate, invoiceNumber, balance, accountId,
                                                                                    ImmutableList.<InvoiceItemJsonSimple>of(invoiceItemJsonSimple), auditLogs);
         Assert.assertEquals(invoiceJsonWithItems.getAmount(), amount);
@@ -80,6 +80,7 @@ public class TestInvoiceJsonWithItems extends JaxrsTestSuiteNoDB {
         Mockito.when(invoice.getInvoiceNumber()).thenReturn(Integer.MAX_VALUE);
         Mockito.when(invoice.getBalance()).thenReturn(BigDecimal.ZERO);
         Mockito.when(invoice.getAccountId()).thenReturn(UUID.randomUUID());
+        Mockito.when(invoice.getCurrency()).thenReturn(Currency.MXN);
         final InvoiceItem invoiceItem = createInvoiceItem();
         Mockito.when(invoice.getInvoiceItems()).thenReturn(ImmutableList.<InvoiceItem>of(invoiceItem));
 

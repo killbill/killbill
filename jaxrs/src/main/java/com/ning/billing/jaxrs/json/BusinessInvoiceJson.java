@@ -94,6 +94,7 @@ public class BusinessInvoiceJson extends JsonBase {
         }));
     }
 
+
     public static class BusinessInvoiceItemJson extends JsonBase {
 
         private final String itemId;
@@ -112,6 +113,7 @@ public class BusinessInvoiceJson extends JsonBase {
         private final String currency;
         private final String linkedItemId;
 
+        @JsonCreator
         private BusinessInvoiceItemJson(@JsonProperty("itemId") final String itemId,
                                         @JsonProperty("invoiceId") final String invoiceId,
                                         @JsonProperty("itemType") final String itemType,

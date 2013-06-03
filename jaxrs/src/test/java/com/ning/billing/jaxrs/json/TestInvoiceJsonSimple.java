@@ -25,6 +25,7 @@ import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.jaxrs.JaxrsTestSuiteNoDB;
 
@@ -44,7 +45,7 @@ public class TestInvoiceJsonSimple extends JaxrsTestSuiteNoDB {
         final BigDecimal balance = BigDecimal.ZERO;
         final String accountId = UUID.randomUUID().toString();
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
-        final InvoiceJsonSimple invoiceJsonSimple = new InvoiceJsonSimple(amount, creditAdj, refundAdj, invoiceId, invoiceDate,
+        final InvoiceJsonSimple invoiceJsonSimple = new InvoiceJsonSimple(amount, Currency.USD.toString(), creditAdj, refundAdj, invoiceId, invoiceDate,
                                                                           targetDate, invoiceNumber, balance, accountId, auditLogs);
         Assert.assertEquals(invoiceJsonSimple.getAmount(), amount);
         Assert.assertEquals(invoiceJsonSimple.getCreditAdj(), creditAdj);
@@ -66,6 +67,7 @@ public class TestInvoiceJsonSimple extends JaxrsTestSuiteNoDB {
     public void testFromInvoice() throws Exception {
         final Invoice invoice = Mockito.mock(Invoice.class);
         Mockito.when(invoice.getChargedAmount()).thenReturn(BigDecimal.TEN);
+        Mockito.when(invoice.getCurrency()).thenReturn(Currency.MXN);
         Mockito.when(invoice.getCreditedAmount()).thenReturn(BigDecimal.ONE);
         Mockito.when(invoice.getRefundedAmount()).thenReturn(BigDecimal.ONE);
         Mockito.when(invoice.getId()).thenReturn(UUID.randomUUID());

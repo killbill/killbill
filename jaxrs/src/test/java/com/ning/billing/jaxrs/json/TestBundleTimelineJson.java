@@ -27,6 +27,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
@@ -95,7 +96,7 @@ public class TestBundleTimelineJson extends JaxrsTestSuiteNoDB {
         final String invoiceNumber = UUID.randomUUID().toString();
         final BigDecimal balance = BigDecimal.ZERO;
 
-        return new InvoiceJsonSimple(invoiceAmount, creditAdj, refundAdj, invoiceId.toString(), invoiceDate,
+        return new InvoiceJsonSimple(invoiceAmount, Currency.USD.toString(), creditAdj, refundAdj, invoiceId.toString(), invoiceDate,
                                      targetDate, invoiceNumber, balance, accountId.toString(), null);
     }
 

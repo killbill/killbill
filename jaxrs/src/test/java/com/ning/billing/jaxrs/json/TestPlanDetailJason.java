@@ -39,7 +39,7 @@ public class TestPlanDetailJason extends JaxrsTestSuiteNoDB {
         final String planName = UUID.randomUUID().toString();
         final BillingPeriod billingPeriod = BillingPeriod.ANNUAL;
         final String priceListName = UUID.randomUUID().toString();
-        final PlanDetailJason planDetailJason = new PlanDetailJason(productName, planName, billingPeriod, priceListName, null);
+        final PlanDetailJson planDetailJason = new PlanDetailJson(productName, planName, billingPeriod, priceListName, null);
         Assert.assertEquals(planDetailJason.getProductName(), productName);
         Assert.assertEquals(planDetailJason.getPlanName(), planName);
         Assert.assertEquals(planDetailJason.getBillingPeriod(), billingPeriod);
@@ -53,7 +53,7 @@ public class TestPlanDetailJason extends JaxrsTestSuiteNoDB {
                                     "\"priceListName\":\"" + planDetailJason.getPriceListName() + "\"," +
                                     "\"finalPhasePrice\":null}");
 
-        final PlanDetailJason fromJson = mapper.readValue(asJson, PlanDetailJason.class);
+        final PlanDetailJson fromJson = mapper.readValue(asJson, PlanDetailJson.class);
         Assert.assertEquals(fromJson, planDetailJason);
     }
 
@@ -79,7 +79,7 @@ public class TestPlanDetailJason extends JaxrsTestSuiteNoDB {
         Mockito.when(listing.getPlan()).thenReturn(plan);
         Mockito.when(listing.getPriceList()).thenReturn(priceList);
 
-        final PlanDetailJason planDetailJason = new PlanDetailJason(listing);
+        final PlanDetailJson planDetailJason = new PlanDetailJson(listing);
         Assert.assertEquals(planDetailJason.getProductName(), plan.getProduct().getName());
         Assert.assertEquals(planDetailJason.getPlanName(), plan.getName());
         Assert.assertEquals(planDetailJason.getBillingPeriod(), plan.getBillingPeriod());
