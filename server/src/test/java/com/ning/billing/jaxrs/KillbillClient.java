@@ -130,7 +130,7 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
     }
 
     protected PaymentMethodJson getPaymentMethodJson(final String accountId, final List<PaymentMethodProperties> properties) {
-        final PaymentMethodPluginDetailJson info = new PaymentMethodPluginDetailJson(null, properties);
+        final PaymentMethodPluginDetailJson info = new PaymentMethodPluginDetailJson(null, null, null, null, null, null, null, null, null, null, null, null, null, null, properties);
         return new PaymentMethodJson(null, accountId, true, PLUGIN_NAME, info);
     }
 
