@@ -267,7 +267,7 @@ public class AnalyticsListener implements OSGIKillbillEventHandler {
             lock = locker.lockWithNumberOfTries("ACCOUNT_FOR_ANALYTICS", lockKey, NB_LOCK_TRY);
             return task.call();
         } catch (Exception e) {
-            logService.log(LogService.LOG_WARNING, "Exception while refreshing analytics tables", e);
+            logService.log(LogService.LOG_WARNING, "Exception while refreshing analytics tables for account " + killbillEvent.getAccountId().toString(), e);
         } finally {
             if (lock != null) {
                 lock.release();
