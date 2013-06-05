@@ -91,6 +91,7 @@ public class RefundModelDao extends EntityBase implements EntityModelDao<Refund>
         CREATED,
         PLUGIN_COMPLETED,
         COMPLETED,
+        PLUGIN_ERRORED
     }
 
     @Override

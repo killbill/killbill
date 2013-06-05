@@ -47,6 +47,8 @@ import com.ning.billing.payment.dao.RefundModelDao;
 import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
 import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 import com.ning.billing.payment.plugin.api.PaymentPluginApiException;
+import com.ning.billing.payment.plugin.api.RefundInfoPlugin;
+import com.ning.billing.payment.plugin.api.RefundPluginStatus;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
@@ -122,17 +124,23 @@ public class RefundProcessor extends ProcessorBase {
                     paymentDao.insertRefund(refundInfo, context);
 
                     final PaymentPluginApi plugin = getPaymentProviderPlugin(payment.getPaymentMethodId(), context);
-                    plugin.processRefund(account.getId(), paymentId, refundAmount, account.getCurrency(), context.toCallContext());
+                    final RefundInfoPlugin refundInfoPlugin = plugin.processRefund(account.getId(), paymentId, refundAmount, account.getCurrency(), context.toCallContext());
 
-                    paymentDao.updateRefundStatus(refundInfo.getId(), RefundStatus.PLUGIN_COMPLETED, context);
+                    if (refundInfoPlugin.getStatus() == RefundPluginStatus.PROCESSED) {
+                        paymentDao.updateRefundStatus(refundInfo.getId(), RefundStatus.PLUGIN_COMPLETED, context);
 
-                    invoiceApi.createRefund(paymentId, refundAmount, isAdjusted, invoiceItemIdsWithAmounts, refundInfo.getId(), context);
+                        invoiceApi.createRefund(paymentId, refundAmount, isAdjusted, invoiceItemIdsWithAmounts, refundInfo.getId(), context);
 
-                    paymentDao.updateRefundStatus(refundInfo.getId(), RefundStatus.COMPLETED, context);
+                        paymentDao.updateRefundStatus(refundInfo.getId(), RefundStatus.COMPLETED, context);
 
-                    return new DefaultRefund(refundInfo.getId(), refundInfo.getCreatedDate(), refundInfo.getUpdatedDate(),
-                                             paymentId, refundInfo.getAmount(), account.getCurrency(),
-                                             isAdjusted, refundInfo.getCreatedDate());
+                        return new DefaultRefund(refundInfo.getId(), refundInfo.getCreatedDate(), refundInfo.getUpdatedDate(),
+                                                 paymentId, refundInfo.getAmount(), account.getCurrency(),
+                                                 isAdjusted, refundInfo.getCreatedDate());
+                    } else {
+                        paymentDao.updateRefundStatus(refundInfo.getId(), RefundStatus.PLUGIN_ERRORED, context);
+                        throw new PaymentPluginApiException("Refund error for RefundInfo: " + refundInfo.toString(),
+                                                            String.format("Gateway error: %s, Gateway error code: %s, Reference id: %s", refundInfoPlugin.getGatewayError(), refundInfoPlugin.getGatewayErrorCode(), refundInfoPlugin.getReferenceId()));
+                    }
                 } catch (PaymentPluginApiException e) {
                     throw new PaymentApiException(ErrorCode.PAYMENT_CREATE_REFUND, account.getId(), e.getErrorMessage());
                 } catch (InvoiceApiException e) {
