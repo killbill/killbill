@@ -1,20 +1,98 @@
 #! /usr/bin/env ruby
 
 require 'aws-sdk'
+require 'net/http'
 require 'net/scp'
 require 'net/ssh'
+require 'openssl'
+require 'tmpdir'
+require 'yaml'
 
 SHH_PRIVATE_KEY = ""
 
-AMI="ami-3d4ff254"
-SECURITY_GROUPS = ""
-INSTANCE_TYPE = "t1.micro"
-AVAILABILITY_ZONE = "us-east-1d"
-KEY_NAME = ""
+class KillBillConfig
+  attr_reader :config
 
+  def initialize(path)
+    @config = YAML.load(File.open(path))
+    @working_dir = Dir.mktmpdir
+    puts "Working directory is #{@working_dir}"
 
-class SimpleEC2 
-  
+    @config_dir = Dir.mkdir(File.join(@working_dir, 'config'))
+    @binaries_dir = Dir.mkdir(File.join(@working_dir, 'binaries'))
+  end
+
+  def cleanup
+    FileUtils.remove_entry @working_dir
+  end
+
+  def download_world
+    download_killbill
+    download_plugins
+  end
+
+  private
+
+  def download_killbill
+    version = (@config[:killbill] || {})[:version]
+
+    # Download the binary
+    download('com.ning.billing', 'killbill-server', version, 'war', 'jar-with-dependencies')
+
+    # Copy the configuration
+    config (@config[:killbill] || {})[:config]
+    FileUtils.cp config, @config_dir if config
+  end
+
+  def download_plugins
+    plugins = (@config[:plugins] || [])
+    plugins.each do |plugin_name, plugin_def|
+      version = plugin_def[:version]
+
+      # Download the binary
+      download (plugin_def[:group_id] || 'com.ning.killbill.ruby'),
+               (plugin_def[:artifact_id] || plugin_name),
+               version
+
+      # Copy the configuration
+      FileUtils.cp plugin_def[:config], @config_dir if plugin_def[:config]
+    end
+  end
+
+  def download(group_id, artifact_id, version=nil, packaging='tar.gz', classifier=nil)
+    fetch("https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=#{group_id}&a=#{artifact_id}&c=#{classifier}&p=#{packaging}&v=#{version||'LATEST'}",
+          "#{artifact_id}#{'-' + version if version}.#{packaging}")
+  end
+
+  def fetch(uri_string, filename, limit=10)
+    return if limit <= 0
+
+    uri = URI(uri_string)
+    Net::HTTP.start(uri.host, uri.port, {:use_ssl => true, :verify_mode => OpenSSL::SSL::VERIFY_NONE}) do |http|
+      request = Net::HTTP::Get.new uri.request_uri
+
+      http.request request do |response|
+        case response
+          when Net::HTTPSuccess then
+            puts "Downloading #{uri.request_uri}"
+            open "#{@binaries_dir}/#{filename}", 'w' do |io|
+              response.read_body do |chunk|
+                io.write chunk
+              end
+            end
+          when Net::HTTPRedirection then
+            #puts "Redirect from #{uri.request_uri} to #{response['location']}"
+            fetch(response['location'], filename, limit - 1)
+          else
+            response.error!
+        end
+      end
+    end
+  end
+end
+
+class SimpleEC2
+
   attr_reader :aws_ec2, :ami, :instance_type, :zone, :key_name, :security_groups
   
   def initialize(access_key, secret_key, ami, instance_type, zone, key_name, security_groups)
