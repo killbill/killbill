@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.jaxrs.json;
 
 import java.util.ArrayList;
@@ -24,8 +25,8 @@ import org.joda.time.DateTime;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.payment.api.PaymentMethod;
-import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.payment.api.PaymentMethodKVInfo;
+import com.ning.billing.payment.api.PaymentMethodPlugin;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -46,7 +47,6 @@ public class PaymentMethodJson {
                              @JsonProperty("isDefault") final Boolean isDefault,
                              @JsonProperty("pluginName") final String pluginName,
                              @JsonProperty("pluginInfo") final PaymentMethodPluginDetailJson pluginInfo) {
-        super();
         this.paymentMethodId = paymentMethodId;
         this.accountId = accountId;
         this.isDefault = isDefault;
@@ -55,22 +55,36 @@ public class PaymentMethodJson {
     }
 
     public static PaymentMethodJson toPaymentMethodJson(final Account account, final PaymentMethod in) {
-
         final boolean isDefault = account.getPaymentMethodId() != null && account.getPaymentMethodId().equals(in.getId());
-        PaymentMethodPluginDetailJson detail = null;
-        if (in.getPluginDetail() != null) {
+        final PaymentMethodPlugin pluginDetail = in.getPluginDetail();
+        PaymentMethodPluginDetailJson pluginDetailJson = null;
+        if (pluginDetail != null) {
             List<PaymentMethodProperties> properties = null;
-            if (in.getPluginDetail().getProperties() != null) {
-                properties = new ArrayList<PaymentMethodJson.PaymentMethodProperties>(Collections2.transform(in.getPluginDetail().getProperties(), new Function<PaymentMethodKVInfo, PaymentMethodProperties>() {
+            if (pluginDetail.getProperties() != null) {
+                properties = new ArrayList<PaymentMethodJson.PaymentMethodProperties>(Collections2.transform(pluginDetail.getProperties(), new Function<PaymentMethodKVInfo, PaymentMethodProperties>() {
                     @Override
                     public PaymentMethodProperties apply(final PaymentMethodKVInfo input) {
                         return new PaymentMethodProperties(input.getKey(), input.getValue() == null ? null : input.getValue().toString(), input.getIsUpdatable());
                     }
                 }));
             }
-            detail = new PaymentMethodPluginDetailJson(in.getPluginDetail().getExternalPaymentMethodId(), properties);
+            pluginDetailJson = new PaymentMethodPluginDetailJson(pluginDetail.getExternalPaymentMethodId(),
+                                                                 pluginDetail.isDefaultPaymentMethod(),
+                                                                 pluginDetail.getType(),
+                                                                 pluginDetail.getCCName(),
+                                                                 pluginDetail.getCCType(),
+                                                                 pluginDetail.getCCExpirationMonth(),
+                                                                 pluginDetail.getCCExpirationYear(),
+                                                                 pluginDetail.getCCLast4(),
+                                                                 pluginDetail.getAddress1(),
+                                                                 pluginDetail.getAddress2(),
+                                                                 pluginDetail.getCity(),
+                                                                 pluginDetail.getState(),
+                                                                 pluginDetail.getZip(),
+                                                                 pluginDetail.getCountry(),
+                                                                 properties);
         }
-        return new PaymentMethodJson(in.getId().toString(), account.getId().toString(), isDefault, in.getPluginName(), detail);
+        return new PaymentMethodJson(in.getId().toString(), account.getId().toString(), isDefault, in.getPluginName(), pluginDetailJson);
     }
 
     public PaymentMethod toPaymentMethod(final String accountId) {
@@ -213,10 +227,6 @@ public class PaymentMethodJson {
         };
     }
 
-    public PaymentMethodJson() {
-        this(null, null, null, null, null);
-    }
-
     public String getPaymentMethodId() {
         return paymentMethodId;
     }
@@ -241,23 +251,108 @@ public class PaymentMethodJson {
     public static class PaymentMethodPluginDetailJson {
 
         private final String externalPaymentId;
+        private final Boolean isDefaultPaymentMethod;
+        private final String type;
+        private final String ccName;
+        private final String ccType;
+        private final String ccExpirationMonth;
+        private final String ccExpirationYear;
+        private final String ccLast4;
+        private final String address1;
+        private final String address2;
+        private final String city;
+        private final String state;
+        private final String zip;
+        private final String country;
         private final List<PaymentMethodProperties> properties;
-
 
         @JsonCreator
         public PaymentMethodPluginDetailJson(@JsonProperty("externalPaymentId") final String externalPaymentId,
+                                             @JsonProperty("isDefaultPaymentMethod") final Boolean isDefaultPaymentMethod,
+                                             @JsonProperty("type") final String type,
+                                             @JsonProperty("ccName") final String ccName,
+                                             @JsonProperty("ccType") final String ccType,
+                                             @JsonProperty("ccExpirationMonth") final String ccExpirationMonth,
+                                             @JsonProperty("ccExpirationYear") final String ccExpirationYear,
+                                             @JsonProperty("ccLast4") final String ccLast4,
+                                             @JsonProperty("address1") final String address1,
+                                             @JsonProperty("address2") final String address2,
+                                             @JsonProperty("city") final String city,
+                                             @JsonProperty("state") final String state,
+                                             @JsonProperty("zip") final String zip,
+                                             @JsonProperty("country") final String country,
                                              @JsonProperty("properties") final List<PaymentMethodProperties> properties) {
-            super();
             this.externalPaymentId = externalPaymentId;
+            this.isDefaultPaymentMethod = isDefaultPaymentMethod;
+            this.type = type;
+            this.ccName = ccName;
+            this.ccType = ccType;
+            this.ccExpirationMonth = ccExpirationMonth;
+            this.ccExpirationYear = ccExpirationYear;
+            this.ccLast4 = ccLast4;
+            this.address1 = address1;
+            this.address2 = address2;
+            this.city = city;
+            this.state = state;
+            this.zip = zip;
+            this.country = country;
             this.properties = properties;
-        }
-
-        public PaymentMethodPluginDetailJson() {
-            this(null, null);
         }
 
         public String getExternalPaymentId() {
             return externalPaymentId;
+        }
+
+        public Boolean getIsDefaultPaymentMethod() {
+            return isDefaultPaymentMethod;
+        }
+
+        public String getType() {
+            return type;
+        }
+
+        public String getCcName() {
+            return ccName;
+        }
+
+        public String getCcType() {
+            return ccType;
+        }
+
+        public String getCcExpirationMonth() {
+            return ccExpirationMonth;
+        }
+
+        public String getCcExpirationYear() {
+            return ccExpirationYear;
+        }
+
+        public String getCcLast4() {
+            return ccLast4;
+        }
+
+        public String getAddress1() {
+            return address1;
+        }
+
+        public String getAddress2() {
+            return address2;
+        }
+
+        public String getCity() {
+            return city;
+        }
+
+        public String getState() {
+            return state;
+        }
+
+        public String getZip() {
+            return zip;
+        }
+
+        public String getCountry() {
+            return country;
         }
 
         public List<PaymentMethodProperties> getProperties() {
@@ -266,6 +361,7 @@ public class PaymentMethodJson {
     }
 
     public static final class PaymentMethodProperties {
+
         private final String key;
         private final String value;
         private final Boolean isUpdatable;
@@ -279,11 +375,6 @@ public class PaymentMethodJson {
             this.value = value;
             this.isUpdatable = isUpdatable;
         }
-
-        public PaymentMethodProperties() {
-            this(null, null, null);
-        }
-
 
         public String getKey() {
             return key;
