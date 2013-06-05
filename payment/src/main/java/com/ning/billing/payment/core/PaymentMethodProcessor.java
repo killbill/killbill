@@ -23,6 +23,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 
+import javax.annotation.Nullable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,8 +35,8 @@ import com.ning.billing.osgi.api.OSGIServiceRegistration;
 import com.ning.billing.payment.api.DefaultPaymentMethod;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.PaymentMethod;
-import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.payment.api.PaymentMethodKVInfo;
+import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.dao.PaymentMethodModelDao;
 import com.ning.billing.payment.plugin.api.PaymentMethodInfoPlugin;
@@ -332,11 +334,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                 }
 
                 try {
-                    if (defaultPaymentMethodId != null) {
-                        accountInternalApi.updatePaymentMethod(account.getId(), defaultPaymentMethodId, context);
-                    } else {
-                        accountInternalApi.removePaymentMethod(account.getId(), context);
-                    }
+                    updateDefaultPaymentMethodIfNeeded(pluginName, account, defaultPaymentMethodId, context);
                 } catch (AccountApiException e) {
                     throw new PaymentApiException(e);
                 }
@@ -349,5 +347,26 @@ public class PaymentMethodProcessor extends ProcessorBase {
                 }));
             }
         });
+    }
+
+    private void updateDefaultPaymentMethodIfNeeded(final String pluginName, final Account account, @Nullable final UUID defaultPaymentMethodId, final InternalCallContext context) throws PaymentApiException, AccountApiException {
+        // Some gateways have the concept of default payment methods. Kill Bill has also its own default payment method
+        // and is authoritative on this matter. However, if the default payment method is associated with a given plugin,
+        // and if the default payment method in that plugin has changed, we will reflect this change in Kill Bill as well.
+        boolean shouldUpdateDefaultPaymentMethod = true;
+        if (account.getPaymentMethodId() != null) {
+            final PaymentMethodModelDao currentDefaultPaymentMethod = paymentDao.getPaymentMethod(account.getPaymentMethodId(), context);
+            shouldUpdateDefaultPaymentMethod = pluginName.equals(currentDefaultPaymentMethod.getPluginName());
+        }
+
+        if (!shouldUpdateDefaultPaymentMethod) {
+            return;
+        }
+
+        if (defaultPaymentMethodId != null) {
+            accountInternalApi.updatePaymentMethod(account.getId(), defaultPaymentMethodId, context);
+        } else {
+            accountInternalApi.removePaymentMethod(account.getId(), context);
+        }
     }
 }
