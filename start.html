@@ -220,8 +220,32 @@ etc/jetty-webapps.xml</pre>
             <section id="installation_in_tomcat">
                 <div class="page-header">
                     <h2>Installation in Tomcat</h2>
-                </div>
-                <p>TODO</p>
+                    
+                    <h3>Download the Tomcat container</h3>
+                    <p>If you don't have it yet, you can download the Tomcat container <a href="http://mirrors.ibiblio.org/apache/tomcat/tomcat-7/v7.0.40/bin/apache-tomcat-7.0.40.tar.gz" target="_blank">here</a>.Then you can then untar the archive and at this point you need to tweak the configuration before starting it. The setup suggested below is a quick setup used for demo, it may not be not best way to deploy your Kill Bill war into tomcat especially if you plan to have multiple wars within the same container.</p>
+                    <h3>Deploy Kill Bill in Tomcat</h3>
+                    <p>Assuming you installed tomcat in a directory called <code>CATALINA_HOME</code>, then there are two things that need to happen:
+                        <ul>
+                            <li>The Kill Bill system properties need to be added at the end of the <code>CATALINA_HOME/conf/catalina.properties</code>. The minimal set of system properties that need to added are the one for the jdbc parameters:
+                                                            <pre>
+ # Kill Bill properties
+ com.ning.jetty.jdbi.url=jdbc:mysql://127.0.0.1:3306/killbill
+ com.ning.jetty.jdbi.user=killbill
+ com.ning.jetty.jdbi.password=killbill
+                                                            </pre>
+                            </li>
+                            <li>A new entry must be added to let tomcat know about the location of the Kill Bill war. That file is called Root.xml and it must located under <code>CATALINA_HOME/conf/Catalina/localhost</code>. Its content must be:
+                            <pre>
+&lt;Context docBase="path_to_killbill-server.war"&gt;
+&lt;/Context&gt;                               
+                            </pre>                                
+                            </li>
+                        </ul>
+                        Once this is setup, you can restart the tomcat container using the script <code>CATALINA_HOME/bin/startup.sh</code>.
+                    </p>
+                    
+                    <p>
+                    </p>
             </section>
 
             <section id="installation_in_glassfish">
