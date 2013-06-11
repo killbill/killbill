@@ -29,6 +29,10 @@ To configure a report, create a INI file in the following format:
     [report_name]
     tableName = view_or_table_name_to_query
     prettyName = Pretty name to use for the dashboard legend
+    # Optional, specify a refresh schedule (via a stored procedure)
+    #storedProcedureName = refresh_my_report
+    #frequency = DAILY
+    #refreshTimeOfTheDayGMT = 5
 
 The path to the INI file can be configured via -Dcom.ning.billing.osgi.bundles.analytics.reports.configuration
 
