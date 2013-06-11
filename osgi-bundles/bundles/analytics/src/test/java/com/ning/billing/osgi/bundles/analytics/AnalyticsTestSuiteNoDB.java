@@ -20,6 +20,7 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
+import javax.sql.DataSource;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -41,16 +42,16 @@ import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
-import com.ning.billing.entitlement.api.user.SubscriptionState;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.entitlement.api.user.SubscriptionState;
 import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.InvoicePaymentType;
-import com.ning.billing.junction.api.Type;
 import com.ning.billing.junction.api.BlockingState;
+import com.ning.billing.junction.api.Type;
 import com.ning.billing.osgi.bundles.analytics.api.BusinessEntityBase;
 import com.ning.billing.osgi.bundles.analytics.dao.TestCallContext;
 import com.ning.billing.osgi.bundles.analytics.dao.model.BusinessInvoiceItemBaseModelDao.BusinessInvoiceItemType;
@@ -421,5 +422,7 @@ public abstract class AnalyticsTestSuiteNoDB {
         Mockito.when(killbillAPI.getRecordIdApi()).thenReturn(recordIdApi);
 
         killbillDataSource = Mockito.mock(OSGIKillbillDataSource.class);
+        final DataSource dataSource = Mockito.mock(DataSource.class);
+        Mockito.when(killbillDataSource.getDataSource()).thenReturn(dataSource);
     }
 }

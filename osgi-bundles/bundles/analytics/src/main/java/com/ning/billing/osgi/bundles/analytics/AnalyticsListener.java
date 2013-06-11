@@ -16,6 +16,7 @@
 
 package com.ning.billing.osgi.bundles.analytics;
 
+import java.util.Properties;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
@@ -43,10 +44,22 @@ import com.ning.killbill.osgi.libs.killbill.OSGIKillbillDataSource;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillEventDispatcher.OSGIKillbillEventHandler;
 import com.ning.killbill.osgi.libs.killbill.OSGIKillbillLogService;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Predicates;
+import com.google.common.base.Splitter;
+import com.google.common.collect.Iterables;
+
 public class AnalyticsListener implements OSGIKillbillEventHandler {
 
     private static final String ANALYTICS_NB_LOCK_TRY_PROPERTY = "killbill.osgi.analytics.lock.count";
     private static final int NB_LOCK_TRY = Integer.parseInt(System.getProperty(ANALYTICS_NB_LOCK_TRY_PROPERTY, "5"));
+
+    // List of account ids to ignore
+    static final String ANALYTICS_ACCOUNTS_BLACKLIST_PROPERTY = "killbill.osgi.analytics.blacklist";
+    private static final Splitter BLACKLIST_SPLITTER = Splitter.on(',')
+                                                               .trimResults()
+                                                               .omitEmptyStrings();
+    private final Iterable<String> accountsBlacklist;
 
     private final LogService logService;
     private final BusinessAccountDao bacDao;
@@ -62,6 +75,14 @@ public class AnalyticsListener implements OSGIKillbillEventHandler {
                              final OSGIKillbillAPI osgiKillbillAPI,
                              final OSGIKillbillDataSource osgiKillbillDataSource,
                              final Executor executor) {
+        this(logService, osgiKillbillAPI, osgiKillbillDataSource, executor, System.getProperties());
+    }
+
+    AnalyticsListener(final OSGIKillbillLogService logService,
+                      final OSGIKillbillAPI osgiKillbillAPI,
+                      final OSGIKillbillDataSource osgiKillbillDataSource,
+                      final Executor executor,
+                      final Properties properties) {
         this.logService = logService;
 
         this.bacDao = new BusinessAccountDao(logService, osgiKillbillAPI, osgiKillbillDataSource, executor);
@@ -74,10 +95,17 @@ public class AnalyticsListener implements OSGIKillbillEventHandler {
 
         // TODO Do we still need it?
         this.locker = new MySqlGlobalLocker(osgiKillbillDataSource.getDataSource());
+
+        accountsBlacklist = BLACKLIST_SPLITTER.split(properties.getProperty(ANALYTICS_ACCOUNTS_BLACKLIST_PROPERTY, ""));
     }
 
     @Override
     public void handleKillbillEvent(final ExtBusEvent killbillEvent) {
+        // Don't mirror accounts in the blacklist
+        if (isAccountBlacklisted(killbillEvent.getAccountId())) {
+            return;
+        }
+
         final CallContext callContext = new AnalyticsCallContext(killbillEvent);
 
         switch (killbillEvent.getEventType()) {
@@ -118,6 +146,11 @@ public class AnalyticsListener implements OSGIKillbillEventHandler {
             default:
                 break;
         }
+    }
+
+    @VisibleForTesting
+    protected boolean isAccountBlacklisted(final UUID accountId) {
+        return Iterables.find(accountsBlacklist, Predicates.<String>equalTo(accountId.toString()), null) != null;
     }
 
     private void handleAccountEvent(final ExtBusEvent killbillEvent, final CallContext callContext) {
