@@ -161,6 +161,13 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
                 if (currentAccount == null) {
                     throw new EntityPersistenceException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, accountId);
                 }
+
+                // Check if an update is really needed. If not, bail early to avoid sending an extra event on the bus
+                if ((currentAccount.getPaymentMethodId() == null && paymentMethodId == null) ||
+                    (currentAccount.getPaymentMethodId() != null && currentAccount.getPaymentMethodId().equals(paymentMethodId))) {
+                    return null;
+                }
+
                 final String thePaymentMethodId = paymentMethodId != null ? paymentMethodId.toString() : null;
                 transactional.updatePaymentMethod(accountId.toString(), thePaymentMethodId, context);
 

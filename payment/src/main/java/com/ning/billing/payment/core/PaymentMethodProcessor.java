@@ -363,6 +363,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
             return;
         }
 
+        // Note that the code below is a no-op if the default payment method hasn't changed
         if (defaultPaymentMethodId != null) {
             accountInternalApi.updatePaymentMethod(account.getId(), defaultPaymentMethodId, context);
         } else {
