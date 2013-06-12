@@ -342,7 +342,12 @@ public class DefaultPaymentDao implements PaymentDao {
 
                 // Finally, all payment methods left in the existingPaymentMethods should be marked as deleted
                 for (final PaymentMethodModelDao existingPaymentMethod : existingPaymentMethods) {
-                    deletedPaymentMethodInTransaction(entitySqlDaoWrapperFactory, existingPaymentMethod.getId(), context);
+                    // Need to verify if this is active -- failure to do so would provide an exception down the stream because
+                    // the logic around audit/history will use getById to retrieve the entity and that method would not return
+                    // a marked as deleted object
+                    if (existingPaymentMethod.isActive()) {
+                        deletedPaymentMethodInTransaction(entitySqlDaoWrapperFactory, existingPaymentMethod.getId(), context);
+                    }
                 }
                 return transactional.getByAccountId(accountId.toString(), context);
             }
