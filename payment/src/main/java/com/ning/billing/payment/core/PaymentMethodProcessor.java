@@ -365,7 +365,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
             final PaymentMethodModelDao currentDefaultPaymentMethod = paymentDao.getPaymentMethod(account.getPaymentMethodId(), context);
             shouldUpdateDefaultPaymentMethod = pluginName.equals(currentDefaultPaymentMethod.getPluginName());
         }
-        if (!shouldUpdateDefaultPaymentMethod) {
+        if (shouldUpdateDefaultPaymentMethod) {
             accountInternalApi.updatePaymentMethod(account.getId(), defaultPluginPaymentMethodId, context);
         }
     }
