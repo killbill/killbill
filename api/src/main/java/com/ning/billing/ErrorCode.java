@@ -194,7 +194,7 @@ public enum ErrorCode {
     INVOICE_NOTHING_TO_DO(4007, "No invoice to generate for account %s and date %s"),
     INVOICE_NO_SUCH_CREDIT(4008, "Credit item for id %s does not exist"),
     CREDIT_AMOUNT_INVALID(4009, "Credit amount %s should be strictly positive"),
-    INVOICE_ITEM_ADJUSTMENT_AMOUNT_INVALID(4010, "Invoice adjustment amount %s should be strictly positive"),
+    INVOICE_ITEM_ADJUSTMENT_AMOUNT_SHOULD_BE_POSITIVE(4010, "Invoice adjustment amount %s should be strictly positive"),
     INVOICE_ITEM_NOT_FOUND(4011, "No invoice item could be found for id %s."),
     INVOICE_INVALID_FOR_INVOICE_ITEM_ADJUSTMENT(4012, "Invoice item %s doesn't belong to invoice %s."),
     INVOICE_NO_SUCH_EXTERNAL_CHARGE(4014, "External charge item for id %s does not exist"),
@@ -203,6 +203,7 @@ public enum ErrorCode {
     INVOICE_ALREADY_EXISTS(4017, "The invoice already exists %s"),
     INVOICE_NUMBER_NOT_FOUND(4018, "No invoice could be found for number %s."),
     INVOICE_INVALID_NUMBER(4019, "Invalid invoice number %s."),
+    INVOICE_ITEM_ADJUSTMENT_AMOUNT_INVALID(4020, "Invoice adjustment amount %s should be lower than %s"),
 
     /*
      *
@@ -216,7 +217,7 @@ public enum ErrorCode {
     CHARGE_BACK_DOES_NOT_EXIST(4004, "Could not find chargeback for id %s."),
     INVOICE_PAYMENT_BY_ATTEMPT_NOT_FOUND(4905, "No invoice payment could be found for paymentAttempt id %s."),
     REFUND_AMOUNT_TOO_HIGH(4906, "Tried to refund %s of a %s payment."),
-    REFUND_AMOUNT_DONT_MATCH_ITEMS_TO_ADJUST(4907, "You can't specify a refund amount of %s that doesn't match the invoice items amount of %s."),
+    REFUND_AMOUNT_DONT_MATCH_ITEMS_TO_ADJUST(4907, "You can't specify a refund amount of %s that is less than the sum of the invoice items amount of %s."),
 
     /*
      *

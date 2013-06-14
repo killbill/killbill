@@ -78,17 +78,27 @@ public class InvoiceDaoHelper {
             throw new IllegalStateException("Invoice shouldn't be null for id " + invoiceId);
         }
 
+        //
+        // If we have an item amount, we 'd like to use it, but we need to check first that it is lesser or equal than maximum allowed
+        //If, not we compute maximum value we can adjust per item
         for (final UUID invoiceItemId : invoiceItemIdsWithNullAmounts.keySet()) {
-            final BigDecimal adjAmount = Objects.firstNonNull(invoiceItemIdsWithNullAmounts.get(invoiceItemId),
-                                                              getInvoiceItemAmountForId(invoice, invoiceItemId));
-            final BigDecimal adjAmountRemainingAfterRepair = computeItemAdjustmentAmount(invoiceItemId, adjAmount, invoice.getInvoiceItems());
-            if (adjAmountRemainingAfterRepair.compareTo(BigDecimal.ZERO) > 0) {
-                invoiceItemIdsWithAmountsBuilder.put(invoiceItemId, adjAmountRemainingAfterRepair);
+            final BigDecimal originalItemAmount = getInvoiceItemAmountForId(invoice, invoiceItemId);
+            final BigDecimal maxAdjAmount = computeItemAdjustmentAmount(invoiceItemId, originalItemAmount, invoice.getInvoiceItems());
+
+            final BigDecimal proposedItemAmount = invoiceItemIdsWithNullAmounts.get(invoiceItemId);
+            if (proposedItemAmount != null && proposedItemAmount.compareTo(maxAdjAmount) > 0) {
+                throw new InvoiceApiException(ErrorCode.INVOICE_ITEM_ADJUSTMENT_AMOUNT_INVALID, proposedItemAmount, maxAdjAmount);
+            }
+
+            final BigDecimal itemAmountToAdjust = Objects.firstNonNull(proposedItemAmount, maxAdjAmount);
+            if (itemAmountToAdjust.compareTo(BigDecimal.ZERO) > 0) {
+                invoiceItemIdsWithAmountsBuilder.put(invoiceItemId, itemAmountToAdjust);
             }
         }
 
         return invoiceItemIdsWithAmountsBuilder.build();
     }
+
 
     /**
      * @param invoiceItem  item we are adjusting
@@ -124,9 +134,9 @@ public class InvoiceDaoHelper {
         throw new InvoiceApiException(ErrorCode.INVOICE_ITEM_NOT_FOUND, invoiceItemId);
     }
 
-    public BigDecimal computePositiveRefundAmount(final InvoicePaymentModelDao payment, final BigDecimal requestedAmount, final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts) throws InvoiceApiException {
+    public BigDecimal computePositiveRefundAmount(final InvoicePaymentModelDao payment, final BigDecimal requestedRefundAmount, final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts) throws InvoiceApiException {
         final BigDecimal maxRefundAmount = payment.getAmount() == null ? BigDecimal.ZERO : payment.getAmount();
-        final BigDecimal requestedPositiveAmount = requestedAmount == null ? maxRefundAmount : requestedAmount;
+        final BigDecimal requestedPositiveAmount = requestedRefundAmount == null ? maxRefundAmount : requestedRefundAmount;
         // This check is good but not enough, we need to also take into account previous refunds
         // (But that should have been checked in the payment call already)
         if (requestedPositiveAmount.compareTo(maxRefundAmount) > 0) {
@@ -140,7 +150,7 @@ public class InvoiceDaoHelper {
         }
 
         // Sanity check: if some items were specified, then the sum should be equal to specified refund amount, if specified
-        if (amountFromItems.compareTo(BigDecimal.ZERO) != 0 && requestedPositiveAmount.compareTo(amountFromItems) != 0) {
+        if (amountFromItems.compareTo(BigDecimal.ZERO) != 0 && requestedPositiveAmount.compareTo(amountFromItems) < 0) {
             throw new InvoiceApiException(ErrorCode.REFUND_AMOUNT_DONT_MATCH_ITEMS_TO_ADJUST, requestedPositiveAmount, amountFromItems);
         }
         return requestedPositiveAmount;

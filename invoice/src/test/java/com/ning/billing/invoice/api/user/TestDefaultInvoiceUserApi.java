@@ -332,7 +332,7 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
                                                        BigDecimal.TEN.negate(), accountCurrency, callContext);
             Assert.fail("Should not have been able to adjust an item with a negative amount");
         } catch (InvoiceApiException e) {
-            Assert.assertEquals(e.getCode(), ErrorCode.INVOICE_ITEM_ADJUSTMENT_AMOUNT_INVALID.getCode());
+            Assert.assertEquals(e.getCode(), ErrorCode.INVOICE_ITEM_ADJUSTMENT_AMOUNT_SHOULD_BE_POSITIVE.getCode());
         }
     }
 

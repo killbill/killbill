@@ -270,7 +270,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                                    final LocalDate effectiveDate, @Nullable final BigDecimal amount,
                                                    @Nullable final Currency currency, final CallContext context) throws InvoiceApiException {
         if (amount != null && amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new InvoiceApiException(ErrorCode.INVOICE_ITEM_ADJUSTMENT_AMOUNT_INVALID, amount);
+            throw new InvoiceApiException(ErrorCode.INVOICE_ITEM_ADJUSTMENT_AMOUNT_SHOULD_BE_POSITIVE, amount);
         }
 
         final InvoiceItemModelDao adjustment = dao.insertInvoiceItemAdjustment(accountId, invoiceId, invoiceItemId, effectiveDate, amount, currency, internalCallContextFactory.createInternalCallContext(accountId, context));
