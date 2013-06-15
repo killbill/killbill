@@ -78,7 +78,6 @@ import static com.ning.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR_NAMED;
 public class PaymentProcessor extends ProcessorBase {
 
     private final PaymentMethodProcessor paymentMethodProcessor;
-    private final InvoiceInternalApi invoiceApi;
     private final FailedPaymentRetryServiceScheduler failedPaymentRetryService;
     private final PluginFailureRetryServiceScheduler pluginFailureRetryService;
     private final AutoPayRetryServiceScheduler autoPayoffRetryService;
@@ -108,9 +107,8 @@ public class PaymentProcessor extends ProcessorBase {
                             final GlobalLocker locker,
                             final PaymentConfig paymentConfig,
                             @Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor) {
-        super(pluginRegistry, accountUserApi, eventBus, paymentDao, tagUserApi, locker, executor);
+        super(pluginRegistry, accountUserApi, eventBus, paymentDao, tagUserApi, locker, executor, invoiceApi);
         this.paymentMethodProcessor = paymentMethodProcessor;
-        this.invoiceApi = invoiceApi;
         this.failedPaymentRetryService = failedPaymentRetryService;
         this.pluginFailureRetryService = pluginFailureRetryService;
         this.autoPayoffRetryService = autoPayoffRetryService;
@@ -250,9 +248,8 @@ public class PaymentProcessor extends ProcessorBase {
 
 
                                                                                                                 try {
-                                                                                                                    final Invoice invoice = invoiceApi.getInvoiceById(invoiceId, context);
-
-                                                                                                                    if (invoice.isMigrationInvoice()) {
+                                                                                                                    final Invoice invoice = rebalanceAndGetInvoice(account.getId(), invoiceId, context);
+                                                                                                                    if (invoice == null || invoice.isMigrationInvoice()) {
                                                                                                                         log.error("Received invoice for payment that is a migration invoice - don't know how to handle those yet: {}", invoice);
                                                                                                                         return null;
                                                                                                                     }
@@ -388,8 +385,8 @@ public class PaymentProcessor extends ProcessorBase {
                                                                                                            return null;
                                                                                                        }
 
-                                                                                                       final Invoice invoice = invoiceApi.getInvoiceById(payment.getInvoiceId(), context);
-                                                                                                       if (invoice.isMigrationInvoice()) {
+                                                                                                       final Invoice invoice = rebalanceAndGetInvoice(payment.getAccountId(), payment.getInvoiceId(), context);
+                                                                                                       if (invoice == null || invoice.isMigrationInvoice()) {
                                                                                                            return null;
                                                                                                        }
                                                                                                        if (invoice.getBalance().compareTo(BigDecimal.ZERO) <= 0) {

@@ -49,6 +49,7 @@ import com.google.common.collect.Collections2;
 public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
 
     private static final WithInvoiceApiException<InvoicePayment> invoicePaymentWithException = new WithInvoiceApiException<InvoicePayment>();
+    private static final WithInvoiceApiException<Void> voidWithException = new WithInvoiceApiException<Void>();
 
     private final InvoiceDao dao;
 
@@ -132,15 +133,18 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
                 if (amount.compareTo(BigDecimal.ZERO) <= 0) {
                     throw new InvoiceApiException(ErrorCode.PAYMENT_REFUND_AMOUNT_NEGATIVE_OR_NULL);
                 }
-
-                final Collection<InvoicePayment> invoicePayments = Collections2.transform(dao.getInvoicePayments(paymentId, context), new Function<InvoicePaymentModelDao, InvoicePayment>() {
-                    @Override
-                    public InvoicePayment apply(final InvoicePaymentModelDao input) {
-                        return new DefaultInvoicePayment(input);
-                    }
-                });
-
                 return new DefaultInvoicePayment(dao.createRefund(paymentId, amount, isInvoiceAdjusted, invoiceItemIdsWithAmounts, paymentCookieId, context));
+            }
+        });
+    }
+
+    @Override
+    public void consumeExistingCBAOnAccountWithUnpaidInvoices(final UUID accountId, final InternalCallContext context) throws InvoiceApiException {
+        voidWithException.executeAndThrow(new WithInvoiceApiExceptionCallback<Void>()  {
+            @Override
+            public Void doHandle() throws InvoiceApiException {
+                dao.consumeExstingCBAOnAccountWithUnpaidInvoices(accountId, context);
+                return null;
             }
         });
     }

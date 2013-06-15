@@ -73,7 +73,6 @@ public class RefundProcessor extends ProcessorBase {
 
     private static final Logger log = LoggerFactory.getLogger(RefundProcessor.class);
 
-    private final InvoiceInternalApi invoiceApi;
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
@@ -86,8 +85,7 @@ public class RefundProcessor extends ProcessorBase {
                            final PaymentDao paymentDao,
                            final GlobalLocker locker,
                            @Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor) {
-        super(pluginRegistry, accountApi, eventBus, paymentDao, tagUserApi, locker, executor);
-        this.invoiceApi = invoiceApi;
+        super(pluginRegistry, accountApi, eventBus, paymentDao, tagUserApi, locker, executor, invoiceApi);
         this.internalCallContextFactory = internalCallContextFactory;
     }
 

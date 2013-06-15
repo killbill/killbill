@@ -49,6 +49,7 @@ import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
+import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
 import com.ning.billing.util.svcapi.tag.TagInternalApi;
 import com.ning.billing.util.svcsapi.bus.InternalBus;
 
@@ -67,12 +68,13 @@ public class PaymentMethodProcessor extends ProcessorBase {
     @Inject
     public PaymentMethodProcessor(final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry,
                                   final AccountInternalApi accountInternalApi,
+                                  final InvoiceInternalApi invoiceApi,
                                   final InternalBus eventBus,
                                   final PaymentDao paymentDao,
                                   final TagInternalApi tagUserApi,
                                   final GlobalLocker locker,
                                   @Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor) {
-        super(pluginRegistry, accountInternalApi, eventBus, paymentDao, tagUserApi, locker, executor);
+        super(pluginRegistry, accountInternalApi, eventBus, paymentDao, tagUserApi, locker, executor, invoiceApi);
     }
 
     public Set<String> getAvailablePlugins() {

@@ -30,6 +30,8 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.osgi.api.OSGIServiceRegistration;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.dao.PaymentDao;
@@ -44,6 +46,7 @@ import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.globallocker.GlobalLocker.LockerType;
 import com.ning.billing.util.globallocker.LockFailedException;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
+import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
 import com.ning.billing.util.svcapi.tag.TagInternalApi;
 import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.svcsapi.bus.InternalBus.EventBusException;
@@ -66,6 +69,7 @@ public abstract class ProcessorBase {
     protected final TagInternalApi tagInternalApi;
 
     private static final Logger log = LoggerFactory.getLogger(ProcessorBase.class);
+    protected final InvoiceInternalApi invoiceApi;
 
     public ProcessorBase(final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry,
                          final AccountInternalApi accountInternalApi,
@@ -73,7 +77,7 @@ public abstract class ProcessorBase {
                          final PaymentDao paymentDao,
                          final TagInternalApi tagInternalApi,
                          final GlobalLocker locker,
-                         final ExecutorService executor) {
+                         final ExecutorService executor, final InvoiceInternalApi invoiceApi) {
         this.pluginRegistry = pluginRegistry;
         this.accountInternalApi = accountInternalApi;
         this.eventBus = eventBus;
@@ -81,6 +85,7 @@ public abstract class ProcessorBase {
         this.locker = locker;
         this.executor = executor;
         this.tagInternalApi = tagInternalApi;
+        this.invoiceApi = invoiceApi;
     }
 
     protected boolean isAccountAutoPayOff(final UUID accountId, final InternalTenantContext context) {
@@ -141,6 +146,12 @@ public abstract class ProcessorBase {
         } catch (EventBusException e) {
             log.error("Failed to post Payment event event for account {} ", accountId, e);
         }
+    }
+
+    protected Invoice rebalanceAndGetInvoice(final UUID accountId, final UUID invoiceId, final InternalCallContext context) throws InvoiceApiException {
+        invoiceApi.consumeExistingCBAOnAccountWithUnpaidInvoices(accountId, context);
+        final Invoice invoice = invoiceApi.getInvoiceById(invoiceId, context);
+        return invoice;
     }
 
     public interface WithAccountLockCallback<T> {
