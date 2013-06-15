@@ -17,8 +17,6 @@
 package com.ning.billing.osgi.api;
 
 import com.ning.billing.account.api.AccountUserApi;
-import com.ning.billing.analytics.api.sanity.AnalyticsSanityApi;
-import com.ning.billing.analytics.api.user.AnalyticsUserApi;
 import com.ning.billing.catalog.api.CatalogUserApi;
 import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi;
 import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
@@ -51,9 +49,6 @@ public interface OSGIKillbill {
      */
     public AccountUserApi getAccountUserApi();
 
-    public AnalyticsSanityApi getAnalyticsSanityApi();
-
-    public AnalyticsUserApi getAnalyticsUserApi();
 
     public CatalogUserApi getCatalogUserApi();
 

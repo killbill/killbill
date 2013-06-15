@@ -19,8 +19,6 @@ package com.ning.billing.osgi;
 import javax.inject.Inject;
 
 import com.ning.billing.account.api.AccountUserApi;
-import com.ning.billing.analytics.api.sanity.AnalyticsSanityApi;
-import com.ning.billing.analytics.api.user.AnalyticsUserApi;
 import com.ning.billing.catalog.api.CatalogUserApi;
 import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi;
 import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
@@ -45,8 +43,6 @@ import com.ning.billing.util.api.TagUserApi;
 public class DefaultOSGIKillbill implements OSGIKillbill {
 
     private final AccountUserApi accountUserApi;
-    private final AnalyticsSanityApi analyticsSanityApi;
-    private final AnalyticsUserApi analyticsUserApi;
     private final CatalogUserApi catalogUserApi;
     private final EntitlementMigrationApi entitlementMigrationApi;
     private final EntitlementTimelineApi entitlementTimelineApi;
@@ -70,8 +66,6 @@ public class DefaultOSGIKillbill implements OSGIKillbill {
 
     @Inject
     public DefaultOSGIKillbill(final AccountUserApi accountUserApi,
-                               final AnalyticsSanityApi analyticsSanityApi,
-                               final AnalyticsUserApi analyticsUserApi,
                                final CatalogUserApi catalogUserApi,
                                final EntitlementMigrationApi entitlementMigrationApi,
                                final EntitlementTimelineApi entitlementTimelineApi,
@@ -92,8 +86,6 @@ public class DefaultOSGIKillbill implements OSGIKillbill {
                                final RecordIdApi recordIdApi,
                                final PluginConfigServiceApi configServiceApi) {
         this.accountUserApi = accountUserApi;
-        this.analyticsSanityApi = analyticsSanityApi;
-        this.analyticsUserApi = analyticsUserApi;
         this.catalogUserApi = catalogUserApi;
         this.entitlementMigrationApi = entitlementMigrationApi;
         this.entitlementTimelineApi = entitlementTimelineApi;
@@ -118,16 +110,6 @@ public class DefaultOSGIKillbill implements OSGIKillbill {
     @Override
     public AccountUserApi getAccountUserApi() {
         return accountUserApi;
-    }
-
-    @Override
-    public AnalyticsSanityApi getAnalyticsSanityApi() {
-        return analyticsSanityApi;
-    }
-
-    @Override
-    public AnalyticsUserApi getAnalyticsUserApi() {
-        return analyticsUserApi;
     }
 
     @Override

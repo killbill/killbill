@@ -25,7 +25,6 @@ import org.skife.config.ConfigSource;
 import com.ning.billing.GuicyKillbillTestWithEmbeddedDBModule;
 import com.ning.billing.account.api.AccountService;
 import com.ning.billing.account.glue.DefaultAccountModule;
-import com.ning.billing.analytics.setup.AnalyticsModule;
 import com.ning.billing.beatrix.DefaultBeatrixService;
 import com.ning.billing.beatrix.bus.api.ExternalBus;
 import com.ning.billing.beatrix.extbus.BeatrixListener;
@@ -112,7 +111,6 @@ public class BeatrixIntegrationModule extends AbstractModule {
         install(new TagStoreModule());
         install(new CustomFieldModule());
         install(new DefaultAccountModule(configSource));
-        install(new AnalyticsModule(configSource));
         install(new CatalogModule(configSource));
         install(new DefaultEntitlementModule(configSource));
         install(new DefaultInvoiceModuleWithSwitchRepairLogic(configSource));

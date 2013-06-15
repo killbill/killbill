@@ -38,7 +38,6 @@ import org.testng.annotations.BeforeSuite;
 import com.ning.billing.GuicyKillbillTestWithEmbeddedDBModule;
 import com.ning.billing.KillbillConfigSource;
 import com.ning.billing.account.glue.DefaultAccountModule;
-import com.ning.billing.analytics.setup.AnalyticsModule;
 import com.ning.billing.api.TestApiListener;
 import com.ning.billing.beatrix.glue.BeatrixModule;
 import com.ning.billing.catalog.glue.CatalogModule;
@@ -184,10 +183,6 @@ public class TestJaxrsBase extends KillbillClient {
             Modules.override(new com.ning.billing.payment.setup.PaymentModule()).with(new PaymentMockModule());
             */
 
-            configSource.setProperty(AnalyticsModule.ANALYTICS_DBI_CONFIG_STRING + "url", helper.getJdbcConnectionString());
-            configSource.setProperty(AnalyticsModule.ANALYTICS_DBI_CONFIG_STRING + "user", DBTestingHelper.USERNAME);
-            configSource.setProperty(AnalyticsModule.ANALYTICS_DBI_CONFIG_STRING + "password", DBTestingHelper.PASSWORD);
-
             install(new GuicyKillbillTestWithEmbeddedDBModule());
 
 
@@ -206,7 +201,6 @@ public class TestJaxrsBase extends KillbillClient {
             install(new InvoiceModuleWithMockSender(configSource));
             install(new TemplateModule());
             install(new DefaultEntitlementModule(configSource));
-            install(new AnalyticsModule(configSource));
             install(new PaymentMockModule(configSource));
             install(new BeatrixModule());
             install(new DefaultJunctionModule(configSource));

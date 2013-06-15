@@ -22,7 +22,6 @@ import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.IDBI;
 
 import com.ning.billing.account.glue.DefaultAccountModule;
-import com.ning.billing.analytics.setup.AnalyticsModule;
 import com.ning.billing.beatrix.glue.BeatrixModule;
 import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
@@ -131,7 +130,6 @@ public class KillbillServerModule extends AbstractModule {
         install(new DefaultInvoiceModule(configSource));
         install(new TemplateModule());
         install(new DefaultEntitlementModule(configSource));
-        install(new AnalyticsModule(configSource));
         install(new PaymentModule(configSource));
         install(new BeatrixModule());
         install(new DefaultJunctionModule(configSource));

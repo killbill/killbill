@@ -20,8 +20,6 @@ import org.osgi.framework.BundleContext;
 import org.osgi.util.tracker.ServiceTracker;
 
 import com.ning.billing.account.api.AccountUserApi;
-import com.ning.billing.analytics.api.sanity.AnalyticsSanityApi;
-import com.ning.billing.analytics.api.user.AnalyticsUserApi;
 import com.ning.billing.catalog.api.CatalogUserApi;
 import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi;
 import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
@@ -69,27 +67,6 @@ public class OSGIKillbillAPI extends OSGIKillbillLibraryBase implements OSGIKill
                 return service.getAccountUserApi();
             }
         });
-    }
-
-    @Override
-    public AnalyticsSanityApi getAnalyticsSanityApi() {
-        return withServiceTracker(killbillTracker, new APICallback<AnalyticsSanityApi, OSGIKillbill>(KILLBILL_SERVICE_NAME) {
-            @Override
-            public AnalyticsSanityApi executeWithService(final OSGIKillbill service) {
-                return service.getAnalyticsSanityApi();
-            }
-        });
-    }
-
-    @Override
-    public AnalyticsUserApi getAnalyticsUserApi() {
-        return withServiceTracker(killbillTracker, new APICallback<AnalyticsUserApi, OSGIKillbill>(KILLBILL_SERVICE_NAME) {
-            @Override
-            public AnalyticsUserApi executeWithService(final OSGIKillbill service) {
-                return service.getAnalyticsUserApi();
-            }
-        });
-
     }
 
     @Override

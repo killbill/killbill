@@ -164,11 +164,6 @@
         </dependency>
         <dependency>
             <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-analytics</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.ning.billing</groupId>
             <artifactId>killbill-overdue</artifactId>
             <scope>test</scope>
         </dependency>
