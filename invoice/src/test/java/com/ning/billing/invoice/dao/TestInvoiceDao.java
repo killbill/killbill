@@ -605,16 +605,16 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         final RecurringInvoiceItem item2 = new RecurringInvoiceItem(invoice.getId(), accountId, bundleId, UUID.randomUUID(), "test plan", "test phase B", startDate,
                                                                     endDate, amount, amount, Currency.USD);
         invoiceUtil.createInvoiceItem(item2, internalCallContext);
-        BigDecimal balance = invoiceDao.getAccountBalance(accountId, internalCallContext);
-        assertEquals(balance.compareTo(new BigDecimal("20.00")), 0);
+        BigDecimal balancePriorRefund = invoiceDao.getAccountBalance(accountId, internalCallContext);
+        assertEquals(balancePriorRefund.compareTo(new BigDecimal("20.00")), 0);
 
         // Pay the whole thing
         final UUID paymentId = UUID.randomUUID();
         final BigDecimal payment1 = amount;
         final InvoicePayment payment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentId, invoice.getId(), new DateTime(), payment1, Currency.USD);
         invoiceUtil.createPayment(payment, internalCallContext);
-        balance = invoiceDao.getAccountBalance(accountId, internalCallContext);
-        assertEquals(balance.compareTo(new BigDecimal("0.00")), 0);
+        balancePriorRefund = invoiceDao.getAccountBalance(accountId, internalCallContext);
+        assertEquals(balancePriorRefund.compareTo(new BigDecimal("0.00")), 0);
 
         // Repair the item (And add CBA item that should be generated)
         final InvoiceItem repairItem = new RepairAdjInvoiceItem(invoice.getId(), accountId, startDate, endDate, amount.negate(), Currency.USD, item2.getId());
@@ -624,25 +624,37 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         invoiceUtil.createInvoiceItem(cbaItem, internalCallContext);
 
         final Map<UUID, BigDecimal> itemAdjustment = new HashMap<UUID, BigDecimal>();
-        itemAdjustment.put(item2.getId(), refundAmount);
+        // PAss a null value to let invoice calculate the amount to adjust
+        itemAdjustment.put(item2.getId(), null);
 
         invoiceDao.createRefund(paymentId, refundAmount, true, itemAdjustment, UUID.randomUUID(), internalCallContext);
-        balance = invoiceDao.getAccountBalance(accountId, internalCallContext);
+        balancePriorRefund = invoiceDao.getAccountBalance(accountId, internalCallContext);
 
         final boolean partialRefund = refundAmount.compareTo(amount) < 0;
         final BigDecimal cba = invoiceDao.getAccountCBA(accountId, internalCallContext);
         final InvoiceModelDao savedInvoice = invoiceDao.getById(invoice.getId(), internalCallContext);
 
-        final BigDecimal expectedCba = balance.compareTo(BigDecimal.ZERO) < 0 ? balance.negate() : BigDecimal.ZERO;
+        final BigDecimal expectedCba = balancePriorRefund.compareTo(BigDecimal.ZERO) < 0 ? balancePriorRefund.negate() : BigDecimal.ZERO;
         assertEquals(cba.compareTo(expectedCba), 0);
+
+        // Let's re-calculate them from invoice
+        final BigDecimal balanceAfterRefund = invoiceDao.getAccountBalance(accountId, internalCallContext);
+        final BigDecimal cbaAfterRefund = invoiceDao.getAccountCBA(accountId, internalCallContext);
+
         if (partialRefund) {
             // IB = 20 (rec) - 20 (repair) + 20 (cba) - (20 -7) = 7;  AB = IB - CBA = 7 - 20 = -13
-            assertEquals(balance.compareTo(new BigDecimal("-13.0")), 0);
+            assertEquals(balancePriorRefund.compareTo(new BigDecimal("-13.0")), 0);
             assertEquals(savedInvoice.getInvoiceItems().size(), 4);
+            assertEquals(balanceAfterRefund.compareTo(new BigDecimal("-13.0")), 0);
+            assertEquals(cbaAfterRefund.compareTo(expectedCba), 0);
         } else {
-            assertEquals(balance.compareTo(new BigDecimal("0.0")), 0);
+            assertEquals(balancePriorRefund.compareTo(new BigDecimal("0.0")), 0);
             assertEquals(savedInvoice.getInvoiceItems().size(), 4);
+            assertEquals(balanceAfterRefund.compareTo(BigDecimal.ZERO), 0);
+            assertEquals(cbaAfterRefund.compareTo(expectedCba), 0);
         }
+
+
     }
 
     @Test(groups = "slow")

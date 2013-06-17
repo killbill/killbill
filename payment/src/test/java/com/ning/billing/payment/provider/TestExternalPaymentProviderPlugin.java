@@ -61,44 +61,6 @@ public class TestExternalPaymentProviderPlugin extends PaymentTestSuiteNoDB {
         Assert.assertEquals(paymentInfoPlugin.getStatus(), PaymentPluginStatus.PROCESSED);
 
         final PaymentInfoPlugin retrievedPaymentInfoPlugin = plugin.getPaymentInfo(accountId, paymentId, callContext);
-        Assert.assertEquals(retrievedPaymentInfoPlugin, paymentInfoPlugin);
-    }
-
-    @Test(groups = "fast", expectedExceptions = PaymentPluginApiException.class)
-    public void testRefundForNonExistingPayment() throws Exception {
-        plugin.processRefund(UUID.randomUUID(), UUID.randomUUID(), BigDecimal.ONE, Currency.GBP, callContext);
-    }
-
-    @Test(groups = "fast", expectedExceptions = PaymentPluginApiException.class)
-    public void testRefundTooLarge() throws Exception {
-
-        final UUID accountId = UUID.randomUUID();
-        final UUID paymentId = UUID.randomUUID();
-        final UUID paymentMethodId = UUID.randomUUID();
-
-        plugin.processPayment(accountId, paymentId, paymentMethodId, BigDecimal.ZERO, Currency.EUR, callContext);
-        plugin.processRefund(accountId, paymentId, BigDecimal.ONE, Currency.EUR, callContext);
-    }
-
-    @Test(groups = "fast")
-    public void testRefundTooLargeMultipleTimes() throws Exception {
-
-        final UUID accountId = UUID.randomUUID();
-        final UUID paymentId = UUID.randomUUID();
-        final UUID paymentMethodId = UUID.randomUUID();
-
-        plugin.processPayment(accountId, paymentId, paymentMethodId, BigDecimal.TEN, Currency.EUR, callContext);
-
-        final Account account = Mockito.mock(Account.class);
-        for (int i = 0; i < 10; i++) {
-            plugin.processRefund(accountId, paymentId, BigDecimal.ONE, Currency.EUR, callContext);
-        }
-
-        try {
-            plugin.processRefund(accountId, paymentId, BigDecimal.ONE, Currency.EUR, callContext);
-            Assert.fail("Shouldn't have been able to refund");
-        } catch (PaymentPluginApiException e) {
-            Assert.assertTrue(true);
-        }
+        Assert.assertEquals(retrievedPaymentInfoPlugin.getStatus(), PaymentPluginStatus.PROCESSED);
     }
 }
