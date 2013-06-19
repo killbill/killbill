@@ -14,63 +14,140 @@
   ~ License for the specific language governing permissions and limitations
   ~ under the License.
   -->
-
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>com.ning.billing</groupId>
         <artifactId>killbill</artifactId>
+        <groupId>com.ning.billing</groupId>
         <version>0.2.6-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>killbill-server</artifactId>
-    <name>killbill-server</name>
     <packaging>war</packaging>
+    <name>killbill-server</name>
     <dependencies>
         <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-http</artifactId>
-            <scope>test</scope>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-io</artifactId>
-            <scope>test</scope>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-core</artifactId>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-util</artifactId>
-            <scope>test</scope>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-server</artifactId>
-            <scope>test</scope>
+            <groupId>com.google.inject</groupId>
+            <artifactId>guice</artifactId>
+            <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-deploy</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-jmx</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-xml</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.weakref</groupId>
-            <artifactId>jmxutils</artifactId>
-            <version>1.12</version>
+            <!-- Needed by jmxutils -->
+            <groupId>com.google.inject.extensions</groupId>
+            <artifactId>guice-multibindings</artifactId>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.google.inject.extensions</groupId>
             <artifactId>guice-servlet</artifactId>
             <version>${guice.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.ning</groupId>
+            <artifactId>async-http-client</artifactId>
+            <version>${async-http-client.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-account</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-beatrix</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-beatrix</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-catalog</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-entitlement</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-invoice</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-jaxrs</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-junction</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-osgi</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-overdue</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-payment</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-payment</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-tenant</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-usage</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-util</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-util</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.jetty</groupId>
+            <artifactId>ning-service-skeleton-base</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.jetty</groupId>
+            <artifactId>ning-service-skeleton-jdbi</artifactId>
         </dependency>
         <dependency>
             <groupId>com.yammer.metrics</groupId>
@@ -85,124 +162,6 @@
             <artifactId>javax.servlet-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.ning.jetty</groupId>
-            <artifactId>ning-service-skeleton-base</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.ning.jetty</groupId>
-            <artifactId>ning-service-skeleton-jdbi</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.ning</groupId>
-            <artifactId>async-http-client</artifactId>
-            <version>${async-http-client.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>jcl-over-slf4j</artifactId>
-            <version>${slf4j.version}</version>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-core</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-account</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-jaxrs</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-beatrix</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-util</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-entitlement</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-invoice</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-payment</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-catalog</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-junction</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-overdue</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-tenant</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-usage</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-osgi</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.google.inject</groupId>
-            <artifactId>guice</artifactId>
-            <scope>compile</scope>
-        </dependency>
-        <dependency><!-- Needed by jmxutils -->
-            <groupId>com.google.inject.extensions</groupId>
-            <artifactId>guice-multibindings</artifactId>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.antlr</groupId>
-            <artifactId>stringtemplate</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.skife.config</groupId>
-            <artifactId>config-magic</artifactId>
-        </dependency>
-        <dependency>
             <groupId>javax.ws.rs</groupId>
             <artifactId>jsr311-api</artifactId>
         </dependency>
@@ -211,31 +170,9 @@
             <artifactId>joda-time</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.shiro</groupId>
-            <artifactId>shiro-web</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.testng</groupId>
-            <artifactId>testng</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-util</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-beatrix</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-payment</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>mysql</groupId>
@@ -248,14 +185,77 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
+            <groupId>org.antlr</groupId>
+            <artifactId>stringtemplate</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.shiro</groupId>
+            <artifactId>shiro-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-deploy</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-http</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-io</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-jmx</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-server</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-util</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-xml</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-all</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.skife.config</groupId>
+            <artifactId>config-magic</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl-over-slf4j</artifactId>
+            <version>${slf4j.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.weakref</groupId>
+            <artifactId>jmxutils</artifactId>
+            <version>1.12</version>
         </dependency>
     </dependencies>
     <build>
@@ -281,14 +281,29 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>2.4</version>
+                <executions>
+                    <execution>
+                        <!-- We would like to be able to run the war, jar and jettyconsole plugins at the same time;
+                         and we could, except they rely on a strict ordering (jettyconsole has to run after the war and
+                         before the jar, or jettyconsole won't find the war artifact). This could be done by relying
+                         on the declaration ordering of the various plugins (all have to be bound to the package phase),
+                         but that's fragile. Instead, ignore altogether the jar for now, until maven is smarter. -->
+                        <phase>pierre-s-hack-for-maven</phase>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
                 <executions>
                     <execution>
                         <id>assemble-killbill</id>
+                        <phase>package</phase>
                         <goals>
                             <goal>shade</goal>
                         </goals>
-                        <phase>package</phase>
                         <configuration>
                             <createSourcesJar>true</createSourcesJar>
                             <shadedArtifactAttached>true</shadedArtifactAttached>
@@ -303,30 +318,19 @@
                 </executions>
             </plugin>
             <plugin>
-                <!-- To make eclipse happy -->
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-resources-plugin</artifactId>
-            </plugin>
-            <plugin>
                 <groupId>org.mortbay.jetty</groupId>
                 <artifactId>jetty-maven-plugin</artifactId>
                 <version>${jetty.version}</version>
                 <dependencies>
-                    <!-- Needed to redirect Jetty logs to slf4j -->
-                    <dependency>
-                        <groupId>org.slf4j</groupId>
-                        <artifactId>slf4j-api</artifactId>
-                        <version>${slf4j.version}</version>
-                    </dependency>
                     <dependency>
                         <groupId>ch.qos.logback</groupId>
-                        <artifactId>logback-core</artifactId>
+                        <artifactId>logback-classic</artifactId>
                         <version>${logback.version}</version>
                         <scope>runtime</scope>
                     </dependency>
                     <dependency>
                         <groupId>ch.qos.logback</groupId>
-                        <artifactId>logback-classic</artifactId>
+                        <artifactId>logback-core</artifactId>
                         <version>${logback.version}</version>
                         <scope>runtime</scope>
                     </dependency>
@@ -339,6 +343,12 @@
                         <groupId>org.eclipse.jetty</groupId>
                         <artifactId>jetty-jmx</artifactId>
                         <version>${jetty.version}</version>
+                    </dependency>
+                    <!-- Needed to redirect Jetty logs to slf4j -->
+                    <dependency>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-api</artifactId>
+                        <version>${slf4j.version}</version>
                     </dependency>
                 </dependencies>
                 <configuration>
