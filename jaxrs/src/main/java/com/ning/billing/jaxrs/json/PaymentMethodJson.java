@@ -129,12 +129,6 @@ public class PaymentMethodJson {
                     }
 
                     @Override
-                    public String getValueString(final String key) {
-                        // N/A
-                        return null;
-                    }
-
-                    @Override
                     public String getType() {
                         // N/A
                         return null;

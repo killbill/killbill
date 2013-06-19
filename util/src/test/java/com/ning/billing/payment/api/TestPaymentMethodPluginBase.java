@@ -34,11 +34,6 @@ public class TestPaymentMethodPluginBase implements PaymentMethodPlugin {
     }
 
     @Override
-    public String getValueString(final String key) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public String getType() {
         return "CreditCard";
     }

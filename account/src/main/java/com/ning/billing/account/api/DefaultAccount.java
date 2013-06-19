@@ -416,6 +416,6 @@ public class DefaultAccount extends EntityBase implements Account {
 
     @Override
     public BlockingState getBlockingState() {
-        throw new UnsupportedOperationException();
+        return null;
     }
 }
