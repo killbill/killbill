@@ -28,7 +28,6 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.account.api.AccountUserApi;
-import com.ning.billing.account.api.MigrationAccountData;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.mock.MockAccountBuilder;
 import com.ning.billing.util.callcontext.CallContext;
@@ -139,14 +138,6 @@ public class MockAccountUserApi implements AccountUserApi {
     @Override
     public void updateAccount(final Account account, final CallContext context) {
         throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Account migrateAccount(final MigrationAccountData data, final CallContext context)
-            throws AccountApiException {
-        final Account result = new MockAccountBuilder(data).build();
-        accounts.add(result);
-        return result;
     }
 
     @Override

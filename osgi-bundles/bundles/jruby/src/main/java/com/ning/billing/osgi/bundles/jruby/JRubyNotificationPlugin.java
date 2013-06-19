@@ -20,7 +20,7 @@ import org.jruby.Ruby;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.log.LogService;
 
-import com.ning.billing.beatrix.bus.api.ExtBusEvent;
+import com.ning.billing.notification.plugin.api.ExtBusEvent;
 import com.ning.billing.notification.plugin.api.NotificationPluginApi;
 import com.ning.billing.osgi.api.config.PluginRubyConfig;
 import com.ning.billing.payment.plugin.api.PaymentPluginApiException;

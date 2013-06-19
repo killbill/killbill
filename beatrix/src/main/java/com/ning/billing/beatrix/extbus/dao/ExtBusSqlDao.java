@@ -36,7 +36,7 @@ import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTempla
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import com.ning.billing.ObjectType;
-import com.ning.billing.beatrix.bus.api.ExtBusEventType;
+import com.ning.billing.notification.plugin.api.ExtBusEventType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.InternalTenantContextBinder;

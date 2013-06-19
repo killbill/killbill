@@ -118,11 +118,6 @@ public class DefaultOSGIKillbill implements OSGIKillbill {
     }
 
     @Override
-    public EntitlementMigrationApi getEntitlementMigrationApi() {
-        return entitlementMigrationApi;
-    }
-
-    @Override
     public EntitlementTimelineApi getEntitlementTimelineApi() {
         return entitlementTimelineApi;
     }
@@ -135,11 +130,6 @@ public class DefaultOSGIKillbill implements OSGIKillbill {
     @Override
     public EntitlementUserApi getEntitlementUserApi() {
         return entitlementUserApi;
-    }
-
-    @Override
-    public InvoiceMigrationApi getInvoiceMigrationApi() {
-        return invoiceMigrationApi;
     }
 
     @Override

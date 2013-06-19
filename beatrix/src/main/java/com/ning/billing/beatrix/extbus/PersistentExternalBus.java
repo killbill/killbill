@@ -29,10 +29,10 @@ import org.slf4j.LoggerFactory;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.beatrix.bus.api.ExtBusEvent;
 import com.ning.billing.beatrix.bus.api.ExternalBus;
 import com.ning.billing.beatrix.extbus.dao.ExtBusEventEntry;
 import com.ning.billing.beatrix.extbus.dao.ExtBusSqlDao;
+import com.ning.billing.notification.plugin.api.ExtBusEvent;
 import com.ning.billing.util.Hostname;
 import com.ning.billing.util.bus.DefaultBusService;
 import com.ning.billing.util.bus.PersistentBusConfig;

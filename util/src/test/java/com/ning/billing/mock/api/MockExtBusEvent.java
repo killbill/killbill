@@ -19,8 +19,8 @@ package com.ning.billing.mock.api;
 import java.util.UUID;
 
 import com.ning.billing.ObjectType;
-import com.ning.billing.beatrix.bus.api.ExtBusEvent;
-import com.ning.billing.beatrix.bus.api.ExtBusEventType;
+import com.ning.billing.notification.plugin.api.ExtBusEvent;
+import com.ning.billing.notification.plugin.api.ExtBusEventType;
 
 /**
  * Used for Jruby plugin that import util test package for default implementation of interfaces in api.

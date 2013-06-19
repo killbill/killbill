@@ -21,8 +21,6 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import org.joda.time.DateTime;
-
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
@@ -31,7 +29,6 @@ import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.account.api.DefaultAccountEmail;
-import com.ning.billing.account.api.MigrationAccountData;
 import com.ning.billing.account.dao.AccountDao;
 import com.ning.billing.account.dao.AccountEmailModelDao;
 import com.ning.billing.account.dao.AccountModelDao;
@@ -139,27 +136,6 @@ public class DefaultAccountUserApi implements AccountUserApi {
         final AccountModelDao accountToUpdate = new AccountModelDao(currentAccount.getId(), updatedAccount.mergeWithDelegate(currentAccount));
 
         accountDao.update(accountToUpdate, internalCallContextFactory.createInternalCallContext(accountToUpdate.getId(), context));
-    }
-
-    @Override
-    public Account migrateAccount(final MigrationAccountData data, final CallContext context) throws AccountApiException {
-        // Create a special (migration) context
-        final DateTime createdDate = data.getCreatedDate() == null ? context.getCreatedDate() : data.getCreatedDate();
-        final DateTime updatedDate = data.getUpdatedDate() == null ? context.getUpdatedDate() : data.getUpdatedDate();
-        final CallContext migrationContext = callContextFactory.toMigrationCallContext(context, createdDate, updatedDate);
-
-        // Create the account
-        final Account account = createAccount(data, migrationContext);
-
-        // Add associated contact emails
-        // In Killbill, we never return null for empty lists, but MigrationAccountData is implemented outside of Killbill
-        if (data.getAdditionalContactEmails() != null) {
-            for (final String cur : data.getAdditionalContactEmails()) {
-                addEmail(account.getId(), new DefaultAccountEmail(account.getId(), cur), migrationContext);
-            }
-        }
-
-        return account;
     }
 
     @Override

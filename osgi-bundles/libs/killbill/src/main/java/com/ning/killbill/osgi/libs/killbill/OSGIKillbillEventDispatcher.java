@@ -24,7 +24,7 @@ import java.util.Observer;
 import org.osgi.framework.BundleContext;
 import org.osgi.util.tracker.ServiceTracker;
 
-import com.ning.billing.beatrix.bus.api.ExtBusEvent;
+import com.ning.billing.notification.plugin.api.ExtBusEvent;
 
 public class OSGIKillbillEventDispatcher extends OSGIKillbillLibraryBase {
 

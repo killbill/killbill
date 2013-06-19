@@ -26,64 +26,42 @@
     <artifactId>killbill-server</artifactId>
     <name>killbill-server</name>
     <packaging>war</packaging>
-
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <guice.version>3.0</guice.version>
-        <jersey.version>1.12</jersey.version>
-        <jetty.version>8.1.2.v20120308</jetty.version>
-        <logback.version>1.0.1</logback.version>
-        <metrics.version>2.1.2</metrics.version>
-        <skeleton.version>0.1.7</skeleton.version>
-        <async-http-client.version>1.7.1</async-http-client.version>
-    </properties>
-
     <dependencies>
-        <!-- Jetty test scope -->
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-http</artifactId>
-            <version>${jetty.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-io</artifactId>
-            <version>${jetty.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-util</artifactId>
-            <version>${jetty.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-server</artifactId>
-            <version>${jetty.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-deploy</artifactId>
-            <version>${jetty.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-jmx</artifactId>
-            <version>${jetty.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-xml</artifactId>
-            <version>${jetty.version}</version>
             <scope>test</scope>
         </dependency>
-
-        <!-- NOT in master POM; include version as well -->
         <dependency>
             <groupId>org.weakref</groupId>
             <artifactId>jmxutils</artifactId>
@@ -97,22 +75,10 @@
         <dependency>
             <groupId>com.yammer.metrics</groupId>
             <artifactId>metrics-core</artifactId>
-            <version>${metrics.version}</version>
         </dependency>
         <dependency>
             <groupId>com.yammer.metrics</groupId>
             <artifactId>metrics-guice</artifactId>
-            <version>${metrics.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.sun.jersey</groupId>
-            <artifactId>jersey-server</artifactId>
-            <version>${jersey.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.sun.jersey.contribs</groupId>
-            <artifactId>jersey-guice</artifactId>
-            <version>${jersey.version}</version>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>
@@ -121,12 +87,10 @@
         <dependency>
             <groupId>com.ning.jetty</groupId>
             <artifactId>ning-service-skeleton-base</artifactId>
-            <version>${skeleton.version}</version>
         </dependency>
         <dependency>
             <groupId>com.ning.jetty</groupId>
             <artifactId>ning-service-skeleton-jdbi</artifactId>
-            <version>${skeleton.version}</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -146,17 +110,13 @@
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-core</artifactId>
-            <version>${logback.version}</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
-            <version>${logback.version}</version>
             <scope>runtime</scope>
         </dependency>
-
-        <!-- FROM MASTER POM / LIBRARY -->
         <dependency>
             <groupId>com.ning.billing</groupId>
             <artifactId>killbill-api</artifactId>
@@ -308,7 +268,6 @@
             <plugin>
                 <groupId>io.tesla.jettyconsole</groupId>
                 <artifactId>jetty-console-maven-plugin</artifactId>
-                <version>1.47</version>
                 <executions>
                     <execution>
                         <goals>
@@ -349,14 +308,6 @@
                 <artifactId>maven-resources-plugin</artifactId>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-war-plugin</artifactId>
-                <version>2.1.1</version>
-                <configuration>
-                    <attachClasses>true</attachClasses>
-                </configuration>
-            </plugin>
-            <plugin>
                 <groupId>org.mortbay.jetty</groupId>
                 <artifactId>jetty-maven-plugin</artifactId>
                 <version>${jetty.version}</version>
@@ -371,11 +322,13 @@
                         <groupId>ch.qos.logback</groupId>
                         <artifactId>logback-core</artifactId>
                         <version>${logback.version}</version>
+                        <scope>runtime</scope>
                     </dependency>
                     <dependency>
                         <groupId>ch.qos.logback</groupId>
                         <artifactId>logback-classic</artifactId>
                         <version>${logback.version}</version>
+                        <scope>runtime</scope>
                     </dependency>
                     <dependency>
                         <groupId>org.eclipse.jetty</groupId>

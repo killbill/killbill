@@ -32,22 +32,9 @@ import com.ning.billing.account.api.MigrationAccountData;
 import com.ning.billing.account.api.MutableAccountData;
 import com.ning.billing.catalog.api.Currency;
 
-import static com.ning.billing.account.AccountTestUtils.checkAccountsEqual;
-import static com.ning.billing.account.AccountTestUtils.createAccountData;
 import static com.ning.billing.account.AccountTestUtils.createTestAccount;
 
 public class TestDefaultAccountUserApi extends AccountTestSuiteWithEmbeddedDB {
-
-    @Test(groups = "slow")
-    public void testMigrate() throws Exception {
-        final MigrationAccountData accountData = new TestMigrationAccountData(createAccountData());
-        final Account account = accountUserApi.migrateAccount(accountData, callContext);
-        checkAccountsEqual(account.toMutableAccountData(), accountData);
-
-        // Make sure we can retrieve the migrated account
-        final Account retrievedAccount = accountUserApi.getAccountById(account.getId(), callContext);
-        checkAccountsEqual(retrievedAccount, account);
-    }
 
     @Test(groups = "slow")
     public void testShouldBeAbleToPassNullForSomeFieldsToAvoidUpdate() throws Exception {

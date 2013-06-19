@@ -24,7 +24,6 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.account.api.AccountUserApi;
-import com.ning.billing.account.api.MigrationAccountData;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.InternalTenantContext;
@@ -52,11 +51,6 @@ public class BlockingAccountUserApi implements AccountUserApi {
     public Account createAccount(final AccountData data, final CallContext context)
             throws AccountApiException {
         return userApi.createAccount(data, context);
-    }
-
-    @Override
-    public Account migrateAccount(final MigrationAccountData data, final CallContext context) throws AccountApiException {
-        return userApi.migrateAccount(data, context);
     }
 
     @Override

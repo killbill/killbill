@@ -21,11 +21,9 @@ import org.osgi.util.tracker.ServiceTracker;
 
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.api.CatalogUserApi;
-import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi;
 import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
 import com.ning.billing.entitlement.api.transfer.EntitlementTransferApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
-import com.ning.billing.invoice.api.InvoiceMigrationApi;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.junction.api.JunctionApi;
@@ -80,16 +78,6 @@ public class OSGIKillbillAPI extends OSGIKillbillLibraryBase implements OSGIKill
     }
 
     @Override
-    public EntitlementMigrationApi getEntitlementMigrationApi() {
-        return withServiceTracker(killbillTracker, new APICallback<EntitlementMigrationApi, OSGIKillbill>(KILLBILL_SERVICE_NAME) {
-            @Override
-            public EntitlementMigrationApi executeWithService(final OSGIKillbill service) {
-                return service.getEntitlementMigrationApi();
-            }
-        });
-    }
-
-    @Override
     public EntitlementTimelineApi getEntitlementTimelineApi() {
         return withServiceTracker(killbillTracker, new APICallback<EntitlementTimelineApi, OSGIKillbill>(KILLBILL_SERVICE_NAME) {
             @Override
@@ -115,16 +103,6 @@ public class OSGIKillbillAPI extends OSGIKillbillLibraryBase implements OSGIKill
             @Override
             public EntitlementUserApi executeWithService(final OSGIKillbill service) {
                 return service.getEntitlementUserApi();
-            }
-        });
-    }
-
-    @Override
-    public InvoiceMigrationApi getInvoiceMigrationApi() {
-        return withServiceTracker(killbillTracker, new APICallback<InvoiceMigrationApi, OSGIKillbill>(KILLBILL_SERVICE_NAME) {
-            @Override
-            public InvoiceMigrationApi executeWithService(final OSGIKillbill service) {
-                return service.getInvoiceMigrationApi();
             }
         });
     }

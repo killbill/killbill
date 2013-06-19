@@ -25,8 +25,8 @@ import javax.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ning.billing.beatrix.bus.api.ExtBusEvent;
 import com.ning.billing.jaxrs.json.NotificationJson;
+import com.ning.billing.notification.plugin.api.ExtBusEvent;
 import com.ning.billing.tenant.api.TenantApiException;
 import com.ning.billing.tenant.api.TenantKV.TenantKey;
 import com.ning.billing.tenant.api.TenantUserApi;

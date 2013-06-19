@@ -21,7 +21,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.service.log.LogService;
@@ -172,11 +171,9 @@ public class JRubyActivator extends KillbillActivatorBase {
         // See killbill/plugin.rb for the naming convention magic
         killbillUserApis.put("account_user_api", killbillAPI.getAccountUserApi());
         killbillUserApis.put("catalog_user_api", killbillAPI.getCatalogUserApi());
-        killbillUserApis.put("entitlement_migration_api", killbillAPI.getEntitlementMigrationApi());
         killbillUserApis.put("entitlement_timeline_api", killbillAPI.getEntitlementTimelineApi());
         killbillUserApis.put("entitlement_transfer_api", killbillAPI.getEntitlementTransferApi());
         killbillUserApis.put("entitlement_user_api", killbillAPI.getEntitlementUserApi());
-        killbillUserApis.put("invoice_migration_api", killbillAPI.getInvoiceMigrationApi());
         killbillUserApis.put("invoice_payment_api", killbillAPI.getInvoicePaymentApi());
         killbillUserApis.put("invoice_user_api", killbillAPI.getInvoiceUserApi());
         killbillUserApis.put("overdue_user_api", killbillAPI.getOverdueUserApi());

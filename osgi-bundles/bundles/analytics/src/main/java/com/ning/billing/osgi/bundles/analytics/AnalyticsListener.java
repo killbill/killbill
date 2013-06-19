@@ -25,10 +25,10 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.osgi.service.log.LogService;
 
-import com.ning.billing.beatrix.bus.api.ExtBusEvent;
 import com.ning.billing.commons.locker.GlobalLock;
 import com.ning.billing.commons.locker.GlobalLocker;
 import com.ning.billing.commons.locker.mysql.MySqlGlobalLocker;
+import com.ning.billing.notification.plugin.api.ExtBusEvent;
 import com.ning.billing.osgi.bundles.analytics.dao.AllBusinessObjectsDao;
 import com.ning.billing.osgi.bundles.analytics.dao.BusinessAccountDao;
 import com.ning.billing.osgi.bundles.analytics.dao.BusinessFieldDao;

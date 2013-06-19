@@ -16,7 +16,7 @@
 
 package com.ning.billing.jaxrs.json;
 
-import com.ning.billing.beatrix.bus.api.ExtBusEvent;
+import com.ning.billing.notification.plugin.api.ExtBusEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

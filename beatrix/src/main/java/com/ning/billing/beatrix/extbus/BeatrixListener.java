@@ -23,10 +23,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ning.billing.ObjectType;
-import com.ning.billing.beatrix.bus.api.ExtBusEventType;
 import com.ning.billing.beatrix.bus.api.ExternalBus;
 import com.ning.billing.beatrix.extbus.dao.ExtBusEventEntry;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
+import com.ning.billing.notification.plugin.api.ExtBusEventType;
 import com.ning.billing.util.Hostname;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.InternalCallContext;
@@ -41,14 +41,11 @@ import com.ning.billing.util.events.CustomFieldCreationEvent;
 import com.ning.billing.util.events.CustomFieldDeletionEvent;
 import com.ning.billing.util.events.InvoiceAdjustmentInternalEvent;
 import com.ning.billing.util.events.InvoiceCreationInternalEvent;
-import com.ning.billing.util.events.InvoiceInternalEvent;
 import com.ning.billing.util.events.OverdueChangeInternalEvent;
 import com.ning.billing.util.events.PaymentErrorInternalEvent;
 import com.ning.billing.util.events.PaymentInfoInternalEvent;
 import com.ning.billing.util.events.SubscriptionInternalEvent;
 import com.ning.billing.util.events.UserTagCreationInternalEvent;
-import com.ning.billing.util.events.UserTagDefinitionCreationInternalEvent;
-import com.ning.billing.util.events.UserTagDefinitionDeletionInternalEvent;
 import com.ning.billing.util.events.UserTagDeletionInternalEvent;
 import com.ning.billing.util.svcsapi.bus.InternalBus.EventBusException;
 
