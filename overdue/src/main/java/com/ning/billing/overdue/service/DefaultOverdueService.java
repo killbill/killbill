@@ -112,16 +112,11 @@ public class DefaultOverdueService implements OverdueService {
 
     @LifecycleHandlerType(LifecycleHandlerType.LifecycleLevel.INIT_SERVICE)
     public void initialize() {
+        registerForBus();
         notifier.initialize();
     }
 
-    @LifecycleHandlerType(LifecycleLevel.START_SERVICE)
-    public void start() {
-        notifier.start();
-    }
-
-    @LifecycleHandlerType(LifecycleHandlerType.LifecycleLevel.REGISTER_EVENTS)
-    public void registerForBus() {
+    private void registerForBus() {
         try {
             busService.getBus().register(listener);
         } catch (final EventBusException e) {
@@ -129,17 +124,18 @@ public class DefaultOverdueService implements OverdueService {
         }
     }
 
-    @LifecycleHandlerType(LifecycleHandlerType.LifecycleLevel.UNREGISTER_EVENTS)
-    public void unregisterForBus() {
+    @LifecycleHandlerType(LifecycleLevel.START_SERVICE)
+    public void start() {
+        notifier.start();
+    }
+
+    @LifecycleHandlerType(LifecycleLevel.STOP_SERVICE)
+    public void stop() {
         try {
             busService.getBus().unregister(listener);
         } catch (final EventBusException e) {
             log.error("Problem encountered registering OverdueListener on the Event Bus", e);
         }
-    }
-
-    @LifecycleHandlerType(LifecycleLevel.STOP_SERVICE)
-    public void stop() {
         notifier.stop();
     }
 }

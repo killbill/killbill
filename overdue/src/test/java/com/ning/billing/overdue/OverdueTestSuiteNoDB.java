@@ -91,9 +91,7 @@ public abstract class OverdueTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     @BeforeMethod(groups = "fast")
     public void beforeMethod() throws Exception {
         bus.start();
-
-        service.registerForBus();
-            service.initialize();
+        service.initialize();
         service.start();
     }
 

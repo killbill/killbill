@@ -101,13 +101,13 @@ public class TestLifecycle extends BeatrixTestSuite {
             incrementCount();
         }
 
-        @LifecycleHandlerType(LifecycleLevel.REGISTER_EVENTS)
+        @LifecycleHandlerType(LifecycleLevel.INIT_SERVICE)
         public void registerEvents() {
             log.info("Service2 : got REGISTER_EVENTS");
             incrementCount();
         }
 
-        @LifecycleHandlerType(LifecycleLevel.UNREGISTER_EVENTS)
+        @LifecycleHandlerType(LifecycleLevel.STOP_SERVICE)
         public void unregisterEvents() {
             log.info("Service2 : got UNREGISTER_EVENTS");
             incrementCount();

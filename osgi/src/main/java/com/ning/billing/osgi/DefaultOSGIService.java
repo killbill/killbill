@@ -18,12 +18,15 @@ package com.ning.billing.osgi;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import javax.inject.Inject;
 
 import org.apache.felix.framework.Felix;
 import org.apache.felix.framework.util.FelixConstants;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.launch.Framework;
@@ -48,6 +51,7 @@ public class DefaultOSGIService implements OSGIService {
     private final OSGIConfig osgiConfig;
     private final KillbillActivator killbillActivator;
     private final FileInstall fileInstall;
+    private final List<Bundle> installedBundles;
 
     private Framework framework;
 
@@ -58,6 +62,7 @@ public class DefaultOSGIService implements OSGIService {
         this.osgiConfig = osgiConfig;
         this.killbillActivator = killbillActivator;
         this.fileInstall = new FileInstall(osgiBundleFinder, pluginFinder, pluginConfigServiceApi);
+        this.installedBundles = new LinkedList<Bundle>();
         this.framework = null;
     }
 
@@ -66,7 +71,8 @@ public class DefaultOSGIService implements OSGIService {
         return OSGI_SERVICE_NAME;
     }
 
-    @LifecycleHandlerType(LifecycleLevel.INIT_SERVICE)
+
+    @LifecycleHandlerType(LifecycleLevel.INIT_PLUGIN)
     public void initialize() {
         try {
             // We start by deleting existing osi cache; we might optimize later keeping the cache
@@ -76,31 +82,28 @@ public class DefaultOSGIService implements OSGIService {
             this.framework = createAndInitFramework();
             framework.start();
 
-            // This will call the start() method for the bundles
-            fileInstall.installAndStartBundles(framework);
+            installedBundles.addAll(fileInstall.installBundles(framework));
         } catch (BundleException e) {
             logger.error("Failed to initialize Killbill OSGIService", e);
         }
+
     }
 
-    @LifecycleHandlerType(LifecycleHandlerType.LifecycleLevel.REGISTER_EVENTS)
-    public void registerForExternalEvents() throws Exception {
+    @LifecycleHandlerType(LifecycleLevel.START_PLUGIN)
+    public void start() {
+        // This will call the start() method for the bundles
+        fileInstall.startBundles(installedBundles);
     }
 
-    @LifecycleHandlerType(LifecycleHandlerType.LifecycleLevel.UNREGISTER_EVENTS)
-    public void unregisterForExternalEvents() {
-    }
 
-    @LifecycleHandlerType(LifecycleLevel.START_SERVICE)
-    public void startFramework() {
-    }
 
-    @LifecycleHandlerType(LifecycleLevel.STOP_SERVICE)
+    @LifecycleHandlerType(LifecycleLevel.STOP_PLUGIN)
     public void stop() {
         try {
             framework.stop();
             framework.waitForStop(0);
 
+            installedBundles.clear();
         } catch (BundleException e) {
             logger.error("Failed to Stop Killbill OSGIService " + e.getMessage());
         } catch (InterruptedException e) {

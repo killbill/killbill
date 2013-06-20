@@ -19,6 +19,7 @@ import javax.inject.Inject;
 
 import com.ning.billing.beatrix.bus.api.ExternalBus;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
+import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
 import com.ning.billing.server.notifications.PushNotificationListener;
 
 public class DefaultServerService implements ServerService {
@@ -40,12 +41,12 @@ public class DefaultServerService implements ServerService {
         return SERVER_SERVICE;
     }
 
-    @LifecycleHandlerType(LifecycleHandlerType.LifecycleLevel.REGISTER_EVENTS)
+    @LifecycleHandlerType(LifecycleLevel.INIT_SERVICE)
     public void registerForNotifications() {
         bus.register(pushNotificationListener);
     }
 
-    @LifecycleHandlerType(LifecycleHandlerType.LifecycleLevel.UNREGISTER_EVENTS)
+    @LifecycleHandlerType(LifecycleLevel.STOP_SERVICE)
     public void unregisterForNotifications() {
         bus.unregister(pushNotificationListener);
     }
