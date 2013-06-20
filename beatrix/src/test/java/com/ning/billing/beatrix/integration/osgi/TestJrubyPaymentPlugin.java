@@ -40,6 +40,8 @@ import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 import com.ning.billing.payment.plugin.api.RefundInfoPlugin;
 import com.ning.billing.payment.plugin.api.RefundPluginStatus;
 
+import static org.testng.Assert.assertEquals;
+
 public class TestJrubyPaymentPlugin extends TestOSGIBase {
 
     private final String BUNDLE_TEST_RESOURCE_PREFIX = "killbill-payment-test";
@@ -50,7 +52,7 @@ public class TestJrubyPaymentPlugin extends TestOSGIBase {
     @Inject
     private OSGIServiceRegistration<PaymentPluginApi> paymentPluginApiOSGIServiceRegistration;
 
-    @BeforeClass(groups = "slow", enabled = true)
+    @BeforeClass(groups = "slow")
     public void beforeClass() throws Exception {
 
 
@@ -84,10 +86,10 @@ public class TestJrubyPaymentPlugin extends TestOSGIBase {
         Assert.assertTrue(res.getEffectiveDate().compareTo(beforeCall) >= 0);
         Assert.assertTrue(res.getEffectiveDate().compareTo(afterCall) <= 0);
 
-        Assert.assertEquals(res.getGatewayError(), "gateway_error");
-        Assert.assertEquals(res.getGatewayErrorCode(), "gateway_error_code");
+        assertEquals(res.getGatewayError(), "gateway_error");
+        assertEquals(res.getGatewayErrorCode(), "gateway_error_code");
 
-        Assert.assertEquals(res.getStatus(), PaymentPluginStatus.PROCESSED);
+        assertEquals(res.getStatus(), PaymentPluginStatus.PROCESSED);
     }
 
     @Test(groups = "slow", enabled = true)
@@ -107,10 +109,10 @@ public class TestJrubyPaymentPlugin extends TestOSGIBase {
         Assert.assertTrue(res.getEffectiveDate().compareTo(beforeCall) >= 0);
         Assert.assertTrue(res.getEffectiveDate().compareTo(afterCall) <= 0);
 
-        Assert.assertEquals(res.getGatewayError(), "gateway_error");
-        Assert.assertEquals(res.getGatewayErrorCode(), "gateway_error_code");
+        assertEquals(res.getGatewayError(), "gateway_error");
+        assertEquals(res.getGatewayErrorCode(), "gateway_error_code");
 
-        Assert.assertEquals(res.getStatus(), PaymentPluginStatus.PROCESSED);
+        assertEquals(res.getStatus(), PaymentPluginStatus.PROCESSED);
     }
 
 
@@ -131,10 +133,10 @@ public class TestJrubyPaymentPlugin extends TestOSGIBase {
         Assert.assertTrue(res.getEffectiveDate().compareTo(beforeCall) >= 0);
         Assert.assertTrue(res.getEffectiveDate().compareTo(afterCall) <= 0);
 
-        Assert.assertEquals(res.getGatewayError(), "gateway_error");
-        Assert.assertEquals(res.getGatewayErrorCode(), "gateway_error_code");
+        assertEquals(res.getGatewayError(), "gateway_error");
+        assertEquals(res.getGatewayErrorCode(), "gateway_error_code");
 
-        Assert.assertEquals(res.getStatus(), RefundPluginStatus.PROCESSED);
+        assertEquals(res.getStatus(), RefundPluginStatus.PROCESSED);
     }
 
     @Test(groups = "slow", enabled = true)
@@ -162,9 +164,13 @@ public class TestJrubyPaymentPlugin extends TestOSGIBase {
         PaymentPluginApi api = getTestPluginPaymentApi();
         final PaymentMethodPlugin res = api.getPaymentMethodDetail(UUID.randomUUID(), UUID.randomUUID(), callContext);
 
-        Assert.assertEquals(res.getExternalPaymentMethodId(), "foo");
+        assertEquals(res.getExternalPaymentMethodId(), "external_payment_method_id");
         Assert.assertTrue(res.isDefaultPaymentMethod());
-        Assert.assertEquals(res.getProperties().size(), 0);
+        assertEquals(res.getProperties().size(), 2);
+        assertEquals(res.getProperties().get(0).getKey(), "key1");
+        assertEquals(res.getProperties().get(0).getValue(), "value1");
+        assertEquals(res.getProperties().get(1).getKey(), "key2");
+        assertEquals(res.getProperties().get(1).getValue(), "value2");
     }
 
     @Test(groups = "slow", enabled = true)
@@ -179,13 +185,16 @@ public class TestJrubyPaymentPlugin extends TestOSGIBase {
     public void testGetPaymentMethods() throws Exception {
 
         PaymentPluginApi api = getTestPluginPaymentApi();
-        final List<PaymentMethodInfoPlugin> res = api.getPaymentMethods(UUID.randomUUID(), true, callContext);
+        final UUID kbAccountId = UUID.randomUUID();
+        final List<PaymentMethodInfoPlugin> res = api.getPaymentMethods(kbAccountId, true, callContext);
 
-        Assert.assertEquals(res.size(), 1);
+        assertEquals(res.size(), 1);
 
         final PaymentMethodInfoPlugin res0 = res.get(0);
         Assert.assertTrue(res0.isDefault());
-        Assert.assertEquals(res0.getExternalPaymentMethodId(), "external_payment_method_id");
+        assertEquals(res0.getExternalPaymentMethodId(), "external_payment_method_id");
+        assertEquals(res0.getAccountId(), kbAccountId);
+        assertEquals(res0.getPaymentMethodId(), kbAccountId);
     }
 
 

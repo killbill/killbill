@@ -61,21 +61,6 @@ public class DefaultNoOpPaymentMethodPlugin implements PaymentMethodPlugin {
     }
 
     @Override
-    public String getValueString(final String key) {
-        if (props == null) {
-            return null;
-        }
-
-        for (final PaymentMethodKVInfo cur : props) {
-            if (cur.getKey().equals(key)) {
-                return cur.getValue().toString();
-            }
-        }
-
-        return null;
-    }
-
-    @Override
     public String getType() {
         return "noop";
     }

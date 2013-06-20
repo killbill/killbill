@@ -45,13 +45,4 @@ public class TestPaymentMethodPlugin extends TestPaymentMethodPluginBase impleme
         return properties;
     }
 
-    @Override
-    public String getValueString(final String key) {
-        for (PaymentMethodKVInfo cur : properties) {
-            if (cur.getKey().equals(key)) {
-                return cur.getValue() != null ? cur.getValue().toString() : null;
-            }
-        }
-        return null;
-    }
 }
