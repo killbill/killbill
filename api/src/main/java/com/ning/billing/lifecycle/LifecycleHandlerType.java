@@ -44,13 +44,17 @@ public @interface LifecycleHandlerType {
          */
         INIT_BUS(Sequence.STARTUP_PRE_EVENT_REGISTRATION),
         /**
+        * Start Felix Framework along with its system bundle
+        */
+        INIT_PLUGIN(Sequence.STARTUP_PRE_EVENT_REGISTRATION),
+        /**
          * Service specific initalization-- service does not start yet
          */
         INIT_SERVICE(Sequence.STARTUP_PRE_EVENT_REGISTRATION),
         /**
-         * Service register their interest in events
+         * Start all the plugins
          */
-        REGISTER_EVENTS(Sequence.STARTUP_PRE_EVENT_REGISTRATION),
+        START_PLUGIN(Sequence.STARTUP_PRE_EVENT_REGISTRATION),
         /**
          * Service start
          * - API call should not work
@@ -63,9 +67,9 @@ public @interface LifecycleHandlerType {
          */
         STOP_SERVICE(Sequence.SHUTDOWN_PRE_EVENT_UNREGISTRATION),
         /**
-         * Unregister interest in events
+         * Stop the plugins
          */
-        UNREGISTER_EVENTS(Sequence.SHUTDOWN_PRE_EVENT_UNREGISTRATION),
+        STOP_PLUGIN(Sequence.SHUTDOWN_PRE_EVENT_UNREGISTRATION),
         /**
          * Stop bus
          */

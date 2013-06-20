@@ -160,31 +160,47 @@ public class PersistentInternalBus extends PersistentQueueBase implements Intern
 
     @Override
     public void register(final Object handlerInstance) throws EventBusException {
-        eventBusDelegate.register(handlerInstance);
+        if (isStarted) {
+            eventBusDelegate.register(handlerInstance);
+        } else {
+            log.warn("Attempting to register handler " + handlerInstance + " in a non initialized bus");
+        }
     }
 
     @Override
     public void unregister(final Object handlerInstance) throws EventBusException {
-        eventBusDelegate.unregister(handlerInstance);
+        if (isStarted) {
+            eventBusDelegate.unregister(handlerInstance);
+        } else {
+            log.warn("Attempting to unregister handler " + handlerInstance + " in a non initialized bus");
+        }
     }
 
     @Override
     public void post(final BusInternalEvent event, final InternalCallContext context) throws EventBusException {
-        dao.inTransaction(TransactionIsolationLevel.READ_COMMITTED, new Transaction<Void, PersistentBusSqlDao>() {
-            @Override
-            public Void inTransaction(final PersistentBusSqlDao transactional,
-                                      final TransactionStatus status) throws Exception {
-                postFromTransaction(event, context, transactional);
-                return null;
-            }
-        });
+        if (isStarted) {
+            dao.inTransaction(TransactionIsolationLevel.READ_COMMITTED, new Transaction<Void, PersistentBusSqlDao>() {
+                @Override
+                public Void inTransaction(final PersistentBusSqlDao transactional,
+                                          final TransactionStatus status) throws Exception {
+                    postFromTransaction(event, context, transactional);
+                    return null;
+                }
+            });
+        } else {
+            log.warn("Attempting to post event " + event + " in a non initialized bus");
+        }
     }
 
     @Override
     public void postFromTransaction(final BusInternalEvent event, final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final InternalCallContext context)
             throws EventBusException {
         final PersistentBusSqlDao transactional = entitySqlDaoWrapperFactory.transmogrify(PersistentBusSqlDao.class);
-        postFromTransaction(event, context, transactional);
+        if (isStarted) {
+            postFromTransaction(event, context, transactional);
+        } else {
+            log.warn("Attempting to post event " + event + " in a non initialized bus");
+        }
     }
 
     private void postFromTransaction(final BusInternalEvent event, final InternalCallContext context, final PersistentBusSqlDao transactional) {

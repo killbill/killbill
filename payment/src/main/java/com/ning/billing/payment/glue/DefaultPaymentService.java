@@ -70,19 +70,15 @@ public class DefaultPaymentService implements PaymentService {
 
     @LifecycleHandlerType(LifecycleLevel.INIT_SERVICE)
     public void initialize() throws NotificationQueueAlreadyExists {
-        failedRetryService.initialize(SERVICE_NAME);
-        timedoutRetryService.initialize(SERVICE_NAME);
-        autoPayoffRetryService.initialize(SERVICE_NAME);
-    }
-
-    @LifecycleHandlerType(LifecycleHandlerType.LifecycleLevel.REGISTER_EVENTS)
-    public void registerForNotifications() {
         try {
             eventBus.register(invoiceHandler);
             eventBus.register(tagHandler);
         } catch (InternalBus.EventBusException e) {
             log.error("Unable to register with the EventBus!", e);
         }
+        failedRetryService.initialize(SERVICE_NAME);
+        timedoutRetryService.initialize(SERVICE_NAME);
+        autoPayoffRetryService.initialize(SERVICE_NAME);
     }
 
     @LifecycleHandlerType(LifecycleLevel.START_SERVICE)
@@ -94,6 +90,12 @@ public class DefaultPaymentService implements PaymentService {
 
     @LifecycleHandlerType(LifecycleLevel.STOP_SERVICE)
     public void stop() throws NoSuchNotificationQueue {
+        try {
+            eventBus.unregister(invoiceHandler);
+            eventBus.unregister(tagHandler);
+        } catch (InternalBus.EventBusException e) {
+            throw new RuntimeException("Unable to unregister to the EventBus!", e);
+        }
         failedRetryService.stop();
         timedoutRetryService.stop();
         autoPayoffRetryService.stop();

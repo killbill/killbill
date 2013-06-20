@@ -128,12 +128,10 @@ public abstract class InvoiceTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
 
     private void restartInvoiceService(final InvoiceService invoiceService) throws Exception {
         ((DefaultInvoiceService) invoiceService).initialize();
-        ((DefaultInvoiceService) invoiceService).registerForNotifications();
         ((DefaultInvoiceService) invoiceService).start();
     }
 
     private void stopInvoiceService(final InvoiceService invoiceService) throws Exception {
-        ((DefaultInvoiceService) invoiceService).unregisterForNotifications();
         ((DefaultInvoiceService) invoiceService).stop();
     }
 

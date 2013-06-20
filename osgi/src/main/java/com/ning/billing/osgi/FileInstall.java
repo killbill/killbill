@@ -66,26 +66,32 @@ public class FileInstall {
         this.pluginConfigServiceApi = pluginConfigServiceApi;
     }
 
-    public void installAndStartBundles(final Framework framework) {
-        try {
-            final BundleContext context = framework.getBundleContext();
 
+    public List<Bundle> installBundles(final Framework framework) {
+
+        final List<Bundle> installedBundles = new LinkedList<Bundle>();
+        try {
+
+            final BundleContext context = framework.getBundleContext();
             final String jrubyBundlePath = findJrubyBundlePath();
 
             // Install all bundles and create service mapping
-            final List<Bundle> installedBundles = new LinkedList<Bundle>();
             installAllJavaBundles(context, installedBundles, jrubyBundlePath);
             installAllJavaPluginBundles(context, installedBundles);
             installAllJRubyPluginBundles(context, installedBundles, jrubyBundlePath);
 
-            // Start all the bundles
-            for (final Bundle bundle : installedBundles) {
-                startBundle(bundle);
-            }
         } catch (PluginConfigException e) {
             logger.error("Error while parsing plugin configurations", e);
         } catch (BundleException e) {
             logger.error("Error while parsing plugin configurations", e);
+        }
+        return installedBundles;
+    }
+
+    public void startBundles(final List<Bundle> installedBundles) {
+        // Start all the bundles
+        for (final Bundle bundle : installedBundles) {
+            startBundle(bundle);
         }
     }
 

@@ -98,11 +98,8 @@ public abstract class OverdueTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     public void beforeMethod() throws Exception {
         super.beforeMethod();
         cacheControllerDispatcher.clearAll();
-        bus.register(listener);
         bus.start();
-
-        // The service will initialize and start the notifier
-        service.registerForBus();
+        bus.register(listener);
         service.initialize();
         service.start();
     }
@@ -110,6 +107,7 @@ public abstract class OverdueTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     @AfterMethod(groups = "slow")
     public void afterMethod() throws Exception {
         service.stop();
+        bus.unregister(listener);
         bus.stop();
     }
 }

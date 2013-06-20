@@ -47,7 +47,7 @@ public class DefaultBeatrixService implements BeatrixService {
     }
 
 
-    @LifecycleHandlerType(LifecycleHandlerType.LifecycleLevel.REGISTER_EVENTS)
+    @LifecycleHandlerType(LifecycleLevel.INIT_SERVICE)
     public void registerForNotifications() {
         try {
             eventBus.register(beatrixListener);
@@ -56,7 +56,7 @@ public class DefaultBeatrixService implements BeatrixService {
         }
     }
 
-    @LifecycleHandlerType(LifecycleHandlerType.LifecycleLevel.UNREGISTER_EVENTS)
+    @LifecycleHandlerType(LifecycleLevel.STOP_SERVICE)
     public void unregisterForNotifications() {
         try {
             eventBus.unregister(beatrixListener);

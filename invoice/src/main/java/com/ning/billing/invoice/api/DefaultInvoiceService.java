@@ -50,6 +50,12 @@ public class DefaultInvoiceService implements InvoiceService {
 
     @LifecycleHandlerType(LifecycleHandlerType.LifecycleLevel.INIT_SERVICE)
     public void initialize() throws NotificationQueueAlreadyExists {
+        try {
+            eventBus.register(invoiceListener);
+            eventBus.register(tagHandler);
+        } catch (InternalBus.EventBusException e) {
+            throw new RuntimeException("Unable to register to the EventBus!", e);
+        }
         dateNotifier.initialize();
     }
 
@@ -58,28 +64,14 @@ public class DefaultInvoiceService implements InvoiceService {
         dateNotifier.start();
     }
 
-    @LifecycleHandlerType(LifecycleHandlerType.LifecycleLevel.REGISTER_EVENTS)
-    public void registerForNotifications() {
-        try {
-            eventBus.register(invoiceListener);
-            eventBus.register(tagHandler);
-        } catch (InternalBus.EventBusException e) {
-            throw new RuntimeException("Unable to register to the EventBus!", e);
-        }
-    }
-
-    @LifecycleHandlerType(LifecycleHandlerType.LifecycleLevel.UNREGISTER_EVENTS)
-    public void unregisterForNotifications() {
+    @LifecycleHandlerType(LifecycleLevel.STOP_SERVICE)
+    public void stop() throws NoSuchNotificationQueue {
         try {
             eventBus.unregister(invoiceListener);
             eventBus.unregister(tagHandler);
         } catch (InternalBus.EventBusException e) {
             throw new RuntimeException("Unable to unregister to the EventBus!", e);
         }
-    }
-
-    @LifecycleHandlerType(LifecycleLevel.STOP_SERVICE)
-    public void stop() throws NoSuchNotificationQueue {
         dateNotifier.stop();
     }
 }
