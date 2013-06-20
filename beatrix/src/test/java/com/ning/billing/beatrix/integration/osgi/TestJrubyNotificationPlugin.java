@@ -52,7 +52,7 @@ public class TestJrubyNotificationPlugin extends TestOSGIBase {
 
         // Once we create the account we give the hand to the jruby notification plugin
         // which will handle the ExtBusEvent and start updating the account, create tag definition and finally create a tag.
-        // We wait for all that to occur and declare victory if we see the TagDefiniton/Tag creation.
+        // We wait for all that to occur and declare victory if we see the TagDefinition/Tag creation.
         busHandler.pushExpectedEvents(NextEvent.TAG_DEFINITION, NextEvent.TAG);
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(4));
         assertTrue(busHandler.isCompleted(2 * DELAY));

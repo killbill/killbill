@@ -55,7 +55,6 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.dbi.DBTestingHelper;
 import com.ning.billing.entitlement.api.EntitlementService;
 import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
 import com.ning.billing.entitlement.api.transfer.EntitlementTransferApi;

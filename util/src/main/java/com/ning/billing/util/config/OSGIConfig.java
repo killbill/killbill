@@ -46,7 +46,7 @@ public interface OSGIConfig extends KillbillConfig {
     @Default("com.ning.billing.account.api," +
              "com.ning.billing.analytics.api.sanity," +
              "com.ning.billing.analytics.api.user," +
-             "com.ning.billing.beatrix.bus.api," +
+             "com.ning.billing.beatrix.bus.api," + /* TODO PIERRE Remove it after plugins classes have been regenerated */
              "com.ning.billing.catalog.api," +
              "com.ning.billing.entitlement.api," +
              "com.ning.billing.entitlement.api.migration," +
@@ -56,6 +56,8 @@ public interface OSGIConfig extends KillbillConfig {
              "com.ning.billing.invoice.api," +
              "com.ning.billing.junction.api," +
              "com.ning.billing," +
+             "com.ning.billing.notification.api," +
+             "com.ning.billing.notification.plugin.api," +
              "com.ning.billing.osgi.api," +
              "com.ning.billing.osgi.api.config," +
              "com.ning.billing.overdue," +
