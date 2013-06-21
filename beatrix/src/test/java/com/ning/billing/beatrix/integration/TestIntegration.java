@@ -83,7 +83,7 @@ public class TestIntegration extends TestIntegrationBase {
                                     // CANCEL BP ON THE SAME DAY (we should have two cancellations, BP and AO)
                                     // There is no invoice created as we only adjust the previous invoice.
                                     //
-                                    cancelSubscriptionAndCheckForCompletion(bpSubscription, clock.getUTCNow(), NextEvent.CANCEL, NextEvent.CANCEL);
+        cancelSubscriptionAndCheckForCompletion(bpSubscription, clock.getUTCNow(), NextEvent.CANCEL, NextEvent.CANCEL, NextEvent.INVOICE_ADJUSTMENT);
         invoiceChecker.checkInvoice(account.getId(), 2,
                                     callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("399.95")),
                                     // The second invoice should be adjusted for the AO (we paid for the full period) and since we paid we should also see a CBA
