@@ -159,10 +159,11 @@ public class TestPaymentOSGIWithTestPaymentBundle extends TestOSGIBase {
         if (expectedException == null && expectedRuntimeException == null) {
             expectedEvents.add(NextEvent.PAYMENT);
         } else if (expectedException != null) {
+            //expectedEvents.add(NextEvent.PAYMENT_ERROR);
             paymentPluginApi.setPaymentPluginApiExceptionOnNextCalls(expectedException);
         } else if (expectedRuntimeException != null) {
+            //expectedEvents.add(NextEvent.PAYMENT_ERROR);
             paymentPluginApi.setPaymentRuntimeExceptionOnNextCalls(expectedRuntimeException);
-
         }
 
         createSubscriptionAndCheckForCompletion(bundle.getId(), "Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, expectedEvents.toArray(new NextEvent[expectedEvents.size()]));

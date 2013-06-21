@@ -57,4 +57,13 @@
     <properties>
         <killbill.version>${project.version}</killbill.version>
     </properties>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>12.0</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 </project>
