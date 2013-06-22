@@ -45,8 +45,8 @@ public class JRubyActivator extends KillbillActivatorBase {
     private JRubyPlugin plugin = null;
     private ScheduledFuture<?> restartFuture = null;
 
-    private static final String KILLBILL_PLUGIN_JPAYMENT = "Killbill::Plugin::JPayment";
-    private static final String KILLBILL_PLUGIN_JNOTIFICATION = "Killbill::Plugin::JNotification";
+    private static final String KILLBILL_PLUGIN_JPAYMENT = "Killbill::Plugin::Api::PaymentPluginApi";
+    private static final String KILLBILL_PLUGIN_JNOTIFICATION = "Killbill::Plugin::Api::NotificationPluginApi";
 
     public void start(final BundleContext context) throws Exception {
         super.start(context);
