@@ -189,6 +189,11 @@ layout: default
                             </ul></td>
                         <td>Remove a set of tags associated with that account</td>
                     </tr>
+                    <tr>
+                        <td>GET&nbsp;/1.0/kb/accounts/search/<code>search_key</code></td>
+                        <td></td>
+                        <td>Search for accounts that have an name, email, external_key, company_name matching the search_key</td>
+                    </tr>
                 </tbody>
             </table>
         </section>
@@ -445,11 +450,11 @@ layout: default
                         <td>Retrieve all invoices associated with an account</td>
                     </tr>
                     <tr>
-                        <td>GET&nbsp;/1.0/kb/invoices/<code>invoice_id</code></td>
+                        <td>GET&nbsp;/1.0/kb/invoices/<code>invoice_id|invoice_number</code></td>
                         <td><ul>
                                 <li>withItems=true|false</li>
                             </ul></td>
-                        <td>Retrieve the invoice specified by <code>invoice_id</code></td>
+                        <td>Retrieve the invoice specified by <code>invoice_id</code> or <code>invoice_number</code></td>
                     </tr>
                     <tr>
                         <td>GET&nbsp;/1.0/kb/invoices/<code>invoice_id</code>/html</td>
@@ -621,6 +626,11 @@ layout: default
                         <td>DELETE&nbsp;/1.0/kb/paymentMethods/<code>payment_method_id</code></td>
                         <td></td>
                         <td>Delete a payment method properties</td>
+                    </tr>
+                    <tr>
+                        <td>GET&nbsp;/1.0/kb/paymentMethods/search/<code>search_key</code></td>
+                        <td></td>
+                        <td>Retrieve all payment methods that match the search_key. The match will be plugin specific; for instance some plugin may return values for last4 of CC number</td>
                     </tr>
                 </tbody>
             </table>
