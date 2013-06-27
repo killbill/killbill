@@ -114,14 +114,6 @@ public class PaymentMethodProcessor extends ProcessorBase {
         });
     }
 
-    private PaymentPluginApi getPaymentPluginApi(final String pluginName) throws PaymentApiException {
-        final PaymentPluginApi pluginApi = pluginRegistry.getServiceForName(pluginName);
-        if (pluginApi == null) {
-            throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_PLUGIN, pluginName);
-        }
-        return pluginApi;
-    }
-
     public List<PaymentMethod> getPaymentMethods(final Account account, final boolean withPluginInfo, final InternalTenantContext context) throws PaymentApiException {
 
         final List<PaymentMethodModelDao> paymentMethodModels = paymentDao.getPaymentMethods(account.getId(), context);
