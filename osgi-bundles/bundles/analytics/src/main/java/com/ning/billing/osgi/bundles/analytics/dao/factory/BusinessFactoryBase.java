@@ -433,7 +433,7 @@ public abstract class BusinessFactoryBase {
             // Try to get all payment methods, including deleted ones, with plugin information
             return paymentApi.getPaymentMethodById(paymentMethodId, true, true, context);
         } catch (PaymentApiException e) {
-            logService.log(LogService.LOG_INFO, "Error retrieving payment method for id " + paymentMethodId + " (already deleted?)", e);
+            logService.log(LogService.LOG_INFO, "Error retrieving payment method for id " + paymentMethodId + ": " + e.getMessage());
         }
 
         try {
