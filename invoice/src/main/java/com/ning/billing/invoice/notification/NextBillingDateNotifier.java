@@ -16,8 +16,8 @@
 
 package com.ning.billing.invoice.notification;
 
-import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotificationQueue;
-import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
+import com.ning.billing.notificationq.NotificationQueueService.NoSuchNotificationQueue;
+import com.ning.billing.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
 
 public interface NextBillingDateNotifier {
 

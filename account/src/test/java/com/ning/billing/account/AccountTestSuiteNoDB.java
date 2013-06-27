@@ -24,13 +24,13 @@ import com.ning.billing.GuicyKillbillTestSuiteNoDB;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.dao.AccountDao;
 import com.ning.billing.account.glue.TestAccountModuleNoDB;
+import com.ning.billing.bus.PersistentBus;
 import com.ning.billing.util.audit.dao.AuditDao;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.customfield.dao.CustomFieldDao;
 import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.glue.RealImplementation;
-import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.tag.api.user.TagEventBuilder;
 import com.ning.billing.util.tag.dao.TagDao;
 import com.ning.billing.util.tag.dao.TagDefinitionDao;
@@ -55,7 +55,7 @@ public abstract class AccountTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     @Inject
     protected CustomFieldDao customFieldDao;
     @Inject
-    protected InternalBus bus;
+    protected PersistentBus bus;
     @Inject
     protected TagDao tagDao;
     @Inject

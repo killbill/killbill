@@ -79,6 +79,16 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>com.ning.billing.commons</groupId>
+            <artifactId>killbill-queue</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing.commons</groupId>
+            <artifactId>killbill-queue</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>javax.inject</groupId>
             <artifactId>javax.inject</artifactId>
             <scope>provided</scope>

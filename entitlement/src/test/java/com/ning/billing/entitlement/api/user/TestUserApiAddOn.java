@@ -106,11 +106,11 @@ public class TestUserApiAddOn extends EntitlementTestSuiteWithEmbeddedDB {
             // SET CTD TO CANCEL IN FUTURE
             final DateTime now = clock.getUTCNow();
             final Duration aoCtd = testUtil.getDurationMonth(1);
-            final DateTime newAOChargedThroughDate = DefaultClock.addDuration(now, aoCtd);
+            final DateTime newAOChargedThroughDate = TestEntitlementHelper.addDuration(now, aoCtd);
             entitlementInternalApi.setChargedThroughDate(aoSubscription.getId(), newAOChargedThroughDate, internalCallContext);
 
             final Duration bpCtd = testUtil.getDurationMonth(11);
-            final DateTime newBPChargedThroughDate = DefaultClock.addDuration(now, bpCtd);
+            final DateTime newBPChargedThroughDate = TestEntitlementHelper.addDuration(now, bpCtd);
             entitlementInternalApi.setChargedThroughDate(baseSubscription.getId(), newBPChargedThroughDate, internalCallContext);
 
             baseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
@@ -189,7 +189,7 @@ public class TestUserApiAddOn extends EntitlementTestSuiteWithEmbeddedDB {
             final DateTime now = clock.getUTCNow();
             final Duration ctd = testUtil.getDurationMonth(1);
             // Why not just use clock.getUTCNow().plusMonths(1) ?
-            final DateTime newChargedThroughDate = DefaultClock.addDuration(now, ctd);
+            final DateTime newChargedThroughDate = TestEntitlementHelper.addDuration(now, ctd);
             entitlementInternalApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate, internalCallContext);
             baseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
 
@@ -251,7 +251,7 @@ public class TestUserApiAddOn extends EntitlementTestSuiteWithEmbeddedDB {
             final DateTime now = clock.getUTCNow();
             final Duration ctd = testUtil.getDurationMonth(1);
             // Why not just use clock.getUTCNow().plusMonths(1) ?
-            final DateTime newChargedThroughDate = DefaultClock.addDuration(now, ctd);
+            final DateTime newChargedThroughDate = TestEntitlementHelper.addDuration(now, ctd);
             entitlementInternalApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate, internalCallContext);
             baseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
 
@@ -325,7 +325,7 @@ public class TestUserApiAddOn extends EntitlementTestSuiteWithEmbeddedDB {
             // SET CTD TO CHANGE IN FUTURE
             final DateTime now = clock.getUTCNow();
             final Duration ctd = testUtil.getDurationMonth(1);
-            final DateTime newChargedThroughDate = DefaultClock.addDuration(now, ctd);
+            final DateTime newChargedThroughDate = TestEntitlementHelper.addDuration(now, ctd);
             entitlementInternalApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate, internalCallContext);
             baseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
 
@@ -388,7 +388,7 @@ public class TestUserApiAddOn extends EntitlementTestSuiteWithEmbeddedDB {
             // SET CTD TO CANCEL IN FUTURE
             final DateTime now = clock.getUTCNow();
             final Duration ctd = testUtil.getDurationMonth(1);
-            final DateTime newChargedThroughDate = DefaultClock.addDuration(now, ctd);
+            final DateTime newChargedThroughDate = TestEntitlementHelper.addDuration(now, ctd);
             entitlementInternalApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate, internalCallContext);
             baseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
 

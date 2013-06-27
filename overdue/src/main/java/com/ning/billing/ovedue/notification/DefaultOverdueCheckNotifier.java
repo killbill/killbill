@@ -22,15 +22,15 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ning.billing.notificationq.NotificationKey;
+import com.ning.billing.notificationq.NotificationQueue;
+import com.ning.billing.notificationq.NotificationQueueService;
+import com.ning.billing.notificationq.NotificationQueueService.NoSuchNotificationQueue;
+import com.ning.billing.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
+import com.ning.billing.notificationq.NotificationQueueService.NotificationQueueHandler;
 import com.ning.billing.overdue.OverdueProperties;
 import com.ning.billing.overdue.listener.OverdueListener;
 import com.ning.billing.overdue.service.DefaultOverdueService;
-import com.ning.billing.util.notificationq.NotificationKey;
-import com.ning.billing.util.notificationq.NotificationQueue;
-import com.ning.billing.util.notificationq.NotificationQueueService;
-import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotificationQueue;
-import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
-import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
 
 import com.google.inject.Inject;
 

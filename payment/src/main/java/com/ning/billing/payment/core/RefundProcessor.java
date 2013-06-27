@@ -35,6 +35,7 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.bus.PersistentBus;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.osgi.api.OSGIServiceRegistration;
@@ -58,7 +59,6 @@ import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
 import com.ning.billing.util.svcapi.tag.TagInternalApi;
-import com.ning.billing.util.svcsapi.bus.InternalBus;
 
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
@@ -79,7 +79,7 @@ public class RefundProcessor extends ProcessorBase {
     public RefundProcessor(final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry,
                            final AccountInternalApi accountApi,
                            final InvoiceInternalApi invoiceApi,
-                           final InternalBus eventBus,
+                           final PersistentBus eventBus,
                            final InternalCallContextFactory internalCallContextFactory,
                            final TagInternalApi tagUserApi,
                            final PaymentDao paymentDao,

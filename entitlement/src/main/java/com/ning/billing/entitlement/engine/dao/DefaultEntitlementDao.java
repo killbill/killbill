@@ -37,6 +37,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ning.billing.ErrorCode;
+import com.ning.billing.bus.PersistentBus;
+import com.ning.billing.bus.PersistentBus.EventBusException;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.ProductCategory;
@@ -70,6 +72,10 @@ import com.ning.billing.entitlement.events.user.ApiEventChange;
 import com.ning.billing.entitlement.events.user.ApiEventMigrateBilling;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
+import com.ning.billing.notificationq.NotificationKey;
+import com.ning.billing.notificationq.NotificationQueue;
+import com.ning.billing.notificationq.NotificationQueueService;
+import com.ning.billing.notificationq.NotificationQueueService.NoSuchNotificationQueue;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
@@ -82,12 +88,6 @@ import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 import com.ning.billing.util.events.RepairEntitlementInternalEvent;
-import com.ning.billing.util.notificationq.NotificationKey;
-import com.ning.billing.util.notificationq.NotificationQueue;
-import com.ning.billing.util.notificationq.NotificationQueueService;
-import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotificationQueue;
-import com.ning.billing.util.svcsapi.bus.InternalBus;
-import com.ning.billing.util.svcsapi.bus.InternalBus.EventBusException;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
@@ -102,12 +102,12 @@ public class DefaultEntitlementDao implements EntitlementDao {
     private final EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao;
     private final NotificationQueueService notificationQueueService;
     private final AddonUtils addonUtils;
-    private final InternalBus eventBus;
+    private final PersistentBus eventBus;
     private final CatalogService catalogService;
 
     @Inject
     public DefaultEntitlementDao(final IDBI dbi, final Clock clock, final AddonUtils addonUtils,
-                                 final NotificationQueueService notificationQueueService, final InternalBus eventBus, final CatalogService catalogService,
+                                 final NotificationQueueService notificationQueueService, final PersistentBus eventBus, final CatalogService catalogService,
                                  final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao) {
         this.clock = clock;
         this.transactionalSqlDao = new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, cacheControllerDispatcher, nonEntityDao);
@@ -296,8 +296,7 @@ public class DefaultEntitlementDao implements EntitlementDao {
                 transactional.create(new EntitlementEventModelDao(nextPhase), context);
                 recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory,
                                                         nextPhase.getEffectiveDate(),
-                                                        new EntitlementNotificationKey(nextPhase.getId()),
-                                                        context);
+                                                        new EntitlementNotificationKey(nextPhase.getId()), context);
 
                 // Notify the Bus of the requested change
                 notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, nextPhase, context);
@@ -415,7 +414,6 @@ public class DefaultEntitlementDao implements EntitlementDao {
     }
 
 
-
     @Override
     public void recreateSubscription(final SubscriptionData subscription, final List<EntitlementEvent> recreateEvents, final InternalCallContext context) {
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
@@ -453,7 +451,6 @@ public class DefaultEntitlementDao implements EntitlementDao {
             }
         });
     }
-
 
 
     @Override
@@ -834,7 +831,7 @@ public class DefaultEntitlementDao implements EntitlementDao {
                     // Note: we don't send a requested change event here, but a repair event
                     final RepairEntitlementInternalEvent busEvent = new DefaultRepairEntitlementEvent(context.getUserToken(), accountId, bundleId, clock.getUTCNow(),
                                                                                                       context.getAccountRecordId(), context.getTenantRecordId());
-                    eventBus.postFromTransaction(busEvent, entitySqlDaoWrapperFactory, context);
+                    eventBus.postFromTransaction(busEvent, entitySqlDaoWrapperFactory.getSqlDao());
                 } catch (EventBusException e) {
                     log.warn("Failed to post repair entitlement event for bundle " + bundleId, e);
                 }
@@ -904,7 +901,7 @@ public class DefaultEntitlementDao implements EntitlementDao {
     // - IMM CANCEL or CHANGE
     //
     private void notifyBusOfEffectiveImmediateChange(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final SubscriptionData subscription,
-                                            final EntitlementEvent immediateEvent, final int seqId, final InternalCallContext context) {
+                                                     final EntitlementEvent immediateEvent, final int seqId, final InternalCallContext context) {
         try {
             final SubscriptionData upToDateSubscription = createSubscriptionWithNewEvent(subscription, immediateEvent);
 
@@ -914,7 +911,7 @@ public class DefaultEntitlementDao implements EntitlementDao {
                                                                                                       context.getAccountRecordId(), context.getTenantRecordId());
 
 
-            eventBus.postFromTransaction(busEvent, entitySqlDaoWrapperFactory, context);
+            eventBus.postFromTransaction(busEvent, entitySqlDaoWrapperFactory.getSqlDao());
         } catch (EventBusException e) {
             log.warn("Failed to post effective event for subscription " + subscription.getId(), e);
         }
@@ -923,7 +920,7 @@ public class DefaultEntitlementDao implements EntitlementDao {
     private void notifyBusOfRequestedChange(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final SubscriptionData subscription,
                                             final EntitlementEvent nextEvent, final InternalCallContext context) {
         try {
-            eventBus.postFromTransaction(new DefaultRequestedSubscriptionEvent(subscription, nextEvent, context.getAccountRecordId(), context.getTenantRecordId()), entitySqlDaoWrapperFactory, context);
+            eventBus.postFromTransaction(new DefaultRequestedSubscriptionEvent(subscription, nextEvent, context.getAccountRecordId(), context.getTenantRecordId()), entitySqlDaoWrapperFactory.getSqlDao());
         } catch (EventBusException e) {
             log.warn("Failed to post requested change event for subscription " + subscription.getId(), e);
         }
@@ -934,13 +931,14 @@ public class DefaultEntitlementDao implements EntitlementDao {
         try {
             final NotificationQueue subscriptionEventQueue = notificationQueueService.getNotificationQueue(Engine.ENTITLEMENT_SERVICE_NAME,
                                                                                                            Engine.NOTIFICATION_QUEUE_NAME);
-            subscriptionEventQueue.recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory, effectiveDate, notificationKey, context);
+            subscriptionEventQueue.recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory.getSqlDao(), effectiveDate, notificationKey, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
         } catch (NoSuchNotificationQueue e) {
             throw new RuntimeException(e);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
+
     private void migrateBundleDataFromTransaction(final BundleMigrationData bundleTransferData, final EntitlementEventSqlDao transactional,
                                                   final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final InternalCallContext context) throws EntityPersistenceException {
 

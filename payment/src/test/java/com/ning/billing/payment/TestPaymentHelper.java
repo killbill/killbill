@@ -22,6 +22,8 @@ import org.joda.time.LocalDate;
 import org.mockito.Mockito;
 
 import com.ning.billing.account.api.Account;
+import com.ning.billing.bus.PersistentBus;
+import com.ning.billing.bus.PersistentBus.EventBusException;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
@@ -37,8 +39,6 @@ import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.events.InvoiceCreationInternalEvent;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
-import com.ning.billing.util.svcsapi.bus.InternalBus;
-import com.ning.billing.util.svcsapi.bus.InternalBus.EventBusException;
 
 import com.google.inject.Inject;
 
@@ -47,7 +47,7 @@ public class TestPaymentHelper {
     protected final AccountInternalApi AccountApi;
     protected final InvoiceInternalApi invoiceApi;
     protected PaymentApi paymentApi;
-    private final InternalBus eventBus;
+    private final PersistentBus eventBus;
     private final Clock clock;
 
     private final CallContext context;
@@ -55,7 +55,7 @@ public class TestPaymentHelper {
 
     @Inject
     public TestPaymentHelper(final AccountInternalApi AccountApi, final InvoiceInternalApi invoiceApi,
-                             final PaymentApi paymentApi, final InternalBus eventBus, final Clock clock,
+                             final PaymentApi paymentApi, final PersistentBus eventBus, final Clock clock,
                              final CallContext context, final InternalCallContext internalCallContext) {
         this.eventBus = eventBus;
         this.AccountApi = AccountApi;
@@ -92,11 +92,11 @@ public class TestPaymentHelper {
 
         Mockito.when(invoiceApi.getInvoiceById(Mockito.eq(invoice.getId()), Mockito.<InternalTenantContext>any())).thenReturn(invoice);
         final InvoiceCreationInternalEvent event = new MockInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
-                                                                        invoice.getBalance(), invoice.getCurrency(),
-                                                                        invoice.getInvoiceDate(),
-                                                                        context.getUserToken());
+                                                                                invoice.getBalance(), invoice.getCurrency(),
+                                                                                invoice.getInvoiceDate(),
+                                                                                context.getUserToken());
 
-        eventBus.post(event, internalCallContext);
+        eventBus.post(event);
         return invoice;
     }
 

@@ -18,7 +18,7 @@ package com.ning.billing.invoice.notification;
 
 import java.util.UUID;
 
-import com.ning.billing.util.notificationq.DefaultUUIDNotificationKey;
+import com.ning.billing.notificationq.DefaultUUIDNotificationKey;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

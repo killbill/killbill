@@ -26,7 +26,12 @@ import org.slf4j.LoggerFactory;
 
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.Type;
+import com.ning.billing.notificationq.Notification;
+import com.ning.billing.notificationq.NotificationQueue;
+import com.ning.billing.notificationq.NotificationQueueService;
+import com.ning.billing.notificationq.NotificationQueueService.NoSuchNotificationQueue;
 import com.ning.billing.overdue.service.DefaultOverdueService;
+import com.ning.billing.queue.PersistentQueueBase;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.clock.Clock;
@@ -35,11 +40,6 @@ import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
-import com.ning.billing.util.notificationq.Notification;
-import com.ning.billing.util.notificationq.NotificationQueue;
-import com.ning.billing.util.notificationq.NotificationQueueService;
-import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotificationQueue;
-import com.ning.billing.util.queue.PersistentQueueBase;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -88,14 +88,14 @@ public class DefaultOverdueCheckPoster implements OverdueCheckPoster {
                         }
 
                         for (int i = minIndexToDeleteFrom; i < futureNotifications.size(); i++) {
-                            checkOverdueQueue.removeNotificationFromTransaction(entitySqlDaoWrapperFactory, futureNotifications.get(i).getId(), context);
+                            checkOverdueQueue.removeNotificationFromTransaction(entitySqlDaoWrapperFactory.getSqlDao(), futureNotifications.get(i).getId());
                         }
                     }
 
                     if (shouldInsertNewNotification) {
                         log.debug("Queuing overdue check notification. Overdueable id: {}, timestamp: {}", overdueable.getId().toString(), futureNotificationTime.toString());
                         final OverdueCheckNotificationKey notificationKey = new OverdueCheckNotificationKey(overdueable.getId(), Type.get(overdueable));
-                        checkOverdueQueue.recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory, futureNotificationTime, notificationKey, context);
+                        checkOverdueQueue.recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory.getSqlDao(), futureNotificationTime, notificationKey, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
                     } else {
                         log.debug("Skipping queuing overdue check notification. Overdueable id: {}, timestamp: {}", overdueable.getId().toString(), futureNotificationTime.toString());
                     }
@@ -119,7 +119,7 @@ public class DefaultOverdueCheckPoster implements OverdueCheckPoster {
                 public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
                     final List<Notification> futureNotifications = getFutureNotificationsForAccountAndOverdueableInTransaction(entitySqlDaoWrapperFactory, checkOverdueQueue, overdueable, context);
                     for (final Notification notification : futureNotifications) {
-                        checkOverdueQueue.removeNotificationFromTransaction(entitySqlDaoWrapperFactory, notification.getId(), context);
+                        checkOverdueQueue.removeNotificationFromTransaction(entitySqlDaoWrapperFactory.getSqlDao(), notification.getId());
                     }
 
                     return null;
@@ -137,7 +137,7 @@ public class DefaultOverdueCheckPoster implements OverdueCheckPoster {
                                                                                    final InternalCallContext context) {
         final List<Notification> notifications = new ArrayList<Notification>();
 
-        final List<Notification> candidates = checkOverdueQueue.getFutureNotificationsForAccountFromTransaction(entitySqlDaoWrapperFactory, context);
+        final List<Notification> candidates = checkOverdueQueue.getFutureNotificationsForAccountFromTransaction(context.getAccountRecordId(), entitySqlDaoWrapperFactory.getSqlDao());
         for (final Notification candidate : candidates) {
             if (OverdueCheckNotificationKey.class.getName().equals(candidate.getNotificationKeyClass())) {
                 final OverdueCheckNotificationKey key = PersistentQueueBase.deserializeEvent(candidate.getNotificationKeyClass(), candidate.getNotificationKey());

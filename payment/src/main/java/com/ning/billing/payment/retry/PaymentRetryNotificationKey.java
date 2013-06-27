@@ -17,9 +17,10 @@ package com.ning.billing.payment.retry;
 
 import java.util.UUID;
 
+import com.ning.billing.notificationq.DefaultUUIDNotificationKey;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.ning.billing.util.notificationq.DefaultUUIDNotificationKey;
 
 public class PaymentRetryNotificationKey extends DefaultUUIDNotificationKey {
 

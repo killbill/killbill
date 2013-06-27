@@ -33,7 +33,7 @@ import com.ning.billing.util.clock.DefaultClock;
 
 import com.google.inject.Inject;
 
-public class MigrationPlanAligner {
+public class MigrationPlanAligner extends BaseAligner {
 
     private final CatalogService catalogService;
 
@@ -87,7 +87,7 @@ public class MigrationPlanAligner {
                                                                              plan0.getName(), curPhaseType));
                 }
 
-                migrationStartDate = DefaultClock.removeDuration(input[1].getEffectiveDate(), curPhaseDuration);
+                migrationStartDate = removeDuration(input[1].getEffectiveDate(), curPhaseDuration);
                 events = getEventsOnFuturePhaseChangeMigration(plan0,
                                                                getPlanPhase(plan0, input[0].getPlanPhaseSpecifier().getPhaseType()),
                                                                input[0].getPlanPhaseSpecifier().getPriceListName(),

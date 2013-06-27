@@ -63,6 +63,10 @@ public class EntitySqlDaoWrapperFactory<InitialSqlDao extends EntitySqlDao> {
         return sqlDao.become(newTransactionalClass);
     }
 
+    public InitialSqlDao getSqlDao() {
+        return sqlDao;
+    }
+
     private <NewSqlDao extends EntitySqlDao<NewEntityModelDao, NewEntity>,
             NewEntityModelDao extends EntityModelDao<NewEntity>,
             NewEntity extends Entity> NewSqlDao create(final Class<NewSqlDao> newSqlDaoClass, final NewSqlDao newSqlDao) {

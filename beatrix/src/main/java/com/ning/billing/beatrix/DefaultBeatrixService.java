@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.beatrix;
 
 import javax.inject.Inject;
@@ -21,9 +22,9 @@ import com.ning.billing.beatrix.bus.api.BeatrixService;
 import com.ning.billing.beatrix.bus.api.ExternalBus;
 import com.ning.billing.beatrix.extbus.BeatrixListener;
 import com.ning.billing.beatrix.extbus.PersistentExternalBus;
+import com.ning.billing.bus.PersistentBus;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
-import com.ning.billing.util.svcsapi.bus.InternalBus;
 
 
 public class DefaultBeatrixService implements BeatrixService {
@@ -31,11 +32,11 @@ public class DefaultBeatrixService implements BeatrixService {
     public static final String BEATRIX_SERVICE_NAME = "beatrix-service";
 
     private final BeatrixListener beatrixListener;
-    private final InternalBus eventBus;
+    private final PersistentBus eventBus;
     private final ExternalBus externalBus;
 
     @Inject
-    public DefaultBeatrixService(final InternalBus eventBus, final ExternalBus externalBus, final BeatrixListener beatrixListener) {
+    public DefaultBeatrixService(final PersistentBus eventBus, final ExternalBus externalBus, final BeatrixListener beatrixListener) {
         this.eventBus = eventBus;
         this.externalBus = externalBus;
         this.beatrixListener = beatrixListener;
@@ -51,7 +52,7 @@ public class DefaultBeatrixService implements BeatrixService {
     public void registerForNotifications() {
         try {
             eventBus.register(beatrixListener);
-        } catch (InternalBus.EventBusException e) {
+        } catch (PersistentBus.EventBusException e) {
             throw new RuntimeException("Unable to register to the EventBus!", e);
         }
     }
@@ -60,7 +61,7 @@ public class DefaultBeatrixService implements BeatrixService {
     public void unregisterForNotifications() {
         try {
             eventBus.unregister(beatrixListener);
-        } catch (InternalBus.EventBusException e) {
+        } catch (PersistentBus.EventBusException e) {
             throw new RuntimeException("Unable to unregister to the EventBus!", e);
         }
     }

@@ -49,7 +49,8 @@ import com.google.inject.Inject;
  * PlanAligner offers specific APIs to return the correct {@code TimedPhase} when creating, changing Plan or to compute
  * next Phase on current Plan.
  */
-public class PlanAligner {
+public class PlanAligner extends BaseAligner {
+
     private final CatalogService catalogService;
 
     @Inject
@@ -300,7 +301,7 @@ public class PlanAligner {
             // STEPH check for duration null instead TimeUnit UNLIMITED
             if (cur.getPhaseType() != PhaseType.EVERGREEN) {
                 final Duration curPhaseDuration = cur.getDuration();
-                nextPhaseStart = DefaultClock.addDuration(curPhaseStart, curPhaseDuration);
+                nextPhaseStart = addDuration(curPhaseStart, curPhaseDuration);
                 if (nextPhaseStart == null) {
                     throw new EntitlementError(String.format("Unexpected non ending UNLIMITED phase for plan %s",
                                                              plan.getName()));
@@ -337,4 +338,7 @@ public class PlanAligner {
                 throw new EntitlementError(String.format("Unexpected %s TimedPhase", which));
         }
     }
+
+
+
 }

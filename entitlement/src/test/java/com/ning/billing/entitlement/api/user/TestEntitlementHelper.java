@@ -585,6 +585,49 @@ public class TestEntitlementHelper {
 
 
 
+    public static DateTime addOrRemoveDuration(final DateTime input, final List<Duration> durations, final boolean add) {
+        DateTime result = input;
+        for (final Duration cur : durations) {
+            switch (cur.getUnit()) {
+                case DAYS:
+                    result = add ? result.plusDays(cur.getNumber()) : result.minusDays(cur.getNumber());
+                    break;
+
+                case MONTHS:
+                    result = add ? result.plusMonths(cur.getNumber()) : result.minusMonths(cur.getNumber());
+                    break;
+
+                case YEARS:
+                    result = add ? result.plusYears(cur.getNumber()) : result.minusYears(cur.getNumber());
+                    break;
+                case UNLIMITED:
+                default:
+                    throw new RuntimeException("Trying to move to unlimited time period");
+            }
+        }
+        return result;
+    }
+
+    public static DateTime addDuration(final DateTime input, final List<Duration> durations) {
+        return addOrRemoveDuration(input, durations, true);
+    }
+
+    public static DateTime removeDuration(final DateTime input, final List<Duration> durations) {
+        return addOrRemoveDuration(input, durations, false);
+    }
+
+    public static DateTime addDuration(final DateTime input, final Duration duration) {
+        final List<Duration> list = new ArrayList<Duration>();
+        list.add(duration);
+        return addOrRemoveDuration(input, list, true);
+    }
+
+    public static DateTime removeDuration(final DateTime input, final Duration duration) {
+        final List<Duration> list = new ArrayList<Duration>();
+        list.add(duration);
+        return addOrRemoveDuration(input, list, false);
+    }
+
 
 
     public static class EntitlementSubscriptionMigrationCaseWithCTD implements EntitlementSubscriptionMigrationCase {

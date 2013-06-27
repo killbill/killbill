@@ -16,10 +16,11 @@
 
 package com.ning.billing.util.svcsapi.bus;
 
+import com.ning.billing.bus.PersistentBus;
 import com.ning.billing.lifecycle.KillbillService;
 
 public interface BusService extends KillbillService {
 
    // API_FIX should be removed and server should only use public bus
-   public InternalBus getBus();
+   public PersistentBus getBus();
 }

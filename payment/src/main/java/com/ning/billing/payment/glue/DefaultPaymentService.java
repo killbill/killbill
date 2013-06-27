@@ -19,9 +19,11 @@ package com.ning.billing.payment.glue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
+import com.ning.billing.bus.PersistentBus;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
+import com.ning.billing.notificationq.NotificationQueueService.NoSuchNotificationQueue;
+import com.ning.billing.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentService;
 import com.ning.billing.payment.bus.InvoiceHandler;
@@ -29,9 +31,8 @@ import com.ning.billing.payment.bus.PaymentTagHandler;
 import com.ning.billing.payment.retry.AutoPayRetryService;
 import com.ning.billing.payment.retry.FailedPaymentRetryService;
 import com.ning.billing.payment.retry.PluginFailureRetryService;
-import com.ning.billing.util.svcsapi.bus.InternalBus;
-import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotificationQueue;
-import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
+
+import com.google.inject.Inject;
 
 public class DefaultPaymentService implements PaymentService {
 
@@ -41,7 +42,7 @@ public class DefaultPaymentService implements PaymentService {
 
     private final InvoiceHandler invoiceHandler;
     private final PaymentTagHandler tagHandler;
-    private final InternalBus eventBus;
+    private final PersistentBus eventBus;
     private final PaymentApi api;
     private final FailedPaymentRetryService failedRetryService;
     private final PluginFailureRetryService timedoutRetryService;
@@ -49,11 +50,11 @@ public class DefaultPaymentService implements PaymentService {
 
     @Inject
     public DefaultPaymentService(final InvoiceHandler invoiceHandler,
-            final PaymentTagHandler tagHandler,
-            final PaymentApi api, final InternalBus eventBus,
-            final FailedPaymentRetryService failedRetryService,
-            final PluginFailureRetryService timedoutRetryService,
-            final AutoPayRetryService autoPayoffRetryService) {
+                                 final PaymentTagHandler tagHandler,
+                                 final PaymentApi api, final PersistentBus eventBus,
+                                 final FailedPaymentRetryService failedRetryService,
+                                 final PluginFailureRetryService timedoutRetryService,
+                                 final AutoPayRetryService autoPayoffRetryService) {
         this.invoiceHandler = invoiceHandler;
         this.tagHandler = tagHandler;
         this.eventBus = eventBus;
@@ -73,7 +74,7 @@ public class DefaultPaymentService implements PaymentService {
         try {
             eventBus.register(invoiceHandler);
             eventBus.register(tagHandler);
-        } catch (InternalBus.EventBusException e) {
+        } catch (PersistentBus.EventBusException e) {
             log.error("Unable to register with the EventBus!", e);
         }
         failedRetryService.initialize(SERVICE_NAME);
@@ -93,7 +94,7 @@ public class DefaultPaymentService implements PaymentService {
         try {
             eventBus.unregister(invoiceHandler);
             eventBus.unregister(tagHandler);
-        } catch (InternalBus.EventBusException e) {
+        } catch (PersistentBus.EventBusException e) {
             throw new RuntimeException("Unable to unregister to the EventBus!", e);
         }
         failedRetryService.stop();

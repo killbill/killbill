@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import com.ning.billing.ObjectType;
 import com.ning.billing.beatrix.bus.api.ExternalBus;
 import com.ning.billing.beatrix.extbus.dao.ExtBusEventEntry;
+import com.ning.billing.bus.PersistentBus.EventBusException;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.notification.plugin.api.ExtBusEventType;
 import com.ning.billing.util.Hostname;
@@ -47,7 +48,6 @@ import com.ning.billing.util.events.PaymentInfoInternalEvent;
 import com.ning.billing.util.events.SubscriptionInternalEvent;
 import com.ning.billing.util.events.UserTagCreationInternalEvent;
 import com.ning.billing.util.events.UserTagDeletionInternalEvent;
-import com.ning.billing.util.svcsapi.bus.InternalBus.EventBusException;
 
 import com.google.common.eventbus.Subscribe;
 
@@ -70,14 +70,14 @@ public class BeatrixListener {
     @Subscribe
     public void handleAllInternalKillbillEvents(final BusInternalEvent event) {
         final ExtBusEventEntry externalEvent = computeExtBusEventEntryFromBusInternalEvent(event);
-        try {
 
-            if (externalEvent != null) {
-                final InternalCallContext internalContext =  internalCallContextFactory.createInternalCallContext(event.getTenantRecordId(), event.getAccountRecordId(), "BeatrixListener", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
+        if (externalEvent != null) {
+            final InternalCallContext internalContext =  internalCallContextFactory.createInternalCallContext(event.getTenantRecordId(), event.getAccountRecordId(), "BeatrixListener", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
+            try {
                 ((PersistentExternalBus) externalBus).post(externalEvent, internalContext);
+            } catch (EventBusException e) {
+               log.warn("Failed to dispatch external bus events", e);
             }
-        }  catch (EventBusException e) {
-            log.warn("Failed to post external bus event {} {} ", externalEvent.getExtBusType(), externalEvent.getObjectId());
         }
     }
 

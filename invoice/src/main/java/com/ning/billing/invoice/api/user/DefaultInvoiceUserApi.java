@@ -32,6 +32,8 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.bus.PersistentBus;
+import com.ning.billing.bus.PersistentBus.EventBusException;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.InvoiceDispatcher;
 import com.ning.billing.invoice.api.Invoice;
@@ -54,8 +56,6 @@ import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.tag.TagInternalApi;
-import com.ning.billing.util.svcsapi.bus.InternalBus;
-import com.ning.billing.util.svcsapi.bus.InternalBus.EventBusException;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.Tag;
 
@@ -74,10 +74,10 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     private final TagInternalApi tagApi;
     private final HtmlInvoiceGenerator generator;
     private final InternalCallContextFactory internalCallContextFactory;
-    private final InternalBus eventBus;
+    private final PersistentBus eventBus;
 
     @Inject
-    public DefaultInvoiceUserApi(final InvoiceDao dao, final InvoiceDispatcher dispatcher, final AccountInternalApi accountUserApi, final InternalBus eventBus,
+    public DefaultInvoiceUserApi(final InvoiceDao dao, final InvoiceDispatcher dispatcher, final AccountInternalApi accountUserApi, final PersistentBus eventBus,
                                  final TagInternalApi tagApi, final HtmlInvoiceGenerator generator, final InternalCallContextFactory internalCallContextFactory) {
         this.dao = dao;
         this.dispatcher = dispatcher;
@@ -312,7 +312,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
 
     private void notifyBusOfInvoiceAdjustment(final UUID invoiceId, final UUID accountId, final InternalCallContext context) {
         try {
-            eventBus.post(new DefaultInvoiceAdjustmentEvent(invoiceId, accountId, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId()), context);
+            eventBus.post(new DefaultInvoiceAdjustmentEvent(invoiceId, accountId, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId()));
         } catch (EventBusException e) {
             log.warn("Failed to post adjustment event for invoice " + invoiceId, e);
         }

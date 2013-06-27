@@ -29,6 +29,8 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.user.DefaultAccountChangeEvent;
 import com.ning.billing.account.api.user.DefaultAccountCreationEvent;
+import com.ning.billing.bus.PersistentBus;
+import com.ning.billing.bus.PersistentBus.EventBusException;
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.callcontext.InternalCallContext;
@@ -44,8 +46,6 @@ import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import com.ning.billing.util.events.AccountChangeInternalEvent;
 import com.ning.billing.util.events.AccountCreationInternalEvent;
-import com.ning.billing.util.svcsapi.bus.InternalBus;
-import com.ning.billing.util.svcsapi.bus.InternalBus.EventBusException;
 
 import com.google.inject.Inject;
 
@@ -53,11 +53,11 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
 
     private static final Logger log = LoggerFactory.getLogger(DefaultAccountDao.class);
 
-    private final InternalBus eventBus;
+    private final PersistentBus eventBus;
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
-    public DefaultAccountDao(final IDBI dbi, final InternalBus eventBus, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher,
+    public DefaultAccountDao(final IDBI dbi, final PersistentBus eventBus, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher,
                              final InternalCallContextFactory internalCallContextFactory, final NonEntityDao nonEntityDao) {
         super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, cacheControllerDispatcher, nonEntityDao), AccountSqlDao.class);
         this.eventBus = eventBus;
@@ -88,7 +88,7 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
                                                                                            context.getAccountRecordId(),
                                                                                            context.getTenantRecordId());
         try {
-            eventBus.postFromTransaction(creationEvent, entitySqlDaoWrapperFactory, rehydratedContext);
+            eventBus.postFromTransaction(creationEvent, entitySqlDaoWrapperFactory.getSqlDao());
         } catch (final EventBusException e) {
             log.warn("Failed to post account creation event for account " + savedAccount.getId(), e);
         }
@@ -140,7 +140,7 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
                                                                                              context.getAccountRecordId(),
                                                                                              context.getTenantRecordId());
                 try {
-                    eventBus.postFromTransaction(changeEvent, entitySqlDaoWrapperFactory, context);
+                    eventBus.postFromTransaction(changeEvent, entitySqlDaoWrapperFactory.getSqlDao());
                 } catch (final EventBusException e) {
                     log.warn("Failed to post account change event for account " + accountId, e);
                 }
@@ -176,7 +176,7 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
                                                                                              context.getAccountRecordId(), context.getTenantRecordId());
 
                 try {
-                    eventBus.postFromTransaction(changeEvent, entitySqlDaoWrapperFactory, context);
+                    eventBus.postFromTransaction(changeEvent, entitySqlDaoWrapperFactory.getSqlDao());
                 } catch (final EventBusException e) {
                     log.warn("Failed to post account change event for account " + accountId, e);
                 }

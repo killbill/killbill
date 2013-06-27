@@ -38,6 +38,8 @@ import org.slf4j.LoggerFactory;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.bus.PersistentBus;
+import com.ning.billing.bus.PersistentBus.EventBusException;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.invoice.api.Invoice;
@@ -71,8 +73,6 @@ import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 import com.ning.billing.util.svcapi.junction.BillingEventSet;
 import com.ning.billing.util.svcapi.junction.BillingInternalApi;
-import com.ning.billing.util.svcsapi.bus.InternalBus;
-import com.ning.billing.util.svcsapi.bus.InternalBus.EventBusException;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -92,7 +92,7 @@ public class InvoiceDispatcher {
     private final InvoiceDao invoiceDao;
     private final InvoiceNotifier invoiceNotifier;
     private final GlobalLocker locker;
-    private final InternalBus eventBus;
+    private final PersistentBus eventBus;
     private final Clock clock;
 
     @Inject
@@ -102,7 +102,7 @@ public class InvoiceDispatcher {
                              final InvoiceDao invoiceDao,
                              final InvoiceNotifier invoiceNotifier,
                              final GlobalLocker locker,
-                             final InternalBus eventBus,
+                             final PersistentBus eventBus,
                              final Clock clock) {
         this.generator = generator;
         this.billingApi = billingApi;
@@ -193,7 +193,7 @@ public class InvoiceDispatcher {
                 }
             } else {
                 log.info("Generated invoice {} with {} items for accountId {} and targetDate {} (targetDateTime {})", new Object[]{invoice.getId(), invoice.getNumberOfItems(),
-                                                                                                                                   accountId, targetDate, targetDateTime});
+                        accountId, targetDate, targetDateTime});
                 if (!dryRun) {
 
                     // Extract the set of invoiceId for which we see items that don't belong to current generated invoice
@@ -304,7 +304,7 @@ public class InvoiceDispatcher {
 
     private void postEvent(final BusInternalEvent event, final UUID accountId, final InternalCallContext context) {
         try {
-            eventBus.post(event, context);
+            eventBus.post(event);
         } catch (EventBusException e) {
             log.error(String.format("Failed to post event %s for account %s", event.getBusEventType(), accountId), e);
         }

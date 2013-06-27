@@ -13,11 +13,12 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.entitlement.engine.core;
 
 import java.util.UUID;
 
-import com.ning.billing.util.notificationq.NotificationKey;
+import com.ning.billing.notificationq.NotificationKey;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -27,10 +28,10 @@ public class EntitlementNotificationKey implements NotificationKey {
     private final UUID eventId;
     private final int seqId;
 
-    
+
     @JsonCreator
     public EntitlementNotificationKey(@JsonProperty("eventId") final UUID eventId,
-            @JsonProperty("seqId") final int seqId) {
+                                      @JsonProperty("seqId") final int seqId) {
         this.eventId = eventId;
         this.seqId = seqId;
     }

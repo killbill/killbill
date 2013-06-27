@@ -30,6 +30,7 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.bus.PersistentBus;
 import com.ning.billing.catalog.api.ActionPolicy;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
@@ -58,7 +59,6 @@ import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
 import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 import com.ning.billing.util.svcapi.tag.TagInternalApi;
-import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.Tag;
 
@@ -73,7 +73,7 @@ public class OverdueStateApplicator<T extends Blockable> {
     private final BlockingInternalApi blockingApi;
     private final Clock clock;
     private final OverdueCheckPoster poster;
-    private final InternalBus bus;
+    private final PersistentBus bus;
     private final AccountInternalApi accountApi;
     private final EntitlementInternalApi entitlementUserApi;
     private final OverdueEmailGenerator overdueEmailGenerator;
@@ -83,7 +83,7 @@ public class OverdueStateApplicator<T extends Blockable> {
     @Inject
     public OverdueStateApplicator(final BlockingInternalApi accessApi, final AccountInternalApi accountApi, final EntitlementInternalApi entitlementUserApi,
                                   final Clock clock, final OverdueCheckPoster poster, final OverdueEmailGenerator overdueEmailGenerator,
-                                  final EmailConfig config, final InternalBus bus, final TagInternalApi tagApi) {
+                                  final EmailConfig config, final PersistentBus bus, final TagInternalApi tagApi) {
         this.blockingApi = accessApi;
         this.accountApi = accountApi;
         this.entitlementUserApi = entitlementUserApi;
@@ -141,7 +141,7 @@ public class OverdueStateApplicator<T extends Blockable> {
         }
 
         try {
-            bus.post(createOverdueEvent(overdueable, previousOverdueStateName, nextOverdueState.getName(), context), context);
+            bus.post(createOverdueEvent(overdueable, previousOverdueStateName, nextOverdueState.getName(), context));
         } catch (Exception e) {
             log.error("Error posting overdue change event to bus", e);
         }
@@ -156,7 +156,7 @@ public class OverdueStateApplicator<T extends Blockable> {
         clearFutureNotification(overdueable, context);
 
         try {
-            bus.post(createOverdueEvent(overdueable, previousOverdueStateName, clearState.getName(), context), context);
+            bus.post(createOverdueEvent(overdueable, previousOverdueStateName, clearState.getName(), context));
         } catch (Exception e) {
             log.error("Error posting overdue change event to bus", e);
         }

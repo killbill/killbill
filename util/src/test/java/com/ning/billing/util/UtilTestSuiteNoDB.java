@@ -23,13 +23,13 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
 import com.ning.billing.GuicyKillbillTestSuiteNoDB;
+import com.ning.billing.bus.PersistentBus;
 import com.ning.billing.util.api.AuditUserApi;
 import com.ning.billing.util.audit.dao.AuditDao;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.glue.TestUtilModuleNoDB;
-import com.ning.billing.util.svcsapi.bus.InternalBus;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -39,7 +39,7 @@ public class UtilTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
 
     @Inject
-    protected InternalBus eventBus;
+    protected PersistentBus eventBus;
     @Inject
     protected CacheControllerDispatcher controlCacheDispatcher;
     @Inject

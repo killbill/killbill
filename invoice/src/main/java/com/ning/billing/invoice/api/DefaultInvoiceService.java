@@ -16,14 +16,14 @@
 
 package com.ning.billing.invoice.api;
 
+import com.ning.billing.bus.PersistentBus;
 import com.ning.billing.invoice.InvoiceListener;
 import com.ning.billing.invoice.InvoiceTagHandler;
 import com.ning.billing.invoice.notification.NextBillingDateNotifier;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
-import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotificationQueue;
-import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
-import com.ning.billing.util.svcsapi.bus.InternalBus;
+import com.ning.billing.notificationq.NotificationQueueService.NoSuchNotificationQueue;
+import com.ning.billing.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
 
 import com.google.inject.Inject;
 
@@ -33,10 +33,10 @@ public class DefaultInvoiceService implements InvoiceService {
     private final NextBillingDateNotifier dateNotifier;
     private final InvoiceListener invoiceListener;
     private final InvoiceTagHandler tagHandler;
-    private final InternalBus eventBus;
+    private final PersistentBus eventBus;
 
     @Inject
-    public DefaultInvoiceService(final InvoiceListener invoiceListener, final InvoiceTagHandler tagHandler, final InternalBus eventBus, final NextBillingDateNotifier dateNotifier) {
+    public DefaultInvoiceService(final InvoiceListener invoiceListener, final InvoiceTagHandler tagHandler, final PersistentBus eventBus, final NextBillingDateNotifier dateNotifier) {
         this.invoiceListener = invoiceListener;
         this.tagHandler = tagHandler;
         this.eventBus = eventBus;
@@ -53,7 +53,7 @@ public class DefaultInvoiceService implements InvoiceService {
         try {
             eventBus.register(invoiceListener);
             eventBus.register(tagHandler);
-        } catch (InternalBus.EventBusException e) {
+        } catch (PersistentBus.EventBusException e) {
             throw new RuntimeException("Unable to register to the EventBus!", e);
         }
         dateNotifier.initialize();
@@ -69,7 +69,7 @@ public class DefaultInvoiceService implements InvoiceService {
         try {
             eventBus.unregister(invoiceListener);
             eventBus.unregister(tagHandler);
-        } catch (InternalBus.EventBusException e) {
+        } catch (PersistentBus .EventBusException e) {
             throw new RuntimeException("Unable to unregister to the EventBus!", e);
         }
         dateNotifier.stop();

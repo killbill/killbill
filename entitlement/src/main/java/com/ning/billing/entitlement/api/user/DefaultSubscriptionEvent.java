@@ -29,6 +29,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public abstract class DefaultSubscriptionEvent extends DefaultBusInternalEvent implements SubscriptionInternalEvent {
+
     private final Long totalOrdering;
     private final UUID subscriptionId;
     private final UUID bundleId;

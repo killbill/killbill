@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.bus.PersistentBus;
 import com.ning.billing.osgi.api.OSGIServiceRegistration;
 import com.ning.billing.payment.api.DefaultPaymentMethod;
 import com.ning.billing.payment.api.PaymentApiException;
@@ -51,7 +52,6 @@ import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
 import com.ning.billing.util.svcapi.tag.TagInternalApi;
-import com.ning.billing.util.svcsapi.bus.InternalBus;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
@@ -69,7 +69,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
     public PaymentMethodProcessor(final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry,
                                   final AccountInternalApi accountInternalApi,
                                   final InvoiceInternalApi invoiceApi,
-                                  final InternalBus eventBus,
+                                  final PersistentBus eventBus,
                                   final PaymentDao paymentDao,
                                   final TagInternalApi tagUserApi,
                                   final GlobalLocker locker,

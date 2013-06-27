@@ -99,7 +99,7 @@ public class TestUserApiCancel extends EntitlementTestSuiteWithEmbeddedDB {
             assertEquals(trialPhase.getPhaseType(), PhaseType.TRIAL);
 
             // NEXT PHASE
-            final DateTime expectedPhaseTrialChange = DefaultClock.addDuration(subscription.getStartDate(), trialPhase.getDuration());
+            final DateTime expectedPhaseTrialChange = TestEntitlementHelper.addDuration(subscription.getStartDate(), trialPhase.getDuration());
             testUtil.checkNextPhaseChange(subscription, 1, expectedPhaseTrialChange);
 
             // MOVE TO NEXT PHASE
@@ -113,7 +113,7 @@ public class TestUserApiCancel extends EntitlementTestSuiteWithEmbeddedDB {
 
             // SET CTD + RE READ SUBSCRIPTION + CHANGE PLAN
             final Duration ctd = testUtil.getDurationMonth(1);
-            final DateTime newChargedThroughDate = DefaultClock.addDuration(expectedPhaseTrialChange, ctd);
+            final DateTime newChargedThroughDate = TestEntitlementHelper.addDuration(expectedPhaseTrialChange, ctd);
             entitlementInternalApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate, internalCallContext);
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId(), callContext);
 
@@ -176,7 +176,7 @@ public class TestUserApiCancel extends EntitlementTestSuiteWithEmbeddedDB {
             assertEquals(trialPhase.getPhaseType(), PhaseType.TRIAL);
 
             // NEXT PHASE
-            final DateTime expectedPhaseTrialChange = DefaultClock.addDuration(subscription.getStartDate(), trialPhase.getDuration());
+            final DateTime expectedPhaseTrialChange = TestEntitlementHelper.addDuration(subscription.getStartDate(), trialPhase.getDuration());
             testUtil.checkNextPhaseChange(subscription, 1, expectedPhaseTrialChange);
 
             // MOVE TO NEXT PHASE
@@ -220,7 +220,7 @@ public class TestUserApiCancel extends EntitlementTestSuiteWithEmbeddedDB {
             assertEquals(trialPhase.getPhaseType(), PhaseType.TRIAL);
 
             // NEXT PHASE
-            final DateTime expectedPhaseTrialChange = DefaultClock.addDuration(subscription.getStartDate(), trialPhase.getDuration());
+            final DateTime expectedPhaseTrialChange = TestEntitlementHelper.addDuration(subscription.getStartDate(), trialPhase.getDuration());
             testUtil.checkNextPhaseChange(subscription, 1, expectedPhaseTrialChange);
 
             // MOVE TO NEXT PHASE
@@ -233,7 +233,7 @@ public class TestUserApiCancel extends EntitlementTestSuiteWithEmbeddedDB {
 
             // SET CTD + RE READ SUBSCRIPTION + CHANGE PLAN
             final Duration ctd = testUtil.getDurationMonth(1);
-            final DateTime newChargedThroughDate = DefaultClock.addDuration(expectedPhaseTrialChange, ctd);
+            final DateTime newChargedThroughDate = TestEntitlementHelper.addDuration(expectedPhaseTrialChange, ctd);
             entitlementInternalApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate, internalCallContext);
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId(), callContext);
 

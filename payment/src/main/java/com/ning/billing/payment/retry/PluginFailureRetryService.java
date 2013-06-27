@@ -22,6 +22,7 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ning.billing.notificationq.NotificationQueueService;
 import com.ning.billing.payment.core.PaymentProcessor;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
@@ -29,7 +30,6 @@ import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.config.PaymentConfig;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
-import com.ning.billing.util.notificationq.NotificationQueueService;
 
 import com.google.inject.Inject;
 

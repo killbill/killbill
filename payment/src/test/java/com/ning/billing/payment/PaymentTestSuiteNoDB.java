@@ -24,6 +24,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
 import com.ning.billing.GuicyKillbillTestSuiteNoDB;
+import com.ning.billing.bus.PersistentBus;
 import com.ning.billing.osgi.api.OSGIServiceRegistration;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.core.PaymentMethodProcessor;
@@ -36,7 +37,6 @@ import com.ning.billing.payment.retry.PluginFailureRetryService;
 import com.ning.billing.util.config.PaymentConfig;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
-import com.ning.billing.util.svcsapi.bus.InternalBus;
 
 import com.google.inject.Guice;
 import com.google.inject.Inject;
@@ -59,7 +59,7 @@ public abstract class PaymentTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     @Inject
     protected PluginFailureRetryService pluginRetryService;
     @Inject
-    protected InternalBus eventBus;
+    protected PersistentBus eventBus;
     @Inject
     protected PaymentApi paymentApi;
     @Inject

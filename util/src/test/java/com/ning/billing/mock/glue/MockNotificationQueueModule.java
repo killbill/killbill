@@ -19,10 +19,10 @@ package com.ning.billing.mock.glue;
 import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
 
+import com.ning.billing.notificationq.MockNotificationQueueService;
+import com.ning.billing.notificationq.NotificationQueueConfig;
+import com.ning.billing.notificationq.NotificationQueueService;
 import com.ning.billing.util.glue.NotificationQueueModule;
-import com.ning.billing.util.notificationq.MockNotificationQueueService;
-import com.ning.billing.util.notificationq.NotificationQueueConfig;
-import com.ning.billing.util.notificationq.NotificationQueueService;
 
 public class MockNotificationQueueModule extends NotificationQueueModule {
 

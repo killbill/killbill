@@ -49,15 +49,15 @@ import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
 import com.ning.billing.entitlement.events.user.ApiEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
+import com.ning.billing.notificationq.NotificationKey;
+import com.ning.billing.notificationq.NotificationQueue;
+import com.ning.billing.notificationq.NotificationQueueService;
+import com.ning.billing.notificationq.NotificationQueueService.NoSuchNotificationQueue;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
-import com.ning.billing.util.notificationq.NotificationKey;
-import com.ning.billing.util.notificationq.NotificationQueue;
-import com.ning.billing.util.notificationq.NotificationQueueService;
-import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotificationQueue;
 
 import com.google.inject.Inject;
 
@@ -245,11 +245,11 @@ public class MockEntitlementDaoMemory implements EntitlementDao {
     }
 
     private Subscription buildSubscription(final SubscriptionData in, final InternalTenantContext context) {
-            final SubscriptionData subscription = new SubscriptionData(new SubscriptionBuilder(in), null, clock);
-            if (events.size() > 0) {
-                subscription.rebuildTransitions(getEventsForSubscription(in.getId(), context), catalogService.getFullCatalog());
-            }
-            return subscription;
+        final SubscriptionData subscription = new SubscriptionData(new SubscriptionBuilder(in), null, clock);
+        if (events.size() > 0) {
+            subscription.rebuildTransitions(getEventsForSubscription(in.getId(), context), catalogService.getFullCatalog());
+        }
+        return subscription;
 
     }
 
@@ -417,7 +417,7 @@ public class MockEntitlementDaoMemory implements EntitlementDao {
         try {
             final NotificationQueue subscriptionEventQueue = notificationQueueService.getNotificationQueue(Engine.ENTITLEMENT_SERVICE_NAME,
                                                                                                            Engine.NOTIFICATION_QUEUE_NAME);
-            subscriptionEventQueue.recordFutureNotificationFromTransaction(transactionalDao, effectiveDate, notificationKey, context);
+            subscriptionEventQueue.recordFutureNotificationFromTransaction(transactionalDao.getSqlDao(), effectiveDate, notificationKey, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
         } catch (NoSuchNotificationQueue e) {
             throw new RuntimeException(e);
         } catch (IOException e) {

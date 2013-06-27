@@ -31,13 +31,13 @@ import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.account.api.DefaultMutableAccountData;
 import com.ning.billing.account.api.user.DefaultAccountChangeEvent;
 import com.ning.billing.account.api.user.DefaultAccountCreationEvent;
+import com.ning.billing.bus.PersistentBus;
+import com.ning.billing.bus.PersistentBus.EventBusException;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.entity.dao.MockEntityDaoBase;
 import com.ning.billing.util.events.AccountChangeInternalEvent;
-import com.ning.billing.util.svcsapi.bus.InternalBus;
-import com.ning.billing.util.svcsapi.bus.InternalBus.EventBusException;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
@@ -47,10 +47,10 @@ import com.google.inject.Inject;
 public class MockAccountDao extends MockEntityDaoBase<AccountModelDao, Account, AccountApiException> implements AccountDao {
 
     private final MockEntityDaoBase<AccountEmailModelDao, AccountEmail, AccountApiException> accountEmailSqlDao = new MockEntityDaoBase<AccountEmailModelDao, AccountEmail, AccountApiException>();
-    private final InternalBus eventBus;
+    private final PersistentBus eventBus;
 
     @Inject
-    public MockAccountDao(final InternalBus eventBus) {
+    public MockAccountDao(final PersistentBus eventBus) {
         this.eventBus = eventBus;
     }
 
@@ -62,7 +62,7 @@ public class MockAccountDao extends MockEntityDaoBase<AccountModelDao, Account, 
             final Long accountRecordId = getRecordId(account.getId(), context);
             final long tenantRecordId = context == null ? InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID
                                                         : context.getTenantRecordId();
-            eventBus.post(new DefaultAccountCreationEvent(account, null, accountRecordId, tenantRecordId), context);
+            eventBus.post(new DefaultAccountCreationEvent(account, null, accountRecordId, tenantRecordId));
         } catch (final EventBusException ex) {
             Assert.fail(ex.toString());
         }
@@ -80,7 +80,7 @@ public class MockAccountDao extends MockEntityDaoBase<AccountModelDao, Account, 
                                                                                      accountRecordId, tenantRecordId);
         if (changeEvent.hasChanges()) {
             try {
-                eventBus.post(changeEvent, context);
+                eventBus.post(changeEvent);
             } catch (final EventBusException ex) {
                 Assert.fail(ex.toString());
             }

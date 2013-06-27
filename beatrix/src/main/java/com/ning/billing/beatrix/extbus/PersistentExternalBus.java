@@ -32,18 +32,18 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.beatrix.bus.api.ExternalBus;
 import com.ning.billing.beatrix.extbus.dao.ExtBusEventEntry;
 import com.ning.billing.beatrix.extbus.dao.ExtBusSqlDao;
+import com.ning.billing.bus.PersistentBus.EventBusException;
+import com.ning.billing.bus.PersistentBusConfig;
 import com.ning.billing.notification.plugin.api.ExtBusEvent;
+import com.ning.billing.queue.PersistentQueueBase;
 import com.ning.billing.util.Hostname;
 import com.ning.billing.util.bus.DefaultBusService;
-import com.ning.billing.util.bus.PersistentBusConfig;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.queue.PersistentQueueBase;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcsapi.bus.InternalBus.EventBusException;
 
 import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
@@ -76,8 +76,8 @@ public class PersistentExternalBus extends PersistentQueueBase implements Extern
             @Override
             public Thread newThread(final Runnable r) {
                 return new Thread(new ThreadGroup(DefaultBusService.EVENT_BUS_GROUP_NAME),
-                        r,
-                        DefaultBusService.EVENT_BUS_TH_NAME);
+                                  r,
+                                  DefaultBusService.EVENT_BUS_TH_NAME);
             }
         }), config.getNbThreads(), config);
         this.dao = dbi.onDemand(ExtBusSqlDao.class);
@@ -150,7 +150,7 @@ public class PersistentExternalBus extends PersistentQueueBase implements Extern
         eventBusDelegate.unregister(handlerInstance);
     }
 
-    public void post(final ExtBusEventEntry event, final InternalCallContext context) throws EventBusException{
+    public void post(final ExtBusEventEntry event, final InternalCallContext context) throws EventBusException {
         dao.insertBusExtEvent(event, context);
     }
 }

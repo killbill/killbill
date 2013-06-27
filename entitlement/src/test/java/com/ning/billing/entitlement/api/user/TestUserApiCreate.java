@@ -172,7 +172,7 @@ public class TestUserApiCreate extends EntitlementTestSuiteWithEmbeddedDB {
             assertTrue(events.size() == 1);
             assertTrue(events.get(0) instanceof PhaseEvent);
             final DateTime nextPhaseChange = ((PhaseEvent) events.get(0)).getEffectiveDate();
-            final DateTime nextExpectedPhaseChange = DefaultClock.addDuration(subscription.getStartDate(), currentPhase.getDuration());
+            final DateTime nextExpectedPhaseChange = TestEntitlementHelper.addDuration(subscription.getStartDate(), currentPhase.getDuration());
             assertEquals(nextPhaseChange, nextExpectedPhaseChange);
 
             testListener.pushExpectedEvent(NextEvent.PHASE);

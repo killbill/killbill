@@ -29,25 +29,25 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 
+import com.ning.billing.bus.PersistentBus;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.user.DefaultInvoiceCreationEvent;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.svcsapi.bus.InternalBus;
 
 import com.google.inject.Inject;
 
 public class MockInvoiceDao implements InvoiceDao {
 
-    private final InternalBus eventBus;
+    private final PersistentBus eventBus;
     private final Object monitor = new Object();
     private final Map<UUID, InvoiceModelDao> invoices = new LinkedHashMap<UUID, InvoiceModelDao>();
     private final Map<UUID, InvoiceItemModelDao> items = new LinkedHashMap<UUID, InvoiceItemModelDao>();
     private final Map<UUID, InvoicePaymentModelDao> payments = new LinkedHashMap<UUID, InvoicePaymentModelDao>();
 
     @Inject
-    public MockInvoiceDao(final InternalBus eventBus) {
+    public MockInvoiceDao(final PersistentBus eventBus) {
         this.eventBus = eventBus;
     }
 
@@ -66,8 +66,8 @@ public class MockInvoiceDao implements InvoiceDao {
         try {
             eventBus.post(new DefaultInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
                                                           InvoiceModelDaoHelper.getBalance(invoice), invoice.getCurrency(),
-                                                          null, 1L, 1L), context);
-        } catch (InternalBus.EventBusException ex) {
+                                                          null, 1L, 1L));
+        } catch (PersistentBus.EventBusException ex) {
             throw new RuntimeException(ex);
         }
     }

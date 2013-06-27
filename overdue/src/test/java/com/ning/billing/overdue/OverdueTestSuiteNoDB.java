@@ -21,7 +21,9 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
 import com.ning.billing.GuicyKillbillTestSuiteNoDB;
+import com.ning.billing.bus.PersistentBus;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.notificationq.NotificationQueueService;
 import com.ning.billing.ovedue.notification.OverdueCheckNotifier;
 import com.ning.billing.ovedue.notification.OverdueCheckPoster;
 import com.ning.billing.overdue.applicator.OverdueBusListenerTester;
@@ -31,13 +33,11 @@ import com.ning.billing.overdue.glue.TestOverdueModuleNoDB;
 import com.ning.billing.overdue.service.DefaultOverdueService;
 import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
-import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
 import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
 import com.ning.billing.util.svcsapi.bus.BusService;
-import com.ning.billing.util.svcsapi.bus.InternalBus;
 
 import com.google.inject.Guice;
 import com.google.inject.Inject;
@@ -58,7 +58,7 @@ public abstract class OverdueTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     @Inject
     protected EntitlementInternalApi entitlementApi;
     @Inject
-    protected InternalBus bus;
+    protected PersistentBus bus;
     @Inject
     protected InternalCallContextFactory internalCallContextFactory;
     @Inject

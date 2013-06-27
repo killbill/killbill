@@ -23,6 +23,8 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
 import com.ning.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
+import com.ning.billing.bus.PersistentBus;
+import com.ning.billing.notificationq.NotificationQueueService;
 import com.ning.billing.util.audit.dao.AuditDao;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
@@ -31,8 +33,6 @@ import com.ning.billing.util.customfield.dao.CustomFieldDao;
 import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.export.dao.DatabaseExportDao;
 import com.ning.billing.util.glue.TestUtilModuleWithEmbeddedDB;
-import com.ning.billing.util.notificationq.NotificationQueueService;
-import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.tag.dao.DefaultTagDao;
 import com.ning.billing.util.tag.dao.TagDefinitionDao;
 
@@ -44,7 +44,7 @@ import com.google.inject.Stage;
 public abstract class UtilTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWithEmbeddedDB {
 
     @Inject
-    protected InternalBus eventBus;
+    protected PersistentBus eventBus;
     @Inject
     protected CacheControllerDispatcher controlCacheDispatcher;
     @Inject

@@ -30,6 +30,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ning.billing.ErrorCode;
+import com.ning.billing.bus.PersistentBus;
+import com.ning.billing.bus.PersistentBus.EventBusException;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
@@ -47,8 +49,6 @@ import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
-import com.ning.billing.util.svcsapi.bus.InternalBus;
-import com.ning.billing.util.svcsapi.bus.InternalBus.EventBusException;
 
 import com.google.inject.Inject;
 
@@ -57,14 +57,14 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     private static final Logger log = LoggerFactory.getLogger(DefaultInvoiceDao.class);
 
     private final NextBillingDatePoster nextBillingDatePoster;
-    private final InternalBus eventBus;
+    private final PersistentBus eventBus;
     private final InvoiceDaoHelper invoiceDaoHelper;
     private final CBADao cbaDao;
 
     @Inject
     public DefaultInvoiceDao(final IDBI dbi,
                              final NextBillingDatePoster nextBillingDatePoster,
-                             final InternalBus eventBus,
+                             final PersistentBus eventBus,
                              final Clock clock,
                              final CacheControllerDispatcher cacheControllerDispatcher,
                              final NonEntityDao nonEntityDao) {
@@ -72,7 +72,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
         this.nextBillingDatePoster = nextBillingDatePoster;
         this.eventBus = eventBus;
         this.invoiceDaoHelper = new InvoiceDaoHelper();
-        this.cbaDao =  new CBADao();
+        this.cbaDao = new CBADao();
     }
 
     @Override
@@ -308,9 +308,9 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
                 // Retrieve the amounts to adjust, if needed
                 final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts = invoiceDaoHelper.computeItemAdjustments(payment.getInvoiceId().toString(),
-                                                                                               entitySqlDaoWrapperFactory,
-                                                                                               invoiceItemIdsWithNullAmounts,
-                                                                                               context);
+                                                                                                                entitySqlDaoWrapperFactory,
+                                                                                                                invoiceItemIdsWithNullAmounts,
+                                                                                                                context);
 
                 // Compute the actual amount to refund
                 final BigDecimal requestedPositiveAmount = invoiceDaoHelper.computePositiveRefundAmount(payment, requestedRefundAmount, invoiceItemIdsWithAmounts);
@@ -357,8 +357,8 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                     for (final UUID invoiceItemId : invoiceItemIdsWithAmounts.keySet()) {
                         final BigDecimal adjAmount = invoiceItemIdsWithAmounts.get(invoiceItemId);
                         final InvoiceItemModelDao item = invoiceDaoHelper.createAdjustmentItem(entitySqlDaoWrapperFactory, invoice.getId(), invoiceItemId, adjAmount,
-                                                                              invoice.getCurrency(), context.getCreatedDate().toLocalDate(),
-                                                                              context);
+                                                                                               invoice.getCurrency(), context.getCreatedDate().toLocalDate(),
+                                                                                               context);
                         transInvoiceItemDao.create(item, context);
                     }
                 }
@@ -372,7 +372,6 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
             }
         });
     }
-
 
 
     @Override
@@ -582,7 +581,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
             @Override
             public InvoiceItemModelDao inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
                 final InvoiceItemModelDao invoiceItemAdjustment = invoiceDaoHelper.createAdjustmentItem(entitySqlDaoWrapperFactory, invoiceId, invoiceItemId, positiveAdjAmount,
-                                                                                       currency, effectiveDate, context);
+                                                                                                        currency, effectiveDate, context);
                 invoiceDaoHelper.insertItem(entitySqlDaoWrapperFactory, invoiceItemAdjustment, context);
 
                 cbaDao.doCBAComplexity(accountId, entitySqlDaoWrapperFactory, context);
@@ -712,7 +711,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                               final UUID userToken, final InternalCallContext context) {
         try {
             eventBus.postFromTransaction(new DefaultInvoiceAdjustmentEvent(invoiceId, accountId, userToken, context.getAccountRecordId(), context.getTenantRecordId()),
-                                         entitySqlDaoWrapperFactory, context);
+                                         entitySqlDaoWrapperFactory.getSqlDao());
         } catch (EventBusException e) {
             log.warn("Failed to post adjustment event for invoice " + invoiceId, e);
         }

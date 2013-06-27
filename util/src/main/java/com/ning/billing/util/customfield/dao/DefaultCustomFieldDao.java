@@ -22,12 +22,15 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.skife.jdbi.v2.IDBI;
+import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ning.billing.BillingExceptionBase;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.ObjectType;
+import com.ning.billing.bus.PersistentBus;
+import com.ning.billing.bus.dao.PersistentBusSqlDao;
 import com.ning.billing.util.api.CustomFieldApiException;
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
@@ -44,8 +47,6 @@ import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import com.ning.billing.util.events.BusInternalEvent;
-import com.ning.billing.util.svcsapi.bus.InternalBus;
-import com.ning.billing.util.tag.dao.TagModelDao;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
@@ -56,10 +57,10 @@ public class DefaultCustomFieldDao extends EntityDaoBase<CustomFieldModelDao, Cu
 
     private final static Logger log = LoggerFactory.getLogger(DefaultCustomFieldDao.class);
 
-    private final InternalBus bus;
+    private final PersistentBus bus;
 
     @Inject
-    public DefaultCustomFieldDao(final IDBI dbi, final Clock clock, final CacheControllerDispatcher controllerDispatcher, final NonEntityDao nonEntityDao, final InternalBus bus) {
+    public DefaultCustomFieldDao(final IDBI dbi, final Clock clock, final CacheControllerDispatcher controllerDispatcher, final NonEntityDao nonEntityDao, final PersistentBus bus) {
         super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, controllerDispatcher, nonEntityDao), CustomFieldSqlDao.class);
         this.bus = bus;
     }
@@ -120,8 +121,8 @@ public class DefaultCustomFieldDao extends EntityDaoBase<CustomFieldModelDao, Cu
         }
 
         try {
-            bus.postFromTransaction(customFieldEvent, entitySqlDaoWrapperFactory, context);
-        } catch (InternalBus.EventBusException e) {
+            bus.postFromTransaction(customFieldEvent, entitySqlDaoWrapperFactory.getSqlDao());
+        } catch (PersistentBus.EventBusException e) {
             log.warn("Failed to post tag event for custom field " + customField.getId().toString(), e);
         }
 

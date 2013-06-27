@@ -26,15 +26,15 @@ import org.slf4j.LoggerFactory;
 
 import com.ning.billing.beatrix.bus.api.ExternalBus;
 import com.ning.billing.beatrix.lifecycle.DefaultLifecycle;
+import com.ning.billing.bus.PersistentBus;
 import com.ning.billing.jaxrs.resources.JaxRsResourceBase;
 import com.ning.billing.jaxrs.util.KillbillEventHandler;
+import com.ning.billing.notificationq.NotificationQueueService;
 import com.ning.billing.server.config.KillbillServerConfig;
 import com.ning.billing.server.healthchecks.KillbillHealthcheck;
 import com.ning.billing.server.modules.KillbillServerModule;
 import com.ning.billing.server.security.TenantFilter;
-import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.svcsapi.bus.BusService;
-import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.jetty.base.modules.ServerModuleBuilder;
 import com.ning.jetty.core.listeners.SetupServer;
 
@@ -74,11 +74,11 @@ public class KillbillGuiceListener extends SetupServer {
                 .addHealthCheck(KillbillHealthcheck.class)
                 .addJMXExport(KillbillHealthcheck.class)
                 .addJMXExport(NotificationQueueService.class)
-                .addJMXExport(InternalBus.class)
+                .addJMXExport(PersistentBus.class)
                 .addJMXExport(ExternalBus.class)
                 .addModule(getModule())
-                // Don't filter all requests through Jersey, only the JAX-RS APIs (otherwise,
-                // things like static resources, favicon, etc. are 404'ed)
+                        // Don't filter all requests through Jersey, only the JAX-RS APIs (otherwise,
+                        // things like static resources, favicon, etc. are 404'ed)
                 .setJerseyUriPattern("(" + JaxRsResourceBase.PREFIX + "|" + JaxRsResourceBase.PLUGINS_PATH + ")" + "/.*")
                 .addJerseyResource("com.ning.billing.jaxrs.mappers")
                 .addJerseyResource("com.ning.billing.jaxrs.resources");
@@ -116,7 +116,7 @@ public class KillbillGuiceListener extends SetupServer {
         //
         try {
             killbillBusService.getBus().register(killbilleventHandler);
-        } catch (InternalBus.EventBusException e) {
+        } catch (PersistentBus.EventBusException e) {
             logger.error("Failed to register for event notifications, this is bad exiting!", e);
             System.exit(1);
         }
@@ -139,7 +139,7 @@ public class KillbillGuiceListener extends SetupServer {
 
         try {
             killbillBusService.getBus().unregister(killbilleventHandler);
-        } catch (InternalBus.EventBusException e) {
+        } catch (PersistentBus.EventBusException e) {
             logger.warn("Failed to unregister for event notifications", e);
         }
 

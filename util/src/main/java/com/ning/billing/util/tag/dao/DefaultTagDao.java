@@ -28,9 +28,9 @@ import org.slf4j.LoggerFactory;
 import com.ning.billing.BillingExceptionBase;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.ObjectType;
+import com.ning.billing.bus.PersistentBus;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.audit.ChangeType;
-import com.ning.billing.util.cache.Cachable.CacheType;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
@@ -42,7 +42,6 @@ import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import com.ning.billing.util.events.TagInternalEvent;
-import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.api.user.TagEventBuilder;
@@ -57,10 +56,10 @@ public class DefaultTagDao extends EntityDaoBase<TagModelDao, Tag, TagApiExcepti
     private static final Logger log = LoggerFactory.getLogger(DefaultTagDao.class);
 
     private final TagEventBuilder tagEventBuilder;
-    private final InternalBus bus;
+    private final PersistentBus bus;
 
     @Inject
-    public DefaultTagDao(final IDBI dbi, final TagEventBuilder tagEventBuilder, final InternalBus bus, final Clock clock,
+    public DefaultTagDao(final IDBI dbi, final TagEventBuilder tagEventBuilder, final PersistentBus bus, final Clock clock,
                          final CacheControllerDispatcher controllerDispatcher, final NonEntityDao nonEntityDao) {
         super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, controllerDispatcher, nonEntityDao), TagSqlDao.class);
         this.tagEventBuilder = tagEventBuilder;
@@ -125,8 +124,8 @@ public class DefaultTagDao extends EntityDaoBase<TagModelDao, Tag, TagApiExcepti
         }
 
         try {
-            bus.postFromTransaction(tagEvent, entitySqlDaoWrapperFactory, context);
-        } catch (InternalBus.EventBusException e) {
+            bus.postFromTransaction(tagEvent, entitySqlDaoWrapperFactory.getSqlDao());
+        } catch (PersistentBus.EventBusException e) {
             log.warn("Failed to post tag event for tag " + tag.getId().toString(), e);
         }
     }

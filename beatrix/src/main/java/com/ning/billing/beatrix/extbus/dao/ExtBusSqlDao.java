@@ -37,12 +37,12 @@ import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import com.ning.billing.ObjectType;
 import com.ning.billing.notification.plugin.api.ExtBusEventType;
+import com.ning.billing.queue.PersistentQueueEntryLifecycle.PersistentQueueEntryLifecycleState;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 import com.ning.billing.util.dao.BinderBase;
 import com.ning.billing.util.dao.MapperBase;
-import com.ning.billing.util.queue.PersistentQueueEntryLifecycle.PersistentQueueEntryLifecycleState;
 
 @ExternalizedSqlViaStringTemplate3()
 public interface ExtBusSqlDao extends Transactional<ExtBusSqlDao>, CloseMe {

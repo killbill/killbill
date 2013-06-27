@@ -189,9 +189,9 @@ public class TestUserApiError extends EntitlementTestSuiteNoDB {
             assertTrue(testListener.isCompleted(5000));
 
             // SET CTD TO CANCEL IN FUTURE
-            final DateTime expectedPhaseTrialChange = DefaultClock.addDuration(subscription.getStartDate(), trialPhase.getDuration());
+            final DateTime expectedPhaseTrialChange = TestEntitlementHelper.addDuration(subscription.getStartDate(), trialPhase.getDuration());
             final Duration ctd = testUtil.getDurationMonth(1);
-            final DateTime newChargedThroughDate = DefaultClock.addDuration(expectedPhaseTrialChange, ctd);
+            final DateTime newChargedThroughDate = TestEntitlementHelper.addDuration(expectedPhaseTrialChange, ctd);
             entitlementInternalApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate, internalCallContext);
 
             subscription = entitlementApi.getSubscriptionFromId(subscription.getId(), tenantContext);

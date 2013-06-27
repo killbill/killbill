@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import com.ning.billing.BillingExceptionBase;
 import com.ning.billing.ErrorCode;
+import com.ning.billing.bus.PersistentBus;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
@@ -41,7 +42,6 @@ import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import com.ning.billing.util.events.TagDefinitionInternalEvent;
-import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.TagDefinition;
 import com.ning.billing.util.tag.api.user.TagEventBuilder;
@@ -55,10 +55,10 @@ public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinitionModelDao
     private static final Logger log = LoggerFactory.getLogger(DefaultTagDefinitionDao.class);
 
     private final TagEventBuilder tagEventBuilder;
-    private final InternalBus bus;
+    private final PersistentBus bus;
 
     @Inject
-    public DefaultTagDefinitionDao(final IDBI dbi, final TagEventBuilder tagEventBuilder, final InternalBus bus, final Clock clock,
+    public DefaultTagDefinitionDao(final IDBI dbi, final TagEventBuilder tagEventBuilder, final PersistentBus bus, final Clock clock,
                                    final CacheControllerDispatcher controllerDispatcher, final NonEntityDao nonEntityDao) {
         super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, controllerDispatcher, nonEntityDao), TagDefinitionSqlDao.class);
         this.tagEventBuilder = tagEventBuilder;
@@ -174,8 +174,8 @@ public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinitionModelDao
                         tagDefinitionEvent = tagEventBuilder.newUserTagDefinitionCreationEvent(tagDefinition.getId(), tagDefinition, context);
                     }
                     try {
-                        bus.postFromTransaction(tagDefinitionEvent, entitySqlDaoWrapperFactory, context);
-                    } catch (InternalBus.EventBusException e) {
+                        bus.postFromTransaction(tagDefinitionEvent, entitySqlDaoWrapperFactory.getSqlDao());
+                    } catch (PersistentBus.EventBusException e) {
                         log.warn("Failed to post tag definition creation event for tag " + tagDefinition.getId(), e);
                     }
 
@@ -249,8 +249,8 @@ public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinitionModelDao
         }
 
         try {
-            bus.postFromTransaction(tagDefinitionEvent, entitySqlDaoWrapperFactory, context);
-        } catch (InternalBus.EventBusException e) {
+            bus.postFromTransaction(tagDefinitionEvent, entitySqlDaoWrapperFactory.getSqlDao());
+        } catch (PersistentBus.EventBusException e) {
             log.warn("Failed to post tag definition event for tag " + tagDefinition.getId().toString(), e);
         }
     }

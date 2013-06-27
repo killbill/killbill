@@ -30,13 +30,13 @@ import java.util.concurrent.TimeoutException;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 
-import org.skife.config.TimeSpan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.bus.PersistentBus;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.osgi.api.OSGIServiceRegistration;
@@ -67,7 +67,6 @@ import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
 import com.ning.billing.util.svcapi.tag.TagInternalApi;
-import com.ning.billing.util.svcsapi.bus.InternalBus;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
@@ -102,7 +101,7 @@ public class PaymentProcessor extends ProcessorBase {
                             final PluginFailureRetryServiceScheduler pluginFailureRetryService,
                             final AutoPayRetryServiceScheduler autoPayoffRetryService,
                             final PaymentDao paymentDao,
-                            final InternalBus eventBus,
+                            final PersistentBus eventBus,
                             final Clock clock,
                             final GlobalLocker locker,
                             final PaymentConfig paymentConfig,

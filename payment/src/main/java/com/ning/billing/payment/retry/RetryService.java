@@ -17,9 +17,9 @@ package com.ning.billing.payment.retry;
 
 import java.util.UUID;
 
+import com.ning.billing.notificationq.NotificationQueueService.NoSuchNotificationQueue;
+import com.ning.billing.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
 import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotificationQueue;
-import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
 
 public interface RetryService {
 

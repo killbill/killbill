@@ -22,6 +22,8 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ning.billing.bus.PersistentBus;
+import com.ning.billing.bus.PersistentBus.EventBusException;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.alignment.PlanAligner;
 import com.ning.billing.entitlement.alignment.TimedPhase;
@@ -40,20 +42,18 @@ import com.ning.billing.entitlement.events.user.ApiEvent;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
+import com.ning.billing.notificationq.NotificationKey;
+import com.ning.billing.notificationq.NotificationQueue;
+import com.ning.billing.notificationq.NotificationQueueService;
+import com.ning.billing.notificationq.NotificationQueueService.NoSuchNotificationQueue;
+import com.ning.billing.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
+import com.ning.billing.notificationq.NotificationQueueService.NotificationQueueHandler;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
-import com.ning.billing.util.notificationq.NotificationKey;
-import com.ning.billing.util.notificationq.NotificationQueue;
-import com.ning.billing.util.notificationq.NotificationQueueService;
-import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotificationQueue;
-import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
-import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
-import com.ning.billing.util.svcsapi.bus.InternalBus;
-import com.ning.billing.util.svcsapi.bus.InternalBus.EventBusException;
 
 import com.google.inject.Inject;
 
@@ -68,7 +68,7 @@ public class Engine implements EventListener, EntitlementService {
     private final EntitlementDao dao;
     private final PlanAligner planAligner;
     private final AddonUtils addonUtils;
-    private final InternalBus eventBus;
+    private final PersistentBus eventBus;
     private final NotificationQueueService notificationQueueService;
     private final InternalCallContextFactory internalCallContextFactory;
     private NotificationQueue subscriptionEventQueue;
@@ -76,7 +76,7 @@ public class Engine implements EventListener, EntitlementService {
 
     @Inject
     public Engine(final Clock clock, final EntitlementDao dao, final PlanAligner planAligner,
-                  final AddonUtils addonUtils, final InternalBus eventBus,
+                  final AddonUtils addonUtils, final PersistentBus eventBus,
                   final NotificationQueueService notificationQueueService,
                   final InternalCallContextFactory internalCallContextFactory,
                   final SubscriptionApiService apiService) {
@@ -171,7 +171,7 @@ public class Engine implements EventListener, EntitlementService {
             final EffectiveSubscriptionInternalEvent busEvent = new DefaultEffectiveSubscriptionEvent(transition, subscription.getAlignStartDate(),
                                                                                                       context.getUserToken(),
                                                                                                       context.getAccountRecordId(), context.getTenantRecordId());
-            eventBus.post(busEvent, context);
+            eventBus.post(busEvent);
         } catch (EventBusException e) {
             log.warn("Failed to post entitlement event " + event, e);
         }

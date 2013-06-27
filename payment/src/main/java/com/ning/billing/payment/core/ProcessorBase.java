@@ -30,6 +30,8 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.bus.PersistentBus;
+import com.ning.billing.bus.PersistentBus.EventBusException;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.osgi.api.OSGIServiceRegistration;
@@ -48,8 +50,6 @@ import com.ning.billing.util.globallocker.LockFailedException;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
 import com.ning.billing.util.svcapi.tag.TagInternalApi;
-import com.ning.billing.util.svcsapi.bus.InternalBus;
-import com.ning.billing.util.svcsapi.bus.InternalBus.EventBusException;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.Tag;
 
@@ -62,7 +62,7 @@ public abstract class ProcessorBase {
 
     protected final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry;
     protected final AccountInternalApi accountInternalApi;
-    protected final InternalBus eventBus;
+    protected final PersistentBus eventBus;
     protected final GlobalLocker locker;
     protected final ExecutorService executor;
     protected final PaymentDao paymentDao;
@@ -73,7 +73,7 @@ public abstract class ProcessorBase {
 
     public ProcessorBase(final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry,
                          final AccountInternalApi accountInternalApi,
-                         final InternalBus eventBus,
+                         final PersistentBus eventBus,
                          final PaymentDao paymentDao,
                          final TagInternalApi tagInternalApi,
                          final GlobalLocker locker,
@@ -142,7 +142,7 @@ public abstract class ProcessorBase {
             return;
         }
         try {
-            eventBus.post(ev, context);
+            eventBus.post(ev);
         } catch (EventBusException e) {
             log.error("Failed to post Payment event event for account {} ", accountId, e);
         }

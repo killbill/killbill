@@ -30,6 +30,8 @@ import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.Type;
+import com.ning.billing.notificationq.Notification;
+import com.ning.billing.notificationq.NotificationQueue;
 import com.ning.billing.overdue.OverdueTestSuiteWithEmbeddedDB;
 import com.ning.billing.overdue.service.DefaultOverdueService;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
@@ -37,8 +39,6 @@ import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import com.ning.billing.util.jackson.ObjectMapper;
-import com.ning.billing.util.notificationq.Notification;
-import com.ning.billing.util.notificationq.NotificationQueue;
 
 public class TestDefaultOverdueCheckPoster extends OverdueTestSuiteWithEmbeddedDB {
 
@@ -81,7 +81,7 @@ public class TestDefaultOverdueCheckPoster extends OverdueTestSuiteWithEmbeddedD
         insertOverdueCheckAndVerifyQueueContent(otherOverdueable, 15, 5);
 
         // Verify the final content of the queue
-        Assert.assertEquals(overdueQueue.getFutureNotificationsForAccount(internalCallContext).size(), 2);
+        Assert.assertEquals(overdueQueue.getFutureNotificationsForAccount(internalCallContext.getAccountRecordId()).size(), 2);
     }
 
     private void insertOverdueCheckAndVerifyQueueContent(final Blockable overdueable, final int nbDaysInFuture, final int expectedNbDaysInFuture) throws IOException {

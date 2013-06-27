@@ -142,6 +142,10 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>com.ning.billing.commons</groupId>
+            <artifactId>killbill-queue</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.ning.jetty</groupId>
             <artifactId>ning-service-skeleton-base</artifactId>
         </dependency>

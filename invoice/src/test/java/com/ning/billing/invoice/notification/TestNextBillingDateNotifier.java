@@ -26,8 +26,8 @@ import org.testng.annotations.Test;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.invoice.InvoiceTestSuiteWithEmbeddedDB;
 import com.ning.billing.invoice.api.DefaultInvoiceService;
+import com.ning.billing.notificationq.NotificationQueue;
 import com.ning.billing.util.clock.ClockMock;
-import com.ning.billing.util.notificationq.NotificationQueue;
 
 import static com.jayway.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -46,7 +46,7 @@ public class TestNextBillingDateNotifier extends InvoiceTestSuiteWithEmbeddedDB 
         final NotificationQueue nextBillingQueue = notificationQueueService.getNotificationQueue(DefaultInvoiceService.INVOICE_SERVICE_NAME, DefaultNextBillingDateNotifier.NEXT_BILLING_DATE_NOTIFIER_QUEUE);
 
 
-        nextBillingQueue.recordFutureNotification(now, new NextBillingDateNotificationKey(subscriptionId), internalCallContext);
+        nextBillingQueue.recordFutureNotification(now, new NextBillingDateNotificationKey(subscriptionId), internalCallContext.getUserToken(), internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());
 
         // Move time in the future after the notification effectiveDate
         ((ClockMock) clock).setDeltaFromReality(3000);

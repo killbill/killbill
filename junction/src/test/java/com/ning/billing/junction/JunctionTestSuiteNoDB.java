@@ -21,6 +21,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
 import com.ning.billing.GuicyKillbillTestSuiteNoDB;
+import com.ning.billing.bus.PersistentBus;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.junction.block.BlockingChecker;
@@ -34,7 +35,6 @@ import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 import com.ning.billing.util.svcapi.junction.BillingInternalApi;
 import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
 import com.ning.billing.util.svcapi.tag.TagInternalApi;
-import com.ning.billing.util.svcsapi.bus.InternalBus;
 import com.ning.billing.util.tag.dao.TagDao;
 
 import com.google.inject.Guice;
@@ -65,7 +65,7 @@ public abstract class JunctionTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     @Inject
     protected EntitlementInternalApi entitlementInternalApi;
     @Inject
-    protected InternalBus bus;
+    protected PersistentBus bus;
     @Inject
     protected TagDao tagDao;
     @Inject

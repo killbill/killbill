@@ -32,12 +32,12 @@ import com.ning.billing.account.api.DefaultAccountEmail;
 import com.ning.billing.account.dao.AccountDao;
 import com.ning.billing.account.dao.AccountModelDao;
 import com.ning.billing.account.dao.MockAccountDao;
+import com.ning.billing.bus.PersistentBus;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.svcsapi.bus.InternalBus;
 
 public class TestDefaultAccountUserApiWithMocks extends AccountTestSuiteNoDB {
 
@@ -51,7 +51,7 @@ public class TestDefaultAccountUserApiWithMocks extends AccountTestSuiteNoDB {
 
     @BeforeMethod(groups = "fast")
     public void setUp() throws Exception {
-        accountDao = new MockAccountDao(Mockito.mock(InternalBus.class));
+        accountDao = new MockAccountDao(Mockito.mock(PersistentBus.class));
         accountUserApi = new DefaultAccountUserApi(factory, internalFactory, accountDao);
     }
 

@@ -16,9 +16,9 @@
 
 package com.ning.billing.util.events;
 
-import java.util.UUID;
+import com.ning.billing.bus.BusPersistentEvent;
 
-public interface BusInternalEvent {
+public interface BusInternalEvent extends BusPersistentEvent {
 
     public enum BusInternalEventType {
         ACCOUNT_CREATE,
@@ -45,9 +45,4 @@ public interface BusInternalEvent {
 
     public BusInternalEventType getBusEventType();
 
-    public UUID getUserToken();
-
-    public Long getTenantRecordId();
-
-    public Long getAccountRecordId();
 }

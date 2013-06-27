@@ -26,6 +26,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
 import com.ning.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
+import com.ning.billing.bus.PersistentBus;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.DefaultInvoiceService;
 import com.ning.billing.invoice.api.InvoiceMigrationApi;
@@ -36,18 +37,17 @@ import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.generator.InvoiceGenerator;
 import com.ning.billing.invoice.glue.TestInvoiceModuleWithEmbeddedDb;
 import com.ning.billing.invoice.notification.NextBillingDateNotifier;
+import com.ning.billing.notificationq.NotificationQueueService;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.globallocker.GlobalLocker;
-import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
 import com.ning.billing.util.svcapi.junction.BillingInternalApi;
 import com.ning.billing.util.svcsapi.bus.BusService;
-import com.ning.billing.util.svcsapi.bus.InternalBus;
 
 import com.google.inject.Guice;
 import com.google.inject.Inject;
@@ -62,7 +62,7 @@ public abstract class InvoiceTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     @Inject
     protected InvoiceService invoiceService;
     @Inject
-    protected InternalBus bus;
+    protected PersistentBus bus;
     @Inject
     protected CacheControllerDispatcher controllerDispatcher;
     @Inject
