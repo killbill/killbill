@@ -96,8 +96,6 @@
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
-        <!-- TEST SCOPE -->
-
         <dependency>
             <groupId>com.ning.billing</groupId>
             <artifactId>killbill-osgi</artifactId>
@@ -143,6 +141,20 @@
         </dependency>
         <dependency>
             <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-util</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing.commons</groupId>
+            <artifactId>killbill-queue</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing.commons</groupId>
+            <artifactId>killbill-util</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing.commons</groupId>
             <artifactId>killbill-util</artifactId>
             <type>test-jar</type>
             <scope>test</scope>

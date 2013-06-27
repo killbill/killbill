@@ -17,7 +17,13 @@
 package com.ning.billing.ovedue.notification;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.IDBI;
@@ -31,7 +37,6 @@ import com.ning.billing.notificationq.NotificationQueue;
 import com.ning.billing.notificationq.NotificationQueueService;
 import com.ning.billing.notificationq.NotificationQueueService.NoSuchNotificationQueue;
 import com.ning.billing.overdue.service.DefaultOverdueService;
-import com.ning.billing.queue.PersistentQueueBase;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.clock.Clock;
@@ -42,6 +47,9 @@ import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 public class DefaultOverdueCheckPoster implements OverdueCheckPoster {
@@ -135,19 +143,23 @@ public class DefaultOverdueCheckPoster implements OverdueCheckPoster {
                                                                                    final NotificationQueue checkOverdueQueue,
                                                                                    final Blockable overdueable,
                                                                                    final InternalCallContext context) {
-        final List<Notification> notifications = new ArrayList<Notification>();
 
-        final List<Notification> candidates = checkOverdueQueue.getFutureNotificationsForAccountFromTransaction(context.getAccountRecordId(), entitySqlDaoWrapperFactory.getSqlDao());
-        for (final Notification candidate : candidates) {
-            if (OverdueCheckNotificationKey.class.getName().equals(candidate.getNotificationKeyClass())) {
-                final OverdueCheckNotificationKey key = PersistentQueueBase.deserializeEvent(candidate.getNotificationKeyClass(), candidate.getNotificationKey());
-
-                if (Type.get(overdueable).equals(key.getType()) && overdueable.getId().equals(key.getUuidKey())) {
-                    notifications.add(candidate);
-                }
+        final Map<Notification, OverdueCheckNotificationKey> candidates = checkOverdueQueue.getFutureNotificationsForAccountAndTypeFromTransaction(OverdueCheckNotificationKey.class, context.getAccountRecordId(), entitySqlDaoWrapperFactory.getSqlDao());
+        final Map<Notification, OverdueCheckNotificationKey> notifications = Maps.filterEntries(candidates, new Predicate<Entry<Notification, OverdueCheckNotificationKey>>() {
+            @Override
+            public boolean apply(@Nullable final Entry<Notification, OverdueCheckNotificationKey> input) {
+                final OverdueCheckNotificationKey notificationKey = input.getValue();
+                return (Type.get(overdueable).equals(notificationKey.getType()) && overdueable.getId().equals(notificationKey.getUuidKey()));
             }
-        }
+        });
 
-        return notifications;
+        final List<Notification> result = new ArrayList(notifications.keySet());
+        Collections.sort(result, new Comparator<Notification>() {
+            @Override
+            public int compare(final Notification o1, final Notification o2) {
+                return o1.getEffectiveDate().compareTo(o2.getEffectiveDate());
+            }
+        });
+        return result;
     }
 }

@@ -27,6 +27,7 @@ import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.beatrix.bus.api.ExternalBus;
@@ -35,6 +36,7 @@ import com.ning.billing.beatrix.extbus.dao.ExtBusSqlDao;
 import com.ning.billing.bus.PersistentBus.EventBusException;
 import com.ning.billing.bus.PersistentBusConfig;
 import com.ning.billing.notification.plugin.api.ExtBusEvent;
+import com.ning.billing.notification.plugin.api.ExtBusEventType;
 import com.ning.billing.queue.PersistentQueueBase;
 import com.ning.billing.util.Hostname;
 import com.ning.billing.util.bus.DefaultBusService;
@@ -100,7 +102,13 @@ public class PersistentExternalBus extends PersistentQueueBase implements Extern
 
         int result = 0;
         for (final ExtBusEventEntry cur : events) {
-            final UUID accountId = getAccountIdFromRecordId(cur.getAccountRecordId(), context);
+            // The accountRecordId for a newly created account is not set
+            final UUID accountId;
+            if (cur.getObjectType() == ObjectType.ACCOUNT && cur.getExtBusType() == ExtBusEventType.ACCOUNT_CREATION) {
+                accountId = cur.getObjectId();
+            } else {
+                accountId = getAccountIdFromRecordId(cur.getAccountRecordId(), context);
+            }
             final ExtBusEvent event = new DefaultBusEvent(cur.getExtBusType(), cur.getObjectType(), cur.getObjectId(), accountId, null);
             result++;
             // STEPH exception handling is done by GUAVA-- logged a bug Issue-780

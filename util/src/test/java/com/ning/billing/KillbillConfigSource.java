@@ -35,10 +35,10 @@ public class KillbillConfigSource implements ConfigSource {
         this.properties.put("user.timezone", "UTC");
 
         // Speed up the notification queue
-        this.properties.put("killbill.billing.util.notificationq.sleep", "100");
+        this.properties.put("killbill.billing.notificationq.sleep", "100");
         // Speed up the bus
-        this.properties.put("killbill.billing.util.persistent.bus.sleep", "100");
-        this.properties.put("killbill.billing.util.persistent.bus.nbThreads", "1");
+        this.properties.put("killbill.billing.persistent.bus.sleep", "100");
+        this.properties.put("killbill.billing.persistent.bus.nbThreads", "1");
     }
 
     public String getString(final String propertyName) {
