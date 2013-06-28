@@ -33,20 +33,21 @@ public class NotificationJson {
 
     @JsonCreator
     public NotificationJson(@JsonProperty("eventType") final String eventType,
-            @JsonProperty("accountId") final String accountId,
-            @JsonProperty("objectType") final String objectType,
-            @JsonProperty("objectId") final String objectId) {
+                            @JsonProperty("accountId") final String accountId,
+                            @JsonProperty("objectType") final String objectType,
+                            @JsonProperty("objectId") final String objectId) {
         this.eventType = eventType;
         this.accountId = accountId;
         this.objectType = objectType;
         this.objectId = objectId;
     }
 
-
     public NotificationJson(final ExtBusEvent event) {
-        this(event.getEventType().toString(), event.getAccountId().toString(), event.getObjectType().toString(), event.getObjectId() != null ?  event.getObjectId().toString() : null);
+        this(event.getEventType().toString(),
+             event.getAccountId() != null ? event.getAccountId().toString() : null,
+             event.getObjectType().toString(),
+             event.getObjectId() != null ? event.getObjectId().toString() : null);
     }
-
 
     public String getEventType() {
         return eventType;
