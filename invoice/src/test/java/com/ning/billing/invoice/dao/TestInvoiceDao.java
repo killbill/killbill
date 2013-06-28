@@ -141,13 +141,59 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
-    public void testRetrievalForNonExistentInvoiceId() throws InvoiceApiException {
+    public void testRetrievalForNonExistentInvoiceOrInvoiceItem() throws InvoiceApiException {
         try {
             invoiceDao.getById(UUID.randomUUID(), internalCallContext);
             Assert.fail();
         } catch (TransactionFailedException e) {
+            // TODO FIXME getById defined in EntityDaoBase
             Assert.assertTrue(e.getCause() instanceof InvoiceApiException);
             Assert.assertEquals(((InvoiceApiException) e.getCause()).getCode(), ErrorCode.INVOICE_NOT_FOUND.getCode());
+        }
+
+        try {
+            invoiceDao.getByNumber(null, internalCallContext);
+            Assert.fail();
+        } catch (InvoiceApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.INVOICE_INVALID_NUMBER.getCode());
+        }
+
+        try {
+            invoiceDao.getByNumber(Integer.MIN_VALUE, internalCallContext);
+            Assert.fail();
+        } catch (InvoiceApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.INVOICE_NUMBER_NOT_FOUND.getCode());
+        }
+
+        try {
+            invoiceDao.getChargebackById(UUID.randomUUID(), internalCallContext);
+            Assert.fail();
+        } catch (InvoiceApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.CHARGE_BACK_DOES_NOT_EXIST.getCode());
+        }
+
+        try {
+            invoiceDao.getExternalChargeById(UUID.randomUUID(), internalCallContext);
+            Assert.fail();
+        } catch (InvoiceApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.INVOICE_ITEM_NOT_FOUND.getCode());
+        }
+
+        try {
+            invoiceDao.getCreditById(UUID.randomUUID(), internalCallContext);
+            Assert.fail();
+        } catch (InvoiceApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.INVOICE_ITEM_NOT_FOUND.getCode());
+        }
+    }
+
+    @Test(groups = "slow")
+    public void testCreateRefundOnNonExistingPayment() throws Exception {
+        try {
+            invoiceDao.createRefund(UUID.randomUUID(), BigDecimal.TEN, false, ImmutableMap.<UUID, BigDecimal>of(), null, internalCallContext);
+            Assert.fail();
+        } catch (InvoiceApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.INVOICE_PAYMENT_BY_ATTEMPT_NOT_FOUND.getCode());
         }
     }
 
