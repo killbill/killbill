@@ -30,7 +30,6 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.ObjectType;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.audit.ChangeType;
-import com.ning.billing.util.cache.Cachable.CacheType;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
@@ -50,6 +49,7 @@ import com.ning.billing.util.tag.api.user.TagEventBuilder;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
 public class DefaultTagDao extends EntityDaoBase<TagModelDao, Tag, TagApiException> implements TagDao {
@@ -132,8 +132,22 @@ public class DefaultTagDao extends EntityDaoBase<TagModelDao, Tag, TagApiExcepti
     }
 
     @Override
+    protected boolean checkEntityAlreadyExists(final EntitySqlDao<TagModelDao, Tag> transactional, final TagModelDao entity, final InternalCallContext context) {
+        return Iterables.find(transactional.getByAccountRecordId(context),
+                              new Predicate<TagModelDao>() {
+                                  @Override
+                                  public boolean apply(final TagModelDao existingTag) {
+                                      return entity.equals(existingTag) || entity.isSame(existingTag);
+                                  }
+                              },
+                              null) != null;
+    }
+
+    @Override
     protected TagApiException generateAlreadyExistsException(final TagModelDao entity, final InternalCallContext context) {
-        return new TagApiException(ErrorCode.TAG_ALREADY_EXISTS, entity.getId());
+        // Print the tag details, not the id here, as we throw this exception when checking if a tag already exists
+        // by using the isSame(TagModelDao) method (see above)
+        return new TagApiException(ErrorCode.TAG_ALREADY_EXISTS, entity.toString());
     }
 
     private TagDefinitionModelDao getTagDefinitionFromTransaction(final UUID tagDefinitionId, final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final InternalTenantContext context) throws TagApiException {
@@ -153,6 +167,11 @@ public class DefaultTagDao extends EntityDaoBase<TagModelDao, Tag, TagApiExcepti
             throw new TagApiException(ErrorCode.TAG_DEFINITION_DOES_NOT_EXIST, tagDefinitionId);
         }
         return tagDefintion;
+    }
+
+    @Override
+    public void create(final TagModelDao entity, final InternalCallContext context) throws TagApiException {
+        transactionalSqlDao.execute(TagApiException.class, getCreateEntitySqlDaoTransactionWrapper(entity, context));
     }
 
     @Override

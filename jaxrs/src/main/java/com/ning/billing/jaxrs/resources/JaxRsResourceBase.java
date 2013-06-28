@@ -130,6 +130,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
                                   final CallContext context) throws TagApiException {
         final Collection<UUID> input = getTagDefinitionUUIDs(tagList);
         tagUserApi.addTags(id, getObjectType(), input, context);
+        // TODO This will always return 201, even if some (or all) tags already existed (in which case we don't do anything)
         return uriBuilder.buildResponse(this.getClass(), "getTags", id, uriInfo.getBaseUri().toString());
     }
 
