@@ -72,7 +72,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
         this.nextBillingDatePoster = nextBillingDatePoster;
         this.eventBus = eventBus;
         this.invoiceDaoHelper = new InvoiceDaoHelper();
-        this.cbaDao =  new CBADao();
+        this.cbaDao = new CBADao();
     }
 
     @Override
@@ -308,9 +308,9 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
                 // Retrieve the amounts to adjust, if needed
                 final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts = invoiceDaoHelper.computeItemAdjustments(payment.getInvoiceId().toString(),
-                                                                                               entitySqlDaoWrapperFactory,
-                                                                                               invoiceItemIdsWithNullAmounts,
-                                                                                               context);
+                                                                                                                entitySqlDaoWrapperFactory,
+                                                                                                                invoiceItemIdsWithNullAmounts,
+                                                                                                                context);
 
                 // Compute the actual amount to refund
                 final BigDecimal requestedPositiveAmount = invoiceDaoHelper.computePositiveRefundAmount(payment, requestedRefundAmount, invoiceItemIdsWithAmounts);
@@ -357,8 +357,8 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                     for (final UUID invoiceItemId : invoiceItemIdsWithAmounts.keySet()) {
                         final BigDecimal adjAmount = invoiceItemIdsWithAmounts.get(invoiceItemId);
                         final InvoiceItemModelDao item = invoiceDaoHelper.createAdjustmentItem(entitySqlDaoWrapperFactory, invoice.getId(), invoiceItemId, adjAmount,
-                                                                              invoice.getCurrency(), context.getCreatedDate().toLocalDate(),
-                                                                              context);
+                                                                                               invoice.getCurrency(), context.getCreatedDate().toLocalDate(),
+                                                                                               context);
                         transInvoiceItemDao.create(item, context);
                     }
                 }
@@ -373,23 +373,20 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
         });
     }
 
-
-
     @Override
     public InvoicePaymentModelDao postChargeback(final UUID invoicePaymentId, final BigDecimal amount, final InternalCallContext context) throws InvoiceApiException {
-
-        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<InvoicePaymentModelDao>() {
+        return transactionalSqlDao.execute(InvoiceApiException.class, new EntitySqlDaoTransactionWrapper<InvoicePaymentModelDao>() {
             @Override
             public InvoicePaymentModelDao inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
                 final InvoicePaymentSqlDao transactional = entitySqlDaoWrapperFactory.become(InvoicePaymentSqlDao.class);
 
                 final BigDecimal maxChargedBackAmount = invoiceDaoHelper.getRemainingAmountPaidFromTransaction(invoicePaymentId, entitySqlDaoWrapperFactory, context);
-                final BigDecimal requestedChargedBackAmout = (amount == null) ? maxChargedBackAmount : amount;
-                if (requestedChargedBackAmout.compareTo(BigDecimal.ZERO) <= 0) {
+                final BigDecimal requestedChargedBackAmount = (amount == null) ? maxChargedBackAmount : amount;
+                if (requestedChargedBackAmount.compareTo(BigDecimal.ZERO) <= 0) {
                     throw new InvoiceApiException(ErrorCode.CHARGE_BACK_AMOUNT_IS_NEGATIVE);
                 }
-                if (requestedChargedBackAmout.compareTo(maxChargedBackAmount) > 0) {
-                    throw new InvoiceApiException(ErrorCode.CHARGE_BACK_AMOUNT_TOO_HIGH, requestedChargedBackAmout, maxChargedBackAmount);
+                if (requestedChargedBackAmount.compareTo(maxChargedBackAmount) > 0) {
+                    throw new InvoiceApiException(ErrorCode.CHARGE_BACK_AMOUNT_TOO_HIGH, requestedChargedBackAmount, maxChargedBackAmount);
                 }
 
                 final InvoicePaymentModelDao payment = entitySqlDaoWrapperFactory.become(InvoicePaymentSqlDao.class).getById(invoicePaymentId.toString(), context);
@@ -398,7 +395,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 }
                 final InvoicePaymentModelDao chargeBack = new InvoicePaymentModelDao(UUID.randomUUID(), context.getCreatedDate(), InvoicePaymentType.CHARGED_BACK,
                                                                                      payment.getInvoiceId(), payment.getPaymentId(), context.getCreatedDate(),
-                                                                                     requestedChargedBackAmout.negate(), payment.getCurrency(), null, payment.getId());
+                                                                                     requestedChargedBackAmount.negate(), payment.getCurrency(), null, payment.getId());
                 transactional.create(chargeBack, context);
 
                 // Notify the bus since the balance of the invoice changed
@@ -425,7 +422,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
     @Override
     public UUID getAccountIdFromInvoicePaymentId(final UUID invoicePaymentId, final InternalTenantContext context) throws InvoiceApiException {
-        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<UUID>() {
+        return transactionalSqlDao.execute(InvoiceApiException.class, new EntitySqlDaoTransactionWrapper<UUID>() {
             @Override
             public UUID inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
                 final UUID accountId = entitySqlDaoWrapperFactory.become(InvoicePaymentSqlDao.class).getAccountIdFromInvoicePaymentId(invoicePaymentId.toString(), context);
@@ -582,7 +579,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
             @Override
             public InvoiceItemModelDao inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
                 final InvoiceItemModelDao invoiceItemAdjustment = invoiceDaoHelper.createAdjustmentItem(entitySqlDaoWrapperFactory, invoiceId, invoiceItemId, positiveAdjAmount,
-                                                                                       currency, effectiveDate, context);
+                                                                                                        currency, effectiveDate, context);
                 invoiceDaoHelper.insertItem(entitySqlDaoWrapperFactory, invoiceItemAdjustment, context);
 
                 cbaDao.doCBAComplexity(accountId, entitySqlDaoWrapperFactory, context);
