@@ -120,7 +120,7 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
 
     @Override
     public void update(final AccountModelDao specifiedAccount, final InternalCallContext context) throws AccountApiException {
-        transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
+        transactionalSqlDao.execute(AccountApiException.class, new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws EventBusException, AccountApiException {
                 final AccountSqlDao transactional = entitySqlDaoWrapperFactory.become(AccountSqlDao.class);
@@ -152,7 +152,7 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
 
     @Override
     public void updatePaymentMethod(final UUID accountId, final UUID paymentMethodId, final InternalCallContext context) throws AccountApiException {
-        transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
+        transactionalSqlDao.execute(AccountApiException.class, new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws EntityPersistenceException, EventBusException {
                 final AccountSqlDao transactional = entitySqlDaoWrapperFactory.become(AccountSqlDao.class);
@@ -187,7 +187,7 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
 
     @Override
     public void addEmail(final AccountEmailModelDao email, final InternalCallContext context) throws AccountApiException {
-        transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
+        transactionalSqlDao.execute(AccountApiException.class, new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
                 final AccountEmailSqlDao transactional = entitySqlDaoWrapperFactory.become(AccountEmailSqlDao.class);
