@@ -23,7 +23,8 @@ import javax.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ning.billing.beatrix.bus.api.ExternalBus;
+import com.ning.billing.bus.PersistentBus;
+import com.ning.billing.bus.PersistentBus.EventBusException;
 import com.ning.billing.notification.plugin.api.ExtBusEvent;
 
 import com.google.common.eventbus.Subscribe;
@@ -33,18 +34,18 @@ public class KillbillEventObservable extends Observable {
 
     private Logger logger = LoggerFactory.getLogger(KillbillEventObservable.class);
 
-    private final ExternalBus externalBus;
+    private final PersistentBus externalBus;
 
     @Inject
-    public KillbillEventObservable(final ExternalBus externalBus) {
+    public KillbillEventObservable(final PersistentBus externalBus) {
         this.externalBus = externalBus;
     }
 
-    public void register() {
+    public void register() throws EventBusException {
         externalBus.register(this);
     }
 
-    public void unregister() {
+    public void unregister() throws EventBusException {
         deleteObservers();
         if (externalBus != null) {
             externalBus.unregister(this);

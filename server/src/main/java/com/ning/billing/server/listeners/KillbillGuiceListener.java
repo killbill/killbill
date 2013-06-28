@@ -24,7 +24,6 @@ import javax.servlet.ServletContextEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ning.billing.beatrix.bus.api.ExternalBus;
 import com.ning.billing.beatrix.lifecycle.DefaultLifecycle;
 import com.ning.billing.bus.PersistentBus;
 import com.ning.billing.jaxrs.resources.JaxRsResourceBase;
@@ -75,7 +74,6 @@ public class KillbillGuiceListener extends SetupServer {
                 .addJMXExport(KillbillHealthcheck.class)
                 .addJMXExport(NotificationQueueService.class)
                 .addJMXExport(PersistentBus.class)
-                .addJMXExport(ExternalBus.class)
                 .addModule(getModule())
                         // Don't filter all requests through Jersey, only the JAX-RS APIs (otherwise,
                         // things like static resources, favicon, etc. are 404'ed)

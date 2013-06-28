@@ -19,9 +19,7 @@ package com.ning.billing.beatrix;
 import javax.inject.Inject;
 
 import com.ning.billing.beatrix.bus.api.BeatrixService;
-import com.ning.billing.beatrix.bus.api.ExternalBus;
 import com.ning.billing.beatrix.extbus.BeatrixListener;
-import com.ning.billing.beatrix.extbus.PersistentExternalBus;
 import com.ning.billing.bus.PersistentBus;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
@@ -33,10 +31,10 @@ public class DefaultBeatrixService implements BeatrixService {
 
     private final BeatrixListener beatrixListener;
     private final PersistentBus eventBus;
-    private final ExternalBus externalBus;
+    private final PersistentBus externalBus;
 
     @Inject
-    public DefaultBeatrixService(final PersistentBus eventBus, final ExternalBus externalBus, final BeatrixListener beatrixListener) {
+    public DefaultBeatrixService(final PersistentBus eventBus, final PersistentBus externalBus, final BeatrixListener beatrixListener) {
         this.eventBus = eventBus;
         this.externalBus = externalBus;
         this.beatrixListener = beatrixListener;
@@ -68,12 +66,11 @@ public class DefaultBeatrixService implements BeatrixService {
 
     @LifecycleHandlerType(LifecycleLevel.INIT_BUS)
     public void startBus() {
-        ((PersistentExternalBus) externalBus).startQueue();
+        externalBus.start();
     }
 
     @LifecycleHandlerType(LifecycleLevel.STOP_BUS)
     public void stopBus() {
-        ((PersistentExternalBus) externalBus).stopQueue();
+        externalBus.stop();
     }
-
 }

@@ -42,7 +42,6 @@ import com.ning.billing.api.TestApiListener;
 import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.api.TestListenerStatus;
 import com.ning.billing.beatrix.BeatrixTestSuiteWithEmbeddedDB;
-import com.ning.billing.beatrix.bus.api.ExternalBus;
 import com.ning.billing.beatrix.lifecycle.Lifecycle;
 import com.ning.billing.beatrix.osgi.SetupBundleWithAssertion;
 import com.ning.billing.beatrix.util.AccountChecker;
@@ -50,6 +49,7 @@ import com.ning.billing.beatrix.util.EntitlementChecker;
 import com.ning.billing.beatrix.util.InvoiceChecker;
 import com.ning.billing.beatrix.util.PaymentChecker;
 import com.ning.billing.beatrix.util.RefundChecker;
+import com.ning.billing.bus.PersistentBus;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
@@ -180,7 +180,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     protected AccountChecker accountChecker;
 
     @Inject
-    protected ExternalBus externalBus;
+    protected PersistentBus externalBus;
 
     @Inject
     protected RefundChecker refundChecker;

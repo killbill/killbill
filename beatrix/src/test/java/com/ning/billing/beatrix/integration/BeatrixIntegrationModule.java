@@ -26,9 +26,7 @@ import com.ning.billing.GuicyKillbillTestWithEmbeddedDBModule;
 import com.ning.billing.account.api.AccountService;
 import com.ning.billing.account.glue.DefaultAccountModule;
 import com.ning.billing.beatrix.DefaultBeatrixService;
-import com.ning.billing.beatrix.bus.api.ExternalBus;
-import com.ning.billing.beatrix.extbus.BeatrixListener;
-import com.ning.billing.beatrix.extbus.PersistentExternalBus;
+import com.ning.billing.beatrix.glue.BeatrixModule;
 import com.ning.billing.beatrix.integration.overdue.IntegrationTestOverdueModule;
 import com.ning.billing.beatrix.lifecycle.DefaultLifecycle;
 import com.ning.billing.beatrix.lifecycle.Lifecycle;
@@ -98,8 +96,6 @@ public class BeatrixIntegrationModule extends AbstractModule {
 
         loadSystemPropertiesFromClasspath("/beatrix.properties");
 
-        bind(Lifecycle.class).to(SubsetDefaultLifecycle.class).asEagerSingleton();
-
         install(new GuicyKillbillTestWithEmbeddedDBModule());
 
         install(new GlobalLockerModule());
@@ -125,6 +121,7 @@ public class BeatrixIntegrationModule extends AbstractModule {
         install(new DefaultOSGIModule(configSource));
         install(new NonEntityDaoModule());
         install(new RecordIdModule());
+        install(new BeatrixModuleWithSubsetLifecycle());
 
         bind(AccountChecker.class).asEagerSingleton();
         bind(EntitlementChecker.class).asEagerSingleton();
@@ -132,15 +129,8 @@ public class BeatrixIntegrationModule extends AbstractModule {
         bind(PaymentChecker.class).asEagerSingleton();
         bind(RefundChecker.class).asEagerSingleton();
         bind(AuditChecker.class).asEagerSingleton();
-
-        installPublicBus();
     }
 
-    private void installPublicBus() {
-        bind(ExternalBus.class).to(PersistentExternalBus.class).asEagerSingleton();
-        bind(BeatrixListener.class).asEagerSingleton();
-        bind(DefaultBeatrixService.class).asEagerSingleton();
-    }
 
     private static final class DefaultInvoiceModuleWithSwitchRepairLogic extends DefaultInvoiceModule {
 
@@ -198,6 +188,14 @@ public class BeatrixIntegrationModule extends AbstractModule {
                     .add(injector.getInstance(DefaultOSGIService.class))
                     .build();
             return services;
+        }
+    }
+
+    private static final class BeatrixModuleWithSubsetLifecycle extends BeatrixModule {
+
+        @Override
+        protected void installLifecycle() {
+            bind(Lifecycle.class).to(SubsetDefaultLifecycle.class).asEagerSingleton();
         }
     }
 }

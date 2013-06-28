@@ -26,8 +26,8 @@ import org.slf4j.LoggerFactory;
 import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.beatrix.bus.api.ExternalBus;
 import com.ning.billing.bus.BusPersistentEvent;
+import com.ning.billing.bus.PersistentBus;
 import com.ning.billing.bus.PersistentBus.EventBusException;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.notification.plugin.api.ExtBusEventType;
@@ -62,7 +62,7 @@ public class BeatrixListener {
 
     private static final Logger log = LoggerFactory.getLogger(BeatrixListener.class);
 
-    private final ExternalBus externalBus;
+    private final PersistentBus externalBus;
     private final InternalCallContextFactory internalCallContextFactory;
     private final AccountInternalApi accountApi;
 
@@ -70,7 +70,7 @@ public class BeatrixListener {
     protected final ObjectMapper objectMapper;
 
     @Inject
-    public BeatrixListener(final ExternalBus externalBus,
+    public BeatrixListener(final PersistentBus externalBus,
                            final InternalCallContextFactory internalCallContextFactory,
                            final AccountInternalApi accountApi) {
         this.externalBus = externalBus;
@@ -88,7 +88,7 @@ public class BeatrixListener {
         try {
             final BusPersistentEvent externalEvent = computeExtBusEventEntryFromBusInternalEvent(event, internalContext);
             if (externalEvent != null) {
-                ((PersistentExternalBus) externalBus).post(externalEvent, internalContext);
+                externalBus.post(externalEvent);
             }
         } catch (EventBusException e) {
             log.warn("Failed to dispatch external bus events", e);

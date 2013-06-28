@@ -17,21 +17,27 @@ package com.ning.billing.server;
 
 import javax.inject.Inject;
 
-import com.ning.billing.beatrix.bus.api.ExternalBus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.ning.billing.bus.PersistentBus;
+import com.ning.billing.bus.PersistentBus.EventBusException;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
 import com.ning.billing.server.notifications.PushNotificationListener;
 
 public class DefaultServerService implements ServerService {
 
+    private final static Logger log = LoggerFactory.getLogger(DefaultServerService.class);
+
     private final static String SERVER_SERVICE = "server-service";
 
 
-    private final ExternalBus bus;
+    private final PersistentBus bus;
     private final PushNotificationListener pushNotificationListener;
 
     @Inject
-    public DefaultServerService(final ExternalBus bus, final PushNotificationListener pushNotificationListener) {
+    public DefaultServerService(final PersistentBus bus, final PushNotificationListener pushNotificationListener) {
         this.bus = bus;
         this.pushNotificationListener = pushNotificationListener;
     }
@@ -43,11 +49,19 @@ public class DefaultServerService implements ServerService {
 
     @LifecycleHandlerType(LifecycleLevel.INIT_SERVICE)
     public void registerForNotifications() {
-        bus.register(pushNotificationListener);
+        try {
+            bus.register(pushNotificationListener);
+        } catch (EventBusException e) {
+            log.warn("Failed to initialize Server service :", e);
+        }
     }
 
     @LifecycleHandlerType(LifecycleLevel.STOP_SERVICE)
     public void unregisterForNotifications() {
-        bus.unregister(pushNotificationListener);
+        try {
+            bus.unregister(pushNotificationListener);
+        } catch (EventBusException e) {
+            log.warn("Failed to stop Server service :", e);
+        }
     }
 }

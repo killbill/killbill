@@ -19,8 +19,6 @@ package com.ning.billing.util.glue;
 import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
 
-import com.ning.billing.bus.BusTableName;
-import com.ning.billing.bus.DefaultPersistentBus;
 import com.ning.billing.bus.InMemoryPersistentBus;
 import com.ning.billing.bus.PersistentBus;
 import com.ning.billing.bus.PersistentBusConfig;
@@ -28,7 +26,6 @@ import com.ning.billing.util.bus.DefaultBusService;
 import com.ning.billing.util.svcsapi.bus.BusService;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.name.Names;
 
 public class BusModule extends AbstractModule {
 
@@ -78,8 +75,8 @@ public class BusModule extends AbstractModule {
 
     private void configurePersistentEventBus() {
         configurePersistentBusConfig();
-        bind(String.class).annotatedWith(BusTableName.class).toInstance(tableName);
-        bind(PersistentBus.class).to(DefaultPersistentBus.class).asEagerSingleton();
+        bind(BusProvider.class).toInstance(new BusProvider(tableName));
+        bind(PersistentBus.class).toProvider(BusProvider.class).asEagerSingleton();
     }
 
     private void configureInMemoryEventBus() {
