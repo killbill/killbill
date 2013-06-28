@@ -19,6 +19,7 @@ package com.ning.billing.beatrix.extbus;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
@@ -26,12 +27,15 @@ import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ning.billing.ObjectType;
 import com.ning.billing.beatrix.bus.api.ExternalBus;
 import com.ning.billing.bus.BusPersistentEvent;
 import com.ning.billing.bus.PersistentBus.EventBusException;
 import com.ning.billing.bus.PersistentBusConfig;
 import com.ning.billing.bus.dao.BusEventEntry;
 import com.ning.billing.bus.dao.PersistentBusSqlDao;
+import com.ning.billing.notification.plugin.api.ExtBusEvent;
+import com.ning.billing.notification.plugin.api.ExtBusEventType;
 import com.ning.billing.queue.PersistentQueueBase;
 import com.ning.billing.util.Hostname;
 import com.ning.billing.util.bus.DefaultBusService;
@@ -48,6 +52,8 @@ public class PersistentExternalBus extends PersistentQueueBase implements Extern
 
     private static final long DELTA_IN_PROCESSING_TIME_MS = 1000L * 60L * 5L; // 5 minutes
     private static final int MAX_BUS_EVENTS = 1;
+
+    final String bus_ext_events = "bus_ext_events";
 
     private static final Logger log = LoggerFactory.getLogger(PersistentExternalBus.class);
 
@@ -90,15 +96,10 @@ public class PersistentExternalBus extends PersistentQueueBase implements Extern
         for (final BusEventEntry cur : events) {
             final String jsonWithAccountAndTenantRecorId = tweakJsonToIncludeAccountAndTenantRecordId(cur.getBusEventJson(), cur.getAccountRecordId(), cur.getTenantRecordId());
             final BusPersistentEvent evt = deserializeEvent(cur.getBusEventClass(), objectMapper, jsonWithAccountAndTenantRecorId);
-
-            //TODO STEPH needs to be fixed with accountId and tenantId...
-
-            //final UUID accountId = getAccountIdFromRecordId(evt.getAccountRecordId());
-            //final BusPersistentEvent evtWithAccountAndTenantId = new BusPersistentEvent(evt, );
             result++;
             // STEPH exception handling is done by GUAVA-- logged a bug Issue-780
             eventBusDelegate.post(evt);
-            dao.clearBusEvent(cur.getId(), com.ning.billing.Hostname.get());
+            dao.clearBusEvent(cur.getId(), com.ning.billing.Hostname.get(), bus_ext_events);
         }
         return result;
     }
@@ -109,10 +110,10 @@ public class PersistentExternalBus extends PersistentQueueBase implements Extern
         final Date now = clock.getUTCNow().toDate();
         final Date nextAvailable = clock.getUTCNow().plus(DELTA_IN_PROCESSING_TIME_MS).toDate();
 
-        final List<BusEventEntry> entries = dao.getNextBusEventEntries(config.getPrefetchAmount(), com.ning.billing.Hostname.get(), now);
+        final List<BusEventEntry> entries = dao.getNextBusEventEntries(config.getPrefetchAmount(), com.ning.billing.Hostname.get(), now, bus_ext_events);
         final List<BusEventEntry> claimedEntries = new LinkedList<BusEventEntry>();
         for (final BusEventEntry entry : entries) {
-            final boolean claimed = (dao.claimBusEvent(com.ning.billing.Hostname.get(), nextAvailable, entry.getId(), now) == 1);
+            final boolean claimed = (dao.claimBusEvent(com.ning.billing.Hostname.get(), nextAvailable, entry.getId(), now, bus_ext_events) == 1);
             if (claimed) {
                 dao.insertClaimedHistory(com.ning.billing.Hostname.get(), now, entry.getId(), entry.getAccountRecordId(), entry.getTenantRecordId());
                 claimedEntries.add(entry);
@@ -137,7 +138,7 @@ public class PersistentExternalBus extends PersistentQueueBase implements Extern
         try {
             json = objectMapper.writeValueAsString(event);
             final BusEventEntry entry = new BusEventEntry(com.ning.billing.Hostname.get(), event.getClass().getName(), json, event.getUserToken(), event.getAccountRecordId(), event.getTenantRecordId());
-            dao.insertBusEvent(entry);
+            dao.insertBusEvent(entry, bus_ext_events);
 
         } catch (JsonProcessingException e) {
             throw new EventBusException("Failed to serialize ext bus event", e);

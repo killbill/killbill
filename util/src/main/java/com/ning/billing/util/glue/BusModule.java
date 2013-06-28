@@ -19,6 +19,7 @@ package com.ning.billing.util.glue;
 import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
 
+import com.ning.billing.bus.BusTableName;
 import com.ning.billing.bus.DefaultPersistentBus;
 import com.ning.billing.bus.InMemoryPersistentBus;
 import com.ning.billing.bus.PersistentBus;
@@ -27,19 +28,26 @@ import com.ning.billing.util.bus.DefaultBusService;
 import com.ning.billing.util.svcsapi.bus.BusService;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.name.Names;
 
 public class BusModule extends AbstractModule {
 
     private final BusType type;
     private final ConfigSource configSource;
+    private final String tableName;
 
     public BusModule(final ConfigSource configSource) {
-        this(BusType.PERSISTENT, configSource);
+        this(BusType.PERSISTENT, configSource, "bus_events");
     }
 
-    protected BusModule(final BusType type, final ConfigSource configSource) {
+    public BusModule(final ConfigSource configSource, final String tableName) {
+        this(BusType.PERSISTENT, configSource, tableName);
+    }
+
+    protected BusModule(final BusType type, final ConfigSource configSource, final String tableName) {
         this.type = type;
         this.configSource = configSource;
+        this.tableName = tableName;
     }
 
     public enum BusType {
@@ -70,6 +78,7 @@ public class BusModule extends AbstractModule {
 
     private void configurePersistentEventBus() {
         configurePersistentBusConfig();
+        bind(String.class).annotatedWith(BusTableName.class).toInstance(tableName);
         bind(PersistentBus.class).to(DefaultPersistentBus.class).asEagerSingleton();
     }
 

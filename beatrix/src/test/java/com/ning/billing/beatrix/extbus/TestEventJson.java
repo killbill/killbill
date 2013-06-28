@@ -6,11 +6,12 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.ObjectType;
+import com.ning.billing.beatrix.BeatrixTestSuite;
 import com.ning.billing.notification.plugin.api.ExtBusEventType;
-import com.ning.billing.payment.PaymentTestSuiteNoDB;
 import com.ning.billing.util.jackson.ObjectMapper;
 
-public class TestEventJson extends PaymentTestSuiteNoDB {
+
+public class TestEventJson extends BeatrixTestSuite {
 
     private final ObjectMapper mapper = new ObjectMapper();
 

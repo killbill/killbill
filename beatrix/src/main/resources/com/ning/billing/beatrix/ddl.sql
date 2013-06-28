@@ -3,21 +3,22 @@
 DROP TABLE IF EXISTS bus_ext_events;
 CREATE TABLE bus_ext_events (
     record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
-    event_type varchar(32) NOT NULL,
-    object_id varchar(64) DEFAULT NULL,
-    object_type varchar(32) NOT NULL,
+    class_name varchar(128) NOT NULL,
+    event_json varchar(2048) NOT NULL,
     user_token char(36),
     created_date datetime NOT NULL,
     creating_owner char(50) NOT NULL,
     processing_owner char(50) DEFAULT NULL,
     processing_available_date datetime DEFAULT NULL,
     processing_state varchar(14) DEFAULT 'AVAILABLE',
-    account_record_id int(11) unsigned DEFAULT NULL,
-    tenant_record_id int(11) unsigned DEFAULT NULL,
+    account_record_id int(11) unsigned default null,
+    tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)
 );
-CREATE INDEX  `idx_bus_ext_where` ON bus_ext_events (`processing_state`,`processing_owner`,`processing_available_date`);
-CREATE INDEX bus_ext_events_tenant_account_record_id ON bus_ext_events(tenant_record_id, account_record_id);
+CREATE INDEX  `idx_ext_bus_where` ON bus_ext_events (`processing_state`,`processing_owner`,`processing_available_date`);
+CREATE INDEX ext_bus_events_tenant_account_record_id ON bus_ext_events(tenant_record_id, account_record_id);
+
+
 
 DROP TABLE IF EXISTS claimed_bus_ext_events;
 CREATE TABLE claimed_bus_ext_events (

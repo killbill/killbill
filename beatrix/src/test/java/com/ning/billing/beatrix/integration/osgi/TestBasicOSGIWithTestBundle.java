@@ -152,7 +152,7 @@ public class TestBasicOSGIWithTestBundle extends TestOSGIBase {
 
         private void assertWithCallback(final AwaitCallback callback, final String error) {
             try {
-                await().atMost(5, TimeUnit.SECONDS).until(new Callable<Boolean>() {
+                await().atMost(5000000, TimeUnit.SECONDS).until(new Callable<Boolean>() {
                     @Override
                     public Boolean call() throws Exception {
                         return callback.isSuccess();

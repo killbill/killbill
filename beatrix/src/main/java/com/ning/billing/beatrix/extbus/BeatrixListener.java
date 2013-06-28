@@ -27,18 +27,16 @@ import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.beatrix.bus.api.ExternalBus;
+import com.ning.billing.bus.BusPersistentEvent;
 import com.ning.billing.bus.PersistentBus.EventBusException;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.notification.plugin.api.ExtBusEventType;
-import com.ning.billing.tenant.api.TenantUserApi;
-import com.ning.billing.util.Hostname;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.events.AccountChangeInternalEvent;
 import com.ning.billing.util.events.AccountCreationInternalEvent;
-import com.ning.billing.util.events.BusExternalEvent;
 import com.ning.billing.util.events.BusInternalEvent;
 import com.ning.billing.util.events.BusInternalEvent.BusInternalEventType;
 import com.ning.billing.util.events.ControlTagCreationInternalEvent;
@@ -88,7 +86,7 @@ public class BeatrixListener {
 
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(event.getTenantRecordId(), event.getAccountRecordId(), "BeatrixListener", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
         try {
-            final BusExternalEvent externalEvent = computeExtBusEventEntryFromBusInternalEvent(event, internalContext);
+            final BusPersistentEvent externalEvent = computeExtBusEventEntryFromBusInternalEvent(event, internalContext);
             if (externalEvent != null) {
                 ((PersistentExternalBus) externalBus).post(externalEvent, internalContext);
             }
@@ -98,7 +96,7 @@ public class BeatrixListener {
     }
 
 
-    private BusExternalEvent computeExtBusEventEntryFromBusInternalEvent(final BusInternalEvent event, final InternalCallContext context) {
+    private BusPersistentEvent computeExtBusEventEntryFromBusInternalEvent(final BusInternalEvent event, final InternalCallContext context) {
 
         ObjectType objectType = null;
         UUID objectId = null;
