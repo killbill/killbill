@@ -74,10 +74,10 @@ public class EntitySqlDaoTransactionalJdbiWrapper {
     /**
      * @param entitySqlDaoTransactionWrapper transaction to execute
      * @param <ReturnType>                   object type to return from the transaction
+     * @param <E>                            checked exception which can be thrown from the transaction
      * @return result from the transaction fo type ReturnType
      */
     public <ReturnType, E extends Exception> ReturnType execute(final Class<E> exception, final EntitySqlDaoTransactionWrapper<ReturnType> entitySqlDaoTransactionWrapper) throws E {
-        final EntitySqlDao<EntityModelDao<Entity>, Entity> entitySqlDao = dbi.onDemand(InitialEntitySqlDao.class);
         try {
             return execute(entitySqlDaoTransactionWrapper);
         } catch (RuntimeException e) {
