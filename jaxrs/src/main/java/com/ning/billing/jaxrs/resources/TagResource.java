@@ -42,6 +42,7 @@ import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.tag.TagDefinition;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -91,6 +92,10 @@ public class TagResource extends JaxRsResourceBase {
                                         @HeaderParam(HDR_REASON) final String reason,
                                         @HeaderParam(HDR_COMMENT) final String comment,
                                         @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException {
+        // Checked as the database layer as well, but bail early and return 400 instead of 500
+        Preconditions.checkNotNull(json.getName(), String.format("TagDefinition name needs to be set"));
+        Preconditions.checkNotNull(json.getDescription(), String.format("TagDefinition description needs to be set"));
+
         final TagDefinition createdTagDef = tagUserApi.createTagDefinition(json.getName(), json.getDescription(), context.createContext(createdBy, reason, comment, request));
         return uriBuilder.buildResponse(TagResource.class, "getTagDefinition", createdTagDef.getId());
     }
