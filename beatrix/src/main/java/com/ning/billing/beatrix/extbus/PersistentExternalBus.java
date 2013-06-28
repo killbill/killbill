@@ -16,10 +16,9 @@
 
 package com.ning.billing.beatrix.extbus;
 
-import java.util.Collections;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
@@ -27,26 +26,21 @@ import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ning.billing.ObjectType;
-import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.beatrix.bus.api.ExternalBus;
-import com.ning.billing.beatrix.extbus.dao.ExtBusEventEntry;
-import com.ning.billing.beatrix.extbus.dao.ExtBusSqlDao;
+import com.ning.billing.bus.BusPersistentEvent;
 import com.ning.billing.bus.PersistentBus.EventBusException;
 import com.ning.billing.bus.PersistentBusConfig;
-import com.ning.billing.notification.plugin.api.ExtBusEvent;
-import com.ning.billing.notification.plugin.api.ExtBusEventType;
+import com.ning.billing.bus.dao.BusEventEntry;
+import com.ning.billing.bus.dao.PersistentBusSqlDao;
 import com.ning.billing.queue.PersistentQueueBase;
 import com.ning.billing.util.Hostname;
 import com.ning.billing.util.bus.DefaultBusService;
-import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
-import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
 
@@ -57,13 +51,10 @@ public class PersistentExternalBus extends PersistentQueueBase implements Extern
 
     private static final Logger log = LoggerFactory.getLogger(PersistentExternalBus.class);
 
-    private final ExtBusSqlDao dao;
+    private final PersistentBusSqlDao dao;
 
     private final EventBusDelegate eventBusDelegate;
     private final Clock clock;
-    private final String hostname;
-    private final InternalCallContextFactory internalCallContextFactory;
-    private final AccountInternalApi accountApi;
 
     private static final class EventBusDelegate extends EventBus {
 
@@ -82,70 +73,52 @@ public class PersistentExternalBus extends PersistentQueueBase implements Extern
                                   DefaultBusService.EVENT_BUS_TH_NAME);
             }
         }), config.getNbThreads(), config);
-        this.dao = dbi.onDemand(ExtBusSqlDao.class);
+        this.dao = dbi.onDemand(PersistentBusSqlDao.class);
         this.clock = clock;
         this.eventBusDelegate = new EventBusDelegate("Killbill EventBus");
-        this.hostname = Hostname.get();
-        this.internalCallContextFactory = internalCallContextFactory;
-        this.accountApi = accountApi;
     }
 
     @Override
     public int doProcessEvents() {
 
-        // TODO API_FIX Retrieving and clearing bus events is not done per tenant so pass default INTERNAL_TENANT_RECORD_ID; not sure this is something we want to do anyway ?
-        final InternalCallContext context = internalCallContextFactory.createInternalCallContext(InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID, null, "ExtPersistentBus", CallOrigin.INTERNAL, UserType.SYSTEM, null);
-        final List<ExtBusEventEntry> events = getNextBusEvent(context);
+        final List<BusEventEntry> events = getNextBusEvent();
         if (events.size() == 0) {
             return 0;
         }
 
         int result = 0;
-        for (final ExtBusEventEntry cur : events) {
-            // The accountRecordId for a newly created account is not set
-            final UUID accountId;
-            if (cur.getObjectType() == ObjectType.ACCOUNT && cur.getExtBusType() == ExtBusEventType.ACCOUNT_CREATION) {
-                accountId = cur.getObjectId();
-            } else {
-                accountId = getAccountIdFromRecordId(cur.getAccountRecordId(), context);
-            }
-            final ExtBusEvent event = new DefaultBusEvent(cur.getExtBusType(), cur.getObjectType(), cur.getObjectId(), accountId, null);
+        for (final BusEventEntry cur : events) {
+            final String jsonWithAccountAndTenantRecorId = tweakJsonToIncludeAccountAndTenantRecordId(cur.getBusEventJson(), cur.getAccountRecordId(), cur.getTenantRecordId());
+            final BusPersistentEvent evt = deserializeEvent(cur.getBusEventClass(), objectMapper, jsonWithAccountAndTenantRecorId);
+
+            //TODO STEPH needs to be fixed with accountId and tenantId...
+
+            //final UUID accountId = getAccountIdFromRecordId(evt.getAccountRecordId());
+            //final BusPersistentEvent evtWithAccountAndTenantId = new BusPersistentEvent(evt, );
             result++;
             // STEPH exception handling is done by GUAVA-- logged a bug Issue-780
-            eventBusDelegate.post(event);
-            final InternalCallContext rehydratedContext = internalCallContextFactory.createInternalCallContext(cur.getTenantRecordId(), cur.getAccountRecordId(), context);
-            dao.clearBusExtEvent(cur.getId(), hostname, rehydratedContext);
+            eventBusDelegate.post(evt);
+            dao.clearBusEvent(cur.getId(), com.ning.billing.Hostname.get());
         }
         return result;
     }
 
-    private final UUID getAccountIdFromRecordId(final Long recordId, final InternalCallContext context) {
-        try {
-            final Account account = accountApi.getAccountByRecordId(recordId, context);
-            return account.getId();
-        } catch (final AccountApiException e) {
-            log.warn("Failed to retrieve acount from recordId {}", recordId);
-            return null;
-        }
-    }
 
-    private List<ExtBusEventEntry> getNextBusEvent(final InternalCallContext context) {
+    private List<BusEventEntry> getNextBusEvent() {
+
         final Date now = clock.getUTCNow().toDate();
         final Date nextAvailable = clock.getUTCNow().plus(DELTA_IN_PROCESSING_TIME_MS).toDate();
 
-        final ExtBusEventEntry input = dao.getNextBusExtEventEntry(MAX_BUS_EVENTS, hostname, now, context);
-        if (input == null) {
-            return Collections.emptyList();
+        final List<BusEventEntry> entries = dao.getNextBusEventEntries(config.getPrefetchAmount(), com.ning.billing.Hostname.get(), now);
+        final List<BusEventEntry> claimedEntries = new LinkedList<BusEventEntry>();
+        for (final BusEventEntry entry : entries) {
+            final boolean claimed = (dao.claimBusEvent(com.ning.billing.Hostname.get(), nextAvailable, entry.getId(), now) == 1);
+            if (claimed) {
+                dao.insertClaimedHistory(com.ning.billing.Hostname.get(), now, entry.getId(), entry.getAccountRecordId(), entry.getTenantRecordId());
+                claimedEntries.add(entry);
+            }
         }
-
-        // We need to re-hydrate the context with the record ids from the ExtBusEventEntry
-        final InternalCallContext rehydratedContext = internalCallContextFactory.createInternalCallContext(input.getTenantRecordId(), input.getAccountRecordId(), context);
-        final boolean claimed = (dao.claimBusExtEvent(hostname, nextAvailable, input.getId(), now, rehydratedContext) == 1);
-        if (claimed) {
-            dao.insertClaimedExtHistory(hostname, now, input.getId(), rehydratedContext);
-            return Collections.singletonList(input);
-        }
-        return Collections.emptyList();
+        return claimedEntries;
     }
 
     @Override
@@ -158,7 +131,27 @@ public class PersistentExternalBus extends PersistentQueueBase implements Extern
         eventBusDelegate.unregister(handlerInstance);
     }
 
-    public void post(final ExtBusEventEntry event, final InternalCallContext context) throws EventBusException {
-        dao.insertBusExtEvent(event, context);
+    public void post(final BusPersistentEvent event, final InternalCallContext context) throws EventBusException {
+
+        final String json;
+        try {
+            json = objectMapper.writeValueAsString(event);
+            final BusEventEntry entry = new BusEventEntry(com.ning.billing.Hostname.get(), event.getClass().getName(), json, event.getUserToken(), event.getAccountRecordId(), event.getTenantRecordId());
+            dao.insertBusEvent(entry);
+
+        } catch (JsonProcessingException e) {
+            throw new EventBusException("Failed to serialize ext bus event", e);
+        }
+    }
+
+    private String tweakJsonToIncludeAccountAndTenantRecordId(final String input, final Long accountRecordId, final Long tenantRecordId) {
+        final int lastIndexPriorFinalBracket = input.lastIndexOf("}");
+        final StringBuilder tmp = new StringBuilder(input.substring(0, lastIndexPriorFinalBracket));
+        tmp.append(",\"accountRecordId\":");
+        tmp.append(accountRecordId);
+        tmp.append(",\"tenantRecordId\":");
+        tmp.append(tenantRecordId);
+        tmp.append("}");
+        return tmp.toString();
     }
 }

@@ -23,17 +23,16 @@ import java.util.UUID;
 import com.ning.billing.account.api.DefaultChangedField;
 import com.ning.billing.account.dao.AccountModelDao;
 import com.ning.billing.util.events.AccountChangeInternalEvent;
+import com.ning.billing.util.events.BusEventBase;
 import com.ning.billing.util.events.ChangedField;
-import com.ning.billing.util.events.DefaultBusInternalEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
-public class DefaultAccountChangeEvent extends DefaultBusInternalEvent implements AccountChangeInternalEvent {
+public class DefaultAccountChangeEvent extends BusEventBase implements AccountChangeInternalEvent {
 
-    private final UUID userToken;
     private final List<ChangedField> changedFields;
     private final UUID accountId;
 
@@ -44,7 +43,6 @@ public class DefaultAccountChangeEvent extends DefaultBusInternalEvent implement
                                      @JsonProperty("accountRecordId") final Long accountRecordId,
                                      @JsonProperty("tenantRecordId") final Long tenantRecordId) {
         super(userToken, accountRecordId, tenantRecordId);
-        this.userToken = userToken;
         this.accountId = accountId;
         this.changedFields = changedFields;
     }
@@ -53,7 +51,6 @@ public class DefaultAccountChangeEvent extends DefaultBusInternalEvent implement
                                      final Long accountRecordId, final Long tenantRecordId) {
         super(userToken, accountRecordId, tenantRecordId);
         this.accountId = id;
-        this.userToken = userToken;
         this.changedFields = calculateChangedFields(oldData, newData);
     }
 
@@ -61,11 +58,6 @@ public class DefaultAccountChangeEvent extends DefaultBusInternalEvent implement
     @Override
     public BusInternalEventType getBusEventType() {
         return BusInternalEventType.ACCOUNT_CHANGE;
-    }
-
-    @Override
-    public UUID getUserToken() {
-        return userToken;
     }
 
     @Override
@@ -93,8 +85,6 @@ public class DefaultAccountChangeEvent extends DefaultBusInternalEvent implement
                  + ((accountId == null) ? 0 : accountId.hashCode());
         result = prime * result
                  + ((changedFields == null) ? 0 : changedFields.hashCode());
-        result = prime * result
-                 + ((userToken == null) ? 0 : userToken.hashCode());
         return result;
     }
 
@@ -122,13 +112,6 @@ public class DefaultAccountChangeEvent extends DefaultBusInternalEvent implement
                 return false;
             }
         } else if (!changedFields.equals(other.changedFields)) {
-            return false;
-        }
-        if (userToken == null) {
-            if (other.userToken != null) {
-                return false;
-            }
-        } else if (!userToken.equals(other.userToken)) {
             return false;
         }
         return true;

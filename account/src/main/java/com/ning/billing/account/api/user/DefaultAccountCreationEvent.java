@@ -24,13 +24,13 @@ import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.dao.AccountModelDao;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.events.AccountCreationInternalEvent;
-import com.ning.billing.util.events.DefaultBusInternalEvent;
+import com.ning.billing.util.events.BusEventBase;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class DefaultAccountCreationEvent extends DefaultBusInternalEvent implements AccountCreationInternalEvent {
+public class DefaultAccountCreationEvent extends BusEventBase implements AccountCreationInternalEvent {
 
     private final UUID id;
     private final AccountData data;

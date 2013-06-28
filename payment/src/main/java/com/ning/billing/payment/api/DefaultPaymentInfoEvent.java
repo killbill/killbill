@@ -21,14 +21,14 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.util.events.DefaultBusInternalEvent;
+import com.ning.billing.util.events.BusEventBase;
 import com.ning.billing.util.events.PaymentInfoInternalEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class DefaultPaymentInfoEvent extends DefaultBusInternalEvent implements PaymentInfoInternalEvent {
+public class DefaultPaymentInfoEvent extends BusEventBase implements PaymentInfoInternalEvent {
 
     private final UUID accountId;
     private final UUID invoiceId;

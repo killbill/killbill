@@ -19,14 +19,14 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.util.events.DefaultBusInternalEvent;
+import com.ning.billing.util.events.BusEventBase;
 import com.ning.billing.util.events.RepairEntitlementInternalEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class DefaultRepairEntitlementEvent extends DefaultBusInternalEvent implements RepairEntitlementInternalEvent {
+public class DefaultRepairEntitlementEvent extends BusEventBase implements RepairEntitlementInternalEvent {
 
     private final UUID bundleId;
     private final UUID accountId;

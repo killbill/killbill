@@ -19,7 +19,7 @@ package com.ning.billing.util.tag.api.user;
 import java.util.UUID;
 
 import com.ning.billing.ObjectType;
-import com.ning.billing.util.events.DefaultBusInternalEvent;
+import com.ning.billing.util.events.BusEventBase;
 import com.ning.billing.util.events.UserTagDeletionInternalEvent;
 import com.ning.billing.util.tag.TagDefinition;
 
@@ -27,7 +27,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class DefaultUserTagDeletionEvent extends DefaultBusInternalEvent implements UserTagDeletionInternalEvent {
+public class DefaultUserTagDeletionEvent extends BusEventBase implements UserTagDeletionInternalEvent {
     private final UUID tagId;
     private final UUID objectId;
     private final ObjectType objectType;

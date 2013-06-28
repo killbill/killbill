@@ -19,14 +19,14 @@ package com.ning.billing.overdue.applicator;
 import java.util.UUID;
 
 import com.ning.billing.junction.api.Type;
-import com.ning.billing.util.events.DefaultBusInternalEvent;
+import com.ning.billing.util.events.BusEventBase;
 import com.ning.billing.util.events.OverdueChangeInternalEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class DefaultOverdueChangeEvent extends DefaultBusInternalEvent implements OverdueChangeInternalEvent {
+public class DefaultOverdueChangeEvent extends BusEventBase implements OverdueChangeInternalEvent {
 
     private final UUID overdueObjectId;
     private final Type overdueObjectType;

@@ -19,14 +19,14 @@ package com.ning.billing.util.customfield.api;
 import java.util.UUID;
 
 import com.ning.billing.ObjectType;
+import com.ning.billing.util.events.BusEventBase;
 import com.ning.billing.util.events.CustomFieldDeletionEvent;
-import com.ning.billing.util.events.DefaultBusInternalEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class DefaultCustomFieldDeletionEvent extends DefaultBusInternalEvent implements CustomFieldDeletionEvent {
+public class DefaultCustomFieldDeletionEvent extends BusEventBase implements CustomFieldDeletionEvent {
 
     private final UUID customFieldId;
     private final UUID objectId;

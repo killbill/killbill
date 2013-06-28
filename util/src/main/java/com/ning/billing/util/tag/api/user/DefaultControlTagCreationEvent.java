@@ -19,15 +19,15 @@ package com.ning.billing.util.tag.api.user;
 import java.util.UUID;
 
 import com.ning.billing.ObjectType;
+import com.ning.billing.util.events.BusEventBase;
 import com.ning.billing.util.events.ControlTagCreationInternalEvent;
-import com.ning.billing.util.events.DefaultBusInternalEvent;
 import com.ning.billing.util.tag.TagDefinition;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class DefaultControlTagCreationEvent extends DefaultBusInternalEvent implements ControlTagCreationInternalEvent {
+public class DefaultControlTagCreationEvent extends BusEventBase implements ControlTagCreationInternalEvent {
 
     private final UUID tagId;
     private final UUID objectId;

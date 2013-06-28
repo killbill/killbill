@@ -20,14 +20,14 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.util.events.DefaultBusInternalEvent;
+import com.ning.billing.util.events.BusEventBase;
 import com.ning.billing.util.events.InvoiceCreationInternalEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class DefaultInvoiceCreationEvent extends DefaultBusInternalEvent implements InvoiceCreationInternalEvent {
+public class DefaultInvoiceCreationEvent extends BusEventBase implements InvoiceCreationInternalEvent {
 
     private final UUID invoiceId;
     private final UUID accountId;
