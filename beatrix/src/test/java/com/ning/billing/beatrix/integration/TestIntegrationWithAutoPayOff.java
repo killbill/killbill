@@ -262,6 +262,8 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
             }
             assertEquals(cur.getBalance(), cur.getChargedAmount());
         }
+        // We want to give some time for the retry to fail before we start clearing the state
+        addDelayBceauseOfLackOfCorrectSynchro();
 
         // REMOVE AUTO_PAY_OFF -> WILL SCHEDULE A PAYMENT_RETRY
         paymentPlugin.clear();
