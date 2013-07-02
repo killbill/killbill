@@ -62,6 +62,8 @@ public class InvoiceApiExceptionMapper extends ExceptionMapperBase implements Ex
             return buildBadRequestResponse(exception, uriInfo);
         } else if (exception.getCode() == ErrorCode.INVOICE_ITEM_ADJUSTMENT_AMOUNT_SHOULD_BE_POSITIVE.getCode()) {
             return buildBadRequestResponse(exception, uriInfo);
+        } else if (exception.getCode() == ErrorCode.INVOICE_ITEM_NOT_FOUND.getCode()) {
+            return buildNotFoundResponse(exception, uriInfo);
         } else if (exception.getCode() == ErrorCode.INVOICE_NO_SUCH_EXTERNAL_CHARGE.getCode()) {
             return buildBadRequestResponse(exception, uriInfo);
         } else if (exception.getCode() == ErrorCode.EXTERNAL_CHARGE_AMOUNT_INVALID.getCode()) {
