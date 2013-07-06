@@ -13,17 +13,19 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.jaxrs.util;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import com.google.common.eventbus.Subscribe;
-
+import com.ning.billing.bus.api.BusEventWithMetadata;
 import com.ning.billing.util.events.BusInternalEvent;
 import com.ning.billing.util.userrequest.CompletionUserRequest;
 import com.ning.billing.util.userrequest.CompletionUserRequestNotifier;
+
+import com.google.common.eventbus.Subscribe;
 
 public class KillbillEventHandler {
 
@@ -56,7 +58,7 @@ public class KillbillEventHandler {
      * Killbill server event handler
      */
     @Subscribe
-    public void handleEntitlementevents(final BusInternalEvent event) {
+    public void handleEntitlementevents(final BusEventWithMetadata<BusInternalEvent> event) {
         final List<CompletionUserRequestNotifier> runningWaiters = new ArrayList<CompletionUserRequestNotifier>();
         synchronized (activeWaiters) {
             runningWaiters.addAll(activeWaiters);

@@ -22,8 +22,8 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ning.billing.bus.PersistentBus;
-import com.ning.billing.bus.PersistentBus.EventBusException;
+import com.ning.billing.bus.api.PersistentBus;
+import com.ning.billing.bus.api.PersistentBus.EventBusException;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.alignment.PlanAligner;
 import com.ning.billing.entitlement.alignment.TimedPhase;
@@ -42,12 +42,12 @@ import com.ning.billing.entitlement.events.user.ApiEvent;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
-import com.ning.billing.notificationq.NotificationKey;
-import com.ning.billing.notificationq.NotificationQueue;
-import com.ning.billing.notificationq.NotificationQueueService;
-import com.ning.billing.notificationq.NotificationQueueService.NoSuchNotificationQueue;
-import com.ning.billing.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
-import com.ning.billing.notificationq.NotificationQueueService.NotificationQueueHandler;
+import com.ning.billing.notificationq.api.NotificationEvent;
+import com.ning.billing.notificationq.api.NotificationQueue;
+import com.ning.billing.notificationq.api.NotificationQueueService;
+import com.ning.billing.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
+import com.ning.billing.notificationq.api.NotificationQueueService.NotificationQueueAlreadyExists;
+import com.ning.billing.notificationq.api.NotificationQueueService.NotificationQueueHandler;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
@@ -100,7 +100,7 @@ public class Engine implements EventListener, EntitlementService {
         try {
             final NotificationQueueHandler queueHandler = new NotificationQueueHandler() {
                 @Override
-                public void handleReadyNotification(final NotificationKey inputKey, final DateTime eventDateTime, final UUID fromNotificationQueueUserToken, final Long accountRecordId, final Long tenantRecordId) {
+                public void handleReadyNotification(final NotificationEvent inputKey, final DateTime eventDateTime, final UUID fromNotificationQueueUserToken, final Long accountRecordId, final Long tenantRecordId) {
                     if (!(inputKey instanceof EntitlementNotificationKey)) {
                         log.error("Entitlement service received an unexpected event type {}" + inputKey.getClass().getName());
                         return;
@@ -171,7 +171,7 @@ public class Engine implements EventListener, EntitlementService {
             final EffectiveSubscriptionInternalEvent busEvent = new DefaultEffectiveSubscriptionEvent(transition, subscription.getAlignStartDate(),
                                                                                                       context.getUserToken(),
                                                                                                       context.getAccountRecordId(), context.getTenantRecordId());
-            eventBus.post(busEvent);
+            eventBus.post(busEvent, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
         } catch (EventBusException e) {
             log.warn("Failed to post entitlement event " + event, e);
         }

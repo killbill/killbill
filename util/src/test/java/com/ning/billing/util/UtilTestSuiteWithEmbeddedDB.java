@@ -23,8 +23,8 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
 import com.ning.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
-import com.ning.billing.bus.PersistentBus;
-import com.ning.billing.notificationq.NotificationQueueService;
+import com.ning.billing.bus.api.PersistentBus;
+import com.ning.billing.notificationq.api.NotificationQueueService;
 import com.ning.billing.util.audit.dao.AuditDao;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;

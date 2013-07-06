@@ -29,7 +29,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class DefaultEffectiveSubscriptionEvent extends DefaultSubscriptionEvent implements EffectiveSubscriptionInternalEvent {
 
     public DefaultEffectiveSubscriptionEvent(final SubscriptionTransitionData in, final DateTime startDate, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
-        super(in, startDate, userToken, accountRecordId, tenantRecordId);
+        super(in, startDate);
     }
 
     @JsonCreator
@@ -47,14 +47,11 @@ public class DefaultEffectiveSubscriptionEvent extends DefaultSubscriptionEvent 
                                              @JsonProperty("nextPhase") final String nextPhase,
                                              @JsonProperty("nextPriceList") final String nextPriceList,
                                              @JsonProperty("totalOrdering") final Long totalOrdering,
-                                             @JsonProperty("userToken") final UUID userToken,
                                              @JsonProperty("transitionType") final SubscriptionTransitionType transitionType,
                                              @JsonProperty("remainingEventsForUserOperation") final Integer remainingEventsForUserOperation,
-                                             @JsonProperty("startDate") final DateTime startDate,
-                                             @JsonProperty("accountRecordId") final Long accountRecordId,
-                                             @JsonProperty("tenantRecordId") final Long tenantRecordId) {
+                                             @JsonProperty("startDate") final DateTime startDate) {
         super(eventId, subscriptionId, bundleId, requestedTransitionTime, effectiveTransitionTime, previousState, previousPlan,
-              previousPhase, previousPriceList, nextState, nextPlan, nextPhase, nextPriceList, totalOrdering, userToken,
-              transitionType, remainingEventsForUserOperation, startDate, accountRecordId, tenantRecordId);
+              previousPhase, previousPriceList, nextState, nextPlan, nextPhase, nextPriceList, totalOrdering,
+              transitionType, remainingEventsForUserOperation, startDate);
     }
 }

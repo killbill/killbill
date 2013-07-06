@@ -22,6 +22,7 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ning.billing.bus.api.BusEventWithMetadata;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.util.callcontext.CallOrigin;
@@ -47,9 +48,11 @@ public class InvoiceListener {
     }
 
     @Subscribe
-    public void handleRepairEntitlementEvent(final RepairEntitlementInternalEvent repairEvent) {
+    public void handleRepairEntitlementEvent(final BusEventWithMetadata<RepairEntitlementInternalEvent> eventWithMetadata) {
+
+        final RepairEntitlementInternalEvent repairEvent = eventWithMetadata.getEvent();
         try {
-            final InternalCallContext context = internalCallContextFactory.createInternalCallContext(repairEvent.getTenantRecordId(), repairEvent.getAccountRecordId(), "RepairBundle", CallOrigin.INTERNAL, UserType.SYSTEM, repairEvent.getUserToken());
+            final InternalCallContext context = internalCallContextFactory.createInternalCallContext(eventWithMetadata.getSearchKey2(), eventWithMetadata.getSearchKey1(), "RepairBundle", CallOrigin.INTERNAL, UserType.SYSTEM, eventWithMetadata.getUserToken());
             dispatcher.processAccount(repairEvent.getAccountId(), repairEvent.getEffectiveDate(), false, context);
         } catch (InvoiceApiException e) {
             log.error(e.getMessage());
@@ -57,7 +60,9 @@ public class InvoiceListener {
     }
 
     @Subscribe
-    public void handleSubscriptionTransition(final EffectiveSubscriptionInternalEvent transition) {
+    public void handleSubscriptionTransition(final BusEventWithMetadata<EffectiveSubscriptionInternalEvent> eventWithMetadata) {
+
+        final EffectiveSubscriptionInternalEvent transition = eventWithMetadata.getEvent();
         try {
             //  Skip future uncancel event
             //  Skip events which are marked as not being the last one
@@ -66,7 +71,7 @@ public class InvoiceListener {
                 || transition.getRemainingEventsForUserOperation() > 0) {
                 return;
             }
-            final InternalCallContext context = internalCallContextFactory.createInternalCallContext(transition.getTenantRecordId(), transition.getAccountRecordId(), "SubscriptionTransition", CallOrigin.INTERNAL, UserType.SYSTEM, transition.getUserToken());
+            final InternalCallContext context = internalCallContextFactory.createInternalCallContext(eventWithMetadata.getSearchKey2(), eventWithMetadata.getSearchKey1(), "SubscriptionTransition", CallOrigin.INTERNAL, UserType.SYSTEM, eventWithMetadata.getUserToken());
             dispatcher.processSubscription(transition, context);
         } catch (InvoiceApiException e) {
             log.error(e.getMessage());

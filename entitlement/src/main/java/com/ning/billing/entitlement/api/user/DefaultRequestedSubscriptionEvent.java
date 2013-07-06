@@ -28,8 +28,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class DefaultRequestedSubscriptionEvent extends DefaultSubscriptionEvent implements RequestedSubscriptionInternalEvent {
-    public DefaultRequestedSubscriptionEvent(final SubscriptionTransitionData in, final DateTime startDate, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
-        super(in, startDate, userToken, accountRecordId, tenantRecordId);
+
+    public DefaultRequestedSubscriptionEvent(final SubscriptionTransitionData in, final DateTime startDate) {
+        super(in, startDate);
     }
 
     @JsonCreator
@@ -47,19 +48,16 @@ public class DefaultRequestedSubscriptionEvent extends DefaultSubscriptionEvent 
                                              @JsonProperty("nextPhase") final String nextPhase,
                                              @JsonProperty("nextPriceList") final String nextPriceList,
                                              @JsonProperty("totalOrdering") final Long totalOrdering,
-                                             @JsonProperty("userToken") final UUID userToken,
                                              @JsonProperty("transitionType") final SubscriptionTransitionType transitionType,
                                              @JsonProperty("remainingEventsForUserOperation") final Integer remainingEventsForUserOperation,
-                                             @JsonProperty("startDate") final DateTime startDate,
-                                             @JsonProperty("accountRecordId") final Long accountRecordId,
-                                             @JsonProperty("tenantRecordId") final Long tenantRecordId) {
+                                             @JsonProperty("startDate") final DateTime startDate) {
         super(eventId, subscriptionId, bundleId, requestedTransitionTime, effectiveTransitionTime, previousState, previousPlan,
-              previousPhase, previousPriceList, nextState, nextPlan, nextPhase, nextPriceList, totalOrdering, userToken,
-              transitionType, remainingEventsForUserOperation, startDate, accountRecordId, tenantRecordId);
+              previousPhase, previousPriceList, nextState, nextPlan, nextPhase, nextPriceList, totalOrdering,
+              transitionType, remainingEventsForUserOperation, startDate);
     }
 
-    public DefaultRequestedSubscriptionEvent(final SubscriptionData subscription, final EntitlementEvent nextEvent, final Long accountRecordId, final Long tenantRecordId) {
+    public DefaultRequestedSubscriptionEvent(final SubscriptionData subscription, final EntitlementEvent nextEvent) {
         this(nextEvent.getId(), nextEvent.getSubscriptionId(), subscription.getBundleId(), nextEvent.getRequestedDate(), nextEvent.getEffectiveDate(),
-             null, null, null, null, null, null, null, null, nextEvent.getTotalOrdering(), null, null, 0, null, accountRecordId, tenantRecordId);
+             null, null, null, null, null, null, null, null, nextEvent.getTotalOrdering(), null, 0, null);
     }
 }

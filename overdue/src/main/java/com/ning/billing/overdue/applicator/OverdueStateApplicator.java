@@ -30,15 +30,15 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.bus.PersistentBus;
+import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.catalog.api.ActionPolicy;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.api.Blockable;
-import com.ning.billing.junction.api.Type;
 import com.ning.billing.junction.api.BlockingApiException;
+import com.ning.billing.junction.api.Type;
 import com.ning.billing.ovedue.notification.OverdueCheckPoster;
 import com.ning.billing.overdue.OverdueApiException;
 import com.ning.billing.overdue.OverdueCancellationPolicicy;
@@ -96,7 +96,6 @@ public class OverdueStateApplicator<T extends Blockable> {
     }
 
 
-
     public void apply(final OverdueState<T> firstOverdueState, final BillingState<T> billingState,
                       final T overdueable, final String previousOverdueStateName,
                       final OverdueState<T> nextOverdueState, final InternalCallContext context) throws OverdueException {
@@ -141,7 +140,7 @@ public class OverdueStateApplicator<T extends Blockable> {
         }
 
         try {
-            bus.post(createOverdueEvent(overdueable, previousOverdueStateName, nextOverdueState.getName(), context));
+            bus.post(createOverdueEvent(overdueable, previousOverdueStateName, nextOverdueState.getName(), context), context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
         } catch (Exception e) {
             log.error("Error posting overdue change event to bus", e);
         }
@@ -156,14 +155,14 @@ public class OverdueStateApplicator<T extends Blockable> {
         clearFutureNotification(overdueable, context);
 
         try {
-            bus.post(createOverdueEvent(overdueable, previousOverdueStateName, clearState.getName(), context));
+            bus.post(createOverdueEvent(overdueable, previousOverdueStateName, clearState.getName(), context), context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
         } catch (Exception e) {
             log.error("Error posting overdue change event to bus", e);
         }
     }
 
     private OverdueChangeInternalEvent createOverdueEvent(final T overdueable, final String previousOverdueStateName, final String nextOverdueStateName, final InternalCallContext context) throws BlockingApiException {
-        return new DefaultOverdueChangeEvent(overdueable.getId(), Type.get(overdueable), previousOverdueStateName, nextOverdueStateName, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
+        return new DefaultOverdueChangeEvent(overdueable.getId(), Type.get(overdueable), previousOverdueStateName, nextOverdueStateName);
     }
 
     protected void storeNewState(final T blockable, final OverdueState<T> nextOverdueState, final InternalCallContext context) throws OverdueException {
@@ -202,7 +201,7 @@ public class OverdueStateApplicator<T extends Blockable> {
         poster.clearNotificationsFor(blockable, context);
     }
 
-    private void  cancelSubscriptionsIfRequired(final T blockable, final OverdueState<T> nextOverdueState, final InternalCallContext context) throws OverdueException {
+    private void cancelSubscriptionsIfRequired(final T blockable, final OverdueState<T> nextOverdueState, final InternalCallContext context) throws OverdueException {
         if (nextOverdueState.getSubscriptionCancellationPolicy() == OverdueCancellationPolicicy.NONE) {
             return;
         }

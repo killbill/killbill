@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ning.billing.ObjectType;
+import com.ning.billing.bus.api.BusEventWithMetadata;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.InternalCallContext;
@@ -52,10 +53,12 @@ public class InvoiceTagHandler {
     }
 
     @Subscribe
-    public void process_AUTO_INVOICING_OFF_removal(final ControlTagDeletionInternalEvent event) {
+    public void process_AUTO_INVOICING_OFF_removal(final BusEventWithMetadata<ControlTagDeletionInternalEvent> eventWithMetadata) {
+
+        final ControlTagDeletionInternalEvent event = eventWithMetadata.getEvent();
         if (event.getTagDefinition().getName().equals(ControlTagType.AUTO_INVOICING_OFF.toString()) && event.getObjectType() == ObjectType.ACCOUNT) {
             final UUID accountId = event.getObjectId();
-            final InternalCallContext context = internalCallContextFactory.createInternalCallContext(event.getTenantRecordId(), event.getAccountRecordId(), "InvoiceTagHandler", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
+            final InternalCallContext context = internalCallContextFactory.createInternalCallContext(eventWithMetadata.getSearchKey2(), eventWithMetadata.getSearchKey1(), "InvoiceTagHandler", CallOrigin.INTERNAL, UserType.SYSTEM, eventWithMetadata.getUserToken());
             processUnpaid_AUTO_INVOICING_OFF_invoices(accountId, context);
         }
     }

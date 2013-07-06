@@ -38,7 +38,7 @@ public class TestDefaultControlTagDefinitionCreationEvent extends UtilTestSuiteN
         final TagDefinition tagDefinition = new DefaultTagDefinition(tagDefinitionId, tagDefinitionName, tagDefinitionDescription, controlTag);
         final UUID userToken = UUID.randomUUID();
 
-        final DefaultControlTagDefinitionCreationEvent event = new DefaultControlTagDefinitionCreationEvent(tagDefinitionId, tagDefinition, userToken, 1L, 1L);
+        final DefaultControlTagDefinitionCreationEvent event = new DefaultControlTagDefinitionCreationEvent(tagDefinitionId, tagDefinition);
         Assert.assertEquals(event.getBusEventType(), BusInternalEvent.BusInternalEventType.CONTROL_TAGDEFINITION_CREATION);
 
         Assert.assertEquals(event.getTagDefinitionId(), tagDefinitionId);
@@ -46,12 +46,11 @@ public class TestDefaultControlTagDefinitionCreationEvent extends UtilTestSuiteN
         Assert.assertEquals(event.getTagDefinition().getId(), tagDefinitionId);
         Assert.assertEquals(event.getTagDefinition().getName(), tagDefinitionName);
         Assert.assertEquals(event.getTagDefinition().getDescription(), tagDefinitionDescription);
-        Assert.assertEquals(event.getUserToken(), userToken);
 
         Assert.assertEquals(event, event);
-        Assert.assertEquals(event, new DefaultControlTagDefinitionCreationEvent(tagDefinitionId, tagDefinition, userToken, 1L, 1L));
+        Assert.assertEquals(event, new DefaultControlTagDefinitionCreationEvent(tagDefinitionId, tagDefinition));
         Assert.assertTrue(event.equals(event));
-        Assert.assertTrue(event.equals(new DefaultControlTagDefinitionCreationEvent(tagDefinitionId, tagDefinition, userToken, 1L, 1L)));
+        Assert.assertTrue(event.equals(new DefaultControlTagDefinitionCreationEvent(tagDefinitionId, tagDefinition)));
     }
 
     @Test(groups = "fast")
@@ -65,7 +64,7 @@ public class TestDefaultControlTagDefinitionCreationEvent extends UtilTestSuiteN
         final TagDefinition tagDefinition = new DefaultTagDefinition(tagDefinitionId, tagDefinitionName, tagDefinitionDescription, controlTag);
         final UUID userToken = UUID.randomUUID();
 
-        final DefaultControlTagDefinitionCreationEvent event = new DefaultControlTagDefinitionCreationEvent(tagDefinitionId, tagDefinition, userToken, 1L, 1L);
+        final DefaultControlTagDefinitionCreationEvent event = new DefaultControlTagDefinitionCreationEvent(tagDefinitionId, tagDefinition);
 
         final String json = objectMapper.writeValueAsString(event);
         final DefaultControlTagDefinitionCreationEvent fromJson = objectMapper.readValue(json, DefaultControlTagDefinitionCreationEvent.class);

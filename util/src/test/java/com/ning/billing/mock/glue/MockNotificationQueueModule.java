@@ -20,8 +20,8 @@ import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
 
 import com.ning.billing.notificationq.MockNotificationQueueService;
-import com.ning.billing.notificationq.NotificationQueueConfig;
-import com.ning.billing.notificationq.NotificationQueueService;
+import com.ning.billing.notificationq.api.NotificationQueueConfig;
+import com.ning.billing.notificationq.api.NotificationQueueService;
 import com.ning.billing.util.glue.NotificationQueueModule;
 
 public class MockNotificationQueueModule extends NotificationQueueModule {

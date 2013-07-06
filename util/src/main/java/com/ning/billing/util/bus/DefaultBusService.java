@@ -16,7 +16,7 @@
 
 package com.ning.billing.util.bus;
 
-import com.ning.billing.bus.PersistentBus;
+import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
 import com.ning.billing.util.svcsapi.bus.BusService;

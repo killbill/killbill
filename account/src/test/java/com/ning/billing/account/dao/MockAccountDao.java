@@ -31,8 +31,9 @@ import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.account.api.DefaultMutableAccountData;
 import com.ning.billing.account.api.user.DefaultAccountChangeEvent;
 import com.ning.billing.account.api.user.DefaultAccountCreationEvent;
-import com.ning.billing.bus.PersistentBus;
-import com.ning.billing.bus.PersistentBus.EventBusException;
+import com.ning.billing.account.api.user.DefaultAccountCreationEvent.DefaultAccountData;
+import com.ning.billing.bus.api.PersistentBus;
+import com.ning.billing.bus.api.PersistentBus.EventBusException;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.InternalTenantContext;
@@ -62,7 +63,7 @@ public class MockAccountDao extends MockEntityDaoBase<AccountModelDao, Account, 
             final Long accountRecordId = getRecordId(account.getId(), context);
             final long tenantRecordId = context == null ? InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID
                                                         : context.getTenantRecordId();
-            eventBus.post(new DefaultAccountCreationEvent(account, null, accountRecordId, tenantRecordId));
+            eventBus.post(new DefaultAccountCreationEvent(new DefaultAccountData(account), account.getId()), context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
         } catch (final EventBusException ex) {
             Assert.fail(ex.toString());
         }
@@ -76,11 +77,11 @@ public class MockAccountDao extends MockEntityDaoBase<AccountModelDao, Account, 
         final Long accountRecordId = getRecordId(account.getId(), context);
         final long tenantRecordId = context == null ? InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID
                                                     : context.getTenantRecordId();
-        final AccountChangeInternalEvent changeEvent = new DefaultAccountChangeEvent(account.getId(), null, currentAccount, account,
-                                                                                     accountRecordId, tenantRecordId);
+        final AccountChangeInternalEvent changeEvent = new DefaultAccountChangeEvent(account.getId(), currentAccount, account
+        );
         if (changeEvent.hasChanges()) {
             try {
-                eventBus.post(changeEvent);
+                eventBus.post(changeEvent, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
             } catch (final EventBusException ex) {
                 Assert.fail(ex.toString());
             }

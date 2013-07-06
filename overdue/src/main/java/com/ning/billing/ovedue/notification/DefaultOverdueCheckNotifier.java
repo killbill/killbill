@@ -22,12 +22,12 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ning.billing.notificationq.NotificationKey;
-import com.ning.billing.notificationq.NotificationQueue;
-import com.ning.billing.notificationq.NotificationQueueService;
-import com.ning.billing.notificationq.NotificationQueueService.NoSuchNotificationQueue;
-import com.ning.billing.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
-import com.ning.billing.notificationq.NotificationQueueService.NotificationQueueHandler;
+import com.ning.billing.notificationq.api.NotificationEvent;
+import com.ning.billing.notificationq.api.NotificationQueue;
+import com.ning.billing.notificationq.api.NotificationQueueService;
+import com.ning.billing.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
+import com.ning.billing.notificationq.api.NotificationQueueService.NotificationQueueAlreadyExists;
+import com.ning.billing.notificationq.api.NotificationQueueService.NotificationQueueHandler;
 import com.ning.billing.overdue.OverdueProperties;
 import com.ning.billing.overdue.listener.OverdueListener;
 import com.ning.billing.overdue.service.DefaultOverdueService;
@@ -58,7 +58,7 @@ public class DefaultOverdueCheckNotifier implements OverdueCheckNotifier {
     public void initialize() {
         final NotificationQueueHandler notificationQueueHandler = new NotificationQueueHandler() {
             @Override
-            public void handleReadyNotification(final NotificationKey notificationKey, final DateTime eventDate, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
+            public void handleReadyNotification(final NotificationEvent notificationKey, final DateTime eventDate, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
                 try {
                     if (!(notificationKey instanceof OverdueCheckNotificationKey)) {
                         log.error("Overdue service received Unexpected notificationKey {}", notificationKey.getClass().getName());

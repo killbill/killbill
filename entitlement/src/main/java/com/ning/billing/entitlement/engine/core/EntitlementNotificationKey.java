@@ -18,12 +18,12 @@ package com.ning.billing.entitlement.engine.core;
 
 import java.util.UUID;
 
-import com.ning.billing.notificationq.NotificationKey;
+import com.ning.billing.notificationq.api.NotificationEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class EntitlementNotificationKey implements NotificationKey {
+public class EntitlementNotificationKey implements NotificationEvent {
 
     private final UUID eventId;
     private final int seqId;

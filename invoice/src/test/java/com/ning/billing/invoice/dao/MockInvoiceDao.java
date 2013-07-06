@@ -29,7 +29,7 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 
-import com.ning.billing.bus.PersistentBus;
+import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.user.DefaultInvoiceCreationEvent;
@@ -65,8 +65,8 @@ public class MockInvoiceDao implements InvoiceDao {
         }
         try {
             eventBus.post(new DefaultInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
-                                                          InvoiceModelDaoHelper.getBalance(invoice), invoice.getCurrency(),
-                                                          null, 1L, 1L));
+                                                          InvoiceModelDaoHelper.getBalance(invoice), invoice.getCurrency()),
+                          context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
         } catch (PersistentBus.EventBusException ex) {
             throw new RuntimeException(ex);
         }

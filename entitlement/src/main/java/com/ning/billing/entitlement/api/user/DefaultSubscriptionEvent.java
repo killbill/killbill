@@ -21,14 +21,13 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
-import com.ning.billing.util.events.BusEventBase;
 import com.ning.billing.util.events.SubscriptionInternalEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public abstract class DefaultSubscriptionEvent extends BusEventBase implements SubscriptionInternalEvent {
+public abstract class DefaultSubscriptionEvent implements SubscriptionInternalEvent {
 
     private final Long totalOrdering;
     private final UUID subscriptionId;
@@ -48,7 +47,7 @@ public abstract class DefaultSubscriptionEvent extends BusEventBase implements S
     private final SubscriptionTransitionType transitionType;
     private final DateTime startDate;
 
-    public DefaultSubscriptionEvent(final SubscriptionTransitionData in, final DateTime startDate, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
+    public DefaultSubscriptionEvent(final SubscriptionTransitionData in, final DateTime startDate) {
         this(in.getId(),
              in.getSubscriptionId(),
              in.getBundleId(),
@@ -63,12 +62,9 @@ public abstract class DefaultSubscriptionEvent extends BusEventBase implements S
              (in.getNextPhase() != null) ? in.getNextPhase().getName() : null,
              (in.getNextPriceList() != null) ? in.getNextPriceList().getName() : null,
              in.getTotalOrdering(),
-             userToken,
              in.getTransitionType(),
              in.getRemainingEventsForUserOperation(),
-             startDate,
-             accountRecordId,
-             tenantRecordId);
+             startDate);
     }
 
     @JsonCreator
@@ -86,13 +82,9 @@ public abstract class DefaultSubscriptionEvent extends BusEventBase implements S
                                     @JsonProperty("nextPhase") final String nextPhase,
                                     @JsonProperty("nextPriceList") final String nextPriceList,
                                     @JsonProperty("totalOrdering") final Long totalOrdering,
-                                    @JsonProperty("userToken") final UUID userToken,
                                     @JsonProperty("transitionType") final SubscriptionTransitionType transitionType,
                                     @JsonProperty("remainingEventsForUserOperation") final Integer remainingEventsForUserOperation,
-                                    @JsonProperty("startDate") final DateTime startDate,
-                                    @JsonProperty("accountRecordId") final Long accountRecordId,
-                                    @JsonProperty("tenantRecordId") final Long tenantRecordId) {
-        super(userToken, accountRecordId, tenantRecordId);
+                                    @JsonProperty("startDate") final DateTime startDate) {
         this.eventId = eventId;
         this.subscriptionId = subscriptionId;
         this.bundleId = bundleId;
@@ -224,7 +216,6 @@ public abstract class DefaultSubscriptionEvent extends BusEventBase implements S
         sb.append(", nextPlan='").append(nextPlan).append('\'');
         sb.append(", nextPhase='").append(nextPhase).append('\'');
         sb.append(", remainingEventsForUserOperation=").append(remainingEventsForUserOperation);
-        sb.append(", userToken=").append(getUserToken());
         sb.append(", transitionType=").append(transitionType);
         sb.append(", startDate=").append(startDate);
         sb.append('}');

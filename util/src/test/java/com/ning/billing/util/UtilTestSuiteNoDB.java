@@ -23,7 +23,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
 import com.ning.billing.GuicyKillbillTestSuiteNoDB;
-import com.ning.billing.bus.PersistentBus;
+import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.util.api.AuditUserApi;
 import com.ning.billing.util.audit.dao.AuditDao;
 import com.ning.billing.util.cache.CacheControllerDispatcher;

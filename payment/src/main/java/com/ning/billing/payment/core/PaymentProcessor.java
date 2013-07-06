@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.bus.PersistentBus;
+import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.osgi.api.OSGIServiceRegistration;
@@ -195,7 +195,7 @@ public class PaymentProcessor extends ProcessorBase {
                                                                                                                scheduleRetryOnPaymentFailure(cur.getId(), context);
                                                                                                                break;
                                                                                                            case PLUGIN_FAILURE:
-                                                                                                               case UNKNOWN:
+                                                                                                           case UNKNOWN:
                                                                                                                scheduleRetryOnPluginFailure(cur.getId(), context);
                                                                                                                break;
                                                                                                            default:
@@ -231,8 +231,8 @@ public class PaymentProcessor extends ProcessorBase {
             // Note that at this point, we don't know the exact invoice balance (see getAndValidatePaymentAmount() below).
             // This means that events will be posted for null and zero dollar invoices (e.g. trials).
             final PaymentErrorInternalEvent event = new DefaultPaymentErrorEvent(account.getId(), invoiceId, null,
-                                                                                 ErrorCode.PAYMENT_NO_DEFAULT_PAYMENT_METHOD.toString(), context.getUserToken(),
-                                                                                 context.getAccountRecordId(), context.getTenantRecordId());
+                                                                                 ErrorCode.PAYMENT_NO_DEFAULT_PAYMENT_METHOD.toString()
+            );
             postPaymentEvent(event, account.getId(), context);
             throw e;
         }
@@ -279,7 +279,7 @@ public class PaymentProcessor extends ProcessorBase {
                 return null;
             }
         } catch (RuntimeException e) {
-            log.error("Failure when dispatching payment for invoice " + invoiceId , e);
+            log.error("Failure when dispatching payment for invoice " + invoiceId, e);
             if (isInstantPayment) {
                 throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, invoiceId);
             } else {
@@ -434,7 +434,7 @@ public class PaymentProcessor extends ProcessorBase {
     private Payment setTerminalStateOnRetryWithAccountLocked(final Account account, final Invoice invoice, final PaymentModelDao payment, final BigDecimal requestedAmount, final String terminalStateReason, final InternalCallContext context) {
 
         final PaymentStatus paymentStatus;
-        switch(payment.getPaymentStatus()) {
+        switch (payment.getPaymentStatus()) {
             case PAYMENT_FAILURE:
                 paymentStatus = PaymentStatus.PAYMENT_FAILURE_ABORTED;
                 break;
@@ -450,7 +450,7 @@ public class PaymentProcessor extends ProcessorBase {
         }
         final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(account.getId(), invoice.getId(), payment.getId(), clock.getUTCNow(), requestedAmount);
         paymentDao.insertNewAttemptForPayment(payment.getId(), attempt, context);
-        paymentDao.updateStatusAndEffectiveDateForPaymentWithAttempt(payment.getId(), paymentStatus, clock.getUTCNow(), attempt.getId(), null, terminalStateReason,  context);
+        paymentDao.updateStatusAndEffectiveDateForPaymentWithAttempt(payment.getId(), paymentStatus, clock.getUTCNow(), attempt.getId(), null, terminalStateReason, context);
 
         final List<PaymentAttemptModelDao> allAttempts = paymentDao.getAttemptsForPayment(payment.getId(), context);
         return new DefaultPayment(payment, null, allAttempts, Collections.<RefundModelDao>emptyList());
@@ -471,7 +471,7 @@ public class PaymentProcessor extends ProcessorBase {
 
         List<PaymentAttemptModelDao> allAttempts = null;
         if (paymentConfig.isPaymentOff()) {
-            paymentDao.updateStatusAndEffectiveDateForPaymentWithAttempt(paymentInput.getId(), PaymentStatus.PAYMENT_SYSTEM_OFF, clock.getUTCNow(), attemptInput.getId(), null, null,  context);
+            paymentDao.updateStatusAndEffectiveDateForPaymentWithAttempt(paymentInput.getId(), PaymentStatus.PAYMENT_SYSTEM_OFF, clock.getUTCNow(), attemptInput.getId(), null, null, context);
             allAttempts = paymentDao.getAttemptsForPayment(paymentInput.getId(), context);
             return new DefaultPayment(paymentInput, null, allAttempts, Collections.<RefundModelDao>emptyList());
         }
@@ -498,7 +498,7 @@ public class PaymentProcessor extends ProcessorBase {
                                                                   String gatewayErrorMsg, UUID attemptId, InternalCallContext context, String gatewayErrorCode
                      */
 
-                    paymentDao.updateStatusAndEffectiveDateForPaymentWithAttempt(paymentInput.getId(), paymentStatus, clock.getUTCNow(), attemptInput.getId(), paymentPluginInfo.getGatewayErrorCode(), null,  context);
+                    paymentDao.updateStatusAndEffectiveDateForPaymentWithAttempt(paymentInput.getId(), paymentStatus, clock.getUTCNow(), attemptInput.getId(), paymentPluginInfo.getGatewayErrorCode(), null, context);
 
                     // Fetch latest objects
                     allAttempts = paymentDao.getAttemptsForPayment(paymentInput.getId(), context);
@@ -514,8 +514,8 @@ public class PaymentProcessor extends ProcessorBase {
                     // Create Bus event
                     event = new DefaultPaymentInfoEvent(account.getId(),
                                                         invoice.getId(), payment.getId(), payment.getAmount(), payment.getPaymentNumber(), paymentStatus,
-                                                        context.getUserToken(), payment.getEffectiveDate(),
-                                                        context.getAccountRecordId(), context.getTenantRecordId());
+                                                        payment.getEffectiveDate()
+                    );
                     break;
 
                 case ERROR:
@@ -527,13 +527,13 @@ public class PaymentProcessor extends ProcessorBase {
                         paymentStatus = PaymentStatus.PAYMENT_FAILURE_ABORTED;
                     }
 
-                    paymentDao.updateStatusAndEffectiveDateForPaymentWithAttempt(paymentInput.getId(), paymentStatus, clock.getUTCNow(), attemptInput.getId(), paymentPluginInfo.getGatewayErrorCode(), paymentPluginInfo.getGatewayError(),  context);
+                    paymentDao.updateStatusAndEffectiveDateForPaymentWithAttempt(paymentInput.getId(), paymentStatus, clock.getUTCNow(), attemptInput.getId(), paymentPluginInfo.getGatewayErrorCode(), paymentPluginInfo.getGatewayError(), context);
 
                     log.info(String.format("Could not process payment for account %s, invoice %s, error = %s",
                                            account.getId(), invoice.getId(), paymentPluginInfo.getGatewayError()));
 
-                    event = new DefaultPaymentErrorEvent(account.getId(), invoice.getId(), paymentInput.getId(), paymentPluginInfo.getGatewayError(), context.getUserToken(),
-                                                         context.getAccountRecordId(), context.getTenantRecordId());
+                    event = new DefaultPaymentErrorEvent(account.getId(), invoice.getId(), paymentInput.getId(), paymentPluginInfo.getGatewayError()
+                    );
                     throw new PaymentApiException(ErrorCode.PAYMENT_CREATE_PAYMENT, account.getId(), paymentPluginInfo.getGatewayError());
 
                 default:

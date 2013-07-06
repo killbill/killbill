@@ -23,7 +23,7 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ning.billing.notificationq.NotificationQueueService;
+import com.ning.billing.notificationq.api.NotificationQueueService;
 import com.ning.billing.util.config.PaymentConfig;
 import com.ning.billing.payment.core.PaymentProcessor;
 import com.ning.billing.util.callcontext.InternalCallContext;

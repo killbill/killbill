@@ -38,8 +38,8 @@ import org.slf4j.LoggerFactory;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.bus.PersistentBus;
-import com.ning.billing.bus.PersistentBus.EventBusException;
+import com.ning.billing.bus.api.PersistentBus;
+import com.ning.billing.bus.api.PersistentBus.EventBusException;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.invoice.api.Invoice;
@@ -187,8 +187,7 @@ public class InvoiceDispatcher {
             if (invoice == null) {
                 log.info("Generated null invoice for accountId {} and targetDate {} (targetDateTime {})", new Object[]{accountId, targetDate, targetDateTime});
                 if (!dryRun) {
-                    final BusInternalEvent event = new DefaultNullInvoiceEvent(accountId, clock.getUTCToday(), context.getUserToken(),
-                                                                               context.getAccountRecordId(), context.getTenantRecordId());
+                    final BusInternalEvent event = new DefaultNullInvoiceEvent(accountId, clock.getUTCToday());
                     postEvent(event, accountId, context);
                 }
             } else {
@@ -236,13 +235,10 @@ public class InvoiceDispatcher {
                     final List<InvoiceInternalEvent> events = new ArrayList<InvoiceInternalEvent>();
                     if (isRealInvoiceWithItems) {
                         events.add(new DefaultInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
-                                                                   invoice.getBalance(), invoice.getCurrency(),
-                                                                   context.getUserToken(),
-                                                                   context.getAccountRecordId(),
-                                                                   context.getTenantRecordId()));
+                                                                   invoice.getBalance(), invoice.getCurrency()));
                     }
                     for (UUID cur : adjustedUniqueOtherInvoiceId) {
-                        final InvoiceAdjustmentInternalEvent event = new DefaultInvoiceAdjustmentEvent(cur, invoice.getAccountId(), context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
+                        final InvoiceAdjustmentInternalEvent event = new DefaultInvoiceAdjustmentEvent(cur, invoice.getAccountId());
                         events.add(event);
                     }
 
@@ -304,7 +300,7 @@ public class InvoiceDispatcher {
 
     private void postEvent(final BusInternalEvent event, final UUID accountId, final InternalCallContext context) {
         try {
-            eventBus.post(event);
+            eventBus.post(event, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
         } catch (EventBusException e) {
             log.error(String.format("Failed to post event %s for account %s", event.getBusEventType(), accountId), e);
         }

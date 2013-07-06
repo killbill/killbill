@@ -21,9 +21,9 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
 import com.ning.billing.GuicyKillbillTestSuiteNoDB;
-import com.ning.billing.bus.PersistentBus;
+import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.notificationq.NotificationQueueService;
+import com.ning.billing.notificationq.api.NotificationQueueService;
 import com.ning.billing.ovedue.notification.OverdueCheckNotifier;
 import com.ning.billing.ovedue.notification.OverdueCheckPoster;
 import com.ning.billing.overdue.applicator.OverdueBusListenerTester;

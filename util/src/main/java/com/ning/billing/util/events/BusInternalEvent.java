@@ -16,9 +16,10 @@
 
 package com.ning.billing.util.events;
 
-import com.ning.billing.bus.BusPersistentEvent;
 
-public interface BusInternalEvent extends BusPersistentEvent {
+import com.ning.billing.bus.api.BusEvent;
+
+public interface BusInternalEvent extends BusEvent {
 
     public enum BusInternalEventType {
         ACCOUNT_CREATE,

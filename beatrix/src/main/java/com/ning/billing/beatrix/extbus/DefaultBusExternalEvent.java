@@ -3,15 +3,15 @@ package com.ning.billing.beatrix.extbus;
 import java.util.UUID;
 
 import com.ning.billing.ObjectType;
-import com.ning.billing.bus.BusPersistentEvent;
+import com.ning.billing.bus.api.BusEvent;
 import com.ning.billing.notification.plugin.api.ExtBusEvent;
 import com.ning.billing.notification.plugin.api.ExtBusEventType;
-import com.ning.billing.util.events.BusEventBase;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class DefaultBusExternalEvent extends BusEventBase implements ExtBusEvent, BusPersistentEvent {
+
+public class DefaultBusExternalEvent implements ExtBusEvent, BusEvent {
 
     private final UUID objectId;
     private final UUID accountId;
@@ -24,10 +24,8 @@ public class DefaultBusExternalEvent extends BusEventBase implements ExtBusEvent
     public DefaultBusExternalEvent(@JsonProperty("objectId") final UUID objectId,
                                    @JsonProperty("objectType") final ObjectType objectType,
                                    @JsonProperty("eventType") final ExtBusEventType eventType,
-                                   @JsonProperty("userToken") final UUID userToken,
                                    @JsonProperty("accountId") final UUID accountId,
                                    @JsonProperty("tenantId") final UUID tenantId) {
-        super(userToken, null, null);
         this.eventType = eventType;
         this.objectType = objectType;
         this.objectId = objectId;

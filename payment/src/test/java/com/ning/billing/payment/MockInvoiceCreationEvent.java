@@ -35,21 +35,18 @@ public class MockInvoiceCreationEvent implements InvoiceCreationInternalEvent {
     private final BigDecimal amountOwed;
     private final Currency currency;
     private final LocalDate invoiceCreationDate;
-    private final UUID userToken;
 
     @JsonCreator
     public MockInvoiceCreationEvent(@JsonProperty("invoiceId") final UUID invoiceId,
                                     @JsonProperty("accountId") final UUID accountId,
                                     @JsonProperty("amountOwed") final BigDecimal amountOwed,
                                     @JsonProperty("currency") final Currency currency,
-                                    @JsonProperty("invoiceCreationDate") final LocalDate invoiceCreationDate,
-                                    @JsonProperty("userToken") final UUID userToken) {
+                                    @JsonProperty("invoiceCreationDate") final LocalDate invoiceCreationDate) {
         this.invoiceId = invoiceId;
         this.accountId = accountId;
         this.amountOwed = amountOwed;
         this.currency = currency;
         this.invoiceCreationDate = invoiceCreationDate;
-        this.userToken = userToken;
     }
 
     @JsonIgnore
@@ -58,10 +55,6 @@ public class MockInvoiceCreationEvent implements InvoiceCreationInternalEvent {
         return BusInternalEventType.INVOICE_CREATION;
     }
 
-    @Override
-    public UUID getUserToken() {
-        return userToken;
-    }
 
     @Override
     public UUID getInvoiceId() {
@@ -93,19 +86,17 @@ public class MockInvoiceCreationEvent implements InvoiceCreationInternalEvent {
         final int prime = 31;
         int result = 1;
         result = prime * result
-                + ((accountId == null) ? 0 : accountId.hashCode());
+                 + ((accountId == null) ? 0 : accountId.hashCode());
         result = prime * result
-                + ((amountOwed == null) ? 0 : amountOwed.hashCode());
+                 + ((amountOwed == null) ? 0 : amountOwed.hashCode());
         result = prime * result
-                + ((currency == null) ? 0 : currency.hashCode());
+                 + ((currency == null) ? 0 : currency.hashCode());
         result = prime
-                * result
-                + ((invoiceCreationDate == null) ? 0 : invoiceCreationDate
+                 * result
+                 + ((invoiceCreationDate == null) ? 0 : invoiceCreationDate
                 .hashCode());
         result = prime * result
-                + ((invoiceId == null) ? 0 : invoiceId.hashCode());
-        result = prime * result
-                + ((userToken == null) ? 0 : userToken.hashCode());
+                 + ((invoiceId == null) ? 0 : invoiceId.hashCode());
         return result;
     }
 
@@ -152,23 +143,6 @@ public class MockInvoiceCreationEvent implements InvoiceCreationInternalEvent {
         } else if (!invoiceId.equals(other.invoiceId)) {
             return false;
         }
-        if (userToken == null) {
-            if (other.userToken != null) {
-                return false;
-            }
-        } else if (!userToken.equals(other.userToken)) {
-            return false;
-        }
         return true;
-    }
-
-    @Override
-    public Long getTenantRecordId() {
-        return 1L;
-    }
-
-    @Override
-    public Long getAccountRecordId() {
-        return 1L;
     }
 }

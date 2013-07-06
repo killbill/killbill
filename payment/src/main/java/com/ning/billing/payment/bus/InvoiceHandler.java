@@ -22,6 +22,8 @@ import org.slf4j.LoggerFactory;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.bus.api.BusEvent;
+import com.ning.billing.bus.api.BusEventWithMetadata;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.core.PaymentProcessor;
 import com.ning.billing.util.callcontext.CallOrigin;
@@ -52,14 +54,16 @@ public class InvoiceHandler {
     }
 
     @Subscribe
-    public void processInvoiceEvent(final InvoiceCreationInternalEvent event) {
+    public void processInvoiceEvent(final BusEventWithMetadata<InvoiceCreationInternalEvent> eventWithMetadata) {
+
+        final InvoiceCreationInternalEvent event = eventWithMetadata.getEvent();
 
         log.info("Received invoice creation notification for account {} and invoice {}",
                  event.getAccountId(), event.getInvoiceId());
 
         final Account account;
         try {
-            final InternalCallContext internalContext =  internalCallContextFactory.createInternalCallContext(event.getTenantRecordId(), event.getAccountRecordId(), "PaymentRequestProcessor", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
+            final InternalCallContext internalContext =  internalCallContextFactory.createInternalCallContext(eventWithMetadata.getSearchKey2(), eventWithMetadata.getSearchKey1(), "PaymentRequestProcessor", CallOrigin.INTERNAL, UserType.SYSTEM, eventWithMetadata.getUserToken());
             account = accountApi.getAccountById(event.getAccountId(), internalContext);
             paymentProcessor.createPayment(account, event.getInvoiceId(), null, internalContext, false, false);
         } catch (AccountApiException e) {

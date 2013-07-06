@@ -22,7 +22,7 @@ import java.net.URISyntaxException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ning.billing.bus.PersistentBus.EventBusException;
+import com.ning.billing.bus.api.PersistentBus.EventBusException;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
 import com.ning.billing.ovedue.notification.OverdueCheckNotifier;

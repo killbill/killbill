@@ -16,12 +16,9 @@
 
 package com.ning.billing.ovedue.notification;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 
 import javax.annotation.Nullable;
 
@@ -32,10 +29,10 @@ import org.slf4j.LoggerFactory;
 
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.Type;
-import com.ning.billing.notificationq.Notification;
-import com.ning.billing.notificationq.NotificationQueue;
-import com.ning.billing.notificationq.NotificationQueueService;
-import com.ning.billing.notificationq.NotificationQueueService.NoSuchNotificationQueue;
+import com.ning.billing.notificationq.api.NotificationEventWithMetadata;
+import com.ning.billing.notificationq.api.NotificationQueue;
+import com.ning.billing.notificationq.api.NotificationQueueService;
+import com.ning.billing.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
 import com.ning.billing.overdue.service.DefaultOverdueService;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.callcontext.InternalCallContext;
@@ -48,8 +45,7 @@ import com.ning.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Maps;
+import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
 
 public class DefaultOverdueCheckPoster implements OverdueCheckPoster {
@@ -80,10 +76,10 @@ public class DefaultOverdueCheckPoster implements OverdueCheckPoster {
                     boolean shouldInsertNewNotification = true;
 
                     // Check if we already have notifications for that key
-                    final List<Notification> futureNotifications = getFutureNotificationsForAccountAndOverdueableInTransaction(entitySqlDaoWrapperFactory, checkOverdueQueue, overdueable, context);
+                    final Collection<NotificationEventWithMetadata<OverdueCheckNotificationKey>> futureNotifications = getFutureNotificationsForAccountAndOverdueableInTransaction(entitySqlDaoWrapperFactory, checkOverdueQueue, overdueable, context);
                     if (futureNotifications.size() > 0) {
                         // Results are ordered by effective date asc
-                        final DateTime earliestExistingNotificationDate = futureNotifications.get(0).getEffectiveDate();
+                        final DateTime earliestExistingNotificationDate = futureNotifications.iterator().next().getEffectiveDate();
 
                         final int minIndexToDeleteFrom;
                         if (earliestExistingNotificationDate.isBefore(futureNotificationTime)) {
@@ -95,8 +91,14 @@ public class DefaultOverdueCheckPoster implements OverdueCheckPoster {
                             minIndexToDeleteFrom = 0;
                         }
 
-                        for (int i = minIndexToDeleteFrom; i < futureNotifications.size(); i++) {
-                            checkOverdueQueue.removeNotificationFromTransaction(entitySqlDaoWrapperFactory.getSqlDao(), futureNotifications.get(i).getId());
+                        int index = 0;
+                        final Iterator<NotificationEventWithMetadata<OverdueCheckNotificationKey>> it = futureNotifications.iterator();
+                        while (it.hasNext()) {
+                            final NotificationEventWithMetadata<OverdueCheckNotificationKey> cur = it.next();
+                            if (minIndexToDeleteFrom >= index) {
+                                checkOverdueQueue.removeNotificationFromTransaction(entitySqlDaoWrapperFactory.getSqlDao(), cur.getRecordId());
+                            }
+                            index++;
                         }
                     }
 
@@ -125,9 +127,9 @@ public class DefaultOverdueCheckPoster implements OverdueCheckPoster {
 
                 @Override
                 public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
-                    final List<Notification> futureNotifications = getFutureNotificationsForAccountAndOverdueableInTransaction(entitySqlDaoWrapperFactory, checkOverdueQueue, overdueable, context);
-                    for (final Notification notification : futureNotifications) {
-                        checkOverdueQueue.removeNotificationFromTransaction(entitySqlDaoWrapperFactory.getSqlDao(), notification.getId());
+                    final Collection<NotificationEventWithMetadata<OverdueCheckNotificationKey>> futureNotifications = getFutureNotificationsForAccountAndOverdueableInTransaction(entitySqlDaoWrapperFactory, checkOverdueQueue, overdueable, context);
+                    for (final NotificationEventWithMetadata<OverdueCheckNotificationKey> notification : futureNotifications) {
+                        checkOverdueQueue.removeNotificationFromTransaction(entitySqlDaoWrapperFactory.getSqlDao(), notification.getRecordId());
                     }
 
                     return null;
@@ -139,27 +141,21 @@ public class DefaultOverdueCheckPoster implements OverdueCheckPoster {
     }
 
     @VisibleForTesting
-    List<Notification> getFutureNotificationsForAccountAndOverdueableInTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory,
-                                                                                   final NotificationQueue checkOverdueQueue,
-                                                                                   final Blockable overdueable,
-                                                                                   final InternalCallContext context) {
+    Collection<NotificationEventWithMetadata<OverdueCheckNotificationKey>> getFutureNotificationsForAccountAndOverdueableInTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory,
+                                                                                                                                       final NotificationQueue checkOverdueQueue,
+                                                                                                                                       final Blockable overdueable,
+                                                                                                                                       final InternalCallContext context) {
 
-        final Map<Notification, OverdueCheckNotificationKey> candidates = checkOverdueQueue.getFutureNotificationsForAccountAndTypeFromTransaction(OverdueCheckNotificationKey.class, context.getAccountRecordId(), entitySqlDaoWrapperFactory.getSqlDao());
-        final Map<Notification, OverdueCheckNotificationKey> notifications = Maps.filterEntries(candidates, new Predicate<Entry<Notification, OverdueCheckNotificationKey>>() {
+        final List<NotificationEventWithMetadata<OverdueCheckNotificationKey>> notifications = checkOverdueQueue.getFutureNotificationFromTransactionForSearchKey1(OverdueCheckNotificationKey.class, context.getAccountRecordId(), entitySqlDaoWrapperFactory.getSqlDao());
+
+        final Collection<NotificationEventWithMetadata<OverdueCheckNotificationKey>> notificationsFilterered = Collections2.filter(notifications, new Predicate<NotificationEventWithMetadata<OverdueCheckNotificationKey>>() {
             @Override
-            public boolean apply(@Nullable final Entry<Notification, OverdueCheckNotificationKey> input) {
-                final OverdueCheckNotificationKey notificationKey = input.getValue();
+            public boolean apply(@Nullable final NotificationEventWithMetadata<OverdueCheckNotificationKey> input) {
+                final OverdueCheckNotificationKey notificationKey = input.getEvent();
                 return (Type.get(overdueable).equals(notificationKey.getType()) && overdueable.getId().equals(notificationKey.getUuidKey()));
             }
         });
 
-        final List<Notification> result = new ArrayList(notifications.keySet());
-        Collections.sort(result, new Comparator<Notification>() {
-            @Override
-            public int compare(final Notification o1, final Notification o2) {
-                return o1.getEffectiveDate().compareTo(o2.getEffectiveDate());
-            }
-        });
-        return result;
+        return notificationsFilterered;
     }
 }

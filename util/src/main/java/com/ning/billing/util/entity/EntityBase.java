@@ -19,8 +19,6 @@ package com.ning.billing.util.entity;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.joda.time.ReadableInstant;
-import org.joda.time.ReadablePartial;
 
 public abstract class EntityBase implements Entity {
 

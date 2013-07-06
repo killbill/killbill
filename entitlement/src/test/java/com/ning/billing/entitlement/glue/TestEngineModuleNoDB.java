@@ -26,8 +26,8 @@ import com.ning.billing.entitlement.engine.dao.MockEntitlementDaoMemory;
 import com.ning.billing.entitlement.engine.dao.RepairEntitlementDao;
 import com.ning.billing.mock.glue.MockNonEntityDaoModule;
 import com.ning.billing.notificationq.MockNotificationQueueService;
-import com.ning.billing.notificationq.NotificationQueueConfig;
-import com.ning.billing.notificationq.NotificationQueueService;
+import com.ning.billing.notificationq.api.NotificationQueueConfig;
+import com.ning.billing.notificationq.api.NotificationQueueService;
 import com.ning.billing.util.bus.InMemoryBusModule;
 
 import com.google.inject.name.Names;

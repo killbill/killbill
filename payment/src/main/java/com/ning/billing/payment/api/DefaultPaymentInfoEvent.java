@@ -21,14 +21,13 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.util.events.BusEventBase;
 import com.ning.billing.util.events.PaymentInfoInternalEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class DefaultPaymentInfoEvent extends BusEventBase implements PaymentInfoInternalEvent {
+public class DefaultPaymentInfoEvent implements PaymentInfoInternalEvent {
 
     private final UUID accountId;
     private final UUID invoiceId;
@@ -36,7 +35,6 @@ public class DefaultPaymentInfoEvent extends BusEventBase implements PaymentInfo
     private final BigDecimal amount;
     private final Integer paymentNumber;
     private final PaymentStatus status;
-    private final UUID userToken;
     private final DateTime effectiveDate;
 
     @JsonCreator
@@ -49,43 +47,22 @@ public class DefaultPaymentInfoEvent extends BusEventBase implements PaymentInfo
                                    @JsonProperty("status") final PaymentStatus status,
                                    @JsonProperty("extFirstPaymentRefId") final String extFirstPaymentRefId /* TODO for backward compatibility only */,
                                    @JsonProperty("extSecondPaymentRefId") final String extSecondPaymentRefId /* TODO for backward compatibility only */,
-                                   @JsonProperty("userToken") final UUID userToken,
-                                   @JsonProperty("effectiveDate") final DateTime effectiveDate,
-                                   @JsonProperty("accountRecordId") final Long accountRecordId,
-                                   @JsonProperty("tenantRecordId") final Long tenantRecordId) {
-        super(userToken, accountRecordId, tenantRecordId);
+                                   @JsonProperty("effectiveDate") final DateTime effectiveDate) {
         this.accountId = accountId;
         this.invoiceId = invoiceId;
         this.paymentId = paymentId;
         this.amount = amount;
         this.paymentNumber = paymentNumber;
         this.status = status;
-        this.userToken = userToken;
         this.effectiveDate = effectiveDate;
     }
 
     public DefaultPaymentInfoEvent(final UUID accountId, final UUID invoiceId,
                                    final UUID paymentId, final BigDecimal amount, final Integer paymentNumber,
-                                   final PaymentStatus status, final UUID userToken,
-                                   final DateTime effectiveDatefinal, final Long accountRecordId, final Long tenantRecordId) {
-        this(UUID.randomUUID(), accountId, invoiceId, paymentId, amount, paymentNumber, status, null, null, userToken,
-             effectiveDatefinal, accountRecordId, tenantRecordId);
-    }
-
-    public DefaultPaymentInfoEvent(final DefaultPaymentInfoEvent src) {
-        this(UUID.randomUUID(),
-             src.accountId,
-             src.invoiceId,
-             src.paymentId,
-             src.amount,
-             src.paymentNumber,
-             src.status,
-             null,
-             null,
-             src.userToken,
-             src.effectiveDate,
-             src.getAccountRecordId(),
-             src.getTenantRecordId());
+                                   final PaymentStatus status,
+                                   final DateTime effectiveDatefinal) {
+        this(UUID.randomUUID(), accountId, invoiceId, paymentId, amount, paymentNumber, status, null, null,
+             effectiveDatefinal);
     }
 
     @JsonIgnore
@@ -94,10 +71,6 @@ public class DefaultPaymentInfoEvent extends BusEventBase implements PaymentInfo
         return BusInternalEventType.PAYMENT_INFO;
     }
 
-    @Override
-    public UUID getUserToken() {
-        return userToken;
-    }
 
     @Override
     public UUID getAccountId() {
@@ -144,7 +117,6 @@ public class DefaultPaymentInfoEvent extends BusEventBase implements PaymentInfo
         sb.append(", amount=").append(amount);
         sb.append(", paymentNumber=").append(paymentNumber);
         sb.append(", status=").append(status);
-        sb.append(", userToken=").append(userToken);
         sb.append(", effectiveDate=").append(effectiveDate);
         sb.append('}');
         return sb.toString();
@@ -166,8 +138,6 @@ public class DefaultPaymentInfoEvent extends BusEventBase implements PaymentInfo
         result = prime * result
                  + ((paymentNumber == null) ? 0 : paymentNumber.hashCode());
         result = prime * result + ((status == null) ? 0 : status.hashCode());
-        result = prime * result
-                 + ((userToken == null) ? 0 : userToken.hashCode());
         return result;
     }
 
@@ -226,13 +196,6 @@ public class DefaultPaymentInfoEvent extends BusEventBase implements PaymentInfo
             return false;
         }
         if (status != other.status) {
-            return false;
-        }
-        if (userToken == null) {
-            if (other.userToken != null) {
-                return false;
-            }
-        } else if (!userToken.equals(other.userToken)) {
             return false;
         }
         return true;

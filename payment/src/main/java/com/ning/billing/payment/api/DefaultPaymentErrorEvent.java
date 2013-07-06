@@ -18,7 +18,6 @@ package com.ning.billing.payment.api;
 
 import java.util.UUID;
 
-import com.ning.billing.util.events.BusEventBase;
 import com.ning.billing.util.events.PaymentErrorInternalEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -27,7 +26,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "error")
-public class DefaultPaymentErrorEvent extends BusEventBase implements PaymentErrorInternalEvent {
+public class DefaultPaymentErrorEvent implements PaymentErrorInternalEvent {
 
     private final UUID id;
     private final String message;
@@ -41,11 +40,7 @@ public class DefaultPaymentErrorEvent extends BusEventBase implements PaymentErr
                                     @JsonProperty("accountId") final UUID accountId,
                                     @JsonProperty("invoiceId") final UUID invoiceId,
                                     @JsonProperty("paymentId") final UUID paymentId,
-                                    @JsonProperty("message") final String message,
-                                    @JsonProperty("userToken") final UUID userToken,
-                                    @JsonProperty("accountRecordId") final Long accountRecordId,
-                                    @JsonProperty("tenantRecordId") final Long tenantRecordId) {
-        super(userToken, accountRecordId, tenantRecordId);
+                                    @JsonProperty("message") final String message) {
         this.id = id;
         this.message = message;
         this.accountId = accountId;
@@ -55,8 +50,8 @@ public class DefaultPaymentErrorEvent extends BusEventBase implements PaymentErr
 
 
     public DefaultPaymentErrorEvent(final UUID accountId,
-                                    final UUID invoiceId, final UUID paymentId, final String message, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
-        this(UUID.randomUUID(), accountId, invoiceId, paymentId, message, userToken, accountRecordId, tenantRecordId);
+                                    final UUID invoiceId, final UUID paymentId, final String message) {
+        this(UUID.randomUUID(), accountId, invoiceId, paymentId, message);
     }
 
 
@@ -93,12 +88,12 @@ public class DefaultPaymentErrorEvent extends BusEventBase implements PaymentErr
         final int prime = 31;
         int result = 1;
         result = prime * result
-                + ((accountId == null) ? 0 : accountId.hashCode());
+                 + ((accountId == null) ? 0 : accountId.hashCode());
         result = prime * result
-                + ((invoiceId == null) ? 0 : invoiceId.hashCode());
+                 + ((invoiceId == null) ? 0 : invoiceId.hashCode());
         result = prime * result + ((message == null) ? 0 : message.hashCode());
         result = prime * result
-                + ((paymentId == null) ? 0 : paymentId.hashCode());
+                 + ((paymentId == null) ? 0 : paymentId.hashCode());
         return result;
     }
 
@@ -150,7 +145,7 @@ public class DefaultPaymentErrorEvent extends BusEventBase implements PaymentErr
     @Override
     public String toString() {
         return "DefaultPaymentErrorEvent [message=" + message + ", accountId="
-                + accountId + ", invoiceId=" + invoiceId + ", paymentId="
-                + paymentId + ", userToken=" + getUserToken() + "]";
+               + accountId + ", invoiceId=" + invoiceId + ", paymentId="
+               + paymentId + "]";
     }
 }

@@ -24,7 +24,7 @@ import com.ning.billing.GuicyKillbillTestSuiteNoDB;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.dao.AccountDao;
 import com.ning.billing.account.glue.TestAccountModuleNoDB;
-import com.ning.billing.bus.PersistentBus;
+import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.util.audit.dao.AuditDao;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.clock.Clock;

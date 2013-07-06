@@ -19,7 +19,6 @@ package com.ning.billing.util.tag.api.user;
 import java.util.UUID;
 
 import com.ning.billing.ObjectType;
-import com.ning.billing.util.events.BusEventBase;
 import com.ning.billing.util.events.ControlTagDeletionInternalEvent;
 import com.ning.billing.util.tag.TagDefinition;
 
@@ -27,7 +26,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class DefaultControlTagDeletionEvent extends BusEventBase implements ControlTagDeletionInternalEvent {
+public class DefaultControlTagDeletionEvent implements ControlTagDeletionInternalEvent {
+
     private final UUID tagId;
     final UUID objectId;
     final ObjectType objectType;
@@ -37,11 +37,7 @@ public class DefaultControlTagDeletionEvent extends BusEventBase implements Cont
     public DefaultControlTagDeletionEvent(@JsonProperty("tagId") final UUID tagId,
                                           @JsonProperty("objectId") final UUID objectId,
                                           @JsonProperty("objectType") final ObjectType objectType,
-                                          @JsonProperty("tagDefinition") final TagDefinition tagDefinition,
-                                          @JsonProperty("userToken") final UUID userToken,
-                                          @JsonProperty("accountRecordId") final Long accountRecordId,
-                                          @JsonProperty("tenantRecordId") final Long tenantRecordId) {
-        super(userToken, accountRecordId, tenantRecordId);
+                                          @JsonProperty("tagDefinition") final TagDefinition tagDefinition) {
         this.tagId = tagId;
         this.objectId = objectId;
         this.objectType = objectType;

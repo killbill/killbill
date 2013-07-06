@@ -33,17 +33,15 @@ public class TestDefaultCustomFieldCreationEvent {
         final UUID customFieldId = UUID.randomUUID();
         final UUID objectId = UUID.randomUUID();
         final ObjectType objectType = ObjectType.ACCOUNT_EMAIL;
-        final UUID userToken = UUID.randomUUID();
 
-        final DefaultCustomFieldCreationEvent event = new DefaultCustomFieldCreationEvent(customFieldId, objectId, objectType, userToken, 1L, 1L);
+        final DefaultCustomFieldCreationEvent event = new DefaultCustomFieldCreationEvent(customFieldId, objectId, objectType);
         Assert.assertEquals(event.getBusEventType(), BusInternalEventType.CUSTOM_FIELD_CREATION);
 
         Assert.assertEquals(event.getObjectId(), objectId);
         Assert.assertEquals(event.getObjectType(), objectType);
-        Assert.assertEquals(event.getUserToken(), userToken);
 
         Assert.assertEquals(event, event);
-        Assert.assertEquals(event, new DefaultCustomFieldCreationEvent(customFieldId, objectId, objectType, userToken, 1L, 1L));
+        Assert.assertEquals(event, new DefaultCustomFieldCreationEvent(customFieldId, objectId, objectType));
     }
 
     @Test(groups = "fast")
@@ -54,9 +52,8 @@ public class TestDefaultCustomFieldCreationEvent {
         final UUID customFieldId = UUID.randomUUID();
         final UUID objectId = UUID.randomUUID();
         final ObjectType objectType = ObjectType.ACCOUNT_EMAIL;
-        final UUID userToken = UUID.randomUUID();
 
-        final DefaultCustomFieldCreationEvent event = new DefaultCustomFieldCreationEvent(customFieldId, objectId, objectType, userToken, 1L, 1L);
+        final DefaultCustomFieldCreationEvent event = new DefaultCustomFieldCreationEvent(customFieldId, objectId, objectType);
 
         final String json = objectMapper.writeValueAsString(event);
         final DefaultCustomFieldCreationEvent fromJson = objectMapper.readValue(json, DefaultCustomFieldCreationEvent.class);

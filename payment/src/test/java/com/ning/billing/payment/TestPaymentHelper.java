@@ -22,8 +22,8 @@ import org.joda.time.LocalDate;
 import org.mockito.Mockito;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.bus.PersistentBus;
-import com.ning.billing.bus.PersistentBus.EventBusException;
+import com.ning.billing.bus.api.PersistentBus;
+import com.ning.billing.bus.api.PersistentBus.EventBusException;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
@@ -93,10 +93,9 @@ public class TestPaymentHelper {
         Mockito.when(invoiceApi.getInvoiceById(Mockito.eq(invoice.getId()), Mockito.<InternalTenantContext>any())).thenReturn(invoice);
         final InvoiceCreationInternalEvent event = new MockInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
                                                                                 invoice.getBalance(), invoice.getCurrency(),
-                                                                                invoice.getInvoiceDate(),
-                                                                                context.getUserToken());
+                                                                                invoice.getInvoiceDate());
 
-        eventBus.post(event);
+        eventBus.post(event, context.getUserToken(), 1L, 1L);
         return invoice;
     }
 

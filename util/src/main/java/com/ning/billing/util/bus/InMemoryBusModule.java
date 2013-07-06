@@ -23,6 +23,6 @@ import com.ning.billing.util.glue.BusModule;
 public class InMemoryBusModule extends BusModule {
 
     public InMemoryBusModule(final ConfigSource configSource) {
-        super(BusType.MEMORY, configSource, "foo");
+        super(BusType.MEMORY, configSource, "foo", "bar");
     }
 }

@@ -30,7 +30,7 @@ import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 import com.ning.billing.util.events.RepairEntitlementInternalEvent;
 import com.ning.billing.util.jackson.ObjectMapper;
 
-public class TestEventJson extends GuicyKillbillTestSuiteNoDB  {
+public class TestEventJson extends GuicyKillbillTestSuiteNoDB {
 
     private final ObjectMapper mapper = new ObjectMapper();
 
@@ -38,8 +38,8 @@ public class TestEventJson extends GuicyKillbillTestSuiteNoDB  {
     public void testSubscriptionEvent() throws Exception {
 
         final EffectiveSubscriptionInternalEvent e = new DefaultEffectiveSubscriptionEvent(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), new DateTime(), new DateTime(),
-                                                                                   SubscriptionState.ACTIVE, "pro", "TRIAL", "DEFAULT", SubscriptionState.CANCELLED, null, null, null, 3L,
-                                                                                   UUID.randomUUID(), SubscriptionTransitionType.CANCEL, 0, new DateTime(), 1L, 1L);
+                                                                                           SubscriptionState.ACTIVE, "pro", "TRIAL", "DEFAULT", SubscriptionState.CANCELLED, null, null, null, 3L,
+                                                                                           SubscriptionTransitionType.CANCEL, 0, new DateTime());
 
         final String json = mapper.writeValueAsString(e);
 
@@ -50,7 +50,7 @@ public class TestEventJson extends GuicyKillbillTestSuiteNoDB  {
 
     @Test(groups = "fast")
     public void testRepairEntitlementEvent() throws Exception {
-        final RepairEntitlementInternalEvent e = new DefaultRepairEntitlementEvent(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), new DateTime(), 1L, 1L);
+        final RepairEntitlementInternalEvent e = new DefaultRepairEntitlementEvent(UUID.randomUUID(), UUID.randomUUID(), new DateTime());
 
         final String json = mapper.writeValueAsString(e);
 

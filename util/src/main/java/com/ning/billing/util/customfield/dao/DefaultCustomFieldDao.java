@@ -22,15 +22,13 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.skife.jdbi.v2.IDBI;
-import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ning.billing.BillingExceptionBase;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.ObjectType;
-import com.ning.billing.bus.PersistentBus;
-import com.ning.billing.bus.dao.PersistentBusSqlDao;
+import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.util.api.CustomFieldApiException;
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
@@ -108,20 +106,19 @@ public class DefaultCustomFieldDao extends EntityDaoBase<CustomFieldModelDao, Cu
             throws BillingExceptionBase {
 
         BusInternalEvent customFieldEvent = null;
-        switch(changeType) {
+        switch (changeType) {
             case INSERT:
-                customFieldEvent = new DefaultCustomFieldCreationEvent(customField.getId(), customField.getObjectId(), customField.getObjectType(), context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
+                customFieldEvent = new DefaultCustomFieldCreationEvent(customField.getId(), customField.getObjectId(), customField.getObjectType());
                 break;
             case DELETE:
-                customFieldEvent = new DefaultCustomFieldDeletionEvent(customField.getId(), customField.getObjectId(), customField.getObjectType(), context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
-
+                customFieldEvent = new DefaultCustomFieldDeletionEvent(customField.getId(), customField.getObjectId(), customField.getObjectType());
                 break;
             default:
                 return;
         }
 
         try {
-            bus.postFromTransaction(customFieldEvent, entitySqlDaoWrapperFactory.getSqlDao());
+            bus.postFromTransaction(customFieldEvent, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId(), entitySqlDaoWrapperFactory.getSqlDao());
         } catch (PersistentBus.EventBusException e) {
             log.warn("Failed to post tag event for custom field " + customField.getId().toString(), e);
         }

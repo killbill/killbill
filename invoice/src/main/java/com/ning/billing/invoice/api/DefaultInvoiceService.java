@@ -16,14 +16,14 @@
 
 package com.ning.billing.invoice.api;
 
-import com.ning.billing.bus.PersistentBus;
+import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.invoice.InvoiceListener;
 import com.ning.billing.invoice.InvoiceTagHandler;
 import com.ning.billing.invoice.notification.NextBillingDateNotifier;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
-import com.ning.billing.notificationq.NotificationQueueService.NoSuchNotificationQueue;
-import com.ning.billing.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
+import com.ning.billing.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
+import com.ning.billing.notificationq.api.NotificationQueueService.NotificationQueueAlreadyExists;
 
 import com.google.inject.Inject;
 
@@ -69,7 +69,7 @@ public class DefaultInvoiceService implements InvoiceService {
         try {
             eventBus.unregister(invoiceListener);
             eventBus.unregister(tagHandler);
-        } catch (PersistentBus .EventBusException e) {
+        } catch (PersistentBus.EventBusException e) {
             throw new RuntimeException("Unable to unregister to the EventBus!", e);
         }
         dateNotifier.stop();

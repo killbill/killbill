@@ -20,7 +20,7 @@ import javax.inject.Inject;
 
 import com.ning.billing.beatrix.bus.api.BeatrixService;
 import com.ning.billing.beatrix.extbus.BeatrixListener;
-import com.ning.billing.bus.PersistentBus;
+import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
 

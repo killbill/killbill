@@ -13,20 +13,20 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.entitlement.api.timeline;
 
 import java.util.UUID;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.util.events.BusEventBase;
 import com.ning.billing.util.events.RepairEntitlementInternalEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class DefaultRepairEntitlementEvent extends BusEventBase implements RepairEntitlementInternalEvent {
+public class DefaultRepairEntitlementEvent implements RepairEntitlementInternalEvent {
 
     private final UUID bundleId;
     private final UUID accountId;
@@ -34,13 +34,9 @@ public class DefaultRepairEntitlementEvent extends BusEventBase implements Repai
 
 
     @JsonCreator
-    public DefaultRepairEntitlementEvent(@JsonProperty("userToken") final UUID userToken,
-                                         @JsonProperty("accountId") final UUID accountId,
+    public DefaultRepairEntitlementEvent(@JsonProperty("accountId") final UUID accountId,
                                          @JsonProperty("bundleId") final UUID bundleId,
-                                         @JsonProperty("effectiveDate") final DateTime effectiveDate,
-                                         @JsonProperty("accountRecordId") final Long accountRecordId,
-                                         @JsonProperty("tenantRecordId") final Long tenantRecordId) {
-        super(userToken, accountRecordId, tenantRecordId);
+                                         @JsonProperty("effectiveDate") final DateTime effectiveDate) {
         this.bundleId = bundleId;
         this.accountId = accountId;
         this.effectiveDate = effectiveDate;
@@ -72,11 +68,11 @@ public class DefaultRepairEntitlementEvent extends BusEventBase implements Repai
         final int prime = 31;
         int result = 1;
         result = prime * result
-                + ((accountId == null) ? 0 : accountId.hashCode());
+                 + ((accountId == null) ? 0 : accountId.hashCode());
         result = prime * result
-                + ((bundleId == null) ? 0 : bundleId.hashCode());
+                 + ((bundleId == null) ? 0 : bundleId.hashCode());
         result = prime * result
-                + ((effectiveDate == null) ? 0 : effectiveDate.hashCode());
+                 + ((effectiveDate == null) ? 0 : effectiveDate.hashCode());
         return result;
     }
 

@@ -20,7 +20,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.notificationq.NotificationQueueService;
+import com.ning.billing.notificationq.api.NotificationQueueService;
 import com.ning.billing.util.config.PaymentConfig;
 import com.ning.billing.payment.core.PaymentProcessor;
 import com.ning.billing.util.callcontext.InternalCallContext;

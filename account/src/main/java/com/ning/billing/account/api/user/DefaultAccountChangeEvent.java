@@ -23,7 +23,6 @@ import java.util.UUID;
 import com.ning.billing.account.api.DefaultChangedField;
 import com.ning.billing.account.dao.AccountModelDao;
 import com.ning.billing.util.events.AccountChangeInternalEvent;
-import com.ning.billing.util.events.BusEventBase;
 import com.ning.billing.util.events.ChangedField;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -31,25 +30,19 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
-public class DefaultAccountChangeEvent extends BusEventBase implements AccountChangeInternalEvent {
+public class DefaultAccountChangeEvent implements AccountChangeInternalEvent {
 
     private final List<ChangedField> changedFields;
     private final UUID accountId;
 
     @JsonCreator
-    public DefaultAccountChangeEvent(@JsonProperty("userToken") final UUID userToken,
-                                     @JsonProperty("changeFields") final List<ChangedField> changedFields,
-                                     @JsonProperty("accountId") final UUID accountId,
-                                     @JsonProperty("accountRecordId") final Long accountRecordId,
-                                     @JsonProperty("tenantRecordId") final Long tenantRecordId) {
-        super(userToken, accountRecordId, tenantRecordId);
+    public DefaultAccountChangeEvent(@JsonProperty("changeFields") final List<ChangedField> changedFields,
+                                     @JsonProperty("accountId") final UUID accountId) {
         this.accountId = accountId;
         this.changedFields = changedFields;
     }
 
-    public DefaultAccountChangeEvent(final UUID id, final UUID userToken, final AccountModelDao oldData, final AccountModelDao newData,
-                                     final Long accountRecordId, final Long tenantRecordId) {
-        super(userToken, accountRecordId, tenantRecordId);
+    public DefaultAccountChangeEvent(final UUID id, final AccountModelDao oldData, final AccountModelDao newData) {
         this.accountId = id;
         this.changedFields = calculateChangedFields(oldData, newData);
     }

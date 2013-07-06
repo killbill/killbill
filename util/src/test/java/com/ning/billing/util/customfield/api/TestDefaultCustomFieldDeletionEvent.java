@@ -35,15 +35,14 @@ public class TestDefaultCustomFieldDeletionEvent {
         final ObjectType objectType = ObjectType.ACCOUNT_EMAIL;
         final UUID userToken = UUID.randomUUID();
 
-        final DefaultCustomFieldDeletionEvent event = new DefaultCustomFieldDeletionEvent(customFieldId, objectId, objectType, userToken, 1L, 1L);
+        final DefaultCustomFieldDeletionEvent event = new DefaultCustomFieldDeletionEvent(customFieldId, objectId, objectType);
         Assert.assertEquals(event.getBusEventType(), BusInternalEventType.CUSTOM_FIELD_DELETION);
 
         Assert.assertEquals(event.getObjectId(), objectId);
         Assert.assertEquals(event.getObjectType(), objectType);
-        Assert.assertEquals(event.getUserToken(), userToken);
 
         Assert.assertEquals(event, event);
-        Assert.assertEquals(event, new DefaultCustomFieldDeletionEvent(customFieldId, objectId, objectType, userToken, 1L, 1L));
+        Assert.assertEquals(event, new DefaultCustomFieldDeletionEvent(customFieldId, objectId, objectType));
     }
 
     @Test(groups = "fast")
@@ -56,7 +55,7 @@ public class TestDefaultCustomFieldDeletionEvent {
         final ObjectType objectType = ObjectType.ACCOUNT_EMAIL;
         final UUID userToken = UUID.randomUUID();
 
-        final DefaultCustomFieldDeletionEvent event = new DefaultCustomFieldDeletionEvent(customFieldId, objectId, objectType, userToken, 1L, 1L);
+        final DefaultCustomFieldDeletionEvent event = new DefaultCustomFieldDeletionEvent(customFieldId, objectId, objectType);
 
         final String json = objectMapper.writeValueAsString(event);
         final DefaultCustomFieldDeletionEvent fromJson = objectMapper.readValue(json, DefaultCustomFieldDeletionEvent.class);

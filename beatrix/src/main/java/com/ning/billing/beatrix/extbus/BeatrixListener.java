@@ -26,9 +26,10 @@ import org.slf4j.LoggerFactory;
 import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.bus.BusPersistentEvent;
-import com.ning.billing.bus.PersistentBus;
-import com.ning.billing.bus.PersistentBus.EventBusException;
+import com.ning.billing.bus.api.BusEvent;
+import com.ning.billing.bus.api.BusEventWithMetadata;
+import com.ning.billing.bus.api.PersistentBus;
+import com.ning.billing.bus.api.PersistentBus.EventBusException;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.notification.plugin.api.ExtBusEventType;
 import com.ning.billing.util.callcontext.CallOrigin;
@@ -82,13 +83,14 @@ public class BeatrixListener {
     }
 
     @Subscribe
-    public void handleAllInternalKillbillEvents(final BusInternalEvent event) {
+    public void handleAllInternalKillbillEvents(final BusEventWithMetadata<BusInternalEvent> eventWithMetadata) {
 
-        final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(event.getTenantRecordId(), event.getAccountRecordId(), "BeatrixListener", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
+        final BusInternalEvent event = eventWithMetadata.getEvent();
+        final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(eventWithMetadata.getSearchKey2(), eventWithMetadata.getSearchKey1(), "BeatrixListener", CallOrigin.INTERNAL, UserType.SYSTEM, eventWithMetadata.getUserToken());
         try {
-            final BusPersistentEvent externalEvent = computeExtBusEventEntryFromBusInternalEvent(event, internalContext);
+            final BusEvent externalEvent = computeExtBusEventEntryFromBusInternalEvent(event, internalContext);
             if (externalEvent != null) {
-                externalBus.post(externalEvent);
+                externalBus.post(externalEvent, internalContext.getUserToken(), internalContext.getAccountRecordId(), internalContext.getTenantRecordId());
             }
         } catch (EventBusException e) {
             log.warn("Failed to dispatch external bus events", e);
@@ -96,7 +98,7 @@ public class BeatrixListener {
     }
 
 
-    private BusPersistentEvent computeExtBusEventEntryFromBusInternalEvent(final BusInternalEvent event, final InternalCallContext context) {
+    private BusEvent computeExtBusEventEntryFromBusInternalEvent(final BusInternalEvent event, final InternalCallContext context) {
 
         ObjectType objectType = null;
         UUID objectId = null;
@@ -219,11 +221,11 @@ public class BeatrixListener {
             default:
         }
 
-        final UUID accountId = getAccountIdFromRecordId(event.getBusEventType(), objectId, event.getAccountRecordId(), context);
+        final UUID accountId = getAccountIdFromRecordId(event.getBusEventType(), objectId, context.getAccountRecordId(), context);
         final UUID tenantId = context.toTenantContext().getTenantId();
 
         return eventBusType != null ?
-               new DefaultBusExternalEvent(objectId, objectType, eventBusType, event.getUserToken(), accountId, tenantId) :
+               new DefaultBusExternalEvent(objectId, objectType, eventBusType, accountId, tenantId) :
                null;
     }
 

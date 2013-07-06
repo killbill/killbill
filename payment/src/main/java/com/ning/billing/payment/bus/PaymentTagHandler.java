@@ -64,7 +64,8 @@ public class PaymentTagHandler {
     public void process_AUTO_PAY_OFF_removal(final ControlTagDeletionInternalEvent event) {
         if (event.getTagDefinition().getName().equals(ControlTagType.AUTO_PAY_OFF.toString()) && event.getObjectType() == ObjectType.ACCOUNT) {
             final UUID accountId = event.getObjectId();
-            processUnpaid_AUTO_PAY_OFF_payments(accountId, event.getUserToken());
+            // STEPH_BUS
+            processUnpaid_AUTO_PAY_OFF_payments(accountId, null);
         }
     }
 

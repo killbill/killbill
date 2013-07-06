@@ -20,14 +20,13 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.util.events.BusEventBase;
 import com.ning.billing.util.events.InvoiceCreationInternalEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class DefaultInvoiceCreationEvent extends BusEventBase implements InvoiceCreationInternalEvent {
+public class DefaultInvoiceCreationEvent implements InvoiceCreationInternalEvent {
 
     private final UUID invoiceId;
     private final UUID accountId;
@@ -38,11 +37,7 @@ public class DefaultInvoiceCreationEvent extends BusEventBase implements Invoice
     public DefaultInvoiceCreationEvent(@JsonProperty("invoiceId") final UUID invoiceId,
                                        @JsonProperty("accountId") final UUID accountId,
                                        @JsonProperty("amountOwed") final BigDecimal amountOwed,
-                                       @JsonProperty("currency") final Currency currency,
-                                       @JsonProperty("userToken") final UUID userToken,
-                                       @JsonProperty("accountRecordId") final Long accountRecordId,
-                                       @JsonProperty("tenantRecordId") final Long tenantRecordId) {
-        super(userToken, accountRecordId, tenantRecordId);
+                                       @JsonProperty("currency") final Currency currency) {
         this.invoiceId = invoiceId;
         this.accountId = accountId;
         this.amountOwed = amountOwed;

@@ -35,7 +35,7 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.bus.PersistentBus;
+import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.osgi.api.OSGIServiceRegistration;
@@ -189,7 +189,7 @@ public class RefundProcessor extends ProcessorBase {
         throw new IllegalArgumentException("Unable to find invoice item for id " + itemId);
     }
 
-    public Refund getRefund(final UUID refundId, final boolean withPluginInfo /* not yet implemented */ , final InternalTenantContext context)
+    public Refund getRefund(final UUID refundId, final boolean withPluginInfo /* not yet implemented */, final InternalTenantContext context)
             throws PaymentApiException {
         RefundModelDao result = paymentDao.getRefund(refundId, context);
         if (result == null) {

@@ -17,7 +17,7 @@
 package com.ning.billing.ovedue.notification;
 
 import java.io.IOException;
-import java.util.List;
+import java.util.Collection;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -30,8 +30,8 @@ import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.Type;
-import com.ning.billing.notificationq.Notification;
-import com.ning.billing.notificationq.NotificationQueue;
+import com.ning.billing.notificationq.api.NotificationEventWithMetadata;
+import com.ning.billing.notificationq.api.NotificationQueue;
 import com.ning.billing.overdue.OverdueTestSuiteWithEmbeddedDB;
 import com.ning.billing.overdue.service.DefaultOverdueService;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
@@ -81,7 +81,7 @@ public class TestDefaultOverdueCheckPoster extends OverdueTestSuiteWithEmbeddedD
         insertOverdueCheckAndVerifyQueueContent(otherOverdueable, 15, 5);
 
         // Verify the final content of the queue
-        Assert.assertEquals(overdueQueue.getFutureNotificationsForAccountAndType(OverdueCheckNotificationKey.class, internalCallContext.getAccountRecordId()).size(), 2);
+        Assert.assertEquals(overdueQueue.getFutureNotificationForSearchKey1(OverdueCheckNotificationKey.class, internalCallContext.getAccountRecordId()).size(), 2);
     }
 
     private void insertOverdueCheckAndVerifyQueueContent(final Blockable overdueable, final int nbDaysInFuture, final int expectedNbDaysInFuture) throws IOException {
@@ -89,16 +89,17 @@ public class TestDefaultOverdueCheckPoster extends OverdueTestSuiteWithEmbeddedD
         poster.insertOverdueCheckNotification(overdueable, futureNotificationTime, internalCallContext);
 
         final OverdueCheckNotificationKey notificationKey = new OverdueCheckNotificationKey(overdueable.getId(), Type.get(overdueable));
-        final List<Notification> notificationsForKey = getNotificationsForOverdueable(overdueable);
+        final Collection<NotificationEventWithMetadata<OverdueCheckNotificationKey>> notificationsForKey = getNotificationsForOverdueable(overdueable);
         Assert.assertEquals(notificationsForKey.size(), 1);
-        Assert.assertEquals(notificationsForKey.get(0).getNotificationKey(), objectMapper.writeValueAsString(notificationKey));
-        Assert.assertEquals(notificationsForKey.get(0).getEffectiveDate(), testReferenceTime.plusDays(expectedNbDaysInFuture));
+        final NotificationEventWithMetadata nm = notificationsForKey.iterator().next();
+        Assert.assertEquals(nm.getEvent(), notificationKey);
+        Assert.assertEquals(nm.getEffectiveDate(), testReferenceTime.plusDays(expectedNbDaysInFuture));
     }
 
-    private List<Notification> getNotificationsForOverdueable(final Blockable overdueable) {
-        return entitySqlDaoTransactionalJdbiWrapper.execute(new EntitySqlDaoTransactionWrapper<List<Notification>>() {
+    private Collection<NotificationEventWithMetadata<OverdueCheckNotificationKey>> getNotificationsForOverdueable(final Blockable overdueable) {
+        return entitySqlDaoTransactionalJdbiWrapper.execute(new EntitySqlDaoTransactionWrapper<Collection<NotificationEventWithMetadata<OverdueCheckNotificationKey>>>() {
             @Override
-            public List<Notification> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+            public Collection<NotificationEventWithMetadata<OverdueCheckNotificationKey>> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
                 return ((DefaultOverdueCheckPoster) poster).getFutureNotificationsForAccountAndOverdueableInTransaction(entitySqlDaoWrapperFactory, overdueQueue, overdueable, internalCallContext);
             }
         });

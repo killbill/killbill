@@ -27,8 +27,8 @@ import com.ning.billing.util.jackson.ObjectMapper;
 import com.ning.billing.util.tag.DefaultTagDefinition;
 import com.ning.billing.util.tag.TagDefinition;
 
-public class TestDefaultUserTagDefinitionDeletionEvent extends UtilTestSuiteNoDB
-{
+public class TestDefaultUserTagDefinitionDeletionEvent extends UtilTestSuiteNoDB {
+
     @Test(groups = "fast")
     public void testPojo() throws Exception {
         final UUID tagDefinitionId = UUID.randomUUID();
@@ -38,7 +38,7 @@ public class TestDefaultUserTagDefinitionDeletionEvent extends UtilTestSuiteNoDB
         final TagDefinition tagDefinition = new DefaultTagDefinition(tagDefinitionId, tagDefinitionName, tagDefinitionDescription, controlTag);
         final UUID userToken = UUID.randomUUID();
 
-        final DefaultUserTagDefinitionDeletionEvent event = new DefaultUserTagDefinitionDeletionEvent(tagDefinitionId, tagDefinition, userToken, 1L, 1L);
+        final DefaultUserTagDefinitionDeletionEvent event = new DefaultUserTagDefinitionDeletionEvent(tagDefinitionId, tagDefinition);
         Assert.assertEquals(event.getBusEventType(), BusInternalEvent.BusInternalEventType.USER_TAGDEFINITION_DELETION);
 
         Assert.assertEquals(event.getTagDefinitionId(), tagDefinitionId);
@@ -46,12 +46,11 @@ public class TestDefaultUserTagDefinitionDeletionEvent extends UtilTestSuiteNoDB
         Assert.assertEquals(event.getTagDefinition().getId(), tagDefinitionId);
         Assert.assertEquals(event.getTagDefinition().getName(), tagDefinitionName);
         Assert.assertEquals(event.getTagDefinition().getDescription(), tagDefinitionDescription);
-        Assert.assertEquals(event.getUserToken(), userToken);
 
         Assert.assertEquals(event, event);
-        Assert.assertEquals(event, new DefaultUserTagDefinitionDeletionEvent(tagDefinitionId, tagDefinition, userToken, 1L, 1L));
+        Assert.assertEquals(event, new DefaultUserTagDefinitionDeletionEvent(tagDefinitionId, tagDefinition));
         Assert.assertTrue(event.equals(event));
-        Assert.assertTrue(event.equals(new DefaultUserTagDefinitionDeletionEvent(tagDefinitionId, tagDefinition, userToken, 1L, 1L)));
+        Assert.assertTrue(event.equals(new DefaultUserTagDefinitionDeletionEvent(tagDefinitionId, tagDefinition)));
     }
 
     @Test(groups = "fast")
@@ -65,7 +64,7 @@ public class TestDefaultUserTagDefinitionDeletionEvent extends UtilTestSuiteNoDB
         final TagDefinition tagDefinition = new DefaultTagDefinition(tagDefinitionId, tagDefinitionName, tagDefinitionDescription, controlTag);
         final UUID userToken = UUID.randomUUID();
 
-        final DefaultUserTagDefinitionDeletionEvent event = new DefaultUserTagDefinitionDeletionEvent(tagDefinitionId, tagDefinition, userToken, 1L, 1L);
+        final DefaultUserTagDefinitionDeletionEvent event = new DefaultUserTagDefinitionDeletionEvent(tagDefinitionId, tagDefinition);
 
         final String json = objectMapper.writeValueAsString(event);
         final DefaultUserTagDefinitionDeletionEvent fromJson = objectMapper.readValue(json, DefaultUserTagDefinitionDeletionEvent.class);

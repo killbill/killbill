@@ -20,8 +20,9 @@ import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
 
 import com.ning.billing.notificationq.DefaultNotificationQueueService;
-import com.ning.billing.notificationq.NotificationQueueConfig;
-import com.ning.billing.notificationq.NotificationQueueService;
+import com.ning.billing.notificationq.api.NotificationQueueConfig;
+import com.ning.billing.notificationq.api.NotificationQueueService;
+
 import com.google.inject.AbstractModule;
 
 public class NotificationQueueModule extends AbstractModule {

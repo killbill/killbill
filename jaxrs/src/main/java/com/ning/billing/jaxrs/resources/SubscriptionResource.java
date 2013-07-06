@@ -42,6 +42,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ning.billing.ObjectType;
+import com.ning.billing.bus.api.BusEventWithMetadata;
 import com.ning.billing.catalog.api.ActionPolicy;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
@@ -280,34 +281,38 @@ public class SubscriptionResource extends JaxRsResourceBase {
         }
 
         @Override
-        public void onSubscriptionTransition(final EffectiveSubscriptionInternalEvent curEventEffective) {
+        public void onSubscriptionTransition(final BusEventWithMetadata<EffectiveSubscriptionInternalEvent> eventWithMetadata) {
+
+            final EffectiveSubscriptionInternalEvent curEventEffective = eventWithMetadata.getEvent();
             log.info(String.format("Got event SubscriptionTransition token = %s, type = %s, remaining = %d ",
-                                   curEventEffective.getUserToken(), curEventEffective.getTransitionType(), curEventEffective.getRemainingEventsForUserOperation()));
+                                   eventWithMetadata.getUserToken(), curEventEffective.getTransitionType(), curEventEffective.getRemainingEventsForUserOperation()));
         }
 
         @Override
-        public void onEmptyInvoice(final NullInvoiceInternalEvent curEvent) {
-            log.info(String.format("Got event EmptyInvoiceNotification token = %s ", curEvent.getUserToken()));
+        public void onEmptyInvoice(final BusEventWithMetadata<NullInvoiceInternalEvent> eventWithMetadata) {
+            log.info(String.format("Got event EmptyInvoiceNotification token = %s ", eventWithMetadata.getUserToken()));
             notifyForCompletion();
         }
 
         @Override
-        public void onInvoiceCreation(final InvoiceCreationInternalEvent curEvent) {
-            log.info(String.format("Got event InvoiceCreationNotification token = %s ", curEvent.getUserToken()));
-            if (curEvent.getAmountOwed().compareTo(BigDecimal.ZERO) <= 0) {
+        public void onInvoiceCreation(final BusEventWithMetadata<InvoiceCreationInternalEvent> eventWithMetadata) {
+
+            final InvoiceCreationInternalEvent event = eventWithMetadata.getEvent();
+            log.info(String.format("Got event InvoiceCreationNotification token = %s ", eventWithMetadata.getUserToken()));
+            if (event.getAmountOwed().compareTo(BigDecimal.ZERO) <= 0) {
                 notifyForCompletion();
             }
         }
 
         @Override
-        public void onPaymentInfo(final PaymentInfoInternalEvent curEvent) {
-            log.info(String.format("Got event PaymentInfo token = %s ", curEvent.getUserToken()));
+        public void onPaymentInfo(final BusEventWithMetadata<PaymentInfoInternalEvent> eventWithMetadata) {
+            log.info(String.format("Got event PaymentInfo token = %s ", eventWithMetadata.getUserToken()));
             notifyForCompletion();
         }
 
         @Override
-        public void onPaymentError(final PaymentErrorInternalEvent curEvent) {
-            log.info(String.format("Got event PaymentError token = %s ", curEvent.getUserToken()));
+        public void onPaymentError(final BusEventWithMetadata<PaymentErrorInternalEvent> eventWithMetadata) {
+            log.info(String.format("Got event PaymentError token = %s ", eventWithMetadata.getUserToken()));
             notifyForCompletion();
         }
     }

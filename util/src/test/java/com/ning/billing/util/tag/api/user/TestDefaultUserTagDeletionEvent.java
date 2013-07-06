@@ -42,7 +42,7 @@ public class TestDefaultUserTagDeletionEvent extends UtilTestSuiteNoDB
         final TagDefinition tagDefinition = new DefaultTagDefinition(tagDefinitionId, tagDefinitionName, tagDefinitionDescription, controlTag);
         final UUID userToken = UUID.randomUUID();
 
-        final DefaultUserTagDeletionEvent event = new DefaultUserTagDeletionEvent(tagId, objectId, objectType, tagDefinition, userToken, 1L, 1L);
+        final DefaultUserTagDeletionEvent event = new DefaultUserTagDeletionEvent(tagId, objectId, objectType, tagDefinition);
         Assert.assertEquals(event.getBusEventType(), BusInternalEvent.BusInternalEventType.USER_TAG_DELETION);
 
         Assert.assertEquals(event.getTagId(), tagId);
@@ -52,12 +52,11 @@ public class TestDefaultUserTagDeletionEvent extends UtilTestSuiteNoDB
         Assert.assertEquals(event.getTagDefinition().getId(), tagDefinitionId);
         Assert.assertEquals(event.getTagDefinition().getName(), tagDefinitionName);
         Assert.assertEquals(event.getTagDefinition().getDescription(), tagDefinitionDescription);
-        Assert.assertEquals(event.getUserToken(), userToken);
 
         Assert.assertEquals(event, event);
-        Assert.assertEquals(event, new DefaultUserTagDeletionEvent(tagId, objectId, objectType, tagDefinition, userToken, 1L, 1L));
+        Assert.assertEquals(event, new DefaultUserTagDeletionEvent(tagId, objectId, objectType, tagDefinition));
         Assert.assertTrue(event.equals(event));
-        Assert.assertTrue(event.equals(new DefaultUserTagDeletionEvent(tagId, objectId, objectType, tagDefinition, userToken, 1L, 1L)));
+        Assert.assertTrue(event.equals(new DefaultUserTagDeletionEvent(tagId, objectId, objectType, tagDefinition)));
     }
 
     @Test(groups = "fast")
@@ -74,7 +73,7 @@ public class TestDefaultUserTagDeletionEvent extends UtilTestSuiteNoDB
         final TagDefinition tagDefinition = new DefaultTagDefinition(tagDefinitionId, tagDefinitionName, tagDefinitionDescription, controlTag);
         final UUID userToken = UUID.randomUUID();
 
-        final DefaultUserTagDeletionEvent event = new DefaultUserTagDeletionEvent(tagId, objectId, objectType, tagDefinition, userToken, 1L, 1L);
+        final DefaultUserTagDeletionEvent event = new DefaultUserTagDeletionEvent(tagId, objectId, objectType, tagDefinition);
 
         final String json = objectMapper.writeValueAsString(event);
         final DefaultUserTagDeletionEvent fromJson = objectMapper.readValue(json, DefaultUserTagDeletionEvent.class);

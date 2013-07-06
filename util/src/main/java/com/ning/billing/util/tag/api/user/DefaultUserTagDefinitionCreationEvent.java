@@ -18,7 +18,6 @@ package com.ning.billing.util.tag.api.user;
 
 import java.util.UUID;
 
-import com.ning.billing.util.events.BusEventBase;
 import com.ning.billing.util.events.UserTagDefinitionCreationInternalEvent;
 import com.ning.billing.util.tag.TagDefinition;
 
@@ -26,18 +25,14 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class DefaultUserTagDefinitionCreationEvent extends BusEventBase implements UserTagDefinitionCreationInternalEvent {
+public class DefaultUserTagDefinitionCreationEvent implements UserTagDefinitionCreationInternalEvent {
 
     private final UUID tagDefinitionId;
     private final TagDefinition tagDefinition;
 
     @JsonCreator
     public DefaultUserTagDefinitionCreationEvent(@JsonProperty("tagDefinitionId") final UUID tagDefinitionId,
-                                                 @JsonProperty("tagDefinition") final TagDefinition tagDefinition,
-                                                 @JsonProperty("userToken") final UUID userToken,
-                                                 @JsonProperty("accountRecordId") final Long accountRecordId,
-                                                 @JsonProperty("tenantRecordId") final Long tenantRecordId) {
-        super(userToken, accountRecordId, tenantRecordId);
+                                                 @JsonProperty("tagDefinition") final TagDefinition tagDefinition) {
         this.tagDefinitionId = tagDefinitionId;
         this.tagDefinition = tagDefinition;
     }

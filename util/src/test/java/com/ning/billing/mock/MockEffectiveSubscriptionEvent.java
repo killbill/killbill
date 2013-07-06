@@ -155,11 +155,6 @@ public class MockEffectiveSubscriptionEvent implements EffectiveSubscriptionInte
     }
 
     @Override
-    public UUID getUserToken() {
-        return userToken;
-    }
-
-    @Override
     public Integer getRemainingEventsForUserOperation() {
         return remainingEventsForUserOperation;
     }
@@ -197,46 +192,46 @@ public class MockEffectiveSubscriptionEvent implements EffectiveSubscriptionInte
         final int prime = 31;
         int result = 1;
         result = prime * result
-                + ((bundleId == null) ? 0 : bundleId.hashCode());
+                 + ((bundleId == null) ? 0 : bundleId.hashCode());
         result = prime
-                * result
-                + ((effectiveTransitionTime == null) ? 0
-                : effectiveTransitionTime.hashCode());
+                 * result
+                 + ((effectiveTransitionTime == null) ? 0
+                                                      : effectiveTransitionTime.hashCode());
         result = prime * result + ((eventId == null) ? 0 : eventId.hashCode());
         result = prime * result
-                + ((nextPhase == null) ? 0 : nextPhase.hashCode());
+                 + ((nextPhase == null) ? 0 : nextPhase.hashCode());
         result = prime * result
-                + ((nextPlan == null) ? 0 : nextPlan.hashCode());
+                 + ((nextPlan == null) ? 0 : nextPlan.hashCode());
         result = prime * result
-                + ((nextPriceList == null) ? 0 : nextPriceList.hashCode());
+                 + ((nextPriceList == null) ? 0 : nextPriceList.hashCode());
         result = prime * result
-                + ((nextState == null) ? 0 : nextState.hashCode());
+                 + ((nextState == null) ? 0 : nextState.hashCode());
         result = prime * result
-                + ((previousPhase == null) ? 0 : previousPhase.hashCode());
+                 + ((previousPhase == null) ? 0 : previousPhase.hashCode());
         result = prime * result
-                + ((previousPlan == null) ? 0 : previousPlan.hashCode());
+                 + ((previousPlan == null) ? 0 : previousPlan.hashCode());
         result = prime
-                * result
-                + ((previousPriceList == null) ? 0 : previousPriceList
+                 * result
+                 + ((previousPriceList == null) ? 0 : previousPriceList
                 .hashCode());
         result = prime * result
-                + ((previousState == null) ? 0 : previousState.hashCode());
+                 + ((previousState == null) ? 0 : previousState.hashCode());
         result = prime
-                * result
-                + ((remainingEventsForUserOperation == null) ? 0
-                : remainingEventsForUserOperation.hashCode());
+                 * result
+                 + ((remainingEventsForUserOperation == null) ? 0
+                                                              : remainingEventsForUserOperation.hashCode());
         result = prime
-                * result
-                + ((requestedTransitionTime == null) ? 0
-                : requestedTransitionTime.hashCode());
+                 * result
+                 + ((requestedTransitionTime == null) ? 0
+                                                      : requestedTransitionTime.hashCode());
         result = prime * result
-                + ((subscriptionId == null) ? 0 : subscriptionId.hashCode());
+                 + ((subscriptionId == null) ? 0 : subscriptionId.hashCode());
         result = prime * result
-                + ((totalOrdering == null) ? 0 : totalOrdering.hashCode());
+                 + ((totalOrdering == null) ? 0 : totalOrdering.hashCode());
         result = prime * result
-                + ((transitionType == null) ? 0 : transitionType.hashCode());
+                 + ((transitionType == null) ? 0 : transitionType.hashCode());
         result = prime * result
-                + ((userToken == null) ? 0 : userToken.hashCode());
+                 + ((userToken == null) ? 0 : userToken.hashCode());
         return result;
     }
 
@@ -264,7 +259,7 @@ public class MockEffectiveSubscriptionEvent implements EffectiveSubscriptionInte
                 return false;
             }
         } else if (effectiveTransitionTime
-                .compareTo(other.effectiveTransitionTime) != 0) {
+                           .compareTo(other.effectiveTransitionTime) != 0) {
             return false;
         }
         if (eventId == null) {
@@ -335,7 +330,7 @@ public class MockEffectiveSubscriptionEvent implements EffectiveSubscriptionInte
                 return false;
             }
         } else if (requestedTransitionTime
-                .compareTo(other.requestedTransitionTime) != 0) {
+                           .compareTo(other.requestedTransitionTime) != 0) {
             return false;
         }
         if (subscriptionId == null) {
@@ -364,15 +359,4 @@ public class MockEffectiveSubscriptionEvent implements EffectiveSubscriptionInte
         }
         return true;
     }
-
-    @Override
-    public Long getTenantRecordId() {
-        return 1L;
-    }
-
-    @Override
-    public Long getAccountRecordId() {
-        return 1L;
-    }
-
 }
