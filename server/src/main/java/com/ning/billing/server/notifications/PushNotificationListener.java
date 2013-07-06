@@ -25,6 +25,7 @@ import javax.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ning.billing.bus.api.BusEventWithMetadata;
 import com.ning.billing.jaxrs.json.NotificationJson;
 import com.ning.billing.notification.plugin.api.ExtBusEvent;
 import com.ning.billing.tenant.api.TenantApiException;
@@ -63,7 +64,9 @@ public class PushNotificationListener {
     }
 
     @Subscribe
-    public void triggerPushNotifications(final ExtBusEvent event) {
+    public void triggerPushNotifications(final BusEventWithMetadata<ExtBusEvent> eventWithMetadata) {
+
+        final ExtBusEvent event = eventWithMetadata.getEvent();
         final TenantContext context = contextFactory.createTenantContext(event.getTenantId());
         try {
             final List<String> callbacks = getCallbacksForTenant(context);

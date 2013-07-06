@@ -27,6 +27,7 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.api.TestApiListener;
 import com.ning.billing.api.TestApiListener.NextEvent;
+import com.ning.billing.bus.api.BusEventWithMetadata;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.events.BusInternalEvent;
 import com.ning.billing.util.events.TagDefinitionInternalEvent;
@@ -106,12 +107,14 @@ public class TestDefaultTagDefinitionDao extends UtilTestSuiteWithEmbeddedDB {
         private final List<TagDefinitionInternalEvent> tagDefinitionEvents = new ArrayList<TagDefinitionInternalEvent>();
 
         @Subscribe
-        public synchronized void processEvent(final BusInternalEvent event) {
+        public synchronized void processEvent(final BusEventWithMetadata<BusInternalEvent> eventWithMetadata) {
+            final BusInternalEvent event = eventWithMetadata.getEvent();
             events.add(event);
         }
 
         @Subscribe
-        public synchronized void processTagDefinitionEvent(final TagDefinitionInternalEvent tagDefinitionEvent) {
+        public synchronized void processTagDefinitionEvent(final BusEventWithMetadata<TagDefinitionInternalEvent> eventWithMetadata) {
+            final TagDefinitionInternalEvent tagDefinitionEvent = eventWithMetadata.getEvent();
             tagDefinitionEvents.add(tagDefinitionEvent);
         }
 
