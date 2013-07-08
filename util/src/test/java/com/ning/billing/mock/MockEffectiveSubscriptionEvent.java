@@ -22,13 +22,14 @@ import org.joda.time.DateTime;
 
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.user.SubscriptionState;
+import com.ning.billing.util.events.BusEventBase;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class MockEffectiveSubscriptionEvent implements EffectiveSubscriptionInternalEvent {
+public class MockEffectiveSubscriptionEvent extends BusEventBase implements EffectiveSubscriptionInternalEvent {
 
     private final Long totalOrdering;
     private final UUID subscriptionId;
@@ -65,11 +66,13 @@ public class MockEffectiveSubscriptionEvent implements EffectiveSubscriptionInte
                                           @JsonProperty("nextPhase") final String nextPhase,
                                           @JsonProperty("nextPriceList") final String nextPriceList,
                                           @JsonProperty("totalOrdering") final Long totalOrdering,
-                                          @JsonProperty("userToken") final UUID userToken,
                                           @JsonProperty("transitionType") final SubscriptionTransitionType transitionType,
                                           @JsonProperty("remainingEventsForUserOperation") final Integer remainingEventsForUserOperation,
-                                          @JsonProperty("startDate") final DateTime startDate) {
-        super();
+                                          @JsonProperty("startDate") final DateTime startDate,
+                                          @JsonProperty("searchKey1") final Long searchKey1,
+                                          @JsonProperty("searchKey2") final Long searchKey2,
+                                          @JsonProperty("userToken") final UUID userToken) {
+        super(searchKey1, searchKey2, userToken);
         this.eventId = eventId;
         this.subscriptionId = subscriptionId;
         this.bundleId = bundleId;

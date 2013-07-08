@@ -23,6 +23,7 @@ import java.util.UUID;
 import com.ning.billing.account.api.DefaultChangedField;
 import com.ning.billing.account.dao.AccountModelDao;
 import com.ning.billing.util.events.AccountChangeInternalEvent;
+import com.ning.billing.util.events.BusEventBase;
 import com.ning.billing.util.events.ChangedField;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -30,19 +31,24 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
-public class DefaultAccountChangeEvent implements AccountChangeInternalEvent {
+public class DefaultAccountChangeEvent extends BusEventBase implements AccountChangeInternalEvent {
 
     private final List<ChangedField> changedFields;
     private final UUID accountId;
 
     @JsonCreator
     public DefaultAccountChangeEvent(@JsonProperty("changeFields") final List<ChangedField> changedFields,
-                                     @JsonProperty("accountId") final UUID accountId) {
+                                     @JsonProperty("accountId") final UUID accountId,
+                                     @JsonProperty("searchKey1") final Long searchKey1,
+                                     @JsonProperty("searchKey2") final Long searchKey2,
+                                     @JsonProperty("userToken") final UUID userToken) {
+        super(searchKey1, searchKey2, userToken);
         this.accountId = accountId;
         this.changedFields = changedFields;
     }
 
-    public DefaultAccountChangeEvent(final UUID id, final AccountModelDao oldData, final AccountModelDao newData) {
+    public DefaultAccountChangeEvent(final UUID id, final AccountModelDao oldData, final AccountModelDao newData, final Long searchKey1, final Long searchKey2, final UUID userToken) {
+        super(searchKey1, searchKey2, userToken);
         this.accountId = id;
         this.changedFields = calculateChangedFields(oldData, newData);
     }

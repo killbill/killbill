@@ -21,13 +21,14 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
+import com.ning.billing.util.events.BusEventBase;
 import com.ning.billing.util.events.SubscriptionInternalEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public abstract class DefaultSubscriptionEvent implements SubscriptionInternalEvent {
+public abstract class DefaultSubscriptionEvent extends BusEventBase implements SubscriptionInternalEvent {
 
     private final Long totalOrdering;
     private final UUID subscriptionId;
@@ -47,7 +48,10 @@ public abstract class DefaultSubscriptionEvent implements SubscriptionInternalEv
     private final SubscriptionTransitionType transitionType;
     private final DateTime startDate;
 
-    public DefaultSubscriptionEvent(final SubscriptionTransitionData in, final DateTime startDate) {
+    public DefaultSubscriptionEvent(final SubscriptionTransitionData in, final DateTime startDate,
+                                    final Long searchKey1,
+                                    final Long searchKey2,
+                                    final UUID userToken) {
         this(in.getId(),
              in.getSubscriptionId(),
              in.getBundleId(),
@@ -64,7 +68,10 @@ public abstract class DefaultSubscriptionEvent implements SubscriptionInternalEv
              in.getTotalOrdering(),
              in.getTransitionType(),
              in.getRemainingEventsForUserOperation(),
-             startDate);
+             startDate,
+             searchKey1,
+             searchKey2,
+             userToken);
     }
 
     @JsonCreator
@@ -84,7 +91,11 @@ public abstract class DefaultSubscriptionEvent implements SubscriptionInternalEv
                                     @JsonProperty("totalOrdering") final Long totalOrdering,
                                     @JsonProperty("transitionType") final SubscriptionTransitionType transitionType,
                                     @JsonProperty("remainingEventsForUserOperation") final Integer remainingEventsForUserOperation,
-                                    @JsonProperty("startDate") final DateTime startDate) {
+                                    @JsonProperty("startDate") final DateTime startDate,
+                                    @JsonProperty("searchKey1") final Long searchKey1,
+                                    @JsonProperty("searchKey2") final Long searchKey2,
+                                    @JsonProperty("userToken") final UUID userToken) {
+        super(searchKey1, searchKey2, userToken);
         this.eventId = eventId;
         this.subscriptionId = subscriptionId;
         this.bundleId = bundleId;

@@ -171,7 +171,7 @@ public class Engine implements EventListener, EntitlementService {
             final EffectiveSubscriptionInternalEvent busEvent = new DefaultEffectiveSubscriptionEvent(transition, subscription.getAlignStartDate(),
                                                                                                       context.getUserToken(),
                                                                                                       context.getAccountRecordId(), context.getTenantRecordId());
-            eventBus.post(busEvent, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
+            eventBus.post(busEvent);
         } catch (EventBusException e) {
             log.warn("Failed to post entitlement event " + event, e);
         }

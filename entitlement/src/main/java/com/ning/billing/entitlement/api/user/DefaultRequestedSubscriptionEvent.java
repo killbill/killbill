@@ -29,10 +29,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class DefaultRequestedSubscriptionEvent extends DefaultSubscriptionEvent implements RequestedSubscriptionInternalEvent {
 
-    public DefaultRequestedSubscriptionEvent(final SubscriptionTransitionData in, final DateTime startDate) {
-        super(in, startDate);
-    }
-
     @JsonCreator
     public DefaultRequestedSubscriptionEvent(@JsonProperty("eventId") final UUID eventId,
                                              @JsonProperty("subscriptionId") final UUID subscriptionId,
@@ -50,14 +46,21 @@ public class DefaultRequestedSubscriptionEvent extends DefaultSubscriptionEvent 
                                              @JsonProperty("totalOrdering") final Long totalOrdering,
                                              @JsonProperty("transitionType") final SubscriptionTransitionType transitionType,
                                              @JsonProperty("remainingEventsForUserOperation") final Integer remainingEventsForUserOperation,
-                                             @JsonProperty("startDate") final DateTime startDate) {
+                                             @JsonProperty("startDate") final DateTime startDate,
+                                             @JsonProperty("searchKey1") final Long searchKey1,
+                                             @JsonProperty("searchKey2") final Long searchKey2,
+                                             @JsonProperty("userToken") final UUID userToken) {
         super(eventId, subscriptionId, bundleId, requestedTransitionTime, effectiveTransitionTime, previousState, previousPlan,
               previousPhase, previousPriceList, nextState, nextPlan, nextPhase, nextPriceList, totalOrdering,
-              transitionType, remainingEventsForUserOperation, startDate);
+              transitionType, remainingEventsForUserOperation, startDate, searchKey1, searchKey2, userToken);
     }
 
-    public DefaultRequestedSubscriptionEvent(final SubscriptionData subscription, final EntitlementEvent nextEvent) {
+    public DefaultRequestedSubscriptionEvent(final SubscriptionData subscription,
+                                             final EntitlementEvent nextEvent,
+                                             final Long searchKey1,
+                                             final Long searchKey2,
+                                             final UUID userToken) {
         this(nextEvent.getId(), nextEvent.getSubscriptionId(), subscription.getBundleId(), nextEvent.getRequestedDate(), nextEvent.getEffectiveDate(),
-             null, null, null, null, null, null, null, null, nextEvent.getTotalOrdering(), null, 0, null);
+             null, null, null, null, null, null, null, null, nextEvent.getTotalOrdering(), null, 0, null, searchKey1, searchKey2, userToken);
     }
 }

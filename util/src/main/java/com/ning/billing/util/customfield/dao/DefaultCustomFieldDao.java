@@ -108,17 +108,19 @@ public class DefaultCustomFieldDao extends EntityDaoBase<CustomFieldModelDao, Cu
         BusInternalEvent customFieldEvent = null;
         switch (changeType) {
             case INSERT:
-                customFieldEvent = new DefaultCustomFieldCreationEvent(customField.getId(), customField.getObjectId(), customField.getObjectType());
+                customFieldEvent = new DefaultCustomFieldCreationEvent(customField.getId(), customField.getObjectId(), customField.getObjectType(),
+                                                                       context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
                 break;
             case DELETE:
-                customFieldEvent = new DefaultCustomFieldDeletionEvent(customField.getId(), customField.getObjectId(), customField.getObjectType());
+                customFieldEvent = new DefaultCustomFieldDeletionEvent(customField.getId(), customField.getObjectId(), customField.getObjectType(),
+                                                                       context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
                 break;
             default:
                 return;
         }
 
         try {
-            bus.postFromTransaction(customFieldEvent, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId(), entitySqlDaoWrapperFactory.getSqlDao());
+            bus.postFromTransaction(customFieldEvent, entitySqlDaoWrapperFactory.getSqlDao());
         } catch (PersistentBus.EventBusException e) {
             log.warn("Failed to post tag event for custom field " + customField.getId().toString(), e);
         }

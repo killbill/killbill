@@ -65,8 +65,8 @@ public class MockInvoiceDao implements InvoiceDao {
         }
         try {
             eventBus.post(new DefaultInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
-                                                          InvoiceModelDaoHelper.getBalance(invoice), invoice.getCurrency()),
-                          context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
+                                                          InvoiceModelDaoHelper.getBalance(invoice), invoice.getCurrency(),
+                          context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken()));
         } catch (PersistentBus.EventBusException ex) {
             throw new RuntimeException(ex);
         }

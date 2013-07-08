@@ -169,12 +169,14 @@ public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinitionModelDao
                     final boolean isControlTag = TagModelDaoHelper.isControlTag(tagDefinition.getName());
                     final TagDefinitionInternalEvent tagDefinitionEvent;
                     if (isControlTag) {
-                        tagDefinitionEvent = tagEventBuilder.newControlTagDefinitionCreationEvent(tagDefinition.getId(), tagDefinition);
+                        tagDefinitionEvent = tagEventBuilder.newControlTagDefinitionCreationEvent(tagDefinition.getId(), tagDefinition,
+                                                                                                  context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
                     } else {
-                        tagDefinitionEvent = tagEventBuilder.newUserTagDefinitionCreationEvent(tagDefinition.getId(), tagDefinition);
+                        tagDefinitionEvent = tagEventBuilder.newUserTagDefinitionCreationEvent(tagDefinition.getId(), tagDefinition,
+                                                                                               context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
                     }
                     try {
-                        bus.postFromTransaction(tagDefinitionEvent, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId(), entitySqlDaoWrapperFactory.getSqlDao());
+                        bus.postFromTransaction(tagDefinitionEvent, entitySqlDaoWrapperFactory.getSqlDao());
                     } catch (PersistentBus.EventBusException e) {
                         log.warn("Failed to post tag definition creation event for tag " + tagDefinition.getId(), e);
                     }
@@ -235,21 +237,25 @@ public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinitionModelDao
         switch (changeType) {
             case INSERT:
                 tagDefinitionEvent = (isControlTag) ?
-                                     tagEventBuilder.newControlTagDefinitionCreationEvent(tagDefinition.getId(), tagDefinition) :
-                                     tagEventBuilder.newUserTagDefinitionCreationEvent(tagDefinition.getId(), tagDefinition);
+                                     tagEventBuilder.newControlTagDefinitionCreationEvent(tagDefinition.getId(), tagDefinition,
+                                                                                          context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken()) :
+                                     tagEventBuilder.newUserTagDefinitionCreationEvent(tagDefinition.getId(), tagDefinition,
+                                             context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
 
                 break;
             case DELETE:
                 tagDefinitionEvent = (isControlTag) ?
-                                     tagEventBuilder.newControlTagDefinitionDeletionEvent(tagDefinition.getId(), tagDefinition) :
-                                     tagEventBuilder.newUserTagDefinitionDeletionEvent(tagDefinition.getId(), tagDefinition);
+                                     tagEventBuilder.newControlTagDefinitionDeletionEvent(tagDefinition.getId(), tagDefinition,
+                                                                                          context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken()) :
+                                     tagEventBuilder.newUserTagDefinitionDeletionEvent(tagDefinition.getId(), tagDefinition,
+                                                                                       context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
                 break;
             default:
                 return;
         }
 
         try {
-            bus.postFromTransaction(tagDefinitionEvent, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId(), entitySqlDaoWrapperFactory.getSqlDao());
+            bus.postFromTransaction(tagDefinitionEvent, entitySqlDaoWrapperFactory.getSqlDao());
         } catch (PersistentBus.EventBusException e) {
             log.warn("Failed to post tag definition event for tag " + tagDefinition.getId().toString(), e);
         }

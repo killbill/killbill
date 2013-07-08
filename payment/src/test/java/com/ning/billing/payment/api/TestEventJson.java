@@ -33,7 +33,7 @@ public class TestEventJson extends PaymentTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testPaymentErrorEvent() throws Exception {
-        final PaymentErrorInternalEvent e = new DefaultPaymentErrorEvent(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "no message");
+        final PaymentErrorInternalEvent e = new DefaultPaymentErrorEvent(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "no message", 1L, 2L, UUID.randomUUID());
         final String json = mapper.writeValueAsString(e);
 
         final Class<?> claz = Class.forName(DefaultPaymentErrorEvent.class.getName());
@@ -44,7 +44,7 @@ public class TestEventJson extends PaymentTestSuiteNoDB {
     @Test(groups = "fast")
     public void testPaymentInfoEvent() throws Exception {
         final PaymentInfoInternalEvent e = new DefaultPaymentInfoEvent(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), new BigDecimal(12.9), new Integer(13), PaymentStatus.SUCCESS,
-                                                                       new DateTime());
+                                                                       new DateTime(), 1L, 2L, UUID.randomUUID());
         final String json = mapper.writeValueAsString(e);
 
         final Class<?> clazz = Class.forName(DefaultPaymentInfoEvent.class.getName());

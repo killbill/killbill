@@ -84,10 +84,10 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
         final Long recordId = entitySqlDaoWrapperFactory.become(AccountSqlDao.class).getRecordId(savedAccount.getId().toString(), context);
         // We need to re-hydrate the context with the account record id
         final InternalCallContext rehydratedContext = internalCallContextFactory.createInternalCallContext(recordId, context);
-        final AccountCreationInternalEvent creationEvent = new DefaultAccountCreationEvent(new DefaultAccountData(savedAccount), savedAccount.getId());
+        final AccountCreationInternalEvent creationEvent = new DefaultAccountCreationEvent(new DefaultAccountData(savedAccount), savedAccount.getId(),
+                                                                                           context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
         try {
-            eventBus.postFromTransaction(creationEvent, rehydratedContext.getUserToken(), rehydratedContext.getAccountRecordId(),
-                                         rehydratedContext.getTenantRecordId(), entitySqlDaoWrapperFactory.getSqlDao());
+            eventBus.postFromTransaction(creationEvent, entitySqlDaoWrapperFactory.getSqlDao());
         } catch (final EventBusException e) {
             log.warn("Failed to post account creation event for account " + savedAccount.getId(), e);
         }
@@ -134,10 +134,13 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
 
                 final AccountChangeInternalEvent changeEvent = new DefaultAccountChangeEvent(accountId,
                                                                                              currentAccount,
-                                                                                             specifiedAccount
+                                                                                             specifiedAccount,
+                                                                                             context.getAccountRecordId(),
+                                                                                             context.getTenantRecordId(),
+                                                                                             context.getUserToken()
                 );
                 try {
-                    eventBus.postFromTransaction(changeEvent, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId(), entitySqlDaoWrapperFactory.getSqlDao());
+                    eventBus.postFromTransaction(changeEvent, entitySqlDaoWrapperFactory.getSqlDao());
                 } catch (final EventBusException e) {
                     log.warn("Failed to post account change event for account " + accountId, e);
                 }
@@ -169,11 +172,14 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
                 transactional.updatePaymentMethod(accountId.toString(), thePaymentMethodId, context);
 
                 final AccountModelDao account = transactional.getById(accountId.toString(), context);
-                final AccountChangeInternalEvent changeEvent = new DefaultAccountChangeEvent(accountId, currentAccount, account
+                final AccountChangeInternalEvent changeEvent = new DefaultAccountChangeEvent(accountId, currentAccount, account,
+                                                                                             context.getAccountRecordId(),
+                                                                                             context.getTenantRecordId(),
+                                                                                             context.getUserToken()
                 );
 
                 try {
-                    eventBus.postFromTransaction(changeEvent, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId(), entitySqlDaoWrapperFactory.getSqlDao());
+                    eventBus.postFromTransaction(changeEvent, entitySqlDaoWrapperFactory.getSqlDao());
                 } catch (final EventBusException e) {
                     log.warn("Failed to post account change event for account " + accountId, e);
                 }

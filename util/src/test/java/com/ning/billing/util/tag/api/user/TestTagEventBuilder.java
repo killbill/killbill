@@ -49,12 +49,12 @@ public class TestTagEventBuilder extends UtilTestSuiteNoDB {
         final UUID userToken = internalCallContext.getUserToken();
 
         final TagEventBuilder tagEventBuilder = new TagEventBuilder();
-        final TagDefinitionInternalEvent event = tagEventBuilder.newUserTagDefinitionCreationEvent(tagDefinitionId, new TagDefinitionModelDao(tagDefinition));
+        final TagDefinitionInternalEvent event = tagEventBuilder.newUserTagDefinitionCreationEvent(tagDefinitionId, new TagDefinitionModelDao(tagDefinition), 1L, 2L, UUID.randomUUID());
         Assert.assertTrue(event instanceof UserTagDefinitionCreationInternalEvent);
 
-        Assert.assertEquals(event, new DefaultUserTagDefinitionCreationEvent(tagDefinitionId, tagDefinition));
+        Assert.assertEquals(event, new DefaultUserTagDefinitionCreationEvent(tagDefinitionId, tagDefinition, 1L, 2L, UUID.randomUUID()));
 
-        Assert.assertTrue(event.equals(new DefaultUserTagDefinitionCreationEvent(tagDefinitionId, tagDefinition)));
+        Assert.assertTrue(event.equals(new DefaultUserTagDefinitionCreationEvent(tagDefinitionId, tagDefinition, 1L, 2L, UUID.randomUUID())));
 
         verifyTagDefinitionEvent(tagDefinitionId, tagDefinitionName, tagDefinitionDescription, tagDefinition, userToken, event);
     }
@@ -69,11 +69,11 @@ public class TestTagEventBuilder extends UtilTestSuiteNoDB {
         final UUID userToken = internalCallContext.getUserToken();
 
         final TagEventBuilder tagEventBuilder = new TagEventBuilder();
-        final TagDefinitionInternalEvent event = tagEventBuilder.newUserTagDefinitionDeletionEvent(tagDefinitionId, new TagDefinitionModelDao(tagDefinition));
+        final TagDefinitionInternalEvent event = tagEventBuilder.newUserTagDefinitionDeletionEvent(tagDefinitionId, new TagDefinitionModelDao(tagDefinition), 1L, 2L, UUID.randomUUID());
         Assert.assertTrue(event instanceof UserTagDefinitionDeletionInternalEvent);
 
-        Assert.assertEquals(event, new DefaultUserTagDefinitionDeletionEvent(tagDefinitionId, tagDefinition));
-        Assert.assertTrue(event.equals(new DefaultUserTagDefinitionDeletionEvent(tagDefinitionId, tagDefinition)));
+        Assert.assertEquals(event, new DefaultUserTagDefinitionDeletionEvent(tagDefinitionId, tagDefinition, 1L, 2L, UUID.randomUUID()));
+        Assert.assertTrue(event.equals(new DefaultUserTagDefinitionDeletionEvent(tagDefinitionId, tagDefinition, 1L, 2L, UUID.randomUUID())));
 
         verifyTagDefinitionEvent(tagDefinitionId, tagDefinitionName, tagDefinitionDescription, tagDefinition, userToken, event);
     }
@@ -88,11 +88,11 @@ public class TestTagEventBuilder extends UtilTestSuiteNoDB {
         final UUID userToken = internalCallContext.getUserToken();
 
         final TagEventBuilder tagEventBuilder = new TagEventBuilder();
-        final TagDefinitionInternalEvent event = tagEventBuilder.newControlTagDefinitionCreationEvent(tagDefinitionId, new TagDefinitionModelDao(tagDefinition));
+        final TagDefinitionInternalEvent event = tagEventBuilder.newControlTagDefinitionCreationEvent(tagDefinitionId, new TagDefinitionModelDao(tagDefinition), 1L, 2L, UUID.randomUUID());
         Assert.assertTrue(event instanceof ControlTagDefinitionCreationInternalEvent);
 
-        Assert.assertEquals(event, new DefaultControlTagDefinitionCreationEvent(tagDefinitionId, tagDefinition));
-        Assert.assertTrue(event.equals(new DefaultControlTagDefinitionCreationEvent(tagDefinitionId, tagDefinition)));
+        Assert.assertEquals(event, new DefaultControlTagDefinitionCreationEvent(tagDefinitionId, tagDefinition, 1L, 2L, UUID.randomUUID()));
+        Assert.assertTrue(event.equals(new DefaultControlTagDefinitionCreationEvent(tagDefinitionId, tagDefinition, 1L, 2L, UUID.randomUUID())));
 
         verifyTagDefinitionEvent(tagDefinitionId, tagDefinitionName, tagDefinitionDescription, tagDefinition, userToken, event);
     }
@@ -107,11 +107,11 @@ public class TestTagEventBuilder extends UtilTestSuiteNoDB {
         final UUID userToken = internalCallContext.getUserToken();
 
         final TagEventBuilder tagEventBuilder = new TagEventBuilder();
-        final TagDefinitionInternalEvent event = tagEventBuilder.newControlTagDefinitionDeletionEvent(tagDefinitionId, new TagDefinitionModelDao(tagDefinition));
+        final TagDefinitionInternalEvent event = tagEventBuilder.newControlTagDefinitionDeletionEvent(tagDefinitionId, new TagDefinitionModelDao(tagDefinition), 1L, 2L, UUID.randomUUID());
         Assert.assertTrue(event instanceof ControlTagDefinitionDeletionInternalEvent);
 
-        Assert.assertEquals(event, new DefaultControlTagDefinitionDeletionEvent(tagDefinitionId, tagDefinition));
-        Assert.assertTrue(event.equals(new DefaultControlTagDefinitionDeletionEvent(tagDefinitionId, tagDefinition)));
+        Assert.assertEquals(event, new DefaultControlTagDefinitionDeletionEvent(tagDefinitionId, tagDefinition, 1L, 2L, UUID.randomUUID()));
+        Assert.assertTrue(event.equals(new DefaultControlTagDefinitionDeletionEvent(tagDefinitionId, tagDefinition, 1L, 2L, UUID.randomUUID())));
 
         verifyTagDefinitionEvent(tagDefinitionId, tagDefinitionName, tagDefinitionDescription, tagDefinition, userToken, event);
     }
@@ -129,11 +129,11 @@ public class TestTagEventBuilder extends UtilTestSuiteNoDB {
         final UUID userToken = internalCallContext.getUserToken();
 
         final TagEventBuilder tagEventBuilder = new TagEventBuilder();
-        final TagInternalEvent event = tagEventBuilder.newUserTagCreationEvent(tagId, objectId, objectType, new TagDefinitionModelDao(tagDefinition));
+        final TagInternalEvent event = tagEventBuilder.newUserTagCreationEvent(tagId, objectId, objectType, new TagDefinitionModelDao(tagDefinition), 1L, 2L, UUID.randomUUID());
         Assert.assertTrue(event instanceof UserTagCreationInternalEvent);
 
-        Assert.assertEquals(event, new DefaultUserTagCreationEvent(tagId, objectId, objectType, tagDefinition));
-        Assert.assertTrue(event.equals(new DefaultUserTagCreationEvent(tagId, objectId, objectType, tagDefinition)));
+        Assert.assertEquals(event, new DefaultUserTagCreationEvent(tagId, objectId, objectType, tagDefinition, 1L, 2L, UUID.randomUUID()));
+        Assert.assertTrue(event.equals(new DefaultUserTagCreationEvent(tagId, objectId, objectType, tagDefinition, 1L, 2L, UUID.randomUUID())));
 
         verifyTagEvent(tagId, objectId, objectType, tagDefinitionId, tagDefinitionName, tagDefinitionDescription, tagDefinition, userToken, event);
     }
@@ -151,11 +151,11 @@ public class TestTagEventBuilder extends UtilTestSuiteNoDB {
         final UUID userToken = internalCallContext.getUserToken();
 
         final TagEventBuilder tagEventBuilder = new TagEventBuilder();
-        final TagInternalEvent event = tagEventBuilder.newUserTagDeletionEvent(tagId, objectId, objectType, new TagDefinitionModelDao(tagDefinition));
+        final TagInternalEvent event = tagEventBuilder.newUserTagDeletionEvent(tagId, objectId, objectType, new TagDefinitionModelDao(tagDefinition), 1L, 2L, UUID.randomUUID());
         Assert.assertTrue(event instanceof UserTagDeletionInternalEvent);
 
-        Assert.assertEquals(event, new DefaultUserTagDeletionEvent(tagId, objectId, objectType, tagDefinition));
-        Assert.assertTrue(event.equals(new DefaultUserTagDeletionEvent(tagId, objectId, objectType, tagDefinition)));
+        Assert.assertEquals(event, new DefaultUserTagDeletionEvent(tagId, objectId, objectType, tagDefinition, 1L, 2L, UUID.randomUUID()));
+        Assert.assertTrue(event.equals(new DefaultUserTagDeletionEvent(tagId, objectId, objectType, tagDefinition, 1L, 2L, UUID.randomUUID())));
 
         verifyTagEvent(tagId, objectId, objectType, tagDefinitionId, tagDefinitionName, tagDefinitionDescription, tagDefinition, userToken, event);
     }
@@ -173,11 +173,11 @@ public class TestTagEventBuilder extends UtilTestSuiteNoDB {
         final UUID userToken = internalCallContext.getUserToken();
 
         final TagEventBuilder tagEventBuilder = new TagEventBuilder();
-        final TagInternalEvent event = tagEventBuilder.newControlTagCreationEvent(tagId, objectId, objectType, new TagDefinitionModelDao(tagDefinition));
+        final TagInternalEvent event = tagEventBuilder.newControlTagCreationEvent(tagId, objectId, objectType, new TagDefinitionModelDao(tagDefinition), 1L, 2L, UUID.randomUUID());
         Assert.assertTrue(event instanceof ControlTagCreationInternalEvent);
 
-        Assert.assertEquals(event, new DefaultControlTagCreationEvent(tagId, objectId, objectType, tagDefinition));
-        Assert.assertTrue(event.equals(new DefaultControlTagCreationEvent(tagId, objectId, objectType, tagDefinition)));
+        Assert.assertEquals(event, new DefaultControlTagCreationEvent(tagId, objectId, objectType, tagDefinition, 1L, 2L, UUID.randomUUID()));
+        Assert.assertTrue(event.equals(new DefaultControlTagCreationEvent(tagId, objectId, objectType, tagDefinition, 1L, 2L, UUID.randomUUID())));
 
         verifyTagEvent(tagId, objectId, objectType, tagDefinitionId, tagDefinitionName, tagDefinitionDescription, tagDefinition, userToken, event);
     }
@@ -195,11 +195,11 @@ public class TestTagEventBuilder extends UtilTestSuiteNoDB {
         final UUID userToken = internalCallContext.getUserToken();
 
         final TagEventBuilder tagEventBuilder = new TagEventBuilder();
-        final TagInternalEvent event = tagEventBuilder.newControlTagDeletionEvent(tagId, objectId, objectType, new TagDefinitionModelDao(tagDefinition));
+        final TagInternalEvent event = tagEventBuilder.newControlTagDeletionEvent(tagId, objectId, objectType, new TagDefinitionModelDao(tagDefinition), 1L, 2L, UUID.randomUUID());
         Assert.assertTrue(event instanceof ControlTagDeletionInternalEvent);
 
-        Assert.assertEquals(event, new DefaultControlTagDeletionEvent(tagId, objectId, objectType, tagDefinition));
-        Assert.assertTrue(event.equals(new DefaultControlTagDeletionEvent(tagId, objectId, objectType, tagDefinition)));
+        Assert.assertEquals(event, new DefaultControlTagDeletionEvent(tagId, objectId, objectType, tagDefinition, 1L, 2L, UUID.randomUUID()));
+        Assert.assertTrue(event.equals(new DefaultControlTagDeletionEvent(tagId, objectId, objectType, tagDefinition, 1L, 2L, UUID.randomUUID())));
 
         verifyTagEvent(tagId, objectId, objectType, tagDefinitionId, tagDefinitionName, tagDefinitionDescription, tagDefinition, userToken, event);
     }

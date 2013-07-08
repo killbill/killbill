@@ -18,20 +18,25 @@ package com.ning.billing.invoice.api.user;
 
 import java.util.UUID;
 
+import com.ning.billing.util.events.BusEventBase;
 import com.ning.billing.util.events.InvoiceAdjustmentInternalEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class DefaultInvoiceAdjustmentEvent implements InvoiceAdjustmentInternalEvent {
+public class DefaultInvoiceAdjustmentEvent extends BusEventBase implements InvoiceAdjustmentInternalEvent {
 
     private final UUID invoiceId;
     private final UUID accountId;
 
     @JsonCreator
     public DefaultInvoiceAdjustmentEvent(@JsonProperty("invoiceId") final UUID invoiceId,
-                                         @JsonProperty("accountId") final UUID accountId) {
+                                         @JsonProperty("accountId") final UUID accountId,
+                                         @JsonProperty("searchKey1") final Long searchKey1,
+                                         @JsonProperty("searchKey2") final Long searchKey2,
+                                         @JsonProperty("userToken") final UUID userToken) {
+        super(searchKey1, searchKey2, userToken);
         this.invoiceId = invoiceId;
         this.accountId = accountId;
     }

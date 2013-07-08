@@ -22,8 +22,6 @@ import org.slf4j.LoggerFactory;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.bus.api.BusEvent;
-import com.ning.billing.bus.api.BusEventWithMetadata;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.core.PaymentProcessor;
 import com.ning.billing.util.callcontext.CallOrigin;
@@ -54,16 +52,14 @@ public class InvoiceHandler {
     }
 
     @Subscribe
-    public void processInvoiceEvent(final BusEventWithMetadata<InvoiceCreationInternalEvent> eventWithMetadata) {
-
-        final InvoiceCreationInternalEvent event = eventWithMetadata.getEvent();
+    public void processInvoiceEvent(final InvoiceCreationInternalEvent event) {
 
         log.info("Received invoice creation notification for account {} and invoice {}",
                  event.getAccountId(), event.getInvoiceId());
 
         final Account account;
         try {
-            final InternalCallContext internalContext =  internalCallContextFactory.createInternalCallContext(eventWithMetadata.getSearchKey2(), eventWithMetadata.getSearchKey1(), "PaymentRequestProcessor", CallOrigin.INTERNAL, UserType.SYSTEM, eventWithMetadata.getUserToken());
+            final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "PaymentRequestProcessor", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
             account = accountApi.getAccountById(event.getAccountId(), internalContext);
             paymentProcessor.createPayment(account, event.getInvoiceId(), null, internalContext, false, false);
         } catch (AccountApiException e) {
@@ -71,7 +67,7 @@ public class InvoiceHandler {
         } catch (PaymentApiException e) {
             // Log as error unless:
             if (e.getCode() != ErrorCode.PAYMENT_NULL_INVOICE.getCode() /*  Nothing to left be paid*/ &&
-                    e.getCode() != ErrorCode.PAYMENT_CREATE_PAYMENT.getCode() /* User payment error */) {
+                e.getCode() != ErrorCode.PAYMENT_CREATE_PAYMENT.getCode() /* User payment error */) {
                 log.error("Failed to process invoice payment {}", e.toString());
             }
         }

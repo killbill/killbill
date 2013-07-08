@@ -281,8 +281,8 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
         final EffectiveSubscriptionInternalEvent t = new MockEffectiveSubscriptionEvent(
                 eventId, subId, bunId, then, now, null, null, null, null, SubscriptionState.ACTIVE,
                 nextPlan.getName(), nextPhase.getName(),
-                nextPriceList.getName(), 1L, null,
-                SubscriptionTransitionType.CREATE, 0, null);
+                nextPriceList.getName(), 1L,
+                SubscriptionTransitionType.CREATE,  1, null, 1L, 2L, null);
 
         effectiveSubscriptionTransitions.add(t);
         return now;

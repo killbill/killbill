@@ -93,9 +93,9 @@ public class TestPaymentHelper {
         Mockito.when(invoiceApi.getInvoiceById(Mockito.eq(invoice.getId()), Mockito.<InternalTenantContext>any())).thenReturn(invoice);
         final InvoiceCreationInternalEvent event = new MockInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
                                                                                 invoice.getBalance(), invoice.getCurrency(),
-                                                                                invoice.getInvoiceDate());
+                                                                                invoice.getInvoiceDate(), 1L, 2L, null);
 
-        eventBus.post(event, context.getUserToken(), 1L, 1L);
+        eventBus.post(event);
         return invoice;
     }
 

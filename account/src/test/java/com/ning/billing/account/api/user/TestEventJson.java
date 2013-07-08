@@ -39,7 +39,7 @@ public class TestEventJson extends AccountTestSuiteNoDB {
         final List<ChangedField> changes = new ArrayList<ChangedField>();
         changes.add(new DefaultChangedField("fieldXX", "valueX", "valueXXX"));
         changes.add(new DefaultChangedField("fieldYY", "valueY", "valueYYY"));
-        final AccountChangeInternalEvent e = new DefaultAccountChangeEvent(changes, UUID.randomUUID());
+        final AccountChangeInternalEvent e = new DefaultAccountChangeEvent(changes, UUID.randomUUID(), 1L, 2L, null);
 
         final String json = mapper.writeValueAsString(e);
 
@@ -52,7 +52,7 @@ public class TestEventJson extends AccountTestSuiteNoDB {
     public void testAccountCreationEvent() throws Exception {
         final DefaultAccountData data = new DefaultAccountData("dsfdsf", "bobo", 3, "bobo@yahoo.com", 12, "USD", UUID.randomUUID(),
                                                                "UTC", "US", "21 avenue", "", "Gling", "San Franciso", "CA", "94110", "USA", "4126789887", false, false);
-        final DefaultAccountCreationEvent e = new DefaultAccountCreationEvent(data, UUID.randomUUID());
+        final DefaultAccountCreationEvent e = new DefaultAccountCreationEvent(data, UUID.randomUUID(), 1L, 2L, null);
         final String json = mapper.writeValueAsString(e);
 
         final DefaultAccountCreationEvent obj = mapper.readValue(json, DefaultAccountCreationEvent.class);

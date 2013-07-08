@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.beatrix.integration;
 
 import java.util.UUID;
@@ -23,7 +24,6 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.api.TestApiListener.NextEvent;
-import com.ning.billing.bus.api.BusEventWithMetadata;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
@@ -43,8 +43,9 @@ public class TestPublicBus extends TestIntegrationBase {
 
 
     public class PublicListener {
+
         @Subscribe
-        public void handleExternalEvents(final BusEventWithMetadata<ExtBusEvent> event) {
+        public void handleExternalEvents(final ExtBusEvent event) {
             log.info("GOT EXT EVENT " + event.toString());
         }
     }
@@ -71,7 +72,7 @@ public class TestPublicBus extends TestIntegrationBase {
     }
 
 
-    @Test(groups= "{slow}")
+    @Test(groups = "{slow}")
     public void testSimple() throws Exception {
 
         final DateTime initialDate = new DateTime(2012, 2, 1, 0, 3, 42, 0, testTimeZone);
@@ -102,8 +103,6 @@ public class TestPublicBus extends TestIntegrationBase {
         assertNotNull(subscription);
         assertTrue(busHandler.isCompleted(DELAY));
     }
-
-
 
 
 }

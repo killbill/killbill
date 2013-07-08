@@ -63,7 +63,7 @@ public class MockAccountDao extends MockEntityDaoBase<AccountModelDao, Account, 
             final Long accountRecordId = getRecordId(account.getId(), context);
             final long tenantRecordId = context == null ? InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID
                                                         : context.getTenantRecordId();
-            eventBus.post(new DefaultAccountCreationEvent(new DefaultAccountData(account), account.getId()), context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
+            eventBus.post(new DefaultAccountCreationEvent(new DefaultAccountData(account), account.getId(), context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken()));
         } catch (final EventBusException ex) {
             Assert.fail(ex.toString());
         }
@@ -77,11 +77,12 @@ public class MockAccountDao extends MockEntityDaoBase<AccountModelDao, Account, 
         final Long accountRecordId = getRecordId(account.getId(), context);
         final long tenantRecordId = context == null ? InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID
                                                     : context.getTenantRecordId();
-        final AccountChangeInternalEvent changeEvent = new DefaultAccountChangeEvent(account.getId(), currentAccount, account
+        final AccountChangeInternalEvent changeEvent = new DefaultAccountChangeEvent(account.getId(), currentAccount, account,
+                context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken()
         );
         if (changeEvent.hasChanges()) {
             try {
-                eventBus.post(changeEvent, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
+                eventBus.post(changeEvent);
             } catch (final EventBusException ex) {
                 Assert.fail(ex.toString());
             }

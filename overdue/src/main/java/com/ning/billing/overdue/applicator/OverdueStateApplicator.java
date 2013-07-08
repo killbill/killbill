@@ -140,7 +140,7 @@ public class OverdueStateApplicator<T extends Blockable> {
         }
 
         try {
-            bus.post(createOverdueEvent(overdueable, previousOverdueStateName, nextOverdueState.getName(), context), context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
+            bus.post(createOverdueEvent(overdueable, previousOverdueStateName, nextOverdueState.getName(), context));
         } catch (Exception e) {
             log.error("Error posting overdue change event to bus", e);
         }
@@ -155,14 +155,15 @@ public class OverdueStateApplicator<T extends Blockable> {
         clearFutureNotification(overdueable, context);
 
         try {
-            bus.post(createOverdueEvent(overdueable, previousOverdueStateName, clearState.getName(), context), context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
+            bus.post(createOverdueEvent(overdueable, previousOverdueStateName, clearState.getName(), context));
         } catch (Exception e) {
             log.error("Error posting overdue change event to bus", e);
         }
     }
 
     private OverdueChangeInternalEvent createOverdueEvent(final T overdueable, final String previousOverdueStateName, final String nextOverdueStateName, final InternalCallContext context) throws BlockingApiException {
-        return new DefaultOverdueChangeEvent(overdueable.getId(), Type.get(overdueable), previousOverdueStateName, nextOverdueStateName);
+        return new DefaultOverdueChangeEvent(overdueable.getId(), Type.get(overdueable), previousOverdueStateName, nextOverdueStateName,
+                                             context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
     }
 
     protected void storeNewState(final T blockable, final OverdueState<T> nextOverdueState, final InternalCallContext context) throws OverdueException {

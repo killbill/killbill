@@ -312,7 +312,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
 
     private void notifyBusOfInvoiceAdjustment(final UUID invoiceId, final UUID accountId, final InternalCallContext context) {
         try {
-            eventBus.post(new DefaultInvoiceAdjustmentEvent(invoiceId, accountId), context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
+            eventBus.post(new DefaultInvoiceAdjustmentEvent(invoiceId, accountId, context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken()));
         } catch (EventBusException e) {
             log.warn("Failed to post adjustment event for invoice " + invoiceId, e);
         }

@@ -231,7 +231,10 @@ public class PaymentProcessor extends ProcessorBase {
             // Note that at this point, we don't know the exact invoice balance (see getAndValidatePaymentAmount() below).
             // This means that events will be posted for null and zero dollar invoices (e.g. trials).
             final PaymentErrorInternalEvent event = new DefaultPaymentErrorEvent(account.getId(), invoiceId, null,
-                                                                                 ErrorCode.PAYMENT_NO_DEFAULT_PAYMENT_METHOD.toString()
+                                                                                 ErrorCode.PAYMENT_NO_DEFAULT_PAYMENT_METHOD.toString(),
+                                                                                 context.getAccountRecordId(),
+                                                                                 context.getTenantRecordId(),
+                                                                                 context.getUserToken()
             );
             postPaymentEvent(event, account.getId(), context);
             throw e;
@@ -514,7 +517,10 @@ public class PaymentProcessor extends ProcessorBase {
                     // Create Bus event
                     event = new DefaultPaymentInfoEvent(account.getId(),
                                                         invoice.getId(), payment.getId(), payment.getAmount(), payment.getPaymentNumber(), paymentStatus,
-                                                        payment.getEffectiveDate()
+                                                        payment.getEffectiveDate(),
+                                                        context.getAccountRecordId(),
+                                                        context.getTenantRecordId(),
+                                                        context.getUserToken()
                     );
                     break;
 
@@ -532,7 +538,8 @@ public class PaymentProcessor extends ProcessorBase {
                     log.info(String.format("Could not process payment for account %s, invoice %s, error = %s",
                                            account.getId(), invoice.getId(), paymentPluginInfo.getGatewayError()));
 
-                    event = new DefaultPaymentErrorEvent(account.getId(), invoice.getId(), paymentInput.getId(), paymentPluginInfo.getGatewayError()
+                    event = new DefaultPaymentErrorEvent(account.getId(), invoice.getId(), paymentInput.getId(), paymentPluginInfo.getGatewayError(),
+                                                         context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken()
                     );
                     throw new PaymentApiException(ErrorCode.PAYMENT_CREATE_PAYMENT, account.getId(), paymentPluginInfo.getGatewayError());
 

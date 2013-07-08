@@ -22,7 +22,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ning.billing.ObjectType;
-import com.ning.billing.bus.api.BusEventWithMetadata;
 import com.ning.billing.ovedue.notification.OverdueCheckNotificationKey;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.InternalCallContext;
@@ -53,48 +52,43 @@ public class OverdueListener {
     }
 
     @Subscribe
-    public void handle_OVERDUE_ENFORCEMENT_OFF_Insert(final BusEventWithMetadata<ControlTagCreationInternalEvent> eventWithMetadata) {
-        final ControlTagCreationInternalEvent event = eventWithMetadata.getEvent();
+    public void handle_OVERDUE_ENFORCEMENT_OFF_Insert(final ControlTagCreationInternalEvent event) {
         if (event.getTagDefinition().getName().equals(ControlTagType.OVERDUE_ENFORCEMENT_OFF.toString()) && event.getObjectType() == ObjectType.ACCOUNT) {
             final UUID accountId = event.getObjectId();
-            dispatcher.clearOverdueForAccount(accountId, createCallContext(eventWithMetadata.getUserToken(), eventWithMetadata.getSearchKey1(), eventWithMetadata.getSearchKey2()));
+            dispatcher.clearOverdueForAccount(accountId, createCallContext(event.getUserToken(), event.getSearchKey1(), event.getSearchKey2()));
         }
     }
 
     @Subscribe
-    public void handle_OVERDUE_ENFORCEMENT_OFF_Removal(final BusEventWithMetadata<ControlTagDeletionInternalEvent> eventWithMetadata) {
-        final ControlTagDeletionInternalEvent event = eventWithMetadata.getEvent();
+    public void handle_OVERDUE_ENFORCEMENT_OFF_Removal(final ControlTagDeletionInternalEvent event) {
         if (event.getTagDefinition().getName().equals(ControlTagType.OVERDUE_ENFORCEMENT_OFF.toString()) && event.getObjectType() == ObjectType.ACCOUNT) {
             final UUID accountId = event.getObjectId();
-            dispatcher.processOverdueForAccount(accountId, createCallContext(eventWithMetadata.getUserToken(), eventWithMetadata.getSearchKey1(), eventWithMetadata.getSearchKey2()));
+            dispatcher.processOverdueForAccount(accountId, createCallContext(event.getUserToken(), event.getSearchKey1(), event.getSearchKey2()));
         }
     }
 
 
     @Subscribe
-    public void handlePaymentInfoEvent(final BusEventWithMetadata<PaymentInfoInternalEvent> eventWithMetadata) {
+    public void handlePaymentInfoEvent(final PaymentInfoInternalEvent event) {
 
-        final PaymentInfoInternalEvent event = eventWithMetadata.getEvent();
         log.debug("Received PaymentInfo event {}", event);
-        dispatcher.processOverdueForAccount(event.getAccountId(), createCallContext(eventWithMetadata.getUserToken(), eventWithMetadata.getSearchKey1(), eventWithMetadata.getSearchKey2()));
+        dispatcher.processOverdueForAccount(event.getAccountId(), createCallContext(event.getUserToken(), event.getSearchKey1(), event.getSearchKey2()));
     }
 
     @Subscribe
-    public void handlePaymentErrorEvent(final BusEventWithMetadata<PaymentErrorInternalEvent> eventWithMetadata) {
+    public void handlePaymentErrorEvent(final PaymentErrorInternalEvent event) {
 
-        final PaymentErrorInternalEvent event = eventWithMetadata.getEvent();
         log.debug("Received PaymentError event {}", event);
         final UUID accountId = event.getAccountId();
-        dispatcher.processOverdueForAccount(accountId, createCallContext(eventWithMetadata.getUserToken(), eventWithMetadata.getSearchKey1(), eventWithMetadata.getSearchKey2()));
+        dispatcher.processOverdueForAccount(accountId, createCallContext(event.getUserToken(), event.getSearchKey1(), event.getSearchKey2()));
     }
 
     @Subscribe
-    public void handleInvoiceAdjustmentEvent(final BusEventWithMetadata<InvoiceAdjustmentInternalEvent> eventWithMetadata) {
+    public void handleInvoiceAdjustmentEvent(final InvoiceAdjustmentInternalEvent event) {
 
-        final InvoiceAdjustmentInternalEvent event = eventWithMetadata.getEvent();
         log.debug("Received InvoiceAdjustment event {}", event);
         final UUID accountId = event.getAccountId();
-        dispatcher.processOverdueForAccount(accountId, createCallContext(eventWithMetadata.getUserToken(), eventWithMetadata.getSearchKey1(), eventWithMetadata.getSearchKey2()));
+        dispatcher.processOverdueForAccount(accountId, createCallContext(event.getUserToken(), event.getSearchKey1(), event.getSearchKey2()));
     }
 
     public void handleNextOverdueCheck(final OverdueCheckNotificationKey notificationKey, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {

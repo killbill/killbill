@@ -142,7 +142,7 @@ public abstract class ProcessorBase {
             return;
         }
         try {
-            eventBus.post(ev, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
+            eventBus.post(ev);
         } catch (EventBusException e) {
             log.error("Failed to post Payment event event for account {} ", accountId, e);
         }

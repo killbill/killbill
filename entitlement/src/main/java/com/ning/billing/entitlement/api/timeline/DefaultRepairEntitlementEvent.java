@@ -20,13 +20,14 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.util.events.BusEventBase;
 import com.ning.billing.util.events.RepairEntitlementInternalEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class DefaultRepairEntitlementEvent implements RepairEntitlementInternalEvent {
+public class DefaultRepairEntitlementEvent extends BusEventBase implements RepairEntitlementInternalEvent {
 
     private final UUID bundleId;
     private final UUID accountId;
@@ -36,7 +37,11 @@ public class DefaultRepairEntitlementEvent implements RepairEntitlementInternalE
     @JsonCreator
     public DefaultRepairEntitlementEvent(@JsonProperty("accountId") final UUID accountId,
                                          @JsonProperty("bundleId") final UUID bundleId,
-                                         @JsonProperty("effectiveDate") final DateTime effectiveDate) {
+                                         @JsonProperty("effectiveDate") final DateTime effectiveDate,
+                                         @JsonProperty("searchKey1") final Long searchKey1,
+                                         @JsonProperty("searchKey2") final Long searchKey2,
+                                         @JsonProperty("userToken") final UUID userToken) {
+        super(searchKey1, searchKey2, userToken);
         this.bundleId = bundleId;
         this.accountId = accountId;
         this.effectiveDate = effectiveDate;

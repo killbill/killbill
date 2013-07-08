@@ -26,7 +26,6 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ning.billing.bus.api.BusEventWithMetadata;
 import com.ning.billing.util.events.CustomFieldEvent;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 import com.ning.billing.util.events.InvoiceAdjustmentInternalEvent;
@@ -89,16 +88,15 @@ public class TestApiListener {
     }
 
     @Subscribe
-    public void handleRepairEntitlementEvents(final BusEventWithMetadata<RepairEntitlementInternalEvent> eventWithMetadata) {
-        log.info(String.format("Got RepairEntitlementEvent event %s", eventWithMetadata.toString()));
+    public void handleRepairEntitlementEvents(final RepairEntitlementInternalEvent event) {
+        log.info(String.format("Got RepairEntitlementEvent event %s", event.toString()));
         assertEqualsNicely(NextEvent.REPAIR_BUNDLE);
         notifyIfStackEmpty();
     }
 
     @Subscribe
-    public void handleEntitlementEvents(final BusEventWithMetadata<EffectiveSubscriptionInternalEvent> eventWithMetadata) {
+    public void handleEntitlementEvents(final EffectiveSubscriptionInternalEvent eventEffective) {
 
-        final EffectiveSubscriptionInternalEvent eventEffective = eventWithMetadata.getEvent();
         log.info(String.format("Got subscription event %s", eventEffective.toString()));
         switch (eventEffective.getTransitionType()) {
             case TRANSFER:
@@ -143,14 +141,14 @@ public class TestApiListener {
     }
 
     @Subscribe
-    public synchronized void processTagEvent(final BusEventWithMetadata<TagInternalEvent> event) {
+    public synchronized void processTagEvent(final TagInternalEvent event) {
         log.info(String.format("Got TagInternalEvent event %s", event.toString()));
         assertEqualsNicely(NextEvent.TAG);
         notifyIfStackEmpty();
     }
 
     @Subscribe
-    public synchronized void processCustomFieldEvent(final BusEventWithMetadata<CustomFieldEvent> event) {
+    public synchronized void processCustomFieldEvent(final CustomFieldEvent event) {
         log.info(String.format("Got CustomFieldEvent event %s", event.toString()));
         assertEqualsNicely(NextEvent.CUSTOM_FIELD);
         notifyIfStackEmpty();
@@ -158,35 +156,35 @@ public class TestApiListener {
 
 
     @Subscribe
-    public synchronized void processTagDefinitonEvent(final BusEventWithMetadata<TagDefinitionInternalEvent> event) {
+    public synchronized void processTagDefinitonEvent(final TagDefinitionInternalEvent event) {
         log.info(String.format("Got TagDefinitionInternalEvent event %s", event.toString()));
         assertEqualsNicely(NextEvent.TAG_DEFINITION);
         notifyIfStackEmpty();
     }
 
     @Subscribe
-    public void handleInvoiceEvents(final BusEventWithMetadata<InvoiceCreationInternalEvent> event) {
+    public void handleInvoiceEvents(final InvoiceCreationInternalEvent event) {
         log.info(String.format("Got Invoice event %s", event.toString()));
         assertEqualsNicely(NextEvent.INVOICE);
         notifyIfStackEmpty();
     }
 
     @Subscribe
-    public void handleInvoiceAdjustmentEvents(final BusEventWithMetadata<InvoiceAdjustmentInternalEvent> event) {
+    public void handleInvoiceAdjustmentEvents(final InvoiceAdjustmentInternalEvent event) {
         log.info(String.format("Got Invoice adjustment event %s", event.toString()));
         assertEqualsNicely(NextEvent.INVOICE_ADJUSTMENT);
         notifyIfStackEmpty();
     }
 
     @Subscribe
-    public void handlePaymentEvents(final BusEventWithMetadata<PaymentInfoInternalEvent> event) {
+    public void handlePaymentEvents(final PaymentInfoInternalEvent event) {
         log.info(String.format("Got PaymentInfo event %s", event.toString()));
         assertEqualsNicely(NextEvent.PAYMENT);
         notifyIfStackEmpty();
     }
 
     @Subscribe
-    public void handlePaymentErrorEvents(final BusEventWithMetadata<PaymentErrorInternalEvent> event) {
+    public void handlePaymentErrorEvents(final PaymentErrorInternalEvent event) {
         log.info(String.format("Got PaymentError event %s", event.toString()));
         assertEqualsNicely(NextEvent.PAYMENT_ERROR);
         notifyIfStackEmpty();

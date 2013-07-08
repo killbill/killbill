@@ -22,13 +22,14 @@ import java.util.UUID;
 import org.joda.time.LocalDate;
 
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.util.events.BusEventBase;
 import com.ning.billing.util.events.InvoiceCreationInternalEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class MockInvoiceCreationEvent implements InvoiceCreationInternalEvent {
+public class MockInvoiceCreationEvent extends BusEventBase implements InvoiceCreationInternalEvent {
 
     private final UUID invoiceId;
     private final UUID accountId;
@@ -41,7 +42,11 @@ public class MockInvoiceCreationEvent implements InvoiceCreationInternalEvent {
                                     @JsonProperty("accountId") final UUID accountId,
                                     @JsonProperty("amountOwed") final BigDecimal amountOwed,
                                     @JsonProperty("currency") final Currency currency,
-                                    @JsonProperty("invoiceCreationDate") final LocalDate invoiceCreationDate) {
+                                    @JsonProperty("invoiceCreationDate") final LocalDate invoiceCreationDate,
+                                    @JsonProperty("searchKey1") final Long searchKey1,
+                                    @JsonProperty("searchKey2") final Long searchKey2,
+                                    @JsonProperty("userToken") final UUID userToken) {
+        super(searchKey1, searchKey2, userToken);
         this.invoiceId = invoiceId;
         this.accountId = accountId;
         this.amountOwed = amountOwed;

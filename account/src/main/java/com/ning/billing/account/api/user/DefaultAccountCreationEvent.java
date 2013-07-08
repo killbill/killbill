@@ -24,19 +24,24 @@ import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.dao.AccountModelDao;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.events.AccountCreationInternalEvent;
+import com.ning.billing.util.events.BusEventBase;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class DefaultAccountCreationEvent implements AccountCreationInternalEvent {
+public class DefaultAccountCreationEvent extends BusEventBase implements AccountCreationInternalEvent {
 
     private final UUID id;
     private final AccountData data;
 
     @JsonCreator
     public DefaultAccountCreationEvent(@JsonProperty("data") final DefaultAccountData data,
-                                       @JsonProperty("id") final UUID id) {
+                                       @JsonProperty("id") final UUID id,
+                                       @JsonProperty("searchKey1") final Long searchKey1,
+                                       @JsonProperty("searchKey2") final Long searchKey2,
+                                       @JsonProperty("userToken") final UUID userToken) {
+        super(searchKey1, searchKey2, userToken);
         this.id = id;
         this.data = data;
     }

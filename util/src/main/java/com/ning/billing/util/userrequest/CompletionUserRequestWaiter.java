@@ -13,12 +13,12 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.util.userrequest;
 
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
-import com.ning.billing.bus.api.BusEventWithMetadata;
 import com.ning.billing.util.events.AccountChangeInternalEvent;
 import com.ning.billing.util.events.AccountCreationInternalEvent;
 import com.ning.billing.util.events.BusInternalEvent;
@@ -32,17 +32,17 @@ public interface CompletionUserRequestWaiter {
 
     public List<BusInternalEvent> waitForCompletion(final long timeoutMilliSec) throws InterruptedException, TimeoutException;
 
-    public void onAccountCreation(final BusEventWithMetadata<AccountCreationInternalEvent> curEvent);
+    public void onAccountCreation(final AccountCreationInternalEvent curEvent);
 
-    public void onAccountChange(final BusEventWithMetadata<AccountChangeInternalEvent> curEvent);
+    public void onAccountChange(final AccountChangeInternalEvent curEvent);
 
-    public void onSubscriptionTransition(final BusEventWithMetadata<EffectiveSubscriptionInternalEvent> curEventEffective);
+    public void onSubscriptionTransition(final EffectiveSubscriptionInternalEvent curEventEffective);
 
-    public void onInvoiceCreation(final BusEventWithMetadata<InvoiceCreationInternalEvent> curEvent);
+    public void onInvoiceCreation(final InvoiceCreationInternalEvent curEvent);
 
-    public void onEmptyInvoice(final BusEventWithMetadata<NullInvoiceInternalEvent> curEvent);
+    public void onEmptyInvoice(final NullInvoiceInternalEvent curEvent);
 
-    public void onPaymentInfo(final BusEventWithMetadata<PaymentInfoInternalEvent> curEvent);
+    public void onPaymentInfo(final PaymentInfoInternalEvent curEvent);
 
-    public void onPaymentError(final BusEventWithMetadata<PaymentErrorInternalEvent> curEvent);
+    public void onPaymentError(final PaymentErrorInternalEvent curEvent);
 }

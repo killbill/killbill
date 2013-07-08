@@ -24,7 +24,6 @@ import org.slf4j.LoggerFactory;
 import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.bus.api.BusEventWithMetadata;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.core.PaymentProcessor;
 import com.ning.billing.util.callcontext.CallContext;
@@ -62,9 +61,8 @@ public class PaymentTagHandler {
     }
 
     @Subscribe
-    public void process_AUTO_PAY_OFF_removal(final BusEventWithMetadata<ControlTagDeletionInternalEvent> eventWithMetadata) {
+    public void process_AUTO_PAY_OFF_removal(final ControlTagDeletionInternalEvent event) {
 
-        final ControlTagDeletionInternalEvent event = eventWithMetadata.getEvent();
         if (event.getTagDefinition().getName().equals(ControlTagType.AUTO_PAY_OFF.toString()) && event.getObjectType() == ObjectType.ACCOUNT) {
             final UUID accountId = event.getObjectId();
             processUnpaid_AUTO_PAY_OFF_payments(accountId, null);

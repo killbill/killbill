@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 
-import com.ning.billing.bus.api.BusEventWithMetadata;
 import com.ning.billing.util.events.AccountChangeInternalEvent;
 import com.ning.billing.util.events.AccountCreationInternalEvent;
 import com.ning.billing.util.events.BusInternalEvent;
@@ -31,7 +30,7 @@ import com.ning.billing.util.events.NullInvoiceInternalEvent;
 import com.ning.billing.util.events.PaymentErrorInternalEvent;
 import com.ning.billing.util.events.PaymentInfoInternalEvent;
 
-public abstract class CompletionUserRequestBase implements CompletionUserRequest {
+public class CompletionUserRequestBase implements CompletionUserRequest {
 
     private static final long NANO_TO_MILLI_SEC = (1000L * 1000L);
 
@@ -79,6 +78,7 @@ public abstract class CompletionUserRequestBase implements CompletionUserRequest
         }
     }
 
+
     private long currentTimeMillis() {
         return System.nanoTime() / NANO_TO_MILLI_SEC;
     }
@@ -88,72 +88,69 @@ public abstract class CompletionUserRequestBase implements CompletionUserRequest
     }
 
     @Override
-    public void onBusEvent(final BusEventWithMetadata<BusInternalEvent> busEventWithMetadata) {
+    public void onBusEvent(final BusInternalEvent curEvent) {
 
-        final BusInternalEvent curEvent = busEventWithMetadata.getEvent();
         // Check if this is for us..
-        if (busEventWithMetadata.getUserToken() == null ||
-            !busEventWithMetadata.getUserToken().equals(userToken)) {
+        if (curEvent.getUserToken() == null ||
+            !curEvent.getUserToken().equals(userToken)) {
             return;
         }
         events.add(curEvent);
 
         switch (curEvent.getBusEventType()) {
             case ACCOUNT_CREATE:
-                onAccountCreation((BusEventWithMetadata<AccountCreationInternalEvent>) curEvent);
+                onAccountCreation((AccountCreationInternalEvent) curEvent);
                 break;
             case ACCOUNT_CHANGE:
-                onAccountChange((BusEventWithMetadata<AccountChangeInternalEvent>) curEvent);
+                onAccountChange((AccountChangeInternalEvent) curEvent);
                 break;
             case SUBSCRIPTION_TRANSITION:
-                onSubscriptionTransition((BusEventWithMetadata<EffectiveSubscriptionInternalEvent>) curEvent);
+                onSubscriptionTransition((EffectiveSubscriptionInternalEvent) curEvent);
                 break;
             case INVOICE_EMPTY:
-                onEmptyInvoice((BusEventWithMetadata<NullInvoiceInternalEvent>) curEvent);
+                onEmptyInvoice((NullInvoiceInternalEvent) curEvent);
                 break;
             case INVOICE_CREATION:
-                onInvoiceCreation((BusEventWithMetadata<InvoiceCreationInternalEvent>) curEvent);
+                onInvoiceCreation((InvoiceCreationInternalEvent) curEvent);
                 break;
             case PAYMENT_INFO:
-                onPaymentInfo((BusEventWithMetadata<PaymentInfoInternalEvent>) curEvent);
+                onPaymentInfo((PaymentInfoInternalEvent) curEvent);
                 break;
             case PAYMENT_ERROR:
-                onPaymentError((BusEventWithMetadata<PaymentErrorInternalEvent>) curEvent);
+                onPaymentError((PaymentErrorInternalEvent) curEvent);
                 break;
             default:
                 throw new RuntimeException("Unexpected event type " + curEvent.getBusEventType());
         }
     }
 
-    /*
-     *
-     * Default no-op implementation so as to not have to implement all callbacks
-     */
+
     @Override
-    public void onAccountCreation(final BusEventWithMetadata<AccountCreationInternalEvent> curEvent) {
+    public void onAccountCreation(final AccountCreationInternalEvent curEvent) {
     }
 
     @Override
-    public void onAccountChange(final BusEventWithMetadata<AccountChangeInternalEvent> curEvent) {
+    public void onAccountChange(final AccountChangeInternalEvent curEvent) {
     }
 
     @Override
-    public void onSubscriptionTransition(final BusEventWithMetadata<EffectiveSubscriptionInternalEvent> curEventEffective) {
+    public void onSubscriptionTransition(final EffectiveSubscriptionInternalEvent curEventEffective) {
     }
 
     @Override
-    public void onEmptyInvoice(final BusEventWithMetadata<NullInvoiceInternalEvent> curEvent) {
+    public void onInvoiceCreation(final InvoiceCreationInternalEvent curEvent) {
     }
 
     @Override
-    public void onInvoiceCreation(final BusEventWithMetadata<InvoiceCreationInternalEvent> curEvent) {
+    public void onEmptyInvoice(final NullInvoiceInternalEvent curEvent) {
     }
 
     @Override
-    public void onPaymentInfo(final BusEventWithMetadata<PaymentInfoInternalEvent> curEvent) {
+    public void onPaymentInfo(final PaymentInfoInternalEvent curEvent) {
     }
 
     @Override
-    public void onPaymentError(final BusEventWithMetadata<PaymentErrorInternalEvent> curEvent) {
+    public void onPaymentError(final PaymentErrorInternalEvent curEvent) {
     }
+
 }

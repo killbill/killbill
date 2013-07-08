@@ -21,13 +21,14 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.util.events.BusEventBase;
 import com.ning.billing.util.events.PaymentInfoInternalEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class DefaultPaymentInfoEvent implements PaymentInfoInternalEvent {
+public class DefaultPaymentInfoEvent extends BusEventBase implements PaymentInfoInternalEvent {
 
     private final UUID accountId;
     private final UUID invoiceId;
@@ -38,8 +39,7 @@ public class DefaultPaymentInfoEvent implements PaymentInfoInternalEvent {
     private final DateTime effectiveDate;
 
     @JsonCreator
-    public DefaultPaymentInfoEvent(@JsonProperty("id") final UUID id, /* not used */
-                                   @JsonProperty("accountId") final UUID accountId,
+    public DefaultPaymentInfoEvent(@JsonProperty("accountId") final UUID accountId,
                                    @JsonProperty("invoiceId") final UUID invoiceId,
                                    @JsonProperty("paymentId") final UUID paymentId,
                                    @JsonProperty("amount") final BigDecimal amount,
@@ -47,7 +47,11 @@ public class DefaultPaymentInfoEvent implements PaymentInfoInternalEvent {
                                    @JsonProperty("status") final PaymentStatus status,
                                    @JsonProperty("extFirstPaymentRefId") final String extFirstPaymentRefId /* TODO for backward compatibility only */,
                                    @JsonProperty("extSecondPaymentRefId") final String extSecondPaymentRefId /* TODO for backward compatibility only */,
-                                   @JsonProperty("effectiveDate") final DateTime effectiveDate) {
+                                   @JsonProperty("effectiveDate") final DateTime effectiveDate,
+                                   @JsonProperty("searchKey1") final Long searchKey1,
+                                   @JsonProperty("searchKey2") final Long searchKey2,
+                                   @JsonProperty("userToken") final UUID userToken) {
+        super(searchKey1, searchKey2, userToken);
         this.accountId = accountId;
         this.invoiceId = invoiceId;
         this.paymentId = paymentId;
@@ -60,9 +64,12 @@ public class DefaultPaymentInfoEvent implements PaymentInfoInternalEvent {
     public DefaultPaymentInfoEvent(final UUID accountId, final UUID invoiceId,
                                    final UUID paymentId, final BigDecimal amount, final Integer paymentNumber,
                                    final PaymentStatus status,
-                                   final DateTime effectiveDatefinal) {
-        this(UUID.randomUUID(), accountId, invoiceId, paymentId, amount, paymentNumber, status, null, null,
-             effectiveDatefinal);
+                                   final DateTime effectiveDate,
+                                   final Long searchKey1,
+                                   final Long searchKey2,
+                                   final UUID userToken) {
+        this(accountId, invoiceId, paymentId, amount, paymentNumber, status, null, null,
+             effectiveDate, searchKey1, searchKey2, userToken);
     }
 
     @JsonIgnore

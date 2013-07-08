@@ -35,7 +35,7 @@ public class TestEventJson extends InvoiceTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testInvoiceCreationEvent() throws Exception {
-        final InvoiceCreationInternalEvent e = new DefaultInvoiceCreationEvent(UUID.randomUUID(), UUID.randomUUID(), new BigDecimal(12.0), Currency.USD);
+        final InvoiceCreationInternalEvent e = new DefaultInvoiceCreationEvent(UUID.randomUUID(), UUID.randomUUID(), new BigDecimal(12.0), Currency.USD, 1L, 2L, null);
         final String json = mapper.writeValueAsString(e);
 
         final Object obj = mapper.readValue(json, DefaultInvoiceCreationEvent.class);
@@ -44,7 +44,7 @@ public class TestEventJson extends InvoiceTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testEmptyInvoiceEvent() throws Exception {
-        final NullInvoiceInternalEvent e = new DefaultNullInvoiceEvent(UUID.randomUUID(), new LocalDate());
+        final NullInvoiceInternalEvent e = new DefaultNullInvoiceEvent(UUID.randomUUID(), new LocalDate(), 1L, 2L, null);
         final String json = mapper.writeValueAsString(e);
 
         final Object obj = mapper.readValue(json, DefaultNullInvoiceEvent.class);

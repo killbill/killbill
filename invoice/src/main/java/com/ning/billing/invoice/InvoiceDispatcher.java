@@ -187,7 +187,8 @@ public class InvoiceDispatcher {
             if (invoice == null) {
                 log.info("Generated null invoice for accountId {} and targetDate {} (targetDateTime {})", new Object[]{accountId, targetDate, targetDateTime});
                 if (!dryRun) {
-                    final BusInternalEvent event = new DefaultNullInvoiceEvent(accountId, clock.getUTCToday());
+                    final BusInternalEvent event = new DefaultNullInvoiceEvent(accountId, clock.getUTCToday(),
+                                                                               context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
                     postEvent(event, accountId, context);
                 }
             } else {
@@ -235,10 +236,12 @@ public class InvoiceDispatcher {
                     final List<InvoiceInternalEvent> events = new ArrayList<InvoiceInternalEvent>();
                     if (isRealInvoiceWithItems) {
                         events.add(new DefaultInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
-                                                                   invoice.getBalance(), invoice.getCurrency()));
+                                                                   invoice.getBalance(), invoice.getCurrency(),
+                                                                   context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken()));
                     }
                     for (UUID cur : adjustedUniqueOtherInvoiceId) {
-                        final InvoiceAdjustmentInternalEvent event = new DefaultInvoiceAdjustmentEvent(cur, invoice.getAccountId());
+                        final InvoiceAdjustmentInternalEvent event = new DefaultInvoiceAdjustmentEvent(cur, invoice.getAccountId(),
+                                                                                                       context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
                         events.add(event);
                     }
 
@@ -300,7 +303,7 @@ public class InvoiceDispatcher {
 
     private void postEvent(final BusInternalEvent event, final UUID accountId, final InternalCallContext context) {
         try {
-            eventBus.post(event, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
+            eventBus.post(event);
         } catch (EventBusException e) {
             log.error(String.format("Failed to post event %s for account %s", event.getBusEventType(), accountId), e);
         }

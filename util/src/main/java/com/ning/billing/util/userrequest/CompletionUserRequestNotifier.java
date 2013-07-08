@@ -17,7 +17,6 @@
 package com.ning.billing.util.userrequest;
 
 
-import com.ning.billing.bus.api.BusEventWithMetadata;
 import com.ning.billing.util.events.BusInternalEvent;
 
 
@@ -25,5 +24,5 @@ public interface CompletionUserRequestNotifier {
 
     public void notifyForCompletion();
 
-    public void onBusEvent(final BusEventWithMetadata<BusInternalEvent> busEventWithMetadata);
+    public void onBusEvent(final BusInternalEvent event);
 }

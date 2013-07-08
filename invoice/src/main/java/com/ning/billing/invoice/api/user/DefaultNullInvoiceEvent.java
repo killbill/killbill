@@ -20,20 +20,25 @@ import java.util.UUID;
 
 import org.joda.time.LocalDate;
 
+import com.ning.billing.util.events.BusEventBase;
 import com.ning.billing.util.events.NullInvoiceInternalEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class DefaultNullInvoiceEvent implements NullInvoiceInternalEvent {
+public class DefaultNullInvoiceEvent extends BusEventBase implements NullInvoiceInternalEvent {
 
     private final UUID accountId;
     private final LocalDate processingDate;
 
     @JsonCreator
     public DefaultNullInvoiceEvent(@JsonProperty("accountId") final UUID accountId,
-                                   @JsonProperty("processingDate") final LocalDate processingDate) {
+                                   @JsonProperty("processingDate") final LocalDate processingDate,
+                                   @JsonProperty("searchKey1") final Long searchKey1,
+                                   @JsonProperty("searchKey2") final Long searchKey2,
+                                   @JsonProperty("userToken") final UUID userToken) {
+        super(searchKey1, searchKey2, userToken);
         this.accountId = accountId;
         this.processingDate = processingDate;
 

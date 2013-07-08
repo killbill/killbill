@@ -23,7 +23,6 @@ import javax.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ning.billing.bus.api.BusEventWithMetadata;
 import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.bus.api.PersistentBus.EventBusException;
 import com.ning.billing.notification.plugin.api.ExtBusEvent;
@@ -54,11 +53,10 @@ public class KillbillEventObservable extends Observable {
     }
 
     @Subscribe
-    public void handleKillbillEvent(final BusEventWithMetadata<ExtBusEvent> eventWithMetadata) {
+    public void handleKillbillEvent(final ExtBusEvent event) {
 
-        final ExtBusEvent killbillEvent = eventWithMetadata.getEvent();
-        logger.debug("Received external event " + killbillEvent.toString());
+        logger.debug("Received external event " + event.toString());
         setChanged();
-        notifyObservers(killbillEvent);
+        notifyObservers(event);
     }
 }

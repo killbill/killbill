@@ -19,13 +19,14 @@ package com.ning.billing.overdue.applicator;
 import java.util.UUID;
 
 import com.ning.billing.junction.api.Type;
+import com.ning.billing.util.events.BusEventBase;
 import com.ning.billing.util.events.OverdueChangeInternalEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class DefaultOverdueChangeEvent implements OverdueChangeInternalEvent {
+public class DefaultOverdueChangeEvent extends BusEventBase implements OverdueChangeInternalEvent {
 
     private final UUID overdueObjectId;
     private final Type overdueObjectType;
@@ -36,7 +37,11 @@ public class DefaultOverdueChangeEvent implements OverdueChangeInternalEvent {
     public DefaultOverdueChangeEvent(@JsonProperty("overdueObjectId") final UUID overdueObjectId,
                                      @JsonProperty("overdueObjectType") final Type overdueObjectType,
                                      @JsonProperty("previousOverdueStateName") final String previousOverdueStateName,
-                                     @JsonProperty("nextOverdueStateName") final String nextOverdueStateName) {
+                                     @JsonProperty("nextOverdueStateName") final String nextOverdueStateName,
+                                     @JsonProperty("searchKey1") final Long searchKey1,
+                                     @JsonProperty("searchKey2") final Long searchKey2,
+                                     @JsonProperty("userToken") final UUID userToken) {
+        super(searchKey1, searchKey2, userToken);
         this.overdueObjectId = overdueObjectId;
         this.overdueObjectType = overdueObjectType;
         this.previousOverdueStateName = previousOverdueStateName;

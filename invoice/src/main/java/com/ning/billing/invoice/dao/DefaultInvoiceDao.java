@@ -710,7 +710,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     private void notifyBusOfInvoiceAdjustment(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final UUID invoiceId, final UUID accountId,
                                               final UUID userToken, final InternalCallContext context) {
         try {
-            eventBus.postFromTransaction(new DefaultInvoiceAdjustmentEvent(invoiceId, accountId), userToken, context.getAccountRecordId(), context.getTenantRecordId(),
+            eventBus.postFromTransaction(new DefaultInvoiceAdjustmentEvent(invoiceId, accountId, context.getAccountRecordId(), context.getTenantRecordId(), userToken),
                                          entitySqlDaoWrapperFactory.getSqlDao());
         } catch (EventBusException e) {
             log.warn("Failed to post adjustment event for invoice " + invoiceId, e);

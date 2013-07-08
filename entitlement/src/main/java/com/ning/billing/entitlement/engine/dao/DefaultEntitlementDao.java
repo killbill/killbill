@@ -829,8 +829,9 @@ public class DefaultEntitlementDao implements EntitlementDao {
 
                 try {
                     // Note: we don't send a requested change event here, but a repair event
-                    final RepairEntitlementInternalEvent busEvent = new DefaultRepairEntitlementEvent(accountId, bundleId, clock.getUTCNow());
-                    eventBus.postFromTransaction(busEvent, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId(), entitySqlDaoWrapperFactory.getSqlDao());
+                    final RepairEntitlementInternalEvent busEvent = new DefaultRepairEntitlementEvent(accountId, bundleId, clock.getUTCNow(),
+                                                                                                      context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
+                    eventBus.postFromTransaction(busEvent, entitySqlDaoWrapperFactory.getSqlDao());
                 } catch (EventBusException e) {
                     log.warn("Failed to post repair entitlement event for bundle " + bundleId, e);
                 }
@@ -910,7 +911,7 @@ public class DefaultEntitlementDao implements EntitlementDao {
                                                                                                       context.getAccountRecordId(), context.getTenantRecordId());
 
 
-            eventBus.postFromTransaction(busEvent, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId(), entitySqlDaoWrapperFactory.getSqlDao());
+            eventBus.postFromTransaction(busEvent, entitySqlDaoWrapperFactory.getSqlDao());
         } catch (EventBusException e) {
             log.warn("Failed to post effective event for subscription " + subscription.getId(), e);
         }
@@ -919,7 +920,7 @@ public class DefaultEntitlementDao implements EntitlementDao {
     private void notifyBusOfRequestedChange(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final SubscriptionData subscription,
                                             final EntitlementEvent nextEvent, final InternalCallContext context) {
         try {
-            eventBus.postFromTransaction(new DefaultRequestedSubscriptionEvent(subscription, nextEvent), context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId(), entitySqlDaoWrapperFactory.getSqlDao());
+            eventBus.postFromTransaction(new DefaultRequestedSubscriptionEvent(subscription, nextEvent, context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken()), entitySqlDaoWrapperFactory.getSqlDao());
         } catch (EventBusException e) {
             log.warn("Failed to post requested change event for subscription " + subscription.getId(), e);
         }

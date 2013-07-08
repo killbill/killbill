@@ -111,20 +111,24 @@ public class DefaultTagDao extends EntityDaoBase<TagModelDao, Tag, TagApiExcepti
         switch (changeType) {
             case INSERT:
                 tagEvent = (isControlTag) ?
-                           tagEventBuilder.newControlTagCreationEvent(tag.getId(), tag.getObjectId(), tag.getObjectType(), tagDefinition) :
-                           tagEventBuilder.newUserTagCreationEvent(tag.getId(), tag.getObjectId(), tag.getObjectType(), tagDefinition);
+                           tagEventBuilder.newControlTagCreationEvent(tag.getId(), tag.getObjectId(), tag.getObjectType(),tagDefinition,
+                                                                      context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken()) :
+                           tagEventBuilder.newUserTagCreationEvent(tag.getId(), tag.getObjectId(), tag.getObjectType(), tagDefinition,
+                                                                   context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
                 break;
             case DELETE:
                 tagEvent = (isControlTag) ?
-                           tagEventBuilder.newControlTagDeletionEvent(tag.getId(), tag.getObjectId(), tag.getObjectType(), tagDefinition) :
-                           tagEventBuilder.newUserTagDeletionEvent(tag.getId(), tag.getObjectId(), tag.getObjectType(), tagDefinition);
+                           tagEventBuilder.newControlTagDeletionEvent(tag.getId(), tag.getObjectId(), tag.getObjectType(), tagDefinition,
+                                                                      context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken()) :
+                           tagEventBuilder.newUserTagDeletionEvent(tag.getId(), tag.getObjectId(), tag.getObjectType(), tagDefinition,
+                                                                   context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
                 break;
             default:
                 return;
         }
 
         try {
-            bus.postFromTransaction(tagEvent, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId(), entitySqlDaoWrapperFactory.getSqlDao());
+            bus.postFromTransaction(tagEvent, entitySqlDaoWrapperFactory.getSqlDao());
         } catch (PersistentBus.EventBusException e) {
             log.warn("Failed to post tag event for tag " + tag.getId().toString(), e);
         }

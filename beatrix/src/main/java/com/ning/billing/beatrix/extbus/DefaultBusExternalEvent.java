@@ -11,7 +11,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 
-public class DefaultBusExternalEvent implements ExtBusEvent, BusEvent {
+public class DefaultBusExternalEvent implements ExtBusEvent {
 
     private final UUID objectId;
     private final UUID accountId;
