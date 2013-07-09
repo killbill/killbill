@@ -95,7 +95,7 @@ public class DefaultOverdueCheckPoster implements OverdueCheckPoster {
                         final Iterator<NotificationEventWithMetadata<OverdueCheckNotificationKey>> it = futureNotifications.iterator();
                         while (it.hasNext()) {
                             final NotificationEventWithMetadata<OverdueCheckNotificationKey> cur = it.next();
-                            if (minIndexToDeleteFrom >= index) {
+                            if (minIndexToDeleteFrom <= index) {
                                 checkOverdueQueue.removeNotificationFromTransaction(entitySqlDaoWrapperFactory.getSqlDao(), cur.getRecordId());
                             }
                             index++;
