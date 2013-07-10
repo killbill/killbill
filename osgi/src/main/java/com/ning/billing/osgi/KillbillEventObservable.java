@@ -19,6 +19,7 @@ package com.ning.billing.osgi;
 import java.util.Observable;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +38,7 @@ public class KillbillEventObservable extends Observable {
     private final PersistentBus externalBus;
 
     @Inject
-    public KillbillEventObservable(final PersistentBus externalBus) {
+    public KillbillEventObservable(@Named("externalBus") final PersistentBus externalBus) {
         this.externalBus = externalBus;
     }
 

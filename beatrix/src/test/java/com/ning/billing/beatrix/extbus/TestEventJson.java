@@ -24,7 +24,7 @@ public class TestEventJson extends BeatrixTestSuite {
         final ObjectType objectType = ObjectType.ACCOUNT;
         final ExtBusEventType extBusEventType = ExtBusEventType.ACCOUNT_CREATION;
 
-        final DefaultBusExternalEvent e = new DefaultBusExternalEvent(objectId, objectType, extBusEventType, accountId, tenantId);
+        final DefaultBusExternalEvent e = new DefaultBusExternalEvent(objectId, objectType, extBusEventType, accountId, tenantId, 1L, 2L, UUID.randomUUID());
         final String json = mapper.writeValueAsString(e);
 
         final Class<?> claz = Class.forName(DefaultBusExternalEvent.class.getName());

@@ -17,6 +17,8 @@
 package com.ning.billing.beatrix.integration;
 
 import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.joda.time.DateTime;
 import org.testng.annotations.BeforeMethod;
@@ -34,6 +36,8 @@ import com.ning.billing.notification.plugin.api.ExtBusEvent;
 
 import com.google.common.eventbus.Subscribe;
 
+import static com.jayway.awaitility.Awaitility.await;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
@@ -42,11 +46,15 @@ public class TestPublicBus extends TestIntegrationBase {
     private PublicListener publicListener;
 
 
+    private AtomicInteger externalBusCount;
+
     public class PublicListener {
 
         @Subscribe
         public void handleExternalEvents(final ExtBusEvent event) {
-            log.info("GOT EXT EVENT " + event.toString());
+            log.info("GOT EXT EVENT " + event);
+            externalBusCount.incrementAndGet();
+
         }
     }
 
@@ -69,6 +77,8 @@ public class TestPublicBus extends TestIntegrationBase {
         busService.getBus().register(busHandler);
         externalBus.register(publicListener);
         lifecycle.fireStartupSequencePostEventRegistration();
+
+        this.externalBusCount = new AtomicInteger(0);
     }
 
 
@@ -102,6 +112,16 @@ public class TestPublicBus extends TestIntegrationBase {
 
         assertNotNull(subscription);
         assertTrue(busHandler.isCompleted(DELAY));
+
+        await().atMost(10, SECONDS).until(new Callable<Boolean>() {
+            @Override
+            public Boolean call() throws Exception {
+                // expecting ACCOUNT_CREATION, ACCOUNT_CHANGE, SUBSCRIPTION_CREATION, INVOICE_CREATION
+                return externalBusCount.get() == 4;
+            }
+        });
+
+
     }
 
 

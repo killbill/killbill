@@ -105,7 +105,11 @@ public class CompletionUserRequestBase implements CompletionUserRequest {
                 onAccountChange((AccountChangeInternalEvent) curEvent);
                 break;
             case SUBSCRIPTION_TRANSITION:
-                onSubscriptionTransition((EffectiveSubscriptionInternalEvent) curEvent);
+                // We only dispatch the event for the effective date and not the requested date since we have both
+                // for entitlement events.
+                if (curEvent instanceof EffectiveSubscriptionInternalEvent) {
+                    onSubscriptionTransition((EffectiveSubscriptionInternalEvent) curEvent);
+                }
                 break;
             case INVOICE_EMPTY:
                 onEmptyInvoice((NullInvoiceInternalEvent) curEvent);

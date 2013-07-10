@@ -19,6 +19,7 @@ package com.ning.billing.beatrix.extbus;
 import java.util.UUID;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,13 +27,16 @@ import org.slf4j.LoggerFactory;
 import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.beatrix.glue.BeatrixModule;
 import com.ning.billing.bus.api.BusEvent;
 import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.bus.api.PersistentBus.EventBusException;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.notification.plugin.api.ExtBusEventType;
+import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
+import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.events.AccountChangeInternalEvent;
 import com.ning.billing.util.events.AccountCreationInternalEvent;
 import com.ning.billing.util.events.BusInternalEvent;
@@ -68,7 +72,7 @@ public class BeatrixListener {
     protected final ObjectMapper objectMapper;
 
     @Inject
-    public BeatrixListener(final PersistentBus externalBus,
+    public BeatrixListener(@Named(BeatrixModule.EXTERNAL_BUS) final PersistentBus externalBus,
                            final InternalCallContextFactory internalCallContextFactory,
                            final AccountInternalApi accountApi) {
         this.externalBus = externalBus;
@@ -82,7 +86,7 @@ public class BeatrixListener {
     @Subscribe
     public void handleAllInternalKillbillEvents(final BusInternalEvent event) {
 
-        final InternalCallContext internalContext = null; // STEPH_BUS internalCallContextFactory.createInternalCallContext(eventWithMetadata.getSearchKey2(), eventWithMetadata.getSearchKey1(), "BeatrixListener", CallOrigin.INTERNAL, UserType.SYSTEM, eventWithMetadata.getUserToken());
+        final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "BeatrixListener", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
         try {
             final BusEvent externalEvent = computeExtBusEventEntryFromBusInternalEvent(event, internalContext);
             if (externalEvent != null) {
@@ -216,17 +220,12 @@ public class BeatrixListener {
 
             default:
         }
-
         final UUID accountId = getAccountIdFromRecordId(event.getBusEventType(), objectId, context.getAccountRecordId(), context);
         final UUID tenantId = context.toTenantContext().getTenantId();
 
-        return null;
-        // STEPH_BUS
-        /*
         return eventBusType != null ?
-               new DefaultBusExternalEvent(objectId, objectType, eventBusType, accountId, tenantId) :
+               new DefaultBusExternalEvent(objectId, objectType, eventBusType, accountId, tenantId, context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken()) :
                null;
-               */
     }
 
     private final UUID getAccountIdFromRecordId(final BusInternalEventType eventType, final UUID objectId, final Long recordId, final InternalCallContext context) {

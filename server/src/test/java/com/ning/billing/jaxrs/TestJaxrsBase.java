@@ -30,6 +30,7 @@ import org.eclipse.jetty.servlet.FilterHolder;
 import org.joda.time.LocalDate;
 import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -40,6 +41,7 @@ import com.ning.billing.KillbillConfigSource;
 import com.ning.billing.account.glue.DefaultAccountModule;
 import com.ning.billing.api.TestApiListener;
 import com.ning.billing.beatrix.glue.BeatrixModule;
+import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.dbi.DBTestingHelper;
 import com.ning.billing.dbi.MysqlTestingHelper;
@@ -96,6 +98,12 @@ public class TestJaxrsBase extends KillbillClient {
 
     @Inject
     protected CacheControllerDispatcher cacheControllerDispatcher;
+
+    @Inject
+    protected @javax.inject.Named(BeatrixModule.EXTERNAL_BUS)PersistentBus externalBus;
+
+    @Inject
+    protected PersistentBus internalBus;
 
     protected static TestKillbillGuiceListener listener;
 
@@ -217,10 +225,18 @@ public class TestJaxrsBase extends KillbillClient {
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
         super.beforeMethod();
+        externalBus.start();
+        internalBus.start();
         cacheControllerDispatcher.clearAll();
         busHandler.reset();
         clock.resetDeltaFromReality();
         clock.setDay(new LocalDate(2012, 8, 25));
+    }
+
+    @AfterMethod(groups = "slow")
+    public void afterMethod() throws Exception {
+        externalBus.stop();
+        internalBus.stop();
     }
 
     @BeforeClass(groups = "slow")

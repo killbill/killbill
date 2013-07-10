@@ -336,7 +336,7 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         String baseJson = mapper.writeValueAsString(input);
 
         final Map<String, String> queryParams = waitCompletion ? getQueryParamsForCallCompletion("5") : DEFAULT_EMPTY_QUERY;
-        Response response = doPost(JaxrsResource.SUBSCRIPTIONS_PATH, baseJson, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
+        Response response = doPost(JaxrsResource.SUBSCRIPTIONS_PATH, baseJson, queryParams, DEFAULT_HTTP_TIMEOUT_SEC * 1000);
         Assert.assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
 
         final String location = response.getHeader("Location");

@@ -42,6 +42,7 @@ import com.ning.billing.api.TestApiListener;
 import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.api.TestListenerStatus;
 import com.ning.billing.beatrix.BeatrixTestSuiteWithEmbeddedDB;
+import com.ning.billing.beatrix.glue.BeatrixModule;
 import com.ning.billing.beatrix.lifecycle.Lifecycle;
 import com.ning.billing.beatrix.osgi.SetupBundleWithAssertion;
 import com.ning.billing.beatrix.util.AccountChecker;
@@ -180,7 +181,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     protected AccountChecker accountChecker;
 
     @Inject
-    protected PersistentBus externalBus;
+    protected @javax.inject.Named(BeatrixModule.EXTERNAL_BUS)PersistentBus externalBus;
 
     @Inject
     protected RefundChecker refundChecker;

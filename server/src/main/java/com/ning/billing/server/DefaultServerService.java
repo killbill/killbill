@@ -17,10 +17,12 @@
 package com.ning.billing.server;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ning.billing.beatrix.glue.BeatrixModule;
 import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.bus.api.PersistentBus.EventBusException;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
@@ -38,7 +40,7 @@ public class DefaultServerService implements ServerService {
     private final PushNotificationListener pushNotificationListener;
 
     @Inject
-    public DefaultServerService(final PersistentBus bus, final PushNotificationListener pushNotificationListener) {
+    public DefaultServerService(@Named(BeatrixModule.EXTERNAL_BUS) final PersistentBus bus, final PushNotificationListener pushNotificationListener) {
         this.bus = bus;
         this.pushNotificationListener = pushNotificationListener;
     }
