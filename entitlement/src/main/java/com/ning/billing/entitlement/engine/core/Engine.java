@@ -52,7 +52,7 @@ import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
-import com.ning.billing.util.clock.Clock;
+import com.ning.billing.clock.Clock;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 
 import com.google.inject.Inject;

@@ -38,7 +38,7 @@ import com.ning.billing.invoice.model.InvoicingConfiguration;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.DefaultCallContext;
-import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.clock.ClockMock;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.Tag;
 

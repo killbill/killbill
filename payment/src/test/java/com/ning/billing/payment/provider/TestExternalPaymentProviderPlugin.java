@@ -30,8 +30,8 @@ import com.ning.billing.payment.PaymentTestSuiteNoDB;
 import com.ning.billing.payment.plugin.api.PaymentInfoPlugin;
 import com.ning.billing.payment.plugin.api.PaymentPluginStatus;
 import com.ning.billing.payment.plugin.api.PaymentPluginApiException;
-import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.clock.Clock;
+import com.ning.billing.clock.ClockMock;
 
 public class TestExternalPaymentProviderPlugin extends PaymentTestSuiteNoDB {
 

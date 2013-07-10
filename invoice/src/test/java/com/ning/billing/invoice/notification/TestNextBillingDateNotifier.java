@@ -27,7 +27,7 @@ import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.invoice.InvoiceTestSuiteWithEmbeddedDB;
 import com.ning.billing.invoice.api.DefaultInvoiceService;
 import com.ning.billing.notificationq.api.NotificationQueue;
-import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.clock.ClockMock;
 
 import static com.jayway.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.MINUTES;

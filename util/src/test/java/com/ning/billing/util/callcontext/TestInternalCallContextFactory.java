@@ -28,7 +28,7 @@ import org.testng.annotations.Test;
 import com.ning.billing.ObjectType;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
-import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.clock.ClockMock;
 import com.ning.billing.util.dao.DefaultNonEntityDao;
 import com.ning.billing.util.dao.NonEntityDao;
 

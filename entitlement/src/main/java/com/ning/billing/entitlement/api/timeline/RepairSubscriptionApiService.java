@@ -28,7 +28,7 @@ import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
-import com.ning.billing.util.clock.Clock;
+import com.ning.billing.clock.Clock;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;

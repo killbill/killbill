@@ -22,7 +22,7 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.util.clock.Clock;
+import com.ning.billing.clock.Clock;
 
 import com.google.inject.Inject;
 

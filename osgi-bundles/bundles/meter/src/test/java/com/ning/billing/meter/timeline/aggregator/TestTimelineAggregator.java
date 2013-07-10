@@ -45,7 +45,7 @@ import com.ning.billing.meter.timeline.times.DefaultTimelineCoder;
 import com.ning.billing.meter.timeline.times.TimelineCoder;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
-import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.clock.ClockMock;
 import com.ning.billing.util.config.MeterConfig;
 import com.ning.billing.util.dao.NonEntityDao;
 

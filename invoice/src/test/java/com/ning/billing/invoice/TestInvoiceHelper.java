@@ -58,7 +58,7 @@ import com.ning.billing.invoice.model.InvoicingConfiguration;
 import com.ning.billing.invoice.notification.NullInvoiceNotifier;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.clock.Clock;
+import com.ning.billing.clock.Clock;
 import com.ning.billing.util.entity.EntityPersistenceException;
 import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;

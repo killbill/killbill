@@ -59,7 +59,7 @@ import com.ning.billing.payment.retry.FailedPaymentRetryService.FailedPaymentRet
 import com.ning.billing.payment.retry.PluginFailureRetryService.PluginFailureRetryServiceScheduler;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.clock.Clock;
+import com.ning.billing.clock.Clock;
 import com.ning.billing.util.config.PaymentConfig;
 import com.ning.billing.util.events.BusInternalEvent;
 import com.ning.billing.util.events.PaymentErrorInternalEvent;

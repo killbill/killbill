@@ -26,7 +26,7 @@ import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.clock.Clock;
+import com.ning.billing.clock.Clock;
 
 public class MockBlockingStateDao implements BlockingStateDao {
 

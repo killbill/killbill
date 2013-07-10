@@ -32,7 +32,7 @@ import com.ning.billing.payment.provider.MockPaymentProviderPlugin;
 import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
 import com.ning.billing.util.bus.InMemoryBusModule;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.clock.Clock;
+import com.ning.billing.clock.Clock;
 import com.ning.billing.util.config.PaymentConfig;
 import com.ning.billing.util.glue.CacheModule;
 import com.ning.billing.util.svcapi.tag.TagInternalApi;

@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.model.RepairAdjInvoiceItem;
-import com.ning.billing.util.clock.Clock;
+import com.ning.billing.clock.Clock;
 import com.ning.billing.util.config.InvoiceConfig;
 
 import com.google.inject.Inject;

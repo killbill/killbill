@@ -43,7 +43,7 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.user.SubscriptionStatusDryRun.DryRunChangeReason;
-import com.ning.billing.util.clock.DefaultClock;
+import com.ning.billing.clock.DefaultClock;
 
 public class TestUserApiAddOn extends EntitlementTestSuiteWithEmbeddedDB {
 

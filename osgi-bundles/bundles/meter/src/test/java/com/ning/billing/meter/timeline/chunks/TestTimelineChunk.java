@@ -21,8 +21,8 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.meter.MeterTestSuiteNoDB;
-import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.clock.Clock;
+import com.ning.billing.clock.ClockMock;
 
 public class TestTimelineChunk extends MeterTestSuiteNoDB {
 

@@ -25,7 +25,7 @@ import com.ning.billing.entitlement.api.EntitlementService;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.clock.ClockMock;
 import com.ning.billing.util.svcsapi.bus.BusService;
 
 public interface EntitlementTestInitializer {

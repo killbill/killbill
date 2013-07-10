@@ -45,7 +45,7 @@ import com.ning.billing.entitlement.events.user.ApiEventBase;
 import com.ning.billing.entitlement.events.user.ApiEventBuilder;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
-import com.ning.billing.util.clock.DefaultClock;
+import com.ning.billing.clock.DefaultClock;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

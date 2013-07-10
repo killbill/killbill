@@ -16,8 +16,8 @@
 
 package com.ning.billing.mock.glue;
 
-import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.clock.Clock;
+import com.ning.billing.clock.ClockMock;
 
 import com.google.inject.AbstractModule;
 

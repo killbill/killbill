@@ -50,7 +50,7 @@ import com.ning.billing.invoice.model.InvoicingConfiguration;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.invoice.model.RecurringInvoiceItemData;
 import com.ning.billing.invoice.model.RepairAdjInvoiceItem;
-import com.ning.billing.util.clock.Clock;
+import com.ning.billing.clock.Clock;
 import com.ning.billing.util.config.InvoiceConfig;
 import com.ning.billing.util.svcapi.junction.BillingEvent;
 import com.ning.billing.util.svcapi.junction.BillingEventSet;

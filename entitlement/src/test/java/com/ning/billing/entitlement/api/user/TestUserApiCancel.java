@@ -34,7 +34,7 @@ import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
-import com.ning.billing.util.clock.DefaultClock;
+import com.ning.billing.clock.DefaultClock;
 import com.ning.billing.util.svcapi.entitlement.EntitlementBillingApiException;
 
 public class TestUserApiCancel extends EntitlementTestSuiteWithEmbeddedDB {

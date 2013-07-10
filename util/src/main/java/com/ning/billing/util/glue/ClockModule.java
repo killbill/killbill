@@ -16,8 +16,8 @@
 
 package com.ning.billing.util.glue;
 
-import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.clock.DefaultClock;
+import com.ning.billing.clock.Clock;
+import com.ning.billing.clock.DefaultClock;
 
 import com.google.inject.AbstractModule;
 

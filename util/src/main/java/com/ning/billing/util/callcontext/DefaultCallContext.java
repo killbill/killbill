@@ -20,7 +20,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.util.clock.Clock;
+import com.ning.billing.clock.Clock;
 
 public class DefaultCallContext extends CallContextBase {
 

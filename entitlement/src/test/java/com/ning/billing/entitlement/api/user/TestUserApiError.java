@@ -36,7 +36,7 @@ import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.entitlement.EntitlementTestSuiteNoDB;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.util.callcontext.TenantContext;
-import com.ning.billing.util.clock.DefaultClock;
+import com.ning.billing.clock.DefaultClock;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;

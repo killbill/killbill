@@ -41,7 +41,7 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
-import com.ning.billing.util.clock.DefaultClock;
+import com.ning.billing.clock.DefaultClock;
 
 import com.google.inject.Inject;
 

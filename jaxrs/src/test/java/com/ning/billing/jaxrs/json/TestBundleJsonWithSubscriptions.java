@@ -34,7 +34,7 @@ import com.ning.billing.entitlement.api.timeline.BundleTimeline;
 import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline;
 import com.ning.billing.jaxrs.JaxrsTestSuiteNoDB;
 import com.ning.billing.util.audit.AuditLog;
-import com.ning.billing.util.clock.DefaultClock;
+import com.ning.billing.clock.DefaultClock;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

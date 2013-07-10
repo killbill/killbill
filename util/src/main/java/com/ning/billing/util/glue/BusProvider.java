@@ -8,7 +8,7 @@ import org.skife.jdbi.v2.IDBI;
 import com.ning.billing.bus.DefaultPersistentBus;
 import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.bus.api.PersistentBusConfig;
-import com.ning.billing.util.clock.Clock;
+import com.ning.billing.clock.Clock;
 
 
 public class BusProvider implements Provider<PersistentBus> {

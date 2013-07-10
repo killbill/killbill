@@ -26,7 +26,7 @@ import org.joda.time.DateTime;
 import com.ning.billing.ObjectType;
 import com.ning.billing.util.cache.Cachable.CacheType;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
-import com.ning.billing.util.clock.Clock;
+import com.ning.billing.clock.Clock;
 import com.ning.billing.util.dao.NonEntityDao;
 
 import com.google.common.base.Objects;

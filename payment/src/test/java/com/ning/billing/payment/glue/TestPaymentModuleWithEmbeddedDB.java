@@ -19,7 +19,7 @@ package com.ning.billing.payment.glue;
 import org.skife.config.ConfigSource;
 
 import com.ning.billing.GuicyKillbillTestWithEmbeddedDBModule;
-import com.ning.billing.util.clock.Clock;
+import com.ning.billing.clock.Clock;
 import com.ning.billing.util.glue.NonEntityDaoModule;
 
 public class TestPaymentModuleWithEmbeddedDB extends TestPaymentModule {

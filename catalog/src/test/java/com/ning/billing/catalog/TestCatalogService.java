@@ -21,7 +21,7 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.io.VersionedCatalogLoader;
 import com.ning.billing.lifecycle.KillbillService.ServiceException;
-import com.ning.billing.util.clock.DefaultClock;
+import com.ning.billing.clock.DefaultClock;
 import com.ning.billing.util.config.CatalogConfig;
 
 public class TestCatalogService extends CatalogTestSuiteNoDB {

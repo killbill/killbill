@@ -24,7 +24,7 @@ import org.testng.annotations.Test;
 import com.ning.billing.meter.MeterTestSuiteNoDB;
 import com.ning.billing.meter.api.TimeAggregationMode;
 import com.ning.billing.meter.timeline.samples.SampleOpcode;
-import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.clock.ClockMock;
 
 public class TestAccumulatorSampleConsumer extends MeterTestSuiteNoDB {
 

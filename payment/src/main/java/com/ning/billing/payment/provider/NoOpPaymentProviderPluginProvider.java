@@ -22,7 +22,7 @@ import com.google.inject.Provider;
 import com.ning.billing.osgi.api.OSGIServiceDescriptor;
 import com.ning.billing.osgi.api.OSGIServiceRegistration;
 import com.ning.billing.payment.plugin.api.PaymentPluginApi;
-import com.ning.billing.util.clock.Clock;
+import com.ning.billing.clock.Clock;
 
 public class NoOpPaymentProviderPluginProvider implements Provider<DefaultNoOpPaymentProviderPlugin> {
 

@@ -19,7 +19,7 @@ package com.ning.billing.util.entity.dao;
 import java.lang.reflect.Proxy;
 
 import com.ning.billing.util.cache.CacheControllerDispatcher;
-import com.ning.billing.util.clock.Clock;
+import com.ning.billing.clock.Clock;
 import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.entity.Entity;
 

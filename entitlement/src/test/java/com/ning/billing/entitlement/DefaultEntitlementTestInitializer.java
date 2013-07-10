@@ -38,7 +38,7 @@ import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.engine.core.Engine;
 import com.ning.billing.mock.MockAccountBuilder;
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.clock.ClockMock;
 import com.ning.billing.util.svcsapi.bus.BusService;
 
 import static org.testng.Assert.assertNotNull;

@@ -59,7 +59,7 @@ import com.ning.billing.entitlement.events.phase.PhaseEvent;
 import com.ning.billing.entitlement.events.user.ApiEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.clock.Clock;
+import com.ning.billing.clock.Clock;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 
 import static org.testng.Assert.assertEquals;

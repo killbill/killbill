@@ -28,7 +28,7 @@ import org.testng.annotations.BeforeMethod;
 
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.clock.ClockMock;
 
 public class GuicyKillbillTestSuite {
 

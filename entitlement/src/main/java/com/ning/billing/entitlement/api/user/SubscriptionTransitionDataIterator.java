@@ -21,7 +21,7 @@ import java.util.LinkedList;
 
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
-import com.ning.billing.util.clock.Clock;
+import com.ning.billing.clock.Clock;
 
 public class SubscriptionTransitionDataIterator implements Iterator<SubscriptionTransition> {
 

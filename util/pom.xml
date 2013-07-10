@@ -79,26 +79,22 @@
         </dependency>
         <dependency>
             <groupId>com.ning.billing.commons</groupId>
+            <artifactId>killbill-clock</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing.commons</groupId>
+            <artifactId>killbill-clock</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing.commons</groupId>
             <artifactId>killbill-queue</artifactId>
         </dependency>
         <dependency>
             <groupId>com.ning.billing.commons</groupId>
             <artifactId>killbill-queue</artifactId>
             <version>${killbill-commons.version}</version>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.ning.billing.commons</groupId>
-            <artifactId>killbill-util</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.ning.billing.commons</groupId>
-            <artifactId>killbill-util</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.ning.billing.commons</groupId>
-            <artifactId>killbill-util</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>

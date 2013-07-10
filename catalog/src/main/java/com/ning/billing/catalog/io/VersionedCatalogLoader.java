@@ -27,7 +27,7 @@ import com.google.inject.Inject;
 import com.ning.billing.catalog.StandaloneCatalog;
 import com.ning.billing.catalog.VersionedCatalog;
 import com.ning.billing.lifecycle.KillbillService.ServiceException;
-import com.ning.billing.util.clock.Clock;
+import com.ning.billing.clock.Clock;
 import com.ning.billing.util.config.catalog.UriAccessor;
 import com.ning.billing.util.config.catalog.XMLLoader;
 

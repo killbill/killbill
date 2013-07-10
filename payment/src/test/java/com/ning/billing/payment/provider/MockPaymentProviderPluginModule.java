@@ -16,7 +16,7 @@
 
 package com.ning.billing.payment.provider;
 
-import com.ning.billing.util.clock.Clock;
+import com.ning.billing.clock.Clock;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;

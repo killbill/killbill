@@ -34,7 +34,7 @@ import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.clock.Clock;
+import com.ning.billing.clock.Clock;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.customfield.api.DefaultCustomFieldCreationEvent;
 import com.ning.billing.util.customfield.api.DefaultCustomFieldDeletionEvent;
