@@ -30,6 +30,13 @@ import java.util.concurrent.TimeoutException;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 
+import com.ning.billing.payment.api.DefaultPayment;
+import com.ning.billing.payment.api.DefaultPaymentErrorEvent;
+import com.ning.billing.payment.api.DefaultPaymentInfoEvent;
+import com.ning.billing.payment.api.DefaultPaymentPluginErrorEvent;
+import com.ning.billing.payment.api.Payment;
+import com.ning.billing.payment.api.PaymentApiException;
+import com.ning.billing.payment.api.PaymentStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,12 +47,6 @@ import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.osgi.api.OSGIServiceRegistration;
-import com.ning.billing.payment.api.DefaultPayment;
-import com.ning.billing.payment.api.DefaultPaymentErrorEvent;
-import com.ning.billing.payment.api.DefaultPaymentInfoEvent;
-import com.ning.billing.payment.api.Payment;
-import com.ning.billing.payment.api.PaymentApiException;
-import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.payment.dao.PaymentAttemptModelDao;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.dao.PaymentModelDao;
@@ -332,6 +333,7 @@ public class PaymentProcessor extends ProcessorBase {
     }
 
     public void retryPluginFailure(final UUID paymentId, final InternalCallContext context) {
+
         retryFailedPaymentInternal(paymentId, context, PaymentStatus.PLUGIN_FAILURE);
     }
 
@@ -558,6 +560,9 @@ public class PaymentProcessor extends ProcessorBase {
 
             paymentDao.updateStatusAndEffectiveDateForPaymentWithAttempt(paymentInput.getId(), paymentStatus, clock.getUTCNow(), attemptInput.getId(), null, e.getMessage(), context);
 
+            event = new DefaultPaymentPluginErrorEvent(account.getId(), invoice.getId(), paymentInput.getId(), e.getMessage(),
+                    context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken()
+            );
             throw new PaymentApiException(ErrorCode.PAYMENT_CREATE_PAYMENT, account.getId(), e.toString());
 
         } catch (InvoiceApiException e) {

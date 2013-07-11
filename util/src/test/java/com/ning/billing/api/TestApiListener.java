@@ -22,19 +22,19 @@ import java.util.Stack;
 
 import javax.inject.Inject;
 
-import org.joda.time.DateTime;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.ning.billing.util.events.CustomFieldEvent;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 import com.ning.billing.util.events.InvoiceAdjustmentInternalEvent;
 import com.ning.billing.util.events.InvoiceCreationInternalEvent;
 import com.ning.billing.util.events.PaymentErrorInternalEvent;
 import com.ning.billing.util.events.PaymentInfoInternalEvent;
+import com.ning.billing.util.events.PaymentPluginErrorInternalEvent;
 import com.ning.billing.util.events.RepairEntitlementInternalEvent;
 import com.ning.billing.util.events.TagDefinitionInternalEvent;
 import com.ning.billing.util.events.TagInternalEvent;
+import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Joiner;
 import com.google.common.eventbus.Subscribe;
@@ -75,6 +75,7 @@ public class TestApiListener {
         INVOICE_ADJUSTMENT,
         PAYMENT,
         PAYMENT_ERROR,
+        PAYMENT_PLUGIN_ERROR,
         REPAIR_BUNDLE,
         TAG,
         TAG_DEFINITION,
@@ -187,6 +188,12 @@ public class TestApiListener {
     public void handlePaymentErrorEvents(final PaymentErrorInternalEvent event) {
         log.info(String.format("Got PaymentError event %s", event.toString()));
         assertEqualsNicely(NextEvent.PAYMENT_ERROR);
+        notifyIfStackEmpty();
+    }
+    @Subscribe
+    public void handlePaymentPluginErrorEvents(final PaymentPluginErrorInternalEvent event) {
+        log.info(String.format("Got PaymentPluginError event %s", event.toString()));
+        assertEqualsNicely(NextEvent.PAYMENT_PLUGIN_ERROR);
         notifyIfStackEmpty();
     }
 
