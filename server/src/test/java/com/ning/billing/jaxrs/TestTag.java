@@ -31,9 +31,20 @@ import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
 
 public class TestTag extends TestJaxrsBase {
+
+    @Test(groups = "slow")
+    public void testTagErrorHandling() throws Exception {
+        final TagDefinitionJson[] tags = new TagDefinitionJson[]{new TagDefinitionJson(null, false, null, null, null),
+                                                                 new TagDefinitionJson(null, false, "something", null, null),
+                                                                 new TagDefinitionJson(null, false, null, "something", null)};
+        for (final TagDefinitionJson tag : tags) {
+            final String baseJson = mapper.writeValueAsString(tag);
+            final Response response = doPost(JaxrsResource.TAG_DEFINITIONS_PATH, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+            assertEquals(response.getStatusCode(), Status.BAD_REQUEST.getStatusCode());
+        }
+    }
 
     @Test(groups = "slow")
     public void testTagDefinitionOk() throws Exception {

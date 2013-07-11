@@ -20,7 +20,6 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
-import org.skife.jdbi.v2.exceptions.TransactionFailedException;
 import org.testng.annotations.Test;
 
 import com.ning.billing.ErrorCode;
@@ -73,29 +72,21 @@ public class TestChargeBacks extends InvoiceTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow", expectedExceptions = InvoiceApiException.class)
     public void testChargeBackLargerThanPaymentAmount() throws InvoiceApiException {
-        try {
-            final Invoice invoice = createAndPersistInvoice(invoiceDao, clock, THIRTY, CURRENCY, internalCallContext);
-            final InvoicePayment payment = createAndPersistPayment(invoiceInternalApi, clock, invoice.getId(), THIRTY, CURRENCY, internalCallContext);
+        final Invoice invoice = createAndPersistInvoice(invoiceDao, clock, THIRTY, CURRENCY, internalCallContext);
+        final InvoicePayment payment = createAndPersistPayment(invoiceInternalApi, clock, invoice.getId(), THIRTY, CURRENCY, internalCallContext);
 
-            // create a large charge back
-            invoicePaymentApi.createChargeback(payment.getId(), ONE_MILLION, callContext);
-            fail("Expected a failure...");
-        } catch (TransactionFailedException expected) {
-            throw (InvoiceApiException) expected.getCause();
-        }
+        // create a large charge back
+        invoicePaymentApi.createChargeback(payment.getId(), ONE_MILLION, callContext);
+        fail("Expected a failure...");
     }
 
     @Test(groups = "slow", expectedExceptions = InvoiceApiException.class)
     public void testNegativeChargeBackAmount() throws InvoiceApiException {
-        try {
-            final Invoice invoice = createAndPersistInvoice(invoiceDao, clock, THIRTY, CURRENCY, internalCallContext);
-            final InvoicePayment payment = createAndPersistPayment(invoiceInternalApi, clock, invoice.getId(), THIRTY, CURRENCY, internalCallContext);
+        final Invoice invoice = createAndPersistInvoice(invoiceDao, clock, THIRTY, CURRENCY, internalCallContext);
+        final InvoicePayment payment = createAndPersistPayment(invoiceInternalApi, clock, invoice.getId(), THIRTY, CURRENCY, internalCallContext);
 
-            // create a partial charge back
-            invoicePaymentApi.createChargeback(payment.getId(), BigDecimal.ONE.negate(), callContext);
-        } catch (TransactionFailedException expected) {
-            throw (InvoiceApiException) expected.getCause();
-        }
+        // create a partial charge back
+        invoicePaymentApi.createChargeback(payment.getId(), BigDecimal.ONE.negate(), callContext);
     }
 
     @Test(groups = "slow")
@@ -111,9 +102,8 @@ public class TestChargeBacks extends InvoiceTestSuiteWithEmbeddedDB {
         try {
             invoicePaymentApi.getAccountIdFromInvoicePaymentId(UUID.randomUUID(), callContext);
             fail();
-        } catch (TransactionFailedException e) {
-            assertTrue(e.getCause() instanceof InvoiceApiException);
-            assertEquals(((InvoiceApiException) e.getCause()).getCode(), ErrorCode.CHARGE_BACK_COULD_NOT_FIND_ACCOUNT_ID.getCode());
+        } catch (InvoiceApiException e) {
+            assertEquals(e.getCode(), ErrorCode.CHARGE_BACK_COULD_NOT_FIND_ACCOUNT_ID.getCode());
         }
     }
 

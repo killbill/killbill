@@ -38,12 +38,16 @@ public abstract class EntityDaoBase<M extends EntityModelDao<E>, E extends Entit
 
     @Override
     public void create(final M entity, final InternalCallContext context) throws U {
-        transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
+        transactionalSqlDao.execute(getCreateEntitySqlDaoTransactionWrapper(entity, context));
+    }
+
+    protected EntitySqlDaoTransactionWrapper<Void> getCreateEntitySqlDaoTransactionWrapper(final M entity, final InternalCallContext context) {
+        return new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
                 final EntitySqlDao<M, E> transactional = entitySqlDaoWrapperFactory.become(realSqlDao);
 
-                if (transactional.getById(entity.getId().toString(), context) != null) {
+                if (checkEntityAlreadyExists(transactional, entity, context)) {
                     throw generateAlreadyExistsException(entity, context);
                 }
                 transactional.create(entity, context);
@@ -53,7 +57,11 @@ public abstract class EntityDaoBase<M extends EntityModelDao<E>, E extends Entit
                 postBusEventFromTransaction(entity, refreshedEntity, ChangeType.INSERT, entitySqlDaoWrapperFactory, context);
                 return null;
             }
-        });
+        };
+    }
+
+    protected boolean checkEntityAlreadyExists(final EntitySqlDao<M, E> transactional, final M entity, final InternalCallContext context) {
+        return transactional.getById(entity.getId().toString(), context) != null;
     }
 
     protected void postBusEventFromTransaction(final M entity, final M savedEntity, final ChangeType changeType,

@@ -34,13 +34,11 @@ import com.ning.billing.jaxrs.json.CustomFieldJson;
 import com.ning.billing.jaxrs.json.PaymentJsonSimple;
 import com.ning.billing.jaxrs.json.PaymentMethodJson;
 import com.ning.billing.jaxrs.json.RefundJson;
-import com.ning.billing.jaxrs.json.TagDefinitionJson;
 import com.ning.billing.jaxrs.json.TagJson;
 import com.ning.billing.jaxrs.resources.JaxrsResource;
 import com.ning.http.client.Response;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import static org.testng.Assert.assertEquals;
@@ -252,21 +250,32 @@ public class TestAccount extends TestJaxrsBase {
 
     @Test(groups = "slow")
     public void testTags() throws Exception {
-
+        final String accountId = UUID.randomUUID().toString();
+        final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountId + "/" + JaxrsResource.TAGS;
+        final String accountTagsUrl = getUrlFromUri(uri);
         // Use tag definition for AUTO_PAY_OFF
-        final TagDefinitionJson input = new TagDefinitionJson(new UUID(0, 1).toString(), false, "AUTO_PAY_OFF",
-                                                              "nothing more to say", ImmutableList.<String>of());
+        final String autoPayOffId = new UUID(0, 1).toString();
 
-        final Map<String, String> queryParams = new HashMap<String, String>();
-        queryParams.put(JaxrsResource.QUERY_TAGS, input.getId());
-        final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + UUID.randomUUID().toString() + "/" + JaxrsResource.TAGS;
-        Response response = doPost(uri, null, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
+        // Add a tag
+        Response response = doPost(uri, null, ImmutableMap.<String, String>of(JaxrsResource.QUERY_TAGS, autoPayOffId), DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
 
-        // Retrieves by Id based on Location returned
-        final String url = getUrlFromUri(uri);
-        response = doGetWithUrl(url, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        // Retrieves all tags
+        response = doGetWithUrl(accountTagsUrl, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+        final List<TagJson> tags1 = mapper.readValue(response.getResponseBody(), new TypeReference<List<TagJson>>() {});
+        Assert.assertEquals(tags1.size(), 1);
+        Assert.assertEquals(tags1.get(0).getTagDefinitionId(), autoPayOffId);
+
+        // Verify adding the same tag a second time doesn't do anything
+        response = doPost(uri, null, ImmutableMap.<String, String>of(JaxrsResource.QUERY_TAGS, autoPayOffId), DEFAULT_HTTP_TIMEOUT_SEC);
+        assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
+
+        // Retrieves all tags again
+        response = doGetWithUrl(accountTagsUrl, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+        final List<TagJson> tags2 = mapper.readValue(response.getResponseBody(), new TypeReference<List<TagJson>>() {});
+        Assert.assertEquals(tags2, tags1);
     }
 
     @Test(groups = "slow")

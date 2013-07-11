@@ -25,7 +25,6 @@ import javax.inject.Inject;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-import org.skife.jdbi.v2.exceptions.TransactionFailedException;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.Currency;
@@ -47,9 +46,6 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 
 public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
-
-    private static final WithInvoiceApiException<InvoicePayment> invoicePaymentWithException = new WithInvoiceApiException<InvoicePayment>();
-    private static final WithInvoiceApiException<Void> voidWithException = new WithInvoiceApiException<Void>();
 
     private final InvoiceDao dao;
 
@@ -126,50 +122,14 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
 
     @Override
     public InvoicePayment createRefund(final UUID paymentId, final BigDecimal amount, final boolean isInvoiceAdjusted, final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts, final UUID paymentCookieId, final InternalCallContext context) throws InvoiceApiException {
-        return invoicePaymentWithException.executeAndThrow(new WithInvoiceApiExceptionCallback<InvoicePayment>() {
-
-            @Override
-            public InvoicePayment doHandle() throws InvoiceApiException {
-                if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-                    throw new InvoiceApiException(ErrorCode.PAYMENT_REFUND_AMOUNT_NEGATIVE_OR_NULL);
-                }
-                return new DefaultInvoicePayment(dao.createRefund(paymentId, amount, isInvoiceAdjusted, invoiceItemIdsWithAmounts, paymentCookieId, context));
-            }
-        });
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new InvoiceApiException(ErrorCode.PAYMENT_REFUND_AMOUNT_NEGATIVE_OR_NULL);
+        }
+        return new DefaultInvoicePayment(dao.createRefund(paymentId, amount, isInvoiceAdjusted, invoiceItemIdsWithAmounts, paymentCookieId, context));
     }
 
     @Override
     public void consumeExistingCBAOnAccountWithUnpaidInvoices(final UUID accountId, final InternalCallContext context) throws InvoiceApiException {
-        voidWithException.executeAndThrow(new WithInvoiceApiExceptionCallback<Void>()  {
-            @Override
-            public Void doHandle() throws InvoiceApiException {
-                dao.consumeExstingCBAOnAccountWithUnpaidInvoices(accountId, context);
-                return null;
-            }
-        });
-    }
-
-    //
-    // Allow to safely catch TransactionFailedException exceptions and rethrow the correct InvoiceApiException exception
-    //
-    private interface WithInvoiceApiExceptionCallback<T> {
-
-        public T doHandle() throws InvoiceApiException;
-    }
-
-    private static final class WithInvoiceApiException<T> {
-
-        public T executeAndThrow(final WithInvoiceApiExceptionCallback<T> callback) throws InvoiceApiException {
-
-            try {
-                return callback.doHandle();
-            } catch (TransactionFailedException e) {
-                if (e.getCause() instanceof InvoiceApiException) {
-                    throw (InvoiceApiException) e.getCause();
-                } else {
-                    throw e;
-                }
-            }
-        }
+        dao.consumeExstingCBAOnAccountWithUnpaidInvoices(accountId, context);
     }
 }

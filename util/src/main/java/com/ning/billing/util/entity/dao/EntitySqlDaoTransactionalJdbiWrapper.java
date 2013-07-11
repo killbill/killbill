@@ -70,4 +70,24 @@ public class EntitySqlDaoTransactionalJdbiWrapper {
         final EntitySqlDao<EntityModelDao<Entity>, Entity> entitySqlDao = dbi.onDemand(InitialEntitySqlDao.class);
         return entitySqlDao.inTransaction(TransactionIsolationLevel.READ_COMMITTED, new JdbiTransaction<ReturnType, EntityModelDao<Entity>, Entity>(entitySqlDaoTransactionWrapper));
     }
+
+    /**
+     * @param entitySqlDaoTransactionWrapper transaction to execute
+     * @param <ReturnType>                   object type to return from the transaction
+     * @param <E>                            checked exception which can be thrown from the transaction
+     * @return result from the transaction fo type ReturnType
+     */
+    public <ReturnType, E extends Exception> ReturnType execute(final Class<E> exception, final EntitySqlDaoTransactionWrapper<ReturnType> entitySqlDaoTransactionWrapper) throws E {
+        try {
+            return execute(entitySqlDaoTransactionWrapper);
+        } catch (RuntimeException e) {
+            if (e.getCause() != null && e.getCause().getClass().isAssignableFrom(exception)) {
+                throw (E) e.getCause();
+            } else if (e.getCause() != null && e.getCause() instanceof RuntimeException) {
+                throw (RuntimeException) e.getCause();
+            } else {
+                throw e;
+            }
+        }
+    }
 }

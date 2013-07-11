@@ -13,16 +13,18 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.jaxrs.json;
 
 import java.util.List;
 
 import javax.annotation.Nullable;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ning.billing.util.audit.AuditLog;
 import com.ning.billing.util.tag.TagDefinition;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class TagJson extends JsonBase {
 
@@ -30,9 +32,9 @@ public class TagJson extends JsonBase {
     private final String tagDefinitionName;
 
     @JsonCreator
-    public TagJson(@JsonProperty("tagDefinitionId")  final String tagDefinitionId,
-            @JsonProperty("tagDefinitionName") final String tagDefinitionName,
-            @JsonProperty("auditLogs") @Nullable List<AuditLogJson> auditLogs) {
+    public TagJson(@JsonProperty("tagDefinitionId") final String tagDefinitionId,
+                   @JsonProperty("tagDefinitionName") final String tagDefinitionName,
+                   @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(auditLogs);
         this.tagDefinitionId = tagDefinitionId;
         this.tagDefinitionName = tagDefinitionName;
@@ -48,5 +50,42 @@ public class TagJson extends JsonBase {
 
     public String getTagDefinitionName() {
         return tagDefinitionName;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("TagJson{");
+        sb.append("tagDefinitionId='").append(tagDefinitionId).append('\'');
+        sb.append(", tagDefinitionName='").append(tagDefinitionName).append('\'');
+        sb.append('}');
+        return sb.toString();
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        final TagJson tagJson = (TagJson) o;
+
+        if (tagDefinitionId != null ? !tagDefinitionId.equals(tagJson.tagDefinitionId) : tagJson.tagDefinitionId != null) {
+            return false;
+        }
+        if (tagDefinitionName != null ? !tagDefinitionName.equals(tagJson.tagDefinitionName) : tagJson.tagDefinitionName != null) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = tagDefinitionId != null ? tagDefinitionId.hashCode() : 0;
+        result = 31 * result + (tagDefinitionName != null ? tagDefinitionName.hashCode() : 0);
+        return result;
     }
 }

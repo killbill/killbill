@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.ErrorCode;
 import com.ning.billing.ObjectType;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagDefinitionApiException;
@@ -110,7 +111,14 @@ public class DefaultTagUserApi implements TagUserApi {
     public void addTag(final UUID objectId, final ObjectType objectType, final UUID tagDefinitionId, final CallContext context) throws TagApiException {
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(objectId, objectType, context);
         final TagModelDao tag = new TagModelDao(context.getCreatedDate(), tagDefinitionId, objectId, objectType);
-        tagDao.create(tag, internalContext);
+        try {
+            tagDao.create(tag, internalContext);
+        } catch (TagApiException e) {
+            // Be lenient here and make the addTag method idempotent
+            if (ErrorCode.TAG_ALREADY_EXISTS.getCode() != e.getCode()) {
+                throw e;
+            }
+        }
     }
 
     @Override

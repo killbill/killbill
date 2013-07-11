@@ -29,7 +29,6 @@ import org.slf4j.LoggerFactory;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.bus.api.PersistentBus.EventBusException;
 import com.ning.billing.invoice.api.Invoice;
@@ -109,24 +108,21 @@ public abstract class ProcessorBase {
         }
     }
 
+    protected PaymentPluginApi getPaymentPluginApi(final String pluginName) throws PaymentApiException {
+        final PaymentPluginApi pluginApi = pluginRegistry.getServiceForName(pluginName);
+        if (pluginApi == null) {
+            throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_PLUGIN, pluginName);
+        }
+        return pluginApi;
+    }
+
     protected PaymentPluginApi getPaymentProviderPlugin(final UUID paymentMethodId, final InternalTenantContext context) throws PaymentApiException {
         final PaymentMethodModelDao methodDao = paymentDao.getPaymentMethodIncludedDeleted(paymentMethodId, context);
         if (methodDao == null) {
-            log.error("PaymentMethod dpes not exist", paymentMethodId);
+            log.error("PaymentMethod does not exist", paymentMethodId);
             throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, paymentMethodId);
         }
-        return pluginRegistry.getServiceForName(methodDao.getPluginName());
-    }
-
-    protected PaymentPluginApi getPaymentProviderPlugin(final String accountKey, final InternalTenantContext context)
-            throws AccountApiException, PaymentApiException {
-
-        final String paymentProviderName = null;
-        if (accountKey != null) {
-            final Account account = accountInternalApi.getAccountByKey(accountKey, context);
-            return getPaymentProviderPlugin(account, context);
-        }
-        return pluginRegistry.getServiceForName(paymentProviderName);
+        return getPaymentPluginApi(methodDao.getPluginName());
     }
 
     protected PaymentPluginApi getPaymentProviderPlugin(final Account account, final InternalTenantContext context) throws PaymentApiException {

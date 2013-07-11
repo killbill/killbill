@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTimeZone;
-import org.skife.jdbi.v2.exceptions.TransactionFailedException;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -220,9 +219,8 @@ public class TestAccountDao extends AccountTestSuiteWithEmbeddedDB {
         try {
             accountDao.addEmail(accountEmailModelDao, internalCallContext);
             Assert.fail();
-        } catch (TransactionFailedException e) {
-            Assert.assertTrue(e.getCause() instanceof AccountApiException);
-            Assert.assertEquals(((AccountApiException) e.getCause()).getCode(), ErrorCode.ACCOUNT_EMAIL_ALREADY_EXISTS.getCode());
+        } catch (AccountApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.ACCOUNT_EMAIL_ALREADY_EXISTS.getCode());
         }
     }
 

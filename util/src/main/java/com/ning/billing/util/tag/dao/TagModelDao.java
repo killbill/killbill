@@ -95,6 +95,10 @@ public class TagModelDao extends EntityBase implements EntityModelDao<Tag> {
 
         final TagModelDao that = (TagModelDao) o;
 
+        return isSame(that);
+    }
+
+    public boolean isSame(final TagModelDao that) {
         if (isActive != null ? !isActive.equals(that.isActive) : that.isActive != null) {
             return false;
         }

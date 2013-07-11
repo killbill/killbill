@@ -20,13 +20,11 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
-import org.skife.jdbi.v2.exceptions.TransactionFailedException;
-
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoicePayment;
-import com.ning.billing.invoice.api.InvoicePaymentType;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
+import com.ning.billing.invoice.api.InvoicePaymentType;
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.dao.InvoiceModelDao;
 import com.ning.billing.invoice.dao.InvoicePaymentModelDao;
@@ -43,8 +41,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
 public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
-
-    private static final WithInvoiceApiException<InvoicePayment> invoicePaymentWithException = new WithInvoiceApiException<InvoicePayment>();
 
     private final InvoiceDao dao;
     private final InternalCallContextFactory internalCallContextFactory;
@@ -140,38 +136,8 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
 
     @Override
     public InvoicePayment createChargeback(final UUID invoicePaymentId, final BigDecimal amount, final CallContext context) throws InvoiceApiException {
-        return invoicePaymentWithException.executeAndThrow(new WithInvoiceApiExceptionCallback<InvoicePayment>() {
-
-            @Override
-            public InvoicePayment doHandle() throws InvoiceApiException {
-                // Retrieve the account id for the internal call context
-                final UUID accountId = dao.getAccountIdFromInvoicePaymentId(invoicePaymentId, internalCallContextFactory.createInternalTenantContext(context));
-                return new DefaultInvoicePayment(dao.postChargeback(invoicePaymentId, amount, internalCallContextFactory.createInternalCallContext(accountId, context)));
-            }
-        });
-    }
-
-    //
-    // Allow to safely catch TransactionFailedException exceptions and rethrow the correct InvoiceApiException exception
-    //
-    private interface WithInvoiceApiExceptionCallback<T> {
-
-        public T doHandle() throws InvoiceApiException;
-    }
-
-    private static final class WithInvoiceApiException<T> {
-
-        public T executeAndThrow(final WithInvoiceApiExceptionCallback<T> callback) throws InvoiceApiException {
-
-            try {
-                return callback.doHandle();
-            } catch (TransactionFailedException e) {
-                if (e.getCause() instanceof InvoiceApiException) {
-                    throw (InvoiceApiException) e.getCause();
-                } else {
-                    throw e;
-                }
-            }
-        }
+        // Retrieve the account id for the internal call context
+        final UUID accountId = dao.getAccountIdFromInvoicePaymentId(invoicePaymentId, internalCallContextFactory.createInternalTenantContext(context));
+        return new DefaultInvoicePayment(dao.postChargeback(invoicePaymentId, amount, internalCallContextFactory.createInternalCallContext(accountId, context)));
     }
 }
