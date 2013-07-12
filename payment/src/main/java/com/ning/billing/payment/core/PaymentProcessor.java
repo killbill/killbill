@@ -16,20 +16,17 @@
 
 package com.ning.billing.payment.core;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
-import javax.annotation.Nullable;
-import javax.inject.Inject;
-
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
+import com.google.inject.name.Named;
+import com.ning.billing.ErrorCode;
+import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.bus.api.PersistentBus;
+import com.ning.billing.clock.Clock;
+import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoiceApiException;
+import com.ning.billing.osgi.api.OSGIServiceRegistration;
 import com.ning.billing.payment.api.DefaultPayment;
 import com.ning.billing.payment.api.DefaultPaymentErrorEvent;
 import com.ning.billing.payment.api.DefaultPaymentInfoEvent;
@@ -37,16 +34,6 @@ import com.ning.billing.payment.api.DefaultPaymentPluginErrorEvent;
 import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.PaymentStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.ning.billing.ErrorCode;
-import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.bus.api.PersistentBus;
-import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.invoice.api.InvoiceApiException;
-import com.ning.billing.osgi.api.OSGIServiceRegistration;
 import com.ning.billing.payment.dao.PaymentAttemptModelDao;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.dao.PaymentModelDao;
@@ -60,7 +47,6 @@ import com.ning.billing.payment.retry.FailedPaymentRetryService.FailedPaymentRet
 import com.ning.billing.payment.retry.PluginFailureRetryService.PluginFailureRetryServiceScheduler;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.clock.Clock;
 import com.ning.billing.util.config.PaymentConfig;
 import com.ning.billing.util.events.BusInternalEvent;
 import com.ning.billing.util.events.PaymentErrorInternalEvent;
@@ -68,10 +54,21 @@ import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
 import com.ning.billing.util.svcapi.tag.TagInternalApi;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
-import com.google.inject.name.Named;
+import javax.annotation.Nullable;
+import javax.inject.Inject;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static com.ning.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR_NAMED;
 
@@ -169,45 +166,45 @@ public class PaymentProcessor extends ProcessorBase {
 
         try {
             voidPluginDispatcher.dispatchWithAccountLock(new CallableWithAccountLock<Void>(locker,
-                                                                                           account.getExternalKey(),
-                                                                                           new WithAccountLockCallback<Void>() {
+                    account.getExternalKey(),
+                    new WithAccountLockCallback<Void>() {
 
-                                                                                               @Override
-                                                                                               public Void doOperation() throws PaymentApiException {
+                        @Override
+                        public Void doOperation() throws PaymentApiException {
 
-                                                                                                   final List<PaymentModelDao> payments = paymentDao.getPaymentsForAccount(account.getId(), context);
-                                                                                                   final Collection<PaymentModelDao> paymentsToBeCompleted = Collections2.filter(payments, new Predicate<PaymentModelDao>() {
-                                                                                                       @Override
-                                                                                                       public boolean apply(final PaymentModelDao in) {
-                                                                                                           // Payments left in AUTO_PAY_OFF or for which we did not retry enough
-                                                                                                           return (in.getPaymentStatus() == PaymentStatus.AUTO_PAY_OFF ||
-                                                                                                                   in.getPaymentStatus() == PaymentStatus.PAYMENT_FAILURE ||
-                                                                                                                   in.getPaymentStatus() == PaymentStatus.PLUGIN_FAILURE ||
-                                                                                                                   in.getPaymentStatus() == PaymentStatus.UNKNOWN);
-                                                                                                       }
-                                                                                                   });
-                                                                                                   // Insert one retry event for each payment left in AUTO_PAY_OFF
-                                                                                                   for (PaymentModelDao cur : paymentsToBeCompleted) {
-                                                                                                       switch (cur.getPaymentStatus()) {
-                                                                                                           case AUTO_PAY_OFF:
-                                                                                                               autoPayoffRetryService.scheduleRetry(cur.getId(), clock.getUTCNow());
-                                                                                                               break;
-                                                                                                           case PAYMENT_FAILURE:
-                                                                                                               scheduleRetryOnPaymentFailure(cur.getId(), context);
-                                                                                                               break;
-                                                                                                           case PLUGIN_FAILURE:
-                                                                                                           case UNKNOWN:
-                                                                                                               scheduleRetryOnPluginFailure(cur.getId(), context);
-                                                                                                               break;
-                                                                                                           default:
-                                                                                                               // Impossible...
-                                                                                                               throw new RuntimeException("Unexpected case " + cur.getPaymentStatus());
-                                                                                                       }
+                            final List<PaymentModelDao> payments = paymentDao.getPaymentsForAccount(account.getId(), context);
+                            final Collection<PaymentModelDao> paymentsToBeCompleted = Collections2.filter(payments, new Predicate<PaymentModelDao>() {
+                                @Override
+                                public boolean apply(final PaymentModelDao in) {
+                                    // Payments left in AUTO_PAY_OFF or for which we did not retry enough
+                                    return (in.getPaymentStatus() == PaymentStatus.AUTO_PAY_OFF ||
+                                            in.getPaymentStatus() == PaymentStatus.PAYMENT_FAILURE ||
+                                            in.getPaymentStatus() == PaymentStatus.PLUGIN_FAILURE ||
+                                            in.getPaymentStatus() == PaymentStatus.UNKNOWN);
+                                }
+                            });
+                            // Insert one retry event for each payment left in AUTO_PAY_OFF
+                            for (PaymentModelDao cur : paymentsToBeCompleted) {
+                                switch (cur.getPaymentStatus()) {
+                                    case AUTO_PAY_OFF:
+                                        autoPayoffRetryService.scheduleRetry(cur.getId(), clock.getUTCNow());
+                                        break;
+                                    case PAYMENT_FAILURE:
+                                        scheduleRetryOnPaymentFailure(cur.getId(), context);
+                                        break;
+                                    case PLUGIN_FAILURE:
+                                    case UNKNOWN:
+                                        scheduleRetryOnPluginFailure(cur.getId(), context);
+                                        break;
+                                    default:
+                                        // Impossible...
+                                        throw new RuntimeException("Unexpected case " + cur.getPaymentStatus());
+                                }
 
-                                                                                                   }
-                                                                                                   return null;
-                                                                                               }
-                                                                                           }));
+                            }
+                            return null;
+                        }
+                    }));
         } catch (TimeoutException e) {
             throw new PaymentApiException(ErrorCode.UNEXPECTED_ERROR, "Unexpected timeout for payment creation (AUTO_PAY_OFF)");
         }
@@ -216,61 +213,74 @@ public class PaymentProcessor extends ProcessorBase {
     public Payment createPayment(final Account account, final UUID invoiceId, @Nullable final BigDecimal inputAmount,
                                  final InternalCallContext context, final boolean isInstantPayment, final boolean isExternalPayment)
             throws PaymentApiException {
-        // Use the special external payment plugin to handle external payments
-        final PaymentPluginApi plugin;
-        final UUID paymentMethodId;
-        try {
-            if (isExternalPayment) {
-                plugin = paymentMethodProcessor.getExternalPaymentProviderPlugin(account, context);
-                paymentMethodId = paymentMethodProcessor.getExternalPaymentMethod(account, context).getId();
-            } else {
-                plugin = getPaymentProviderPlugin(account, context);
-                paymentMethodId = account.getPaymentMethodId();
-            }
-        } catch (PaymentApiException e) {
-            // This event will be caught by overdue to refresh the overdue state, if needed.
-            // Note that at this point, we don't know the exact invoice balance (see getAndValidatePaymentAmount() below).
-            // This means that events will be posted for null and zero dollar invoices (e.g. trials).
-            final PaymentErrorInternalEvent event = new DefaultPaymentErrorEvent(account.getId(), invoiceId, null,
-                                                                                 ErrorCode.PAYMENT_NO_DEFAULT_PAYMENT_METHOD.toString(),
-                                                                                 context.getAccountRecordId(),
-                                                                                 context.getTenantRecordId(),
-                                                                                 context.getUserToken()
-            );
-            postPaymentEvent(event, account.getId(), context);
-            throw e;
+        // If this is an external payment, retrieve the external payment method first.
+        // We need to do this without the lock, because getExternalPaymentProviderPlugin will acquire the lock
+        // if it needs to create an external payment method (for the first external payment for that account).
+        // We don't want to retrieve any other payment method here, because we need to validate the invoice amount first
+        // (to avoid throwing an exception if there is nothing to pay).
+        final PaymentPluginApi externalPaymentPlugin;
+        if (isExternalPayment) {
+            externalPaymentPlugin = paymentMethodProcessor.getExternalPaymentProviderPlugin(account, context);
+        } else {
+            externalPaymentPlugin = null;
         }
 
         try {
             return paymentPluginDispatcher.dispatchWithAccountLock(new CallableWithAccountLock<Payment>(locker,
-                                                                                                        account.getExternalKey(),
-                                                                                                        new WithAccountLockCallback<Payment>() {
+                    account.getExternalKey(),
+                    new WithAccountLockCallback<Payment>() {
 
-                                                                                                            @Override
-                                                                                                            public Payment doOperation() throws PaymentApiException {
+                        @Override
+                        public Payment doOperation() throws PaymentApiException {
 
+                            try {
+                                // First, rebalance CBA and retrieve the latest version of the invoice
+                                final Invoice invoice = rebalanceAndGetInvoice(account.getId(), invoiceId, context);
+                                if (invoice == null || invoice.isMigrationInvoice()) {
+                                    log.error("Received invoice for payment that is a migration invoice - don't know how to handle those yet: {}", invoice);
+                                    return null;
+                                }
 
-                                                                                                                try {
-                                                                                                                    final Invoice invoice = rebalanceAndGetInvoice(account.getId(), invoiceId, context);
-                                                                                                                    if (invoice == null || invoice.isMigrationInvoice()) {
-                                                                                                                        log.error("Received invoice for payment that is a migration invoice - don't know how to handle those yet: {}", invoice);
-                                                                                                                        return null;
-                                                                                                                    }
+                                // Second, validate the payment amount. We want to bail as early as possible if e.g. the balance is zero
+                                final BigDecimal requestedAmount = getAndValidatePaymentAmount(invoice, inputAmount, isInstantPayment);
 
-                                                                                                                    final boolean isAccountAutoPayOff = isAccountAutoPayOff(account.getId(), context);
-                                                                                                                    setUnsaneAccount_AUTO_PAY_OFFWithAccountLock(account.getId(), paymentMethodId, isAccountAutoPayOff, context, isInstantPayment);
+                                // Third, retrieve the payment method and associated plugin
+                                final PaymentPluginApi plugin;
+                                final UUID paymentMethodId;
+                                try {
+                                    // Use the special external payment plugin to handle external payments
+                                    if (isExternalPayment) {
+                                        plugin = externalPaymentPlugin;
+                                        paymentMethodId = paymentMethodProcessor.getExternalPaymentMethod(account, context).getId();
+                                    } else {
+                                        plugin = getPaymentProviderPlugin(account, context);
+                                        paymentMethodId = account.getPaymentMethodId();
+                                    }
+                                } catch (PaymentApiException e) {
+                                    // This event will be caught by overdue to refresh the overdue state, if needed.
+                                    // Note that at this point, we don't know the exact invoice balance (see getAndValidatePaymentAmount() below).
+                                    // This means that events will be posted for null and zero dollar invoices (e.g. trials).
+                                    final PaymentErrorInternalEvent event = new DefaultPaymentErrorEvent(account.getId(), invoiceId, null,
+                                            ErrorCode.PAYMENT_NO_DEFAULT_PAYMENT_METHOD.toString(),
+                                            context.getAccountRecordId(), context.getTenantRecordId(),
+                                            context.getUserToken());
+                                    postPaymentEvent(event, account.getId(), context);
+                                    throw e;
+                                }
 
-                                                                                                                    final BigDecimal requestedAmount = getAndValidatePaymentAmount(invoice, inputAmount, isInstantPayment);
-                                                                                                                    if (!isInstantPayment && isAccountAutoPayOff) {
-                                                                                                                        return processNewPaymentForAutoPayOffWithAccountLocked(paymentMethodId, account, invoice, requestedAmount, context);
-                                                                                                                    } else {
-                                                                                                                        return processNewPaymentWithAccountLocked(paymentMethodId, plugin, account, invoice, requestedAmount, isInstantPayment, context);
-                                                                                                                    }
-                                                                                                                } catch (InvoiceApiException e) {
-                                                                                                                    throw new PaymentApiException(e);
-                                                                                                                }
-                                                                                                            }
-                                                                                                        }));
+                                final boolean isAccountAutoPayOff = isAccountAutoPayOff(account.getId(), context);
+                                setUnsaneAccount_AUTO_PAY_OFFWithAccountLock(account.getId(), paymentMethodId, isAccountAutoPayOff, context, isInstantPayment);
+
+                                if (!isInstantPayment && isAccountAutoPayOff) {
+                                    return processNewPaymentForAutoPayOffWithAccountLocked(paymentMethodId, account, invoice, requestedAmount, context);
+                                } else {
+                                    return processNewPaymentWithAccountLocked(paymentMethodId, plugin, account, invoice, requestedAmount, isInstantPayment, context);
+                                }
+                            } catch (InvoiceApiException e) {
+                                throw new PaymentApiException(e);
+                            }
+                        }
+                    }));
         } catch (TimeoutException e) {
             if (isInstantPayment) {
                 throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_TIMEOUT, account.getId(), invoiceId);
@@ -298,13 +308,13 @@ public class PaymentProcessor extends ProcessorBase {
 
         final PaymentModelDao lastPaymentForPaymentMethod = paymentDao.getLastPaymentForPaymentMethod(accountId, paymentMethodId, context);
         final boolean isLastPaymentForPaymentMethodBad = lastPaymentForPaymentMethod != null &&
-                                                         (lastPaymentForPaymentMethod.getPaymentStatus() == PaymentStatus.PLUGIN_FAILURE_ABORTED ||
-                                                          lastPaymentForPaymentMethod.getPaymentStatus() == PaymentStatus.UNKNOWN);
+                (lastPaymentForPaymentMethod.getPaymentStatus() == PaymentStatus.PLUGIN_FAILURE_ABORTED ||
+                        lastPaymentForPaymentMethod.getPaymentStatus() == PaymentStatus.UNKNOWN);
 
 
         if (isLastPaymentForPaymentMethodBad &&
-            !isInstantPayment &&
-            !isAccountAutoPayOff) {
+                !isInstantPayment &&
+                !isAccountAutoPayOff) {
             log.warn(String.format("Setting account %s into AUTO_PAY_OFF because of bad payment %s", accountId, lastPaymentForPaymentMethod.getId()));
             setAccountAutoPayOff(accountId, context);
         }
@@ -318,10 +328,10 @@ public class PaymentProcessor extends ProcessorBase {
             throw new PaymentApiException(ErrorCode.PAYMENT_NULL_INVOICE, invoice.getId());
         }
         if (isInstantPayment &&
-            inputAmount != null &&
-            invoice.getBalance().compareTo(inputAmount) < 0) {
+                inputAmount != null &&
+                invoice.getBalance().compareTo(inputAmount) < 0) {
             throw new PaymentApiException(ErrorCode.PAYMENT_AMOUNT_DENIED,
-                                          invoice.getId(), inputAmount.floatValue(), invoice.getBalance().floatValue());
+                    invoice.getId(), inputAmount.floatValue(), invoice.getBalance().floatValue());
         }
         final BigDecimal result = inputAmount != null ? inputAmount : invoice.getBalance();
         return result.setScale(2, RoundingMode.HALF_UP);
@@ -345,9 +355,9 @@ public class PaymentProcessor extends ProcessorBase {
     public void retryPaymentFromApi(final UUID paymentId, final InternalCallContext context) {
         log.info("Retrying payment " + paymentId + " time = " + clock.getUTCNow());
         retryFailedPaymentInternal(paymentId, context, PaymentStatus.UNKNOWN,
-                                   PaymentStatus.AUTO_PAY_OFF,
-                                   PaymentStatus.PAYMENT_FAILURE,
-                                   PaymentStatus.PLUGIN_FAILURE);
+                PaymentStatus.AUTO_PAY_OFF,
+                PaymentStatus.PAYMENT_FAILURE,
+                PaymentStatus.PLUGIN_FAILURE);
     }
 
     private void retryFailedPaymentInternal(final UUID paymentId, final InternalCallContext context, final PaymentStatus... expectedPaymentStates) {
@@ -369,42 +379,42 @@ public class PaymentProcessor extends ProcessorBase {
             final PaymentPluginApi plugin = getPaymentProviderPlugin(account, context);
 
             voidPluginDispatcher.dispatchWithAccountLock(new CallableWithAccountLock<Void>(locker,
-                                                                                           account.getExternalKey(),
-                                                                                           new WithAccountLockCallback<Void>() {
+                    account.getExternalKey(),
+                    new WithAccountLockCallback<Void>() {
 
-                                                                                               @Override
-                                                                                               public Void doOperation() throws PaymentApiException {
-                                                                                                   try {
-                                                                                                       // Fetch again with account lock this time
-                                                                                                       final PaymentModelDao payment = paymentDao.getPayment(paymentId, context);
-                                                                                                       boolean foundExpectedState = false;
-                                                                                                       for (final PaymentStatus cur : expectedPaymentStates) {
-                                                                                                           if (payment.getPaymentStatus() == cur) {
-                                                                                                               foundExpectedState = true;
-                                                                                                               break;
-                                                                                                           }
-                                                                                                       }
-                                                                                                       if (!foundExpectedState) {
-                                                                                                           log.info("Aborted retry for payment {} because it is {} state", paymentId, payment.getPaymentStatus());
-                                                                                                           return null;
-                                                                                                       }
+                        @Override
+                        public Void doOperation() throws PaymentApiException {
+                            try {
+                                // Fetch again with account lock this time
+                                final PaymentModelDao payment = paymentDao.getPayment(paymentId, context);
+                                boolean foundExpectedState = false;
+                                for (final PaymentStatus cur : expectedPaymentStates) {
+                                    if (payment.getPaymentStatus() == cur) {
+                                        foundExpectedState = true;
+                                        break;
+                                    }
+                                }
+                                if (!foundExpectedState) {
+                                    log.info("Aborted retry for payment {} because it is {} state", paymentId, payment.getPaymentStatus());
+                                    return null;
+                                }
 
-                                                                                                       final Invoice invoice = rebalanceAndGetInvoice(payment.getAccountId(), payment.getInvoiceId(), context);
-                                                                                                       if (invoice == null || invoice.isMigrationInvoice()) {
-                                                                                                           return null;
-                                                                                                       }
-                                                                                                       if (invoice.getBalance().compareTo(BigDecimal.ZERO) <= 0) {
-                                                                                                           log.info("Aborted retry for payment {} because invoice has been paid", paymentId);
-                                                                                                           setTerminalStateOnRetryWithAccountLocked(account, invoice, payment, invoice.getBalance(), "Paid invoice", context);
-                                                                                                           return null;
-                                                                                                       }
-                                                                                                       processRetryPaymentWithAccountLocked(plugin, account, invoice, payment, invoice.getBalance(), context);
-                                                                                                       return null;
-                                                                                                   } catch (InvoiceApiException e) {
-                                                                                                       throw new PaymentApiException(e);
-                                                                                                   }
-                                                                                               }
-                                                                                           }));
+                                final Invoice invoice = rebalanceAndGetInvoice(payment.getAccountId(), payment.getInvoiceId(), context);
+                                if (invoice == null || invoice.isMigrationInvoice()) {
+                                    return null;
+                                }
+                                if (invoice.getBalance().compareTo(BigDecimal.ZERO) <= 0) {
+                                    log.info("Aborted retry for payment {} because invoice has been paid", paymentId);
+                                    setTerminalStateOnRetryWithAccountLocked(account, invoice, payment, invoice.getBalance(), "Paid invoice", context);
+                                    return null;
+                                }
+                                processRetryPaymentWithAccountLocked(plugin, account, invoice, payment, invoice.getBalance(), context);
+                                return null;
+                            } catch (InvoiceApiException e) {
+                                throw new PaymentApiException(e);
+                            }
+                        }
+                    }));
         } catch (AccountApiException e) {
             log.error(String.format("Failed to retry payment for paymentId %s", paymentId), e);
         } catch (PaymentApiException e) {
@@ -510,19 +520,19 @@ public class PaymentProcessor extends ProcessorBase {
 
                     payment = paymentDao.getPayment(paymentInput.getId(), context);
                     invoiceApi.notifyOfPayment(invoice.getId(),
-                                               payment.getAmount(),
-                                               payment.getCurrency(),
-                                               payment.getId(),
-                                               payment.getEffectiveDate(),
-                                               context);
+                            payment.getAmount(),
+                            payment.getCurrency(),
+                            payment.getId(),
+                            payment.getEffectiveDate(),
+                            context);
 
                     // Create Bus event
                     event = new DefaultPaymentInfoEvent(account.getId(),
-                                                        invoice.getId(), payment.getId(), payment.getAmount(), payment.getPaymentNumber(), paymentStatus,
-                                                        payment.getEffectiveDate(),
-                                                        context.getAccountRecordId(),
-                                                        context.getTenantRecordId(),
-                                                        context.getUserToken()
+                            invoice.getId(), payment.getId(), payment.getAmount(), payment.getPaymentNumber(), paymentStatus,
+                            payment.getEffectiveDate(),
+                            context.getAccountRecordId(),
+                            context.getTenantRecordId(),
+                            context.getUserToken()
                     );
                     break;
 
@@ -538,10 +548,10 @@ public class PaymentProcessor extends ProcessorBase {
                     paymentDao.updateStatusAndEffectiveDateForPaymentWithAttempt(paymentInput.getId(), paymentStatus, clock.getUTCNow(), attemptInput.getId(), paymentPluginInfo.getGatewayErrorCode(), paymentPluginInfo.getGatewayError(), context);
 
                     log.info(String.format("Could not process payment for account %s, invoice %s, error = %s",
-                                           account.getId(), invoice.getId(), paymentPluginInfo.getGatewayError()));
+                            account.getId(), invoice.getId(), paymentPluginInfo.getGatewayError()));
 
                     event = new DefaultPaymentErrorEvent(account.getId(), invoice.getId(), paymentInput.getId(), paymentPluginInfo.getGatewayError(),
-                                                         context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken()
+                            context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken()
                     );
                     throw new PaymentApiException(ErrorCode.PAYMENT_CREATE_PAYMENT, account.getId(), paymentPluginInfo.getGatewayError());
 
@@ -586,7 +596,7 @@ public class PaymentProcessor extends ProcessorBase {
     private PaymentStatus scheduleRetryOnPaymentFailure(final UUID paymentId, final InternalTenantContext context) {
         final List<PaymentAttemptModelDao> allAttempts = paymentDao.getAttemptsForPayment(paymentId, context);
         final int retryAttempt = getNumberAttemptsInState(allAttempts,
-                                                          PaymentStatus.UNKNOWN, PaymentStatus.PAYMENT_FAILURE);
+                PaymentStatus.UNKNOWN, PaymentStatus.PAYMENT_FAILURE);
 
 
         final boolean isScheduledForRetry = failedPaymentRetryService.scheduleRetry(paymentId, retryAttempt);
