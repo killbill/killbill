@@ -18,16 +18,16 @@ package com.ning.billing.glue;
 
 public interface EntitlementModule {
 
-    public abstract void installEntitlementService();
+    public abstract void installSubscriptionService();
 
-    public abstract void installEntitlementUserApi();
+    public abstract void installSubscriptionUserApi();
 
-    public abstract void installEntitlementTransferApi();
+    public abstract void installSubscriptionTransferApi();
 
-    public abstract void installEntitlementMigrationApi();
+    public abstract void installSubscriptionMigrationApi();
 
-    public abstract void installEntitlementInternalApi();
+    public abstract void installSubscriptionInternalApi();
 
-    public abstract void installEntitlementTimelineApi();
+    public abstract void installSubscriptionTimelineApi();
 
 }

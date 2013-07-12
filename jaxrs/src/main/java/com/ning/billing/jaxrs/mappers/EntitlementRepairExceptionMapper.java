@@ -24,11 +24,11 @@ import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
 import com.ning.billing.ErrorCode;
-import com.ning.billing.entitlement.api.timeline.EntitlementRepairException;
+import com.ning.billing.subscription.api.timeline.SubscriptionRepairException;
 
 @Singleton
 @Provider
-public class EntitlementRepairExceptionMapper extends ExceptionMapperBase implements ExceptionMapper<EntitlementRepairException> {
+public class EntitlementRepairExceptionMapper extends ExceptionMapperBase implements ExceptionMapper<SubscriptionRepairException> {
 
     private final UriInfo uriInfo;
 
@@ -37,36 +37,36 @@ public class EntitlementRepairExceptionMapper extends ExceptionMapperBase implem
     }
 
     @Override
-    public Response toResponse(final EntitlementRepairException exception) {
-        if (exception.getCode() == ErrorCode.ENT_REPAIR_AO_CREATE_BEFORE_BP_START.getCode()) {
+    public Response toResponse(final SubscriptionRepairException exception) {
+        if (exception.getCode() == ErrorCode.SUB_REPAIR_AO_CREATE_BEFORE_BP_START.getCode()) {
             return buildBadRequestResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.ENT_REPAIR_BP_RECREATE_MISSING_AO.getCode()) {
+        } else if (exception.getCode() == ErrorCode.SUB_REPAIR_BP_RECREATE_MISSING_AO.getCode()) {
             return buildBadRequestResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.ENT_REPAIR_BP_RECREATE_MISSING_AO_CREATE.getCode()) {
+        } else if (exception.getCode() == ErrorCode.SUB_REPAIR_BP_RECREATE_MISSING_AO_CREATE.getCode()) {
             return buildBadRequestResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.ENT_REPAIR_INVALID_DELETE_SET.getCode()) {
+        } else if (exception.getCode() == ErrorCode.SUB_REPAIR_INVALID_DELETE_SET.getCode()) {
             return buildBadRequestResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.ENT_REPAIR_MISSING_AO_DELETE_EVENT.getCode()) {
+        } else if (exception.getCode() == ErrorCode.SUB_REPAIR_MISSING_AO_DELETE_EVENT.getCode()) {
             return buildBadRequestResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.ENT_REPAIR_NEW_EVENT_BEFORE_LAST_AO_REMAINING.getCode()) {
+        } else if (exception.getCode() == ErrorCode.SUB_REPAIR_NEW_EVENT_BEFORE_LAST_AO_REMAINING.getCode()) {
             return buildBadRequestResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.ENT_REPAIR_NEW_EVENT_BEFORE_LAST_BP_REMAINING.getCode()) {
+        } else if (exception.getCode() == ErrorCode.SUB_REPAIR_NEW_EVENT_BEFORE_LAST_BP_REMAINING.getCode()) {
             return buildBadRequestResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.ENT_REPAIR_NO_ACTIVE_SUBSCRIPTIONS.getCode()) {
+        } else if (exception.getCode() == ErrorCode.SUB_REPAIR_NO_ACTIVE_SUBSCRIPTIONS.getCode()) {
             return buildBadRequestResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.ENT_REPAIR_NON_EXISTENT_DELETE_EVENT.getCode()) {
+        } else if (exception.getCode() == ErrorCode.SUB_REPAIR_NON_EXISTENT_DELETE_EVENT.getCode()) {
             return buildNotFoundResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.ENT_REPAIR_SUB_EMPTY.getCode()) {
+        } else if (exception.getCode() == ErrorCode.SUB_REPAIR_SUB_EMPTY.getCode()) {
             return buildBadRequestResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.ENT_REPAIR_SUB_RECREATE_NOT_EMPTY.getCode()) {
+        } else if (exception.getCode() == ErrorCode.SUB_REPAIR_SUB_RECREATE_NOT_EMPTY.getCode()) {
             return buildBadRequestResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.ENT_REPAIR_UNKNOWN_BUNDLE.getCode()) {
+        } else if (exception.getCode() == ErrorCode.SUB_REPAIR_UNKNOWN_BUNDLE.getCode()) {
             return buildNotFoundResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.ENT_REPAIR_UNKNOWN_SUBSCRIPTION.getCode()) {
+        } else if (exception.getCode() == ErrorCode.SUB_REPAIR_UNKNOWN_SUBSCRIPTION.getCode()) {
             return buildNotFoundResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.ENT_REPAIR_UNKNOWN_TYPE.getCode()) {
+        } else if (exception.getCode() == ErrorCode.SUB_REPAIR_UNKNOWN_TYPE.getCode()) {
             return buildNotFoundResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.ENT_REPAIR_VIEW_CHANGED.getCode()) {
+        } else if (exception.getCode() == ErrorCode.SUB_REPAIR_VIEW_CHANGED.getCode()) {
             return buildBadRequestResponse(exception, uriInfo);
         } else {
             return buildBadRequestResponse(exception, uriInfo);

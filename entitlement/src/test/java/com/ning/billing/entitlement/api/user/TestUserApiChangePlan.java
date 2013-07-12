@@ -16,11 +16,6 @@
 
 package com.ning.billing.entitlement.api.user;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,8 +35,14 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.user.ApiEvent;
-import com.ning.billing.clock.DefaultClock;
+import com.ning.billing.subscription.api.user.SubscriptionTransition;
+import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
 import com.ning.billing.util.svcapi.entitlement.EntitlementBillingApiException;
+
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 
 public class TestUserApiChangePlan extends EntitlementTestSuiteWithEmbeddedDB {
 
@@ -92,7 +93,7 @@ public class TestUserApiChangePlan extends EntitlementTestSuiteWithEmbeddedDB {
             checkChangePlan(subscription, toProd, ProductCategory.BASE, toTerm, PhaseType.EVERGREEN);
 
             assertListenerStatus();
-        } catch (EntitlementUserApiException e) {
+        } catch (SubscriptionUserApiException e) {
             Assert.fail(e.getMessage());
         }
     }
@@ -155,7 +156,7 @@ public class TestUserApiChangePlan extends EntitlementTestSuiteWithEmbeddedDB {
             checkChangePlan(subscription, toProd, ProductCategory.BASE, toTerm, PhaseType.DISCOUNT);
 
             assertListenerStatus();
-        } catch (EntitlementUserApiException e) {
+        } catch (SubscriptionUserApiException e) {
             Assert.fail(e.getMessage());
         }
     }
@@ -196,7 +197,7 @@ public class TestUserApiChangePlan extends EntitlementTestSuiteWithEmbeddedDB {
             assertTrue(testListener.isCompleted(5000));
 
             assertListenerStatus();
-        } catch (EntitlementUserApiException e) {
+        } catch (SubscriptionUserApiException e) {
             Assert.fail(e.getMessage());
         }
     }
@@ -283,7 +284,7 @@ public class TestUserApiChangePlan extends EntitlementTestSuiteWithEmbeddedDB {
             assertTrue(testListener.isCompleted(5000));
 
             assertListenerStatus();
-        } catch (EntitlementUserApiException e) {
+        } catch (SubscriptionUserApiException e) {
             Assert.fail(e.getMessage());
         }
     }
@@ -335,7 +336,7 @@ public class TestUserApiChangePlan extends EntitlementTestSuiteWithEmbeddedDB {
             assertEquals(currentPhase.getPhaseType(), PhaseType.DISCOUNT);
 
             assertListenerStatus();
-        } catch (EntitlementUserApiException e) {
+        } catch (SubscriptionUserApiException e) {
             Assert.fail(e.getMessage());
         }
     }
@@ -421,7 +422,7 @@ public class TestUserApiChangePlan extends EntitlementTestSuiteWithEmbeddedDB {
             assertEquals(currentPhase.getPhaseType(), PhaseType.EVERGREEN);
 
             assertListenerStatus();
-        } catch (EntitlementUserApiException e) {
+        } catch (SubscriptionUserApiException e) {
             Assert.fail(e.getMessage());
         }
     }
@@ -475,7 +476,7 @@ public class TestUserApiChangePlan extends EntitlementTestSuiteWithEmbeddedDB {
 
             assertListenerStatus();
 
-        } catch (EntitlementUserApiException e) {
+        } catch (SubscriptionUserApiException e) {
             Assert.fail(e.getMessage());
         }
     }

@@ -23,10 +23,12 @@ import org.joda.time.DateTime;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PriceList;
-import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
+import com.ning.billing.subscription.api.SubscriptionTransitionType;
+import com.ning.billing.subscription.api.user.SubscriptionState;
+import com.ning.billing.subscription.api.user.SubscriptionTransition;
 
 public class SubscriptionTransitionData implements SubscriptionTransition {
     private final Long totalOrdering;

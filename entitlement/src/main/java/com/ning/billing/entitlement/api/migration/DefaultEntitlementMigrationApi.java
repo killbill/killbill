@@ -27,6 +27,7 @@ import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.clock.Clock;
 import com.ning.billing.entitlement.alignment.MigrationPlanAligner;
 import com.ning.billing.entitlement.alignment.TimedMigration;
 import com.ning.billing.entitlement.api.EntitlementApiBase;
@@ -51,7 +52,6 @@ import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
-import com.ning.billing.clock.Clock;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -227,7 +227,7 @@ public class DefaultEntitlementMigrationApi extends EntitlementApiBase implement
             }
 
             // create the MIGRATE_BILLING based on the current state of the last event.
-            if (! cur.getEventTime().isAfter(ctd)) {
+            if (!cur.getEventTime().isAfter(ctd)) {
                 builder.setEffectiveDate(ctd);
                 builder.setUuid(UUID.randomUUID());
                 apiEventMigrateBilling = new ApiEventMigrateBilling(builder);

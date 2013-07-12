@@ -31,7 +31,7 @@ import com.ning.billing.beatrix.glue.BeatrixModule;
 import com.ning.billing.bus.api.BusEvent;
 import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.bus.api.PersistentBus.EventBusException;
-import com.ning.billing.entitlement.api.SubscriptionTransitionType;
+import com.ning.billing.subscription.api.SubscriptionTransitionType;
 import com.ning.billing.notification.plugin.api.ExtBusEventType;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.InternalCallContext;

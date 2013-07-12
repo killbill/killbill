@@ -19,6 +19,7 @@ import java.util.UUID;
 
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PhaseType;
+import com.ning.billing.subscription.api.user.SubscriptionStatusDryRun;
 
 public class DefaultSubscriptionStatusDryRun implements SubscriptionStatusDryRun {
 

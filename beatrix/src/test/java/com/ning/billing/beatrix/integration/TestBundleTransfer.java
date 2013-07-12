@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.beatrix.integration;
 
 import java.math.BigDecimal;
@@ -29,11 +30,11 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
+import com.ning.billing.subscription.api.user.SubscriptionBundle;
 
 import com.google.common.collect.ImmutableList;
 
@@ -93,14 +94,14 @@ public class TestBundleTransfer extends TestIntegrationBase {
         assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
 
-        List<Invoice> invoices =invoiceUserApi.getInvoicesByAccount(newAccount.getId(), callContext);
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(newAccount.getId(), callContext);
         assertEquals(invoices.size(), 1);
 
         final List<InvoiceItem> invoiceItems = invoices.get(0).getInvoiceItems();
         assertEquals(invoiceItems.size(), 1);
         InvoiceItem theItem = invoiceItems.get(0);
-        assertTrue(theItem.getStartDate().compareTo(new LocalDate(2012,5,11)) == 0);
-        assertTrue(theItem.getEndDate().compareTo(new LocalDate(2013,5,11)) == 0);
+        assertTrue(theItem.getStartDate().compareTo(new LocalDate(2012, 5, 11)) == 0);
+        assertTrue(theItem.getEndDate().compareTo(new LocalDate(2013, 5, 11)) == 0);
         assertTrue(theItem.getAmount().compareTo(new BigDecimal("2399.9500")) == 0);
     }
 
@@ -222,24 +223,24 @@ public class TestBundleTransfer extends TestIntegrationBase {
         assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
 
-        List<Invoice> invoices =invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
         assertEquals(invoices.size(), 2);
 
 
         // CHECK OLD ACCOUNTS ITEMS
         ImmutableList<ExpectedInvoiceItemCheck> toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
-                new ExpectedInvoiceItemCheck(new LocalDate(2012,5,1), new LocalDate(2012,5,9), InvoiceItemType.RECURRING, new BigDecimal("66.66")),
-                new ExpectedInvoiceItemCheck(new LocalDate(2012,5,3), new LocalDate(2012,5,9), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-49.99")),
-                new ExpectedInvoiceItemCheck(new LocalDate(2012,5,3), new LocalDate(2012,5,3), InvoiceItemType.CBA_ADJ, new BigDecimal("49.99")));
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 5, 9), InvoiceItemType.RECURRING, new BigDecimal("66.66")),
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 3), new LocalDate(2012, 5, 9), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-49.99")),
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 3), new LocalDate(2012, 5, 3), InvoiceItemType.CBA_ADJ, new BigDecimal("49.99")));
         invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, toBeChecked);
 
 
         // CHECK NEW ACCOUNT ITEMS
-        invoices =invoiceUserApi.getInvoicesByAccount(newAccount.getId(), callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(newAccount.getId(), callContext);
         assertEquals(invoices.size(), 1);
 
         toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
-                new ExpectedInvoiceItemCheck(new LocalDate(2012,5,3), new LocalDate(2012,5,15), InvoiceItemType.RECURRING, new BigDecimal("99.98")));
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 3), new LocalDate(2012, 5, 15), InvoiceItemType.RECURRING, new BigDecimal("99.98")));
         invoiceChecker.checkInvoice(invoices.get(0).getId(), callContext, toBeChecked);
     }
 }

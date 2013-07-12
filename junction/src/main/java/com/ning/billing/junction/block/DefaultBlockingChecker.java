@@ -20,9 +20,9 @@ import java.util.UUID;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
-import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
-import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
+import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.BlockingApiException;
 import com.ning.billing.junction.api.BlockingState;
@@ -89,12 +89,12 @@ public class DefaultBlockingChecker implements BlockingChecker {
         this.dao = dao;
     }
 
-    private BlockingAggregator getBlockedStateSubscriptionId(final UUID subscriptionId, final InternalTenantContext context) throws EntitlementUserApiException {
+    private BlockingAggregator getBlockedStateSubscriptionId(final UUID subscriptionId, final InternalTenantContext context) throws SubscriptionUserApiException {
         final Subscription subscription = entitlementApi.getSubscriptionFromId(subscriptionId, context);
         return getBlockedStateSubscription(subscription, context);
     }
 
-    private BlockingAggregator getBlockedStateSubscription(final Subscription subscription, final InternalTenantContext context) throws EntitlementUserApiException {
+    private BlockingAggregator getBlockedStateSubscription(final Subscription subscription, final InternalTenantContext context) throws SubscriptionUserApiException {
         final BlockingAggregator result = new BlockingAggregator();
         if (subscription != null) {
             final BlockingAggregator subscriptionState = getBlockedStateForId(subscription.getId(), context);
@@ -110,7 +110,7 @@ public class DefaultBlockingChecker implements BlockingChecker {
     }
 
 
-    private BlockingAggregator getBlockedStateBundleId(final UUID bundleId, final InternalTenantContext context) throws EntitlementUserApiException {
+    private BlockingAggregator getBlockedStateBundleId(final UUID bundleId, final InternalTenantContext context) throws SubscriptionUserApiException {
         final SubscriptionBundle bundle = entitlementApi.getBundleFromId(bundleId, context);
         return getBlockedStateBundle(bundle, context);
     }
@@ -155,7 +155,7 @@ public class DefaultBlockingChecker implements BlockingChecker {
             } else if (blockable instanceof Account && getBlockedStateAccount((Account) blockable, context).isBlockChange()) {
                 throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION, ACTION_CHANGE, TYPE_ACCOUNT, blockable.getId().toString());
             }
-        } catch (EntitlementUserApiException e) {
+        } catch (SubscriptionUserApiException e) {
             throw new BlockingApiException(e, ErrorCode.fromCode(e.getCode()));
         }
     }
@@ -170,7 +170,7 @@ public class DefaultBlockingChecker implements BlockingChecker {
             } else if (blockable instanceof Account && getBlockedStateAccount((Account) blockable, context).isBlockEntitlement()) {
                 throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION, ACTION_ENTITLEMENT, TYPE_ACCOUNT, blockable.getId().toString());
             }
-        } catch (EntitlementUserApiException e) {
+        } catch (SubscriptionUserApiException e) {
             throw new BlockingApiException(e, ErrorCode.fromCode(e.getCode()));
         }
     }
@@ -185,7 +185,7 @@ public class DefaultBlockingChecker implements BlockingChecker {
             } else if (blockable instanceof Account && getBlockedStateAccount((Account) blockable, context).isBlockBilling()) {
                 throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION, ACTION_BILLING, TYPE_ACCOUNT, blockable.getId().toString());
             }
-        } catch (EntitlementUserApiException e) {
+        } catch (SubscriptionUserApiException e) {
             throw new BlockingApiException(e, ErrorCode.fromCode(e.getCode()));
         }
     }
@@ -202,7 +202,7 @@ public class DefaultBlockingChecker implements BlockingChecker {
                 throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION, ACTION_CHANGE, TYPE_ACCOUNT, blockableId.toString());
 
             }
-        } catch (EntitlementUserApiException e) {
+        } catch (SubscriptionUserApiException e) {
             throw new BlockingApiException(e, ErrorCode.fromCode(e.getCode()));
         }
     }
@@ -217,7 +217,7 @@ public class DefaultBlockingChecker implements BlockingChecker {
             } else if (type == Type.ACCOUNT && getBlockedStateAccountId(blockableId, context).isBlockEntitlement()) {
                 throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION, ACTION_ENTITLEMENT, TYPE_ACCOUNT, blockableId.toString());
             }
-        } catch (EntitlementUserApiException e) {
+        } catch (SubscriptionUserApiException e) {
             throw new BlockingApiException(e, ErrorCode.fromCode(e.getCode()));
         }
     }
@@ -232,7 +232,7 @@ public class DefaultBlockingChecker implements BlockingChecker {
             } else if (type == Type.ACCOUNT && getBlockedStateAccountId(blockableId, context).isBlockBilling()) {
                 throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION, ACTION_BILLING, TYPE_ACCOUNT, blockableId.toString());
             }
-        } catch (EntitlementUserApiException e) {
+        } catch (SubscriptionUserApiException e) {
             throw new BlockingApiException(e, ErrorCode.fromCode(e.getCode()));
         }
     }

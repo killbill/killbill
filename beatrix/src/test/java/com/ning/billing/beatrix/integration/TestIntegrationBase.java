@@ -56,12 +56,7 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.entitlement.api.EntitlementService;
-import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
-import com.ning.billing.entitlement.api.transfer.EntitlementTransferApi;
-import com.ning.billing.entitlement.api.user.EntitlementUserApi;
-import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
-import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.entitlement.api.SubscriptionService;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
@@ -81,6 +76,11 @@ import com.ning.billing.payment.api.PaymentMethodKVInfo;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.payment.api.TestPaymentMethodPluginBase;
 import com.ning.billing.payment.provider.MockPaymentProviderPlugin;
+import com.ning.billing.subscription.api.timeline.SubscriptionTimelineApi;
+import com.ning.billing.subscription.api.transfer.SubscriptionTransferApi;
+import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.user.SubscriptionUserApi;
+import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
 import com.ning.billing.util.api.RecordIdApi;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
@@ -126,7 +126,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     protected BusService busService;
 
     @Inject
-    protected EntitlementService entitlementService;
+    protected SubscriptionService entitlementService;
 
     @Inject
     protected InvoiceService invoiceService;
@@ -135,13 +135,13 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     protected AccountService accountService;
 
     @Inject
-    protected EntitlementUserApi entitlementUserApi;
+    protected SubscriptionUserApi entitlementUserApi;
 
     @Inject
-    protected EntitlementTransferApi transferApi;
+    protected SubscriptionTransferApi transferApi;
 
     @Inject
-    protected EntitlementTimelineApi repairApi;
+    protected SubscriptionTimelineApi repairApi;
 
     @Inject
     protected OverdueUserApi overdueUserApi;
@@ -181,7 +181,9 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     protected AccountChecker accountChecker;
 
     @Inject
-    protected @javax.inject.Named(BeatrixModule.EXTERNAL_BUS)PersistentBus externalBus;
+    protected
+    @javax.inject.Named(BeatrixModule.EXTERNAL_BUS)
+    PersistentBus externalBus;
 
     @Inject
     protected RefundChecker refundChecker;
@@ -276,7 +278,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     protected void verifyTestResult(final UUID accountId, final UUID subscriptionId,
                                     final DateTime startDate, @Nullable final DateTime endDate,
                                     final BigDecimal amount, final DateTime chargeThroughDate,
-                                    final int totalInvoiceItemCount) throws EntitlementUserApiException {
+                                    final int totalInvoiceItemCount) throws SubscriptionUserApiException {
         final SubscriptionData subscription = subscriptionDataFromSubscription(entitlementUserApi.getSubscriptionFromId(subscriptionId, callContext));
 
         /*
@@ -500,7 +502,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
                                                                                             callContext);
                     assertNotNull(subscription);
                     return subscription;
-                } catch (EntitlementUserApiException e) {
+                } catch (SubscriptionUserApiException e) {
                     fail();
                     return null;
                 }
@@ -520,7 +522,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
                     final Subscription refreshedSubscription = entitlementUserApi.getSubscriptionFromId(subscription.getId(), callContext);
                     refreshedSubscription.changePlan(productName, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow(), callContext);
                     return refreshedSubscription;
-                } catch (EntitlementUserApiException e) {
+                } catch (SubscriptionUserApiException e) {
                     fail(e.getMessage());
                     return null;
                 }
@@ -539,7 +541,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
                     final Subscription refreshedSubscription = entitlementUserApi.getSubscriptionFromId(subscription.getId(), callContext);
                     refreshedSubscription.cancel(requestedDate, callContext);
                     return refreshedSubscription;
-                } catch (EntitlementUserApiException e) {
+                } catch (SubscriptionUserApiException e) {
                     fail();
                     return null;
                 }

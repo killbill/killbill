@@ -22,28 +22,25 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.joda.time.LocalDate;
-import org.joda.time.LocalTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.CatalogService;
+import com.ning.billing.clock.Clock;
 import com.ning.billing.entitlement.api.EntitlementApiBase;
 import com.ning.billing.entitlement.api.user.DefaultEffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.DefaultSubscriptionApiService;
-import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
-import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBuilder;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
-import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
+import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionTransition;
+import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.clock.Clock;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 
@@ -79,10 +76,10 @@ public class DefaultEntitlementInternalApi extends EntitlementApiBase implements
 
     @Override
     public Subscription getBaseSubscription(UUID bundleId,
-                                            InternalTenantContext context) throws EntitlementUserApiException {
+                                            InternalTenantContext context) throws SubscriptionUserApiException {
         final Subscription result = dao.getBaseSubscription(bundleId, context);
         if (result == null) {
-            throw new EntitlementUserApiException(ErrorCode.ENT_GET_NO_SUCH_BASE_SUBSCRIPTION, bundleId);
+            throw new SubscriptionUserApiException(ErrorCode.SUB_GET_NO_SUCH_BASE_SUBSCRIPTION, bundleId);
         }
         return createSubscriptionForApiUse(result);
     }
@@ -90,25 +87,25 @@ public class DefaultEntitlementInternalApi extends EntitlementApiBase implements
     @Override
 
     public Subscription getSubscriptionFromId(UUID id,
-                                              InternalTenantContext context) throws EntitlementUserApiException {
+                                              InternalTenantContext context) throws SubscriptionUserApiException {
         final Subscription result = dao.getSubscriptionFromId(id, context);
         if (result == null) {
-            throw new EntitlementUserApiException(ErrorCode.ENT_INVALID_SUBSCRIPTION_ID, id);
+            throw new SubscriptionUserApiException(ErrorCode.SUB_INVALID_SUBSCRIPTION_ID, id);
         }
         return createSubscriptionForApiUse(result);
     }
 
     @Override
-    public SubscriptionBundle getBundleFromId(final UUID id, final InternalTenantContext context) throws EntitlementUserApiException {
+    public SubscriptionBundle getBundleFromId(final UUID id, final InternalTenantContext context) throws SubscriptionUserApiException {
         final SubscriptionBundle result = dao.getSubscriptionBundleFromId(id, context);
         if (result == null) {
-            throw new EntitlementUserApiException(ErrorCode.ENT_GET_INVALID_BUNDLE_ID, id.toString());
+            throw new SubscriptionUserApiException(ErrorCode.SUB_GET_INVALID_BUNDLE_ID, id.toString());
         }
         return result;
     }
 
     @Override
-    public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId, final InternalTenantContext context) throws EntitlementUserApiException {
+    public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId, final InternalTenantContext context) throws SubscriptionUserApiException {
         return dao.getAccountIdFromSubscriptionId(subscriptionId, context);
     }
 

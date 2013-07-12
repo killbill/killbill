@@ -35,8 +35,10 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.entitlement.EntitlementTestSuiteNoDB;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
+import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
 import com.ning.billing.util.callcontext.TenantContext;
-import com.ning.billing.clock.DefaultClock;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
@@ -62,19 +64,19 @@ public class TestUserApiError extends EntitlementTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testCreateSubscriptionNoBundle() {
-        tCreateSubscriptionInternal(null, "Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.ENT_CREATE_NO_BUNDLE);
+        tCreateSubscriptionInternal(null, "Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.SUB_CREATE_NO_BUNDLE);
     }
 
     @Test(groups = "fast")
     public void testCreateSubscriptionNoBP() {
-        tCreateSubscriptionInternal(bundle.getId(), "Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.ENT_CREATE_NO_BP);
+        tCreateSubscriptionInternal(bundle.getId(), "Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.SUB_CREATE_NO_BP);
     }
 
     @Test(groups = "fast")
     public void testCreateSubscriptionBPExists() {
         try {
             testUtil.createSubscription(bundle, "Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME);
-            tCreateSubscriptionInternal(bundle.getId(), "Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.ENT_CREATE_BP_EXISTS);
+            tCreateSubscriptionInternal(bundle.getId(), "Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.SUB_CREATE_BP_EXISTS);
         } catch (Exception e) {
             Assert.fail(e.toString());
         }
@@ -87,8 +89,8 @@ public class TestUserApiError extends EntitlementTestSuiteNoDB {
             try {
                 subscription.recreate(testUtil.getProductSpecifier("Pistol", PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, null), clock.getUTCNow(), callContext);
                 Assert.assertFalse(true);
-            } catch (EntitlementUserApiException e) {
-                assertEquals(e.getCode(), ErrorCode.ENT_RECREATE_BAD_STATE.getCode());
+            } catch (SubscriptionUserApiException e) {
+                assertEquals(e.getCode(), ErrorCode.SUB_RECREATE_BAD_STATE.getCode());
             }
         } catch (Exception e) {
             Assert.fail(e.toString());
@@ -101,7 +103,7 @@ public class TestUserApiError extends EntitlementTestSuiteNoDB {
             final UUID accountId = UUID.randomUUID();
             final SubscriptionBundle aoBundle = entitlementApi.createBundleForAccount(accountId, "myAOBundle", callContext);
             testUtil.createSubscriptionWithBundle(aoBundle.getId(), "Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-            tCreateSubscriptionInternal(aoBundle.getId(), "Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.ENT_CREATE_AO_NOT_AVAILABLE);
+            tCreateSubscriptionInternal(aoBundle.getId(), "Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.SUB_CREATE_AO_NOT_AVAILABLE);
         } catch (Exception e) {
             Assert.fail(e.toString());
         }
@@ -114,7 +116,7 @@ public class TestUserApiError extends EntitlementTestSuiteNoDB {
             final UUID accountId = UUID.randomUUID();
             final SubscriptionBundle aoBundle = entitlementApi.createBundleForAccount(accountId, "myAOBundle", callContext);
             testUtil.createSubscriptionWithBundle(aoBundle.getId(), "Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-            tCreateSubscriptionInternal(aoBundle.getId(), "Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.ENT_CREATE_AO_ALREADY_INCLUDED);
+            tCreateSubscriptionInternal(aoBundle.getId(), "Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.SUB_CREATE_AO_ALREADY_INCLUDED);
         } catch (Exception e) {
             Assert.fail(e.toString());
         }
@@ -127,7 +129,7 @@ public class TestUserApiError extends EntitlementTestSuiteNoDB {
                                               testUtil.getProductSpecifier(productName, planSet, term, null),
                                               clock.getUTCNow(), callContext);
             Assert.fail("Exception expected, error code: " + expected);
-        } catch (EntitlementUserApiException e) {
+        } catch (SubscriptionUserApiException e) {
             assertEquals(e.getCode(), expected.getCode());
             try {
                 log.info(e.getMessage());
@@ -146,8 +148,8 @@ public class TestUserApiError extends EntitlementTestSuiteNoDB {
             subscription.cancel(clock.getUTCNow(), callContext);
             try {
                 subscription.changePlan("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow(), callContext);
-            } catch (EntitlementUserApiException e) {
-                assertEquals(e.getCode(), ErrorCode.ENT_CHANGE_NON_ACTIVE.getCode());
+            } catch (SubscriptionUserApiException e) {
+                assertEquals(e.getCode(), ErrorCode.SUB_CHANGE_NON_ACTIVE.getCode());
                 try {
                     log.info(e.getMessage());
                 } catch (Throwable el) {
@@ -199,8 +201,8 @@ public class TestUserApiError extends EntitlementTestSuiteNoDB {
             subscription.cancel(clock.getUTCNow(), callContext);
             try {
                 subscription.changePlan("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow(), callContext);
-            } catch (EntitlementUserApiException e) {
-                assertEquals(e.getCode(), ErrorCode.ENT_CHANGE_FUTURE_CANCELLED.getCode());
+            } catch (SubscriptionUserApiException e) {
+                assertEquals(e.getCode(), ErrorCode.SUB_CHANGE_FUTURE_CANCELLED.getCode());
                 try {
                     log.info(e.getMessage());
                 } catch (Throwable el) {
@@ -225,8 +227,8 @@ public class TestUserApiError extends EntitlementTestSuiteNoDB {
 
             try {
                 subscription.uncancel(callContext);
-            } catch (EntitlementUserApiException e) {
-                assertEquals(e.getCode(), ErrorCode.ENT_UNCANCEL_BAD_STATE.getCode());
+            } catch (SubscriptionUserApiException e) {
+                assertEquals(e.getCode(), ErrorCode.SUB_UNCANCEL_BAD_STATE.getCode());
                 try {
                     log.info(e.getMessage());
                 } catch (Throwable el) {

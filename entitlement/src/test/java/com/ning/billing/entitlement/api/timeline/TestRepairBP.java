@@ -16,11 +16,6 @@
 
 package com.ning.billing.entitlement.api.timeline;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertNull;
-import static org.testng.Assert.assertTrue;
-
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -40,17 +35,25 @@ import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
-import com.ning.billing.entitlement.api.SubscriptionTransitionType;
-import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline.DeletedEvent;
-import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline.ExistingEvent;
-import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline.NewEvent;
-import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
-import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.SubscriptionState;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.api.user.SubscriptionEvents;
 import com.ning.billing.entitlement.api.user.TestEntitlementHelper.TestWithException;
 import com.ning.billing.entitlement.api.user.TestEntitlementHelper.TestWithExceptionCallback;
+import com.ning.billing.subscription.api.SubscriptionTransitionType;
+import com.ning.billing.subscription.api.timeline.BundleTimeline;
+import com.ning.billing.subscription.api.timeline.SubscriptionRepairException;
+import com.ning.billing.subscription.api.timeline.SubscriptionTimeline;
+import com.ning.billing.subscription.api.timeline.SubscriptionTimeline.DeletedEvent;
+import com.ning.billing.subscription.api.timeline.SubscriptionTimeline.ExistingEvent;
+import com.ning.billing.subscription.api.timeline.SubscriptionTimeline.NewEvent;
+import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.user.SubscriptionState;
+import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
+
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
+import static org.testng.Assert.assertTrue;
 
 public class TestRepairBP extends EntitlementTestSuiteWithEmbeddedDB {
 
@@ -640,7 +643,7 @@ public class TestRepairBP extends EntitlementTestSuiteWithEmbeddedDB {
 
         test.withException(new TestWithExceptionCallback() {
             @Override
-            public void doTest() throws EntitlementRepairException, EntitlementUserApiException {
+            public void doTest() throws SubscriptionRepairException, SubscriptionUserApiException {
 
                 final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId(), callContext);
                 testUtil.sortEventsOnBundle(bundleRepair);
@@ -661,7 +664,7 @@ public class TestRepairBP extends EntitlementTestSuiteWithEmbeddedDB {
                 repairApi.repairBundle(bRepair, true, callContext);
                 assertListenerStatus();
             }
-        }, ErrorCode.ENT_REPAIR_VIEW_CHANGED);
+        }, ErrorCode.SUB_REPAIR_VIEW_CHANGED);
     }
 
     @Test(groups = "slow")
@@ -673,7 +676,7 @@ public class TestRepairBP extends EntitlementTestSuiteWithEmbeddedDB {
 
         test.withException(new TestWithExceptionCallback() {
             @Override
-            public void doTest() throws EntitlementRepairException, EntitlementUserApiException {
+            public void doTest() throws SubscriptionRepairException, SubscriptionUserApiException {
 
                 final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId(), callContext);
                 testUtil.sortEventsOnBundle(bundleRepair);
@@ -698,6 +701,6 @@ public class TestRepairBP extends EntitlementTestSuiteWithEmbeddedDB {
 
                 assertListenerStatus();
             }
-        }, ErrorCode.ENT_REPAIR_VIEW_CHANGED);
+        }, ErrorCode.SUB_REPAIR_VIEW_CHANGED);
     }
 }

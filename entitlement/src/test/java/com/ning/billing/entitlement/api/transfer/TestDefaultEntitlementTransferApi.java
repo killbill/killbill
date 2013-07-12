@@ -35,9 +35,6 @@ import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.EntitlementTestSuiteNoDB;
 import com.ning.billing.entitlement.api.SubscriptionApiService;
-import com.ning.billing.entitlement.api.SubscriptionTransitionType;
-import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
-import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline.ExistingEvent;
 import com.ning.billing.entitlement.api.user.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
@@ -45,6 +42,10 @@ import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
 import com.ning.billing.entitlement.events.user.ApiEventTransfer;
 import com.ning.billing.entitlement.events.user.ApiEventType;
+import com.ning.billing.subscription.api.SubscriptionTransitionType;
+import com.ning.billing.subscription.api.timeline.SubscriptionTimeline.ExistingEvent;
+import com.ning.billing.subscription.api.timeline.SubscriptionTimelineApi;
+import com.ning.billing.subscription.api.transfer.SubscriptionTransferApiException;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.dao.NonEntityDao;
@@ -64,7 +65,7 @@ public class TestDefaultEntitlementTransferApi extends EntitlementTestSuiteNoDB 
         final EntitlementDao dao = Mockito.mock(EntitlementDao.class);
         final CatalogService catalogService = new MockCatalogService(new MockCatalog());
         final SubscriptionApiService apiService = Mockito.mock(SubscriptionApiService.class);
-        final EntitlementTimelineApi timelineApi = Mockito.mock(EntitlementTimelineApi.class);
+        final SubscriptionTimelineApi timelineApi = Mockito.mock(SubscriptionTimelineApi.class);
         final InternalCallContextFactory internalCallContextFactory = new InternalCallContextFactory(clock, nonEntityDao, new CacheControllerDispatcher());
         transferApi = new DefaultEntitlementTransferApi(clock, dao, timelineApi, catalogService, apiService, internalCallContextFactory);
     }
@@ -159,7 +160,7 @@ public class TestDefaultEntitlementTransferApi extends EntitlementTestSuiteNoDB 
     }
 
     private List<EntitlementEvent> transferBundle(final DateTime migrateEntitlementEventEffectiveDate, final DateTime migrateBillingEventEffectiveDate,
-                                                  final DateTime transferDate) throws EntitlementTransferApiException {
+                                                  final DateTime transferDate) throws SubscriptionTransferApiException {
         final ImmutableList<ExistingEvent> existingEvents = createMigrateEvents(migrateEntitlementEventEffectiveDate, migrateBillingEventEffectiveDate);
         final SubscriptionBuilder subscriptionBuilder = new SubscriptionBuilder();
         final SubscriptionData subscription = new SubscriptionData(subscriptionBuilder);

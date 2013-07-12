@@ -19,7 +19,7 @@ package com.ning.billing.mock.glue;
 import org.mockito.Mockito;
 
 import com.ning.billing.account.api.AccountUserApi;
-import com.ning.billing.entitlement.api.user.EntitlementUserApi;
+import com.ning.billing.subscription.api.user.SubscriptionUserApi;
 import com.ning.billing.glue.JunctionModule;
 import com.ning.billing.junction.api.JunctionApi;
 import com.ning.billing.util.svcapi.junction.BillingInternalApi;
@@ -31,7 +31,7 @@ public class MockJunctionModule extends AbstractModule implements JunctionModule
     private final BillingInternalApi billingApi = Mockito.mock(BillingInternalApi.class);
     private final BlockingInternalApi blockingApi = Mockito.mock(BlockingInternalApi.class);
     private final AccountUserApi userApi = Mockito.mock(AccountUserApi.class);
-    private final EntitlementUserApi entUserApi = Mockito.mock(EntitlementUserApi.class);
+    private final SubscriptionUserApi entUserApi = Mockito.mock(SubscriptionUserApi.class);
     private final JunctionApi junctionApi = Mockito.mock(JunctionApi.class);
 
     @Override
@@ -39,7 +39,7 @@ public class MockJunctionModule extends AbstractModule implements JunctionModule
         installBlockingApi();
         installAccountUserApi();
         installBillingApi();
-        installEntitlementUserApi();
+        installSubscriptionUserApi();
         installJunctionApi();
     }
 
@@ -59,8 +59,8 @@ public class MockJunctionModule extends AbstractModule implements JunctionModule
     }
 
     @Override
-    public void installEntitlementUserApi() {
-        bind(EntitlementUserApi.class).toInstance(entUserApi);
+    public void installSubscriptionUserApi() {
+        bind(SubscriptionUserApi.class).toInstance(entUserApi);
     }
 
     @Override

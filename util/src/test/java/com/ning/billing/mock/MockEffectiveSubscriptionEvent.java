@@ -20,8 +20,8 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.entitlement.api.SubscriptionTransitionType;
-import com.ning.billing.entitlement.api.user.SubscriptionState;
+import com.ning.billing.subscription.api.SubscriptionTransitionType;
+import com.ning.billing.subscription.api.user.SubscriptionState;
 import com.ning.billing.util.events.BusEventBase;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 

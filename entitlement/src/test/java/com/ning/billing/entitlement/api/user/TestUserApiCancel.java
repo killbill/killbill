@@ -16,11 +16,6 @@
 
 package com.ning.billing.entitlement.api.user;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertNull;
-import static org.testng.Assert.assertTrue;
-
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
 import org.testng.Assert;
@@ -34,8 +29,13 @@ import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
-import com.ning.billing.clock.DefaultClock;
+import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
 import com.ning.billing.util.svcapi.entitlement.EntitlementBillingApiException;
+
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNull;
+import static org.testng.Assert.assertTrue;
 
 public class TestUserApiCancel extends EntitlementTestSuiteWithEmbeddedDB {
 
@@ -81,7 +81,7 @@ public class TestUserApiCancel extends EntitlementTestSuiteWithEmbeddedDB {
             testUtil.checkNextPhaseChange(subscription, 0, null);
 
             assertListenerStatus();
-        } catch (EntitlementUserApiException e) {
+        } catch (SubscriptionUserApiException e) {
             Assert.fail(e.getMessage());
         }
     }
@@ -158,7 +158,7 @@ public class TestUserApiCancel extends EntitlementTestSuiteWithEmbeddedDB {
 
 
             assertListenerStatus();
-        } catch (EntitlementUserApiException e) {
+        } catch (SubscriptionUserApiException e) {
             Assert.fail(e.getMessage());
         }
     }
@@ -199,7 +199,7 @@ public class TestUserApiCancel extends EntitlementTestSuiteWithEmbeddedDB {
             testUtil.checkNextPhaseChange(subscription, 0, null);
 
             assertListenerStatus();
-        } catch (EntitlementUserApiException e) {
+        } catch (SubscriptionUserApiException e) {
             Assert.fail(e.getMessage());
         }
     }
@@ -254,7 +254,7 @@ public class TestUserApiCancel extends EntitlementTestSuiteWithEmbeddedDB {
             assertEquals(currentPhase.getPhaseType(), PhaseType.EVERGREEN);
 
             assertListenerStatus();
-        } catch (EntitlementUserApiException e) {
+        } catch (SubscriptionUserApiException e) {
             Assert.fail(e.getMessage());
         }
     }

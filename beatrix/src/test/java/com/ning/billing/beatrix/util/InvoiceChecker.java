@@ -28,14 +28,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 
-import com.ning.billing.entitlement.api.user.EntitlementUserApi;
-import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
-import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.invoice.api.InvoiceUserApi;
+import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.user.SubscriptionUserApi;
+import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
 import com.ning.billing.util.callcontext.CallContext;
 
 import com.google.common.collect.ImmutableList;
@@ -51,11 +51,11 @@ public class InvoiceChecker {
     private static final Logger log = LoggerFactory.getLogger(InvoiceChecker.class);
 
     private final InvoiceUserApi invoiceUserApi;
-    private final EntitlementUserApi entitlementApi;
+    private final SubscriptionUserApi entitlementApi;
     private final AuditChecker auditChecker;
 
     @Inject
-    public InvoiceChecker(final InvoiceUserApi invoiceUserApi, final EntitlementUserApi entitlementApi, final AuditChecker auditChecker) {
+    public InvoiceChecker(final InvoiceUserApi invoiceUserApi, final SubscriptionUserApi entitlementApi, final AuditChecker auditChecker) {
         this.invoiceUserApi = invoiceUserApi;
         this.entitlementApi = entitlementApi;
         this.auditChecker = auditChecker;
@@ -137,7 +137,7 @@ public class InvoiceChecker {
                 assertNotNull(subscription.getChargedThroughDate());
                 assertTrue(subscription.getChargedThroughDate().compareTo(expectedCTD) == 0, msg);
             }
-        } catch (EntitlementUserApiException e) {
+        } catch (SubscriptionUserApiException e) {
             fail("Failed to retrieve subscription for " + subscriptionId);
         }
     }

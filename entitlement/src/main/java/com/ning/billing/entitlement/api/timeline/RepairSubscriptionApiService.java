@@ -19,6 +19,7 @@ package com.ning.billing.entitlement.api.timeline;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.CatalogService;
+import com.ning.billing.clock.Clock;
 import com.ning.billing.entitlement.alignment.PlanAligner;
 import com.ning.billing.entitlement.api.SubscriptionApiService;
 import com.ning.billing.entitlement.api.user.DefaultSubscriptionApiService;
@@ -28,7 +29,6 @@ import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
-import com.ning.billing.clock.Clock;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;

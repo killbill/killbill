@@ -20,7 +20,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.util.callcontext.InternalTenantContext;

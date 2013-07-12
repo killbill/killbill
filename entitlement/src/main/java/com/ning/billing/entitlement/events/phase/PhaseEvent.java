@@ -16,6 +16,7 @@
 
 package com.ning.billing.entitlement.events.phase;
 
+
 import com.ning.billing.entitlement.events.EntitlementEvent;
 
 public interface PhaseEvent extends EntitlementEvent {

@@ -21,11 +21,11 @@ import com.ning.billing.api.TestApiListener;
 import com.ning.billing.api.TestListenerStatus;
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogService;
-import com.ning.billing.entitlement.api.EntitlementService;
-import com.ning.billing.entitlement.api.user.EntitlementUserApi;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.clock.ClockMock;
+import com.ning.billing.entitlement.api.SubscriptionService;
+import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionUserApi;
+import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.svcsapi.bus.BusService;
 
 public interface EntitlementTestInitializer {
@@ -34,15 +34,15 @@ public interface EntitlementTestInitializer {
 
     public AccountData initAccountData();
 
-    public SubscriptionBundle initBundle(final EntitlementUserApi entitlementApi, final CallContext callContext) throws Exception;
+    public SubscriptionBundle initBundle(final SubscriptionUserApi entitlementApi, final CallContext callContext) throws Exception;
 
     public void startTestFamework(final TestApiListener testListener,
                                   final TestListenerStatus testListenerStatus,
                                   final ClockMock clock,
                                   final BusService busService,
-                                  final EntitlementService entitlementService) throws Exception;
+                                  final SubscriptionService entitlementService) throws Exception;
 
     public void stopTestFramework(final TestApiListener testListener,
                                   final BusService busService,
-                                  final EntitlementService entitlementService) throws Exception;
+                                  final SubscriptionService entitlementService) throws Exception;
 }

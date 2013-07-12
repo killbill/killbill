@@ -34,17 +34,20 @@ import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.EntitlementTestSuiteNoDB;
-import com.ning.billing.entitlement.api.SubscriptionTransitionType;
-import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline.DeletedEvent;
-import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline.NewEvent;
-import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
-import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.api.user.TestEntitlementHelper.TestWithException;
 import com.ning.billing.entitlement.api.user.TestEntitlementHelper.TestWithExceptionCallback;
+import com.ning.billing.subscription.api.SubscriptionTransitionType;
+import com.ning.billing.subscription.api.timeline.BundleTimeline;
+import com.ning.billing.subscription.api.timeline.SubscriptionRepairException;
+import com.ning.billing.subscription.api.timeline.SubscriptionTimeline;
+import com.ning.billing.subscription.api.timeline.SubscriptionTimeline.DeletedEvent;
+import com.ning.billing.subscription.api.timeline.SubscriptionTimeline.NewEvent;
+import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
 
-import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
+import static org.testng.AssertJUnit.assertEquals;
 
 public class TestRepairWithError extends EntitlementTestSuiteNoDB {
 
@@ -65,7 +68,7 @@ public class TestRepairWithError extends EntitlementTestSuiteNoDB {
     public void testENT_REPAIR_NEW_EVENT_BEFORE_LAST_BP_REMAINING() throws Exception {
         test.withException(new TestWithExceptionCallback() {
             @Override
-            public void doTest() throws EntitlementRepairException {
+            public void doTest() throws SubscriptionRepairException {
                 // MOVE AFTER TRIAL
                 testListener.pushExpectedEvent(NextEvent.PHASE);
 
@@ -85,14 +88,14 @@ public class TestRepairWithError extends EntitlementTestSuiteNoDB {
 
                 repairApi.repairBundle(bRepair, true, callContext);
             }
-        }, ErrorCode.ENT_REPAIR_NEW_EVENT_BEFORE_LAST_BP_REMAINING);
+        }, ErrorCode.SUB_REPAIR_NEW_EVENT_BEFORE_LAST_BP_REMAINING);
     }
 
     @Test(groups = "fast")
     public void testENT_REPAIR_INVALID_DELETE_SET() throws Exception {
         test.withException(new TestWithExceptionCallback() {
             @Override
-            public void doTest() throws EntitlementRepairException, EntitlementUserApiException {
+            public void doTest() throws SubscriptionRepairException, SubscriptionUserApiException {
 
                 Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(3));
                 clock.addDeltaFromReality(it.toDurationMillis());
@@ -119,14 +122,14 @@ public class TestRepairWithError extends EntitlementTestSuiteNoDB {
 
                 repairApi.repairBundle(bRepair, true, callContext);
             }
-        }, ErrorCode.ENT_REPAIR_INVALID_DELETE_SET);
+        }, ErrorCode.SUB_REPAIR_INVALID_DELETE_SET);
     }
 
     @Test(groups = "fast")
     public void testENT_REPAIR_NON_EXISTENT_DELETE_EVENT() throws Exception {
         test.withException(new TestWithExceptionCallback() {
             @Override
-            public void doTest() throws EntitlementRepairException {
+            public void doTest() throws SubscriptionRepairException {
 
                 final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId(), callContext);
                 testUtil.sortEventsOnBundle(bundleRepair);
@@ -139,14 +142,14 @@ public class TestRepairWithError extends EntitlementTestSuiteNoDB {
 
                 repairApi.repairBundle(bRepair, true, callContext);
             }
-        }, ErrorCode.ENT_REPAIR_NON_EXISTENT_DELETE_EVENT);
+        }, ErrorCode.SUB_REPAIR_NON_EXISTENT_DELETE_EVENT);
     }
 
     @Test(groups = "fast")
     public void testENT_REPAIR_SUB_RECREATE_NOT_EMPTY() throws Exception {
         test.withException(new TestWithExceptionCallback() {
             @Override
-            public void doTest() throws EntitlementRepairException {
+            public void doTest() throws SubscriptionRepairException {
 
                 // MOVE AFTER TRIAL
                 testListener.pushExpectedEvent(NextEvent.PHASE);
@@ -167,7 +170,7 @@ public class TestRepairWithError extends EntitlementTestSuiteNoDB {
                 repairApi.repairBundle(bRepair, true, callContext);
 
             }
-        }, ErrorCode.ENT_REPAIR_SUB_RECREATE_NOT_EMPTY);
+        }, ErrorCode.SUB_REPAIR_SUB_RECREATE_NOT_EMPTY);
     }
 
     @Test(groups = "fast")
@@ -175,7 +178,7 @@ public class TestRepairWithError extends EntitlementTestSuiteNoDB {
         test.withException(new TestWithExceptionCallback() {
 
             @Override
-            public void doTest() throws EntitlementRepairException {
+            public void doTest() throws SubscriptionRepairException {
 
                 // MOVE AFTER TRIAL
                 testListener.pushExpectedEvent(NextEvent.PHASE);
@@ -196,14 +199,14 @@ public class TestRepairWithError extends EntitlementTestSuiteNoDB {
 
                 repairApi.repairBundle(bRepair, true, callContext);
             }
-        }, ErrorCode.ENT_REPAIR_SUB_EMPTY);
+        }, ErrorCode.SUB_REPAIR_SUB_EMPTY);
     }
 
     @Test(groups = "fast")
     public void testENT_REPAIR_AO_CREATE_BEFORE_BP_START() throws Exception {
         test.withException(new TestWithExceptionCallback() {
             @Override
-            public void doTest() throws EntitlementRepairException, EntitlementUserApiException {
+            public void doTest() throws SubscriptionRepairException, SubscriptionUserApiException {
                 // MOVE CLOCK A LITTLE BIT-- STILL IN TRIAL
                 Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(4));
                 clock.addDeltaFromReality(it.toDurationMillis());
@@ -238,14 +241,14 @@ public class TestRepairWithError extends EntitlementTestSuiteNoDB {
                 final boolean dryRun = true;
                 repairApi.repairBundle(bRepair, dryRun, callContext);
             }
-        }, ErrorCode.ENT_REPAIR_AO_CREATE_BEFORE_BP_START);
+        }, ErrorCode.SUB_REPAIR_AO_CREATE_BEFORE_BP_START);
     }
 
     @Test(groups = "fast")
     public void testENT_REPAIR_NEW_EVENT_BEFORE_LAST_AO_REMAINING() throws Exception {
         test.withException(new TestWithExceptionCallback() {
             @Override
-            public void doTest() throws EntitlementRepairException, EntitlementUserApiException {
+            public void doTest() throws SubscriptionRepairException, SubscriptionUserApiException {
 
                 // MOVE CLOCK A LITTLE BIT-- STILL IN TRIAL
                 Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(4));
@@ -279,14 +282,14 @@ public class TestRepairWithError extends EntitlementTestSuiteNoDB {
                 final boolean dryRun = true;
                 repairApi.repairBundle(bundleRepair, dryRun, callContext);
             }
-        }, ErrorCode.ENT_REPAIR_NEW_EVENT_BEFORE_LAST_AO_REMAINING);
+        }, ErrorCode.SUB_REPAIR_NEW_EVENT_BEFORE_LAST_AO_REMAINING);
     }
 
     @Test(groups = "fast", enabled = false) // TODO - fails on jdk7 on Travis
     public void testENT_REPAIR_BP_RECREATE_MISSING_AO() throws Exception {
         test.withException(new TestWithExceptionCallback() {
             @Override
-            public void doTest() throws EntitlementRepairException, EntitlementUserApiException {
+            public void doTest() throws SubscriptionRepairException, SubscriptionUserApiException {
 
                 //testListener.pushExpectedEvent(NextEvent.PHASE);
 
@@ -316,7 +319,7 @@ public class TestRepairWithError extends EntitlementTestSuiteNoDB {
                 final boolean dryRun = true;
                 repairApi.repairBundle(bRepair, dryRun, callContext);
             }
-        }, ErrorCode.ENT_REPAIR_BP_RECREATE_MISSING_AO);
+        }, ErrorCode.SUB_REPAIR_BP_RECREATE_MISSING_AO);
     }
 
     //
@@ -326,7 +329,7 @@ public class TestRepairWithError extends EntitlementTestSuiteNoDB {
     public void testENT_REPAIR_BP_RECREATE_MISSING_AO_CREATE() throws Exception {
         test.withException(new TestWithExceptionCallback() {
             @Override
-            public void doTest() throws EntitlementRepairException, EntitlementUserApiException {
+            public void doTest() throws SubscriptionRepairException, SubscriptionUserApiException {
                 /*
               //testListener.pushExpectedEvent(NextEvent.PHASE);
 
@@ -365,14 +368,14 @@ public class TestRepairWithError extends EntitlementTestSuiteNoDB {
                 repairApi.repairBundle(bRepair, dryRun, callContext);
                 */
             }
-        }, ErrorCode.ENT_REPAIR_BP_RECREATE_MISSING_AO_CREATE);
+        }, ErrorCode.SUB_REPAIR_BP_RECREATE_MISSING_AO_CREATE);
     }
 
     @Test(groups = "fast", enabled = false)
     public void testENT_REPAIR_MISSING_AO_DELETE_EVENT() throws Exception {
         test.withException(new TestWithExceptionCallback() {
             @Override
-            public void doTest() throws EntitlementRepairException, EntitlementUserApiException {
+            public void doTest() throws SubscriptionRepairException, SubscriptionUserApiException {
 
                 /*
                 // MOVE CLOCK -- JUST BEFORE END OF TRIAL
@@ -416,7 +419,7 @@ public class TestRepairWithError extends EntitlementTestSuiteNoDB {
                 repairApi.repairBundle(bundleRepair, dryRun, callContext);
                 */
             }
-        }, ErrorCode.ENT_REPAIR_MISSING_AO_DELETE_EVENT);
+        }, ErrorCode.SUB_REPAIR_MISSING_AO_DELETE_EVENT);
     }
 
 }

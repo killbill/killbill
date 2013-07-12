@@ -24,6 +24,7 @@ import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 
 public class TimedMigration {
+
     private final DateTime eventTime;
     private final EventType eventType;
     private final ApiEventType apiEventType;

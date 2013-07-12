@@ -41,9 +41,12 @@ import com.ning.billing.catalog.api.PlanSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
-import com.ning.billing.entitlement.api.SubscriptionTransitionType;
-import com.ning.billing.entitlement.api.user.SubscriptionStatusDryRun.DryRunChangeReason;
-import com.ning.billing.clock.DefaultClock;
+import com.ning.billing.subscription.api.SubscriptionTransitionType;
+import com.ning.billing.subscription.api.user.SubscriptionState;
+import com.ning.billing.subscription.api.user.SubscriptionStatusDryRun;
+import com.ning.billing.subscription.api.user.SubscriptionStatusDryRun.DryRunChangeReason;
+import com.ning.billing.subscription.api.user.SubscriptionTransition;
+import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
 
 public class TestUserApiAddOn extends EntitlementTestSuiteWithEmbeddedDB {
 
@@ -544,7 +547,7 @@ public class TestUserApiAddOn extends EntitlementTestSuiteWithEmbeddedDB {
             aoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId(), callContext);
             aoPendingTranstion = aoSubscription.getPendingTransition();
             assertNull(aoPendingTranstion);
-        } catch (EntitlementUserApiException e) {
+        } catch (SubscriptionUserApiException e) {
             Assert.fail(e.getMessage());
         }
     }

@@ -24,7 +24,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.junction.JunctionTestSuiteWithEmbeddedDB;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.junction.api.Type;

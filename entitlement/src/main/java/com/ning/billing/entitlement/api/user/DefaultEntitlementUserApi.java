@@ -33,20 +33,26 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.clock.Clock;
+import com.ning.billing.clock.DefaultClock;
 import com.ning.billing.entitlement.api.EntitlementApiBase;
-import com.ning.billing.entitlement.api.user.SubscriptionStatusDryRun.DryRunChangeReason;
 import com.ning.billing.entitlement.engine.addon.AddonUtils;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
+import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionState;
+import com.ning.billing.subscription.api.user.SubscriptionStatusDryRun;
+import com.ning.billing.subscription.api.user.SubscriptionStatusDryRun.DryRunChangeReason;
+import com.ning.billing.subscription.api.user.SubscriptionUserApi;
+import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.TenantContext;
-import com.ning.billing.clock.Clock;
-import com.ning.billing.clock.DefaultClock;
 
 import com.google.inject.Inject;
 
-public class DefaultEntitlementUserApi extends EntitlementApiBase implements EntitlementUserApi {
+public class DefaultEntitlementUserApi extends EntitlementApiBase implements SubscriptionUserApi {
 
     private final CatalogService catalogService;
     private final AddonUtils addonUtils;
@@ -63,35 +69,35 @@ public class DefaultEntitlementUserApi extends EntitlementApiBase implements Ent
     }
 
     @Override
-    public SubscriptionBundle getBundleFromId(final UUID id, final TenantContext context) throws EntitlementUserApiException {
+    public SubscriptionBundle getBundleFromId(final UUID id, final TenantContext context) throws SubscriptionUserApiException {
         final SubscriptionBundle result = dao.getSubscriptionBundleFromId(id, internalCallContextFactory.createInternalTenantContext(context));
         if (result == null) {
-            throw new EntitlementUserApiException(ErrorCode.ENT_GET_INVALID_BUNDLE_ID, id.toString());
+            throw new SubscriptionUserApiException(ErrorCode.SUB_GET_INVALID_BUNDLE_ID, id.toString());
         }
         return result;
     }
 
     @Override
-    public Subscription getSubscriptionFromId(final UUID id, final TenantContext context) throws EntitlementUserApiException {
+    public Subscription getSubscriptionFromId(final UUID id, final TenantContext context) throws SubscriptionUserApiException {
         final Subscription result = dao.getSubscriptionFromId(id, internalCallContextFactory.createInternalTenantContext(context));
         if (result == null) {
-            throw new EntitlementUserApiException(ErrorCode.ENT_INVALID_SUBSCRIPTION_ID, id);
+            throw new SubscriptionUserApiException(ErrorCode.SUB_INVALID_SUBSCRIPTION_ID, id);
         }
         return createSubscriptionForApiUse(result);
     }
 
     @Override
-    public SubscriptionBundle getBundleForAccountAndKey(final UUID accountId, final String bundleKey, final TenantContext context) throws EntitlementUserApiException {
+    public SubscriptionBundle getBundleForAccountAndKey(final UUID accountId, final String bundleKey, final TenantContext context) throws SubscriptionUserApiException {
         final SubscriptionBundle result = dao.getSubscriptionBundleFromAccountAndKey(accountId, bundleKey, internalCallContextFactory.createInternalTenantContext(context));
         if (result == null) {
-            throw new EntitlementUserApiException(ErrorCode.ENT_GET_INVALID_BUNDLE_KEY, bundleKey);
+            throw new SubscriptionUserApiException(ErrorCode.SUB_GET_INVALID_BUNDLE_KEY, bundleKey);
         }
         return result;
     }
 
     @Override
     public List<SubscriptionBundle> getBundlesForKey(final String bundleKey, final TenantContext context)
-            throws EntitlementUserApiException {
+            throws SubscriptionUserApiException {
         return dao.getSubscriptionBundlesForKey(bundleKey, internalCallContextFactory.createInternalTenantContext(context));
     }
 
@@ -113,10 +119,10 @@ public class DefaultEntitlementUserApi extends EntitlementApiBase implements Ent
     }
 
     @Override
-    public Subscription getBaseSubscription(final UUID bundleId, final TenantContext context) throws EntitlementUserApiException {
+    public Subscription getBaseSubscription(final UUID bundleId, final TenantContext context) throws SubscriptionUserApiException {
         final Subscription result = dao.getBaseSubscription(bundleId, internalCallContextFactory.createInternalTenantContext(context));
         if (result == null) {
-            throw new EntitlementUserApiException(ErrorCode.ENT_GET_NO_SUCH_BASE_SUBSCRIPTION, bundleId);
+            throw new SubscriptionUserApiException(ErrorCode.SUB_GET_NO_SUCH_BASE_SUBSCRIPTION, bundleId);
         }
         return createSubscriptionForApiUse(result);
     }
@@ -124,20 +130,20 @@ public class DefaultEntitlementUserApi extends EntitlementApiBase implements Ent
 
     @Override
     public SubscriptionBundle createBundleForAccount(final UUID accountId, final String bundleName, final CallContext context)
-            throws EntitlementUserApiException {
+            throws SubscriptionUserApiException {
         final SubscriptionBundleData bundle = new SubscriptionBundleData(bundleName, accountId, clock.getUTCNow());
         return dao.createSubscriptionBundle(bundle, internalCallContextFactory.createInternalCallContext(accountId, context));
     }
 
     @Override
     public Subscription createSubscription(final UUID bundleId, final PlanPhaseSpecifier spec, final DateTime requestedDateWithMs,
-                                           final CallContext context) throws EntitlementUserApiException {
+                                           final CallContext context) throws SubscriptionUserApiException {
         try {
             final String realPriceList = (spec.getPriceListName() == null) ? PriceListSet.DEFAULT_PRICELIST_NAME : spec.getPriceListName();
             final DateTime now = clock.getUTCNow();
             final DateTime requestedDate = (requestedDateWithMs != null) ? DefaultClock.truncateMs(requestedDateWithMs) : now;
             if (requestedDate.isAfter(now)) {
-                throw new EntitlementUserApiException(ErrorCode.ENT_INVALID_REQUESTED_DATE, now.toString(), requestedDate.toString());
+                throw new SubscriptionUserApiException(ErrorCode.SUB_INVALID_REQUESTED_DATE, now.toString(), requestedDate.toString());
             }
             final DateTime effectiveDate = requestedDate;
 
@@ -152,7 +158,7 @@ public class DefaultEntitlementUserApi extends EntitlementApiBase implements Ent
 
             final SubscriptionBundle bundle = dao.getSubscriptionBundleFromId(bundleId, internalCallContextFactory.createInternalTenantContext(context));
             if (bundle == null) {
-                throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_NO_BUNDLE, bundleId);
+                throw new SubscriptionUserApiException(ErrorCode.SUB_CREATE_NO_BUNDLE, bundleId);
             }
 
             DateTime bundleStartDate = null;
@@ -161,7 +167,7 @@ public class DefaultEntitlementUserApi extends EntitlementApiBase implements Ent
                 case BASE:
                     if (baseSubscription != null) {
                         if (baseSubscription.getState() == SubscriptionState.ACTIVE) {
-                            throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_BP_EXISTS, bundleId);
+                            throw new SubscriptionUserApiException(ErrorCode.SUB_CREATE_BP_EXISTS, bundleId);
                         } else {
                             // If we do create on an existing CANCELLED BP, this is equivalent to call recreate on that Subscription.
                             final Subscription recreatedSubscriptionForApiUse = createSubscriptionForApiUse(baseSubscription);
@@ -173,17 +179,17 @@ public class DefaultEntitlementUserApi extends EntitlementApiBase implements Ent
                     break;
                 case ADD_ON:
                     if (baseSubscription == null) {
-                        throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_NO_BP, bundleId);
+                        throw new SubscriptionUserApiException(ErrorCode.SUB_CREATE_NO_BP, bundleId);
                     }
                     if (effectiveDate.isBefore(baseSubscription.getStartDate())) {
-                        throw new EntitlementUserApiException(ErrorCode.ENT_INVALID_REQUESTED_DATE, effectiveDate.toString(), baseSubscription.getStartDate().toString());
+                        throw new SubscriptionUserApiException(ErrorCode.SUB_INVALID_REQUESTED_DATE, effectiveDate.toString(), baseSubscription.getStartDate().toString());
                     }
                     addonUtils.checkAddonCreationRights(baseSubscription, plan);
                     bundleStartDate = baseSubscription.getStartDate();
                     break;
                 case STANDALONE:
                     if (baseSubscription != null) {
-                        throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_BP_EXISTS, bundleId);
+                        throw new SubscriptionUserApiException(ErrorCode.SUB_CREATE_BP_EXISTS, bundleId);
                     }
                     // Not really but we don't care, there is no alignment for STANDALONE subscriptions
                     bundleStartDate = requestedDate;
@@ -201,7 +207,7 @@ public class DefaultEntitlementUserApi extends EntitlementApiBase implements Ent
                                                  .setAlignStartDate(effectiveDate),
                                          plan, spec.getPhaseType(), realPriceList, requestedDate, effectiveDate, now, context);
         } catch (CatalogApiException e) {
-            throw new EntitlementUserApiException(e);
+            throw new SubscriptionUserApiException(e);
         }
     }
 
@@ -225,13 +231,13 @@ public class DefaultEntitlementUserApi extends EntitlementApiBase implements Ent
     @Override
     public List<SubscriptionStatusDryRun> getDryRunChangePlanStatus(final UUID subscriptionId, @Nullable final String baseProductName,
                                                                     final DateTime requestedDate, final TenantContext context)
-            throws EntitlementUserApiException {
+            throws SubscriptionUserApiException {
         final Subscription subscription = dao.getSubscriptionFromId(subscriptionId, internalCallContextFactory.createInternalTenantContext(context));
         if (subscription == null) {
-            throw new EntitlementUserApiException(ErrorCode.ENT_INVALID_SUBSCRIPTION_ID, subscriptionId);
+            throw new SubscriptionUserApiException(ErrorCode.SUB_INVALID_SUBSCRIPTION_ID, subscriptionId);
         }
         if (subscription.getCategory() != ProductCategory.BASE) {
-            throw new EntitlementUserApiException(ErrorCode.ENT_CHANGE_DRY_RUN_NOT_BP);
+            throw new SubscriptionUserApiException(ErrorCode.SUB_CHANGE_DRY_RUN_NOT_BP);
         }
 
         final List<SubscriptionStatusDryRun> result = new LinkedList<SubscriptionStatusDryRun>();

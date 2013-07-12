@@ -36,12 +36,12 @@ import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.payment.api.PaymentStatus;
+import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.user.SubscriptionBundle;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -80,9 +80,9 @@ public class TestIntegration extends TestIntegrationBase {
         entitlementChecker.checkBundleAuditUpdated(bundle.getId(), callContext);
 
         //
-                                    // CANCEL BP ON THE SAME DAY (we should have two cancellations, BP and AO)
-                                    // There is no invoice created as we only adjust the previous invoice.
-                                    //
+        // CANCEL BP ON THE SAME DAY (we should have two cancellations, BP and AO)
+        // There is no invoice created as we only adjust the previous invoice.
+        //
         cancelSubscriptionAndCheckForCompletion(bpSubscription, clock.getUTCNow(), NextEvent.CANCEL, NextEvent.CANCEL, NextEvent.INVOICE_ADJUSTMENT);
         invoiceChecker.checkInvoice(account.getId(), 2,
                                     callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("399.95")),

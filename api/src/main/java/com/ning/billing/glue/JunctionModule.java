@@ -25,7 +25,7 @@ public interface JunctionModule {
 
     public void installBlockingApi();
 
-    public void installEntitlementUserApi();
+    public void installSubscriptionUserApi();
 
     public void installJunctionApi();
 

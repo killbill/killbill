@@ -30,8 +30,8 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
-import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
+import com.ning.billing.subscription.api.user.Subscription;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.invoice.api.InvoicePayment;
@@ -722,7 +722,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         if (shouldFail) {
             try {
                 subscription.changePlan("Pistol", term, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow(), callContext);
-            } catch (EntitlementUserApiException e) {
+            } catch (SubscriptionUserApiException e) {
                 assertTrue(e.getCause() instanceof BlockingApiException);
             }
         } else {

@@ -20,8 +20,8 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
+import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.EntityBase;
 import com.ning.billing.util.entity.dao.EntityModelDao;

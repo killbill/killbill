@@ -32,10 +32,10 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
 import com.ning.billing.util.api.CustomFieldApiException;
 import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.customfield.CustomField;
@@ -79,7 +79,7 @@ public class TestCustomFieldApi extends TestIntegrationBase {
 
 
     @Test(groups = "slow")
-    public void testCustomFieldForInvoice() throws CustomFieldApiException, EntitlementUserApiException {
+    public void testCustomFieldForInvoice() throws CustomFieldApiException, SubscriptionUserApiException {
 
         //
         // Create necessary logic to end up with an Invoice object on that account.

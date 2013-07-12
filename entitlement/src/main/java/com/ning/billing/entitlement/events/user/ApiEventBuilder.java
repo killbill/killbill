@@ -16,9 +16,8 @@
 
 package com.ning.billing.entitlement.events.user;
 
-import java.util.UUID;
-
 import com.ning.billing.entitlement.events.EventBaseBuilder;
+
 
 public class ApiEventBuilder extends EventBaseBuilder<ApiEventBuilder> {
 

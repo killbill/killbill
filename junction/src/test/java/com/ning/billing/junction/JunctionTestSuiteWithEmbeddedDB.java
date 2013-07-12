@@ -23,11 +23,11 @@ import org.testng.annotations.BeforeMethod;
 import com.ning.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.catalog.api.CatalogService;
-import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.junction.block.BlockingChecker;
 import com.ning.billing.junction.dao.BlockingStateDao;
 import com.ning.billing.junction.glue.TestJunctionModuleWithEmbeddedDB;
 import com.ning.billing.junction.plumbing.billing.BlockingCalculator;
+import com.ning.billing.subscription.api.user.SubscriptionUserApi;
 import com.ning.billing.util.glue.RealImplementation;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
@@ -58,7 +58,7 @@ public abstract class JunctionTestSuiteWithEmbeddedDB extends GuicyKillbillTestS
     protected CatalogService catalogService;
     @Inject
     @RealImplementation
-    protected EntitlementUserApi entitlementUserApi;
+    protected SubscriptionUserApi entitlementUserApi;
     @Inject
     protected EntitlementInternalApi entitlementInternalApi;
     @Inject

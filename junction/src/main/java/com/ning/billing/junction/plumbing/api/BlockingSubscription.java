@@ -28,11 +28,11 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
-import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.SubscriptionSourceType;
-import com.ning.billing.entitlement.api.user.SubscriptionState;
-import com.ning.billing.entitlement.api.user.SubscriptionTransition;
+import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
+import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.user.SubscriptionSourceType;
+import com.ning.billing.subscription.api.user.SubscriptionState;
+import com.ning.billing.subscription.api.user.SubscriptionTransition;
 import com.ning.billing.junction.api.BlockingApiException;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.junction.block.BlockingChecker;
@@ -76,46 +76,46 @@ public class BlockingSubscription implements Subscription {
     }
 
     @Override
-    public boolean cancel(final DateTime requestedDate, final CallContext context) throws EntitlementUserApiException {
+    public boolean cancel(final DateTime requestedDate, final CallContext context) throws SubscriptionUserApiException {
         return subscription.cancel(requestedDate, context);
     }
 
     @Override
     public boolean cancelWithPolicy(DateTime requestedDate, ActionPolicy policy, CallContext context)
-            throws EntitlementUserApiException {
+            throws SubscriptionUserApiException {
         return subscription.cancelWithPolicy(requestedDate, policy, context);
     }
 
     @Override
-    public boolean uncancel(final CallContext context) throws EntitlementUserApiException {
+    public boolean uncancel(final CallContext context) throws SubscriptionUserApiException {
         return subscription.uncancel(context);
     }
 
     @Override
     public boolean changePlan(final String productName, final BillingPeriod term, final String priceList, final DateTime requestedDate,
-                              final CallContext context) throws EntitlementUserApiException {
+                              final CallContext context) throws SubscriptionUserApiException {
         try {
             checker.checkBlockedChange(this, internalCallContextFactory.createInternalTenantContext(context));
         } catch (BlockingApiException e) {
-            throw new EntitlementUserApiException(e, e.getCode(), e.getMessage());
+            throw new SubscriptionUserApiException(e, e.getCode(), e.getMessage());
         }
         return subscription.changePlan(productName, term, priceList, requestedDate, context);
     }
 
     @Override
     public boolean changePlanWithPolicy(final String productName, final BillingPeriod term, final String priceList,
-                                        final DateTime requestedDate, final ActionPolicy policy, final CallContext context) throws EntitlementUserApiException {
+                                        final DateTime requestedDate, final ActionPolicy policy, final CallContext context) throws SubscriptionUserApiException {
         try {
             checker.checkBlockedChange(this, internalCallContextFactory.createInternalTenantContext(context));
         } catch (BlockingApiException e) {
-            throw new EntitlementUserApiException(e, e.getCode(), e.getMessage());
+            throw new SubscriptionUserApiException(e, e.getCode(), e.getMessage());
         }
         return subscription.changePlanWithPolicy(productName, term, priceList, requestedDate, policy, context);
     }
 
     @Override
     public boolean recreate(final PlanPhaseSpecifier spec, final DateTime requestedDate, final CallContext context)
-            throws EntitlementUserApiException {
+            throws SubscriptionUserApiException {
         return subscription.recreate(spec, requestedDate, context);
     }
 

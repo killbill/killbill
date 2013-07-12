@@ -16,8 +16,6 @@
 
 package com.ning.billing.entitlement;
 
-import java.io.IOException;
-import java.net.URL;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -32,13 +30,13 @@ import com.ning.billing.catalog.DefaultCatalogService;
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.entitlement.api.EntitlementService;
-import com.ning.billing.entitlement.api.user.EntitlementUserApi;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.clock.ClockMock;
+import com.ning.billing.entitlement.api.SubscriptionService;
 import com.ning.billing.entitlement.engine.core.Engine;
 import com.ning.billing.mock.MockAccountBuilder;
+import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionUserApi;
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.clock.ClockMock;
 import com.ning.billing.util.svcsapi.bus.BusService;
 
 import static org.testng.Assert.assertNotNull;
@@ -78,7 +76,7 @@ public class DefaultEntitlementTestInitializer implements EntitlementTestInitial
         return accountData;
     }
 
-    public SubscriptionBundle initBundle(final EntitlementUserApi entitlementApi, final CallContext callContext) throws Exception {
+    public SubscriptionBundle initBundle(final SubscriptionUserApi entitlementApi, final CallContext callContext) throws Exception {
         final UUID accountId = UUID.randomUUID();
         final SubscriptionBundle bundle = entitlementApi.createBundleForAccount(accountId, "myDefaultBundle", callContext);
         assertNotNull(bundle);
@@ -90,7 +88,7 @@ public class DefaultEntitlementTestInitializer implements EntitlementTestInitial
                                   final TestListenerStatus testListenerStatus,
                                   final ClockMock clock,
                                   final BusService busService,
-                                  final EntitlementService entitlementService) throws Exception {
+                                  final SubscriptionService entitlementService) throws Exception {
         log.warn("STARTING TEST FRAMEWORK");
 
         resetTestListener(testListener, testListenerStatus);
@@ -106,7 +104,7 @@ public class DefaultEntitlementTestInitializer implements EntitlementTestInitial
 
     public void stopTestFramework(final TestApiListener testListener,
                                   final BusService busService,
-                                  final EntitlementService entitlementService) throws Exception {
+                                  final SubscriptionService entitlementService) throws Exception {
         log.warn("STOPPING TEST FRAMEWORK");
         stopBusAndUnregisterListener(busService, testListener);
 
@@ -114,7 +112,6 @@ public class DefaultEntitlementTestInitializer implements EntitlementTestInitial
 
         log.warn("STOPPED TEST FRAMEWORK");
     }
-
 
 
     private void resetTestListener(final TestApiListener testListener, final TestListenerStatus testListenerStatus) {
@@ -138,7 +135,7 @@ public class DefaultEntitlementTestInitializer implements EntitlementTestInitial
         busService.getBus().register(testListener);
     }
 
-    private void restartEntitlementService(final EntitlementService entitlementService) {
+    private void restartEntitlementService(final SubscriptionService entitlementService) {
         // START NOTIFICATION QUEUE FOR ENTITLEMENT
         ((Engine) entitlementService).initialize();
         ((Engine) entitlementService).start();
@@ -149,7 +146,7 @@ public class DefaultEntitlementTestInitializer implements EntitlementTestInitial
         busService.getBus().stop();
     }
 
-    private void stopEntitlementService(final EntitlementService entitlementService) throws Exception {
+    private void stopEntitlementService(final SubscriptionService entitlementService) throws Exception {
         ((Engine) entitlementService).stop();
     }
 }

@@ -22,8 +22,8 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
-import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
+import com.ning.billing.subscription.api.user.Subscription;
 import com.ning.billing.invoice.InvoiceListener;
 import com.ning.billing.invoice.api.DefaultInvoiceService;
 import com.ning.billing.notificationq.api.NotificationEvent;
@@ -85,7 +85,7 @@ public class DefaultNextBillingDateNotifier implements NextBillingDateNotifier {
                         } else {
                             processEvent(key.getUuidKey(), eventDate, userToken, accountRecordId, tenantRecordId);
                         }
-                    } catch (EntitlementUserApiException e) {
+                    } catch (SubscriptionUserApiException e) {
                         log.warn("Next Billing Date Notification Queue handled spurious notification (key: " + key + ")", e);
                     }
                 } catch (IllegalArgumentException e) {

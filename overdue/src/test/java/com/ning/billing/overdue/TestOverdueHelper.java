@@ -30,13 +30,13 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.catalog.MockPlan;
 import com.ning.billing.catalog.MockPriceList;
-import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
-import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.overdue.glue.ApplicatorMockJunctionModule.ApplicatorBlockingApi;
+import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
@@ -118,7 +118,7 @@ public class TestOverdueHelper {
         Assert.assertEquals(result.isBlockBilling(), state.disableEntitlementAndChangesBlocked());
     }
 
-    public SubscriptionBundle createBundle(final LocalDate dateOfLastUnPaidInvoice) throws EntitlementUserApiException, AccountApiException {
+    public SubscriptionBundle createBundle(final LocalDate dateOfLastUnPaidInvoice) throws SubscriptionUserApiException, AccountApiException {
         final SubscriptionBundle bundle = Mockito.mock(SubscriptionBundle.class);
         final UUID bundleId = UUID.randomUUID();
         Mockito.when(bundle.getId()).thenReturn(bundleId);

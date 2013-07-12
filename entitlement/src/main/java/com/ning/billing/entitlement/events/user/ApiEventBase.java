@@ -16,8 +16,6 @@
 
 package com.ning.billing.entitlement.events.user;
 
-import java.util.UUID;
-
 import com.ning.billing.entitlement.events.EventBase;
 
 public class ApiEventBase extends EventBase implements ApiEvent {
@@ -72,18 +70,18 @@ public class ApiEventBase extends EventBase implements ApiEvent {
     @Override
     public String toString() {
         return "ApiEventBase [ getId()= " + getId()
-                + " eventType=" + eventType
-                + ", eventPlan=" + eventPlan
-                + ", eventPlanPhase=" + eventPlanPhase
-                + ", getEventType()=" + getEventType()
-                + ", getEventPlan()=" + getEventPlan()
-                + ", getEventPlanPhase()=" + getEventPlanPhase()
-                + ", getType()=" + getType()
-                + ", getRequestedDate()=" + getRequestedDate()
-                + ", getEffectiveDate()=" + getEffectiveDate()
-                + ", getActiveVersion()=" + getActiveVersion()
-                + ", getProcessedDate()=" + getProcessedDate()
-                + ", getSubscriptionId()=" + getSubscriptionId()
-                + ", isActive()=" + isActive() + "]";
+               + " eventType=" + eventType
+               + ", eventPlan=" + eventPlan
+               + ", eventPlanPhase=" + eventPlanPhase
+               + ", getEventType()=" + getEventType()
+               + ", getEventPlan()=" + getEventPlan()
+               + ", getEventPlanPhase()=" + getEventPlanPhase()
+               + ", getType()=" + getType()
+               + ", getRequestedDate()=" + getRequestedDate()
+               + ", getEffectiveDate()=" + getEffectiveDate()
+               + ", getActiveVersion()=" + getActiveVersion()
+               + ", getProcessedDate()=" + getProcessedDate()
+               + ", getSubscriptionId()=" + getSubscriptionId()
+               + ", isActive()=" + isActive() + "]";
     }
 }

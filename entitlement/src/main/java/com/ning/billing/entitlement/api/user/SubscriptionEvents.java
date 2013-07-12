@@ -21,6 +21,7 @@ import java.util.List;
 
 import com.ning.billing.entitlement.events.EntitlementEvent;
 
+
 public class SubscriptionEvents {
     public static final long INITIAL_VERSION = 1;
 

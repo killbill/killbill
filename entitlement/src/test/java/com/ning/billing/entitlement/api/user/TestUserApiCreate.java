@@ -35,7 +35,8 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
-import com.ning.billing.clock.DefaultClock;
+import com.ning.billing.subscription.api.user.SubscriptionTransition;
+import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -89,7 +90,7 @@ public class TestUserApiCreate extends EntitlementTestSuiteWithEmbeddedDB {
             assertEquals(transition.getPreviousEventCreatedDate().compareTo(trialEvent.getCreatedDate()), 0);
             assertEquals(transition.getNextEventCreatedDate().compareTo(phaseEvent.getCreatedDate()), 0);
 
-        } catch (EntitlementUserApiException e) {
+        } catch (SubscriptionUserApiException e) {
             log.error("Unexpected exception", e);
             Assert.fail(e.getMessage());
         }
@@ -128,7 +129,7 @@ public class TestUserApiCreate extends EntitlementTestSuiteWithEmbeddedDB {
 
             assertListenerStatus();
 
-        } catch (EntitlementUserApiException e) {
+        } catch (SubscriptionUserApiException e) {
             Assert.fail(e.getMessage());
         }
     }
@@ -185,7 +186,7 @@ public class TestUserApiCreate extends EntitlementTestSuiteWithEmbeddedDB {
             assertTrue(testListener.isCompleted(5000));
 
             assertListenerStatus();
-        } catch (EntitlementUserApiException e) {
+        } catch (SubscriptionUserApiException e) {
             Assert.fail(e.getMessage());
         }
     }
@@ -230,7 +231,7 @@ public class TestUserApiCreate extends EntitlementTestSuiteWithEmbeddedDB {
             assertEquals(currentPhase.getPhaseType(), PhaseType.EVERGREEN);
 
             assertListenerStatus();
-        } catch (EntitlementUserApiException e) {
+        } catch (SubscriptionUserApiException e) {
             Assert.fail(e.getMessage());
         }
     }
@@ -249,7 +250,7 @@ public class TestUserApiCreate extends EntitlementTestSuiteWithEmbeddedDB {
             assertNotNull(subscription);
 
             assertListenerStatus();
-        } catch (EntitlementUserApiException e) {
+        } catch (SubscriptionUserApiException e) {
             Assert.fail(e.getMessage());
         }
     }

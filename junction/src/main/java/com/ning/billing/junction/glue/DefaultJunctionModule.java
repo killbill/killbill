@@ -19,7 +19,6 @@ package com.ning.billing.junction.glue;
 import org.skife.config.ConfigSource;
 
 import com.ning.billing.account.api.AccountUserApi;
-import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.glue.JunctionModule;
 import com.ning.billing.junction.api.DefaultJunctionApi;
 import com.ning.billing.junction.api.JunctionApi;
@@ -32,6 +31,7 @@ import com.ning.billing.junction.plumbing.api.BlockingAccountUserApi;
 import com.ning.billing.junction.plumbing.api.BlockingEntitlementUserApi;
 import com.ning.billing.junction.plumbing.billing.BlockingCalculator;
 import com.ning.billing.junction.plumbing.billing.DefaultInternalBillingApi;
+import com.ning.billing.subscription.api.user.SubscriptionUserApi;
 import com.ning.billing.util.svcapi.junction.BillingInternalApi;
 import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
 
@@ -51,7 +51,7 @@ public class DefaultJunctionModule extends AbstractModule implements JunctionMod
         installBlockingApi();
         installAccountUserApi();
         installBillingApi();
-        installEntitlementUserApi();
+        installSubscriptionUserApi();
         installBlockingChecker();
         installJunctionApi();
 
@@ -76,8 +76,8 @@ public class DefaultJunctionModule extends AbstractModule implements JunctionMod
         bind(AccountUserApi.class).to(BlockingAccountUserApi.class).asEagerSingleton();
     }
 
-    public void installEntitlementUserApi() {
-        bind(EntitlementUserApi.class).to(BlockingEntitlementUserApi.class).asEagerSingleton();
+    public void installSubscriptionUserApi() {
+        bind(SubscriptionUserApi.class).to(BlockingEntitlementUserApi.class).asEagerSingleton();
     }
 
     public void installBlockingApi() {

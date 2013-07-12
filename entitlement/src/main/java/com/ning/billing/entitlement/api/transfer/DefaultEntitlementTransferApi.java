@@ -33,15 +33,7 @@ import com.ning.billing.entitlement.api.EntitlementApiBase;
 import com.ning.billing.entitlement.api.SubscriptionApiService;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData.BundleMigrationData;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData.SubscriptionMigrationData;
-import com.ning.billing.entitlement.api.timeline.BundleTimeline;
-import com.ning.billing.entitlement.api.timeline.EntitlementRepairException;
-import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
-import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline;
-import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline.ExistingEvent;
-
-import com.ning.billing.entitlement.api.user.SubscriptionState;
 import com.ning.billing.entitlement.api.user.SubscriptionBuilder;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
@@ -52,6 +44,16 @@ import com.ning.billing.entitlement.events.user.ApiEventCancel;
 import com.ning.billing.entitlement.events.user.ApiEventChange;
 import com.ning.billing.entitlement.events.user.ApiEventTransfer;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
+import com.ning.billing.subscription.api.timeline.BundleTimeline;
+import com.ning.billing.subscription.api.timeline.SubscriptionRepairException;
+import com.ning.billing.subscription.api.timeline.SubscriptionTimeline;
+import com.ning.billing.subscription.api.timeline.SubscriptionTimeline.ExistingEvent;
+
+import com.ning.billing.subscription.api.timeline.SubscriptionTimelineApi;
+import com.ning.billing.subscription.api.transfer.SubscriptionTransferApi;
+import com.ning.billing.subscription.api.transfer.SubscriptionTransferApiException;
+import com.ning.billing.subscription.api.user.SubscriptionState;
+import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
@@ -61,14 +63,14 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
-public class DefaultEntitlementTransferApi extends EntitlementApiBase implements EntitlementTransferApi {
+public class DefaultEntitlementTransferApi extends EntitlementApiBase implements SubscriptionTransferApi {
 
     private final CatalogService catalogService;
-    private final EntitlementTimelineApi timelineApi;
+    private final SubscriptionTimelineApi timelineApi;
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
-    public DefaultEntitlementTransferApi(final Clock clock, final EntitlementDao dao, final EntitlementTimelineApi timelineApi, final CatalogService catalogService,
+    public DefaultEntitlementTransferApi(final Clock clock, final EntitlementDao dao, final SubscriptionTimelineApi timelineApi, final CatalogService catalogService,
                                          final SubscriptionApiService apiService, final InternalCallContextFactory internalCallContextFactory) {
         super(dao, apiService, clock, catalogService);
         this.catalogService = catalogService;
@@ -138,7 +140,7 @@ public class DefaultEntitlementTransferApi extends EntitlementApiBase implements
 
     @VisibleForTesting
     List<EntitlementEvent> toEvents(final List<ExistingEvent> existingEvents, final SubscriptionData subscription,
-                                    final DateTime transferDate, final CallContext context) throws EntitlementTransferApiException {
+                                    final DateTime transferDate, final CallContext context) throws SubscriptionTransferApiException {
 
         try {
             final List<EntitlementEvent> result = new LinkedList<EntitlementEvent>();
@@ -181,14 +183,14 @@ public class DefaultEntitlementTransferApi extends EntitlementApiBase implements
 
             return result;
         } catch (CatalogApiException e) {
-            throw new EntitlementTransferApiException(e);
+            throw new SubscriptionTransferApiException(e);
         }
     }
 
     @Override
     public SubscriptionBundle transferBundle(final UUID sourceAccountId, final UUID destAccountId,
                                              final String bundleKey, final DateTime transferDate, final boolean transferAddOn,
-                                             final boolean cancelImmediately, final CallContext context) throws EntitlementTransferApiException {
+                                             final boolean cancelImmediately, final CallContext context) throws SubscriptionTransferApiException {
         final InternalCallContext fromInternalCallContext = internalCallContextFactory.createInternalCallContext(sourceAccountId, context);
         final InternalCallContext toInternalCallContext = internalCallContextFactory.createInternalCallContext(destAccountId, context);
 
@@ -197,12 +199,12 @@ public class DefaultEntitlementTransferApi extends EntitlementApiBase implements
             if (effectiveTransferDate.isAfter(clock.getUTCNow())) {
                 // The transfer event for the migrated bundle will be the first one, which cannot be in the future
                 // (entitlement always expects the first event to be in the past)
-                throw new EntitlementTransferApiException(ErrorCode.ENT_TRANSFER_INVALID_EFF_DATE, effectiveTransferDate);
+                throw new SubscriptionTransferApiException(ErrorCode.SUB_TRANSFER_INVALID_EFF_DATE, effectiveTransferDate);
             }
 
             final SubscriptionBundle bundle = dao.getSubscriptionBundleFromAccountAndKey(sourceAccountId, bundleKey, fromInternalCallContext);
             if (bundle == null) {
-                throw new EntitlementTransferApiException(ErrorCode.ENT_CREATE_NO_BUNDLE, bundleKey);
+                throw new SubscriptionTransferApiException(ErrorCode.SUB_CREATE_NO_BUNDLE, bundleKey);
             }
 
             // Get the bundle timeline for the old account
@@ -271,8 +273,8 @@ public class DefaultEntitlementTransferApi extends EntitlementApiBase implements
             dao.transfer(sourceAccountId, destAccountId, bundleMigrationData, transferCancelDataList, fromInternalCallContext, toInternalCallContext);
 
             return bundle;
-        } catch (EntitlementRepairException e) {
-            throw new EntitlementTransferApiException(e);
+        } catch (SubscriptionRepairException e) {
+            throw new SubscriptionTransferApiException(e);
         }
     }
 }

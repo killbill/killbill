@@ -21,9 +21,9 @@ import javax.inject.Inject;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.api.CatalogUserApi;
 import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi;
-import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
-import com.ning.billing.entitlement.api.transfer.EntitlementTransferApi;
-import com.ning.billing.entitlement.api.user.EntitlementUserApi;
+import com.ning.billing.subscription.api.timeline.SubscriptionTimelineApi;
+import com.ning.billing.subscription.api.transfer.SubscriptionTransferApi;
+import com.ning.billing.subscription.api.user.SubscriptionUserApi;
 import com.ning.billing.invoice.api.InvoiceMigrationApi;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.api.InvoiceUserApi;
@@ -45,9 +45,9 @@ public class DefaultOSGIKillbill implements OSGIKillbill {
     private final AccountUserApi accountUserApi;
     private final CatalogUserApi catalogUserApi;
     private final EntitlementMigrationApi entitlementMigrationApi;
-    private final EntitlementTimelineApi entitlementTimelineApi;
-    private final EntitlementTransferApi entitlementTransferApi;
-    private final EntitlementUserApi entitlementUserApi;
+    private final SubscriptionTimelineApi entitlementTimelineApi;
+    private final SubscriptionTransferApi entitlementTransferApi;
+    private final SubscriptionUserApi entitlementUserApi;
     private final InvoiceMigrationApi invoiceMigrationApi;
     private final InvoicePaymentApi invoicePaymentApi;
     private final InvoiceUserApi invoiceUserApi;
@@ -68,9 +68,9 @@ public class DefaultOSGIKillbill implements OSGIKillbill {
     public DefaultOSGIKillbill(final AccountUserApi accountUserApi,
                                final CatalogUserApi catalogUserApi,
                                final EntitlementMigrationApi entitlementMigrationApi,
-                               final EntitlementTimelineApi entitlementTimelineApi,
-                               final EntitlementTransferApi entitlementTransferApi,
-                               final EntitlementUserApi entitlementUserApi,
+                               final SubscriptionTimelineApi entitlementTimelineApi,
+                               final SubscriptionTransferApi entitlementTransferApi,
+                               final SubscriptionUserApi entitlementUserApi,
                                final InvoiceMigrationApi invoiceMigrationApi,
                                final InvoicePaymentApi invoicePaymentApi,
                                final InvoiceUserApi invoiceUserApi,
@@ -118,17 +118,17 @@ public class DefaultOSGIKillbill implements OSGIKillbill {
     }
 
     @Override
-    public EntitlementTimelineApi getEntitlementTimelineApi() {
+    public SubscriptionTimelineApi getSubscriptionTimelineApi() {
         return entitlementTimelineApi;
     }
 
     @Override
-    public EntitlementTransferApi getEntitlementTransferApi() {
+    public SubscriptionTransferApi getSubscriptionTransferApi() {
         return entitlementTransferApi;
     }
 
     @Override
-    public EntitlementUserApi getEntitlementUserApi() {
+    public SubscriptionUserApi getSubscriptionUserApi() {
         return entitlementUserApi;
     }
 

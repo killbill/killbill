@@ -20,11 +20,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.ning.billing.catalog.api.CatalogService;
-import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.events.EntitlementEvent;
+import com.ning.billing.subscription.api.user.Subscription;
 import com.ning.billing.clock.Clock;
 
 import com.google.common.base.Function;

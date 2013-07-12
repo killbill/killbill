@@ -27,8 +27,8 @@ import com.ning.billing.entitlement.DefaultEntitlementTestInitializer;
 import com.ning.billing.entitlement.EntitlementTestInitializer;
 import com.ning.billing.entitlement.EntitlementTestListenerStatus;
 import com.ning.billing.entitlement.api.user.DefaultEntitlementUserApi;
-import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.TestEntitlementHelper;
+import com.ning.billing.subscription.api.user.SubscriptionUserApi;
 import com.ning.billing.util.glue.CacheModule;
 import com.ning.billing.util.glue.CallContextModule;
 
@@ -39,8 +39,8 @@ public class TestEngineModule extends DefaultEntitlementModule {
     }
 
     @Override
-    public void installEntitlementUserApi() {
-        bind(EntitlementUserApi.class).to(DefaultEntitlementUserApi.class).asEagerSingleton();
+    public void installSubscriptionUserApi() {
+        bind(SubscriptionUserApi.class).to(DefaultEntitlementUserApi.class).asEagerSingleton();
     }
 
     @Override

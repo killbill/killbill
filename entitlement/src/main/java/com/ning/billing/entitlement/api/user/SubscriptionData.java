@@ -38,7 +38,6 @@ import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.SubscriptionApiService;
-import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionDataIterator.Kind;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionDataIterator.Order;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionDataIterator.TimeLimit;
@@ -49,7 +48,13 @@ import com.ning.billing.entitlement.events.phase.PhaseEvent;
 import com.ning.billing.entitlement.events.user.ApiEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
+import com.ning.billing.subscription.api.SubscriptionTransitionType;
 import com.ning.billing.junction.api.BlockingState;
+import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.user.SubscriptionSourceType;
+import com.ning.billing.subscription.api.user.SubscriptionState;
+import com.ning.billing.subscription.api.user.SubscriptionTransition;
+import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.util.entity.EntityBase;
@@ -192,6 +197,7 @@ public class SubscriptionData extends EntityBase implements Subscription {
         if (transitions == null) {
             return null;
         }
+
         final SubscriptionTransitionDataIterator it = new SubscriptionTransitionDataIterator(
                 clock, transitions, Order.ASC_FROM_PAST, Kind.ENTITLEMENT,
                 Visibility.ALL, TimeLimit.FUTURE_ONLY);
@@ -205,36 +211,36 @@ public class SubscriptionData extends EntityBase implements Subscription {
     }
 
     @Override
-    public boolean cancel(final DateTime requestedDate, final CallContext context) throws EntitlementUserApiException {
+    public boolean cancel(final DateTime requestedDate, final CallContext context) throws SubscriptionUserApiException {
         return apiService.cancel(this, requestedDate, context);
     }
 
     @Override
-    public boolean cancelWithPolicy(final DateTime requestedDate, final ActionPolicy policy, final CallContext context) throws EntitlementUserApiException {
+    public boolean cancelWithPolicy(final DateTime requestedDate, final ActionPolicy policy, final CallContext context) throws SubscriptionUserApiException {
         return apiService.cancelWithPolicy(this, requestedDate, policy, context);
     }
 
     @Override
     public boolean uncancel(final CallContext context)
-            throws EntitlementUserApiException {
+            throws SubscriptionUserApiException {
         return apiService.uncancel(this, context);
     }
 
     @Override
     public boolean changePlan(final String productName, final BillingPeriod term, final String priceList,
-            final DateTime requestedDate, final CallContext context) throws EntitlementUserApiException {
+            final DateTime requestedDate, final CallContext context) throws SubscriptionUserApiException {
         return apiService.changePlan(this, productName, term, priceList, requestedDate, context);
     }
 
     @Override
     public boolean changePlanWithPolicy(final String productName, final BillingPeriod term, final String priceList,
-            final DateTime requestedDate, final ActionPolicy policy, final CallContext context) throws EntitlementUserApiException {
+            final DateTime requestedDate, final ActionPolicy policy, final CallContext context) throws SubscriptionUserApiException {
         return apiService.changePlanWithPolicy(this, productName, term, priceList, requestedDate, policy, context);
     }
 
     @Override
     public boolean recreate(final PlanPhaseSpecifier spec, final DateTime requestedDate,
-            final CallContext context) throws EntitlementUserApiException {
+            final CallContext context) throws SubscriptionUserApiException {
         return apiService.recreatePlan(this, spec, requestedDate, context);
     }
 

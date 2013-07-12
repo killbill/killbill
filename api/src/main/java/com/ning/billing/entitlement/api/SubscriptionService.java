@@ -19,7 +19,7 @@ package com.ning.billing.entitlement.api;
 import com.ning.billing.lifecycle.KillbillService;
 
 /**
- * The interface {@code EntitlementService} is a {@code KillbillService} required to handle entitlement operations
+ * The interface {@code SubscriptionService} is a {@code KillbillService} required to handle entitlement operations
  */
-public interface EntitlementService extends KillbillService {
+public interface SubscriptionService extends KillbillService {
 }

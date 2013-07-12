@@ -33,17 +33,17 @@ import com.ning.billing.api.TestApiListener;
 import com.ning.billing.api.TestListenerStatus;
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogService;
-import com.ning.billing.entitlement.api.EntitlementService;
+import com.ning.billing.clock.ClockMock;
+import com.ning.billing.entitlement.api.SubscriptionService;
 import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi;
-import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
-import com.ning.billing.entitlement.api.transfer.EntitlementTransferApi;
-import com.ning.billing.entitlement.api.user.EntitlementUserApi;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.TestEntitlementHelper;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.engine.dao.MockEntitlementDaoMemory;
 import com.ning.billing.entitlement.glue.TestEngineModuleNoDB;
-import com.ning.billing.clock.ClockMock;
+import com.ning.billing.subscription.api.timeline.SubscriptionTimelineApi;
+import com.ning.billing.subscription.api.transfer.SubscriptionTransferApi;
+import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionUserApi;
 import com.ning.billing.util.config.EntitlementConfig;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 import com.ning.billing.util.svcsapi.bus.BusService;
@@ -57,18 +57,18 @@ public class EntitlementTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     protected static final Logger log = LoggerFactory.getLogger(EntitlementTestSuiteNoDB.class);
 
     @Inject
-    protected EntitlementService entitlementService;
+    protected SubscriptionService entitlementService;
     @Inject
-    protected EntitlementUserApi entitlementApi;
+    protected SubscriptionUserApi entitlementApi;
     @Inject
     protected EntitlementInternalApi entitlementInternalApi;
     @Inject
-    protected EntitlementTransferApi transferApi;
+    protected SubscriptionTransferApi transferApi;
 
     @Inject
     protected EntitlementMigrationApi migrationApi;
     @Inject
-    protected EntitlementTimelineApi repairApi;
+    protected SubscriptionTimelineApi repairApi;
 
     @Inject
     protected CatalogService catalogService;

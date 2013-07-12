@@ -18,7 +18,7 @@ package com.ning.billing.overdue.config;
 
 import javax.xml.bind.annotation.XmlElement;
 
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionBundle;
 
 public class OverdueStatesBundle extends DefaultOverdueStateSet<SubscriptionBundle> {
 

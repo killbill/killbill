@@ -25,15 +25,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 
-import com.ning.billing.account.api.AccountUserApi;
-import com.ning.billing.entitlement.api.user.EntitlementUserApi;
-import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
-import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
-import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
 import com.ning.billing.junction.plumbing.api.BlockingSubscription;
+import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionTransition;
+import com.ning.billing.subscription.api.user.SubscriptionUserApi;
+import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
 import com.ning.billing.util.callcontext.CallContext;
 
 public class EntitlementChecker {
@@ -41,30 +40,30 @@ public class EntitlementChecker {
 
     private static final Logger log = LoggerFactory.getLogger(EntitlementChecker.class);
 
-    private final EntitlementUserApi entitlementApi;
+    private final SubscriptionUserApi entitlementApi;
     private final AuditChecker auditChecker;
 
     @Inject
-    public EntitlementChecker(final EntitlementUserApi entitlementApi, final AuditChecker auditChecker) {
+    public EntitlementChecker(final SubscriptionUserApi entitlementApi, final AuditChecker auditChecker) {
         this.entitlementApi = entitlementApi;
         this.auditChecker = auditChecker;
     }
 
-    public SubscriptionBundle checkBundleNoAudits(final UUID bundleId, final UUID expectedAccountId, final String expectedKey, final CallContext context) throws EntitlementUserApiException {
-        final SubscriptionBundle bundle =  entitlementApi.getBundleFromId(bundleId, context);
+    public SubscriptionBundle checkBundleNoAudits(final UUID bundleId, final UUID expectedAccountId, final String expectedKey, final CallContext context) throws SubscriptionUserApiException {
+        final SubscriptionBundle bundle = entitlementApi.getBundleFromId(bundleId, context);
         Assert.assertNotNull(bundle);
         Assert.assertEquals(bundle.getAccountId(), expectedAccountId);
         Assert.assertEquals(bundle.getExternalKey(), expectedKey);
         return bundle;
     }
 
-    public SubscriptionBundle checkBundleAuditUpdated(final UUID bundleId, final CallContext context) throws EntitlementUserApiException {
-        final SubscriptionBundle bundle =  entitlementApi.getBundleFromId(bundleId, context);
+    public SubscriptionBundle checkBundleAuditUpdated(final UUID bundleId, final CallContext context) throws SubscriptionUserApiException {
+        final SubscriptionBundle bundle = entitlementApi.getBundleFromId(bundleId, context);
         auditChecker.checkBundleUpdated(bundle.getId(), context);
         return bundle;
     }
 
-    public Subscription checkSubscriptionCreated(final UUID subscriptionId, final CallContext context) throws EntitlementUserApiException {
+    public Subscription checkSubscriptionCreated(final UUID subscriptionId, final CallContext context) throws SubscriptionUserApiException {
         final Subscription subscription = entitlementApi.getSubscriptionFromId(subscriptionId, context);
         Assert.assertNotNull(subscription);
         auditChecker.checkSubscriptionCreated(subscription.getBundleId(), subscriptionId, context);

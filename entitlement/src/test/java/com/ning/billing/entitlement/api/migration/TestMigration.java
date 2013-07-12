@@ -16,11 +16,6 @@
 
 package com.ning.billing.entitlement.api.migration;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertNull;
-import static org.testng.Assert.assertTrue;
-
 import java.util.List;
 
 import org.joda.time.DateTime;
@@ -35,13 +30,18 @@ import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
 import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi.EntitlementAccountMigration;
-import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.SubscriptionState;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
-import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
 import com.ning.billing.entitlement.events.user.ApiEventType;
+import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionState;
+import com.ning.billing.subscription.api.user.SubscriptionTransition;
+
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
+import static org.testng.Assert.assertTrue;
 
 
 public class TestMigration extends EntitlementTestSuiteWithEmbeddedDB {
@@ -101,7 +101,7 @@ public class TestMigration extends EntitlementTestSuiteWithEmbeddedDB {
             assertEquals(subscriptions.size(), 2);
 
             final Subscription baseSubscription = (subscriptions.get(0).getCurrentPlan().getProduct().getCategory() == ProductCategory.BASE) ?
-                    subscriptions.get(0) : subscriptions.get(1);
+                                                  subscriptions.get(0) : subscriptions.get(1);
             assertTrue(baseSubscription.getStartDate().compareTo(initalBPStart) == 0);
             assertEquals(baseSubscription.getEndDate(), null);
             assertEquals(baseSubscription.getCurrentPriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
@@ -111,7 +111,7 @@ public class TestMigration extends EntitlementTestSuiteWithEmbeddedDB {
             assertEquals(baseSubscription.getChargedThroughDate(), initalBPStart.plusYears(1));
 
             final Subscription aoSubscription = (subscriptions.get(0).getCurrentPlan().getProduct().getCategory() == ProductCategory.ADD_ON) ?
-                    subscriptions.get(0) : subscriptions.get(1);
+                                                subscriptions.get(0) : subscriptions.get(1);
             // initalAddonStart.plusMonths(1).minusMonths(1) may be different from initalAddonStart, depending on exact date
             // e.g : March 31 + 1 month => April 30 and April 30 - 1 month = March 30 which is != March 31 !!!!
             assertEquals(aoSubscription.getStartDate(), initalAddonStart.plusMonths(1).minusMonths(1));

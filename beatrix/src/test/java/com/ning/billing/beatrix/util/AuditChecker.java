@@ -32,7 +32,6 @@ import org.testng.Assert;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.dao.AccountSqlDao;
-import com.ning.billing.entitlement.api.timeline.EntitlementRepairException;
 import com.ning.billing.entitlement.engine.dao.BundleSqlDao;
 import com.ning.billing.entitlement.engine.dao.EntitlementEventSqlDao;
 import com.ning.billing.entitlement.engine.dao.SubscriptionSqlDao;
@@ -42,6 +41,7 @@ import com.ning.billing.invoice.dao.InvoiceItemSqlDao;
 import com.ning.billing.invoice.dao.InvoiceSqlDao;
 import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.dao.PaymentSqlDao;
+import com.ning.billing.subscription.api.timeline.SubscriptionRepairException;
 import com.ning.billing.util.api.AuditLevel;
 import com.ning.billing.util.api.AuditUserApi;
 import com.ning.billing.util.audit.AuditLog;
@@ -52,9 +52,7 @@ import com.ning.billing.util.audit.AuditLogsForPayments;
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
-import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.dao.NonEntityDao;
-import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.Entity;
 import com.ning.billing.util.entity.dao.EntityModelDao;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
@@ -80,7 +78,9 @@ public class AuditChecker {
     }
 
 
-    /***********************************************  ACCOUNT ********************************************************/
+    /**
+     * ********************************************  ACCOUNT *******************************************************
+     */
 
     public void checkAccountCreated(final Account account, final CallContext context) {
         AuditLogsForAccount result = auditUserApi.getAuditLogsForAccount(account.getId(), AuditLevel.FULL, context);
@@ -98,7 +98,9 @@ public class AuditChecker {
         checkAuditLog(ChangeType.UPDATE, context, paymentLogs.get(1), payment.getId(), PaymentSqlDao.class, true, false);
     }
 
-    /***********************************************  BUNDLE ********************************************************/
+    /**
+     * ********************************************  BUNDLE *******************************************************
+     */
 
 
     // Pass the call context used to create the bundle
@@ -115,7 +117,9 @@ public class AuditChecker {
         checkAuditLog(ChangeType.UPDATE, context, auditLogsForBundles.getBundlesAuditLogs().get(bundleId).get(auditLogsForBundles.getBundlesAuditLogs().get(bundleId).size() - 1), bundleId, BundleSqlDao.class, false, false);
     }
 
-    /***********************************************  SUBSCRIPTION ********************************************************/
+    /**
+     * ********************************************  SUBSCRIPTION *******************************************************
+     */
 
     // Pass the call context used to create the subscription
     public void checkSubscriptionCreated(final UUID bundleId, final UUID subscriptionId, final CallContext context) {
@@ -135,7 +139,9 @@ public class AuditChecker {
         checkAuditLog(ChangeType.UPDATE, context, auditLogsForBundles.getSubscriptionsAuditLogs().get(subscriptionId).get(1), subscriptionId, SubscriptionSqlDao.class, false, false);
     }
 
-    /***********************************************  SUBSCRIPTION EVENTS ********************************************************/
+    /**
+     * ********************************************  SUBSCRIPTION EVENTS *******************************************************
+     */
 
     // Pass the call context used to create the subscription event
     public void checkSubscriptionEventCreated(final UUID bundleId, final UUID subscriptionEventId, final CallContext context) {
@@ -151,15 +157,18 @@ public class AuditChecker {
     }
 
 
-
-    /***********************************************  PAYMENT ********************************************************/
+    /**
+     * ********************************************  PAYMENT *******************************************************
+     */
 
     private AuditLogsForPayments getAuditLogsForPayment(final Payment payment, final CallContext context) {
         AuditLogsForPayments results = auditUserApi.getAuditLogsForPayments(Collections.singletonList(payment), AuditLevel.FULL, context);
         return results;
     }
 
-    /***********************************************  INVOICE ********************************************************/
+    /**
+     * ********************************************  INVOICE *******************************************************
+     */
 
     public void checkInvoiceCreated(final Invoice invoice, final CallContext context) {
         AuditLogsForInvoices result = getAuditLogForInvoice(invoice, context);
@@ -177,12 +186,10 @@ public class AuditChecker {
     }
 
 
-
-
     private AuditLogsForBundles getAuditLogsForBundle(final UUID bundleId, final CallContext context) {
         try {
             return auditUserApi.getAuditLogsForBundle(bundleId, AuditLevel.FULL, context);
-        } catch (EntitlementRepairException e) {
+        } catch (SubscriptionRepairException e) {
             Assert.fail(e.toString());
             return null;
         }

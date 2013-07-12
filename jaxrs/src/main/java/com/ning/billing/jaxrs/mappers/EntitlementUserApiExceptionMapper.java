@@ -24,11 +24,11 @@ import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
 import com.ning.billing.ErrorCode;
-import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
+import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
 
 @Singleton
 @Provider
-public class EntitlementUserApiExceptionMapper extends ExceptionMapperBase implements ExceptionMapper<EntitlementUserApiException> {
+public class EntitlementUserApiExceptionMapper extends ExceptionMapperBase implements ExceptionMapper<SubscriptionUserApiException> {
 
     private final UriInfo uriInfo;
 
@@ -37,50 +37,50 @@ public class EntitlementUserApiExceptionMapper extends ExceptionMapperBase imple
     }
 
     @Override
-    public Response toResponse(final EntitlementUserApiException exception) {
-        if (exception.getCode() == ErrorCode.ENT_ACCOUNT_IS_OVERDUE_BLOCKED.getCode()) {
+    public Response toResponse(final SubscriptionUserApiException exception) {
+        if (exception.getCode() == ErrorCode.SUB_ACCOUNT_IS_OVERDUE_BLOCKED.getCode()) {
             return buildBadRequestResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.ENT_BUNDLE_IS_OVERDUE_BLOCKED.getCode()) {
+        } else if (exception.getCode() == ErrorCode.SUB_BUNDLE_IS_OVERDUE_BLOCKED.getCode()) {
             return buildBadRequestResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.ENT_CANCEL_BAD_STATE.getCode()) {
+        } else if (exception.getCode() == ErrorCode.SUB_CANCEL_BAD_STATE.getCode()) {
             return buildInternalErrorResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.ENT_CHANGE_DRY_RUN_NOT_BP.getCode()) {
+        } else if (exception.getCode() == ErrorCode.SUB_CHANGE_DRY_RUN_NOT_BP.getCode()) {
             return buildBadRequestResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.ENT_CHANGE_FUTURE_CANCELLED.getCode()) {
+        } else if (exception.getCode() == ErrorCode.SUB_CHANGE_FUTURE_CANCELLED.getCode()) {
             return buildBadRequestResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.ENT_CHANGE_NON_ACTIVE.getCode()) {
+        } else if (exception.getCode() == ErrorCode.SUB_CHANGE_NON_ACTIVE.getCode()) {
             return buildBadRequestResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.ENT_CREATE_AO_ALREADY_INCLUDED.getCode()) {
+        } else if (exception.getCode() == ErrorCode.SUB_CREATE_AO_ALREADY_INCLUDED.getCode()) {
             return buildBadRequestResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.ENT_CREATE_AO_BP_NON_ACTIVE.getCode()) {
+        } else if (exception.getCode() == ErrorCode.SUB_CREATE_AO_BP_NON_ACTIVE.getCode()) {
             return buildBadRequestResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.ENT_CREATE_AO_NOT_AVAILABLE.getCode()) {
+        } else if (exception.getCode() == ErrorCode.SUB_CREATE_AO_NOT_AVAILABLE.getCode()) {
             return buildBadRequestResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.ENT_CREATE_BAD_PHASE.getCode()) {
+        } else if (exception.getCode() == ErrorCode.SUB_CREATE_BAD_PHASE.getCode()) {
             return buildBadRequestResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.ENT_CREATE_BP_EXISTS.getCode()) {
+        } else if (exception.getCode() == ErrorCode.SUB_CREATE_BP_EXISTS.getCode()) {
             return buildBadRequestResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.ENT_CREATE_NO_BP.getCode()) {
+        } else if (exception.getCode() == ErrorCode.SUB_CREATE_NO_BP.getCode()) {
             return buildBadRequestResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.ENT_CREATE_NO_BUNDLE.getCode()) {
+        } else if (exception.getCode() == ErrorCode.SUB_CREATE_NO_BUNDLE.getCode()) {
             return buildBadRequestResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.ENT_GET_INVALID_BUNDLE_ID.getCode()) {
+        } else if (exception.getCode() == ErrorCode.SUB_GET_INVALID_BUNDLE_ID.getCode()) {
             return buildNotFoundResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.ENT_GET_INVALID_BUNDLE_KEY.getCode()) {
+        } else if (exception.getCode() == ErrorCode.SUB_GET_INVALID_BUNDLE_KEY.getCode()) {
             return buildNotFoundResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.ENT_GET_NO_BUNDLE_FOR_SUBSCRIPTION.getCode()) {
+        } else if (exception.getCode() == ErrorCode.SUB_GET_NO_BUNDLE_FOR_SUBSCRIPTION.getCode()) {
             return buildNotFoundResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.ENT_GET_NO_SUCH_BASE_SUBSCRIPTION.getCode()) {
+        } else if (exception.getCode() == ErrorCode.SUB_GET_NO_SUCH_BASE_SUBSCRIPTION.getCode()) {
             return buildNotFoundResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.ENT_INVALID_REQUESTED_DATE.getCode()) {
+        } else if (exception.getCode() == ErrorCode.SUB_INVALID_REQUESTED_DATE.getCode()) {
             return buildBadRequestResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.ENT_INVALID_REQUESTED_FUTURE_DATE.getCode()) {
+        } else if (exception.getCode() == ErrorCode.SUB_INVALID_REQUESTED_FUTURE_DATE.getCode()) {
             return buildBadRequestResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.ENT_INVALID_SUBSCRIPTION_ID.getCode()) {
+        } else if (exception.getCode() == ErrorCode.SUB_INVALID_SUBSCRIPTION_ID.getCode()) {
             return buildNotFoundResponse(exception, uriInfo);
-        } else if (exception.getCode() == ErrorCode.ENT_RECREATE_BAD_STATE.getCode()) {
+        } else if (exception.getCode() == ErrorCode.SUB_RECREATE_BAD_STATE.getCode()) {
             return buildInternalErrorResponse(exception, uriInfo);
-        }  else if (exception.getCode() == ErrorCode.ENT_UNCANCEL_BAD_STATE.getCode()) {
+        }  else if (exception.getCode() == ErrorCode.SUB_UNCANCEL_BAD_STATE.getCode()) {
             return buildInternalErrorResponse(exception, uriInfo);
         } else {
             return buildBadRequestResponse(exception, uriInfo);

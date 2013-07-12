@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.entitlement.api.transfer;
 
 import com.ning.billing.entitlement.api.user.SubscriptionData;
@@ -24,7 +25,7 @@ public class TransferCancelData {
     final EntitlementEvent cancelEvent;
 
     public TransferCancelData(final SubscriptionData subscription,
-            final EntitlementEvent cancelEvent) {
+                              final EntitlementEvent cancelEvent) {
         this.subscription = subscription;
         this.cancelEvent = cancelEvent;
     }

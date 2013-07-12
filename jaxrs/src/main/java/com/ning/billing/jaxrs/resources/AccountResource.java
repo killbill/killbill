@@ -47,12 +47,12 @@ import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.api.MutableAccountData;
-import com.ning.billing.entitlement.api.timeline.BundleTimeline;
-import com.ning.billing.entitlement.api.timeline.EntitlementRepairException;
-import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
-import com.ning.billing.entitlement.api.user.EntitlementUserApi;
-import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.timeline.BundleTimeline;
+import com.ning.billing.subscription.api.timeline.SubscriptionRepairException;
+import com.ning.billing.subscription.api.timeline.SubscriptionTimelineApi;
+import com.ning.billing.subscription.api.user.SubscriptionUserApi;
+import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
+import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
@@ -106,8 +106,8 @@ public class AccountResource extends JaxRsResourceBase {
     private static final String ID_PARAM_NAME = "accountId";
 
     private final AccountUserApi accountApi;
-    private final EntitlementUserApi entitlementApi;
-    private final EntitlementTimelineApi timelineApi;
+    private final SubscriptionUserApi entitlementApi;
+    private final SubscriptionTimelineApi timelineApi;
     private final InvoiceUserApi invoiceApi;
     private final InvoicePaymentApi invoicePaymentApi;
     private final PaymentApi paymentApi;
@@ -115,11 +115,11 @@ public class AccountResource extends JaxRsResourceBase {
     @Inject
     public AccountResource(final JaxrsUriBuilder uriBuilder,
                            final AccountUserApi accountApi,
-                           final EntitlementUserApi entitlementApi,
+                           final SubscriptionUserApi entitlementApi,
                            final InvoiceUserApi invoiceApi,
                            final InvoicePaymentApi invoicePaymentApi,
                            final PaymentApi paymentApi,
-                           final EntitlementTimelineApi timelineApi,
+                           final SubscriptionTimelineApi timelineApi,
                            final TagUserApi tagUserApi,
                            final AuditUserApi auditUserApi,
                            final CustomFieldUserApi customFieldUserApi,
@@ -150,7 +150,7 @@ public class AccountResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     public Response getAccountBundles(@PathParam("accountId") final String accountId,
                                       @QueryParam(QUERY_EXTERNAL_KEY) final String externalKey,
-                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, EntitlementUserApiException {
+                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, SubscriptionUserApiException {
         final TenantContext tenantContext = context.createContext(request);
 
         final UUID uuid = UUID.fromString(accountId);
@@ -250,7 +250,7 @@ public class AccountResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     public Response getAccountTimeline(@PathParam("accountId") final String accountIdString,
                                        @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
-                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException, EntitlementRepairException {
+                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException, SubscriptionRepairException {
         final TenantContext tenantContext = context.createContext(request);
 
         final UUID accountId = UUID.fromString(accountIdString);

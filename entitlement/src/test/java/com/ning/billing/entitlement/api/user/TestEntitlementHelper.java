@@ -42,24 +42,27 @@ import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.catalog.api.TimeUnit;
-import com.ning.billing.entitlement.api.SubscriptionTransitionType;
+import com.ning.billing.clock.Clock;
 import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi.EntitlementAccountMigration;
 import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi.EntitlementBundleMigration;
 import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi.EntitlementSubscriptionMigration;
 import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi.EntitlementSubscriptionMigrationCase;
-import com.ning.billing.entitlement.api.timeline.BundleTimeline;
-import com.ning.billing.entitlement.api.timeline.EntitlementRepairException;
-import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline;
-import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline.DeletedEvent;
-import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline.ExistingEvent;
-import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline.NewEvent;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
 import com.ning.billing.entitlement.events.user.ApiEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
+import com.ning.billing.subscription.api.SubscriptionTransitionType;
+import com.ning.billing.subscription.api.timeline.BundleTimeline;
+import com.ning.billing.subscription.api.timeline.SubscriptionRepairException;
+import com.ning.billing.subscription.api.timeline.SubscriptionTimeline;
+import com.ning.billing.subscription.api.timeline.SubscriptionTimeline.DeletedEvent;
+import com.ning.billing.subscription.api.timeline.SubscriptionTimeline.ExistingEvent;
+import com.ning.billing.subscription.api.timeline.SubscriptionTimeline.NewEvent;
+import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionUserApi;
+import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
 import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.clock.Clock;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 
 import static org.testng.Assert.assertEquals;
@@ -71,7 +74,7 @@ public class TestEntitlementHelper {
 
     private final Logger log = LoggerFactory.getLogger(TestEntitlementHelper.class);
 
-    private final EntitlementUserApi entitlementApi;
+    private final SubscriptionUserApi entitlementApi;
 
     private final Clock clock;
 
@@ -82,9 +85,8 @@ public class TestEntitlementHelper {
     private final EntitlementDao dao;
 
 
-
     @Inject
-    public TestEntitlementHelper(final EntitlementUserApi entitlementApi, final Clock clock, final InternalCallContext callContext, final TestApiListener testListener, final EntitlementDao dao) {
+    public TestEntitlementHelper(final SubscriptionUserApi entitlementApi, final Clock clock, final InternalCallContext callContext, final TestApiListener testListener, final EntitlementDao dao) {
         this.entitlementApi = entitlementApi;
         this.clock = clock;
         this.callContext = callContext;
@@ -94,17 +96,17 @@ public class TestEntitlementHelper {
 
 
     public SubscriptionData createSubscription(final SubscriptionBundle bundle, final String productName, final BillingPeriod term, final String planSet, final DateTime requestedDate)
-            throws EntitlementUserApiException {
+            throws SubscriptionUserApiException {
         return createSubscriptionWithBundle(bundle.getId(), productName, term, planSet, requestedDate);
     }
 
     public SubscriptionData createSubscription(final SubscriptionBundle bundle, final String productName, final BillingPeriod term, final String planSet)
-            throws EntitlementUserApiException {
+            throws SubscriptionUserApiException {
         return createSubscriptionWithBundle(bundle.getId(), productName, term, planSet, null);
     }
 
     public SubscriptionData createSubscriptionWithBundle(final UUID bundleId, final String productName, final BillingPeriod term, final String planSet, final DateTime requestedDate)
-            throws EntitlementUserApiException {
+            throws SubscriptionUserApiException {
         testListener.pushExpectedEvent(NextEvent.CREATE);
         final SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundleId,
                                                                                                    new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSet, null),
@@ -462,8 +464,8 @@ public class TestEntitlementHelper {
     }
 
     public ExistingEvent createExistingEventForAssertion(final SubscriptionTransitionType type,
-                                                            final String productName, final PhaseType phaseType, final ProductCategory category, final String priceListName, final BillingPeriod billingPeriod,
-                                                            final DateTime effectiveDateTime) {
+                                                         final String productName, final PhaseType phaseType, final ProductCategory category, final String priceListName, final BillingPeriod billingPeriod,
+                                                         final DateTime effectiveDateTime) {
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, category, billingPeriod, priceListName, phaseType);
         return new ExistingEvent() {
             @Override
@@ -584,7 +586,6 @@ public class TestEntitlementHelper {
     }
 
 
-
     public static DateTime addOrRemoveDuration(final DateTime input, final List<Duration> durations, final boolean add) {
         DateTime result = input;
         for (final Duration cur : durations) {
@@ -629,7 +630,6 @@ public class TestEntitlementHelper {
     }
 
 
-
     public static class EntitlementSubscriptionMigrationCaseWithCTD implements EntitlementSubscriptionMigrationCase {
 
         private final PlanPhaseSpecifier pps;
@@ -667,7 +667,7 @@ public class TestEntitlementHelper {
 
     public interface TestWithExceptionCallback {
 
-        public void doTest() throws EntitlementRepairException, EntitlementUserApiException;
+        public void doTest() throws SubscriptionRepairException, SubscriptionUserApiException;
     }
 
     public static class TestWithException {
@@ -676,7 +676,7 @@ public class TestEntitlementHelper {
             try {
                 callback.doTest();
                 Assert.fail("Failed to catch exception " + code);
-            } catch (EntitlementRepairException e) {
+            } catch (SubscriptionRepairException e) {
                 assertEquals(e.getCode(), code.getCode());
             }
         }

@@ -35,10 +35,10 @@ import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.Product;
-import com.ning.billing.entitlement.api.SubscriptionTransitionType;
-import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
-import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.SubscriptionTransitionType;
+import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
+import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
@@ -60,7 +60,7 @@ public class BillCycleDayCalculator {
     }
 
     protected int calculateBcd(final SubscriptionBundle bundle, final Subscription subscription, final EffectiveSubscriptionInternalEvent transition, final Account account, final InternalCallContext context)
-            throws CatalogApiException, AccountApiException, EntitlementUserApiException {
+            throws CatalogApiException, AccountApiException, SubscriptionUserApiException {
 
         final Catalog catalog = catalogService.getFullCatalog();
 
@@ -88,7 +88,7 @@ public class BillCycleDayCalculator {
 
     @VisibleForTesting
     int calculateBcdForAlignment(final BillingAlignment alignment, final SubscriptionBundle bundle, final Subscription subscription,
-                                 final Account account, final Catalog catalog, final Plan plan, final InternalCallContext context) throws AccountApiException, EntitlementUserApiException, CatalogApiException {
+                                 final Account account, final Catalog catalog, final Plan plan, final InternalCallContext context) throws AccountApiException, SubscriptionUserApiException, CatalogApiException {
         int result = 0;
         switch (alignment) {
             case ACCOUNT:

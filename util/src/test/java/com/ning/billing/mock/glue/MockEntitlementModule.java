@@ -18,11 +18,11 @@ package com.ning.billing.mock.glue;
 
 import org.mockito.Mockito;
 
-import com.ning.billing.entitlement.api.EntitlementService;
+import com.ning.billing.entitlement.api.SubscriptionService;
 import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi;
-import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
-import com.ning.billing.entitlement.api.transfer.EntitlementTransferApi;
-import com.ning.billing.entitlement.api.user.EntitlementUserApi;
+import com.ning.billing.subscription.api.timeline.SubscriptionTimelineApi;
+import com.ning.billing.subscription.api.transfer.SubscriptionTransferApi;
+import com.ning.billing.subscription.api.user.SubscriptionUserApi;
 import com.ning.billing.glue.EntitlementModule;
 import com.ning.billing.util.glue.RealImplementation;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
@@ -31,42 +31,42 @@ import com.google.inject.AbstractModule;
 
 public class MockEntitlementModule extends AbstractModule implements EntitlementModule {
     @Override
-    public void installEntitlementService() {
-        bind(EntitlementService.class).toInstance(Mockito.mock(EntitlementService.class));
+    public void installSubscriptionService() {
+        bind(SubscriptionService.class).toInstance(Mockito.mock(SubscriptionService.class));
     }
 
     @Override
-    public void installEntitlementUserApi() {
-        bind(EntitlementUserApi.class).annotatedWith(RealImplementation.class).toInstance(Mockito.mock(EntitlementUserApi.class));
+    public void installSubscriptionUserApi() {
+        bind(SubscriptionUserApi.class).annotatedWith(RealImplementation.class).toInstance(Mockito.mock(SubscriptionUserApi.class));
     }
 
     @Override
-    public void installEntitlementMigrationApi() {
+    public void installSubscriptionMigrationApi() {
         bind(EntitlementMigrationApi.class).toInstance(Mockito.mock(EntitlementMigrationApi.class));
     }
 
     @Override
-    public void installEntitlementInternalApi() {
+    public void installSubscriptionInternalApi() {
         bind(EntitlementInternalApi.class).toInstance(Mockito.mock(EntitlementInternalApi.class));
     }
 
     @Override
     protected void configure() {
-        installEntitlementService();
-        installEntitlementUserApi();
-        installEntitlementMigrationApi();
-        installEntitlementInternalApi();
-        installEntitlementTimelineApi();
+        installSubscriptionService();
+        installSubscriptionUserApi();
+        installSubscriptionMigrationApi();
+        installSubscriptionInternalApi();
+        installSubscriptionTimelineApi();
     }
 
     @Override
-    public void installEntitlementTimelineApi() {
-        bind(EntitlementTimelineApi.class).toInstance(Mockito.mock(EntitlementTimelineApi.class));
+    public void installSubscriptionTimelineApi() {
+        bind(SubscriptionTimelineApi.class).toInstance(Mockito.mock(SubscriptionTimelineApi.class));
     }
 
     @Override
-    public void installEntitlementTransferApi() {
-        bind(EntitlementTransferApi.class).toInstance(Mockito.mock(EntitlementTransferApi.class));
+    public void installSubscriptionTransferApi() {
+        bind(SubscriptionTransferApi.class).toInstance(Mockito.mock(SubscriptionTransferApi.class));
 
     }
 }

@@ -24,17 +24,17 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
-import com.ning.billing.entitlement.api.user.EntitlementUserApi;
-import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
-import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.entitlement.api.user.SubscriptionStatusDryRun;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.overdue.OverdueState;
+import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionStatusDryRun;
+import com.ning.billing.subscription.api.user.SubscriptionUserApi;
+import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TenantContext;
 
-public class MockEntitlementUserApi implements EntitlementUserApi {
+public class MockEntitlementUserApi implements SubscriptionUserApi {
 
     private final Map<UUID, String> subscriptionBundles = new HashMap<UUID, String>();
     private final Map<UUID, UUID> accountForBundle = new HashMap<UUID, UUID>();
@@ -102,7 +102,7 @@ public class MockEntitlementUserApi implements EntitlementUserApi {
 
     @Override
     public List<SubscriptionBundle> getBundlesForKey(final String bundleKey, final TenantContext context)
-            throws EntitlementUserApiException {
+            throws SubscriptionUserApiException {
         throw new UnsupportedOperationException();
     }
 
@@ -112,7 +112,7 @@ public class MockEntitlementUserApi implements EntitlementUserApi {
     }
 
     @Override
-    public SubscriptionBundle createBundleForAccount(final UUID accountId, final String bundleKey, final CallContext context) throws EntitlementUserApiException {
+    public SubscriptionBundle createBundleForAccount(final UUID accountId, final String bundleKey, final CallContext context) throws SubscriptionUserApiException {
         throw new UnsupportedOperationException();
     }
 
@@ -123,7 +123,7 @@ public class MockEntitlementUserApi implements EntitlementUserApi {
 
     @Override
     public Subscription createSubscription(final UUID bundleId, final PlanPhaseSpecifier spec,
-                                           final DateTime requestedDate, final CallContext context) throws EntitlementUserApiException {
+                                           final DateTime requestedDate, final CallContext context) throws SubscriptionUserApiException {
         throw new UnsupportedOperationException();
     }
 
@@ -144,7 +144,7 @@ public class MockEntitlementUserApi implements EntitlementUserApi {
 
     @Override
     public List<SubscriptionStatusDryRun> getDryRunChangePlanStatus(final UUID subscriptionId, final String productName, final DateTime requestedDate, final TenantContext context)
-            throws EntitlementUserApiException {
+            throws SubscriptionUserApiException {
         throw new UnsupportedOperationException();
     }
 }

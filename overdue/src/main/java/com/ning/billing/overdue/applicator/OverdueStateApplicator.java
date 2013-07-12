@@ -33,9 +33,9 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.catalog.api.ActionPolicy;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
-import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
+import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.BlockingApiException;
 import com.ning.billing.junction.api.Type;
@@ -224,13 +224,13 @@ public class OverdueStateApplicator<T extends Blockable> {
                 // STEPH Need conversion toCallContext because we are calling a public API through the Subscription object
                 cur.cancelWithPolicy(clock.getUTCNow(), actionPolicy, context.toCallContext());
             }
-        } catch (EntitlementUserApiException e) {
+        } catch (SubscriptionUserApiException e) {
             throw new OverdueException(e);
         }
     }
 
     @SuppressWarnings("unchecked")
-    private void computeSubscriptionsToCancel(final T blockable, final List<Subscription> result, final InternalTenantContext context) throws EntitlementUserApiException {
+    private void computeSubscriptionsToCancel(final T blockable, final List<Subscription> result, final InternalTenantContext context) throws SubscriptionUserApiException {
         if (blockable instanceof Subscription) {
             result.add((Subscription) blockable);
         } else if (blockable instanceof SubscriptionBundle) {
@@ -276,7 +276,7 @@ public class OverdueStateApplicator<T extends Blockable> {
                 log.warn("Unable to retrieve account for overdueable {} (type {})", overdueable.getId(), overdueableType);
                 return;
             }
-        } catch (EntitlementUserApiException e) {
+        } catch (SubscriptionUserApiException e) {
             log.warn(String.format("Unable to retrieve account for overdueable %s (type %s)", overdueable.getId(), overdueableType), e);
             return;
         } catch (AccountApiException e) {

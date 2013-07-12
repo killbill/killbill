@@ -19,29 +19,29 @@ package com.ning.billing.entitlement.glue;
 import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
 
-import com.ning.billing.entitlement.engine.dao.DefaultEntitlementDao;
-import com.ning.billing.util.config.EntitlementConfig;
 import com.ning.billing.entitlement.alignment.MigrationPlanAligner;
 import com.ning.billing.entitlement.alignment.PlanAligner;
-import com.ning.billing.entitlement.api.EntitlementService;
 import com.ning.billing.entitlement.api.SubscriptionApiService;
+import com.ning.billing.entitlement.api.SubscriptionService;
 import com.ning.billing.entitlement.api.migration.DefaultEntitlementMigrationApi;
 import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi;
 import com.ning.billing.entitlement.api.svcs.DefaultEntitlementInternalApi;
 import com.ning.billing.entitlement.api.timeline.DefaultEntitlementTimelineApi;
-import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
 import com.ning.billing.entitlement.api.timeline.RepairEntitlementLifecycleDao;
 import com.ning.billing.entitlement.api.timeline.RepairSubscriptionApiService;
 import com.ning.billing.entitlement.api.transfer.DefaultEntitlementTransferApi;
-import com.ning.billing.entitlement.api.transfer.EntitlementTransferApi;
 import com.ning.billing.entitlement.api.user.DefaultEntitlementUserApi;
 import com.ning.billing.entitlement.api.user.DefaultSubscriptionApiService;
-import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.engine.addon.AddonUtils;
 import com.ning.billing.entitlement.engine.core.Engine;
+import com.ning.billing.entitlement.engine.dao.DefaultEntitlementDao;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.engine.dao.RepairEntitlementDao;
 import com.ning.billing.glue.EntitlementModule;
+import com.ning.billing.subscription.api.timeline.SubscriptionTimelineApi;
+import com.ning.billing.subscription.api.transfer.SubscriptionTransferApi;
+import com.ning.billing.subscription.api.user.SubscriptionUserApi;
+import com.ning.billing.util.config.EntitlementConfig;
 import com.ning.billing.util.glue.RealImplementation;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 
@@ -80,12 +80,12 @@ public class DefaultEntitlementModule extends AbstractModule implements Entitlem
         bind(AddonUtils.class).asEagerSingleton();
         bind(MigrationPlanAligner.class).asEagerSingleton();
 
-        installEntitlementService();
-        installEntitlementTimelineApi();
-        installEntitlementMigrationApi();
-        installEntitlementInternalApi();
-        installEntitlementUserApi();
-        installEntitlementTransferApi();
+        installSubscriptionService();
+        installSubscriptionTimelineApi();
+        installSubscriptionMigrationApi();
+        installSubscriptionInternalApi();
+        installSubscriptionUserApi();
+        installSubscriptionTransferApi();
     }
 
     @Override
@@ -96,34 +96,33 @@ public class DefaultEntitlementModule extends AbstractModule implements Entitlem
     }
 
     @Override
-    public void installEntitlementService() {
-        bind(EntitlementService.class).to(Engine.class).asEagerSingleton();
+    public void installSubscriptionService() {
+        bind(SubscriptionService.class).to(Engine.class).asEagerSingleton();
     }
 
     @Override
-    public void installEntitlementTimelineApi() {
-        bind(EntitlementTimelineApi.class).to(DefaultEntitlementTimelineApi.class).asEagerSingleton();
+    public void installSubscriptionTimelineApi() {
+        bind(SubscriptionTimelineApi.class).to(DefaultEntitlementTimelineApi.class).asEagerSingleton();
     }
 
     @Override
-    public void installEntitlementMigrationApi() {
+    public void installSubscriptionMigrationApi() {
         bind(EntitlementMigrationApi.class).to(DefaultEntitlementMigrationApi.class).asEagerSingleton();
     }
 
 
-
     @Override
-    public void installEntitlementInternalApi() {
+    public void installSubscriptionInternalApi() {
         bind(EntitlementInternalApi.class).to(DefaultEntitlementInternalApi.class).asEagerSingleton();
     }
 
     @Override
-    public void installEntitlementUserApi() {
-        bind(EntitlementUserApi.class).annotatedWith(RealImplementation.class).to(DefaultEntitlementUserApi.class).asEagerSingleton();
+    public void installSubscriptionUserApi() {
+        bind(SubscriptionUserApi.class).annotatedWith(RealImplementation.class).to(DefaultEntitlementUserApi.class).asEagerSingleton();
     }
 
     @Override
-    public void installEntitlementTransferApi() {
-        bind(EntitlementTransferApi.class).to(DefaultEntitlementTransferApi.class).asEagerSingleton();
+    public void installSubscriptionTransferApi() {
+        bind(SubscriptionTransferApi.class).to(DefaultEntitlementTransferApi.class).asEagerSingleton();
     }
 }

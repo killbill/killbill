@@ -16,10 +16,6 @@
 
 package com.ning.billing.entitlement.api.user;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
-
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +26,11 @@ import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
+import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
+
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 
 public abstract class TestUserApiRecreate extends EntitlementTestSuiteWithEmbeddedDB {
 
@@ -40,7 +41,7 @@ public abstract class TestUserApiRecreate extends EntitlementTestSuiteWithEmbedd
         try {
             testCreateAndRecreate(false);
             assertListenerStatus();
-        } catch (EntitlementUserApiException e) {
+        } catch (SubscriptionUserApiException e) {
             log.error("Unexpected exception", e);
             Assert.fail(e.getMessage());
         }
@@ -51,13 +52,13 @@ public abstract class TestUserApiRecreate extends EntitlementTestSuiteWithEmbedd
         try {
             testCreateAndRecreate(true);
             assertListenerStatus();
-        } catch (EntitlementUserApiException e) {
+        } catch (SubscriptionUserApiException e) {
             log.error("Unexpected exception", e);
             Assert.fail(e.getMessage());
         }
     }
 
-    private SubscriptionData testCreateAndRecreate(final boolean fromUserAPi) throws EntitlementUserApiException {
+    private SubscriptionData testCreateAndRecreate(final boolean fromUserAPi) throws SubscriptionUserApiException {
         final DateTime init = clock.getUTCNow();
         final DateTime requestedDate = init.minusYears(1);
 
@@ -90,7 +91,7 @@ public abstract class TestUserApiRecreate extends EntitlementTestSuiteWithEmbedd
                 subscription.recreate(testUtil.getProductSpecifier(productName, planSetName, term, null), requestedDate, callContext);
             }
             Assert.fail("Expected Create API to fail since BP already exists");
-        } catch (EntitlementUserApiException e) {
+        } catch (SubscriptionUserApiException e) {
             assertTrue(true);
         }
 

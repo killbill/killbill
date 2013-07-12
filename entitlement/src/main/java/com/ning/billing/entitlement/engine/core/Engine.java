@@ -27,8 +27,8 @@ import com.ning.billing.bus.api.PersistentBus.EventBusException;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.alignment.PlanAligner;
 import com.ning.billing.entitlement.alignment.TimedPhase;
-import com.ning.billing.entitlement.api.EntitlementService;
 import com.ning.billing.entitlement.api.SubscriptionApiService;
+import com.ning.billing.entitlement.api.SubscriptionService;
 import com.ning.billing.entitlement.api.user.DefaultEffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
@@ -57,7 +57,7 @@ import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 
 import com.google.inject.Inject;
 
-public class Engine implements EventListener, EntitlementService {
+public class Engine implements EventListener, SubscriptionService {
 
     public static final String NOTIFICATION_QUEUE_NAME = "subscription-events";
     public static final String ENTITLEMENT_SERVICE_NAME = "entitlement-service";

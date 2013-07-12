@@ -31,18 +31,19 @@ import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.SubscriptionApiService;
-import com.ning.billing.entitlement.api.SubscriptionTransitionType;
-import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
-import com.ning.billing.entitlement.api.user.SubscriptionState;
-import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 import com.ning.billing.entitlement.engine.addon.AddonUtils;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
 import com.ning.billing.entitlement.events.user.ApiEventBuilder;
 import com.ning.billing.entitlement.events.user.ApiEventCancel;
+import com.ning.billing.subscription.api.SubscriptionTransitionType;
+import com.ning.billing.subscription.api.timeline.SubscriptionRepairException;
+import com.ning.billing.subscription.api.user.SubscriptionState;
+import com.ning.billing.subscription.api.user.SubscriptionTransition;
+import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.clock.Clock;
@@ -101,7 +102,7 @@ public class SubscriptionDataRepair extends SubscriptionData {
     }
 
     public void addNewRepairEvent(final DefaultNewEvent input, final SubscriptionDataRepair baseSubscription, final List<SubscriptionDataRepair> addonSubscriptions, final CallContext context)
-            throws EntitlementRepairException {
+            throws SubscriptionRepairException {
 
         try {
             final PlanPhaseSpecifier spec = input.getPlanPhaseSpecifier();
@@ -123,12 +124,12 @@ public class SubscriptionDataRepair extends SubscriptionData {
                 case PHASE:
                     break;
                 default:
-                    throw new EntitlementRepairException(ErrorCode.ENT_REPAIR_UNKNOWN_TYPE, input.getSubscriptionTransitionType(), id);
+                    throw new SubscriptionRepairException(ErrorCode.SUB_REPAIR_UNKNOWN_TYPE, input.getSubscriptionTransitionType(), id);
             }
-        } catch (EntitlementUserApiException e) {
-            throw new EntitlementRepairException(e);
+        } catch (SubscriptionUserApiException e) {
+            throw new SubscriptionRepairException(e);
         } catch (CatalogApiException e) {
-            throw new EntitlementRepairException(e);
+            throw new SubscriptionRepairException(e);
         }
     }
 
@@ -149,7 +150,7 @@ public class SubscriptionDataRepair extends SubscriptionData {
     }
 
     private void trickleDownBPEffectForAddon(final List<SubscriptionDataRepair> addOnSubscriptionInRepair, final DateTime effectiveDate, final CallContext context)
-            throws EntitlementUserApiException {
+            throws SubscriptionUserApiException {
 
         if (getCategory() != ProductCategory.BASE) {
             return;
@@ -190,7 +191,7 @@ public class SubscriptionDataRepair extends SubscriptionData {
     }
 
     private void checkAddonRights(final SubscriptionDataRepair baseSubscription)
-            throws EntitlementUserApiException, CatalogApiException {
+            throws SubscriptionUserApiException, CatalogApiException {
         if (getCategory() == ProductCategory.ADD_ON) {
             addonUtils.checkAddonCreationRights(baseSubscription, getCurrentPlan());
         }
