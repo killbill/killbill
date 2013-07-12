@@ -66,7 +66,7 @@ public class InvoiceHandler {
             log.error("Failed to process invoice payment", e);
         } catch (PaymentApiException e) {
             // Log as error unless:
-            if (e.getCode() != ErrorCode.PAYMENT_NULL_INVOICE.getCode() /*  Nothing to left be paid*/ &&
+            if (e.getCode() != ErrorCode.PAYMENT_NULL_INVOICE.getCode() /* Nothing to left be paid */ &&
                     e.getCode() != ErrorCode.PAYMENT_CREATE_PAYMENT.getCode() /* User payment error */) {
                 log.error("Failed to process invoice payment {}", e.toString());
             }

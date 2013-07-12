@@ -216,26 +216,16 @@ public class PaymentProcessor extends ProcessorBase {
     public Payment createPayment(final Account account, final UUID invoiceId, @Nullable final BigDecimal inputAmount,
                                  final InternalCallContext context, final boolean isInstantPayment, final boolean isExternalPayment)
             throws PaymentApiException {
-        // Use the special external payment plugin to handle external payments
-        final PaymentPluginApi plugin;
-        final UUID paymentMethodId;
-        try {
-            if (isExternalPayment) {
-                plugin = paymentMethodProcessor.getExternalPaymentProviderPlugin(account, context);
-                paymentMethodId = paymentMethodProcessor.getExternalPaymentMethod(account, context).getId();
-            } else {
-                plugin = getPaymentProviderPlugin(account, context);
-                paymentMethodId = account.getPaymentMethodId();
-            }
-        } catch (PaymentApiException e) {
-            // This event will be caught by overdue to refresh the overdue state, if needed.
-            // Note that at this point, we don't know the exact invoice balance (see getAndValidatePaymentAmount() below).
-            // This means that events will be posted for null and zero dollar invoices (e.g. trials).
-            final PaymentErrorInternalEvent event = new DefaultPaymentErrorEvent(account.getId(), invoiceId, null,
-                                                                                 ErrorCode.PAYMENT_NO_DEFAULT_PAYMENT_METHOD.toString(), context.getUserToken(),
-                                                                                 context.getAccountRecordId(), context.getTenantRecordId());
-            postPaymentEvent(event, account.getId(), context);
-            throw e;
+        // If this is an external payment, retrieve the external payment method first.
+        // We need to do this without the lock, because getExternalPaymentProviderPlugin will acquire the lock
+        // if it needs to create an external payment method (for the first external payment for that account).
+        // We don't want to retrieve any other payment method here, because we need to validate the invoice amount first
+        // (to avoid throwing an exception if there is nothing to pay).
+        final PaymentPluginApi externalPaymentPlugin;
+        if (isExternalPayment) {
+            externalPaymentPlugin = paymentMethodProcessor.getExternalPaymentProviderPlugin(account, context);
+        } else {
+            externalPaymentPlugin = null;
         }
 
         try {
@@ -246,18 +236,43 @@ public class PaymentProcessor extends ProcessorBase {
                                                                                                             @Override
                                                                                                             public Payment doOperation() throws PaymentApiException {
 
-
                                                                                                                 try {
+                                                                                                                    // First, rebalance CBA and retrieve the latest version of the invoice
                                                                                                                     final Invoice invoice = rebalanceAndGetInvoice(account.getId(), invoiceId, context);
                                                                                                                     if (invoice == null || invoice.isMigrationInvoice()) {
                                                                                                                         log.error("Received invoice for payment that is a migration invoice - don't know how to handle those yet: {}", invoice);
                                                                                                                         return null;
                                                                                                                     }
 
+                                                                                                                    // Second, validate the payment amount. We want to bail as early as possible if e.g. the balance is zero
+                                                                                                                    final BigDecimal requestedAmount = getAndValidatePaymentAmount(invoice, inputAmount, isInstantPayment);
+
+                                                                                                                    // Third, retrieve the payment method and associated plugin
+                                                                                                                    final PaymentPluginApi plugin;
+                                                                                                                    final UUID paymentMethodId;
+                                                                                                                    try {
+                                                                                                                        // Use the special external payment plugin to handle external payments
+                                                                                                                        if (isExternalPayment) {
+                                                                                                                            plugin = externalPaymentPlugin;
+                                                                                                                            paymentMethodId = paymentMethodProcessor.getExternalPaymentMethod(account, context).getId();
+                                                                                                                        } else {
+                                                                                                                            plugin = getPaymentProviderPlugin(account, context);
+                                                                                                                            paymentMethodId = account.getPaymentMethodId();
+                                                                                                                        }
+                                                                                                                    } catch (PaymentApiException e) {
+                                                                                                                        // This event will be caught by overdue to refresh the overdue state, if needed.
+                                                                                                                        // Note that at this point, we don't know the exact invoice balance (see getAndValidatePaymentAmount() below).
+                                                                                                                        // This means that events will be posted for null and zero dollar invoices (e.g. trials).
+                                                                                                                        final PaymentErrorInternalEvent event = new DefaultPaymentErrorEvent(account.getId(), invoiceId, null,
+                                                                                                                                                                                             ErrorCode.PAYMENT_NO_DEFAULT_PAYMENT_METHOD.toString(), context.getUserToken(),
+                                                                                                                                                                                             context.getAccountRecordId(), context.getTenantRecordId());
+                                                                                                                        postPaymentEvent(event, account.getId(), context);
+                                                                                                                        throw e;
+                                                                                                                    }
+
                                                                                                                     final boolean isAccountAutoPayOff = isAccountAutoPayOff(account.getId(), context);
                                                                                                                     setUnsaneAccount_AUTO_PAY_OFFWithAccountLock(account.getId(), paymentMethodId, isAccountAutoPayOff, context, isInstantPayment);
 
-                                                                                                                    final BigDecimal requestedAmount = getAndValidatePaymentAmount(invoice, inputAmount, isInstantPayment);
                                                                                                                     if (!isInstantPayment && isAccountAutoPayOff) {
                                                                                                                         return processNewPaymentForAutoPayOffWithAccountLocked(paymentMethodId, account, invoice, requestedAmount, context);
                                                                                                                     } else {
