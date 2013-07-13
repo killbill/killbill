@@ -52,7 +52,7 @@ public class TestJrubyPaymentPlugin extends TestOSGIBase {
     @Inject
     private OSGIServiceRegistration<PaymentPluginApi> paymentPluginApiOSGIServiceRegistration;
 
-    @BeforeClass(groups = "slow")
+    @BeforeClass(groups = "slow", enabled=false)
     public void beforeClass() throws Exception {
 
 
@@ -67,7 +67,7 @@ public class TestJrubyPaymentPlugin extends TestOSGIBase {
 
     }
 
-    @Test(groups = "slow", enabled = true)
+    @Test(groups = "slow", enabled = false)
     public void testProcessPayment() throws Exception {
 
         PaymentPluginApi api = getTestPluginPaymentApi();
@@ -92,7 +92,7 @@ public class TestJrubyPaymentPlugin extends TestOSGIBase {
         assertEquals(res.getStatus(), PaymentPluginStatus.PROCESSED);
     }
 
-    @Test(groups = "slow", enabled = true)
+    @Test(groups = "slow", enabled = false)
     public void testGetPaymentInfo() throws Exception {
 
         PaymentPluginApi api = getTestPluginPaymentApi();
@@ -116,7 +116,7 @@ public class TestJrubyPaymentPlugin extends TestOSGIBase {
     }
 
 
-    @Test(groups = "slow", enabled = true)
+    @Test(groups = "slow", enabled = false)
     public void testProcessRefund() throws Exception {
 
         PaymentPluginApi api = getTestPluginPaymentApi();
@@ -139,7 +139,7 @@ public class TestJrubyPaymentPlugin extends TestOSGIBase {
         assertEquals(res.getStatus(), RefundPluginStatus.PROCESSED);
     }
 
-    @Test(groups = "slow", enabled = true)
+    @Test(groups = "slow", enabled = false)
     public void testAddPaymentMethod() throws Exception {
 
         PaymentPluginApi api = getTestPluginPaymentApi();
@@ -151,14 +151,14 @@ public class TestJrubyPaymentPlugin extends TestOSGIBase {
     }
 
 
-    @Test(groups = "slow", enabled = true)
+    @Test(groups = "slow", enabled = false)
     public void testDeletePaymentMethod() throws Exception {
 
         PaymentPluginApi api = getTestPluginPaymentApi();
         api.deletePaymentMethod(UUID.randomUUID(), UUID.randomUUID(), callContext);
     }
 
-    @Test(groups = "slow", enabled = true)
+    @Test(groups = "slow", enabled = false)
     public void testGetPaymentMethodDetail() throws Exception {
 
         PaymentPluginApi api = getTestPluginPaymentApi();
@@ -173,7 +173,7 @@ public class TestJrubyPaymentPlugin extends TestOSGIBase {
         assertEquals(res.getProperties().get(1).getValue(), "value2");
     }
 
-    @Test(groups = "slow", enabled = true)
+    @Test(groups = "slow", enabled = false)
     public void testSetDefaultPaymentMethod() throws Exception {
 
         PaymentPluginApi api = getTestPluginPaymentApi();
@@ -181,7 +181,7 @@ public class TestJrubyPaymentPlugin extends TestOSGIBase {
         api.setDefaultPaymentMethod(UUID.randomUUID(), UUID.randomUUID(), callContext);
     }
 
-    @Test(groups = "slow", enabled = true)
+    @Test(groups = "slow", enabled = false)
     public void testGetPaymentMethods() throws Exception {
 
         PaymentPluginApi api = getTestPluginPaymentApi();
