@@ -47,7 +47,7 @@ public class InvoiceListener {
     }
 
     @Subscribe
-    public void handleRepairEntitlementEvent(final RepairSubscriptionInternalEvent event) {
+    public void handleRepairSubscriptionEvent(final RepairSubscriptionInternalEvent event) {
 
         try {
             final InternalCallContext context = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "RepairBundle", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());

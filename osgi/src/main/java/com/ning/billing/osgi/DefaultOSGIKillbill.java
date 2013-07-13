@@ -44,10 +44,10 @@ public class DefaultOSGIKillbill implements OSGIKillbill {
 
     private final AccountUserApi accountUserApi;
     private final CatalogUserApi catalogUserApi;
-    private final SubscriptionMigrationApi entitlementMigrationApi;
-    private final SubscriptionTimelineApi entitlementTimelineApi;
-    private final SubscriptionTransferApi entitlementTransferApi;
-    private final SubscriptionUserApi entitlementUserApi;
+    private final SubscriptionMigrationApi subscriptionMigrationApi;
+    private final SubscriptionTimelineApi subscriptionTimelineApi;
+    private final SubscriptionTransferApi subscriptionTransferApi;
+    private final SubscriptionUserApi subscriptionUserApi;
     private final InvoiceMigrationApi invoiceMigrationApi;
     private final InvoicePaymentApi invoicePaymentApi;
     private final InvoiceUserApi invoiceUserApi;
@@ -67,10 +67,10 @@ public class DefaultOSGIKillbill implements OSGIKillbill {
     @Inject
     public DefaultOSGIKillbill(final AccountUserApi accountUserApi,
                                final CatalogUserApi catalogUserApi,
-                               final SubscriptionMigrationApi entitlementMigrationApi,
-                               final SubscriptionTimelineApi entitlementTimelineApi,
-                               final SubscriptionTransferApi entitlementTransferApi,
-                               final SubscriptionUserApi entitlementUserApi,
+                               final SubscriptionMigrationApi subscriptionMigrationApi,
+                               final SubscriptionTimelineApi subscriptionTimelineApi,
+                               final SubscriptionTransferApi subscriptionTransferApi,
+                               final SubscriptionUserApi subscriptionUserApi,
                                final InvoiceMigrationApi invoiceMigrationApi,
                                final InvoicePaymentApi invoicePaymentApi,
                                final InvoiceUserApi invoiceUserApi,
@@ -87,10 +87,10 @@ public class DefaultOSGIKillbill implements OSGIKillbill {
                                final PluginConfigServiceApi configServiceApi) {
         this.accountUserApi = accountUserApi;
         this.catalogUserApi = catalogUserApi;
-        this.entitlementMigrationApi = entitlementMigrationApi;
-        this.entitlementTimelineApi = entitlementTimelineApi;
-        this.entitlementTransferApi = entitlementTransferApi;
-        this.entitlementUserApi = entitlementUserApi;
+        this.subscriptionMigrationApi = subscriptionMigrationApi;
+        this.subscriptionTimelineApi = subscriptionTimelineApi;
+        this.subscriptionTransferApi = subscriptionTransferApi;
+        this.subscriptionUserApi = subscriptionUserApi;
         this.invoiceMigrationApi = invoiceMigrationApi;
         this.invoicePaymentApi = invoicePaymentApi;
         this.invoiceUserApi = invoiceUserApi;
@@ -119,17 +119,17 @@ public class DefaultOSGIKillbill implements OSGIKillbill {
 
     @Override
     public SubscriptionTimelineApi getSubscriptionTimelineApi() {
-        return entitlementTimelineApi;
+        return subscriptionTimelineApi;
     }
 
     @Override
     public SubscriptionTransferApi getSubscriptionTransferApi() {
-        return entitlementTransferApi;
+        return subscriptionTransferApi;
     }
 
     @Override
     public SubscriptionUserApi getSubscriptionUserApi() {
-        return entitlementUserApi;
+        return subscriptionUserApi;
     }
 
     @Override

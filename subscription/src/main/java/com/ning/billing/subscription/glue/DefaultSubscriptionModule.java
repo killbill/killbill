@@ -43,7 +43,7 @@ import com.ning.billing.subscription.api.transfer.SubscriptionTransferApi;
 import com.ning.billing.subscription.api.user.SubscriptionUserApi;
 import com.ning.billing.util.config.SubscriptionConfig;
 import com.ning.billing.util.glue.RealImplementation;
-import com.ning.billing.util.svcapi.entitlement.SubscriptionInternalApi;
+import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
@@ -63,14 +63,14 @@ public class DefaultSubscriptionModule extends AbstractModule implements Subscri
         bind(SubscriptionConfig.class).toInstance(config);
     }
 
-    protected void installEntitlementDao() {
+    protected void installSubscriptionDao() {
         bind(SubscriptionDao.class).to(DefaultSubscriptionDao.class).asEagerSingleton();
         bind(SubscriptionDao.class).annotatedWith(Names.named(REPAIR_NAMED)).to(RepairSubscriptionDao.class);
         bind(RepairSubscriptionLifecycleDao.class).annotatedWith(Names.named(REPAIR_NAMED)).to(RepairSubscriptionDao.class);
         bind(RepairSubscriptionDao.class).asEagerSingleton();
     }
 
-    protected void installEntitlementCore() {
+    protected void installSubscriptionCore() {
 
         bind(SubscriptionApiService.class).annotatedWith(Names.named(REPAIR_NAMED)).to(RepairSubscriptionApiService.class).asEagerSingleton();
         bind(SubscriptionApiService.class).to(DefaultSubscriptionApiService.class).asEagerSingleton();
@@ -91,8 +91,8 @@ public class DefaultSubscriptionModule extends AbstractModule implements Subscri
     @Override
     protected void configure() {
         installConfig();
-        installEntitlementDao();
-        installEntitlementCore();
+        installSubscriptionDao();
+        installSubscriptionCore();
     }
 
     @Override

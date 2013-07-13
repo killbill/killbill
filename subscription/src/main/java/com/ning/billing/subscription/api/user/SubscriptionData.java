@@ -194,7 +194,7 @@ public class SubscriptionData extends EntityBase implements Subscription {
         }
 
         final SubscriptionTransitionDataIterator it = new SubscriptionTransitionDataIterator(
-                clock, transitions, Order.ASC_FROM_PAST, Kind.ENTITLEMENT,
+                clock, transitions, Order.ASC_FROM_PAST, Kind.SUBSCRIPTION,
                 Visibility.ALL, TimeLimit.FUTURE_ONLY);
         while (it.hasNext()) {
             final SubscriptionTransition cur = it.next();
@@ -250,7 +250,7 @@ public class SubscriptionData extends EntityBase implements Subscription {
             return null;
         }
         final SubscriptionTransitionDataIterator it = new SubscriptionTransitionDataIterator(
-                clock, transitions, Order.ASC_FROM_PAST, Kind.ENTITLEMENT,
+                clock, transitions, Order.ASC_FROM_PAST, Kind.SUBSCRIPTION,
                 Visibility.ALL, TimeLimit.FUTURE_ONLY);
         return it.hasNext() ? it.next() : null;
     }
@@ -311,7 +311,7 @@ public class SubscriptionData extends EntityBase implements Subscription {
             return null;
         }
         final SubscriptionTransitionDataIterator it = new SubscriptionTransitionDataIterator(
-                clock, transitions, Order.DESC_FROM_FUTURE, Kind.ENTITLEMENT,
+                clock, transitions, Order.DESC_FROM_FUTURE, Kind.SUBSCRIPTION,
                 Visibility.FROM_DISK_ONLY, TimeLimit.PAST_OR_PRESENT_ONLY);
         return it.hasNext() ? it.next() : null;
     }
@@ -411,7 +411,7 @@ public class SubscriptionData extends EntityBase implements Subscription {
 
     public long getLastEventOrderedId() {
         final SubscriptionTransitionDataIterator it = new SubscriptionTransitionDataIterator(
-                clock, transitions, Order.DESC_FROM_FUTURE, Kind.ENTITLEMENT,
+                clock, transitions, Order.DESC_FROM_FUTURE, Kind.SUBSCRIPTION,
                 Visibility.FROM_DISK_ONLY, TimeLimit.ALL);
         return it.hasNext() ? ((SubscriptionTransitionData)it.next()).getTotalOrdering() : -1L;
     }
@@ -455,7 +455,7 @@ public class SubscriptionData extends EntityBase implements Subscription {
         final SubscriptionTransitionDataIterator it = new SubscriptionTransitionDataIterator(clock,
                 transitions,
                 Order.DESC_FROM_FUTURE,
-                Kind.ENTITLEMENT,
+                Kind.SUBSCRIPTION,
                 Visibility.ALL,
                 TimeLimit.PAST_OR_PRESENT_ONLY);
 
@@ -503,7 +503,7 @@ public class SubscriptionData extends EntityBase implements Subscription {
                     "No transitions for subscription %s", getId()));
         }
         final SubscriptionTransitionDataIterator it = new SubscriptionTransitionDataIterator(
-                clock, transitions, Order.DESC_FROM_FUTURE, Kind.ENTITLEMENT,
+                clock, transitions, Order.DESC_FROM_FUTURE, Kind.SUBSCRIPTION,
                 Visibility.ALL, TimeLimit.PAST_OR_PRESENT_ONLY);
         while (it.hasNext()) {
             final SubscriptionTransitionData cur = (SubscriptionTransitionData) it.next();

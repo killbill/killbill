@@ -29,7 +29,7 @@ import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.junction.api.Type;
 import com.ning.billing.junction.dao.BlockingStateDao;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.svcapi.entitlement.SubscriptionInternalApi;
+import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
 
 import com.google.inject.Inject;
 
@@ -80,17 +80,17 @@ public class DefaultBlockingChecker implements BlockingChecker {
     private static final Object ACTION_ENTITLEMENT = "Entitlement";
     private static final Object ACTION_BILLING = "Billing";
 
-    private final SubscriptionInternalApi entitlementApi;
+    private final SubscriptionInternalApi subscriptionApi;
     private final BlockingStateDao dao;
 
     @Inject
-    public DefaultBlockingChecker(final SubscriptionInternalApi entitlementApi, final BlockingStateDao dao) {
-        this.entitlementApi = entitlementApi;
+    public DefaultBlockingChecker(final SubscriptionInternalApi subscriptionApi, final BlockingStateDao dao) {
+        this.subscriptionApi = subscriptionApi;
         this.dao = dao;
     }
 
     private BlockingAggregator getBlockedStateSubscriptionId(final UUID subscriptionId, final InternalTenantContext context) throws SubscriptionUserApiException {
-        final Subscription subscription = entitlementApi.getSubscriptionFromId(subscriptionId, context);
+        final Subscription subscription = subscriptionApi.getSubscriptionFromId(subscriptionId, context);
         return getBlockedStateSubscription(subscription, context);
     }
 
@@ -111,7 +111,7 @@ public class DefaultBlockingChecker implements BlockingChecker {
 
 
     private BlockingAggregator getBlockedStateBundleId(final UUID bundleId, final InternalTenantContext context) throws SubscriptionUserApiException {
-        final SubscriptionBundle bundle = entitlementApi.getBundleFromId(bundleId, context);
+        final SubscriptionBundle bundle = subscriptionApi.getBundleFromId(bundleId, context);
         return getBlockedStateBundle(bundle, context);
     }
 

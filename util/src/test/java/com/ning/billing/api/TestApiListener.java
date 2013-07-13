@@ -89,14 +89,14 @@ public class TestApiListener {
     }
 
     @Subscribe
-    public void handleRepairEntitlementEvents(final RepairSubscriptionInternalEvent event) {
-        log.info(String.format("Got RepairEntitlementEvent event %s", event.toString()));
+    public void handleRepairSubscriptionEvents(final RepairSubscriptionInternalEvent event) {
+        log.info(String.format("Got RepairSubscriptionEvent event %s", event.toString()));
         assertEqualsNicely(NextEvent.REPAIR_BUNDLE);
         notifyIfStackEmpty();
     }
 
     @Subscribe
-    public void handleEntitlementEvents(final EffectiveSubscriptionInternalEvent eventEffective) {
+    public void handleSubscriptionEvents(final EffectiveSubscriptionInternalEvent eventEffective) {
 
         log.info(String.format("Got subscription event %s", eventEffective.toString()));
         switch (eventEffective.getTransitionType()) {

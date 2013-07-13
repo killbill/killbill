@@ -42,7 +42,7 @@ import com.ning.billing.overdue.config.api.PaymentResponse;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcapi.entitlement.SubscriptionInternalApi;
+import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
 import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
 import com.ning.billing.util.tag.Tag;
 
@@ -50,14 +50,14 @@ import com.google.inject.Inject;
 
 public class BillingStateCalculatorBundle extends BillingStateCalculator<SubscriptionBundle> {
 
-    private final SubscriptionInternalApi entitlementApi;
+    private final SubscriptionInternalApi subscriptionApi;
     private final AccountInternalApi accountApi;
 
     @Inject
-    public BillingStateCalculatorBundle(final SubscriptionInternalApi entitlementApi, final InvoiceInternalApi invoiceApi,
+    public BillingStateCalculatorBundle(final SubscriptionInternalApi subscriptionApi, final InvoiceInternalApi invoiceApi,
                                         final AccountInternalApi accountApi, final Clock clock) {
         super(invoiceApi, clock);
-        this.entitlementApi = entitlementApi;
+        this.subscriptionApi = subscriptionApi;
         this.accountApi = accountApi;
     }
 
@@ -135,7 +135,7 @@ public class BillingStateCalculatorBundle extends BillingStateCalculator<Subscri
 
     private Subscription getBasePlanIfExist(UUID bundleId, final InternalTenantContext context) throws SubscriptionUserApiException {
         try {
-            final Subscription basePlan = entitlementApi.getBaseSubscription(bundleId, context);
+            final Subscription basePlan = subscriptionApi.getBaseSubscription(bundleId, context);
             return basePlan;
         } catch (SubscriptionUserApiException e) {
             if (e.getCode() == ErrorCode.SUB_GET_NO_SUCH_BASE_SUBSCRIPTION.getCode()) {

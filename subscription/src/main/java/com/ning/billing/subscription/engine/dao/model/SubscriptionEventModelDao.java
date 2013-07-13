@@ -142,7 +142,7 @@ public class SubscriptionEventModelDao extends EntityBase implements EntityModel
         return isActive;
     }
 
-    public static SubscriptionEvent toEntitlementEvent(final SubscriptionEventModelDao src) {
+    public static SubscriptionEvent toSubscriptionEvent(final SubscriptionEventModelDao src) {
 
         if (src == null) {
             return null;

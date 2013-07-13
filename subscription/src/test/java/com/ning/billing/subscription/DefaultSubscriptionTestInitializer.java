@@ -76,9 +76,9 @@ public class DefaultSubscriptionTestInitializer implements SubscriptionTestIniti
         return accountData;
     }
 
-    public SubscriptionBundle initBundle(final SubscriptionUserApi entitlementApi, final CallContext callContext) throws Exception {
+    public SubscriptionBundle initBundle(final SubscriptionUserApi subscriptionApi, final CallContext callContext) throws Exception {
         final UUID accountId = UUID.randomUUID();
-        final SubscriptionBundle bundle = entitlementApi.createBundleForAccount(accountId, "myDefaultBundle", callContext);
+        final SubscriptionBundle bundle = subscriptionApi.createBundleForAccount(accountId, "myDefaultBundle", callContext);
         assertNotNull(bundle);
         return bundle;
     }
@@ -88,7 +88,7 @@ public class DefaultSubscriptionTestInitializer implements SubscriptionTestIniti
                                   final TestListenerStatus testListenerStatus,
                                   final ClockMock clock,
                                   final BusService busService,
-                                  final SubscriptionService entitlementService) throws Exception {
+                                  final SubscriptionService subscriptionService) throws Exception {
         log.warn("STARTING TEST FRAMEWORK");
 
         resetTestListener(testListener, testListenerStatus);
@@ -97,18 +97,18 @@ public class DefaultSubscriptionTestInitializer implements SubscriptionTestIniti
 
         startBusAndRegisterListener(busService, testListener);
 
-        restartEntitlementService(entitlementService);
+        restartSubscriptionService(subscriptionService);
 
         log.warn("STARTED TEST FRAMEWORK");
     }
 
     public void stopTestFramework(final TestApiListener testListener,
                                   final BusService busService,
-                                  final SubscriptionService entitlementService) throws Exception {
+                                  final SubscriptionService subscriptionService) throws Exception {
         log.warn("STOPPING TEST FRAMEWORK");
         stopBusAndUnregisterListener(busService, testListener);
 
-        stopEntitlementService(entitlementService);
+        stopSubscriptionService(subscriptionService);
 
         log.warn("STOPPED TEST FRAMEWORK");
     }
@@ -135,10 +135,10 @@ public class DefaultSubscriptionTestInitializer implements SubscriptionTestIniti
         busService.getBus().register(testListener);
     }
 
-    private void restartEntitlementService(final SubscriptionService entitlementService) {
-        // START NOTIFICATION QUEUE FOR ENTITLEMENT
-        ((DefaultSubscriptionService) entitlementService).initialize();
-        ((DefaultSubscriptionService) entitlementService).start();
+    private void restartSubscriptionService(final SubscriptionService subscriptionService) {
+        // START NOTIFICATION QUEUE FOR SUBSCRIPTION
+        ((DefaultSubscriptionService) subscriptionService).initialize();
+        ((DefaultSubscriptionService) subscriptionService).start();
     }
 
     private void stopBusAndUnregisterListener(final BusService busService, final TestApiListener testListener) throws Exception {
@@ -146,7 +146,7 @@ public class DefaultSubscriptionTestInitializer implements SubscriptionTestIniti
         busService.getBus().stop();
     }
 
-    private void stopEntitlementService(final SubscriptionService entitlementService) throws Exception {
-        ((DefaultSubscriptionService) entitlementService).stop();
+    private void stopSubscriptionService(final SubscriptionService subscriptionService) throws Exception {
+        ((DefaultSubscriptionService) subscriptionService).stop();
     }
 }

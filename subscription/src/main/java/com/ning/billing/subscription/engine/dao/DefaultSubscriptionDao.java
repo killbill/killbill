@@ -312,7 +312,7 @@ public class DefaultSubscriptionDao implements SubscriptionDao {
             @Override
             public SubscriptionEvent inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
                 SubscriptionEventModelDao model = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class).getById(eventId.toString(), context);
-                return SubscriptionEventModelDao.toEntitlementEvent(model);
+                return SubscriptionEventModelDao.toSubscriptionEvent(model);
             }
         });
     }
@@ -333,7 +333,7 @@ public class DefaultSubscriptionDao implements SubscriptionDao {
                 return new ArrayList<SubscriptionEvent>(Collections2.transform(filteredModels, new Function<SubscriptionEventModelDao, SubscriptionEvent>() {
                     @Override
                     public SubscriptionEvent apply(@Nullable final SubscriptionEventModelDao input) {
-                        return SubscriptionEventModelDao.toEntitlementEvent(input);
+                        return SubscriptionEventModelDao.toSubscriptionEvent(input);
                     }
                 }));
             }
@@ -359,7 +359,7 @@ public class DefaultSubscriptionDao implements SubscriptionDao {
                     final List<SubscriptionEvent> events = new ArrayList<SubscriptionEvent>(Collections2.transform(eventModels, new Function<SubscriptionEventModelDao, SubscriptionEvent>() {
                         @Override
                         public SubscriptionEvent apply(@Nullable final SubscriptionEventModelDao input) {
-                            return SubscriptionEventModelDao.toEntitlementEvent(input);
+                            return SubscriptionEventModelDao.toSubscriptionEvent(input);
                         }
                     }));
                     result.put(cur.getId(), events);
@@ -380,7 +380,7 @@ public class DefaultSubscriptionDao implements SubscriptionDao {
                 final List<SubscriptionEvent> events = new ArrayList<SubscriptionEvent>(Collections2.transform(eventModels, new Function<SubscriptionEventModelDao, SubscriptionEvent>() {
                     @Override
                     public SubscriptionEvent apply(@Nullable final SubscriptionEventModelDao input) {
-                        return SubscriptionEventModelDao.toEntitlementEvent(input);
+                        return SubscriptionEventModelDao.toSubscriptionEvent(input);
                     }
                 }));
                 return events;
@@ -929,7 +929,7 @@ public class DefaultSubscriptionDao implements SubscriptionDao {
     private void recordFutureNotificationFromTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory, final DateTime effectiveDate,
                                                          final NotificationEvent notificationKey, final InternalCallContext context) {
         try {
-            final NotificationQueue subscriptionEventQueue = notificationQueueService.getNotificationQueue(DefaultSubscriptionService.ENTITLEMENT_SERVICE_NAME,
+            final NotificationQueue subscriptionEventQueue = notificationQueueService.getNotificationQueue(DefaultSubscriptionService.SUBSCRIPTION_SERVICE_NAME,
                                                                                                            DefaultSubscriptionService.NOTIFICATION_QUEUE_NAME);
             subscriptionEventQueue.recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory.getSqlDao(), effectiveDate, notificationKey, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
         } catch (NoSuchNotificationQueue e) {

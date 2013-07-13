@@ -23,7 +23,7 @@ import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
-import com.ning.billing.util.svcapi.entitlement.SubscriptionBillingApiException;
+import com.ning.billing.util.svcapi.subscription.SubscriptionBillingApiException;
 
 @Singleton
 @Provider

@@ -45,7 +45,7 @@ import com.ning.billing.subscription.api.transfer.SubscriptionTransferApi;
 import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.subscription.api.user.SubscriptionUserApi;
 import com.ning.billing.util.config.SubscriptionConfig;
-import com.ning.billing.util.svcapi.entitlement.SubscriptionInternalApi;
+import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
 import com.ning.billing.util.svcsapi.bus.BusService;
 
 import com.google.inject.Guice;
@@ -57,9 +57,9 @@ public class SubscriptionTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     protected static final Logger log = LoggerFactory.getLogger(SubscriptionTestSuiteNoDB.class);
 
     @Inject
-    protected SubscriptionService entitlementService;
+    protected SubscriptionService subscriptionService;
     @Inject
-    protected SubscriptionUserApi entitlementApi;
+    protected SubscriptionUserApi subscriptionApi;
     @Inject
     protected SubscriptionInternalApi subscriptionInternalApi;
     @Inject
@@ -104,7 +104,7 @@ public class SubscriptionTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
     @BeforeClass(groups = "fast")
     public void beforeClass() throws Exception {
-        loadSystemPropertiesFromClasspath("/entitlement.properties");
+        loadSystemPropertiesFromClasspath("/subscription.properties");
 
         final Injector g = Guice.createInjector(Stage.PRODUCTION, new TestDefaultSubscriptionModuleNoDB(configSource));
         g.injectMembers(this);
@@ -116,16 +116,16 @@ public class SubscriptionTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
         // CLEANUP ALL DB TABLES OR IN MEMORY STRUCTURES
         ((MockSubscriptionDaoMemory) dao).reset();
 
-        subscriptionTestInitializer.startTestFamework(testListener, testListenerStatus, clock, busService, entitlementService);
+        subscriptionTestInitializer.startTestFamework(testListener, testListenerStatus, clock, busService, subscriptionService);
 
         this.catalog = subscriptionTestInitializer.initCatalog(catalogService);
         this.accountData = subscriptionTestInitializer.initAccountData();
-        this.bundle = subscriptionTestInitializer.initBundle(entitlementApi, callContext);
+        this.bundle = subscriptionTestInitializer.initBundle(subscriptionApi, callContext);
     }
 
     @AfterMethod(groups = "fast")
     public void afterMethod() throws Exception {
-        subscriptionTestInitializer.stopTestFramework(testListener, busService, entitlementService);
+        subscriptionTestInitializer.stopTestFramework(testListener, busService, subscriptionService);
     }
 
     protected void assertListenerStatus() {

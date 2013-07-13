@@ -29,7 +29,7 @@ import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.subscription.SubscriptionTestSuiteWithEmbeddedDB;
-import com.ning.billing.subscription.api.migration.SubscriptionMigrationApi.EntitlementAccountMigration;
+import com.ning.billing.subscription.api.migration.SubscriptionMigrationApi.AccountMigration;
 import com.ning.billing.subscription.api.user.SubscriptionData;
 import com.ning.billing.subscription.api.user.SubscriptionTransitionData;
 import com.ning.billing.subscription.events.user.ApiEventType;
@@ -51,18 +51,18 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
         try {
             final DateTime startDate = clock.getUTCNow().minusMonths(2);
             final DateTime beforeMigration = clock.getUTCNow();
-            final EntitlementAccountMigration toBeMigrated = testUtil.createAccountForMigrationWithRegularBasePlan(startDate);
+            final AccountMigration toBeMigrated = testUtil.createAccountForMigrationWithRegularBasePlan(startDate);
             final DateTime afterMigration = clock.getUTCNow();
 
             testListener.pushExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
             migrationApi.migrate(toBeMigrated, callContext);
             assertTrue(testListener.isCompleted(5000));
 
-            final List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(toBeMigrated.getAccountKey(), callContext);
+            final List<SubscriptionBundle> bundles = subscriptionApi.getBundlesForAccount(toBeMigrated.getAccountKey(), callContext);
             assertEquals(bundles.size(), 1);
             final SubscriptionBundle bundle = bundles.get(0);
 
-            final List<Subscription> subscriptions = entitlementApi.getSubscriptionsForBundle(bundle.getId(), callContext);
+            final List<Subscription> subscriptions = subscriptionApi.getSubscriptionsForBundle(bundle.getId(), callContext);
             assertEquals(subscriptions.size(), 1);
             final Subscription subscription = subscriptions.get(0);
             assertTrue(subscription.getStartDate().compareTo(startDate) == 0);
@@ -85,7 +85,7 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
             final DateTime beforeMigration = clock.getUTCNow();
             final DateTime initalBPStart = clock.getUTCNow().minusMonths(3);
             final DateTime initalAddonStart = clock.getUTCNow().minusMonths(1).plusDays(7);
-            final EntitlementAccountMigration toBeMigrated = testUtil.createAccountForMigrationWithRegularBasePlanAndAddons(initalBPStart, initalAddonStart);
+            final AccountMigration toBeMigrated = testUtil.createAccountForMigrationWithRegularBasePlanAndAddons(initalBPStart, initalAddonStart);
             final DateTime afterMigration = clock.getUTCNow();
 
             testListener.pushExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
@@ -93,11 +93,11 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
             migrationApi.migrate(toBeMigrated, callContext);
             assertTrue(testListener.isCompleted(5000));
 
-            final List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(toBeMigrated.getAccountKey(), callContext);
+            final List<SubscriptionBundle> bundles = subscriptionApi.getBundlesForAccount(toBeMigrated.getAccountKey(), callContext);
             assertEquals(bundles.size(), 1);
             final SubscriptionBundle bundle = bundles.get(0);
 
-            final List<Subscription> subscriptions = entitlementApi.getSubscriptionsForBundle(bundle.getId(), callContext);
+            final List<Subscription> subscriptions = subscriptionApi.getSubscriptionsForBundle(bundle.getId(), callContext);
             assertEquals(subscriptions.size(), 2);
 
             final Subscription baseSubscription = (subscriptions.get(0).getCurrentPlan().getProduct().getCategory() == ProductCategory.BASE) ?
@@ -134,19 +134,19 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
         try {
             final DateTime startDate = clock.getUTCNow().minusMonths(1);
             final DateTime beforeMigration = clock.getUTCNow();
-            final EntitlementAccountMigration toBeMigrated = testUtil.createAccountForMigrationWithRegularBasePlanFutreCancelled(startDate);
+            final AccountMigration toBeMigrated = testUtil.createAccountForMigrationWithRegularBasePlanFutreCancelled(startDate);
             final DateTime afterMigration = clock.getUTCNow();
 
             testListener.pushExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
             migrationApi.migrate(toBeMigrated, callContext);
             assertTrue(testListener.isCompleted(5000));
 
-            final List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(toBeMigrated.getAccountKey(), callContext);
+            final List<SubscriptionBundle> bundles = subscriptionApi.getBundlesForAccount(toBeMigrated.getAccountKey(), callContext);
             assertEquals(bundles.size(), 1);
             final SubscriptionBundle bundle = bundles.get(0);
             //assertEquals(bundle.getStartDate(), effectiveDate);
 
-            final List<Subscription> subscriptions = entitlementApi.getSubscriptionsForBundle(bundle.getId(), callContext);
+            final List<Subscription> subscriptions = subscriptionApi.getSubscriptionsForBundle(bundle.getId(), callContext);
             assertEquals(subscriptions.size(), 1);
             final Subscription subscription = subscriptions.get(0);
             assertTrue(subscription.getStartDate().compareTo(startDate) == 0);
@@ -181,17 +181,17 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
     public void testSingleBasePlanWithPendingPhase() {
         try {
             final DateTime trialDate = clock.getUTCNow().minusDays(10);
-            final EntitlementAccountMigration toBeMigrated = testUtil.createAccountForMigrationFuturePendingPhase(trialDate);
+            final AccountMigration toBeMigrated = testUtil.createAccountForMigrationFuturePendingPhase(trialDate);
 
             testListener.pushExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
             migrationApi.migrate(toBeMigrated, callContext);
             assertTrue(testListener.isCompleted(5000));
 
-            final List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(toBeMigrated.getAccountKey(), callContext);
+            final List<SubscriptionBundle> bundles = subscriptionApi.getBundlesForAccount(toBeMigrated.getAccountKey(), callContext);
             assertEquals(bundles.size(), 1);
             final SubscriptionBundle bundle = bundles.get(0);
 
-            final List<Subscription> subscriptions = entitlementApi.getSubscriptionsForBundle(bundle.getId(), callContext);
+            final List<Subscription> subscriptions = subscriptionApi.getSubscriptionsForBundle(bundle.getId(), callContext);
             assertEquals(subscriptions.size(), 1);
             final Subscription subscription = subscriptions.get(0);
 
@@ -228,18 +228,18 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
     public void testSingleBasePlanWithPendingChange() {
         try {
             final DateTime beforeMigration = clock.getUTCNow();
-            final EntitlementAccountMigration toBeMigrated = testUtil.createAccountForMigrationFuturePendingChange();
+            final AccountMigration toBeMigrated = testUtil.createAccountForMigrationFuturePendingChange();
             final DateTime afterMigration = clock.getUTCNow();
 
             testListener.pushExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
             migrationApi.migrate(toBeMigrated, callContext);
             assertTrue(testListener.isCompleted(5000));
 
-            final List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(toBeMigrated.getAccountKey(), callContext);
+            final List<SubscriptionBundle> bundles = subscriptionApi.getBundlesForAccount(toBeMigrated.getAccountKey(), callContext);
             assertEquals(bundles.size(), 1);
             final SubscriptionBundle bundle = bundles.get(0);
 
-            final List<Subscription> subscriptions = entitlementApi.getSubscriptionsForBundle(bundle.getId(), callContext);
+            final List<Subscription> subscriptions = subscriptionApi.getSubscriptionsForBundle(bundle.getId(), callContext);
             assertEquals(subscriptions.size(), 1);
             final Subscription subscription = subscriptions.get(0);
             //assertDateWithin(subscription.getStartDate(), beforeMigration, afterMigration);
@@ -276,7 +276,7 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
         try {
             final DateTime startDate = clock.getUTCNow().minusMonths(2);
             final DateTime beforeMigration = clock.getUTCNow();
-            final EntitlementAccountMigration toBeMigrated = testUtil.createAccountForMigrationWithRegularBasePlan(startDate);
+            final AccountMigration toBeMigrated = testUtil.createAccountForMigrationWithRegularBasePlan(startDate);
             final DateTime afterMigration = clock.getUTCNow();
 
             testListener.pushExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
@@ -284,10 +284,10 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
             assertTrue(testListener.isCompleted(5000));
             assertListenerStatus();
 
-            final List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(toBeMigrated.getAccountKey(), callContext);
+            final List<SubscriptionBundle> bundles = subscriptionApi.getBundlesForAccount(toBeMigrated.getAccountKey(), callContext);
             assertEquals(bundles.size(), 1);
 
-            final List<Subscription> subscriptions = entitlementApi.getSubscriptionsForBundle(bundles.get(0).getId(), callContext);
+            final List<Subscription> subscriptions = subscriptionApi.getSubscriptionsForBundle(bundles.get(0).getId(), callContext);
             assertEquals(subscriptions.size(), 1);
             final SubscriptionData subscription = (SubscriptionData) subscriptions.get(0);
 

@@ -126,7 +126,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     protected BusService busService;
 
     @Inject
-    protected SubscriptionService entitlementService;
+    protected SubscriptionService subscriptionService;
 
     @Inject
     protected InvoiceService invoiceService;
@@ -135,7 +135,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     protected AccountService accountService;
 
     @Inject
-    protected SubscriptionUserApi entitlementUserApi;
+    protected SubscriptionUserApi subscriptionUserApi;
 
     @Inject
     protected SubscriptionTransferApi transferApi;
@@ -279,7 +279,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
                                     final DateTime startDate, @Nullable final DateTime endDate,
                                     final BigDecimal amount, final DateTime chargeThroughDate,
                                     final int totalInvoiceItemCount) throws SubscriptionUserApiException {
-        final SubscriptionData subscription = subscriptionDataFromSubscription(entitlementUserApi.getSubscriptionFromId(subscriptionId, callContext));
+        final SubscriptionData subscription = subscriptionDataFromSubscription(subscriptionUserApi.getSubscriptionFromId(subscriptionId, callContext));
 
         /*
                 final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId);
@@ -496,7 +496,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             @Override
             public Subscription apply(@Nullable final Void dontcare) {
                 try {
-                    final Subscription subscription = entitlementUserApi.createSubscription(bundleId,
+                    final Subscription subscription = subscriptionUserApi.createSubscription(bundleId,
                                                                                             new PlanPhaseSpecifier(productName, productCategory, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, null),
                                                                                             null,
                                                                                             callContext);
@@ -519,7 +519,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             public Subscription apply(@Nullable final Void dontcare) {
                 try {
                     // Need to fetch again to get latest CTD updated from the system
-                    final Subscription refreshedSubscription = entitlementUserApi.getSubscriptionFromId(subscription.getId(), callContext);
+                    final Subscription refreshedSubscription = subscriptionUserApi.getSubscriptionFromId(subscription.getId(), callContext);
                     refreshedSubscription.changePlan(productName, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow(), callContext);
                     return refreshedSubscription;
                 } catch (SubscriptionUserApiException e) {
@@ -538,7 +538,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             public Subscription apply(@Nullable final Void dontcare) {
                 try {
                     // Need to fetch again to get latest CTD updated from the system
-                    final Subscription refreshedSubscription = entitlementUserApi.getSubscriptionFromId(subscription.getId(), callContext);
+                    final Subscription refreshedSubscription = subscriptionUserApi.getSubscriptionFromId(subscription.getId(), callContext);
                     refreshedSubscription.cancel(requestedDate, callContext);
                     return refreshedSubscription;
                 } catch (SubscriptionUserApiException e) {

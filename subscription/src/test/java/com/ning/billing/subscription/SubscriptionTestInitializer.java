@@ -34,15 +34,15 @@ public interface SubscriptionTestInitializer {
 
     public AccountData initAccountData();
 
-    public SubscriptionBundle initBundle(final SubscriptionUserApi entitlementApi, final CallContext callContext) throws Exception;
+    public SubscriptionBundle initBundle(final SubscriptionUserApi subscriptionApi, final CallContext callContext) throws Exception;
 
     public void startTestFamework(final TestApiListener testListener,
                                   final TestListenerStatus testListenerStatus,
                                   final ClockMock clock,
                                   final BusService busService,
-                                  final SubscriptionService entitlementService) throws Exception;
+                                  final SubscriptionService subscriptionService) throws Exception;
 
     public void stopTestFramework(final TestApiListener testListener,
                                   final BusService busService,
-                                  final SubscriptionService entitlementService) throws Exception;
+                                  final SubscriptionService subscriptionService) throws Exception;
 }

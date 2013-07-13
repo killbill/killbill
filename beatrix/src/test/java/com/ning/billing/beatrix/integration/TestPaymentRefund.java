@@ -103,7 +103,7 @@ public class TestPaymentRefund extends TestIntegrationBase {
 
         // set clock to the initial start date
         clock.setTime(initialCreationDate);
-        final SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
+        final SubscriptionBundle bundle = subscriptionUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
 
         invoiceItemCount = 0;
 

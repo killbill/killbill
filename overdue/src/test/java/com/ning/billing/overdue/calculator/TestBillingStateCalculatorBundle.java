@@ -41,7 +41,7 @@ import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.overdue.config.api.BillingStateBundle;
 import com.ning.billing.overdue.config.api.PaymentResponse;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.svcapi.entitlement.SubscriptionInternalApi;
+import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
@@ -67,11 +67,11 @@ public class TestBillingStateCalculatorBundle extends TestBillingStateCalculator
         final SubscriptionBundle bundle = Mockito.mock(SubscriptionBundle.class);
         Mockito.when(bundle.getId()).thenReturn(bundleId);
 
-        final SubscriptionInternalApi entitlementApi = Mockito.mock(SubscriptionInternalApi.class);
+        final SubscriptionInternalApi subscriptionApi = Mockito.mock(SubscriptionInternalApi.class);
         final Subscription subscription = Mockito.mock(Subscription.class);
-        Mockito.when(entitlementApi.getBaseSubscription(Mockito.eq(bundleId), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
+        Mockito.when(subscriptionApi.getBaseSubscription(Mockito.eq(bundleId), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
 
-        final BillingStateCalculatorBundle calc = new BillingStateCalculatorBundle(entitlementApi, invoiceApi, accountApi, clock);
+        final BillingStateCalculatorBundle calc = new BillingStateCalculatorBundle(subscriptionApi, invoiceApi, accountApi, clock);
         final BillingStateBundle billingStateBundle = calc.calculateBillingState(bundle, internalCallContext);
         Assert.assertNull(billingStateBundle.getBasePlanBillingPeriod());
         Assert.assertNull(billingStateBundle.getBasePlanPhaseType());
@@ -100,7 +100,7 @@ public class TestBillingStateCalculatorBundle extends TestBillingStateCalculator
             }
         }));
 
-        final BillingStateCalculatorBundle calc = new BillingStateCalculatorBundle(entitlementApi, invoiceApi, accountApi, clock);
+        final BillingStateCalculatorBundle calc = new BillingStateCalculatorBundle(subscriptionApi, invoiceApi, accountApi, clock);
         final SortedSet<Invoice> resultinvoices = calc.unpaidInvoicesForBundle(thisBundleId, new UUID(0L, 0L), DateTimeZone.UTC, internalCallContext);
 
         Assert.assertEquals(resultinvoices.size(), 3);
@@ -128,7 +128,7 @@ public class TestBillingStateCalculatorBundle extends TestBillingStateCalculator
         Mockito.when(bundle.getAccountId()).thenReturn(UUID.randomUUID());
 
         final Subscription subscription = Mockito.mock(Subscription.class);
-        Mockito.when(entitlementApi.getBaseSubscription(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
+        Mockito.when(subscriptionApi.getBaseSubscription(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
 
         final Plan plan = MockPlan.createBicycleNoTrialEvergreen1USD();
         final PriceList pricelist = new MockPriceList();
@@ -163,7 +163,7 @@ public class TestBillingStateCalculatorBundle extends TestBillingStateCalculator
         Mockito.when(bundle.getAccountId()).thenReturn(UUID.randomUUID());
 
         final Subscription subscription = Mockito.mock(Subscription.class);
-        Mockito.when(entitlementApi.getBaseSubscription(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
+        Mockito.when(subscriptionApi.getBaseSubscription(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
 
         final Plan plan = MockPlan.createBicycleNoTrialEvergreen1USD();
         final PriceList pricelist = new MockPriceList();

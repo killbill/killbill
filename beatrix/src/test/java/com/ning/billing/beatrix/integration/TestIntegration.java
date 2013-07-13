@@ -60,7 +60,7 @@ public class TestIntegration extends TestIntegrationBase {
         // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
         clock.setDay(new LocalDate(2012, 4, 1));
 
-        final SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
+        final SubscriptionBundle bundle = subscriptionUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
         subscriptionChecker.checkBundleNoAudits(bundle.getId(), bundle.getAccountId(), bundle.getExternalKey(), callContext);
 
         //
@@ -104,7 +104,7 @@ public class TestIntegration extends TestIntegrationBase {
 
         // set clock to the initial start date
         clock.setTime(initialCreationDate);
-        final SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
+        final SubscriptionBundle bundle = subscriptionUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
 
         int invoiceItemCount = 1;
 
@@ -186,7 +186,7 @@ public class TestIntegration extends TestIntegrationBase {
 
         // set clock to the initial start date
         clock.setTime(initialCreationDate);
-        final SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
+        final SubscriptionBundle bundle = subscriptionUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
 
         int invoiceItemCount = 1;
 
@@ -268,7 +268,7 @@ public class TestIntegration extends TestIntegrationBase {
 
         // set clock to the initial start date
         clock.setTime(initialCreationDate);
-        final SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
+        final SubscriptionBundle bundle = subscriptionUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
 
         int invoiceItemCount = 1;
 
@@ -400,7 +400,7 @@ public class TestIntegration extends TestIntegrationBase {
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(25));
         assertNotNull(account);
 
-        final SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
+        final SubscriptionBundle bundle = subscriptionUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
 
         final String productName = "Shotgun";
         final BillingPeriod term = BillingPeriod.MONTHLY;
@@ -408,7 +408,7 @@ public class TestIntegration extends TestIntegrationBase {
 
         busHandler.pushExpectedEvent(NextEvent.CREATE);
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
-        final SubscriptionData baseSubscription = subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
+        final SubscriptionData baseSubscription = subscriptionDataFromSubscription(subscriptionUserApi.createSubscription(bundle.getId(),
                                                                                                                          new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, callContext));
         assertNotNull(baseSubscription);
         assertTrue(busHandler.isCompleted(DELAY));
@@ -422,7 +422,7 @@ public class TestIntegration extends TestIntegrationBase {
         busHandler.pushExpectedEvent(NextEvent.CREATE);
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
         busHandler.pushExpectedEvent(NextEvent.PAYMENT);
-        subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
+        subscriptionDataFromSubscription(subscriptionUserApi.createSubscription(bundle.getId(),
                                                                                new PlanPhaseSpecifier("Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null), null, callContext));
         assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
@@ -430,7 +430,7 @@ public class TestIntegration extends TestIntegrationBase {
         busHandler.pushExpectedEvent(NextEvent.CREATE);
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
         busHandler.pushExpectedEvent(NextEvent.PAYMENT);
-        final SubscriptionData aoSubscription2 = subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
+        final SubscriptionData aoSubscription2 = subscriptionDataFromSubscription(subscriptionUserApi.createSubscription(bundle.getId(),
                                                                                                                         new PlanPhaseSpecifier("Laser-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null), null, callContext));
         assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
@@ -483,13 +483,13 @@ public class TestIntegration extends TestIntegrationBase {
         final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0, testTimeZone);
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
 
-        final SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(account.getId(), "someBundle", callContext);
+        final SubscriptionBundle bundle = subscriptionUserApi.createBundleForAccount(account.getId(), "someBundle", callContext);
         assertNotNull(bundle);
 
         final String productName = "Shotgun";
         final BillingPeriod term = BillingPeriod.MONTHLY;
         final String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
-        entitlementUserApi.createSubscription(bundle.getId(),
+        subscriptionUserApi.createSubscription(bundle.getId(),
                                               new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, callContext);
 
         busHandler.reset();
@@ -515,7 +515,7 @@ public class TestIntegration extends TestIntegrationBase {
 
         // set clock to the initial start date
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
-        final SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever2", callContext);
+        final SubscriptionBundle bundle = subscriptionUserApi.createBundleForAccount(account.getId(), "whatever2", callContext);
 
         String productName = "Shotgun";
         BillingPeriod term = BillingPeriod.MONTHLY;
@@ -527,7 +527,7 @@ public class TestIntegration extends TestIntegrationBase {
         busHandler.pushExpectedEvent(NextEvent.CREATE);
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
 
-        SubscriptionData subscription = subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
+        SubscriptionData subscription = subscriptionDataFromSubscription(subscriptionUserApi.createSubscription(bundle.getId(),
                                                                                                                new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, callContext));
 
         assertNotNull(subscription);
@@ -550,7 +550,7 @@ public class TestIntegration extends TestIntegrationBase {
         clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS);
         assertTrue(busHandler.isCompleted(DELAY));
 
-        subscription = subscriptionDataFromSubscription(entitlementUserApi.getSubscriptionFromId(subscription.getId(), callContext));
+        subscription = subscriptionDataFromSubscription(subscriptionUserApi.getSubscriptionFromId(subscription.getId(), callContext));
         subscription.cancel(clock.getUTCNow(), callContext);
 
         // MOVE AFTER CANCEL DATE AND EXPECT EVENT : NextEvent.CANCEL
@@ -589,8 +589,8 @@ public class TestIntegration extends TestIntegrationBase {
 
         busHandler.pushExpectedEvent(NextEvent.CREATE);
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
-        final SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(accountId, "testKey", callContext);
-        subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
+        final SubscriptionBundle bundle = subscriptionUserApi.createBundleForAccount(accountId, "testKey", callContext);
+        subscriptionDataFromSubscription(subscriptionUserApi.createSubscription(bundle.getId(),
                                                                                new PlanPhaseSpecifier(productName, ProductCategory.BASE,
                                                                                                       BillingPeriod.MONTHLY, planSetName, PhaseType.TRIAL), null, callContext));
 

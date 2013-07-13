@@ -57,7 +57,7 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
             testListener.pushExpectedEvent(NextEvent.PHASE);
             testListener.pushExpectedEvent(NextEvent.CREATE);
 
-            final SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
+            final SubscriptionData subscription = (SubscriptionData) subscriptionApi.createSubscription(bundle.getId(),
                                                                                                        testUtil.getProductSpecifier(productName, planSetName, term, null), requestedDate, callContext);
             assertNotNull(subscription);
 
@@ -105,7 +105,7 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
 
             testListener.pushExpectedEvent(NextEvent.CREATE);
 
-            final SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
+            final SubscriptionData subscription = (SubscriptionData) subscriptionApi.createSubscription(bundle.getId(),
                                                                                                        testUtil.getProductSpecifier(productName, planSetName, term, PhaseType.EVERGREEN), clock.getUTCNow(), callContext);
             assertNotNull(subscription);
 
@@ -143,7 +143,7 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
 
             testListener.pushExpectedEvent(NextEvent.CREATE);
 
-            final SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
+            final SubscriptionData subscription = (SubscriptionData) subscriptionApi.createSubscription(bundle.getId(),
                                                                                                        testUtil.getProductSpecifier(productName, planSetName, term, null),
                                                                                                        clock.getUTCNow(), callContext);
             assertNotNull(subscription);
@@ -199,7 +199,7 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
             testListener.pushExpectedEvent(NextEvent.CREATE);
 
             // CREATE SUBSCRIPTION
-            SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
+            SubscriptionData subscription = (SubscriptionData) subscriptionApi.createSubscription(bundle.getId(),
                                                                                                  testUtil.getProductSpecifier(productName, planSetName, term, null), clock.getUTCNow(), callContext);
             assertNotNull(subscription);
 
@@ -223,7 +223,7 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
             clock.addDeltaFromReality(it.toDurationMillis());
             assertTrue(testListener.isCompleted(5000));
 
-            subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId(), callContext);
+            subscription = (SubscriptionData) subscriptionApi.getSubscriptionFromId(subscription.getId(), callContext);
             currentPhase = subscription.getCurrentPhase();
             assertNotNull(currentPhase);
             assertEquals(currentPhase.getPhaseType(), PhaseType.EVERGREEN);
@@ -243,7 +243,7 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
 
             testListener.pushExpectedEvent(NextEvent.CREATE);
 
-            final SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
+            final SubscriptionData subscription = (SubscriptionData) subscriptionApi.createSubscription(bundle.getId(),
                                                                                                        testUtil.getProductSpecifier(productName, planSetName, term, null), clock.getUTCNow(), callContext);
             assertNotNull(subscription);
 

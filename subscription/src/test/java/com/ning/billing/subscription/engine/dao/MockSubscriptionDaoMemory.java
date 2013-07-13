@@ -415,7 +415,7 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
     private void recordFutureNotificationFromTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> transactionalDao, final DateTime effectiveDate,
                                                          final NotificationEvent notificationKey, final InternalCallContext context) {
         try {
-            final NotificationQueue subscriptionEventQueue = notificationQueueService.getNotificationQueue(DefaultSubscriptionService.ENTITLEMENT_SERVICE_NAME,
+            final NotificationQueue subscriptionEventQueue = notificationQueueService.getNotificationQueue(DefaultSubscriptionService.SUBSCRIPTION_SERVICE_NAME,
                                                                                                            DefaultSubscriptionService.NOTIFICATION_QUEUE_NAME);
             subscriptionEventQueue.recordFutureNotificationFromTransaction(null, effectiveDate, notificationKey, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
         } catch (NoSuchNotificationQueue e) {

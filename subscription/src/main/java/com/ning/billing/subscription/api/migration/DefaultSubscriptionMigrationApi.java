@@ -74,30 +74,30 @@ public class DefaultSubscriptionMigrationApi extends SubscriptionApiBase impleme
     }
 
     @Override
-    public void migrate(final EntitlementAccountMigration toBeMigrated, final CallContext context)
+    public void migrate(final AccountMigration toBeMigrated, final CallContext context)
             throws SubscriptionMigrationApiException {
         final AccountMigrationData accountMigrationData = createAccountMigrationData(toBeMigrated, context);
         dao.migrate(toBeMigrated.getAccountKey(), accountMigrationData, internalCallContextFactory.createInternalCallContext(toBeMigrated.getAccountKey(), context));
     }
 
-    private AccountMigrationData createAccountMigrationData(final EntitlementAccountMigration toBeMigrated, final CallContext context)
+    private AccountMigrationData createAccountMigrationData(final AccountMigration toBeMigrated, final CallContext context)
             throws SubscriptionMigrationApiException {
         final UUID accountId = toBeMigrated.getAccountKey();
         final DateTime now = clock.getUTCNow();
 
         final List<BundleMigrationData> accountBundleData = new LinkedList<BundleMigrationData>();
 
-        for (final EntitlementBundleMigration curBundle : toBeMigrated.getBundles()) {
+        for (final BundleMigration curBundle : toBeMigrated.getBundles()) {
 
             final SubscriptionBundleData bundleData = new SubscriptionBundleData(curBundle.getBundleKey(), accountId, clock.getUTCNow());
             final List<SubscriptionMigrationData> bundleSubscriptionData = new LinkedList<AccountMigrationData.SubscriptionMigrationData>();
 
-            final List<EntitlementSubscriptionMigration> sortedSubscriptions = Lists.newArrayList(curBundle.getSubscriptions());
+            final List<SubscriptionMigration> sortedSubscriptions = Lists.newArrayList(curBundle.getSubscriptions());
             // Make sure we have first BASE or STANDALONE, then ADDON and for each category order by CED
-            Collections.sort(sortedSubscriptions, new Comparator<EntitlementSubscriptionMigration>() {
+            Collections.sort(sortedSubscriptions, new Comparator<SubscriptionMigration>() {
                 @Override
-                public int compare(final EntitlementSubscriptionMigration o1,
-                                   final EntitlementSubscriptionMigration o2) {
+                public int compare(final SubscriptionMigration o1,
+                                   final SubscriptionMigration o2) {
                     if (o1.getCategory().equals(o2.getCategory())) {
                         return o1.getSubscriptionCases()[0].getEffectiveDate().compareTo(o2.getSubscriptionCases()[0].getEffectiveDate());
                     } else {
@@ -113,7 +113,7 @@ public class DefaultSubscriptionMigrationApi extends SubscriptionApiBase impleme
             });
 
             DateTime bundleStartDate = null;
-            for (final EntitlementSubscriptionMigration curSub : sortedSubscriptions) {
+            for (final SubscriptionMigration curSub : sortedSubscriptions) {
                 SubscriptionMigrationData data = null;
                 if (bundleStartDate == null) {
                     data = createInitialSubscription(bundleData.getId(), curSub.getCategory(), curSub.getSubscriptionCases(), now, curSub.getChargedThroughDate(), context);
@@ -134,7 +134,7 @@ public class DefaultSubscriptionMigrationApi extends SubscriptionApiBase impleme
     }
 
     private SubscriptionMigrationData createInitialSubscription(final UUID bundleId, final ProductCategory productCategory,
-                                                                final EntitlementSubscriptionMigrationCase[] input, final DateTime now, final DateTime ctd, final CallContext context)
+                                                                final SubscriptionMigrationCase[] input, final DateTime now, final DateTime ctd, final CallContext context)
             throws SubscriptionMigrationApiException {
         final TimedMigration[] events = migrationAligner.getEventsMigration(input, now);
         final DateTime migrationStartDate = events[0].getEventTime();
@@ -150,7 +150,7 @@ public class DefaultSubscriptionMigrationApi extends SubscriptionApiBase impleme
     }
 
     private SubscriptionMigrationData createSubscriptionMigrationDataWithBundleDate(final UUID bundleId, final ProductCategory productCategory,
-                                                                                    final EntitlementSubscriptionMigrationCase[] input, final DateTime now, final DateTime bundleStartDate, final DateTime ctd, final CallContext context)
+                                                                                    final SubscriptionMigrationCase[] input, final DateTime now, final DateTime bundleStartDate, final DateTime ctd, final CallContext context)
             throws SubscriptionMigrationApiException {
         final TimedMigration[] events = migrationAligner.getEventsMigration(input, now);
         final DateTime migrationStartDate = events[0].getEventTime();

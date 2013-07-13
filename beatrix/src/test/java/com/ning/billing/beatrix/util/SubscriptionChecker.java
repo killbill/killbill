@@ -40,17 +40,17 @@ public class SubscriptionChecker {
 
     private static final Logger log = LoggerFactory.getLogger(SubscriptionChecker.class);
 
-    private final SubscriptionUserApi entitlementApi;
+    private final SubscriptionUserApi subscriptionApi;
     private final AuditChecker auditChecker;
 
     @Inject
-    public SubscriptionChecker(final SubscriptionUserApi entitlementApi, final AuditChecker auditChecker) {
-        this.entitlementApi = entitlementApi;
+    public SubscriptionChecker(final SubscriptionUserApi subscriptionApi, final AuditChecker auditChecker) {
+        this.subscriptionApi = subscriptionApi;
         this.auditChecker = auditChecker;
     }
 
     public SubscriptionBundle checkBundleNoAudits(final UUID bundleId, final UUID expectedAccountId, final String expectedKey, final CallContext context) throws SubscriptionUserApiException {
-        final SubscriptionBundle bundle = entitlementApi.getBundleFromId(bundleId, context);
+        final SubscriptionBundle bundle = subscriptionApi.getBundleFromId(bundleId, context);
         Assert.assertNotNull(bundle);
         Assert.assertEquals(bundle.getAccountId(), expectedAccountId);
         Assert.assertEquals(bundle.getExternalKey(), expectedKey);
@@ -58,13 +58,13 @@ public class SubscriptionChecker {
     }
 
     public SubscriptionBundle checkBundleAuditUpdated(final UUID bundleId, final CallContext context) throws SubscriptionUserApiException {
-        final SubscriptionBundle bundle = entitlementApi.getBundleFromId(bundleId, context);
+        final SubscriptionBundle bundle = subscriptionApi.getBundleFromId(bundleId, context);
         auditChecker.checkBundleUpdated(bundle.getId(), context);
         return bundle;
     }
 
     public Subscription checkSubscriptionCreated(final UUID subscriptionId, final CallContext context) throws SubscriptionUserApiException {
-        final Subscription subscription = entitlementApi.getSubscriptionFromId(subscriptionId, context);
+        final Subscription subscription = subscriptionApi.getSubscriptionFromId(subscriptionId, context);
         Assert.assertNotNull(subscription);
         auditChecker.checkSubscriptionCreated(subscription.getBundleId(), subscriptionId, context);
 

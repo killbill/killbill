@@ -160,7 +160,7 @@ public class TestRepairBP extends SubscriptionTestSuiteWithEmbeddedDB {
             testUtil.validateExistingEventForAssertion(e, events.get(index++));
         }
 
-        final SubscriptionData dryRunBaseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
+        final SubscriptionData dryRunBaseSubscription = (SubscriptionData) subscriptionApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
 
         assertEquals(dryRunBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
         assertEquals(dryRunBaseSubscription.getBundleId(), bundle.getId());
@@ -190,7 +190,7 @@ public class TestRepairBP extends SubscriptionTestSuiteWithEmbeddedDB {
         for (final ExistingEvent e : expected) {
             testUtil.validateExistingEventForAssertion(e, events.get(index++));
         }
-        final SubscriptionData realRunBaseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
+        final SubscriptionData realRunBaseSubscription = (SubscriptionData) subscriptionApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
         assertEquals(realRunBaseSubscription.getAllTransitions().size(), 2);
 
         assertEquals(realRunBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
@@ -244,7 +244,7 @@ public class TestRepairBP extends SubscriptionTestSuiteWithEmbeddedDB {
         assertTrue(testListener.isCompleted(5000));
 
         // CHECK WHAT"S GOING ON AFTER WE MOVE CLOCK-- FUTURE MOTIFICATION SHOULD KICK IN
-        final SubscriptionData subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscriptionId, callContext);
+        final SubscriptionData subscription = (SubscriptionData) subscriptionApi.getSubscriptionFromId(baseSubscriptionId, callContext);
 
         assertEquals(subscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
         assertEquals(subscription.getBundleId(), bundle.getId());
@@ -331,7 +331,7 @@ public class TestRepairBP extends SubscriptionTestSuiteWithEmbeddedDB {
         for (final ExistingEvent e : expectedEvents) {
             testUtil.validateExistingEventForAssertion(e, events.get(index++));
         }
-        final SubscriptionData dryRunBaseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
+        final SubscriptionData dryRunBaseSubscription = (SubscriptionData) subscriptionApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
 
         assertEquals(dryRunBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
         assertEquals(dryRunBaseSubscription.getBundleId(), bundle.getId());
@@ -370,7 +370,7 @@ public class TestRepairBP extends SubscriptionTestSuiteWithEmbeddedDB {
         for (final ExistingEvent e : expectedEvents) {
             testUtil.validateExistingEventForAssertion(e, events.get(index++));
         }
-        final SubscriptionData realRunBaseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
+        final SubscriptionData realRunBaseSubscription = (SubscriptionData) subscriptionApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
         assertEquals(realRunBaseSubscription.getAllTransitions().size(), 2);
 
         assertEquals(realRunBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
@@ -414,7 +414,7 @@ public class TestRepairBP extends SubscriptionTestSuiteWithEmbeddedDB {
         final Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(32));
         clock.addDeltaFromReality(it.toDurationMillis());
         assertTrue(testListener.isCompleted(5000));
-        final SubscriptionData subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscriptionId, callContext);
+        final SubscriptionData subscription = (SubscriptionData) subscriptionApi.getSubscriptionFromId(baseSubscriptionId, callContext);
 
         assertEquals(subscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
         assertEquals(subscription.getBundleId(), bundle.getId());
@@ -502,7 +502,7 @@ public class TestRepairBP extends SubscriptionTestSuiteWithEmbeddedDB {
         for (final ExistingEvent e : expectedEvents) {
             testUtil.validateExistingEventForAssertion(e, events.get(index++));
         }
-        final SubscriptionData dryRunBaseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
+        final SubscriptionData dryRunBaseSubscription = (SubscriptionData) subscriptionApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
 
         assertEquals(dryRunBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
         assertEquals(dryRunBaseSubscription.getBundleId(), bundle.getId());
@@ -539,7 +539,7 @@ public class TestRepairBP extends SubscriptionTestSuiteWithEmbeddedDB {
         for (final ExistingEvent e : expectedEvents) {
             testUtil.validateExistingEventForAssertion(e, events.get(index++));
         }
-        final SubscriptionData realRunBaseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
+        final SubscriptionData realRunBaseSubscription = (SubscriptionData) subscriptionApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
         assertEquals(realRunBaseSubscription.getAllTransitions().size(), expectedTransitions);
 
         assertEquals(realRunBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
@@ -579,7 +579,7 @@ public class TestRepairBP extends SubscriptionTestSuiteWithEmbeddedDB {
         // SET CTD to BASE SUBSCRIPTION SP CANCEL OCCURS EOT
         final DateTime newChargedThroughDate = baseSubscription.getStartDate().plusDays(30).plusMonths(1);
         subscriptionInternalApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate, internalCallContext);
-        baseSubscription = entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
+        baseSubscription = subscriptionApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
 
         final DateTime requestedChange = clock.getUTCNow();
         baseSubscription.changePlan("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, requestedChange, callContext);
@@ -611,7 +611,7 @@ public class TestRepairBP extends SubscriptionTestSuiteWithEmbeddedDB {
         repairApi.repairBundle(bRepair, dryRun, callContext);
         assertTrue(testListener.isCompleted(5000));
 
-        baseSubscription = entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
+        baseSubscription = subscriptionApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
 
         assertEquals(((SubscriptionData) baseSubscription).getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
         assertEquals(baseSubscription.getBundleId(), bundle.getId());
@@ -692,7 +692,7 @@ public class TestRepairBP extends SubscriptionTestSuiteWithEmbeddedDB {
                 clock.setDeltaFromReality(1000);
 
                 subscriptionInternalApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate, internalCallContext);
-                entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
+                subscriptionApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
 
                 repairApi.repairBundle(bRepair, true, callContext);
 

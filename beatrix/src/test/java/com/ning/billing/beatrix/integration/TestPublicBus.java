@@ -95,7 +95,7 @@ public class TestPublicBus extends TestIntegrationBase {
 
         // set clock to the initial start date
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
-        final SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever2", callContext);
+        final SubscriptionBundle bundle = subscriptionUserApi.createBundleForAccount(account.getId(), "whatever2", callContext);
 
         String productName = "Shotgun";
         BillingPeriod term = BillingPeriod.MONTHLY;
@@ -107,7 +107,7 @@ public class TestPublicBus extends TestIntegrationBase {
         busHandler.pushExpectedEvent(NextEvent.CREATE);
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
 
-        SubscriptionData subscription = subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
+        SubscriptionData subscription = subscriptionDataFromSubscription(subscriptionUserApi.createSubscription(bundle.getId(),
                                                                                                                new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, callContext));
 
         assertNotNull(subscription);

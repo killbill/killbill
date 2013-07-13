@@ -50,12 +50,12 @@ public class RepairSubscriptionDao implements SubscriptionDao, RepairSubscriptio
 
     private final ThreadLocal<Map<UUID, SubscriptionRepairEvent>> preThreadsInRepairSubscriptions = new ThreadLocal<Map<UUID, SubscriptionRepairEvent>>();
 
-    private static final class EntitlementEventWithOrderingId {
+    private static final class SubscriptionEventWithOrderingId {
 
         private final SubscriptionEvent event;
         private final long orderingId;
 
-        public EntitlementEventWithOrderingId(final SubscriptionEvent event, final long orderingId) {
+        public SubscriptionEventWithOrderingId(final SubscriptionEvent event, final long orderingId) {
             this.event = event;
             this.orderingId = orderingId;
         }
@@ -86,13 +86,13 @@ public class RepairSubscriptionDao implements SubscriptionDao, RepairSubscriptio
 
     private static final class SubscriptionRepairEvent {
 
-        private final Set<EntitlementEventWithOrderingId> events;
+        private final Set<SubscriptionEventWithOrderingId> events;
         private long curOrderingId;
 
         public SubscriptionRepairEvent(final List<SubscriptionEvent> initialEvents) {
-            this.events = new TreeSet<EntitlementEventWithOrderingId>(new Comparator<EntitlementEventWithOrderingId>() {
+            this.events = new TreeSet<SubscriptionEventWithOrderingId>(new Comparator<SubscriptionEventWithOrderingId>() {
                 @Override
-                public int compare(final EntitlementEventWithOrderingId o1, final EntitlementEventWithOrderingId o2) {
+                public int compare(final SubscriptionEventWithOrderingId o1, final SubscriptionEventWithOrderingId o2) {
                     // Work around jdk7 change: compare(o1, o1) is now invoked when inserting the first element
                     // See:
                     // - http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=5045147
@@ -123,9 +123,9 @@ public class RepairSubscriptionDao implements SubscriptionDao, RepairSubscriptio
         }
 
         public List<SubscriptionEvent> getEvents() {
-            return new ArrayList<SubscriptionEvent>(Collections2.transform(events, new Function<EntitlementEventWithOrderingId, SubscriptionEvent>() {
+            return new ArrayList<SubscriptionEvent>(Collections2.transform(events, new Function<SubscriptionEventWithOrderingId, SubscriptionEvent>() {
                 @Override
-                public SubscriptionEvent apply(EntitlementEventWithOrderingId in) {
+                public SubscriptionEvent apply(SubscriptionEventWithOrderingId in) {
                     return in.getEvent();
                 }
             }));
@@ -133,7 +133,7 @@ public class RepairSubscriptionDao implements SubscriptionDao, RepairSubscriptio
 
         public void addEvents(final List<SubscriptionEvent> newEvents) {
             for (final SubscriptionEvent cur : newEvents) {
-                events.add(new EntitlementEventWithOrderingId(cur, curOrderingId++));
+                events.add(new SubscriptionEventWithOrderingId(cur, curOrderingId++));
             }
         }
     }

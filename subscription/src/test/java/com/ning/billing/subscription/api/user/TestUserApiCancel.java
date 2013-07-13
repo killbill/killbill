@@ -29,7 +29,7 @@ import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.subscription.SubscriptionTestSuiteWithEmbeddedDB;
-import com.ning.billing.util.svcapi.entitlement.SubscriptionBillingApiException;
+import com.ning.billing.util.svcapi.subscription.SubscriptionBillingApiException;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
@@ -114,7 +114,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
             final Duration ctd = testUtil.getDurationMonth(1);
             final DateTime newChargedThroughDate = TestSubscriptionHelper.addDuration(expectedPhaseTrialChange, ctd);
             subscriptionInternalApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate, internalCallContext);
-            subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId(), callContext);
+            subscription = (SubscriptionData) subscriptionApi.getSubscriptionFromId(subscription.getId(), callContext);
 
             assertEquals(subscription.getLastActiveProductName(), prod);
             assertEquals(subscription.getLastActivePriceListName(), planSet);
@@ -234,7 +234,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
             final Duration ctd = testUtil.getDurationMonth(1);
             final DateTime newChargedThroughDate = TestSubscriptionHelper.addDuration(expectedPhaseTrialChange, ctd);
             subscriptionInternalApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate, internalCallContext);
-            subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId(), callContext);
+            subscription = (SubscriptionData) subscriptionApi.getSubscriptionFromId(subscription.getId(), callContext);
 
             // CANCEL EOT
             subscription.cancel(clock.getUTCNow(), callContext);

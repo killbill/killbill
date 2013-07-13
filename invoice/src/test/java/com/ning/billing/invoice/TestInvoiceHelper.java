@@ -62,7 +62,7 @@ import com.ning.billing.clock.Clock;
 import com.ning.billing.util.entity.EntityPersistenceException;
 import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcapi.entitlement.SubscriptionInternalApi;
+import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
 import com.ning.billing.util.svcapi.junction.BillingEvent;
 import com.ning.billing.util.svcapi.junction.BillingEventSet;
 import com.ning.billing.util.svcapi.junction.BillingInternalApi;
@@ -129,7 +129,7 @@ public class TestInvoiceHelper {
     private final InvoiceGenerator generator;
     private final BillingInternalApi billingApi;
     private final AccountInternalApi accountApi;
-    private final SubscriptionInternalApi entitlementApi;
+    private final SubscriptionInternalApi subscriptionApi;
     private final  BusService busService;
     private final  InvoiceDao invoiceDao;
     private final  GlobalLocker locker;
@@ -144,12 +144,12 @@ public class TestInvoiceHelper {
 
     @Inject
     public TestInvoiceHelper(final InvoiceGenerator generator, final IDBI dbi,
-                             final BillingInternalApi billingApi, final AccountInternalApi accountApi, final SubscriptionInternalApi entitlementApi, final BusService busService,
+                             final BillingInternalApi billingApi, final AccountInternalApi accountApi, final SubscriptionInternalApi subscriptionApi, final BusService busService,
                              final InvoiceDao invoiceDao, final GlobalLocker locker, final Clock clock, final InternalCallContext internalCallContext) {
         this.generator = generator;
         this.billingApi = billingApi;
         this.accountApi = accountApi;
-        this.entitlementApi = entitlementApi;
+        this.subscriptionApi = subscriptionApi;
         this.busService = busService;
         this.invoiceDao = invoiceDao;
         this.locker = locker;
@@ -176,7 +176,7 @@ public class TestInvoiceHelper {
         Mockito.when(billingApi.getBillingEventsForAccountAndUpdateAccountBCD(Mockito.<UUID>any(), Mockito.<InternalCallContext>any())).thenReturn(events);
 
         final InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
-        final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountApi, billingApi, entitlementApi,
+        final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountApi, billingApi, subscriptionApi,
                                                                    invoiceDao, invoiceNotifier, locker, busService.getBus(),
                                                                    clock);
 
@@ -199,7 +199,7 @@ public class TestInvoiceHelper {
         UUID uuid = UUID.randomUUID();
         final Subscription subscription = Mockito.mock(Subscription.class);
         Mockito.when(subscription.getId()).thenReturn(uuid);
-        Mockito.when(entitlementApi.getSubscriptionFromId(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
+        Mockito.when(subscriptionApi.getSubscriptionFromId(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
         return subscription;
     }
 

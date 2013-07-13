@@ -68,7 +68,7 @@ public class TestIntegrationWithAutoInvoiceOffTag extends TestIntegrationBase {
         account = createAccountWithNonOsgiPaymentMethod(getAccountData(25));
         assertNotNull(account);
 
-        bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
+        bundle = subscriptionUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
 
         productName = "Shotgun";
         term = BillingPeriod.MONTHLY;
@@ -82,7 +82,7 @@ public class TestIntegrationWithAutoInvoiceOffTag extends TestIntegrationBase {
 
         // set next invoice to fail and create network
         busHandler.pushExpectedEvents(NextEvent.CREATE);
-        final SubscriptionData baseSubscription = subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
+        final SubscriptionData baseSubscription = subscriptionDataFromSubscription(subscriptionUserApi.createSubscription(bundle.getId(),
                                                                                                                          new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, callContext));
         assertNotNull(baseSubscription);
         assertTrue(busHandler.isCompleted(DELAY));
@@ -118,7 +118,7 @@ public class TestIntegrationWithAutoInvoiceOffTag extends TestIntegrationBase {
 
         // set next invoice to fail and create network
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.INVOICE);
-        final SubscriptionData baseSubscription = subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
+        final SubscriptionData baseSubscription = subscriptionDataFromSubscription(subscriptionUserApi.createSubscription(bundle.getId(),
                                                                                                                          new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, callContext));
         assertNotNull(baseSubscription);
         assertTrue(busHandler.isCompleted(DELAY));
@@ -145,15 +145,15 @@ public class TestIntegrationWithAutoInvoiceOffTag extends TestIntegrationBase {
 
         // set next invoice to fail and create network
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.INVOICE);
-        final SubscriptionData baseSubscription = subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
+        final SubscriptionData baseSubscription = subscriptionDataFromSubscription(subscriptionUserApi.createSubscription(bundle.getId(),
                                                                                                                          new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, callContext));
         assertNotNull(baseSubscription);
         assertTrue(busHandler.isCompleted(DELAY));
 
-        final SubscriptionBundle bundle2 = entitlementUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
+        final SubscriptionBundle bundle2 = subscriptionUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.INVOICE);
-        final SubscriptionData baseSubscription2 = subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle2.getId(),
+        final SubscriptionData baseSubscription2 = subscriptionDataFromSubscription(subscriptionUserApi.createSubscription(bundle2.getId(),
                                                                                                                           new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, callContext));
         assertNotNull(baseSubscription2);
         assertTrue(busHandler.isCompleted(DELAY));

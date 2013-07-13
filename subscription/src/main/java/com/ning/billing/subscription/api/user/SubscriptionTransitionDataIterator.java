@@ -39,7 +39,7 @@ public class SubscriptionTransitionDataIterator implements Iterator<Subscription
     }
 
     public enum Kind {
-        ENTITLEMENT,
+        SUBSCRIPTION,
         BILLING,
         ALL
     }
@@ -81,7 +81,7 @@ public class SubscriptionTransitionDataIterator implements Iterator<Subscription
         if (visibility == Visibility.FROM_DISK_ONLY && ! ((SubscriptionTransitionData) input).isFromDisk()) {
             return true;
         }
-        if ((kind == Kind.ENTITLEMENT && shouldSkipForEntitlementEvents((SubscriptionTransitionData)input)) ||
+        if ((kind == Kind.SUBSCRIPTION && shouldSkipForSubscriptionEvents((SubscriptionTransitionData) input)) ||
             (kind == Kind.BILLING && shouldSkipForBillingEvents((SubscriptionTransitionData) input))) {
             return true;
         }
@@ -92,8 +92,8 @@ public class SubscriptionTransitionDataIterator implements Iterator<Subscription
         return false;
     }
 
-    private boolean shouldSkipForEntitlementEvents(final SubscriptionTransitionData input) {
-        // Entitlement system knows about all events except for MIGRATE_BILLING
+    private boolean shouldSkipForSubscriptionEvents(final SubscriptionTransitionData input) {
+        // Subscription system knows about all events except for MIGRATE_BILLING
         return (input.getTransitionType() == SubscriptionTransitionType.MIGRATE_BILLING);
     }
 

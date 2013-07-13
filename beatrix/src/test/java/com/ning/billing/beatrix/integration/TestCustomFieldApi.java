@@ -84,7 +84,7 @@ public class TestCustomFieldApi extends TestIntegrationBase {
         //
         // Create necessary logic to end up with an Invoice object on that account.
         //
-        final SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
+        final SubscriptionBundle bundle = subscriptionUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
 
         final String productName = "Shotgun";
         final BillingPeriod term = BillingPeriod.ANNUAL;
@@ -92,7 +92,7 @@ public class TestCustomFieldApi extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.INVOICE);
         final PlanPhaseSpecifier bpPlanPhaseSpecifier = new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null);
-        final SubscriptionData bpSubscription = subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
+        final SubscriptionData bpSubscription = subscriptionDataFromSubscription(subscriptionUserApi.createSubscription(bundle.getId(),
                                                                                                                        bpPlanPhaseSpecifier,
                                                                                                                        null,
                                                                                                                        callContext));

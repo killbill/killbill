@@ -70,7 +70,7 @@ import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.globallocker.GlobalLocker.LockerType;
 import com.ning.billing.util.globallocker.LockFailedException;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcapi.entitlement.SubscriptionInternalApi;
+import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
 import com.ning.billing.util.svcapi.junction.BillingEventSet;
 import com.ning.billing.util.svcapi.junction.BillingInternalApi;
 

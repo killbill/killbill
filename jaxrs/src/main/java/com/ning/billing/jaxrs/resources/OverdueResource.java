@@ -56,12 +56,12 @@ public class OverdueResource extends JaxRsResourceBase {
 
     private final OverdueUserApi overdueApi;
     private final AccountUserApi accountApi;
-    private final SubscriptionUserApi entitlementApi;
+    private final SubscriptionUserApi subscriptionApi;
 
     @Inject
     public OverdueResource(final OverdueUserApi overdueApi,
                            final AccountUserApi accountApi,
-                           final SubscriptionUserApi entitlementApi,
+                           final SubscriptionUserApi subscriptionApi,
                            final JaxrsUriBuilder uriBuilder,
                            final TagUserApi tagUserApi,
                            final CustomFieldUserApi customFieldUserApi,
@@ -70,7 +70,7 @@ public class OverdueResource extends JaxRsResourceBase {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, context);
         this.overdueApi = overdueApi;
         this.accountApi = accountApi;
-        this.entitlementApi = entitlementApi;
+        this.subscriptionApi = subscriptionApi;
     }
 
     @GET
@@ -93,7 +93,7 @@ public class OverdueResource extends JaxRsResourceBase {
                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionUserApiException, OverdueException, OverdueApiException {
         final TenantContext tenantContext = context.createContext(request);
 
-        final SubscriptionBundle bundle = entitlementApi.getBundleFromId(UUID.fromString(bundleId), tenantContext);
+        final SubscriptionBundle bundle = subscriptionApi.getBundleFromId(UUID.fromString(bundleId), tenantContext);
         final OverdueState<SubscriptionBundle> overdueState = overdueApi.getOverdueStateFor(bundle, tenantContext);
 
         return Response.status(Status.OK).entity(new OverdueStateJson(overdueState)).build();
@@ -106,7 +106,7 @@ public class OverdueResource extends JaxRsResourceBase {
                                            @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionUserApiException, OverdueException, OverdueApiException {
         final TenantContext tenantContext = context.createContext(request);
 
-        final Subscription subscription = entitlementApi.getSubscriptionFromId(UUID.fromString(subscriptionId), tenantContext);
+        final Subscription subscription = subscriptionApi.getSubscriptionFromId(UUID.fromString(subscriptionId), tenantContext);
         final OverdueState<Subscription> overdueState = overdueApi.getOverdueStateFor(subscription, tenantContext);
 
         return Response.status(Status.OK).entity(new OverdueStateJson(overdueState)).build();

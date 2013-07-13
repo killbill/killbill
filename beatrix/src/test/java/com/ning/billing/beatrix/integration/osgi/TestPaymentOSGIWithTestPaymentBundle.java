@@ -142,7 +142,7 @@ public class TestPaymentOSGIWithTestPaymentBundle extends TestOSGIBase {
         // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
         clock.setDay(new LocalDate(2012, 4, 1));
 
-        final SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
+        final SubscriptionBundle bundle = subscriptionUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
         //
         // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
         //

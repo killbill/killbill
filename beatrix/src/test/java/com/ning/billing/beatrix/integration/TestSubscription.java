@@ -53,7 +53,7 @@ public class TestSubscription extends TestIntegrationBase {
 
         // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
         clock.setDeltaFromReality(today.toDateTimeAtCurrentTime(DateTimeZone.UTC).getMillis() - clock.getUTCNow().getMillis());
-        final SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
+        final SubscriptionBundle bundle = subscriptionUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
 
         final String productName = "Shotgun";
         final BillingPeriod term = BillingPeriod.ANNUAL;
@@ -64,7 +64,7 @@ public class TestSubscription extends TestIntegrationBase {
         //
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.INVOICE);
         final PlanPhaseSpecifier bpPlanPhaseSpecifier = new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null);
-        final SubscriptionData bpSubscription = subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
+        final SubscriptionData bpSubscription = subscriptionDataFromSubscription(subscriptionUserApi.createSubscription(bundle.getId(),
                                                                                                                        bpPlanPhaseSpecifier,
                                                                                                                        null,
                                                                                                                        callContext));
@@ -73,7 +73,7 @@ public class TestSubscription extends TestIntegrationBase {
         assertListenerStatus();
         assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), callContext).size(), 1);
 
-        assertEquals(entitlementUserApi.getSubscriptionFromId(bpSubscription.getId(), callContext).getCurrentPlan().getBillingPeriod(), BillingPeriod.ANNUAL);
+        assertEquals(subscriptionUserApi.getSubscriptionFromId(bpSubscription.getId(), callContext).getCurrentPlan().getBillingPeriod(), BillingPeriod.ANNUAL);
 
         // Move out of trials for interesting invoices adjustments
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
@@ -92,7 +92,7 @@ public class TestSubscription extends TestIntegrationBase {
         //
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.INVOICE_ADJUSTMENT);
         assertTrue(bpSubscription.changePlanWithPolicy(productName, BillingPeriod.MONTHLY, planSetName, clock.getUTCNow(), ActionPolicy.IMMEDIATE, callContext));
-        assertEquals(entitlementUserApi.getSubscriptionFromId(bpSubscription.getId(), callContext).getCurrentPlan().getBillingPeriod(), BillingPeriod.MONTHLY);
+        assertEquals(subscriptionUserApi.getSubscriptionFromId(bpSubscription.getId(), callContext).getCurrentPlan().getBillingPeriod(), BillingPeriod.MONTHLY);
 
         assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
@@ -116,7 +116,7 @@ public class TestSubscription extends TestIntegrationBase {
         //
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.INVOICE_ADJUSTMENT);
         assertTrue(bpSubscription.changePlanWithPolicy(productName, BillingPeriod.ANNUAL, planSetName, clock.getUTCNow(), ActionPolicy.IMMEDIATE, callContext));
-        assertEquals(entitlementUserApi.getSubscriptionFromId(bpSubscription.getId(), callContext).getCurrentPlan().getBillingPeriod(), BillingPeriod.ANNUAL);
+        assertEquals(subscriptionUserApi.getSubscriptionFromId(bpSubscription.getId(), callContext).getCurrentPlan().getBillingPeriod(), BillingPeriod.ANNUAL);
         assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
 

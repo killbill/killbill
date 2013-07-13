@@ -37,7 +37,7 @@ public class TestDefaultSubscriptionModuleWithEmbeddedDB extends TestDefaultSubs
     }
 
     @Override
-    protected void installEntitlementDao() {
+    protected void installSubscriptionDao() {
         bind(SubscriptionDao.class).to(MockSubscriptionDaoSql.class).asEagerSingleton();
         bind(SubscriptionDao.class).annotatedWith(Names.named(REPAIR_NAMED)).to(RepairSubscriptionDao.class);
         bind(RepairSubscriptionLifecycleDao.class).annotatedWith(Names.named(REPAIR_NAMED)).to(RepairSubscriptionDao.class);

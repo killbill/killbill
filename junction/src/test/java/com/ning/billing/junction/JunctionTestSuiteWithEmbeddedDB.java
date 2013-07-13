@@ -30,7 +30,7 @@ import com.ning.billing.junction.plumbing.billing.BlockingCalculator;
 import com.ning.billing.subscription.api.user.SubscriptionUserApi;
 import com.ning.billing.util.glue.RealImplementation;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcapi.entitlement.SubscriptionInternalApi;
+import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
 import com.ning.billing.util.svcapi.junction.BillingInternalApi;
 import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
 import com.ning.billing.util.svcapi.tag.TagInternalApi;
@@ -58,7 +58,7 @@ public abstract class JunctionTestSuiteWithEmbeddedDB extends GuicyKillbillTestS
     protected CatalogService catalogService;
     @Inject
     @RealImplementation
-    protected SubscriptionUserApi entitlementUserApi;
+    protected SubscriptionUserApi subscriptionUserApi;
     @Inject
     protected SubscriptionInternalApi subscriptionInternalApi;
     @Inject

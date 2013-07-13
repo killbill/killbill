@@ -34,7 +34,7 @@ import com.ning.billing.overdue.service.DefaultOverdueService;
 import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcapi.entitlement.SubscriptionInternalApi;
+import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
 import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
 import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
 import com.ning.billing.util.svcsapi.bus.BusService;
@@ -56,7 +56,7 @@ public abstract class OverdueTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     @Inject
     protected DefaultOverdueService service;
     @Inject
-    protected SubscriptionInternalApi entitlementApi;
+    protected SubscriptionInternalApi subscriptionApi;
     @Inject
     protected PersistentBus bus;
     @Inject

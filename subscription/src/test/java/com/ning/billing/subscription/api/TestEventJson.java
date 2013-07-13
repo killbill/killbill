@@ -49,7 +49,7 @@ public class TestEventJson extends GuicyKillbillTestSuiteNoDB {
     }
 
     @Test(groups = "fast")
-    public void testRepairEntitlementEvent() throws Exception {
+    public void testRepairSubscriptionEvent() throws Exception {
         final RepairSubscriptionInternalEvent e = new DefaultRepairSubscriptionEvent(UUID.randomUUID(), UUID.randomUUID(), new DateTime(), 1L, 2L, null);
 
         final String json = mapper.writeValueAsString(e);

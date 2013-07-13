@@ -35,7 +35,7 @@ import com.ning.billing.subscription.api.user.Subscription;
 import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.junction.JunctionTestSuiteNoDB;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.svcapi.entitlement.SubscriptionInternalApi;
+import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
 
 public class TestBillCycleDayCalculator extends JunctionTestSuiteNoDB {
 

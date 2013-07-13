@@ -32,10 +32,10 @@ public interface SubscriptionMigrationApi {
 
 
     /**
-     * The interface {@code EntitlementAccountMigration} captures all the {@code SubscriptionBundle} associated with
+     * The interface {@code AccountMigration} captures all the {@code SubscriptionBundle} associated with
      * that account.
      */
-    public interface EntitlementAccountMigration {
+    public interface AccountMigration {
 
         /**
          *
@@ -45,16 +45,16 @@ public interface SubscriptionMigrationApi {
 
         /**
          *
-         * @return an array of {@code EntitlementBundleMigration}
+         * @return an array of {@code BundleMigration}
          */
-        public EntitlementBundleMigration[] getBundles();
+        public BundleMigration[] getBundles();
     }
 
     /**
-     * The interface {@code EntitlementBundleMigration} captures all the {@code Subscription} asociated with a given
+     * The interface {@code BundleMigration} captures all the {@code Subscription} asociated with a given
      * {@code SubscriptionBundle}
      */
-    public interface EntitlementBundleMigration {
+    public interface BundleMigration {
 
         /**
          *
@@ -66,14 +66,14 @@ public interface SubscriptionMigrationApi {
          *
          * @return an array of {@code Subscription}
          */
-        public EntitlementSubscriptionMigration[] getSubscriptions();
+        public SubscriptionMigration[] getSubscriptions();
     }
 
     /**
-     * The interface {@code EntitlementSubscriptionMigration} captures the detail for each {@code Subscription} to be
+     * The interface {@code SubscriptionMigration} captures the detail for each {@code Subscription} to be
      * migrated.
      */
-    public interface EntitlementSubscriptionMigration {
+    public interface SubscriptionMigration {
 
         /**
          *
@@ -91,15 +91,15 @@ public interface SubscriptionMigrationApi {
          *
          * @return the various phase information for that {@code Subscription}
          */
-        public EntitlementSubscriptionMigrationCase[] getSubscriptionCases();
+        public SubscriptionMigrationCase[] getSubscriptionCases();
     }
 
     /**
-     * The interface {@code EntitlementSubscriptionMigrationCase} captures the details of
+     * The interface {@code SubscriptionMigrationCase} captures the details of
      * phase for a {@code Subscription}.
      *
      */
-    public interface EntitlementSubscriptionMigrationCase {
+    public interface SubscriptionMigrationCase {
         /**
          *
          * @return the {@code PlanPhaseSpecifier}
@@ -128,6 +128,6 @@ public interface SubscriptionMigrationApi {
      * @throws SubscriptionMigrationApiException
      *          an subscription api exception
      */
-    public void migrate(EntitlementAccountMigration toBeMigrated, CallContext context)
+    public void migrate(AccountMigration toBeMigrated, CallContext context)
             throws SubscriptionMigrationApiException;
 }

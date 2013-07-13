@@ -34,7 +34,7 @@ import com.ning.billing.notificationq.api.NotificationQueueService.NotificationQ
 import com.ning.billing.notificationq.api.NotificationQueueService.NotificationQueueHandler;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.config.InvoiceConfig;
-import com.ning.billing.util.svcapi.entitlement.SubscriptionInternalApi;
+import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
 
 import com.google.inject.Inject;
 
@@ -46,7 +46,7 @@ public class DefaultNextBillingDateNotifier implements NextBillingDateNotifier {
 
     private final NotificationQueueService notificationQueueService;
     private final InvoiceConfig config;
-    private final SubscriptionInternalApi entitlementApi;
+    private final SubscriptionInternalApi subscriptionApi;
     private final InvoiceListener listener;
     private final InternalCallContextFactory callContextFactory;
 
@@ -55,12 +55,12 @@ public class DefaultNextBillingDateNotifier implements NextBillingDateNotifier {
     @Inject
     public DefaultNextBillingDateNotifier(final NotificationQueueService notificationQueueService,
                                           final InvoiceConfig config,
-                                          final SubscriptionInternalApi entitlementApi,
+                                          final SubscriptionInternalApi subscriptionApi,
                                           final InvoiceListener listener,
                                           final InternalCallContextFactory callContextFactory) {
         this.notificationQueueService = notificationQueueService;
         this.config = config;
-        this.entitlementApi = entitlementApi;
+        this.subscriptionApi = subscriptionApi;
         this.listener = listener;
         this.callContextFactory = callContextFactory;
     }
@@ -79,7 +79,7 @@ public class DefaultNextBillingDateNotifier implements NextBillingDateNotifier {
 
                     final NextBillingDateNotificationKey key = (NextBillingDateNotificationKey) notificationKey;
                     try {
-                        final Subscription subscription = entitlementApi.getSubscriptionFromId(key.getUuidKey(), callContextFactory.createInternalTenantContext(tenantRecordId, accountRecordId));
+                        final Subscription subscription = subscriptionApi.getSubscriptionFromId(key.getUuidKey(), callContextFactory.createInternalTenantContext(tenantRecordId, accountRecordId));
                         if (subscription == null) {
                             log.warn("Next Billing Date Notification Queue handled spurious notification (key: " + key + ")");
                         } else {

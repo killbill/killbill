@@ -76,7 +76,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
         account = createAccountWithNonOsgiPaymentMethod(getAccountData(25));
         assertNotNull(account);
 
-        bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
+        bundle = subscriptionUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
 
         productName = "Shotgun";
         term = BillingPeriod.MONTHLY;
@@ -90,7 +90,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
         busHandler.pushExpectedEvents(NextEvent.CREATE);
-        final SubscriptionData baseSubscription = subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
+        final SubscriptionData baseSubscription = subscriptionDataFromSubscription(subscriptionUserApi.createSubscription(bundle.getId(),
                                                                                                                          new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, callContext));
         assertNotNull(baseSubscription);
         assertTrue(busHandler.isCompleted(DELAY));
@@ -138,7 +138,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
         busHandler.pushExpectedEvents(NextEvent.CREATE);
-        final SubscriptionData baseSubscription = subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
+        final SubscriptionData baseSubscription = subscriptionDataFromSubscription(subscriptionUserApi.createSubscription(bundle.getId(),
                                                                                                                          new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, callContext));
         assertNotNull(baseSubscription);
         assertTrue(busHandler.isCompleted(DELAY));
@@ -204,7 +204,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
         busHandler.pushExpectedEvents(NextEvent.CREATE);
-        final SubscriptionData baseSubscription = subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
+        final SubscriptionData baseSubscription = subscriptionDataFromSubscription(subscriptionUserApi.createSubscription(bundle.getId(),
                                                                                                                          new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, callContext));
         assertNotNull(baseSubscription);
         assertTrue(busHandler.isCompleted(DELAY));

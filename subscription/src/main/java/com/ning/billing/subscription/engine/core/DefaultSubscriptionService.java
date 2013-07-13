@@ -60,7 +60,7 @@ import com.google.inject.Inject;
 public class DefaultSubscriptionService implements EventListener, SubscriptionService {
 
     public static final String NOTIFICATION_QUEUE_NAME = "subscription-events";
-    public static final String ENTITLEMENT_SERVICE_NAME = "subscription-service";
+    public static final String SUBSCRIPTION_SERVICE_NAME = "subscription-service";
 
     private static final Logger log = LoggerFactory.getLogger(DefaultSubscriptionService.class);
 
@@ -92,7 +92,7 @@ public class DefaultSubscriptionService implements EventListener, SubscriptionSe
 
     @Override
     public String getName() {
-        return ENTITLEMENT_SERVICE_NAME;
+        return SUBSCRIPTION_SERVICE_NAME;
     }
 
     @LifecycleHandlerType(LifecycleLevel.INIT_SERVICE)
@@ -102,7 +102,7 @@ public class DefaultSubscriptionService implements EventListener, SubscriptionSe
                 @Override
                 public void handleReadyNotification(final NotificationEvent inputKey, final DateTime eventDateTime, final UUID fromNotificationQueueUserToken, final Long accountRecordId, final Long tenantRecordId) {
                     if (!(inputKey instanceof SubscriptionNotificationKey)) {
-                        log.error("Entitlement service received an unexpected event type {}" + inputKey.getClass().getName());
+                        log.error("Subscription service received an unexpected event type {}" + inputKey.getClass().getName());
                         return;
                     }
 
@@ -119,7 +119,7 @@ public class DefaultSubscriptionService implements EventListener, SubscriptionSe
                 }
             };
 
-            subscriptionEventQueue = notificationQueueService.createNotificationQueue(ENTITLEMENT_SERVICE_NAME,
+            subscriptionEventQueue = notificationQueueService.createNotificationQueue(SUBSCRIPTION_SERVICE_NAME,
                                                                                       NOTIFICATION_QUEUE_NAME,
                                                                                       queueHandler);
         } catch (NotificationQueueAlreadyExists e) {

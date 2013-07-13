@@ -79,7 +79,7 @@ public class TestOverdueCheckNotifier extends OverdueTestSuiteWithEmbeddedDB {
         Mockito.when(accountApi.getAccountById(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(account);
 
         final Subscription subscription = Mockito.mock(Subscription.class);
-        Mockito.when(entitlementApi.getSubscriptionFromId(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
+        Mockito.when(subscriptionApi.getSubscriptionFromId(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
 
         mockListener = new OverdueListenerMock(internalCallContextFactory);
         notifierForMock = new DefaultOverdueCheckNotifier(notificationQueueService, overdueProperties, mockListener);

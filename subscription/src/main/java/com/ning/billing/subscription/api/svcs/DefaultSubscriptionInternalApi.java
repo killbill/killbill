@@ -42,7 +42,7 @@ import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
-import com.ning.billing.util.svcapi.entitlement.SubscriptionInternalApi;
+import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;

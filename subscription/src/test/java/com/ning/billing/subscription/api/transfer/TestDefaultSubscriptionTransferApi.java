@@ -106,9 +106,9 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
     public void testEventsAfterTransferForMigratedBundle1() throws Exception {
         // MIGRATE_ENTITLEMENT then MIGRATE_BILLING (both in the past)
         final DateTime transferDate = clock.getUTCNow();
-        final DateTime migrateEntitlementEventEffectiveDate = transferDate.minusDays(10);
-        final DateTime migrateBillingEventEffectiveDate = migrateEntitlementEventEffectiveDate.plusDays(1);
-        final List<SubscriptionEvent> events = transferBundle(migrateEntitlementEventEffectiveDate, migrateBillingEventEffectiveDate, transferDate);
+        final DateTime migrateSubscriptionEventEffectiveDate = transferDate.minusDays(10);
+        final DateTime migrateBillingEventEffectiveDate = migrateSubscriptionEventEffectiveDate.plusDays(1);
+        final List<SubscriptionEvent> events = transferBundle(migrateSubscriptionEventEffectiveDate, migrateBillingEventEffectiveDate, transferDate);
 
         Assert.assertEquals(events.size(), 1);
         Assert.assertEquals(events.get(0).getType(), EventType.API_USER);
@@ -120,9 +120,9 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
     public void testEventsAfterTransferForMigratedBundle2() throws Exception {
         // MIGRATE_ENTITLEMENT and MIGRATE_BILLING at the same time (both in the past)
         final DateTime transferDate = clock.getUTCNow();
-        final DateTime migrateEntitlementEventEffectiveDate = transferDate.minusDays(10);
-        final DateTime migrateBillingEventEffectiveDate = migrateEntitlementEventEffectiveDate;
-        final List<SubscriptionEvent> events = transferBundle(migrateEntitlementEventEffectiveDate, migrateBillingEventEffectiveDate, transferDate);
+        final DateTime migrateSubscriptionEventEffectiveDate = transferDate.minusDays(10);
+        final DateTime migrateBillingEventEffectiveDate = migrateSubscriptionEventEffectiveDate;
+        final List<SubscriptionEvent> events = transferBundle(migrateSubscriptionEventEffectiveDate, migrateBillingEventEffectiveDate, transferDate);
 
         Assert.assertEquals(events.size(), 1);
         Assert.assertEquals(events.get(0).getType(), EventType.API_USER);
@@ -134,9 +134,9 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
     public void testEventsAfterTransferForMigratedBundle3() throws Exception {
         // MIGRATE_ENTITLEMENT then MIGRATE_BILLING (the latter in the future)
         final DateTime transferDate = clock.getUTCNow();
-        final DateTime migrateEntitlementEventEffectiveDate = transferDate.minusDays(10);
-        final DateTime migrateBillingEventEffectiveDate = migrateEntitlementEventEffectiveDate.plusDays(20);
-        final List<SubscriptionEvent> events = transferBundle(migrateEntitlementEventEffectiveDate, migrateBillingEventEffectiveDate, transferDate);
+        final DateTime migrateSubscriptionEventEffectiveDate = transferDate.minusDays(10);
+        final DateTime migrateBillingEventEffectiveDate = migrateSubscriptionEventEffectiveDate.plusDays(20);
+        final List<SubscriptionEvent> events = transferBundle(migrateSubscriptionEventEffectiveDate, migrateBillingEventEffectiveDate, transferDate);
 
         Assert.assertEquals(events.size(), 1);
         Assert.assertEquals(events.get(0).getType(), EventType.API_USER);
@@ -148,19 +148,19 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
     public void testEventsAfterTransferForMigratedBundle4() throws Exception {
         // MIGRATE_ENTITLEMENT then MIGRATE_BILLING (both in the future)
         final DateTime transferDate = clock.getUTCNow();
-        final DateTime migrateEntitlementEventEffectiveDate = transferDate.plusDays(10);
-        final DateTime migrateBillingEventEffectiveDate = migrateEntitlementEventEffectiveDate.plusDays(20);
-        final List<SubscriptionEvent> events = transferBundle(migrateEntitlementEventEffectiveDate, migrateBillingEventEffectiveDate, transferDate);
+        final DateTime migrateSubscriptionEventEffectiveDate = transferDate.plusDays(10);
+        final DateTime migrateBillingEventEffectiveDate = migrateSubscriptionEventEffectiveDate.plusDays(20);
+        final List<SubscriptionEvent> events = transferBundle(migrateSubscriptionEventEffectiveDate, migrateBillingEventEffectiveDate, transferDate);
 
         Assert.assertEquals(events.size(), 1);
         Assert.assertEquals(events.get(0).getType(), EventType.API_USER);
-        Assert.assertEquals(events.get(0).getEffectiveDate(), migrateEntitlementEventEffectiveDate);
+        Assert.assertEquals(events.get(0).getEffectiveDate(), migrateSubscriptionEventEffectiveDate);
         Assert.assertEquals(((ApiEventTransfer) events.get(0)).getEventType(), ApiEventType.TRANSFER);
     }
 
-    private List<SubscriptionEvent> transferBundle(final DateTime migrateEntitlementEventEffectiveDate, final DateTime migrateBillingEventEffectiveDate,
+    private List<SubscriptionEvent> transferBundle(final DateTime migrateSubscriptionEventEffectiveDate, final DateTime migrateBillingEventEffectiveDate,
                                                   final DateTime transferDate) throws SubscriptionTransferApiException {
-        final ImmutableList<ExistingEvent> existingEvents = createMigrateEvents(migrateEntitlementEventEffectiveDate, migrateBillingEventEffectiveDate);
+        final ImmutableList<ExistingEvent> existingEvents = createMigrateEvents(migrateSubscriptionEventEffectiveDate, migrateBillingEventEffectiveDate);
         final SubscriptionBuilder subscriptionBuilder = new SubscriptionBuilder();
         final SubscriptionData subscription = new SubscriptionData(subscriptionBuilder);
 
@@ -203,11 +203,11 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
         };
     }
 
-    private ImmutableList<ExistingEvent> createMigrateEvents(final DateTime migrateEntitlementEventEffectiveDate, final DateTime migrateBillingEventEffectiveDate) {
+    private ImmutableList<ExistingEvent> createMigrateEvents(final DateTime migrateSubscriptionEventEffectiveDate, final DateTime migrateBillingEventEffectiveDate) {
         final ExistingEvent migrateEntitlementEvent = new ExistingEvent() {
             @Override
             public DateTime getEffectiveDate() {
-                return migrateEntitlementEventEffectiveDate;
+                return migrateSubscriptionEventEffectiveDate;
             }
 
             @Override

@@ -27,7 +27,7 @@ import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.junction.api.Type;
 import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
 import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.svcapi.entitlement.SubscriptionInternalApi;
+import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
 
 import com.google.inject.Inject;
 
@@ -35,25 +35,25 @@ public class OverdueDispatcher {
 
     Logger log = LoggerFactory.getLogger(OverdueDispatcher.class);
 
-    private final SubscriptionInternalApi entitlementApi;
+    private final SubscriptionInternalApi subscriptionApi;
     private final OverdueWrapperFactory factory;
 
     @Inject
-    public OverdueDispatcher(final SubscriptionInternalApi entitlementApi,
+    public OverdueDispatcher(final SubscriptionInternalApi subscriptionApi,
                              final OverdueWrapperFactory factory) {
-        this.entitlementApi = entitlementApi;
+        this.subscriptionApi = subscriptionApi;
         this.factory = factory;
     }
 
     public void processOverdueForAccount(final UUID accountId, final InternalCallContext context) {
-        final List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(accountId, context);
+        final List<SubscriptionBundle> bundles = subscriptionApi.getBundlesForAccount(accountId, context);
         for (final SubscriptionBundle bundle : bundles) {
             processOverdue(Type.SUBSCRIPTION_BUNDLE, bundle.getId(), context);
         }
     }
 
     public void clearOverdueForAccount(final UUID accountId, final InternalCallContext context) {
-        final List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(accountId, context);
+        final List<SubscriptionBundle> bundles = subscriptionApi.getBundlesForAccount(accountId, context);
         for (final SubscriptionBundle bundle : bundles) {
             clearOverdue(Type.SUBSCRIPTION_BUNDLE, bundle.getId(), context);
         }

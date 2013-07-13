@@ -60,7 +60,7 @@ public class TestBlockingChecker extends JunctionTestSuiteNoDB {
         Mockito.when(subscription.getBundleId()).thenReturn(bundleId);
 
         try {
-            Mockito.when(entitlementUserApi.getBundleFromId(Mockito.<UUID>any(), Mockito.<TenantContext>any())).thenReturn(bundle);
+            Mockito.when(subscriptionUserApi.getBundleFromId(Mockito.<UUID>any(), Mockito.<TenantContext>any())).thenReturn(bundle);
             Mockito.when(subscriptionInternalApi.getBundleFromId(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(bundle);
         } catch (SubscriptionUserApiException e) {
             Assert.fail(e.toString());

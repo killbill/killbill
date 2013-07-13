@@ -36,7 +36,7 @@ import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcapi.entitlement.SubscriptionInternalApi;
+import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
 import com.ning.billing.util.svcapi.junction.BillingEvent;
 import com.ning.billing.util.svcapi.junction.BillingEventSet;
 import com.ning.billing.util.svcapi.junction.BillingInternalApi;
@@ -53,7 +53,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
     private static final Logger log = LoggerFactory.getLogger(DefaultInternalBillingApi.class);
     private final AccountInternalApi accountApi;
     private final BillCycleDayCalculator bcdCalculator;
-    private final SubscriptionInternalApi entitlementApi;
+    private final SubscriptionInternalApi subscriptionApi;
     private final CatalogService catalogService;
     private final BlockingCalculator blockCalculator;
     private final TagInternalApi tagApi;
@@ -61,12 +61,12 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
     @Inject
     public DefaultInternalBillingApi(final AccountInternalApi accountApi,
                                      final BillCycleDayCalculator bcdCalculator,
-                                     final SubscriptionInternalApi entitlementApi,
+                                     final SubscriptionInternalApi subscriptionApi,
                                      final BlockingCalculator blockCalculator,
                                      final CatalogService catalogService, final TagInternalApi tagApi) {
         this.accountApi = accountApi;
         this.bcdCalculator = bcdCalculator;
-        this.entitlementApi = entitlementApi;
+        this.subscriptionApi = subscriptionApi;
         this.catalogService = catalogService;
         this.blockCalculator = blockCalculator;
         this.tagApi = tagApi;
@@ -74,7 +74,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
 
     @Override
     public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(final UUID accountId, final InternalCallContext context) {
-        final List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(accountId, context);
+        final List<SubscriptionBundle> bundles = subscriptionApi.getBundlesForAccount(accountId, context);
         final DefaultBillingEventSet result = new DefaultBillingEventSet();
 
         try {
@@ -113,7 +113,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
     private void addBillingEventsForBundles(final List<SubscriptionBundle> bundles, final Account account, final InternalCallContext context,
                                             final DefaultBillingEventSet result) {
         for (final SubscriptionBundle bundle : bundles) {
-            final List<Subscription> subscriptions = entitlementApi.getSubscriptionsForBundle(bundle.getId(), context);
+            final List<Subscription> subscriptions = subscriptionApi.getSubscriptionsForBundle(bundle.getId(), context);
 
             //Check if billing is off for the bundle
             final List<Tag> bundleTags = tagApi.getTags(bundle.getId(), ObjectType.BUNDLE, context);
@@ -130,7 +130,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
 
     private void addBillingEventsForSubscription(final List<Subscription> subscriptions, final SubscriptionBundle bundle, final Account account, final InternalCallContext context, final DefaultBillingEventSet result) {
         for (final Subscription subscription : subscriptions) {
-            for (final EffectiveSubscriptionInternalEvent transition : entitlementApi.getBillingTransitions(subscription, context)) {
+            for (final EffectiveSubscriptionInternalEvent transition : subscriptionApi.getBillingTransitions(subscription, context)) {
                 try {
                     final int bcdLocal = bcdCalculator.calculateBcd(bundle, subscription, transition, account, context);
 

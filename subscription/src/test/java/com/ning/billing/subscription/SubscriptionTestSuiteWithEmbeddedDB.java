@@ -44,7 +44,7 @@ import com.ning.billing.subscription.api.transfer.SubscriptionTransferApi;
 import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.subscription.api.user.SubscriptionUserApi;
 import com.ning.billing.util.config.SubscriptionConfig;
-import com.ning.billing.util.svcapi.entitlement.SubscriptionInternalApi;
+import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
 import com.ning.billing.util.svcsapi.bus.BusService;
 
 import com.google.inject.Guice;
@@ -56,9 +56,9 @@ public class SubscriptionTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteW
     protected static final Logger log = LoggerFactory.getLogger(SubscriptionTestSuiteWithEmbeddedDB.class);
 
     @Inject
-    protected SubscriptionService entitlementService;
+    protected SubscriptionService subscriptionService;
     @Inject
-    protected SubscriptionUserApi entitlementApi;
+    protected SubscriptionUserApi subscriptionApi;
     @Inject
     protected SubscriptionInternalApi subscriptionInternalApi;
     @Inject
@@ -102,7 +102,7 @@ public class SubscriptionTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteW
 
     @BeforeClass(groups = "slow")
     public void beforeClass() throws Exception {
-        loadSystemPropertiesFromClasspath("/entitlement.properties");
+        loadSystemPropertiesFromClasspath("/subscription.properties");
 
         final Injector g = Guice.createInjector(Stage.PRODUCTION, new TestDefaultSubscriptionModuleWithEmbeddedDB(configSource));
         g.injectMembers(this);
@@ -112,16 +112,16 @@ public class SubscriptionTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteW
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
         super.beforeMethod();
-        subscriptionTestInitializer.startTestFamework(testListener, testListenerStatus, clock, busService, entitlementService);
+        subscriptionTestInitializer.startTestFamework(testListener, testListenerStatus, clock, busService, subscriptionService);
 
         this.catalog = subscriptionTestInitializer.initCatalog(catalogService);
         this.accountData = subscriptionTestInitializer.initAccountData();
-        this.bundle = subscriptionTestInitializer.initBundle(entitlementApi, callContext);
+        this.bundle = subscriptionTestInitializer.initBundle(subscriptionApi, callContext);
     }
 
     @AfterMethod(groups = "slow")
     public void afterMethod() throws Exception {
-        subscriptionTestInitializer.stopTestFramework(testListener, busService, entitlementService);
+        subscriptionTestInitializer.stopTestFramework(testListener, busService, subscriptionService);
     }
 
     protected void assertListenerStatus() {

@@ -67,7 +67,7 @@ public abstract class TestUserApiRecreate extends SubscriptionTestSuiteWithEmbed
 
         testListener.pushExpectedEvent(NextEvent.PHASE);
         testListener.pushExpectedEvent(NextEvent.CREATE);
-        SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
+        SubscriptionData subscription = (SubscriptionData) subscriptionApi.createSubscription(bundle.getId(),
                                                                                              testUtil.getProductSpecifier(productName, planSetName, term, null), requestedDate, callContext);
         assertNotNull(subscription);
         assertEquals(subscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
@@ -84,7 +84,7 @@ public abstract class TestUserApiRecreate extends SubscriptionTestSuiteWithEmbed
         try {
 
             if (fromUserAPi) {
-                subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
+                subscription = (SubscriptionData) subscriptionApi.createSubscription(bundle.getId(),
                                                                                     testUtil.getProductSpecifier(productName, planSetName, term, null), requestedDate, callContext);
             } else {
                 subscription.recreate(testUtil.getProductSpecifier(productName, planSetName, term, null), requestedDate, callContext);
@@ -109,7 +109,7 @@ public abstract class TestUserApiRecreate extends SubscriptionTestSuiteWithEmbed
         }
 
         if (fromUserAPi) {
-            subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
+            subscription = (SubscriptionData) subscriptionApi.createSubscription(bundle.getId(),
                                                                                 testUtil.getProductSpecifier(productName, planSetName, term, null), requestedDate, callContext);
         } else {
             subscription.recreate(testUtil.getProductSpecifier(productName, planSetName, term, null), clock.getUTCNow(), callContext);

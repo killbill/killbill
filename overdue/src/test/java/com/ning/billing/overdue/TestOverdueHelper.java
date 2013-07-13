@@ -39,7 +39,7 @@ import com.ning.billing.overdue.glue.ApplicatorMockJunctionModule.ApplicatorBloc
 import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcapi.entitlement.SubscriptionInternalApi;
+import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
 import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
 import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
 

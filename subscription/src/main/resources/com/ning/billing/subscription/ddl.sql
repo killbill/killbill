@@ -1,7 +1,5 @@
 /*! SET storage_engine=INNODB */;
 
-DROP TABLE IF EXISTS events;
-DROP TABLE IF EXISTS entitlement_events;
 DROP TABLE IF EXISTS subscription_events;
 CREATE TABLE subscription_events (
     record_id int(11) unsigned NOT NULL AUTO_INCREMENT,

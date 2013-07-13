@@ -80,11 +80,11 @@ public class SubscriptionResource extends JaxRsResourceBase {
     private static final String CUSTOM_FIELD_URI = JaxrsResource.CUSTOM_FIELDS + "/{" + ID_PARAM_NAME + ":" + UUID_PATTERN + "}";
     private static final String TAG_URI = JaxrsResource.TAGS + "/{" + ID_PARAM_NAME + ":" + UUID_PATTERN + "}";
 
-    private final SubscriptionUserApi entitlementApi;
+    private final SubscriptionUserApi subscriptionApi;
     private final KillbillEventHandler killbillHandler;
 
     @Inject
-    public SubscriptionResource(final SubscriptionUserApi entitlementApi,
+    public SubscriptionResource(final SubscriptionUserApi subscriptionApi,
                                 final KillbillEventHandler killbillHandler,
                                 final JaxrsUriBuilder uriBuilder,
                                 final TagUserApi tagUserApi,
@@ -92,7 +92,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                 final AuditUserApi auditUserApi,
                                 final Context context) {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, context);
-        this.entitlementApi = entitlementApi;
+        this.subscriptionApi = subscriptionApi;
         this.killbillHandler = killbillHandler;
     }
 
@@ -102,7 +102,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
     public Response getSubscription(@PathParam("subscriptionId") final String subscriptionId,
                                     @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionUserApiException {
         final UUID uuid = UUID.fromString(subscriptionId);
-        final Subscription subscription = entitlementApi.getSubscriptionFromId(uuid, context.createContext(request));
+        final Subscription subscription = subscriptionApi.getSubscriptionFromId(uuid, context.createContext(request));
         final SubscriptionJsonNoEvents json = new SubscriptionJsonNoEvents(subscription, null);
         return Response.status(Status.OK).entity(json).build();
     }
@@ -130,7 +130,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                 final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(subscription.getProductName(),
                                                                        ProductCategory.valueOf(subscription.getProductCategory()),
                                                                        BillingPeriod.valueOf(subscription.getBillingPeriod()), subscription.getPriceList(), null);
-                return entitlementApi.createSubscription(uuid, spec, inputDate, ctx);
+                return subscriptionApi.createSubscription(uuid, spec, inputDate, ctx);
             }
 
             @Override
@@ -172,7 +172,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
             public Response doOperation(final CallContext ctx) throws SubscriptionUserApiException, InterruptedException,
                                                                       TimeoutException {
                 final UUID uuid = UUID.fromString(subscriptionId);
-                final Subscription current = entitlementApi.getSubscriptionFromId(uuid, callContext);
+                final Subscription current = subscriptionApi.getSubscriptionFromId(uuid, callContext);
                 final DateTime inputDate = (requestedDate != null) ? DATE_TIME_FORMATTER.parseDateTime(requestedDate) : null;
 
                 if (policyString == null) {
@@ -215,7 +215,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                              @HeaderParam(HDR_COMMENT) final String comment,
                                              @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionUserApiException {
         final UUID uuid = UUID.fromString(subscriptionId);
-        final Subscription current = entitlementApi.getSubscriptionFromId(uuid, context.createContext(createdBy, reason, comment, request));
+        final Subscription current = subscriptionApi.getSubscriptionFromId(uuid, context.createContext(createdBy, reason, comment, request));
 
         current.uncancel(context.createContext(createdBy, reason, comment, request));
         return Response.status(Status.OK).build();
@@ -246,7 +246,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                            TimeoutException {
                 final UUID uuid = UUID.fromString(subscriptionId);
 
-                final Subscription current = entitlementApi.getSubscriptionFromId(uuid, callContext);
+                final Subscription current = subscriptionApi.getSubscriptionFromId(uuid, callContext);
 
                 final DateTime inputDate = (requestedDate != null) ? DATE_TIME_FORMATTER.parseDateTime(requestedDate) : null;
                 if (policyString == null) {

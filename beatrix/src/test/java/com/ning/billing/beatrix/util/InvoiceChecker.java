@@ -51,13 +51,13 @@ public class InvoiceChecker {
     private static final Logger log = LoggerFactory.getLogger(InvoiceChecker.class);
 
     private final InvoiceUserApi invoiceUserApi;
-    private final SubscriptionUserApi entitlementApi;
+    private final SubscriptionUserApi subscriptionApi;
     private final AuditChecker auditChecker;
 
     @Inject
-    public InvoiceChecker(final InvoiceUserApi invoiceUserApi, final SubscriptionUserApi entitlementApi, final AuditChecker auditChecker) {
+    public InvoiceChecker(final InvoiceUserApi invoiceUserApi, final SubscriptionUserApi subscriptionApi, final AuditChecker auditChecker) {
         this.invoiceUserApi = invoiceUserApi;
-        this.entitlementApi = entitlementApi;
+        this.subscriptionApi = subscriptionApi;
         this.auditChecker = auditChecker;
     }
 
@@ -126,7 +126,7 @@ public class InvoiceChecker {
 
     public void checkChargedThroughDate(final UUID subscriptionId, final LocalDate expectedLocalCTD, final CallContext context) {
         try {
-            final Subscription subscription = entitlementApi.getSubscriptionFromId(subscriptionId, context);
+            final Subscription subscription = subscriptionApi.getSubscriptionFromId(subscriptionId, context);
             if (expectedLocalCTD == null) {
                 assertNull(subscription.getChargedThroughDate());
             } else {

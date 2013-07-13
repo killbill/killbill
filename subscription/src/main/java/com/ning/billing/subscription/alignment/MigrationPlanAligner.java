@@ -25,7 +25,7 @@ import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
-import com.ning.billing.subscription.api.migration.SubscriptionMigrationApi.EntitlementSubscriptionMigrationCase;
+import com.ning.billing.subscription.api.migration.SubscriptionMigrationApi.SubscriptionMigrationCase;
 import com.ning.billing.subscription.api.migration.SubscriptionMigrationApiException;
 import com.ning.billing.subscription.events.SubscriptionEvent.EventType;
 import com.ning.billing.subscription.events.user.ApiEventType;
@@ -42,7 +42,7 @@ public class MigrationPlanAligner extends BaseAligner {
     }
 
 
-    public TimedMigration[] getEventsMigration(final EntitlementSubscriptionMigrationCase[] input, final DateTime now)
+    public TimedMigration[] getEventsMigration(final SubscriptionMigrationCase[] input, final DateTime now)
             throws SubscriptionMigrationApiException {
 
         try {
@@ -169,15 +169,15 @@ public class MigrationPlanAligner extends BaseAligner {
         throw new SubscriptionMigrationApiException(String.format("Cannot find PlanPhase from Plan %s and type %s", plan.getName(), phaseType));
     }
 
-    private boolean isRegularMigratedSubscription(final EntitlementSubscriptionMigrationCase[] input) {
+    private boolean isRegularMigratedSubscription(final SubscriptionMigrationCase[] input) {
         return (input.length == 1 && input[0].getCancelledDate() == null);
     }
 
-    private boolean isRegularFutureCancelledMigratedSubscription(final EntitlementSubscriptionMigrationCase[] input) {
+    private boolean isRegularFutureCancelledMigratedSubscription(final SubscriptionMigrationCase[] input) {
         return (input.length == 1 && input[0].getCancelledDate() != null);
     }
 
-    private boolean isPhaseChangeMigratedSubscription(final EntitlementSubscriptionMigrationCase[] input) {
+    private boolean isPhaseChangeMigratedSubscription(final SubscriptionMigrationCase[] input) {
         if (input.length != 2) {
             return false;
         }
@@ -185,7 +185,7 @@ public class MigrationPlanAligner extends BaseAligner {
                 !isSamePhase(input[0].getPlanPhaseSpecifier(), input[1].getPlanPhaseSpecifier()));
     }
 
-    private boolean isPlanChangeMigratedSubscription(final EntitlementSubscriptionMigrationCase[] input) {
+    private boolean isPlanChangeMigratedSubscription(final SubscriptionMigrationCase[] input) {
         if (input.length != 2) {
             return false;
         }
