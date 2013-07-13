@@ -32,7 +32,7 @@
         <module>api</module>
         <module>beatrix</module>
         <module>catalog</module>
-        <module>entitlement</module>
+        <module>subscription</module>
         <module>invoice</module>
         <module>junction</module>
         <module>overdue</module>

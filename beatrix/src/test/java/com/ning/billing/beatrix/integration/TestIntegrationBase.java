@@ -46,7 +46,7 @@ import com.ning.billing.beatrix.glue.BeatrixModule;
 import com.ning.billing.beatrix.lifecycle.Lifecycle;
 import com.ning.billing.beatrix.osgi.SetupBundleWithAssertion;
 import com.ning.billing.beatrix.util.AccountChecker;
-import com.ning.billing.beatrix.util.EntitlementChecker;
+import com.ning.billing.beatrix.util.SubscriptionChecker;
 import com.ning.billing.beatrix.util.InvoiceChecker;
 import com.ning.billing.beatrix.util.PaymentChecker;
 import com.ning.billing.beatrix.util.RefundChecker;
@@ -56,8 +56,6 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.subscription.api.SubscriptionService;
-import com.ning.billing.subscription.api.user.SubscriptionData;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoicePayment;
@@ -76,9 +74,11 @@ import com.ning.billing.payment.api.PaymentMethodKVInfo;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.payment.api.TestPaymentMethodPluginBase;
 import com.ning.billing.payment.provider.MockPaymentProviderPlugin;
+import com.ning.billing.subscription.api.SubscriptionService;
 import com.ning.billing.subscription.api.timeline.SubscriptionTimelineApi;
 import com.ning.billing.subscription.api.transfer.SubscriptionTransferApi;
 import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.user.SubscriptionData;
 import com.ning.billing.subscription.api.user.SubscriptionUserApi;
 import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
 import com.ning.billing.util.api.RecordIdApi;
@@ -189,7 +189,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     protected RefundChecker refundChecker;
 
     @Inject
-    protected EntitlementChecker entitlementChecker;
+    protected SubscriptionChecker subscriptionChecker;
 
     @Inject
     protected AccountInternalApi accountInternalApi;

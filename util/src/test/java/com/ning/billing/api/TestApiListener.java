@@ -29,7 +29,7 @@ import com.ning.billing.util.events.InvoiceCreationInternalEvent;
 import com.ning.billing.util.events.PaymentErrorInternalEvent;
 import com.ning.billing.util.events.PaymentInfoInternalEvent;
 import com.ning.billing.util.events.PaymentPluginErrorInternalEvent;
-import com.ning.billing.util.events.RepairEntitlementInternalEvent;
+import com.ning.billing.util.events.RepairSubscriptionInternalEvent;
 import com.ning.billing.util.events.TagDefinitionInternalEvent;
 import com.ning.billing.util.events.TagInternalEvent;
 import org.joda.time.DateTime;
@@ -89,7 +89,7 @@ public class TestApiListener {
     }
 
     @Subscribe
-    public void handleRepairEntitlementEvents(final RepairEntitlementInternalEvent event) {
+    public void handleRepairEntitlementEvents(final RepairSubscriptionInternalEvent event) {
         log.info(String.format("Got RepairEntitlementEvent event %s", event.toString()));
         assertEqualsNicely(NextEvent.REPAIR_BUNDLE);
         notifyIfStackEmpty();

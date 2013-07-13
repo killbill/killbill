@@ -29,7 +29,7 @@ import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
-import com.ning.billing.util.events.RepairEntitlementInternalEvent;
+import com.ning.billing.util.events.RepairSubscriptionInternalEvent;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
@@ -47,7 +47,7 @@ public class InvoiceListener {
     }
 
     @Subscribe
-    public void handleRepairEntitlementEvent(final RepairEntitlementInternalEvent event) {
+    public void handleRepairEntitlementEvent(final RepairSubscriptionInternalEvent event) {
 
         try {
             final InternalCallContext context = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "RepairBundle", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
