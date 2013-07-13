@@ -20,7 +20,7 @@ import org.skife.config.ConfigSource;
 
 import com.ning.billing.catalog.MockCatalogModule;
 import com.ning.billing.mock.glue.MockAccountModule;
-import com.ning.billing.mock.glue.MockEntitlementModule;
+import com.ning.billing.mock.glue.MockSubscriptionModule;
 import com.ning.billing.util.glue.CacheModule;
 import com.ning.billing.util.glue.CallContextModule;
 
@@ -38,6 +38,6 @@ public class TestJunctionModule extends DefaultJunctionModule {
         install(new CallContextModule());
         install(new MockAccountModule());
         install(new MockCatalogModule());
-        install(new MockEntitlementModule());
+        install(new MockSubscriptionModule());
     }
 }

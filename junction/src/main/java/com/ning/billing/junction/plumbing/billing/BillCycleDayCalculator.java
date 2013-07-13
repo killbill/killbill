@@ -41,7 +41,7 @@ import com.ning.billing.subscription.api.user.Subscription;
 import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
-import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
+import com.ning.billing.util.svcapi.entitlement.SubscriptionInternalApi;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -51,10 +51,10 @@ public class BillCycleDayCalculator {
     private static final Logger log = LoggerFactory.getLogger(BillCycleDayCalculator.class);
 
     private final CatalogService catalogService;
-    private final EntitlementInternalApi entitlementApi;
+    private final SubscriptionInternalApi entitlementApi;
 
     @Inject
-    public BillCycleDayCalculator(final CatalogService catalogService, final EntitlementInternalApi entitlementApi) {
+    public BillCycleDayCalculator(final CatalogService catalogService, final SubscriptionInternalApi entitlementApi) {
         this.catalogService = catalogService;
         this.entitlementApi = entitlementApi;
     }

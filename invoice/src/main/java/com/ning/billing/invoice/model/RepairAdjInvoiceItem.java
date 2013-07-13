@@ -46,6 +46,6 @@ public class RepairAdjInvoiceItem extends AdjInvoiceItem {
 
     @Override
     public String getDescription() {
-        return "Adjustment (entitlement change)";
+        return "Adjustment (subscription change)";
     }
 }

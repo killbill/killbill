@@ -42,7 +42,7 @@ import com.ning.billing.overdue.config.api.PaymentResponse;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
+import com.ning.billing.util.svcapi.entitlement.SubscriptionInternalApi;
 import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
 import com.ning.billing.util.tag.Tag;
 
@@ -50,11 +50,11 @@ import com.google.inject.Inject;
 
 public class BillingStateCalculatorBundle extends BillingStateCalculator<SubscriptionBundle> {
 
-    private final EntitlementInternalApi entitlementApi;
+    private final SubscriptionInternalApi entitlementApi;
     private final AccountInternalApi accountApi;
 
     @Inject
-    public BillingStateCalculatorBundle(final EntitlementInternalApi entitlementApi, final InvoiceInternalApi invoiceApi,
+    public BillingStateCalculatorBundle(final SubscriptionInternalApi entitlementApi, final InvoiceInternalApi invoiceApi,
                                         final AccountInternalApi accountApi, final Clock clock) {
         super(invoiceApi, clock);
         this.entitlementApi = entitlementApi;

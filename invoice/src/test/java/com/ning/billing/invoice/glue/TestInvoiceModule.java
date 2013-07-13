@@ -29,7 +29,7 @@ import com.ning.billing.util.glue.CustomFieldModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.TagStoreModule;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
+import com.ning.billing.util.svcapi.entitlement.SubscriptionInternalApi;
 import com.ning.billing.util.svcapi.junction.BillingInternalApi;
 
 
@@ -40,7 +40,7 @@ public class TestInvoiceModule extends DefaultInvoiceModule {
     }
 
     private void installExternalApis() {
-        bind(EntitlementInternalApi.class).toInstance(Mockito.mock(EntitlementInternalApi.class));
+        bind(SubscriptionInternalApi.class).toInstance(Mockito.mock(SubscriptionInternalApi.class));
         bind(AccountInternalApi.class).toInstance(Mockito.mock(AccountInternalApi.class));
         bind(BillingInternalApi.class).toInstance(Mockito.mock(BillingInternalApi.class));
     }

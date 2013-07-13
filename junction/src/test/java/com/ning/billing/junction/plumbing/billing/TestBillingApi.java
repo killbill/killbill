@@ -93,13 +93,13 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
         subscription = new MockSubscription(subId, bunId, null, subscriptionStartDate, effectiveSubscriptionTransitions);
         final List<Subscription> subscriptions = ImmutableList.<Subscription>of(subscription);
 
-        Mockito.when(entitlementInternalApi.getBundlesForAccount(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(bundles);
-        Mockito.when(entitlementInternalApi.getSubscriptionsForBundle(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscriptions);
-        Mockito.when(entitlementInternalApi.getSubscriptionFromId(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
-        Mockito.when(entitlementInternalApi.getBundleFromId(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(bundle);
-        Mockito.when(entitlementInternalApi.getBaseSubscription(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
-        Mockito.when(entitlementInternalApi.getBillingTransitions(Mockito.<Subscription>any(), Mockito.<InternalTenantContext>any())).thenReturn(effectiveSubscriptionTransitions);
-        Mockito.when(entitlementInternalApi.getAllTransitions(Mockito.<Subscription>any(), Mockito.<InternalTenantContext>any())).thenReturn(effectiveSubscriptionTransitions);
+        Mockito.when(subscriptionInternalApi.getBundlesForAccount(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(bundles);
+        Mockito.when(subscriptionInternalApi.getSubscriptionsForBundle(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscriptions);
+        Mockito.when(subscriptionInternalApi.getSubscriptionFromId(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
+        Mockito.when(subscriptionInternalApi.getBundleFromId(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(bundle);
+        Mockito.when(subscriptionInternalApi.getBaseSubscription(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
+        Mockito.when(subscriptionInternalApi.getBillingTransitions(Mockito.<Subscription>any(), Mockito.<InternalTenantContext>any())).thenReturn(effectiveSubscriptionTransitions);
+        Mockito.when(subscriptionInternalApi.getAllTransitions(Mockito.<Subscription>any(), Mockito.<InternalTenantContext>any())).thenReturn(effectiveSubscriptionTransitions);
 
         catalog = ((MockCatalog) catalogService.getCurrentCatalog());
         // TODO The MockCatalog module returns two different things for full vs current catalog

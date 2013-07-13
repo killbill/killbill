@@ -48,11 +48,11 @@ public interface OSGIConfig extends KillbillConfig {
              "com.ning.billing.analytics.api.user," +
              "com.ning.billing.beatrix.bus.api," + /* TODO PIERRE Remove it after plugins classes have been regenerated */
              "com.ning.billing.catalog.api," +
-             "com.ning.billing.entitlement.api," +
-             "com.ning.billing.entitlement.api.migration," +
-             "com.ning.billing.entitlement.api.timeline," +
-             "com.ning.billing.entitlement.api.transfer," +
-             "com.ning.billing.entitlement.api.user," +
+             "com.ning.billing.subscription.api," +
+             "com.ning.billing.subscription.api.migration," +
+             "com.ning.billing.subscription.api.timeline," +
+             "com.ning.billing.subscription.api.transfer," +
+             "com.ning.billing.subscription.api.user," +
              "com.ning.billing.invoice.api," +
              "com.ning.billing.junction.api," +
              "com.ning.billing," +

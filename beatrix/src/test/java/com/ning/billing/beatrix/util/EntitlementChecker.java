@@ -25,8 +25,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 
-import com.ning.billing.entitlement.api.user.SubscriptionData;
-import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
+import com.ning.billing.subscription.api.user.SubscriptionData;
+import com.ning.billing.subscription.api.user.SubscriptionTransitionData;
 import com.ning.billing.junction.plumbing.api.BlockingSubscription;
 import com.ning.billing.subscription.api.user.Subscription;
 import com.ning.billing.subscription.api.user.SubscriptionBundle;

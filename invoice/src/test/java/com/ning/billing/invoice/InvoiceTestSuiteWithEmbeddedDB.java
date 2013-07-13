@@ -44,7 +44,7 @@ import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
+import com.ning.billing.util.svcapi.entitlement.SubscriptionInternalApi;
 import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
 import com.ning.billing.util.svcapi.junction.BillingInternalApi;
 import com.ning.billing.util.svcsapi.bus.BusService;
@@ -78,7 +78,7 @@ public abstract class InvoiceTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     @Inject
     protected AccountInternalApi accountApi;
     @Inject
-    protected EntitlementInternalApi entitlementApi;
+    protected SubscriptionInternalApi entitlementApi;
     @Inject
     protected BusService busService;
     @Inject

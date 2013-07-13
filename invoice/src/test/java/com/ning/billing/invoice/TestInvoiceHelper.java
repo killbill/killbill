@@ -62,7 +62,7 @@ import com.ning.billing.clock.Clock;
 import com.ning.billing.util.entity.EntityPersistenceException;
 import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
+import com.ning.billing.util.svcapi.entitlement.SubscriptionInternalApi;
 import com.ning.billing.util.svcapi.junction.BillingEvent;
 import com.ning.billing.util.svcapi.junction.BillingEventSet;
 import com.ning.billing.util.svcapi.junction.BillingInternalApi;
@@ -129,7 +129,7 @@ public class TestInvoiceHelper {
     private final InvoiceGenerator generator;
     private final BillingInternalApi billingApi;
     private final AccountInternalApi accountApi;
-    private final EntitlementInternalApi entitlementApi;
+    private final SubscriptionInternalApi entitlementApi;
     private final  BusService busService;
     private final  InvoiceDao invoiceDao;
     private final  GlobalLocker locker;
@@ -144,7 +144,7 @@ public class TestInvoiceHelper {
 
     @Inject
     public TestInvoiceHelper(final InvoiceGenerator generator, final IDBI dbi,
-                             final BillingInternalApi billingApi, final AccountInternalApi accountApi, final EntitlementInternalApi entitlementApi, final BusService busService,
+                             final BillingInternalApi billingApi, final AccountInternalApi accountApi, final SubscriptionInternalApi entitlementApi, final BusService busService,
                              final InvoiceDao invoiceDao, final GlobalLocker locker, final Clock clock, final InternalCallContext internalCallContext) {
         this.generator = generator;
         this.billingApi = billingApi;

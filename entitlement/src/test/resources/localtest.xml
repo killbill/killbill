@@ -9,7 +9,7 @@
       </run>
     </groups>
     <classes>
-      <class name="com.ning.billing.entitlement.api.user.TestUserApiChangePlanMemory"/>
+      <class name="com.ning.billing.subscription.api.user.TestUserApiChangePlanMemory"/>
     </classes>
   </test>
   <test name="Cancel">
@@ -20,7 +20,7 @@
       </run>
     </groups>
     <classes>
-      <class name="com.ning.billing.entitlement.api.user.TestUserApiCancelMemory"/>
+      <class name="com.ning.billing.subscription.api.user.TestUserApiCancelMemory"/>
     </classes>
   </test>
   <test name="Create">
@@ -31,7 +31,7 @@
       </run>
     </groups>
     <classes>
-      <class name="com.ning.billing.entitlement.api.user.TestUserApiCreateMemory"/>
+      <class name="com.ning.billing.subscription.api.user.TestUserApiCreateMemory"/>
     </classes>
   </test>
 </suite>

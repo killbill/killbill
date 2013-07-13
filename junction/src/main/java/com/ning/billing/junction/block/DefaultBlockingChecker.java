@@ -29,7 +29,7 @@ import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.junction.api.Type;
 import com.ning.billing.junction.dao.BlockingStateDao;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
+import com.ning.billing.util.svcapi.entitlement.SubscriptionInternalApi;
 
 import com.google.inject.Inject;
 
@@ -80,11 +80,11 @@ public class DefaultBlockingChecker implements BlockingChecker {
     private static final Object ACTION_ENTITLEMENT = "Entitlement";
     private static final Object ACTION_BILLING = "Billing";
 
-    private final EntitlementInternalApi entitlementApi;
+    private final SubscriptionInternalApi entitlementApi;
     private final BlockingStateDao dao;
 
     @Inject
-    public DefaultBlockingChecker(final EntitlementInternalApi entitlementApi, final BlockingStateDao dao) {
+    public DefaultBlockingChecker(final SubscriptionInternalApi entitlementApi, final BlockingStateDao dao) {
         this.entitlementApi = entitlementApi;
         this.dao = dao;
     }

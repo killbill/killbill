@@ -114,8 +114,8 @@ public class DefaultBillingEvent implements BillingEvent {
             if (!getEffectiveDate().equals(e1.getEffectiveDate())) { // Secondly order by date
                 return getEffectiveDate().compareTo(e1.getEffectiveDate());
             } else { // dates and subscriptions are the same
-                // If an entitlement event and an overdue event happen at the exact same time,
-                // we assume we want the entitlement event before the overdue event when entering
+                // If an subscription event and an overdue event happen at the exact same time,
+                // we assume we want the subscription event before the overdue event when entering
                 // the overdue period, and vice-versa when exiting the overdue period
                 if (SubscriptionTransitionType.START_BILLING_DISABLED.equals(getTransitionType())) {
                     if (SubscriptionTransitionType.END_BILLING_DISABLED.equals(e1.getTransitionType())) {

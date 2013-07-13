@@ -23,7 +23,7 @@ import org.skife.config.ConfigSource;
 
 import com.ning.billing.ObjectType;
 import com.ning.billing.mock.glue.MockAccountModule;
-import com.ning.billing.mock.glue.MockEntitlementModule;
+import com.ning.billing.mock.glue.MockSubscriptionModule;
 import com.ning.billing.mock.glue.MockGlobalLockerModule;
 import com.ning.billing.mock.glue.MockInvoiceModule;
 import com.ning.billing.mock.glue.MockNotificationQueueModule;
@@ -67,7 +67,7 @@ public class TestPaymentModule extends PaymentModule {
         install(new MockNotificationQueueModule(configSource));
         install(new MockInvoiceModule());
         install(new MockAccountModule());
-        install(new MockEntitlementModule());
+        install(new MockSubscriptionModule());
         install(new MockGlobalLockerModule());
         install(new CacheModule(configSource));
         installExternalApis();

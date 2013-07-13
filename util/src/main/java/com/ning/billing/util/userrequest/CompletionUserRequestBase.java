@@ -106,7 +106,7 @@ public class CompletionUserRequestBase implements CompletionUserRequest {
                 break;
             case SUBSCRIPTION_TRANSITION:
                 // We only dispatch the event for the effective date and not the requested date since we have both
-                // for entitlement events.
+                // for subscription events.
                 if (curEvent instanceof EffectiveSubscriptionInternalEvent) {
                     onSubscriptionTransition((EffectiveSubscriptionInternalEvent) curEvent);
                 }

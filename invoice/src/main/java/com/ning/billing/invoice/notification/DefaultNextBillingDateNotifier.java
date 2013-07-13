@@ -34,7 +34,7 @@ import com.ning.billing.notificationq.api.NotificationQueueService.NotificationQ
 import com.ning.billing.notificationq.api.NotificationQueueService.NotificationQueueHandler;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.config.InvoiceConfig;
-import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
+import com.ning.billing.util.svcapi.entitlement.SubscriptionInternalApi;
 
 import com.google.inject.Inject;
 
@@ -46,7 +46,7 @@ public class DefaultNextBillingDateNotifier implements NextBillingDateNotifier {
 
     private final NotificationQueueService notificationQueueService;
     private final InvoiceConfig config;
-    private final EntitlementInternalApi entitlementApi;
+    private final SubscriptionInternalApi entitlementApi;
     private final InvoiceListener listener;
     private final InternalCallContextFactory callContextFactory;
 
@@ -55,7 +55,7 @@ public class DefaultNextBillingDateNotifier implements NextBillingDateNotifier {
     @Inject
     public DefaultNextBillingDateNotifier(final NotificationQueueService notificationQueueService,
                                           final InvoiceConfig config,
-                                          final EntitlementInternalApi entitlementApi,
+                                          final SubscriptionInternalApi entitlementApi,
                                           final InvoiceListener listener,
                                           final InternalCallContextFactory callContextFactory) {
         this.notificationQueueService = notificationQueueService;

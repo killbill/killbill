@@ -70,7 +70,7 @@ import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.globallocker.GlobalLocker.LockerType;
 import com.ning.billing.util.globallocker.LockFailedException;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
+import com.ning.billing.util.svcapi.entitlement.SubscriptionInternalApi;
 import com.ning.billing.util.svcapi.junction.BillingEventSet;
 import com.ning.billing.util.svcapi.junction.BillingInternalApi;
 
@@ -88,7 +88,7 @@ public class InvoiceDispatcher {
     private final InvoiceGenerator generator;
     private final BillingInternalApi billingApi;
     private final AccountInternalApi accountApi;
-    private final EntitlementInternalApi subscriptionApi;
+    private final SubscriptionInternalApi subscriptionApi;
     private final InvoiceDao invoiceDao;
     private final InvoiceNotifier invoiceNotifier;
     private final GlobalLocker locker;
@@ -98,7 +98,7 @@ public class InvoiceDispatcher {
     @Inject
     public InvoiceDispatcher(final InvoiceGenerator generator, final AccountInternalApi accountApi,
                              final BillingInternalApi billingApi,
-                             final EntitlementInternalApi SubscriptionApi,
+                             final SubscriptionInternalApi SubscriptionApi,
                              final InvoiceDao invoiceDao,
                              final InvoiceNotifier invoiceNotifier,
                              final GlobalLocker locker,

@@ -45,7 +45,7 @@ import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.dbi.DBTestingHelper;
 import com.ning.billing.dbi.MysqlTestingHelper;
-import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
+import com.ning.billing.subscription.glue.DefaultSubscriptionModule;
 import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.invoice.glue.DefaultInvoiceModule;
 import com.ning.billing.invoice.notification.NullInvoiceNotifier;
@@ -208,7 +208,7 @@ public class TestJaxrsBase extends KillbillClient {
             install(new DefaultAccountModule(configSource));
             install(new InvoiceModuleWithMockSender(configSource));
             install(new TemplateModule());
-            install(new DefaultEntitlementModule(configSource));
+            install(new DefaultSubscriptionModule(configSource));
             install(new PaymentMockModule(configSource));
             install(new BeatrixModule());
             install(new DefaultJunctionModule(configSource));

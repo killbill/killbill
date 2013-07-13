@@ -39,7 +39,7 @@ import com.ning.billing.overdue.glue.ApplicatorMockJunctionModule.ApplicatorBloc
 import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
+import com.ning.billing.util.svcapi.entitlement.SubscriptionInternalApi;
 import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
 import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
 
@@ -93,15 +93,15 @@ public class TestOverdueHelper {
             "</overdueConfig>";
 
     private final AccountInternalApi accountInternalApi;
-    private final EntitlementInternalApi entitlementInternalApi;
+    private final SubscriptionInternalApi subscriptionInternalApi;
     private final InvoiceInternalApi invoiceInternalApi;
     private final BlockingInternalApi blockingInternalApi;
 
     @Inject
-    public TestOverdueHelper(final AccountInternalApi accountInternalApi, final EntitlementInternalApi entitlementInternalApi,
+    public TestOverdueHelper(final AccountInternalApi accountInternalApi, final SubscriptionInternalApi subscriptionInternalApi,
                              final InvoiceInternalApi invoiceInternalApi, final BlockingInternalApi blockingInternalApi) {
         this.accountInternalApi = accountInternalApi;
-        this.entitlementInternalApi = entitlementInternalApi;
+        this.subscriptionInternalApi = subscriptionInternalApi;
         this.invoiceInternalApi = invoiceInternalApi;
         this.blockingInternalApi = blockingInternalApi;
     }
@@ -151,7 +151,7 @@ public class TestOverdueHelper {
         Mockito.when(base.getCurrentPlan()).thenReturn(MockPlan.createBicycleNoTrialEvergreen1USD());
         Mockito.when(base.getCurrentPriceList()).thenReturn(new MockPriceList());
         Mockito.when(base.getCurrentPhase()).thenReturn(MockPlan.createBicycleNoTrialEvergreen1USD().getFinalPhase());
-        Mockito.when(entitlementInternalApi.getBaseSubscription(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(base);
+        Mockito.when(subscriptionInternalApi.getBaseSubscription(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(base);
 
         return bundle;
     }

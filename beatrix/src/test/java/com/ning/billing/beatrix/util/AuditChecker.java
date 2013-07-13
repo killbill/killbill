@@ -32,9 +32,9 @@ import org.testng.Assert;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.dao.AccountSqlDao;
-import com.ning.billing.entitlement.engine.dao.BundleSqlDao;
-import com.ning.billing.entitlement.engine.dao.EntitlementEventSqlDao;
-import com.ning.billing.entitlement.engine.dao.SubscriptionSqlDao;
+import com.ning.billing.subscription.engine.dao.BundleSqlDao;
+import com.ning.billing.subscription.engine.dao.SubscriptionEventSqlDao;
+import com.ning.billing.subscription.engine.dao.SubscriptionSqlDao;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.dao.InvoiceItemSqlDao;
@@ -146,14 +146,14 @@ public class AuditChecker {
     // Pass the call context used to create the subscription event
     public void checkSubscriptionEventCreated(final UUID bundleId, final UUID subscriptionEventId, final CallContext context) {
         final AuditLogsForBundles auditLogsForBundles = getAuditLogsForBundle(bundleId, context);
-        checkAuditLog(ChangeType.INSERT, context, auditLogsForBundles.getSubscriptionEventsAuditLogs().get(subscriptionEventId).get(0), subscriptionEventId, EntitlementEventSqlDao.class, false, true);
+        checkAuditLog(ChangeType.INSERT, context, auditLogsForBundles.getSubscriptionEventsAuditLogs().get(subscriptionEventId).get(0), subscriptionEventId, SubscriptionEventSqlDao.class, false, true);
     }
 
     // Pass the call context used to update the subscription event
     public void checkSubscriptionEventUpdated(final UUID bundleId, final UUID subscriptionEventId, final CallContext context) {
         final AuditLogsForBundles auditLogsForBundles = getAuditLogsForBundle(bundleId, context);
         checkAuditLog(ChangeType.INSERT, auditLogsForBundles.getSubscriptionEventsAuditLogs().get(subscriptionEventId).get(0));
-        checkAuditLog(ChangeType.UPDATE, context, auditLogsForBundles.getSubscriptionEventsAuditLogs().get(subscriptionEventId).get(1), subscriptionEventId, EntitlementEventSqlDao.class, false, true);
+        checkAuditLog(ChangeType.UPDATE, context, auditLogsForBundles.getSubscriptionEventsAuditLogs().get(subscriptionEventId).get(1), subscriptionEventId, SubscriptionEventSqlDao.class, false, true);
     }
 
 

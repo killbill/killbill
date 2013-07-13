@@ -9,7 +9,7 @@
       </run>
     </groups>
     <classes>
-      <class name="com.ning.billing.entitlement.api.user.TestUserApiChangePlanMemory"/>
+      <class name="com.ning.billing.subscription.api.user.TestUserApiChangePlanMemory"/>
     </classes>
   </test>
 </suite>

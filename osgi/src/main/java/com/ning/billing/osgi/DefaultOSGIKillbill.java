@@ -20,7 +20,7 @@ import javax.inject.Inject;
 
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.api.CatalogUserApi;
-import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi;
+import com.ning.billing.subscription.api.migration.SubscriptionMigrationApi;
 import com.ning.billing.subscription.api.timeline.SubscriptionTimelineApi;
 import com.ning.billing.subscription.api.transfer.SubscriptionTransferApi;
 import com.ning.billing.subscription.api.user.SubscriptionUserApi;
@@ -44,7 +44,7 @@ public class DefaultOSGIKillbill implements OSGIKillbill {
 
     private final AccountUserApi accountUserApi;
     private final CatalogUserApi catalogUserApi;
-    private final EntitlementMigrationApi entitlementMigrationApi;
+    private final SubscriptionMigrationApi entitlementMigrationApi;
     private final SubscriptionTimelineApi entitlementTimelineApi;
     private final SubscriptionTransferApi entitlementTransferApi;
     private final SubscriptionUserApi entitlementUserApi;
@@ -67,7 +67,7 @@ public class DefaultOSGIKillbill implements OSGIKillbill {
     @Inject
     public DefaultOSGIKillbill(final AccountUserApi accountUserApi,
                                final CatalogUserApi catalogUserApi,
-                               final EntitlementMigrationApi entitlementMigrationApi,
+                               final SubscriptionMigrationApi entitlementMigrationApi,
                                final SubscriptionTimelineApi entitlementTimelineApi,
                                final SubscriptionTransferApi entitlementTransferApi,
                                final SubscriptionUserApi entitlementUserApi,

@@ -19,7 +19,7 @@ package com.ning.billing.overdue.glue;
 import org.skife.config.ConfigSource;
 
 import com.ning.billing.mock.glue.MockAccountModule;
-import com.ning.billing.mock.glue.MockEntitlementModule;
+import com.ning.billing.mock.glue.MockSubscriptionModule;
 import com.ning.billing.mock.glue.MockInvoiceModule;
 import com.ning.billing.mock.glue.MockTagModule;
 import com.ning.billing.overdue.TestOverdueHelper;
@@ -47,7 +47,7 @@ public class TestOverdueModule extends DefaultOverdueModule {
         install(new CustomFieldModule());
         install(new EmailModule(configSource));
         install(new MockAccountModule());
-        install(new MockEntitlementModule());
+        install(new MockSubscriptionModule());
         install(new MockInvoiceModule());
         install(new MockTagModule());
         install(new TemplateModule());
