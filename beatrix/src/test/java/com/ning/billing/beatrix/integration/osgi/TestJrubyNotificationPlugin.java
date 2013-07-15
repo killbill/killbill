@@ -34,7 +34,7 @@ public class TestJrubyNotificationPlugin extends TestOSGIBase {
     private final String BUNDLE_TEST_RESOURCE_PREFIX = "killbill-notification-test";
     private final String BUNDLE_TEST_RESOURCE = BUNDLE_TEST_RESOURCE_PREFIX + ".tar.gz";
 
-    @BeforeClass(groups = "slow", enabled = false)
+    @BeforeClass(groups = "slow", enabled = true)
     public void beforeClass() throws Exception {
 
         // OSGIDataSourceConfig
@@ -47,7 +47,7 @@ public class TestJrubyNotificationPlugin extends TestOSGIBase {
         setupTest.setupJrubyBundle();
     }
 
-    @Test(groups = "slow", enabled = false)
+    @Test(groups = "slow", enabled = true)
     public void testOnEventForAccountCreation() throws Exception {
 
         // Once we create the account we give the hand to the jruby notification plugin
