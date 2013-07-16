@@ -19,7 +19,7 @@ package com.ning.billing.mock.glue;
 import com.google.inject.AbstractModule;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.glue.EntitlementModule;
-import com.ning.billing.junction.api.JunctionApi;
+import com.ning.billing.junction.api.EntitlementApi;
 import com.ning.billing.subscription.api.user.SubscriptionUserApi;
 import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
 import org.mockito.Mockito;
@@ -29,7 +29,7 @@ public class MockEntitlementModule extends AbstractModule implements Entitlement
     private final AccountUserApi userApi = Mockito.mock(AccountUserApi.class);
     private final SubscriptionUserApi entUserApi = Mockito.mock(SubscriptionUserApi.class);
     private final BlockingInternalApi blockingApi = Mockito.mock(BlockingInternalApi.class);
-    private final JunctionApi junctionApi = Mockito.mock(JunctionApi.class);
+    private final EntitlementApi entitlementApi = Mockito.mock(EntitlementApi.class);
 
     @Override
     protected void configure() {
@@ -61,7 +61,7 @@ public class MockEntitlementModule extends AbstractModule implements Entitlement
 
     @Override
     public void installEntitlementApi() {
-        bind(JunctionApi.class).toInstance(junctionApi);
+        bind(EntitlementApi.class).toInstance(entitlementApi);
     }
 
     @Override
