@@ -19,8 +19,6 @@ package com.ning.billing.junction.glue;
 import org.skife.config.ConfigSource;
 
 import com.ning.billing.GuicyKillbillTestNoDBModule;
-import com.ning.billing.junction.dao.BlockingStateDao;
-import com.ning.billing.junction.dao.MockBlockingStateDao;
 import com.ning.billing.mock.glue.MockNonEntityDaoModule;
 import com.ning.billing.mock.glue.MockTagModule;
 import com.ning.billing.util.bus.InMemoryBusModule;
@@ -29,11 +27,6 @@ public class TestJunctionModuleNoDB extends TestJunctionModule {
 
     public TestJunctionModuleNoDB(final ConfigSource configSource) {
         super(configSource);
-    }
-
-    @Override
-    public void installBlockingStateDao() {
-        bind(BlockingStateDao.class).toInstance(new MockBlockingStateDao());
     }
 
     @Override

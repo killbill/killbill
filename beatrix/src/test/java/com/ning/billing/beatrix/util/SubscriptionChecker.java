@@ -16,24 +16,22 @@
 
 package com.ning.billing.beatrix.util;
 
-import java.util.List;
-import java.util.UUID;
-
-import javax.inject.Inject;
-
+import com.ning.billing.entitlement.api.BlockingSubscription;
+import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionData;
+import com.ning.billing.subscription.api.user.SubscriptionTransition;
+import com.ning.billing.subscription.api.user.SubscriptionTransitionData;
+import com.ning.billing.subscription.api.user.SubscriptionUserApi;
+import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
+import com.ning.billing.util.callcontext.CallContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 
-import com.ning.billing.subscription.api.user.SubscriptionData;
-import com.ning.billing.subscription.api.user.SubscriptionTransitionData;
-import com.ning.billing.junction.plumbing.api.BlockingSubscription;
-import com.ning.billing.subscription.api.user.Subscription;
-import com.ning.billing.subscription.api.user.SubscriptionBundle;
-import com.ning.billing.subscription.api.user.SubscriptionTransition;
-import com.ning.billing.subscription.api.user.SubscriptionUserApi;
-import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
-import com.ning.billing.util.callcontext.CallContext;
+import javax.inject.Inject;
+import java.util.List;
+import java.util.UUID;
 
 public class SubscriptionChecker {
 

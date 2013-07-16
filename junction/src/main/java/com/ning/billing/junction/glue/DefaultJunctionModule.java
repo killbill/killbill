@@ -16,26 +16,12 @@
 
 package com.ning.billing.junction.glue;
 
-import org.skife.config.ConfigSource;
-
-import com.ning.billing.account.api.AccountUserApi;
+import com.google.inject.AbstractModule;
 import com.ning.billing.glue.JunctionModule;
-import com.ning.billing.junction.api.DefaultJunctionApi;
-import com.ning.billing.junction.api.JunctionApi;
-import com.ning.billing.junction.api.svcs.DefaultInternalBlockingApi;
-import com.ning.billing.junction.block.BlockingChecker;
-import com.ning.billing.junction.block.DefaultBlockingChecker;
-import com.ning.billing.junction.dao.BlockingStateDao;
-import com.ning.billing.junction.dao.DefaultBlockingStateDao;
-import com.ning.billing.junction.plumbing.api.BlockingAccountUserApi;
-import com.ning.billing.junction.plumbing.api.BlockingSubscriptionUserApi;
 import com.ning.billing.junction.plumbing.billing.BlockingCalculator;
 import com.ning.billing.junction.plumbing.billing.DefaultInternalBillingApi;
-import com.ning.billing.subscription.api.user.SubscriptionUserApi;
 import com.ning.billing.util.svcapi.junction.BillingInternalApi;
-import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
-
-import com.google.inject.AbstractModule;
+import org.skife.config.ConfigSource;
 
 public class DefaultJunctionModule extends AbstractModule implements JunctionModule {
 
@@ -47,49 +33,18 @@ public class DefaultJunctionModule extends AbstractModule implements JunctionMod
 
     @Override
     protected void configure() {
-        // External
-        installBlockingApi();
-        installAccountUserApi();
         installBillingApi();
-        installSubscriptionUserApi();
-        installBlockingChecker();
-        installJunctionApi();
-
-        // Internal
         installBlockingCalculator();
-        installBlockingStateDao();
     }
 
-    public void installBlockingChecker() {
-        bind(BlockingChecker.class).to(DefaultBlockingChecker.class).asEagerSingleton();
-    }
-
+    @Override
     public void installBillingApi() {
         bind(BillingInternalApi.class).to(DefaultInternalBillingApi.class).asEagerSingleton();
     }
 
-    public void installBlockingStateDao() {
-        bind(BlockingStateDao.class).to(DefaultBlockingStateDao.class).asEagerSingleton();
-    }
-
-    public void installAccountUserApi() {
-        bind(AccountUserApi.class).to(BlockingAccountUserApi.class).asEagerSingleton();
-    }
-
-    public void installSubscriptionUserApi() {
-        bind(SubscriptionUserApi.class).to(BlockingSubscriptionUserApi.class).asEagerSingleton();
-    }
-
-    public void installBlockingApi() {
-        bind(BlockingInternalApi.class).to(DefaultInternalBlockingApi.class).asEagerSingleton();
-    }
 
     public void installBlockingCalculator() {
         bind(BlockingCalculator.class).asEagerSingleton();
     }
 
-    @Override
-    public void installJunctionApi() {
-        bind(JunctionApi.class).to(DefaultJunctionApi.class).asEagerSingleton();
-    }
 }

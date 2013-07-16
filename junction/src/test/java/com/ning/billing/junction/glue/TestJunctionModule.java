@@ -16,6 +16,11 @@
 
 package com.ning.billing.junction.glue;
 
+import com.ning.billing.entitlement.api.svcs.DefaultInternalBlockingApi;
+import com.ning.billing.entitlement.dao.BlockingStateDao;
+import com.ning.billing.entitlement.dao.MockBlockingStateDao;
+import com.ning.billing.mock.glue.MockEntitlementModule;
+import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
 import org.skife.config.ConfigSource;
 
 import com.ning.billing.catalog.MockCatalogModule;
@@ -39,5 +44,19 @@ public class TestJunctionModule extends DefaultJunctionModule {
         install(new MockAccountModule());
         install(new MockCatalogModule());
         install(new MockSubscriptionModule());
+        install(new MockEntitlementModuleForJunction());
+    }
+
+    public class MockEntitlementModuleForJunction extends MockEntitlementModule {
+
+        @Override
+        public void installBlockingApi() {
+            bind(BlockingInternalApi.class).to(DefaultInternalBlockingApi.class).asEagerSingleton();
+        }
+
+        @Override
+        public void installBlockingStateDao() {
+            bind(BlockingStateDao.class).to(MockBlockingStateDao.class).asEagerSingleton();
+        }
     }
 }

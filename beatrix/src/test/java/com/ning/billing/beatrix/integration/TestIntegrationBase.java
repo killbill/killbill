@@ -16,24 +16,13 @@
 
 package com.ning.billing.beatrix.integration;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-
-import javax.annotation.Nullable;
-
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.joda.time.LocalDate;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
-
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
+import com.google.inject.Guice;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.google.inject.Stage;
+import com.google.inject.name.Named;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.AccountService;
@@ -46,16 +35,17 @@ import com.ning.billing.beatrix.glue.BeatrixModule;
 import com.ning.billing.beatrix.lifecycle.Lifecycle;
 import com.ning.billing.beatrix.osgi.SetupBundleWithAssertion;
 import com.ning.billing.beatrix.util.AccountChecker;
-import com.ning.billing.beatrix.util.SubscriptionChecker;
 import com.ning.billing.beatrix.util.InvoiceChecker;
 import com.ning.billing.beatrix.util.PaymentChecker;
 import com.ning.billing.beatrix.util.RefundChecker;
+import com.ning.billing.beatrix.util.SubscriptionChecker;
 import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.entitlement.api.BlockingSubscription;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoicePayment;
@@ -63,7 +53,6 @@ import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.api.InvoiceService;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.invoice.model.InvoicingConfiguration;
-import com.ning.billing.junction.plumbing.api.BlockingSubscription;
 import com.ning.billing.mock.MockAccountBuilder;
 import com.ning.billing.overdue.OverdueUserApi;
 import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
@@ -88,14 +77,22 @@ import com.ning.billing.util.config.OSGIConfig;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
 import com.ning.billing.util.svcsapi.bus.BusService;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 
-import com.google.common.base.Function;
-import com.google.common.base.Joiner;
-import com.google.inject.Guice;
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.google.inject.Stage;
-import com.google.inject.name.Named;
+import javax.annotation.Nullable;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
@@ -354,17 +351,17 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
     protected AccountData getAccountData(final int billingDay) {
         return new MockAccountBuilder().name(UUID.randomUUID().toString().substring(1, 8))
-                                       .firstNameLength(6)
-                                       .email(UUID.randomUUID().toString().substring(1, 8))
-                                       .phone(UUID.randomUUID().toString().substring(1, 8))
-                                       .migrated(false)
-                                       .isNotifiedForInvoices(false)
-                                       .externalKey(UUID.randomUUID().toString().substring(1, 8))
-                                       .billingCycleDayLocal(billingDay)
-                                       .currency(Currency.USD)
-                                       .paymentMethodId(UUID.randomUUID())
-                                       .timeZone(DateTimeZone.UTC)
-                                       .build();
+                .firstNameLength(6)
+                .email(UUID.randomUUID().toString().substring(1, 8))
+                .phone(UUID.randomUUID().toString().substring(1, 8))
+                .migrated(false)
+                .isNotifiedForInvoices(false)
+                .externalKey(UUID.randomUUID().toString().substring(1, 8))
+                .billingCycleDayLocal(billingDay)
+                .currency(Currency.USD)
+                .paymentMethodId(UUID.randomUUID())
+                .timeZone(DateTimeZone.UTC)
+                .build();
     }
 
     protected void addMonthsAndCheckForCompletion(final int nbMonth, final NextEvent... events) {
@@ -497,9 +494,9 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             public Subscription apply(@Nullable final Void dontcare) {
                 try {
                     final Subscription subscription = subscriptionUserApi.createSubscription(bundleId,
-                                                                                            new PlanPhaseSpecifier(productName, productCategory, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, null),
-                                                                                            null,
-                                                                                            callContext);
+                            new PlanPhaseSpecifier(productName, productCategory, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, null),
+                            null,
+                            callContext);
                     assertNotNull(subscription);
                     return subscription;
                 } catch (SubscriptionUserApiException e) {
@@ -555,7 +552,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             public Void apply(@Nullable final Void input) {
                 try {
                     invoiceUserApi.insertCreditForInvoice(account.getId(), invoice.getId(), invoice.getBalance(), invoice.getInvoiceDate(),
-                                                          account.getCurrency(), callContext);
+                            account.getCurrency(), callContext);
                 } catch (InvoiceApiException e) {
                     fail(e.toString());
                 }
@@ -570,7 +567,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             public Void apply(@Nullable final Void input) {
                 try {
                     invoiceUserApi.insertInvoiceItemAdjustment(account.getId(), invoice.getId(), invoice.getInvoiceItems().get(itemNb - 1).getId(),
-                                                               invoice.getInvoiceDate(), callContext);
+                            invoice.getInvoiceDate(), callContext);
                 } catch (InvoiceApiException e) {
                     fail(e.toString());
                 }

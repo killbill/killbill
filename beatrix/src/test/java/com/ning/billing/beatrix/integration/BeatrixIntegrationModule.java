@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Set;
 
+import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
 import org.skife.config.ConfigSource;
 
 import com.ning.billing.GuicyKillbillTestWithEmbeddedDBModule;
@@ -109,6 +110,7 @@ public class BeatrixIntegrationModule extends AbstractModule {
         install(new DefaultAccountModule(configSource));
         install(new CatalogModule(configSource));
         install(new DefaultSubscriptionModule(configSource));
+        install(new DefaultEntitlementModule(configSource));
         install(new DefaultInvoiceModuleWithSwitchRepairLogic(configSource));
         install(new TemplateModule());
         install(new PaymentPluginMockModule(configSource));

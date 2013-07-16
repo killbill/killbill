@@ -70,6 +70,10 @@
         </dependency>
         <dependency>
             <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-entitlement</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing</groupId>
             <artifactId>killbill-internal-api</artifactId>
         </dependency>
         <dependency>

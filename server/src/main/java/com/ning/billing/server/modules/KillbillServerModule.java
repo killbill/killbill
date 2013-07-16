@@ -16,6 +16,7 @@
 
 package com.ning.billing.server.modules;
 
+import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
 import org.skife.config.ConfigSource;
 import org.skife.config.SimplePropertyConfigSource;
 import org.skife.jdbi.v2.DBI;
@@ -130,6 +131,7 @@ public class KillbillServerModule extends AbstractModule {
         install(new DefaultInvoiceModule(configSource));
         install(new TemplateModule());
         install(new DefaultSubscriptionModule(configSource));
+        install(new DefaultEntitlementModule(configSource));
         install(new PaymentModule(configSource));
         install(new BeatrixModule());
         install(new DefaultJunctionModule(configSource));

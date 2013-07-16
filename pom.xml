@@ -33,6 +33,7 @@
         <module>beatrix</module>
         <module>catalog</module>
         <module>subscription</module>
+        <module>entitlement</module>
         <module>invoice</module>
         <module>junction</module>
         <module>overdue</module>

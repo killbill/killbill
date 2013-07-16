@@ -26,6 +26,7 @@ import java.util.Map;
 import javax.inject.Inject;
 import javax.servlet.Servlet;
 
+import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.joda.time.LocalDate;
 import org.skife.config.ConfigSource;
@@ -209,6 +210,7 @@ public class TestJaxrsBase extends KillbillClient {
             install(new InvoiceModuleWithMockSender(configSource));
             install(new TemplateModule());
             install(new DefaultSubscriptionModule(configSource));
+            install(new DefaultEntitlementModule(configSource));
             install(new PaymentMockModule(configSource));
             install(new BeatrixModule());
             install(new DefaultJunctionModule(configSource));
