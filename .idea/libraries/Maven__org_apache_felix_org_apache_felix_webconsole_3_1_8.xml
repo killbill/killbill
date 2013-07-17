@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: org.apache.felix:org.apache.felix.webconsole:3.1.8">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/apache/felix/org.apache.felix.webconsole/3.1.8/org.apache.felix.webconsole-3.1.8.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/org/apache/felix/org.apache.felix.webconsole/3.1.8/org.apache.felix.webconsole-3.1.8-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/apache/felix/org.apache.felix.webconsole/3.1.8/org.apache.felix.webconsole-3.1.8-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

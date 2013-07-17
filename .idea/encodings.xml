@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding" useUTFGuessing="true" native2AsciiForPropertiesFiles="false" defaultCharsetForPropertiesFiles="UTF-8">
+    <file url="file://$PROJECT_DIR$" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/account" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/api" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/beatrix" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/catalog" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/entitlement" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/invoice" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/jaxrs" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/junction" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/osgi" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/osgi-bundles" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/osgi-bundles/bundles" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/osgi-bundles/bundles/jruby" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/osgi-bundles/bundles/logger" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/osgi-bundles/bundles/webconsolebranding" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/osgi-bundles/defaultbundles" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/osgi-bundles/libs" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/osgi-bundles/libs/killbill" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/osgi-bundles/libs/slf4j-osgi" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/osgi-bundles/tests" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/osgi-bundles/tests/beatrix" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/osgi-bundles/tests/payment" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/overdue" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/payment" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/server" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/tenant" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/usage" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/util" charset="UTF-8" />
+    <file url="PROJECT" charset="UTF-8" />
+  </component>
+</project>
+

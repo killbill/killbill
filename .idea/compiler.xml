@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <option name="DEFAULT_COMPILER" value="Javac" />
+    <resourceExtensions />
+    <wildcardResourcePatterns>
+      <entry name="!?*.java" />
+      <entry name="!?*.form" />
+      <entry name="!?*.class" />
+      <entry name="!?*.groovy" />
+      <entry name="!?*.scala" />
+      <entry name="!?*.flex" />
+      <entry name="!?*.kt" />
+      <entry name="!?*.clj" />
+    </wildcardResourcePatterns>
+    <annotationProcessing>
+      <profile default="true" name="Default" enabled="false">
+        <processorPath useClasspath="true" />
+      </profile>
+      <profile default="false" name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="killbill-account" />
+        <module name="killbill-beatrix" />
+        <module name="killbill-catalog" />
+        <module name="killbill-entitlement" />
+        <module name="killbill-internal-api" />
+        <module name="killbill-invoice" />
+        <module name="killbill-jaxrs" />
+        <module name="killbill-junction" />
+        <module name="killbill-osgi" />
+        <module name="killbill-osgi-bundles-jruby" />
+        <module name="killbill-osgi-bundles-lib-killbill" />
+        <module name="killbill-osgi-bundles-lib-slf4j-osgi" />
+        <module name="killbill-osgi-bundles-logger" />
+        <module name="killbill-osgi-bundles-test-beatrix" />
+        <module name="killbill-osgi-bundles-test-payment" />
+        <module name="killbill-osgi-bundles-webconsolebranding" />
+        <module name="killbill-overdue" />
+        <module name="killbill-payment" />
+        <module name="killbill-server" />
+        <module name="killbill-tenant" />
+        <module name="killbill-usage" />
+        <module name="killbill-util" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="killbill" target="1.6" />
+      <module name="killbill-account" target="1.6" />
+      <module name="killbill-beatrix" target="1.6" />
+      <module name="killbill-catalog" target="1.6" />
+      <module name="killbill-entitlement" target="1.6" />
+      <module name="killbill-internal-api" target="1.6" />
+      <module name="killbill-invoice" target="1.6" />
+      <module name="killbill-jaxrs" target="1.6" />
+      <module name="killbill-junction" target="1.6" />
+      <module name="killbill-osgi" target="1.6" />
+      <module name="killbill-osgi-all-bundles" target="1.6" />
+      <module name="killbill-osgi-bundles" target="1.6" />
+      <module name="killbill-osgi-bundles-defaultbundles" target="1.6" />
+      <module name="killbill-osgi-bundles-jruby" target="1.6" />
+      <module name="killbill-osgi-bundles-lib-killbill" target="1.6" />
+      <module name="killbill-osgi-bundles-lib-slf4j-osgi" target="1.6" />
+      <module name="killbill-osgi-bundles-logger" target="1.6" />
+      <module name="killbill-osgi-bundles-test-beatrix" target="1.6" />
+      <module name="killbill-osgi-bundles-test-payment" target="1.6" />
+      <module name="killbill-osgi-bundles-webconsolebranding" target="1.6" />
+      <module name="killbill-osgi-lib-bundles" target="1.6" />
+      <module name="killbill-osgi-test-bundles" target="1.6" />
+      <module name="killbill-overdue" target="1.6" />
+      <module name="killbill-payment" target="1.6" />
+      <module name="killbill-server" target="1.6" />
+      <module name="killbill-tenant" target="1.6" />
+      <module name="killbill-usage" target="1.6" />
+      <module name="killbill-util" target="1.6" />
+    </bytecodeTargetLevel>
+  </component>
+</project>
+

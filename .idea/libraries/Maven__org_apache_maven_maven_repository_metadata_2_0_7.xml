@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: org.apache.maven:maven-repository-metadata:2.0.7">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/apache/maven/maven-repository-metadata/2.0.7/maven-repository-metadata-2.0.7.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/org/apache/maven/maven-repository-metadata/2.0.7/maven-repository-metadata-2.0.7-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/apache/maven/maven-repository-metadata/2.0.7/maven-repository-metadata-2.0.7-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
