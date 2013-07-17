@@ -17,9 +17,9 @@
 package com.ning.billing.overdue.glue;
 
 import com.google.inject.AbstractModule;
-import com.ning.billing.junction.api.Blockable;
-import com.ning.billing.junction.api.BlockingState;
-import com.ning.billing.junction.api.Type;
+import com.ning.billing.entitlement.api.Blockable;
+import com.ning.billing.entitlement.api.BlockingState;
+import com.ning.billing.entitlement.api.Type;
 import com.ning.billing.mock.glue.MockJunctionModule;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;

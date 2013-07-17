@@ -18,7 +18,7 @@ package com.ning.billing.overdue.applicator;
 
 import java.util.UUID;
 
-import com.ning.billing.junction.api.Type;
+import com.ning.billing.entitlement.api.Type;
 import com.ning.billing.util.events.BusEventBase;
 import com.ning.billing.util.events.OverdueChangeInternalEvent;
 

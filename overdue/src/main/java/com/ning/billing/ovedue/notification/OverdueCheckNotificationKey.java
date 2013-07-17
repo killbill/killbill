@@ -18,7 +18,7 @@ package com.ning.billing.ovedue.notification;
 
 import java.util.UUID;
 
-import com.ning.billing.junction.api.Type;
+import com.ning.billing.entitlement.api.Type;
 import com.ning.billing.notificationq.DefaultUUIDNotificationKey;
 
 import com.fasterxml.jackson.annotation.JsonCreator;

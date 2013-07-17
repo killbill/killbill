@@ -27,8 +27,8 @@ import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ning.billing.junction.api.Blockable;
-import com.ning.billing.junction.api.Type;
+import com.ning.billing.entitlement.api.Blockable;
+import com.ning.billing.entitlement.api.Type;
 import com.ning.billing.notificationq.api.NotificationEventWithMetadata;
 import com.ning.billing.notificationq.api.NotificationQueue;
 import com.ning.billing.notificationq.api.NotificationQueueService;

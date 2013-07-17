@@ -26,7 +26,7 @@ import org.joda.time.Period;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.TimeUnit;
-import com.ning.billing.junction.api.Blockable;
+import com.ning.billing.entitlement.api.Blockable;
 import com.ning.billing.overdue.EmailNotification;
 import com.ning.billing.overdue.OverdueApiException;
 import com.ning.billing.overdue.OverdueCancellationPolicicy;

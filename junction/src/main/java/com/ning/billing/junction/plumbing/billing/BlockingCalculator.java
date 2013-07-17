@@ -35,7 +35,7 @@ import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.subscription.api.SubscriptionTransitionType;
 import com.ning.billing.subscription.api.user.Subscription;
-import com.ning.billing.junction.api.BlockingState;
+import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.svcapi.junction.BillingEvent;
 import com.ning.billing.util.svcapi.junction.BillingModeType;

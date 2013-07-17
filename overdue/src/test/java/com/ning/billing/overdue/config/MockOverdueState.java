@@ -16,7 +16,7 @@
 
 package com.ning.billing.overdue.config;
 
-import com.ning.billing.junction.api.Blockable;
+import com.ning.billing.entitlement.api.Blockable;
 
 public class MockOverdueState<T extends Blockable> extends DefaultOverdueState<T> {
 

@@ -24,7 +24,7 @@ import org.joda.time.DateTimeZone;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.MutableAccountData;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.junction.api.BlockingState;
+import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
 

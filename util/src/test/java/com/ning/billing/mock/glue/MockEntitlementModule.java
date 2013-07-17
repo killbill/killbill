@@ -19,7 +19,7 @@ package com.ning.billing.mock.glue;
 import com.google.inject.AbstractModule;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.glue.EntitlementModule;
-import com.ning.billing.junction.api.EntitlementApi;
+import com.ning.billing.entitlement.api.EntitlementApi;
 import com.ning.billing.subscription.api.user.SubscriptionUserApi;
 import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
 import org.mockito.Mockito;

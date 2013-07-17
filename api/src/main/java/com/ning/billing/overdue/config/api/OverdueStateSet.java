@@ -18,7 +18,7 @@ package com.ning.billing.overdue.config.api;
 
 import org.joda.time.LocalDate;
 
-import com.ning.billing.junction.api.Blockable;
+import com.ning.billing.entitlement.api.Blockable;
 import com.ning.billing.overdue.OverdueApiException;
 import com.ning.billing.overdue.OverdueState;
 

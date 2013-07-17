@@ -29,9 +29,9 @@ import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import com.ning.billing.junction.api.Type;
-import com.ning.billing.junction.api.BlockingApiException;
-import com.ning.billing.junction.api.BlockingState;
+import com.ning.billing.entitlement.api.Type;
+import com.ning.billing.entitlement.api.BlockingApiException;
+import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.dao.MapperBase;
 import com.ning.billing.util.entity.dao.EntitySqlDao;

@@ -17,8 +17,8 @@
 package com.ning.billing.entitlement.dao;
 
 import com.ning.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
-import com.ning.billing.junction.api.BlockingState;
-import com.ning.billing.junction.api.Type;
+import com.ning.billing.entitlement.api.BlockingState;
+import com.ning.billing.entitlement.api.Type;
 import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 import org.mockito.Mockito;

@@ -49,7 +49,7 @@ import com.ning.billing.subscription.events.user.ApiEvent;
 import com.ning.billing.subscription.events.user.ApiEventType;
 import com.ning.billing.subscription.exceptions.SubscriptionError;
 import com.ning.billing.subscription.api.SubscriptionTransitionType;
-import com.ning.billing.junction.api.BlockingState;
+import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.util.entity.EntityBase;

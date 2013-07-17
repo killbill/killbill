@@ -20,8 +20,8 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.junction.api.BlockingState;
-import com.ning.billing.junction.api.Type;
+import com.ning.billing.entitlement.api.BlockingState;
+import com.ning.billing.entitlement.api.Type;
 import com.ning.billing.util.entity.EntityBase;
 
 

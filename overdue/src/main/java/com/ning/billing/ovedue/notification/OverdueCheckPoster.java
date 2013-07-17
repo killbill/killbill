@@ -18,7 +18,7 @@ package com.ning.billing.ovedue.notification;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.junction.api.Blockable;
+import com.ning.billing.entitlement.api.Blockable;
 import com.ning.billing.util.callcontext.InternalCallContext;
 
 public interface OverdueCheckPoster {

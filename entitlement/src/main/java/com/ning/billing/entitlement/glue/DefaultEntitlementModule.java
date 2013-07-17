@@ -11,7 +11,7 @@ import com.ning.billing.entitlement.block.DefaultBlockingChecker;
 import com.ning.billing.entitlement.dao.BlockingStateDao;
 import com.ning.billing.entitlement.dao.DefaultBlockingStateDao;
 import com.ning.billing.glue.EntitlementModule;
-import com.ning.billing.junction.api.EntitlementApi;
+import com.ning.billing.entitlement.api.EntitlementApi;
 import com.ning.billing.subscription.api.user.SubscriptionUserApi;
 import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
 import org.skife.config.ConfigSource;
