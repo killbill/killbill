@@ -54,7 +54,7 @@ public interface OSGIConfig extends KillbillConfig {
              "com.ning.billing.subscription.api.transfer," +
              "com.ning.billing.subscription.api.user," +
              "com.ning.billing.invoice.api," +
-             "com.ning.billing.junction.api," +
+             "com.ning.billing.entitlement.api," +
              "com.ning.billing," +
              "com.ning.billing.notification.api," +
              "com.ning.billing.notification.plugin.api," +

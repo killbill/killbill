@@ -143,15 +143,9 @@ public class BlockingCalculator {
                 if (duration.getEnd() != null) { // no second event in the pair means they are still disabled (no re-enable)
                     result.add(createNewReenableEvent(duration.getEnd(), precedingFinalEvent));
                 }
-
             } else if (precedingFinalEvent != null) { // can happen - e.g. phase event
-                //
-                // TODO: check with Jeff that this is going to do something sensible
-                //
                 result.add(createNewReenableEvent(duration.getEnd(), precedingFinalEvent));
-
             }
-
             // N.B. if there's no precedingInitial and no precedingFinal then there's nothing to do
         }
         return result;

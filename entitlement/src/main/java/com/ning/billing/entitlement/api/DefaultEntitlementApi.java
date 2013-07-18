@@ -17,8 +17,6 @@
 package com.ning.billing.entitlement.api;
 
 import com.ning.billing.entitlement.dao.BlockingStateDao;
-import com.ning.billing.entitlement.api.BlockingState;
-import com.ning.billing.entitlement.api.EntitlementApi;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.TenantContext;
 

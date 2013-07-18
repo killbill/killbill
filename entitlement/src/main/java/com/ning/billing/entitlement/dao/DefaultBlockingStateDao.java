@@ -51,7 +51,7 @@ public class DefaultBlockingStateDao implements BlockingStateDao {
 
     @Override
     public BlockingState getBlockingStateFor(final UUID blockableId, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<BlockingState>() {
+        return transactionalSqlDao.execute(  new EntitySqlDaoTransactionWrapper<BlockingState>() {
             @Override
             public BlockingState inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
                 final BlockingStateModelDao model = entitySqlDaoWrapperFactory.become(BlockingStateSqlDao.class).getBlockingStateFor(blockableId, context);
