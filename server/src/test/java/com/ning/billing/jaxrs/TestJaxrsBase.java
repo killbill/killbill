@@ -255,7 +255,7 @@ public class TestJaxrsBase extends KillbillClient {
 
         //mapper.setPropertyNamingStrategy(new PropertyNamingStrategy.LowerCaseWithUnderscoresStrategy());
 
-        busHandler = new TestApiListener(null);
+        busHandler = new TestApiListener(null, getDBTestingHelper().getDBI());
     }
 
     protected void loadConfig() {

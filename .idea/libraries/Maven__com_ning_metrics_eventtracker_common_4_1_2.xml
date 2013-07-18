@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: com.ning:metrics.eventtracker-common:4.1.2">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/ning/metrics.eventtracker-common/4.1.2/metrics.eventtracker-common-4.1.2.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/com/ning/metrics.eventtracker-common/4.1.2/metrics.eventtracker-common-4.1.2-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/ning/metrics.eventtracker-common/4.1.2/metrics.eventtracker-common-4.1.2-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

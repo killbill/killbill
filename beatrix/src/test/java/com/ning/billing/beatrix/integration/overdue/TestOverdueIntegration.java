@@ -727,7 +727,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
             }
         } else {
             // Upgrade - we don't expect a payment here due to the scenario (the account will have some CBA)
-            changeSubscriptionAndCheckForCompletion(subscription, "Assault-Rifle", BillingPeriod.MONTHLY, NextEvent.CHANGE, NextEvent.INVOICE);
+            changeSubscriptionAndCheckForCompletion(subscription, "Assault-Rifle", BillingPeriod.MONTHLY, NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.INVOICE_ADJUSTMENT);
         }
     }
 }

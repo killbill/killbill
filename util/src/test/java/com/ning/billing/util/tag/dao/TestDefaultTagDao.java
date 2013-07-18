@@ -44,7 +44,7 @@ public class TestDefaultTagDao extends UtilTestSuiteWithEmbeddedDB {
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
         super.beforeMethod();
-        eventsListener = new TestApiListener(null);
+        eventsListener = new TestApiListener(null, idbi);
         eventBus.register(eventsListener);
     }
 

@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: org.apache.felix:org.apache.felix.bundlerepository:1.6.6">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/apache/felix/org.apache.felix.bundlerepository/1.6.6/org.apache.felix.bundlerepository-1.6.6.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/org/apache/felix/org.apache.felix.bundlerepository/1.6.6/org.apache.felix.bundlerepository-1.6.6-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/apache/felix/org.apache.felix.bundlerepository/1.6.6/org.apache.felix.bundlerepository-1.6.6-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
