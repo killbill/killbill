@@ -20,6 +20,9 @@ import java.net.URL;
 
 import javax.inject.Inject;
 
+import org.mockito.Mockito;
+import org.skife.jdbi.v2.IDBI;
+import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -91,6 +94,9 @@ public class EntitlementTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     @Inject
     protected EntitlementTestInitializer entitlementTestInitializer;
 
+    @Inject
+    protected IDBI idbi;
+
     protected Catalog catalog;
     protected AccountData accountData;
     protected SubscriptionBundle bundle;
@@ -108,6 +114,9 @@ public class EntitlementTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
         final Injector g = Guice.createInjector(Stage.PRODUCTION, new TestEngineModuleNoDB(configSource));
         g.injectMembers(this);
+
+        // For TestApiListener#isCompleted
+        Mockito.doReturn(0L).when(idbi).withHandle(Mockito.<HandleCallback<Long>>any());
     }
 
     @BeforeMethod(groups = "fast")
