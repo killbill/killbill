@@ -1,0 +1,15 @@
+<component name="libraryTable">
+  <library name="Maven: com.ning.billing.commons:killbill-queue:test-jar:tests:0.1.6-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/ning/billing/commons/killbill-queue/0.1.6-SNAPSHOT/killbill-queue-0.1.6-SNAPSHOT-tests.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/com/ning/billing/commons/killbill-queue/0.1.6-SNAPSHOT/killbill-queue-0.1.6-SNAPSHOT-test-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/ning/billing/commons/killbill-queue/0.1.6-SNAPSHOT/killbill-queue-0.1.6-SNAPSHOT-test-sources.jar!/" />
+      <root url="file://$PROJECT_DIR$/../killbill-commons/queue/src/main/java" />
+      <root url="file://$PROJECT_DIR$/../killbill-commons/queue/src/test/java" />
+    </SOURCES>
+  </library>
+</component>

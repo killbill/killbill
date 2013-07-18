@@ -11,7 +11,6 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="Maven: com.ning.billing:killbill-api:0.3.1" level="project" />
     <orderEntry type="library" name="Maven: com.ning.billing:killbill-api:0.3.2" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.1.0" level="project" />
     <orderEntry type="library" name="Maven: joda-time:joda-time:2.0" level="project" />
@@ -29,7 +28,7 @@
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.5" level="project" />
     <orderEntry type="library" name="Maven: com.mchange:c3p0:0.9.2" level="project" />
     <orderEntry type="library" name="Maven: com.mchange:mchange-commons-java:0.2.3.3" level="project" />
-    <orderEntry type="module" module-name="killbill-internal-api" />
+    <orderEntry type="module" module-name="killbill-api" />
     <orderEntry type="library" name="Maven: com.ning.billing.plugin:killbill-plugin-api-payment:0.2.5" level="project" />
     <orderEntry type="library" name="Maven: org.skife.config:config-magic:0.14" level="project" />
     <orderEntry type="library" name="Maven: com.ning.billing.commons:killbill-clock:0.1.7" level="project" />
