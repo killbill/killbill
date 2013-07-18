@@ -27,6 +27,7 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
+import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -116,7 +117,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     protected static final Logger log = LoggerFactory.getLogger(TestIntegration.class);
     protected static long AT_LEAST_ONE_MONTH_MS = 32L * 24L * 3600L * 1000L;
 
-    protected static final long DELAY = 5000;
+    protected static final long DELAY = 10000;
 
 
     @Inject
@@ -198,6 +199,9 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     @Inject
     protected RecordIdApi recordIdApi;
 
+    @Inject
+    protected IDBI idbi;
+
     @javax.inject.Inject
     protected CacheControllerDispatcher controlCacheDispatcher;
 
@@ -229,7 +233,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     public void beforeClass() throws Exception {
         final Injector g = Guice.createInjector(Stage.PRODUCTION, new BeatrixIntegrationModule(configSource));
         g.injectMembers(this);
-        busHandler = new TestApiListener(this);
+        busHandler = new TestApiListener(this, idbi);
 
         SetupBundleWithAssertion setupTest = new SetupBundleWithAssertion("whatever", osgiConfig, "whatever");
         setupTest.cleanBundleInstallDir();

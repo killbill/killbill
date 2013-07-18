@@ -78,6 +78,7 @@ public class TestIntegrationWithAutoInvoiceOffTag extends TestIntegrationBase {
     @Test(groups = {"slow"}, enabled = true)
     public void testAutoInvoiceOffAccount() throws Exception {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
+        busHandler.pushExpectedEvents(NextEvent.TAG);
         add_AUTO_INVOICING_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
 
         // set next invoice to fail and create network
@@ -104,7 +105,7 @@ public class TestIntegrationWithAutoInvoiceOffTag extends TestIntegrationBase {
         invoices = invoiceApi.getInvoicesByAccount(account.getId(), callContext);
         assertEquals(invoices.size(), 0);
 
-        busHandler.pushExpectedEvents(NextEvent.INVOICE);
+        busHandler.pushExpectedEvents(NextEvent.TAG, NextEvent.INVOICE, NextEvent.PAYMENT);
         remove_AUTO_INVOICING_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
         assertTrue(busHandler.isCompleted(DELAY));
 
@@ -163,7 +164,7 @@ public class TestIntegrationWithAutoInvoiceOffTag extends TestIntegrationBase {
 
         add_AUTO_INVOICING_OFF_Tag(baseSubscription.getBundleId(), ObjectType.BUNDLE);
 
-        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.PHASE, NextEvent.INVOICE);
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
         clock.addDays(40); // DAY 40 out of trial
         assertTrue(busHandler.isCompleted(DELAY));
 

@@ -18,6 +18,7 @@ package com.ning.billing.util;
 
 import javax.inject.Inject;
 
+import org.skife.jdbi.v2.IDBI;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -65,6 +66,8 @@ public abstract class UtilTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
     protected DefaultTagDao tagDao;
     @Inject
     protected AuditDao auditDao;
+    @Inject
+    protected IDBI idbi;
 
     @BeforeClass(groups = "slow")
     public void beforeClass() throws Exception {

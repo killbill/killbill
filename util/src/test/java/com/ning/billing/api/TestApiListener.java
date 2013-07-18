@@ -19,6 +19,7 @@ package com.ning.billing.api;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
+import java.util.concurrent.Callable;
 
 import javax.inject.Inject;
 
@@ -33,11 +34,17 @@ import com.ning.billing.util.events.RepairEntitlementInternalEvent;
 import com.ning.billing.util.events.TagDefinitionInternalEvent;
 import com.ning.billing.util.events.TagInternalEvent;
 import org.joda.time.DateTime;
+import org.skife.jdbi.v2.Handle;
+import org.skife.jdbi.v2.IDBI;
+import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Joiner;
 import com.google.common.eventbus.Subscribe;
+
+import static com.jayway.awaitility.Awaitility.await;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class TestApiListener {
 
@@ -46,17 +53,19 @@ public class TestApiListener {
     private final List<NextEvent> nextExpectedEvent;
 
     private final TestListenerStatus testStatus;
+    private final IDBI idbi;
 
     private boolean nonExpectedMode;
 
     private volatile boolean completed;
 
     @Inject
-    public TestApiListener(final TestListenerStatus testStatus) {
+    public TestApiListener(final TestListenerStatus testStatus, final IDBI idbi) {
         nextExpectedEvent = new Stack<NextEvent>();
         this.completed = false;
         this.testStatus = testStatus;
         this.nonExpectedMode = false;
+        this.idbi = idbi;
     }
 
     public enum NextEvent {
@@ -231,6 +240,24 @@ public class TestApiListener {
                     final DateTime before = new DateTime();
                     wait(500);
                     if (completed) {
+                        // TODO PIERRE Kludge alert!
+                        // When we arrive here, we got notified by the current thread (Bus listener) that we received
+                        // all expected events. But other handlers might still be processing them.
+                        // Since there is only one bus thread, and that the test thread waits for all events to be processed,
+                        // we're guaranteed that all are processed when the bus events table is empty.
+                        await().atMost(10, SECONDS).until(new Callable<Boolean>() {
+                            @Override
+                            public Boolean call() throws Exception {
+                                final long inProcessingBusEvents = idbi.withHandle(new HandleCallback<Long>() {
+                                    @Override
+                                    public Long withHandle(final Handle handle) throws Exception {
+                                        return (Long) handle.select("select count(distinct record_id) count from bus_events").get(0).get("count");
+                                    }
+                                });
+                                log.debug("Events still in processing: " + inProcessingBusEvents);
+                                return inProcessingBusEvents == 0;
+                            }
+                        });
                         return completed;
                     }
                     final DateTime after = new DateTime();
