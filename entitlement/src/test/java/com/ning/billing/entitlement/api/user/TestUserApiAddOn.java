@@ -63,11 +63,11 @@ public class TestUserApiAddOn extends EntitlementTestSuiteWithEmbeddedDB {
             SubscriptionData aoSubscription = testUtil.createSubscription(bundle, aoProduct, aoTerm, aoPriceList);
             assertEquals(aoSubscription.getState(), SubscriptionState.ACTIVE);
 
+            testListener.pushExpectedEvent(NextEvent.CANCEL);
+
             final DateTime now = clock.getUTCNow();
             aoSubscription.cancel(now, callContext);
 
-            testListener.reset();
-            testListener.pushExpectedEvent(NextEvent.CANCEL);
             assertTrue(testListener.isCompleted(5000));
             aoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId(), callContext);
             assertEquals(aoSubscription.getState(), SubscriptionState.CANCELLED);
