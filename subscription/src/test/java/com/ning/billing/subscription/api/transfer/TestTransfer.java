@@ -376,6 +376,8 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
 
         final DateTime transferRequestedDate = clock.getUTCNow();
         testListener.pushExpectedEvent(NextEvent.TRANSFER);
+        testListener.pushExpectedEvent(NextEvent.TRANSFER);
+        testListener.pushExpectedEvent(NextEvent.TRANSFER);
         transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getExternalKey(), transferRequestedDate, true, false, callContext);
         assertTrue(testListener.isCompleted(3000));
 
@@ -421,8 +423,10 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         final UUID finalNewAccountId = UUID.randomUUID();
         final DateTime newTransferRequestedDate = clock.getUTCNow();
         testListener.pushExpectedEvent(NextEvent.TRANSFER);
+        testListener.pushExpectedEvent(NextEvent.TRANSFER);
+        testListener.pushExpectedEvent(NextEvent.TRANSFER);
         transferApi.transferBundle(newBundle.getAccountId(), finalNewAccountId, newBundle.getExternalKey(), newTransferRequestedDate, true, false, callContext);
-        assertTrue(testListener.isCompleted(3000));
+        assertTrue(testListener.isCompleted(5000));
 
     }
 

@@ -729,6 +729,8 @@ public class TestRepairWithAO extends SubscriptionTestSuiteWithEmbeddedDB {
         assertNotNull(currentPhase);
         assertEquals(currentPhase.getPhaseType(), PhaseType.DISCOUNT);
 
+        // One phase for BP an one phase for the new AO (laser-scope)
+        testListener.pushExpectedEvent(NextEvent.PHASE);
         testListener.pushExpectedEvent(NextEvent.PHASE);
 
         it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(60));

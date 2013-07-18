@@ -60,7 +60,10 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.common.eventbus.Subscribe;
 
-public class BeatrixListener {
+public class
+
+
+        BeatrixListener {
 
     private static final Logger log = LoggerFactory.getLogger(BeatrixListener.class);
 

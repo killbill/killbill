@@ -62,11 +62,10 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
             SubscriptionData aoSubscription = testUtil.createSubscription(bundle, aoProduct, aoTerm, aoPriceList);
             assertEquals(aoSubscription.getState(), SubscriptionState.ACTIVE);
 
+            testListener.pushExpectedEvent(NextEvent.CANCEL);
             final DateTime now = clock.getUTCNow();
             aoSubscription.cancel(now, callContext);
 
-            testListener.reset();
-            testListener.pushExpectedEvent(NextEvent.CANCEL);
             assertTrue(testListener.isCompleted(5000));
             aoSubscription = (SubscriptionData) subscriptionApi.getSubscriptionFromId(aoSubscription.getId(), callContext);
             assertEquals(aoSubscription.getState(), SubscriptionState.CANCELLED);
