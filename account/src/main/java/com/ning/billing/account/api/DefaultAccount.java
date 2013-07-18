@@ -25,7 +25,7 @@ import org.joda.time.DateTimeZone;
 
 import com.ning.billing.account.dao.AccountModelDao;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.junction.api.BlockingState;
+import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.util.entity.EntityBase;
 
 import com.google.common.base.Objects;

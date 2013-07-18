@@ -33,9 +33,9 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
-import com.ning.billing.entitlement.api.SubscriptionTransitionType;
-import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.junction.api.BlockingState;
+import com.ning.billing.subscription.api.SubscriptionTransitionType;
+import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.svcapi.junction.BillingEvent;
 import com.ning.billing.util.svcapi.junction.BillingModeType;
@@ -143,15 +143,9 @@ public class BlockingCalculator {
                 if (duration.getEnd() != null) { // no second event in the pair means they are still disabled (no re-enable)
                     result.add(createNewReenableEvent(duration.getEnd(), precedingFinalEvent));
                 }
-
             } else if (precedingFinalEvent != null) { // can happen - e.g. phase event
-                //
-                // TODO: check with Jeff that this is going to do something sensible
-                //
                 result.add(createNewReenableEvent(duration.getEnd(), precedingFinalEvent));
-
             }
-
             // N.B. if there's no precedingInitial and no precedingFinal then there's nothing to do
         }
         return result;

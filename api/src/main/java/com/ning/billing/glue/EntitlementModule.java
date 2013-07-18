@@ -5,7 +5,7 @@
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
@@ -17,17 +17,16 @@
 package com.ning.billing.glue;
 
 public interface EntitlementModule {
+    public void installAccountUserApi();
 
-    public abstract void installEntitlementService();
+    public void installSubscriptionUserApi();
 
-    public abstract void installEntitlementUserApi();
 
-    public abstract void installEntitlementTransferApi();
+    public void installBlockingStateDao();
 
-    public abstract void installEntitlementMigrationApi();
+    public void installBlockingApi();
 
-    public abstract void installEntitlementInternalApi();
+    public void installEntitlementApi();
 
-    public abstract void installEntitlementTimelineApi();
-
+    public void installBlockingChecker();
 }

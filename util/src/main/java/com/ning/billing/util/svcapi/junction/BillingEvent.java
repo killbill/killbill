@@ -26,8 +26,8 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
-import com.ning.billing.entitlement.api.SubscriptionTransitionType;
-import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.subscription.api.SubscriptionTransitionType;
+import com.ning.billing.subscription.api.user.Subscription;
 
 public interface BillingEvent extends Comparable<BillingEvent> {
 

@@ -23,7 +23,7 @@ import org.joda.time.DateTime;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.subscription.api.user.Subscription;
 import com.ning.billing.invoice.InvoiceTestSuiteWithEmbeddedDB;
 import com.ning.billing.invoice.api.DefaultInvoiceService;
 import com.ning.billing.notificationq.api.NotificationQueue;

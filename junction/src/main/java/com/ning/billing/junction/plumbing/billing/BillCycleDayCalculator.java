@@ -35,13 +35,13 @@ import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.Product;
-import com.ning.billing.entitlement.api.SubscriptionTransitionType;
-import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
-import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.SubscriptionTransitionType;
+import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
+import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
-import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
+import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -51,16 +51,16 @@ public class BillCycleDayCalculator {
     private static final Logger log = LoggerFactory.getLogger(BillCycleDayCalculator.class);
 
     private final CatalogService catalogService;
-    private final EntitlementInternalApi entitlementApi;
+    private final SubscriptionInternalApi subscriptionApi;
 
     @Inject
-    public BillCycleDayCalculator(final CatalogService catalogService, final EntitlementInternalApi entitlementApi) {
+    public BillCycleDayCalculator(final CatalogService catalogService, final SubscriptionInternalApi subscriptionApi) {
         this.catalogService = catalogService;
-        this.entitlementApi = entitlementApi;
+        this.subscriptionApi = subscriptionApi;
     }
 
     protected int calculateBcd(final SubscriptionBundle bundle, final Subscription subscription, final EffectiveSubscriptionInternalEvent transition, final Account account, final InternalCallContext context)
-            throws CatalogApiException, AccountApiException, EntitlementUserApiException {
+            throws CatalogApiException, AccountApiException, SubscriptionUserApiException {
 
         final Catalog catalog = catalogService.getFullCatalog();
 
@@ -88,7 +88,7 @@ public class BillCycleDayCalculator {
 
     @VisibleForTesting
     int calculateBcdForAlignment(final BillingAlignment alignment, final SubscriptionBundle bundle, final Subscription subscription,
-                                 final Account account, final Catalog catalog, final Plan plan, final InternalCallContext context) throws AccountApiException, EntitlementUserApiException, CatalogApiException {
+                                 final Account account, final Catalog catalog, final Plan plan, final InternalCallContext context) throws AccountApiException, SubscriptionUserApiException, CatalogApiException {
         int result = 0;
         switch (alignment) {
             case ACCOUNT:
@@ -98,7 +98,7 @@ public class BillCycleDayCalculator {
                 }
                 break;
             case BUNDLE:
-                final Subscription baseSub = entitlementApi.getBaseSubscription(bundle.getId(), context);
+                final Subscription baseSub = subscriptionApi.getBaseSubscription(bundle.getId(), context);
                 Plan basePlan = baseSub.getCurrentPlan();
                 if (basePlan == null) {
                     // The BP has been cancelled
@@ -124,7 +124,7 @@ public class BillCycleDayCalculator {
         // Retrieve the initial phase type for that subscription
         // TODO - this should be extracted somewhere, along with this code above
         final PhaseType initialPhaseType;
-        final List<EffectiveSubscriptionInternalEvent> transitions = entitlementApi.getAllTransitions(subscription, context);
+        final List<EffectiveSubscriptionInternalEvent> transitions = subscriptionApi.getAllTransitions(subscription, context);
         if (transitions.size() == 0) {
             initialPhaseType = null;
         } else {

@@ -27,8 +27,8 @@ import com.ning.billing.beatrix.integration.TestIntegrationBase;
 import com.ning.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.invoice.api.InvoiceItemType;
 
 public class TestBillingAlignment extends TestIntegrationBase {
@@ -49,7 +49,7 @@ public class TestBillingAlignment extends TestIntegrationBase {
         // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
         clock.setDay(new LocalDate(2012, 4, 1));
 
-        final SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
+        final SubscriptionBundle bundle = subscriptionUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
 
         //
         // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE

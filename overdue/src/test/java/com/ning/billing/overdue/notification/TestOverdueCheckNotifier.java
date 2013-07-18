@@ -27,8 +27,8 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.junction.api.Blockable;
+import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.entitlement.api.Blockable;
 import com.ning.billing.ovedue.notification.DefaultOverdueCheckNotifier;
 import com.ning.billing.ovedue.notification.OverdueCheckNotificationKey;
 import com.ning.billing.ovedue.notification.OverdueCheckNotifier;
@@ -79,7 +79,7 @@ public class TestOverdueCheckNotifier extends OverdueTestSuiteWithEmbeddedDB {
         Mockito.when(accountApi.getAccountById(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(account);
 
         final Subscription subscription = Mockito.mock(Subscription.class);
-        Mockito.when(entitlementApi.getSubscriptionFromId(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
+        Mockito.when(subscriptionApi.getSubscriptionFromId(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
 
         mockListener = new OverdueListenerMock(internalCallContextFactory);
         notifierForMock = new DefaultOverdueCheckNotifier(notificationQueueService, overdueProperties, mockListener);

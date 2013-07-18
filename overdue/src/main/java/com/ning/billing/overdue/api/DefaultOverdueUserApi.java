@@ -21,9 +21,9 @@ import org.slf4j.LoggerFactory;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.ObjectType;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.junction.api.Blockable;
-import com.ning.billing.junction.api.Type;
+import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.entitlement.api.Blockable;
+import com.ning.billing.entitlement.api.Type;
 import com.ning.billing.overdue.OverdueApiException;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.OverdueUserApi;

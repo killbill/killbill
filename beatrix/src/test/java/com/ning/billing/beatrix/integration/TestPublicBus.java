@@ -30,9 +30,9 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.entitlement.api.user.SubscriptionData;
+import com.ning.billing.subscription.api.user.SubscriptionData;
 import com.ning.billing.notification.plugin.api.ExtBusEvent;
+import com.ning.billing.subscription.api.user.SubscriptionBundle;
 
 import com.google.common.eventbus.Subscribe;
 
@@ -95,7 +95,7 @@ public class TestPublicBus extends TestIntegrationBase {
 
         // set clock to the initial start date
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
-        final SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever2", callContext);
+        final SubscriptionBundle bundle = subscriptionUserApi.createBundleForAccount(account.getId(), "whatever2", callContext);
 
         String productName = "Shotgun";
         BillingPeriod term = BillingPeriod.MONTHLY;
@@ -107,7 +107,7 @@ public class TestPublicBus extends TestIntegrationBase {
         busHandler.pushExpectedEvent(NextEvent.CREATE);
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
 
-        SubscriptionData subscription = subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
+        SubscriptionData subscription = subscriptionDataFromSubscription(subscriptionUserApi.createSubscription(bundle.getId(),
                                                                                                                new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, callContext));
 
         assertNotNull(subscription);

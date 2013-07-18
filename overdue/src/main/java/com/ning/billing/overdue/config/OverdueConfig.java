@@ -22,7 +22,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.net.URI;
 
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.util.config.catalog.ValidatingConfig;
 import com.ning.billing.util.config.catalog.ValidationErrors;
 

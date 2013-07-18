@@ -133,6 +133,10 @@
         </dependency>
         <dependency>
             <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-subscription</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing</groupId>
             <artifactId>killbill-tenant</artifactId>
         </dependency>
         <dependency>

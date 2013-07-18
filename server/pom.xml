@@ -91,10 +91,6 @@
         </dependency>
         <dependency>
             <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-entitlement</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.ning.billing</groupId>
             <artifactId>killbill-invoice</artifactId>
         </dependency>
         <dependency>
@@ -122,6 +118,10 @@
             <artifactId>killbill-payment</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-subscription</artifactId>
         </dependency>
         <dependency>
             <groupId>com.ning.billing</groupId>

@@ -28,7 +28,7 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 
 import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.junction.api.Blockable;
+import com.ning.billing.entitlement.api.Blockable;
 import com.ning.billing.overdue.config.api.BillingState;
 import com.ning.billing.overdue.config.api.OverdueException;
 import com.ning.billing.util.callcontext.InternalTenantContext;

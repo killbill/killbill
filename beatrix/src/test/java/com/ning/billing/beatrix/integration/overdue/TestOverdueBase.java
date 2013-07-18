@@ -29,7 +29,7 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.beatrix.integration.BeatrixIntegrationModule;
 import com.ning.billing.beatrix.integration.TestIntegrationBase;
 import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.overdue.config.OverdueConfig;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.payment.api.TestPaymentMethodPluginBase;
@@ -66,7 +66,7 @@ public abstract class TestOverdueBase extends TestIntegrationBase {
 
         paymentApi.addPaymentMethod(BeatrixIntegrationModule.NON_OSGI_PLUGIN_NAME, account, true, paymentMethodPlugin, callContext);
 
-        bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
+        bundle = subscriptionUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
 
         productName = "Shotgun";
         term = BillingPeriod.MONTHLY;

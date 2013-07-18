@@ -22,10 +22,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ning.billing.ErrorCode;
-import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.junction.api.Blockable;
-import com.ning.billing.junction.api.Type;
+import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
+import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.entitlement.api.Blockable;
+import com.ning.billing.entitlement.api.Type;
 import com.ning.billing.overdue.applicator.OverdueStateApplicator;
 import com.ning.billing.overdue.calculator.BillingStateCalculatorBundle;
 import com.ning.billing.overdue.config.DefaultOverdueState;
@@ -35,7 +35,7 @@ import com.ning.billing.overdue.config.api.OverdueException;
 import com.ning.billing.overdue.config.api.OverdueStateSet;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.clock.Clock;
-import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
+import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
 import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
 
 import com.google.inject.Inject;
@@ -43,7 +43,7 @@ import com.google.inject.Inject;
 public class OverdueWrapperFactory {
     private static final Logger log = LoggerFactory.getLogger(OverdueWrapperFactory.class);
 
-    private final EntitlementInternalApi entitlementApi;
+    private final SubscriptionInternalApi subscriptionApi;
     private final BillingStateCalculatorBundle billingStateCalcuatorBundle;
     private final OverdueStateApplicator<SubscriptionBundle> overdueStateApplicatorBundle;
     private final BlockingInternalApi api;
@@ -54,10 +54,10 @@ public class OverdueWrapperFactory {
     public OverdueWrapperFactory(final BlockingInternalApi api, final Clock clock,
                                  final BillingStateCalculatorBundle billingStateCalcuatorBundle,
                                  final OverdueStateApplicator<SubscriptionBundle> overdueStateApplicatorBundle,
-                                 final EntitlementInternalApi entitlementApi) {
+                                 final SubscriptionInternalApi subscriptionApi) {
         this.billingStateCalcuatorBundle = billingStateCalcuatorBundle;
         this.overdueStateApplicatorBundle = overdueStateApplicatorBundle;
-        this.entitlementApi = entitlementApi;
+        this.subscriptionApi = subscriptionApi;
         this.api = api;
         this.clock = clock;
     }
@@ -78,7 +78,7 @@ public class OverdueWrapperFactory {
         try {
             switch (type) {
                 case SUBSCRIPTION_BUNDLE: {
-                    final SubscriptionBundle bundle = entitlementApi.getBundleFromId(id, context);
+                    final SubscriptionBundle bundle = subscriptionApi.getBundleFromId(id, context);
                     return (OverdueWrapper<T>) new OverdueWrapper<SubscriptionBundle>(bundle, api, getOverdueStateSetBundle(),
                                                                                       clock, billingStateCalcuatorBundle, overdueStateApplicatorBundle);
                 }
@@ -87,7 +87,7 @@ public class OverdueWrapperFactory {
                 }
 
             }
-        } catch (EntitlementUserApiException e) {
+        } catch (SubscriptionUserApiException e) {
             throw new OverdueException(e);
         }
     }

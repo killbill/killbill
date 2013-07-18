@@ -1,11 +1,11 @@
 /*
- * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
@@ -16,57 +16,56 @@
 
 package com.ning.billing.mock.glue;
 
+import com.google.inject.AbstractModule;
+import com.ning.billing.account.api.AccountUserApi;
+import com.ning.billing.glue.EntitlementModule;
+import com.ning.billing.entitlement.api.EntitlementApi;
+import com.ning.billing.subscription.api.user.SubscriptionUserApi;
+import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
 import org.mockito.Mockito;
 
-import com.ning.billing.entitlement.api.EntitlementService;
-import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi;
-import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
-import com.ning.billing.entitlement.api.transfer.EntitlementTransferApi;
-import com.ning.billing.entitlement.api.user.EntitlementUserApi;
-import com.ning.billing.glue.EntitlementModule;
-import com.ning.billing.util.glue.RealImplementation;
-import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
-
-import com.google.inject.AbstractModule;
-
 public class MockEntitlementModule extends AbstractModule implements EntitlementModule {
-    @Override
-    public void installEntitlementService() {
-        bind(EntitlementService.class).toInstance(Mockito.mock(EntitlementService.class));
-    }
 
-    @Override
-    public void installEntitlementUserApi() {
-        bind(EntitlementUserApi.class).annotatedWith(RealImplementation.class).toInstance(Mockito.mock(EntitlementUserApi.class));
-    }
-
-    @Override
-    public void installEntitlementMigrationApi() {
-        bind(EntitlementMigrationApi.class).toInstance(Mockito.mock(EntitlementMigrationApi.class));
-    }
-
-    @Override
-    public void installEntitlementInternalApi() {
-        bind(EntitlementInternalApi.class).toInstance(Mockito.mock(EntitlementInternalApi.class));
-    }
+    private final AccountUserApi userApi = Mockito.mock(AccountUserApi.class);
+    private final SubscriptionUserApi entUserApi = Mockito.mock(SubscriptionUserApi.class);
+    private final BlockingInternalApi blockingApi = Mockito.mock(BlockingInternalApi.class);
+    private final EntitlementApi entitlementApi = Mockito.mock(EntitlementApi.class);
 
     @Override
     protected void configure() {
-        installEntitlementService();
-        installEntitlementUserApi();
-        installEntitlementMigrationApi();
-        installEntitlementInternalApi();
-        installEntitlementTimelineApi();
+        installAccountUserApi();
+        installSubscriptionUserApi();
+        installBlockingStateDao();
+        installBlockingApi();
+        installEntitlementApi();
     }
 
     @Override
-    public void installEntitlementTimelineApi() {
-        bind(EntitlementTimelineApi.class).toInstance(Mockito.mock(EntitlementTimelineApi.class));
+    public void installAccountUserApi() {
+        bind(AccountUserApi.class).toInstance(userApi);
     }
 
     @Override
-    public void installEntitlementTransferApi() {
-        bind(EntitlementTransferApi.class).toInstance(Mockito.mock(EntitlementTransferApi.class));
-
+    public void installSubscriptionUserApi() {
+        bind(SubscriptionUserApi.class).toInstance(entUserApi);
     }
+
+    @Override
+    public void installBlockingStateDao() {
+    }
+
+    @Override
+    public void installBlockingApi() {
+        bind(BlockingInternalApi.class).toInstance(blockingApi);
+    }
+
+    @Override
+    public void installEntitlementApi() {
+        bind(EntitlementApi.class).toInstance(entitlementApi);
+    }
+
+    @Override
+    public void installBlockingChecker() {
+    }
+
 }

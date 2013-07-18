@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.beatrix.integration;
 
 import java.math.BigDecimal;
@@ -31,14 +32,14 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.util.config.PaymentConfig;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.entitlement.api.user.SubscriptionData;
+import com.ning.billing.subscription.api.user.SubscriptionData;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceUserApi;
+import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.api.TagUserApi;
+import com.ning.billing.util.config.PaymentConfig;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.Tag;
 
@@ -75,7 +76,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
         account = createAccountWithNonOsgiPaymentMethod(getAccountData(25));
         assertNotNull(account);
 
-        bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
+        bundle = subscriptionUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
 
         productName = "Shotgun";
         term = BillingPeriod.MONTHLY;
@@ -89,8 +90,8 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
         busHandler.pushExpectedEvents(NextEvent.CREATE);
-        final SubscriptionData baseSubscription = subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
-                                                                                                                   new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, callContext));
+        final SubscriptionData baseSubscription = subscriptionDataFromSubscription(subscriptionUserApi.createSubscription(bundle.getId(),
+                                                                                                                         new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, callContext));
         assertNotNull(baseSubscription);
         assertTrue(busHandler.isCompleted(DELAY));
 
@@ -137,8 +138,8 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
         busHandler.pushExpectedEvents(NextEvent.CREATE);
-        final SubscriptionData baseSubscription = subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
-                                                                                                                   new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, callContext));
+        final SubscriptionData baseSubscription = subscriptionDataFromSubscription(subscriptionUserApi.createSubscription(bundle.getId(),
+                                                                                                                         new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, callContext));
         assertNotNull(baseSubscription);
         assertTrue(busHandler.isCompleted(DELAY));
 
@@ -203,8 +204,8 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
         busHandler.pushExpectedEvents(NextEvent.CREATE);
-        final SubscriptionData baseSubscription = subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
-                                                                                                                   new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, callContext));
+        final SubscriptionData baseSubscription = subscriptionDataFromSubscription(subscriptionUserApi.createSubscription(bundle.getId(),
+                                                                                                                         new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, callContext));
         assertNotNull(baseSubscription);
         assertTrue(busHandler.isCompleted(DELAY));
 

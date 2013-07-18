@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.beatrix.integration;
 
 import java.util.Collections;
@@ -33,16 +34,16 @@ import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.entitlement.api.SubscriptionTransitionType;
-import com.ning.billing.entitlement.api.timeline.BundleTimeline;
-import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline;
-import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline.DeletedEvent;
-import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline.ExistingEvent;
-import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline.NewEvent;
-import com.ning.billing.entitlement.api.user.SubscriptionState;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.entitlement.api.user.SubscriptionData;
-import com.ning.billing.entitlement.api.user.SubscriptionEvents;
+import com.ning.billing.subscription.api.user.SubscriptionData;
+import com.ning.billing.subscription.api.user.SubscriptionEvents;
+import com.ning.billing.subscription.api.SubscriptionTransitionType;
+import com.ning.billing.subscription.api.timeline.BundleTimeline;
+import com.ning.billing.subscription.api.timeline.SubscriptionTimeline;
+import com.ning.billing.subscription.api.timeline.SubscriptionTimeline.DeletedEvent;
+import com.ning.billing.subscription.api.timeline.SubscriptionTimeline.ExistingEvent;
+import com.ning.billing.subscription.api.timeline.SubscriptionTimeline.NewEvent;
+import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionState;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -70,7 +71,7 @@ public class TestRepairIntegration extends TestIntegrationBase {
 
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(25));
 
-        final SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
+        final SubscriptionBundle bundle = subscriptionUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
 
         final String productName = "Shotgun";
         final BillingPeriod term = BillingPeriod.MONTHLY;
@@ -78,8 +79,8 @@ public class TestRepairIntegration extends TestIntegrationBase {
 
         busHandler.pushExpectedEvent(NextEvent.CREATE);
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
-        final SubscriptionData baseSubscription = subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
-                                                                                                                   new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, callContext));
+        final SubscriptionData baseSubscription = subscriptionDataFromSubscription(subscriptionUserApi.createSubscription(bundle.getId(),
+                                                                                                                         new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, callContext));
         assertNotNull(baseSubscription);
         assertTrue(busHandler.isCompleted(DELAY));
 
@@ -90,15 +91,15 @@ public class TestRepairIntegration extends TestIntegrationBase {
         busHandler.pushExpectedEvent(NextEvent.CREATE);
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
         busHandler.pushExpectedEvent(NextEvent.PAYMENT);
-        final SubscriptionData aoSubscription = subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
-                                                                                                                 new PlanPhaseSpecifier("Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null), null, callContext));
+        final SubscriptionData aoSubscription = subscriptionDataFromSubscription(subscriptionUserApi.createSubscription(bundle.getId(),
+                                                                                                                       new PlanPhaseSpecifier("Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null), null, callContext));
         assertTrue(busHandler.isCompleted(DELAY));
 
         busHandler.pushExpectedEvent(NextEvent.CREATE);
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
         busHandler.pushExpectedEvent(NextEvent.PAYMENT);
-        final SubscriptionData aoSubscription2 = subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
-                                                                                                                  new PlanPhaseSpecifier("Laser-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null), null, callContext));
+        final SubscriptionData aoSubscription2 = subscriptionDataFromSubscription(subscriptionUserApi.createSubscription(bundle.getId(),
+                                                                                                                        new PlanPhaseSpecifier("Laser-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null), null, callContext));
         assertTrue(busHandler.isCompleted(DELAY));
 
 
@@ -150,18 +151,18 @@ public class TestRepairIntegration extends TestIntegrationBase {
             repairApi.repairBundle(bundleRepair, false, callContext);
             assertTrue(busHandler.isCompleted(DELAY));
 
-            final SubscriptionData newAoSubscription = subscriptionDataFromSubscription(entitlementUserApi.getSubscriptionFromId(aoSubscription.getId(), callContext));
+            final SubscriptionData newAoSubscription = subscriptionDataFromSubscription(subscriptionUserApi.getSubscriptionFromId(aoSubscription.getId(), callContext));
             assertEquals(newAoSubscription.getState(), SubscriptionState.CANCELLED);
             assertEquals(newAoSubscription.getAllTransitions().size(), 2);
             assertEquals(newAoSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
 
-            final SubscriptionData newAoSubscription2 = subscriptionDataFromSubscription(entitlementUserApi.getSubscriptionFromId(aoSubscription2.getId(), callContext));
+            final SubscriptionData newAoSubscription2 = subscriptionDataFromSubscription(subscriptionUserApi.getSubscriptionFromId(aoSubscription2.getId(), callContext));
             assertEquals(newAoSubscription2.getState(), SubscriptionState.ACTIVE);
             assertEquals(newAoSubscription2.getAllTransitions().size(), 2);
             assertEquals(newAoSubscription2.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
 
 
-            final SubscriptionData newBaseSubscription = subscriptionDataFromSubscription(entitlementUserApi.getSubscriptionFromId(baseSubscription.getId(), callContext));
+            final SubscriptionData newBaseSubscription = subscriptionDataFromSubscription(subscriptionUserApi.getSubscriptionFromId(baseSubscription.getId(), callContext));
             assertEquals(newBaseSubscription.getState(), SubscriptionState.ACTIVE);
             assertEquals(newBaseSubscription.getAllTransitions().size(), 3);
             assertEquals(newBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);

@@ -16,21 +16,26 @@
 
 package com.ning.billing.overdue.glue;
 
-import java.util.List;
-import java.util.UUID;
-
-import org.joda.time.DateTime;
-
-import com.ning.billing.junction.api.Blockable;
-import com.ning.billing.junction.api.Type;
-import com.ning.billing.junction.api.BlockingState;
+import com.google.inject.AbstractModule;
+import com.ning.billing.entitlement.api.Blockable;
+import com.ning.billing.entitlement.api.BlockingState;
+import com.ning.billing.entitlement.api.Type;
 import com.ning.billing.mock.glue.MockJunctionModule;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
 import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
+import org.joda.time.DateTime;
 
-public class ApplicatorMockJunctionModule extends MockJunctionModule {
+import java.util.List;
+import java.util.UUID;
+
+public class ApplicatorMockJunctionModule extends AbstractModule {
+
+    @Override
+    protected void configure() {
+        installBlockingApi();
+    }
 
     public static class ApplicatorBlockingApi implements BlockingInternalApi {
 
@@ -134,7 +139,6 @@ public class ApplicatorMockJunctionModule extends MockJunctionModule {
 
     }
 
-    @Override
     public void installBlockingApi() {
         bind(BlockingInternalApi.class).toInstance(new ApplicatorBlockingApi());
     }

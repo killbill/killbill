@@ -23,7 +23,7 @@ import org.joda.time.LocalDate;
 import org.joda.time.Period;
 
 import com.ning.billing.ErrorCode;
-import com.ning.billing.junction.api.Blockable;
+import com.ning.billing.entitlement.api.Blockable;
 import com.ning.billing.overdue.OverdueApiException;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.config.api.BillingState;

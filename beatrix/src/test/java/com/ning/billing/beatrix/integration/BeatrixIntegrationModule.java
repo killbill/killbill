@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Set;
 
+import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
 import org.skife.config.ConfigSource;
 
 import com.ning.billing.GuicyKillbillTestWithEmbeddedDBModule;
@@ -32,14 +33,13 @@ import com.ning.billing.beatrix.lifecycle.DefaultLifecycle;
 import com.ning.billing.beatrix.lifecycle.Lifecycle;
 import com.ning.billing.beatrix.util.AccountChecker;
 import com.ning.billing.beatrix.util.AuditChecker;
-import com.ning.billing.beatrix.util.EntitlementChecker;
+import com.ning.billing.beatrix.util.SubscriptionChecker;
 import com.ning.billing.beatrix.util.InvoiceChecker;
 import com.ning.billing.beatrix.util.PaymentChecker;
 import com.ning.billing.beatrix.util.RefundChecker;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.glue.CatalogModule;
-import com.ning.billing.entitlement.api.EntitlementService;
-import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
+import com.ning.billing.subscription.api.SubscriptionService;
 import com.ning.billing.invoice.api.InvoiceService;
 import com.ning.billing.invoice.generator.DefaultInvoiceGeneratorWithSwitchRepairLogic;
 import com.ning.billing.invoice.generator.InvoiceGenerator;
@@ -52,6 +52,7 @@ import com.ning.billing.overdue.OverdueService;
 import com.ning.billing.payment.api.PaymentService;
 import com.ning.billing.payment.glue.PaymentModule;
 import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
+import com.ning.billing.subscription.glue.DefaultSubscriptionModule;
 import com.ning.billing.tenant.glue.TenantModule;
 import com.ning.billing.usage.glue.UsageModule;
 import com.ning.billing.util.config.PaymentConfig;
@@ -108,6 +109,7 @@ public class BeatrixIntegrationModule extends AbstractModule {
         install(new CustomFieldModule());
         install(new DefaultAccountModule(configSource));
         install(new CatalogModule(configSource));
+        install(new DefaultSubscriptionModule(configSource));
         install(new DefaultEntitlementModule(configSource));
         install(new DefaultInvoiceModuleWithSwitchRepairLogic(configSource));
         install(new TemplateModule());
@@ -124,7 +126,7 @@ public class BeatrixIntegrationModule extends AbstractModule {
         install(new BeatrixModuleWithSubsetLifecycle());
 
         bind(AccountChecker.class).asEagerSingleton();
-        bind(EntitlementChecker.class).asEagerSingleton();
+        bind(SubscriptionChecker.class).asEagerSingleton();
         bind(InvoiceChecker.class).asEagerSingleton();
         bind(PaymentChecker.class).asEagerSingleton();
         bind(RefundChecker.class).asEagerSingleton();
@@ -180,7 +182,7 @@ public class BeatrixIntegrationModule extends AbstractModule {
                     .add(injector.getInstance(AccountService.class))
                     .add(injector.getInstance(BusService.class))
                     .add(injector.getInstance(CatalogService.class))
-                    .add(injector.getInstance(EntitlementService.class))
+                    .add(injector.getInstance(SubscriptionService.class))
                     .add(injector.getInstance(InvoiceService.class))
                     .add(injector.getInstance(PaymentService.class))
                     .add(injector.getInstance(OverdueService.class))

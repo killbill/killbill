@@ -36,13 +36,13 @@ import com.ning.billing.beatrix.util.RefundChecker.ExpectedRefundCheck;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.entitlement.api.user.SubscriptionData;
+import com.ning.billing.subscription.api.user.SubscriptionData;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.PaymentStatus;
+import com.ning.billing.subscription.api.user.SubscriptionBundle;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
@@ -103,7 +103,7 @@ public class TestPaymentRefund extends TestIntegrationBase {
 
         // set clock to the initial start date
         clock.setTime(initialCreationDate);
-        final SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
+        final SubscriptionBundle bundle = subscriptionUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
 
         invoiceItemCount = 0;
 

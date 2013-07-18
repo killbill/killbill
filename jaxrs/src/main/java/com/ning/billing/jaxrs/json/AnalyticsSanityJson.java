@@ -28,31 +28,31 @@ import com.google.common.collect.ImmutableList;
 
 public class AnalyticsSanityJson extends JsonBase {
 
-    private final List<String> checkEntitlement;
+    private final List<String> checkSubscription;
     private final List<String> checkInvoice;
     private final List<String> checkPayment;
     private final List<String> checkTag;
     private final List<String> checkConsistency;
 
     @JsonCreator
-    public AnalyticsSanityJson(@JsonProperty("checkEntitlement") final List<String> checkEntitlement,
+    public AnalyticsSanityJson(@JsonProperty("checkSubscription") final List<String> checkSubscription,
                                @JsonProperty("checkInvoice") final List<String> checkInvoice,
                                @JsonProperty("checkPayment") final List<String> checkPayment,
                                @JsonProperty("checkTag") final List<String> checkTag,
                                @JsonProperty("checkConsistency") final List<String> checkConsistency) {
-        this.checkEntitlement = checkEntitlement;
+        this.checkSubscription = checkSubscription;
         this.checkInvoice = checkInvoice;
         this.checkPayment = checkPayment;
         this.checkTag = checkTag;
         this.checkConsistency = checkConsistency;
     }
 
-    public AnalyticsSanityJson(final Collection<UUID> checkEntitlement,
+    public AnalyticsSanityJson(final Collection<UUID> checkSubscription,
                                final Collection<UUID> checkInvoice,
                                final Collection<UUID> checkPayment,
                                final Collection<UUID> checkTag,
                                final Collection<UUID> checkConsistency) {
-        this.checkEntitlement = ImmutableList.<String>copyOf(Collections2.transform(checkEntitlement, new Function<UUID, String>() {
+        this.checkSubscription = ImmutableList.<String>copyOf(Collections2.transform(checkSubscription, new Function<UUID, String>() {
             @Override
             public String apply(final UUID input) {
                 return input.toString();
@@ -84,8 +84,8 @@ public class AnalyticsSanityJson extends JsonBase {
         }));
     }
 
-    public List<String> getCheckEntitlement() {
-        return checkEntitlement;
+    public List<String> getCheckSubscription() {
+        return checkSubscription;
     }
 
     public List<String> getCheckInvoice() {
@@ -108,7 +108,7 @@ public class AnalyticsSanityJson extends JsonBase {
     public String toString() {
         final StringBuilder sb = new StringBuilder();
         sb.append("AnalyticsSanityJson");
-        sb.append("{checkEntitlement=").append(checkEntitlement);
+        sb.append("{checkSubscription=").append(checkSubscription);
         sb.append(", checkInvoice=").append(checkInvoice);
         sb.append(", checkPayment=").append(checkPayment);
         sb.append(", checkTag=").append(checkTag);
@@ -131,7 +131,7 @@ public class AnalyticsSanityJson extends JsonBase {
         if (checkConsistency != null ? !checkConsistency.equals(json.checkConsistency) : json.checkConsistency != null) {
             return false;
         }
-        if (checkEntitlement != null ? !checkEntitlement.equals(json.checkEntitlement) : json.checkEntitlement != null) {
+        if (checkSubscription != null ? !checkSubscription.equals(json.checkSubscription) : json.checkSubscription != null) {
             return false;
         }
         if (checkInvoice != null ? !checkInvoice.equals(json.checkInvoice) : json.checkInvoice != null) {
@@ -149,7 +149,7 @@ public class AnalyticsSanityJson extends JsonBase {
 
     @Override
     public int hashCode() {
-        int result = checkEntitlement != null ? checkEntitlement.hashCode() : 0;
+        int result = checkSubscription != null ? checkSubscription.hashCode() : 0;
         result = 31 * result + (checkInvoice != null ? checkInvoice.hashCode() : 0);
         result = 31 * result + (checkPayment != null ? checkPayment.hashCode() : 0);
         result = 31 * result + (checkTag != null ? checkTag.hashCode() : 0);

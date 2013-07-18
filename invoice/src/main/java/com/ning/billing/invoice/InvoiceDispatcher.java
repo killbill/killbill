@@ -41,7 +41,7 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.bus.api.PersistentBus.EventBusException;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
+import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
@@ -70,7 +70,7 @@ import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.globallocker.GlobalLocker.LockerType;
 import com.ning.billing.util.globallocker.LockFailedException;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
+import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
 import com.ning.billing.util.svcapi.junction.BillingEventSet;
 import com.ning.billing.util.svcapi.junction.BillingInternalApi;
 
@@ -88,7 +88,7 @@ public class InvoiceDispatcher {
     private final InvoiceGenerator generator;
     private final BillingInternalApi billingApi;
     private final AccountInternalApi accountApi;
-    private final EntitlementInternalApi entitlementApi;
+    private final SubscriptionInternalApi subscriptionApi;
     private final InvoiceDao invoiceDao;
     private final InvoiceNotifier invoiceNotifier;
     private final GlobalLocker locker;
@@ -98,7 +98,7 @@ public class InvoiceDispatcher {
     @Inject
     public InvoiceDispatcher(final InvoiceGenerator generator, final AccountInternalApi accountApi,
                              final BillingInternalApi billingApi,
-                             final EntitlementInternalApi entitlementApi,
+                             final SubscriptionInternalApi SubscriptionApi,
                              final InvoiceDao invoiceDao,
                              final InvoiceNotifier invoiceNotifier,
                              final GlobalLocker locker,
@@ -106,7 +106,7 @@ public class InvoiceDispatcher {
                              final Clock clock) {
         this.generator = generator;
         this.billingApi = billingApi;
-        this.entitlementApi = entitlementApi;
+        this.subscriptionApi = SubscriptionApi;
         this.accountApi = accountApi;
         this.invoiceDao = invoiceDao;
         this.invoiceNotifier = invoiceNotifier;
@@ -125,13 +125,13 @@ public class InvoiceDispatcher {
     public void processSubscription(final UUID subscriptionId, final DateTime targetDate, final InternalCallContext context) throws InvoiceApiException {
         try {
             if (subscriptionId == null) {
-                log.error("Failed handling entitlement change.", new InvoiceApiException(ErrorCode.INVOICE_INVALID_TRANSITION));
+                log.error("Failed handling Subscription change.", new InvoiceApiException(ErrorCode.INVOICE_INVALID_TRANSITION));
                 return;
             }
-            final UUID accountId = entitlementApi.getAccountIdFromSubscriptionId(subscriptionId, context);
+            final UUID accountId = subscriptionApi.getAccountIdFromSubscriptionId(subscriptionId, context);
             processAccount(accountId, targetDate, false, context);
-        } catch (EntitlementUserApiException e) {
-            log.error("Failed handling entitlement change.",
+        } catch (SubscriptionUserApiException e) {
+            log.error("Failed handling Subscription change.",
                       new InvoiceApiException(ErrorCode.INVOICE_NO_ACCOUNT_ID_FOR_SUBSCRIPTION_ID, subscriptionId.toString()));
         }
     }
@@ -260,7 +260,7 @@ public class InvoiceDispatcher {
 
             return invoice;
         } catch (AccountApiException e) {
-            log.error("Failed handling entitlement change.", e);
+            log.error("Failed handling Subscription change.", e);
             return null;
         }
     }
@@ -296,7 +296,7 @@ public class InvoiceDispatcher {
         for (final UUID subscriptionId : chargeThroughDates.keySet()) {
             if (subscriptionId != null) {
                 final DateTime chargeThroughDate = chargeThroughDates.get(subscriptionId);
-                entitlementApi.setChargedThroughDate(subscriptionId, chargeThroughDate, context);
+                subscriptionApi.setChargedThroughDate(subscriptionId, chargeThroughDate, context);
             }
         }
     }

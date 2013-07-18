@@ -16,20 +16,7 @@
 
 package com.ning.billing.junction.plumbing.billing;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.SortedSet;
-import java.util.UUID;
-
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.mockito.Mockito;
-import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
+import com.google.common.collect.ImmutableList;
 import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
@@ -42,16 +29,16 @@ import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.PriceListSet;
-import com.ning.billing.entitlement.api.SubscriptionTransitionType;
-import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.SubscriptionState;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.entitlement.dao.MockBlockingStateDao;
 import com.ning.billing.junction.JunctionTestSuiteNoDB;
-import com.ning.billing.junction.api.BlockingState;
-import com.ning.billing.junction.api.Type;
-import com.ning.billing.junction.dao.MockBlockingStateDao;
+import com.ning.billing.entitlement.api.BlockingState;
+import com.ning.billing.entitlement.api.Type;
 import com.ning.billing.mock.MockEffectiveSubscriptionEvent;
 import com.ning.billing.mock.MockSubscription;
+import com.ning.billing.subscription.api.SubscriptionTransitionType;
+import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionState;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
@@ -61,8 +48,19 @@ import com.ning.billing.util.svcapi.junction.BillingModeType;
 import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.dao.MockTagDao;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.mockito.Mockito;
+import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableList;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.SortedSet;
+import java.util.UUID;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
@@ -81,7 +79,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
     private MockCatalog catalog;
 
     @BeforeMethod(groups = "fast")
-    public void beforeMethod() throws Exception  {
+    public void beforeMethod() throws Exception {
         super.beforeMethod();
         final SubscriptionBundle bundle = Mockito.mock(SubscriptionBundle.class);
         Mockito.when(bundle.getId()).thenReturn(bunId);
@@ -93,13 +91,13 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
         subscription = new MockSubscription(subId, bunId, null, subscriptionStartDate, effectiveSubscriptionTransitions);
         final List<Subscription> subscriptions = ImmutableList.<Subscription>of(subscription);
 
-        Mockito.when(entitlementInternalApi.getBundlesForAccount(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(bundles);
-        Mockito.when(entitlementInternalApi.getSubscriptionsForBundle(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscriptions);
-        Mockito.when(entitlementInternalApi.getSubscriptionFromId(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
-        Mockito.when(entitlementInternalApi.getBundleFromId(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(bundle);
-        Mockito.when(entitlementInternalApi.getBaseSubscription(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
-        Mockito.when(entitlementInternalApi.getBillingTransitions(Mockito.<Subscription>any(), Mockito.<InternalTenantContext>any())).thenReturn(effectiveSubscriptionTransitions);
-        Mockito.when(entitlementInternalApi.getAllTransitions(Mockito.<Subscription>any(), Mockito.<InternalTenantContext>any())).thenReturn(effectiveSubscriptionTransitions);
+        Mockito.when(subscriptionInternalApi.getBundlesForAccount(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(bundles);
+        Mockito.when(subscriptionInternalApi.getSubscriptionsForBundle(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscriptions);
+        Mockito.when(subscriptionInternalApi.getSubscriptionFromId(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
+        Mockito.when(subscriptionInternalApi.getBundleFromId(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(bundle);
+        Mockito.when(subscriptionInternalApi.getBaseSubscription(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
+        Mockito.when(subscriptionInternalApi.getBillingTransitions(Mockito.<Subscription>any(), Mockito.<InternalTenantContext>any())).thenReturn(effectiveSubscriptionTransitions);
+        Mockito.when(subscriptionInternalApi.getAllTransitions(Mockito.<Subscription>any(), Mockito.<InternalTenantContext>any())).thenReturn(effectiveSubscriptionTransitions);
 
         catalog = ((MockCatalog) catalogService.getCurrentCatalog());
         // TODO The MockCatalog module returns two different things for full vs current catalog
@@ -282,7 +280,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
                 eventId, subId, bunId, then, now, null, null, null, null, SubscriptionState.ACTIVE,
                 nextPlan.getName(), nextPhase.getName(),
                 nextPriceList.getName(), 1L,
-                SubscriptionTransitionType.CREATE,  1, null, 1L, 2L, null);
+                SubscriptionTransitionType.CREATE, 1, null, 1L, 2L, null);
 
         effectiveSubscriptionTransitions.add(t);
         return now;

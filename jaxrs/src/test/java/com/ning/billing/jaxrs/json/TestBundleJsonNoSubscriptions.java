@@ -23,7 +23,7 @@ import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.jaxrs.JaxrsTestSuiteNoDB;
 
 import static com.ning.billing.jaxrs.JaxrsTestUtils.createAuditLogsJson;

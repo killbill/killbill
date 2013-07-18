@@ -16,7 +16,7 @@
 
 package com.ning.billing.overdue.config;
 
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionBundle;
 
 public class MockOverdueStatesBundle extends OverdueStatesBundle {
 

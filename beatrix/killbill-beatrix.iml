@@ -12,6 +12,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="Maven: com.ning.billing:killbill-api:0.3.1" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: com.google.guava:guava:14.0.1" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: com.google.inject:guice:3.0" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: javax.inject:javax.inject:1" level="project" />
@@ -29,7 +30,7 @@
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.1.0" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.1.0" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-core:2.1.0" level="project" />
-    <orderEntry type="library" name="Maven: com.ning.billing:killbill-api:0.3.1" level="project" />
+    <orderEntry type="library" name="Maven: com.ning.billing:killbill-api:0.3.2" level="project" />
     <orderEntry type="library" name="Maven: joda-time:joda-time:2.0" level="project" />
     <orderEntry type="module" module-name="killbill-internal-api" />
     <orderEntry type="library" name="Maven: com.ning.billing.plugin:killbill-plugin-api-payment:0.2.5" level="project" />
@@ -82,6 +83,7 @@
     <orderEntry type="module" module-name="killbill-payment" />
     <orderEntry type="module" module-name="killbill-payment" scope="TEST" production-on-test="" />
     <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing:killbill-payment:test-jar:tests:0.3.4-SNAPSHOT" level="project" />
+    <orderEntry type="module" module-name="killbill-subscription" />
     <orderEntry type="module" module-name="killbill-tenant" />
     <orderEntry type="library" name="Maven: org.apache.shiro:shiro-core:1.2.1" level="project" />
     <orderEntry type="library" name="Maven: commons-beanutils:commons-beanutils:1.8.3" level="project" />

@@ -52,7 +52,7 @@ public class TestJrubyPaymentPlugin extends TestOSGIBase {
     @Inject
     private OSGIServiceRegistration<PaymentPluginApi> paymentPluginApiOSGIServiceRegistration;
 
-    @BeforeClass(groups = "slow")
+    @BeforeClass(groups = "slow", enabled = true)
     public void beforeClass() throws Exception {
 
 

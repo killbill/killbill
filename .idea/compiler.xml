@@ -41,6 +41,7 @@
         <module name="killbill-overdue" />
         <module name="killbill-payment" />
         <module name="killbill-server" />
+        <module name="killbill-subscription" />
         <module name="killbill-tenant" />
         <module name="killbill-usage" />
         <module name="killbill-util" />
@@ -72,6 +73,7 @@
       <module name="killbill-overdue" target="1.6" />
       <module name="killbill-payment" target="1.6" />
       <module name="killbill-server" target="1.6" />
+      <module name="killbill-subscription" target="1.6" />
       <module name="killbill-tenant" target="1.6" />
       <module name="killbill-usage" target="1.6" />
       <module name="killbill-util" target="1.6" />

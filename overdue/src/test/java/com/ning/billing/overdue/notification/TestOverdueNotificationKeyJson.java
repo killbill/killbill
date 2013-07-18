@@ -21,7 +21,7 @@ import java.util.UUID;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.junction.api.Type;
+import com.ning.billing.entitlement.api.Type;
 import com.ning.billing.ovedue.notification.OverdueCheckNotificationKey;
 import com.ning.billing.util.jackson.ObjectMapper;
 

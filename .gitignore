@@ -2,6 +2,7 @@
 *.ipr
 *.iws
 *.DS_Store
+*.bak
 target
 staging
 overlays

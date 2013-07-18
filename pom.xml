@@ -19,7 +19,7 @@
     <parent>
         <artifactId>killbill-oss-parent</artifactId>
         <groupId>com.ning.billing</groupId>
-        <version>0.3.2</version>
+        <version>0.3.3</version>
     </parent>
     <artifactId>killbill</artifactId>
     <version>0.3.4-SNAPSHOT</version>
@@ -32,6 +32,7 @@
         <module>api</module>
         <module>beatrix</module>
         <module>catalog</module>
+        <module>subscription</module>
         <module>entitlement</module>
         <module>invoice</module>
         <module>junction</module>

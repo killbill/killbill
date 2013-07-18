@@ -27,6 +27,7 @@
       <module fileurl="file://$PROJECT_DIR$/overdue/killbill-overdue.iml" filepath="$PROJECT_DIR$/overdue/killbill-overdue.iml" />
       <module fileurl="file://$PROJECT_DIR$/payment/killbill-payment.iml" filepath="$PROJECT_DIR$/payment/killbill-payment.iml" />
       <module fileurl="file://$PROJECT_DIR$/server/killbill-server.iml" filepath="$PROJECT_DIR$/server/killbill-server.iml" />
+      <module fileurl="file://$PROJECT_DIR$/subscription/killbill-subscription.iml" filepath="$PROJECT_DIR$/subscription/killbill-subscription.iml" />
       <module fileurl="file://$PROJECT_DIR$/tenant/killbill-tenant.iml" filepath="$PROJECT_DIR$/tenant/killbill-tenant.iml" />
       <module fileurl="file://$PROJECT_DIR$/usage/killbill-usage.iml" filepath="$PROJECT_DIR$/usage/killbill-usage.iml" />
       <module fileurl="file://$PROJECT_DIR$/util/killbill-util.iml" filepath="$PROJECT_DIR$/util/killbill-util.iml" />

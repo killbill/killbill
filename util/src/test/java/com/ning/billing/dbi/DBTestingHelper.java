@@ -96,7 +96,7 @@ public abstract class DBTestingHelper {
         initDb("drop table if exists subscriptions; create table subscriptions(record_id int(11) unsigned not null auto_increment, id char(36) not null, " +
                "account_record_id int(11) unsigned not null, tenant_record_id int(11) unsigned default 0, primary key(record_id));");
 
-        for (final String pack : new String[]{"account", "analytics", "beatrix", "entitlement", "util", "payment", "invoice", "junction", "usage", "meter", "tenant"}) {
+        for (final String pack : new String[]{"account", "analytics", "beatrix", "subscription", "util", "payment", "invoice", "entitlement", "usage", "meter", "tenant"}) {
             for (final String ddlFile : new String[]{"ddl.sql", "ddl_test.sql"}) {
                 final String ddl;
                 try {

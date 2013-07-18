@@ -32,7 +32,7 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.subscription.api.user.Subscription;
 import com.ning.billing.jaxrs.JaxrsTestSuiteNoDB;
 
 import static com.ning.billing.jaxrs.JaxrsTestUtils.createAuditLogsJson;

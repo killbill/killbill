@@ -21,7 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.junction.api.Blockable;
+import com.ning.billing.entitlement.api.Blockable;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.applicator.formatters.OverdueEmailFormatterFactory;
 import com.ning.billing.overdue.config.api.BillingState;

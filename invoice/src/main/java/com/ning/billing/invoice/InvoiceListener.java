@@ -22,14 +22,14 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ning.billing.entitlement.api.SubscriptionTransitionType;
+import com.ning.billing.subscription.api.SubscriptionTransitionType;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
-import com.ning.billing.util.events.RepairEntitlementInternalEvent;
+import com.ning.billing.util.events.RepairSubscriptionInternalEvent;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
@@ -47,7 +47,7 @@ public class InvoiceListener {
     }
 
     @Subscribe
-    public void handleRepairEntitlementEvent(final RepairEntitlementInternalEvent event) {
+    public void handleRepairSubscriptionEvent(final RepairSubscriptionInternalEvent event) {
 
         try {
             final InternalCallContext context = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "RepairBundle", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());

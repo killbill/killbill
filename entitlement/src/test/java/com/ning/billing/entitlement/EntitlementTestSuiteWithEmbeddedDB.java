@@ -1,130 +1,62 @@
-/*
- * Copyright 2010-2013 Ning, Inc.
- *
- * Ning licenses this file to you under the Apache License, version 2.0
- * (the "License"); you may not use this file except in compliance with the
- * License.  You may obtain a copy of the License at:
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
-
 package com.ning.billing.entitlement;
 
-import java.net.URL;
-
-import javax.inject.Inject;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.Assert;
+import com.google.inject.Guice;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.ning.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
+import com.ning.billing.bus.api.PersistentBus;
+import com.ning.billing.catalog.api.CatalogService;
+import com.ning.billing.entitlement.dao.BlockingStateDao;
+import com.ning.billing.entitlement.glue.TestEntitlementModuleWithEmbeddedDB;
+import com.ning.billing.subscription.api.user.SubscriptionUserApi;
+import com.ning.billing.util.glue.RealImplementation;
+import com.ning.billing.util.svcapi.account.AccountInternalApi;
+import com.ning.billing.util.svcapi.junction.BillingInternalApi;
+import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
+import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
+import com.ning.billing.util.svcapi.tag.TagInternalApi;
+import com.ning.billing.util.tag.dao.TagDao;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
-import com.ning.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
-import com.ning.billing.account.api.AccountData;
-import com.ning.billing.api.TestApiListener;
-import com.ning.billing.api.TestListenerStatus;
-import com.ning.billing.catalog.api.Catalog;
-import com.ning.billing.catalog.api.CatalogService;
-import com.ning.billing.entitlement.api.EntitlementService;
-import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi;
-import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
-import com.ning.billing.entitlement.api.transfer.EntitlementTransferApi;
-import com.ning.billing.entitlement.api.user.EntitlementUserApi;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.entitlement.api.user.TestEntitlementHelper;
-import com.ning.billing.entitlement.engine.dao.EntitlementDao;
-import com.ning.billing.entitlement.glue.TestEngineModuleWithEmbeddedDB;
-import com.ning.billing.clock.ClockMock;
-import com.ning.billing.util.config.EntitlementConfig;
-import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
-import com.ning.billing.util.svcsapi.bus.BusService;
-
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Stage;
-
 public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWithEmbeddedDB {
 
-    protected static final Logger log = LoggerFactory.getLogger(EntitlementTestSuiteWithEmbeddedDB.class);
 
     @Inject
-    protected EntitlementService entitlementService;
+    protected AccountInternalApi accountInternalApi;
     @Inject
-    protected EntitlementUserApi entitlementApi;
+    protected BlockingInternalApi blockingInternalApi;
     @Inject
-    protected EntitlementInternalApi entitlementInternalApi;
-    @Inject
-    protected EntitlementTransferApi transferApi;
-
-    @Inject
-    protected EntitlementMigrationApi migrationApi;
-    @Inject
-    protected EntitlementTimelineApi repairApi;
-
+    protected BlockingStateDao blockingStateDao;
     @Inject
     protected CatalogService catalogService;
     @Inject
-    protected EntitlementConfig config;
+    @RealImplementation
+    protected SubscriptionUserApi subscriptionUserApi;
     @Inject
-    protected EntitlementDao dao;
+    protected SubscriptionInternalApi subscriptionInternalApi;
     @Inject
-    protected ClockMock clock;
+    protected PersistentBus bus;
     @Inject
-    protected BusService busService;
-
+    protected TagDao tagDao;
     @Inject
-    protected TestEntitlementHelper testUtil;
-    @Inject
-    protected TestApiListener testListener;
-    @Inject
-    protected TestListenerStatus testListenerStatus;
-    @Inject
-    protected EntitlementTestInitializer entitlementTestInitializer;
-
-    protected Catalog catalog;
-    protected AccountData accountData;
-    protected SubscriptionBundle bundle;
-
-    private void loadSystemPropertiesFromClasspath(final String resource) {
-        final URL url = DefaultEntitlementTestInitializer.class.getResource(resource);
-        Assert.assertNotNull(url);
-
-        configSource.merge(url);
-    }
+    protected TagInternalApi tagInternalApi;
 
     @BeforeClass(groups = "slow")
-    public void beforeClass() throws Exception {
-        loadSystemPropertiesFromClasspath("/entitlement.properties");
-
-        final Injector g = Guice.createInjector(Stage.PRODUCTION, new TestEngineModuleWithEmbeddedDB(configSource));
-        g.injectMembers(this);
+    protected void beforeClass() throws Exception {
+        final Injector injector = Guice.createInjector(new TestEntitlementModuleWithEmbeddedDB(configSource));
+        injector.injectMembers(this);
     }
 
-    @Override
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
         super.beforeMethod();
-        entitlementTestInitializer.startTestFamework(testListener, testListenerStatus, clock, busService, entitlementService);
-
-        this.catalog = entitlementTestInitializer.initCatalog(catalogService);
-        this.accountData = entitlementTestInitializer.initAccountData();
-        this.bundle = entitlementTestInitializer.initBundle(entitlementApi, callContext);
+        bus.start();
     }
 
     @AfterMethod(groups = "slow")
-    public void afterMethod() throws Exception {
-        entitlementTestInitializer.stopTestFramework(testListener, busService, entitlementService);
-    }
-
-    protected void assertListenerStatus() {
-        ((EntitlementTestListenerStatus) testListenerStatus).assertListenerStatus();
+    public void afterMethod() {
+        bus.stop();
     }
 }

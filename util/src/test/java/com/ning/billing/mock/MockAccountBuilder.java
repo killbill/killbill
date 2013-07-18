@@ -25,7 +25,7 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.MutableAccountData;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.junction.api.BlockingState;
+import com.ning.billing.entitlement.api.BlockingState;
 
 public class MockAccountBuilder {
 

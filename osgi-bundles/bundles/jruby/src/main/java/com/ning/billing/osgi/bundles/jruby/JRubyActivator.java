@@ -171,7 +171,7 @@ public class JRubyActivator extends KillbillActivatorBase {
         // See killbill/plugin.rb for the naming convention magic
         killbillUserApis.put("account_user_api", killbillAPI.getAccountUserApi());
         killbillUserApis.put("catalog_user_api", killbillAPI.getCatalogUserApi());
-        killbillUserApis.put("entitlement_user_api", killbillAPI.getEntitlementUserApi());
+        killbillUserApis.put("subscription_user_api", killbillAPI.getSubscriptionUserApi());
         killbillUserApis.put("invoice_payment_api", killbillAPI.getInvoicePaymentApi());
         killbillUserApis.put("invoice_user_api", killbillAPI.getInvoiceUserApi());
         killbillUserApis.put("overdue_user_api", killbillAPI.getOverdueUserApi());

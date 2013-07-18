@@ -39,7 +39,7 @@ import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
+import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
 import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
 import com.ning.billing.util.svcapi.junction.BillingInternalApi;
 import com.ning.billing.util.svcsapi.bus.BusService;
@@ -69,7 +69,7 @@ public abstract class InvoiceTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     @Inject
     protected AccountInternalApi accountApi;
     @Inject
-    protected EntitlementInternalApi entitlementApi;
+    protected SubscriptionInternalApi subscriptionApi;
     @Inject
     protected BusService busService;
     @Inject

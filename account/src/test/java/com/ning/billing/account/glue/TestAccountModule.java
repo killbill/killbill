@@ -18,7 +18,7 @@ package com.ning.billing.account.glue;
 
 import org.skife.config.ConfigSource;
 
-import com.ning.billing.mock.glue.MockEntitlementModule;
+import com.ning.billing.mock.glue.MockSubscriptionModule;
 import com.ning.billing.util.glue.AuditModule;
 import com.ning.billing.util.glue.CacheModule;
 import com.ning.billing.util.glue.CallContextModule;
@@ -40,7 +40,7 @@ public class TestAccountModule extends DefaultAccountModule {
         install(new CallContextModule());
         install(new CustomFieldModule());
         // Needed for Audit
-        install(new MockEntitlementModule());
+        install(new MockSubscriptionModule());
         install(new TagStoreModule());
     }
 }

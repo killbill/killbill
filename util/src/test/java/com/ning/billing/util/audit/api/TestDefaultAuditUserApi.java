@@ -28,7 +28,7 @@ import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 import com.ning.billing.ObjectType;
-import com.ning.billing.entitlement.api.timeline.BundleTimeline;
+import com.ning.billing.subscription.api.timeline.BundleTimeline;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;

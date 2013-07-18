@@ -16,6 +16,30 @@
 
 package com.ning.billing.junction.plumbing.billing;
 
+import com.ning.billing.account.api.Account;
+import com.ning.billing.catalog.MockPlan;
+import com.ning.billing.catalog.MockPlanPhase;
+import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.entitlement.dao.MockBlockingStateDao;
+import com.ning.billing.junction.JunctionTestSuiteNoDB;
+import com.ning.billing.entitlement.api.BlockingState;
+import com.ning.billing.entitlement.api.Type;
+import com.ning.billing.junction.plumbing.billing.BlockingCalculator.DisabledDuration;
+import com.ning.billing.subscription.api.SubscriptionTransitionType;
+import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.util.svcapi.junction.BillingEvent;
+import com.ning.billing.util.svcapi.junction.BillingModeType;
+import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
+import org.mockito.Mockito;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Hashtable;
@@ -24,31 +48,6 @@ import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
-
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.joda.time.LocalDate;
-import org.mockito.Mockito;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
-import com.ning.billing.account.api.Account;
-import com.ning.billing.catalog.MockPlan;
-import com.ning.billing.catalog.MockPlanPhase;
-import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.catalog.api.Plan;
-import com.ning.billing.catalog.api.PlanPhase;
-import com.ning.billing.entitlement.api.SubscriptionTransitionType;
-import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.junction.JunctionTestSuiteNoDB;
-import com.ning.billing.junction.api.Type;
-import com.ning.billing.junction.api.BlockingState;
-import com.ning.billing.junction.dao.MockBlockingStateDao;
-import com.ning.billing.junction.plumbing.billing.BlockingCalculator.DisabledDuration;
-import com.ning.billing.util.svcapi.junction.BillingEvent;
-import com.ning.billing.util.svcapi.junction.BillingModeType;
-import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -539,9 +538,9 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         final DateTimeZone tz = DateTimeZone.UTC;
 
         return new DefaultBillingEvent(account, subscription, effectiveDate, plan, planPhase,
-                                       fixedPrice, recurringPrice, currency,
-                                       billingPeriod, billCycleDay, billingModeType,
-                                       description, totalOrdering, type, tz);
+                fixedPrice, recurringPrice, currency,
+                billingPeriod, billCycleDay, billingModeType,
+                description, totalOrdering, type, tz);
     }
 
     @Test(groups = "fast")
@@ -611,7 +610,7 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
 
         public MockBillingEvent() {
             super(account, subscription1, clock.getUTCNow(), null, null, BigDecimal.ZERO, BigDecimal.TEN, Currency.USD, BillingPeriod.ANNUAL,
-                  4, BillingModeType.IN_ADVANCE, "", 3L, SubscriptionTransitionType.CREATE, DateTimeZone.UTC);
+                    4, BillingModeType.IN_ADVANCE, "", 3L, SubscriptionTransitionType.CREATE, DateTimeZone.UTC);
         }
     }
 
