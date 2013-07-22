@@ -19,7 +19,7 @@
     <orderEntry type="library" name="Maven: org.osgi:org.osgi.compendium:4.3.1" level="project" />
     <orderEntry type="library" name="Maven: org.slf4j:osgi-over-slf4j:1.7.5" level="project" />
     <orderEntry type="module" module-name="killbill-util" production-on-test="" />
-    <orderEntry type="library" name="Maven: com.ning.billing:killbill-util:test-jar:tests:0.3.4-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: com.ning.billing:killbill-util:test-jar:tests:0.3.6-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.1.0" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-core:2.1.0" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.1.0" level="project" />
@@ -28,7 +28,7 @@
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.5" level="project" />
     <orderEntry type="library" name="Maven: com.mchange:c3p0:0.9.2" level="project" />
     <orderEntry type="library" name="Maven: com.mchange:mchange-commons-java:0.2.3.3" level="project" />
-    <orderEntry type="module" module-name="killbill-api" />
+    <orderEntry type="module" module-name="killbill-internal-api" />
     <orderEntry type="library" name="Maven: com.ning.billing.plugin:killbill-plugin-api-payment:0.2.5" level="project" />
     <orderEntry type="library" name="Maven: org.skife.config:config-magic:0.14" level="project" />
     <orderEntry type="library" name="Maven: com.ning.billing.commons:killbill-clock:0.1.7" level="project" />

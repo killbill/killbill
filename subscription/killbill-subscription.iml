@@ -27,8 +27,8 @@
     <orderEntry type="library" name="Maven: com.ning.billing:killbill-api:0.3.2" level="project" />
     <orderEntry type="library" name="Maven: joda-time:joda-time:2.0" level="project" />
     <orderEntry type="module" module-name="killbill-catalog" scope="TEST" production-on-test="" />
-    <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing:killbill-catalog:test-jar:tests:0.3.4-SNAPSHOT" level="project" />
-    <orderEntry type="module" module-name="killbill-api" />
+    <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing:killbill-catalog:test-jar:tests:0.3.6-SNAPSHOT" level="project" />
+    <orderEntry type="module" module-name="killbill-internal-api" />
     <orderEntry type="library" name="Maven: com.ning.billing.plugin:killbill-plugin-api-payment:0.2.5" level="project" />
     <orderEntry type="library" name="Maven: org.skife.config:config-magic:0.14" level="project" />
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.5" level="project" />
@@ -56,7 +56,7 @@
     <orderEntry type="library" name="Maven: javax.activation:activation:1.1" level="project" />
     <orderEntry type="module" module-name="killbill-catalog" scope="TEST" />
     <orderEntry type="module" module-name="killbill-util" scope="TEST" production-on-test="" />
-    <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing:killbill-util:test-jar:tests:0.3.4-SNAPSHOT" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing:killbill-util:test-jar:tests:0.3.6-SNAPSHOT" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing.commons:killbill-clock:test-jar:tests:0.1.7" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing.commons:killbill-queue:test-jar:tests:0.1.7" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: mysql:mysql-connector-mxj:5.0.12" level="project" />
