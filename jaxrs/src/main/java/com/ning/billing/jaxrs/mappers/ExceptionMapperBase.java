@@ -24,18 +24,23 @@ import javax.ws.rs.core.UriInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ning.billing.jaxrs.json.BillingExceptionJson;
+import com.ning.billing.util.jackson.ObjectMapper;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 public abstract class ExceptionMapperBase {
 
     private static final Logger log = LoggerFactory.getLogger(ExceptionMapperBase.class);
+    private static final ObjectMapper mapper = new ObjectMapper();
 
     protected Response buildConflictingRequestResponse(final Exception e, final UriInfo uriInfo) {
         // Log the full stacktrace
         log.warn("Conflicting request", e);
-        return buildConflictingRequestResponse(e.toString(), uriInfo);
+        return buildConflictingRequestResponse(exceptionToString(e), uriInfo);
     }
 
-    protected Response buildConflictingRequestResponse(final String error, final UriInfo uriInfo) {
-        log.warn("Conflicting request for {}: {}", uriInfo.getRequestUri(), error);
+    private Response buildConflictingRequestResponse(final String error, final UriInfo uriInfo) {
         return Response.status(Status.CONFLICT)
                        .entity(error)
                        .type(MediaType.TEXT_PLAIN_TYPE)
@@ -45,11 +50,10 @@ public abstract class ExceptionMapperBase {
     protected Response buildNotFoundResponse(final Exception e, final UriInfo uriInfo) {
         // Log the full stacktrace
         log.info("Not found", e);
-        return buildNotFoundResponse(e.toString(), uriInfo);
+        return buildNotFoundResponse(exceptionToString(e), uriInfo);
     }
 
-    protected Response buildNotFoundResponse(final String error, final UriInfo uriInfo) {
-        log.info("Not found for {}: {}", uriInfo.getRequestUri(), error);
+    private Response buildNotFoundResponse(final String error, final UriInfo uriInfo) {
         return Response.status(Status.NOT_FOUND)
                        .entity(error)
                        .type(MediaType.TEXT_PLAIN_TYPE)
@@ -59,11 +63,10 @@ public abstract class ExceptionMapperBase {
     protected Response buildBadRequestResponse(final Exception e, final UriInfo uriInfo) {
         // Log the full stacktrace
         log.warn("Bad request", e);
-        return buildBadRequestResponse(e.toString(), uriInfo);
+        return buildBadRequestResponse(exceptionToString(e), uriInfo);
     }
 
-    protected Response buildBadRequestResponse(final String error, final UriInfo uriInfo) {
-        log.warn("Bad request for {}: {}", uriInfo.getRequestUri(), error);
+    private Response buildBadRequestResponse(final String error, final UriInfo uriInfo) {
         return Response.status(Status.BAD_REQUEST)
                        .entity(error)
                        .type(MediaType.TEXT_PLAIN_TYPE)
@@ -73,14 +76,22 @@ public abstract class ExceptionMapperBase {
     protected Response buildInternalErrorResponse(final Exception e, final UriInfo uriInfo) {
         // Log the full stacktrace
         log.warn("Internal error", e);
-        return buildInternalErrorResponse(e.toString(), uriInfo);
+        return buildInternalErrorResponse(exceptionToString(e), uriInfo);
     }
 
-    protected Response buildInternalErrorResponse(final String error, final UriInfo uriInfo) {
-        log.warn("Internal error for {}: {}", uriInfo.getRequestUri(), error);
+    private Response buildInternalErrorResponse(final String error, final UriInfo uriInfo) {
         return Response.status(Status.INTERNAL_SERVER_ERROR)
                        .entity(error)
                        .type(MediaType.TEXT_PLAIN_TYPE)
                        .build();
+    }
+
+    private String exceptionToString(final Exception e) {
+        try {
+            return mapper.writeValueAsString(new BillingExceptionJson(e));
+        } catch (JsonProcessingException jsonException) {
+            log.warn("Unable to serialize exception", jsonException);
+        }
+        return e.toString();
     }
 }
