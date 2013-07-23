@@ -146,7 +146,7 @@ public class TestPaymentOSGIWithTestPaymentBundle extends TestOSGIBase {
         //
         // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
         //
-        final Subscription bpSubscription = createSubscriptionAndCheckForCompletion(bundle.getId(), "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
+        final Subscription bpSubscription = createBaseEntitlementAndCheckForCompletion(bundle.getId(), "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
         //
         // ADD ADD_ON ON THE SAME DAY TO TRIGGER PAYMENT
         //
@@ -164,7 +164,7 @@ public class TestPaymentOSGIWithTestPaymentBundle extends TestOSGIBase {
             paymentPluginApi.setPaymentRuntimeExceptionOnNextCalls(expectedRuntimeException);
         }
 
-        createSubscriptionAndCheckForCompletion(bundle.getId(), "Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, expectedEvents.toArray(new NextEvent[expectedEvents.size()]));
+        createBaseEntitlementAndCheckForCompletion(bundle.getId(), "Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, expectedEvents.toArray(new NextEvent[expectedEvents.size()]));
         Invoice invoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("399.95")));
 
         if (expectedException == null && expectedRuntimeException == null) {

@@ -47,6 +47,7 @@ import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.api.MutableAccountData;
+import com.ning.billing.entitlement.api.EntitlementApi;
 import com.ning.billing.subscription.api.timeline.BundleTimeline;
 import com.ning.billing.subscription.api.timeline.SubscriptionRepairException;
 import com.ning.billing.subscription.api.timeline.SubscriptionTimelineApi;
@@ -106,7 +107,7 @@ public class AccountResource extends JaxRsResourceBase {
     private static final String ID_PARAM_NAME = "accountId";
 
     private final AccountUserApi accountApi;
-    private final SubscriptionUserApi subscriptionApi;
+    private final EntitlementApi entitlementApi;
     private final SubscriptionTimelineApi timelineApi;
     private final InvoiceUserApi invoiceApi;
     private final InvoicePaymentApi invoicePaymentApi;
@@ -115,7 +116,7 @@ public class AccountResource extends JaxRsResourceBase {
     @Inject
     public AccountResource(final JaxrsUriBuilder uriBuilder,
                            final AccountUserApi accountApi,
-                           final SubscriptionUserApi subscriptionApi,
+                           final EntitlementApi entitlementApi,
                            final InvoiceUserApi invoiceApi,
                            final InvoicePaymentApi invoicePaymentApi,
                            final PaymentApi paymentApi,
@@ -126,7 +127,7 @@ public class AccountResource extends JaxRsResourceBase {
                            final Context context) {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, context);
         this.accountApi = accountApi;
-        this.subscriptionApi = subscriptionApi;
+        this.entitlementApi = entitlementApi;
         this.invoiceApi = invoiceApi;
         this.invoicePaymentApi = invoicePaymentApi;
         this.paymentApi = paymentApi;
@@ -145,6 +146,10 @@ public class AccountResource extends JaxRsResourceBase {
         return getAccount(account, accountWithBalance, accountWithBalanceAndCBA, tenantContext);
     }
 
+    /*
+
+    STEPH_ENT
+
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + BUNDLES)
     @Produces(APPLICATION_JSON)
@@ -157,11 +162,11 @@ public class AccountResource extends JaxRsResourceBase {
         accountApi.getAccountById(uuid, tenantContext);
 
         if (externalKey != null) {
-            final SubscriptionBundle bundle = subscriptionApi.getBundleForAccountAndKey(uuid, externalKey, tenantContext);
+            final SubscriptionBundle bundle = entitlementApi.getBundleForAccountAndKey(uuid, externalKey, tenantContext);
             final BundleJsonNoSubscriptions json = new BundleJsonNoSubscriptions(bundle);
             return Response.status(Status.OK).entity(json).build();
         } else {
-            final List<SubscriptionBundle> bundles = subscriptionApi.getBundlesForAccount(uuid, tenantContext);
+            final List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(uuid, tenantContext);
             final Collection<BundleJsonNoSubscriptions> result = Collections2.transform(bundles, new Function<SubscriptionBundle, BundleJsonNoSubscriptions>() {
                 @Override
                 public BundleJsonNoSubscriptions apply(final SubscriptionBundle input) {
@@ -171,6 +176,7 @@ public class AccountResource extends JaxRsResourceBase {
             return Response.status(Status.OK).entity(result).build();
         }
     }
+    */
 
     @GET
     @Produces(APPLICATION_JSON)
@@ -280,8 +286,9 @@ public class AccountResource extends JaxRsResourceBase {
             chargebacksByPayment.put(chargeback.getPaymentId(), chargeback);
         }
 
+        /*
         // Get the bundles
-        final List<SubscriptionBundle> bundles = subscriptionApi.getBundlesForAccount(account.getId(), tenantContext);
+        final List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(account.getId(), tenantContext);
         final List<BundleTimeline> bundlesTimeline = new LinkedList<BundleTimeline>();
         for (final SubscriptionBundle bundle : bundles) {
             bundlesTimeline.add(timelineApi.getBundleTimeline(bundle.getId(), tenantContext));
@@ -292,6 +299,9 @@ public class AccountResource extends JaxRsResourceBase {
                                                                  refundsByPayment, chargebacksByPayment,
                                                                  invoicesAuditLogs, paymentsAuditLogs, refundsAuditLogs,
                                                                  chargebacksAuditLogs, bundlesAuditLogs);
+        // STEPH_ENT
+        */
+        final AccountTimelineJson json = null;
         return Response.status(Status.OK).entity(json).build();
     }
 

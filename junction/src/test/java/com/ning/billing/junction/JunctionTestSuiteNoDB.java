@@ -49,12 +49,7 @@ public abstract class JunctionTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     @Inject
     protected BlockingCalculator blockingCalculator;
     @Inject
-    protected BlockingInternalApi blockingInternalApi;
-    @Inject
     protected CatalogService catalogService;
-    @Inject
-    @RealImplementation
-    protected SubscriptionUserApi subscriptionUserApi;
     @Inject
     protected SubscriptionInternalApi subscriptionInternalApi;
     @Inject

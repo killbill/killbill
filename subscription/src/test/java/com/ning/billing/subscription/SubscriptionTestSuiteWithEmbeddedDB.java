@@ -58,8 +58,6 @@ public class SubscriptionTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteW
     @Inject
     protected SubscriptionService subscriptionService;
     @Inject
-    protected SubscriptionUserApi subscriptionApi;
-    @Inject
     protected SubscriptionInternalApi subscriptionInternalApi;
     @Inject
     protected SubscriptionTransferApi transferApi;
@@ -116,7 +114,7 @@ public class SubscriptionTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteW
 
         this.catalog = subscriptionTestInitializer.initCatalog(catalogService);
         this.accountData = subscriptionTestInitializer.initAccountData();
-        this.bundle = subscriptionTestInitializer.initBundle(subscriptionApi, callContext);
+        this.bundle = subscriptionTestInitializer.initBundle(subscriptionInternalApi, callContext);
     }
 
     @AfterMethod(groups = "slow")

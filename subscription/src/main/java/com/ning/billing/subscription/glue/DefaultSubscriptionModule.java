@@ -28,21 +28,18 @@ import com.ning.billing.subscription.api.migration.DefaultSubscriptionMigrationA
 import com.ning.billing.subscription.api.migration.SubscriptionMigrationApi;
 import com.ning.billing.subscription.api.svcs.DefaultSubscriptionInternalApi;
 import com.ning.billing.subscription.api.timeline.DefaultSubscriptionTimelineApi;
-import com.ning.billing.subscription.api.timeline.RepairSubscriptionLifecycleDao;
 import com.ning.billing.subscription.api.timeline.RepairSubscriptionApiService;
+import com.ning.billing.subscription.api.timeline.RepairSubscriptionLifecycleDao;
+import com.ning.billing.subscription.api.timeline.SubscriptionTimelineApi;
 import com.ning.billing.subscription.api.transfer.DefaultSubscriptionTransferApi;
-import com.ning.billing.subscription.api.user.DefaultSubscriptionUserApi;
+import com.ning.billing.subscription.api.transfer.SubscriptionTransferApi;
 import com.ning.billing.subscription.api.user.DefaultSubscriptionApiService;
 import com.ning.billing.subscription.engine.addon.AddonUtils;
 import com.ning.billing.subscription.engine.core.DefaultSubscriptionService;
 import com.ning.billing.subscription.engine.dao.DefaultSubscriptionDao;
-import com.ning.billing.subscription.engine.dao.SubscriptionDao;
 import com.ning.billing.subscription.engine.dao.RepairSubscriptionDao;
-import com.ning.billing.subscription.api.timeline.SubscriptionTimelineApi;
-import com.ning.billing.subscription.api.transfer.SubscriptionTransferApi;
-import com.ning.billing.subscription.api.user.SubscriptionUserApi;
+import com.ning.billing.subscription.engine.dao.SubscriptionDao;
 import com.ning.billing.util.config.SubscriptionConfig;
-import com.ning.billing.util.glue.RealImplementation;
 import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
 
 import com.google.inject.AbstractModule;
@@ -84,7 +81,6 @@ public class DefaultSubscriptionModule extends AbstractModule implements Subscri
         installSubscriptionTimelineApi();
         installSubscriptionMigrationApi();
         installSubscriptionInternalApi();
-        installSubscriptionUserApi();
         installSubscriptionTransferApi();
     }
 
@@ -114,11 +110,6 @@ public class DefaultSubscriptionModule extends AbstractModule implements Subscri
     @Override
     public void installSubscriptionInternalApi() {
         bind(SubscriptionInternalApi.class).to(DefaultSubscriptionInternalApi.class).asEagerSingleton();
-    }
-
-    @Override
-    public void installSubscriptionUserApi() {
-        bind(SubscriptionUserApi.class).annotatedWith(RealImplementation.class).to(DefaultSubscriptionUserApi.class).asEagerSingleton();
     }
 
     @Override

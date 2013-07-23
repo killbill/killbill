@@ -97,16 +97,6 @@ public class OSGIKillbillAPI extends OSGIKillbillLibraryBase implements OSGIKill
     }
 
     @Override
-    public SubscriptionUserApi getSubscriptionUserApi() {
-        return withServiceTracker(killbillTracker, new APICallback<SubscriptionUserApi, OSGIKillbill>(KILLBILL_SERVICE_NAME) {
-            @Override
-            public SubscriptionUserApi executeWithService(final OSGIKillbill service) {
-                return service.getSubscriptionUserApi();
-            }
-        });
-    }
-
-    @Override
     public InvoicePaymentApi getInvoicePaymentApi() {
         return withServiceTracker(killbillTracker, new APICallback<InvoicePaymentApi, OSGIKillbill>(KILLBILL_SERVICE_NAME) {
             @Override

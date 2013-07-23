@@ -49,9 +49,6 @@ public abstract class JunctionTestSuiteWithEmbeddedDB extends GuicyKillbillTestS
     @Inject
     protected CatalogService catalogService;
     @Inject
-    @RealImplementation
-    protected SubscriptionUserApi subscriptionUserApi;
-    @Inject
     protected SubscriptionInternalApi subscriptionInternalApi;
     @Inject
     protected PersistentBus bus;

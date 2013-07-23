@@ -55,7 +55,7 @@ public class TestBillingAlignment extends TestIntegrationBase {
         // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
         // (Start with monthly that has a 'Account' billing alignment
         //
-        final Subscription bpSubscription = createSubscriptionAndCheckForCompletion(bundle.getId(), "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
+        final Subscription bpSubscription = createBaseEntitlementAndCheckForCompletion(bundle.getId(), "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
         invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
 
         // GET OUT TRIAL
@@ -63,7 +63,7 @@ public class TestBillingAlignment extends TestIntegrationBase {
 
         //
         // Change plan to annual that has been configured to have a 'Subscription' billing alignment
-        changeSubscriptionAndCheckForCompletion(bpSubscription, "Shotgun", BillingPeriod.ANNUAL, NextEvent.CHANGE, NextEvent.INVOICE);
+        changeEntitlementAndCheckForCompletion(bpSubscription, "Shotgun", BillingPeriod.ANNUAL, NextEvent.CHANGE, NextEvent.INVOICE);
 
 
         /*

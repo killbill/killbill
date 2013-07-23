@@ -26,9 +26,7 @@ import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.subscription.DefaultSubscriptionTestInitializer;
 import com.ning.billing.subscription.SubscriptionTestInitializer;
 import com.ning.billing.subscription.SubscriptionTestListenerStatus;
-import com.ning.billing.subscription.api.user.DefaultSubscriptionUserApi;
 import com.ning.billing.subscription.api.user.TestSubscriptionHelper;
-import com.ning.billing.subscription.api.user.SubscriptionUserApi;
 import com.ning.billing.util.glue.CacheModule;
 import com.ning.billing.util.glue.CallContextModule;
 
@@ -38,10 +36,6 @@ public class TestDefaultSubscriptionModule extends DefaultSubscriptionModule {
         super(configSource);
     }
 
-    @Override
-    public void installSubscriptionUserApi() {
-        bind(SubscriptionUserApi.class).to(DefaultSubscriptionUserApi.class).asEagerSingleton();
-    }
 
     @Override
     protected void configure() {

@@ -16,6 +16,8 @@
 
 package com.ning.billing.entitlement.api;
 
+import java.util.UUID;
+
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 
@@ -111,6 +113,55 @@ public class DefaultEntitlement implements Entitlement {
     public boolean resume(final LocalDate localDate, final CallContext callContext) throws EntitlementApiException {
         return false;
     }
+
+
+    public Subscription getSubscription() {
+        return subscription;
+    }
+
+    @Override
+    public UUID getId() {
+        return subscription.getId();
+    }
+
+    /*
+      public SubscriptionSourceType getSourceType();
+
+    public DateTime getStartDate();
+
+    public DateTime getEndDate();
+
+    public DateTime getFutureEndDate();
+
+    public Plan getCurrentPlan();
+
+    public Plan getLastActivePlan();
+
+    public PriceList getCurrentPriceList();
+
+    public PlanPhase getCurrentPhase();
+
+    public String getLastActiveProductName();
+
+    public String getLastActivePriceListName();
+
+    public String getLastActiveCategoryName();
+
+    public String getLastActiveBillingPeriod();
+
+    public DateTime getChargedThroughDate();
+
+    public DateTime getPaidThroughDate();
+
+    public ProductCategory getCategory();
+
+    public SubscriptionTransition getPendingTransition();
+
+    public SubscriptionTransition getPreviousTransition();
+
+    public List<SubscriptionTransition> getAllTransitions();
+     */
+
 
     private DateTime fromLocalDateAndReferenceTime(final LocalDate requestedDate, final DateTime subscriptionStartDate, final Clock clock, final InternalCallContext callContext) throws EntitlementApiException {
         try {

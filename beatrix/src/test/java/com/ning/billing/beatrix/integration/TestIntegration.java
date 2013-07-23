@@ -32,16 +32,14 @@ import com.ning.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import com.ning.billing.beatrix.util.PaymentChecker.ExpectedPaymentCheck;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.entitlement.api.DefaultEntitlement;
 import com.ning.billing.subscription.api.user.SubscriptionData;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.payment.api.PaymentStatus;
-import com.ning.billing.subscription.api.user.Subscription;
-import com.ning.billing.subscription.api.user.SubscriptionBundle;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -60,36 +58,30 @@ public class TestIntegration extends TestIntegrationBase {
         // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
         clock.setDay(new LocalDate(2012, 4, 1));
 
-        final SubscriptionBundle bundle = subscriptionUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
-        subscriptionChecker.checkBundleNoAudits(bundle.getId(), bundle.getAccountId(), bundle.getExternalKey(), callContext);
-
         //
         // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
         //
-        final Subscription bpSubscription = createSubscriptionAndCheckForCompletion(bundle.getId(), "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
+        final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
         // Check bundle after BP got created otherwise we get an error from auditApi.
         subscriptionChecker.checkSubscriptionCreated(bpSubscription.getId(), callContext);
         invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
-        subscriptionChecker.checkBundleAuditUpdated(bundle.getId(), callContext);
         //
         // ADD ADD_ON ON THE SAME DAY
         //
-        createSubscriptionAndCheckForCompletion(bundle.getId(), "Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE, NextEvent.PAYMENT);
+        addAOEntitlementAndCheckForCompletion(account.getId(), "Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE, NextEvent.PAYMENT);
         Invoice invoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("399.95")));
         paymentChecker.checkPayment(account.getId(), 1, callContext, new ExpectedPaymentCheck(new LocalDate(2012, 4, 1), new BigDecimal("399.95"), PaymentStatus.SUCCESS, invoice.getId(), Currency.USD));
-        subscriptionChecker.checkBundleAuditUpdated(bundle.getId(), callContext);
 
         //
         // CANCEL BP ON THE SAME DAY (we should have two cancellations, BP and AO)
         // There is no invoice created as we only adjust the previous invoice.
         //
-        cancelSubscriptionAndCheckForCompletion(bpSubscription, clock.getUTCNow(), NextEvent.CANCEL, NextEvent.CANCEL, NextEvent.INVOICE_ADJUSTMENT);
+        cancelEntitlementAndCheckForCompletion(bpSubscription, clock.getUTCNow(), NextEvent.CANCEL, NextEvent.CANCEL, NextEvent.INVOICE_ADJUSTMENT);
         invoiceChecker.checkInvoice(account.getId(), 2,
                                     callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("399.95")),
                                     // The second invoice should be adjusted for the AO (we paid for the full period) and since we paid we should also see a CBA
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-399.95")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 4, 1), InvoiceItemType.CBA_ADJ, new BigDecimal("399.95")));
-        subscriptionChecker.checkBundleAuditUpdated(bundle.getId(), callContext);
 
     }
 
@@ -104,14 +96,13 @@ public class TestIntegration extends TestIntegrationBase {
 
         // set clock to the initial start date
         clock.setTime(initialCreationDate);
-        final SubscriptionBundle bundle = subscriptionUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
-
         int invoiceItemCount = 1;
 
         //
         // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
         //
-        SubscriptionData subscription = subscriptionDataFromSubscription(createSubscriptionAndCheckForCompletion(bundle.getId(), "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE));
+        final DefaultEntitlement baseEntitlementAndCheckForCompletion = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
+        SubscriptionData subscription = subscriptionDataFromSubscription(baseEntitlementAndCheckForCompletion.getSubscription());
         invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(initialCreationDate.toLocalDate(), null, InvoiceItemType.FIXED, new BigDecimal("0")));
         // No end date for the trial item (fixed price of zero), and CTD should be today (i.e. when the trial started)
         invoiceChecker.checkChargedThroughDate(subscription.getId(), clock.getUTCToday(), callContext);
@@ -119,7 +110,7 @@ public class TestIntegration extends TestIntegrationBase {
         //
         // CHANGE PLAN IMMEDIATELY AND EXPECT BOTH EVENTS: NextEvent.CHANGE NextEvent.INVOICE
         //
-        subscription = subscriptionDataFromSubscription(changeSubscriptionAndCheckForCompletion(subscription, "Assault-Rifle", BillingPeriod.MONTHLY, NextEvent.CHANGE, NextEvent.INVOICE));
+        subscription = subscriptionDataFromSubscription(changeEntitlementAndCheckForCompletion(subscription, "Assault-Rifle", BillingPeriod.MONTHLY, NextEvent.CHANGE, NextEvent.INVOICE));
         invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(initialCreationDate.toLocalDate(), null, InvoiceItemType.FIXED, new BigDecimal("0")));
         invoiceChecker.checkChargedThroughDate(subscription.getId(), clock.getUTCToday(), callContext);
 
@@ -137,7 +128,7 @@ public class TestIntegration extends TestIntegrationBase {
         //
         // CHANGE PLAN EOT AND EXPECT NOTHING
         //
-        subscription = subscriptionDataFromSubscription(changeSubscriptionAndCheckForCompletion(subscription, "Pistol", BillingPeriod.MONTHLY));
+        subscription = subscriptionDataFromSubscription(changeEntitlementAndCheckForCompletion(subscription, "Pistol", BillingPeriod.MONTHLY));
 
         //
         // MOVE TIME AFTER CTD AND EXPECT BOTH EVENTS : NextEvent.CHANGE NextEvent.INVOICE
@@ -166,7 +157,7 @@ public class TestIntegration extends TestIntegrationBase {
         //
         // FINALLY CANCEL SUBSCRIPTION EOT
         //
-        subscription = subscriptionDataFromSubscription(cancelSubscriptionAndCheckForCompletion(subscription, clock.getUTCNow()));
+        subscription = subscriptionDataFromSubscription(cancelEntitlementAndCheckForCompletion(subscription, clock.getUTCNow()));
 
         // MOVE AFTER CANCEL DATE AND EXPECT EVENT : NextEvent.CANCEL
         addDaysAndCheckForCompletion(31, NextEvent.CANCEL);
@@ -186,14 +177,13 @@ public class TestIntegration extends TestIntegrationBase {
 
         // set clock to the initial start date
         clock.setTime(initialCreationDate);
-        final SubscriptionBundle bundle = subscriptionUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
-
         int invoiceItemCount = 1;
 
         //
         // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
         //
-        SubscriptionData subscription = subscriptionDataFromSubscription(createSubscriptionAndCheckForCompletion(bundle.getId(), "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE));
+        final DefaultEntitlement baseEntitlementAndCheckForCompletion = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
+        SubscriptionData subscription = subscriptionDataFromSubscription(baseEntitlementAndCheckForCompletion.getSubscription());
         invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(initialCreationDate.toLocalDate(), null, InvoiceItemType.FIXED, new BigDecimal("0")));
         // No end date for the trial item (fixed price of zero), and CTD should be today (i.e. when the trial started)
         invoiceChecker.checkChargedThroughDate(subscription.getId(), clock.getUTCToday(), callContext);
@@ -201,7 +191,7 @@ public class TestIntegration extends TestIntegrationBase {
         //
         // CHANGE PLAN IMMEDIATELY AND EXPECT BOTH EVENTS: NextEvent.CHANGE NextEvent.INVOICE
         //
-        subscription = subscriptionDataFromSubscription(changeSubscriptionAndCheckForCompletion(subscription, "Assault-Rifle", BillingPeriod.MONTHLY, NextEvent.CHANGE, NextEvent.INVOICE));
+        subscription = subscriptionDataFromSubscription(changeEntitlementAndCheckForCompletion(subscription, "Assault-Rifle", BillingPeriod.MONTHLY, NextEvent.CHANGE, NextEvent.INVOICE));
         invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(initialCreationDate.toLocalDate(), null, InvoiceItemType.FIXED, new BigDecimal("0")));
         invoiceChecker.checkChargedThroughDate(subscription.getId(), clock.getUTCToday(), callContext);
 
@@ -219,7 +209,7 @@ public class TestIntegration extends TestIntegrationBase {
         //
         // CHANGE PLAN EOT AND EXPECT NOTHING
         //
-        subscription = subscriptionDataFromSubscription(changeSubscriptionAndCheckForCompletion(subscription, "Pistol", BillingPeriod.MONTHLY));
+        subscription = subscriptionDataFromSubscription(changeEntitlementAndCheckForCompletion(subscription, "Pistol", BillingPeriod.MONTHLY));
 
         //
         // MOVE TIME AFTER CTD AND EXPECT BOTH EVENTS : NextEvent.CHANGE NextEvent.INVOICE
@@ -248,7 +238,7 @@ public class TestIntegration extends TestIntegrationBase {
         //
         // FINALLY CANCEL SUBSCRIPTION EOT
         //
-        subscription = subscriptionDataFromSubscription(cancelSubscriptionAndCheckForCompletion(subscription, clock.getUTCNow()));
+        subscription = subscriptionDataFromSubscription(cancelEntitlementAndCheckForCompletion(subscription, clock.getUTCNow()));
 
         // MOVE AFTER CANCEL DATE AND EXPECT EVENT : NextEvent.CANCEL
         addDaysAndCheckForCompletion(31, NextEvent.CANCEL);
@@ -268,14 +258,13 @@ public class TestIntegration extends TestIntegrationBase {
 
         // set clock to the initial start date
         clock.setTime(initialCreationDate);
-        final SubscriptionBundle bundle = subscriptionUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
-
         int invoiceItemCount = 1;
 
         //
         // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
         //
-        SubscriptionData subscription = subscriptionDataFromSubscription(createSubscriptionAndCheckForCompletion(bundle.getId(), "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE));
+        final DefaultEntitlement baseEntitlementAndCheckForCompletion = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
+        SubscriptionData subscription = subscriptionDataFromSubscription(baseEntitlementAndCheckForCompletion.getSubscription());
 
 
         invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(initialCreationDate.toLocalDate(), null, InvoiceItemType.FIXED, new BigDecimal("0")));
@@ -285,7 +274,7 @@ public class TestIntegration extends TestIntegrationBase {
         //
         // CHANGE PLAN IMMEDIATELY AND EXPECT BOTH EVENTS: NextEvent.CHANGE NextEvent.INVOICE
         //
-        subscription = subscriptionDataFromSubscription(changeSubscriptionAndCheckForCompletion(subscription, "Assault-Rifle", BillingPeriod.MONTHLY, NextEvent.CHANGE, NextEvent.INVOICE));
+        subscription = subscriptionDataFromSubscription(changeEntitlementAndCheckForCompletion(subscription, "Assault-Rifle", BillingPeriod.MONTHLY, NextEvent.CHANGE, NextEvent.INVOICE));
         invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(initialCreationDate.toLocalDate(), null, InvoiceItemType.FIXED, new BigDecimal("0")));
         invoiceChecker.checkChargedThroughDate(subscription.getId(), clock.getUTCToday(), callContext);
 
@@ -309,7 +298,7 @@ public class TestIntegration extends TestIntegrationBase {
         //
         // CHANGE PLAN EOT AND EXPECT NOTHING
         //
-        subscription = subscriptionDataFromSubscription(changeSubscriptionAndCheckForCompletion(subscription, "Pistol", BillingPeriod.MONTHLY));
+        subscription = subscriptionDataFromSubscription(changeEntitlementAndCheckForCompletion(subscription, "Pistol", BillingPeriod.MONTHLY));
 
         //
         // MOVE TIME AFTER CTD AND EXPECT BOTH EVENTS : NextEvent.CHANGE NextEvent.INVOICE
@@ -338,7 +327,7 @@ public class TestIntegration extends TestIntegrationBase {
         //
         // FINALLY CANCEL SUBSCRIPTION EOT
         //
-        subscription = subscriptionDataFromSubscription(cancelSubscriptionAndCheckForCompletion(subscription, clock.getUTCNow()));
+        subscription = subscriptionDataFromSubscription(cancelEntitlementAndCheckForCompletion(subscription, clock.getUTCNow()));
 
         // MOVE AFTER CANCEL DATE AND EXPECT EVENT : NextEvent.CANCEL
         addDaysAndCheckForCompletion(31, NextEvent.CANCEL);
@@ -400,19 +389,13 @@ public class TestIntegration extends TestIntegrationBase {
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(25));
         assertNotNull(account);
 
-        final SubscriptionBundle bundle = subscriptionUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
-
         final String productName = "Shotgun";
         final BillingPeriod term = BillingPeriod.MONTHLY;
         final String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-        busHandler.pushExpectedEvent(NextEvent.CREATE);
-        busHandler.pushExpectedEvent(NextEvent.INVOICE);
-        final SubscriptionData baseSubscription = subscriptionDataFromSubscription(subscriptionUserApi.createSubscription(bundle.getId(),
-                                                                                                                         new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, callContext));
-        assertNotNull(baseSubscription);
-        assertTrue(busHandler.isCompleted(DELAY));
-        assertListenerStatus();
+
+        final DefaultEntitlement baseEntitlementAndCheckForCompletion = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
+
 
         // MOVE CLOCK A LITTLE BIT-- STILL IN TRIAL
         final Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(3));
@@ -422,18 +405,14 @@ public class TestIntegration extends TestIntegrationBase {
         busHandler.pushExpectedEvent(NextEvent.CREATE);
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
         busHandler.pushExpectedEvent(NextEvent.PAYMENT);
-        subscriptionDataFromSubscription(subscriptionUserApi.createSubscription(bundle.getId(),
-                                                                               new PlanPhaseSpecifier("Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null), null, callContext));
-        assertTrue(busHandler.isCompleted(DELAY));
-        assertListenerStatus();
 
-        busHandler.pushExpectedEvent(NextEvent.CREATE);
-        busHandler.pushExpectedEvent(NextEvent.INVOICE);
-        busHandler.pushExpectedEvent(NextEvent.PAYMENT);
-        final SubscriptionData aoSubscription2 = subscriptionDataFromSubscription(subscriptionUserApi.createSubscription(bundle.getId(),
-                                                                                                                        new PlanPhaseSpecifier("Laser-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null), null, callContext));
-        assertTrue(busHandler.isCompleted(DELAY));
-        assertListenerStatus();
+        final DefaultEntitlement aoEntitlement1 = addAOEntitlementAndCheckForCompletion(baseEntitlementAndCheckForCompletion.getId(), "Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY,
+                                                                                        NextEvent.CREATE, NextEvent.INVOICE, NextEvent.PAYMENT);
+
+
+        final DefaultEntitlement aoEntitlement2 = addAOEntitlementAndCheckForCompletion(baseEntitlementAndCheckForCompletion.getId(), "Laser-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY,
+                                                                                        NextEvent.CREATE, NextEvent.INVOICE, NextEvent.PAYMENT);
+
 
         // MOVE CLOCK A LITTLE BIT MORE -- EITHER STAY IN TRIAL OR GET OUT
         busHandler.pushExpectedEvent(NextEvent.PHASE);
@@ -471,37 +450,6 @@ public class TestIntegration extends TestIntegrationBase {
         assertListenerStatus();
     }
 
-    @Test(groups = {"slow"})
-    public void testRepairForInvoicing() throws Exception {
-
-        log.info("Starting testRepairForInvoicing");
-
-        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
-        final UUID accountId = account.getId();
-        assertNotNull(account);
-
-        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0, testTimeZone);
-        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
-
-        final SubscriptionBundle bundle = subscriptionUserApi.createBundleForAccount(account.getId(), "someBundle", callContext);
-        assertNotNull(bundle);
-
-        final String productName = "Shotgun";
-        final BillingPeriod term = BillingPeriod.MONTHLY;
-        final String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
-        subscriptionUserApi.createSubscription(bundle.getId(),
-                                              new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, callContext);
-
-        busHandler.reset();
-        busHandler.pushExpectedEvent(NextEvent.CREATE);
-        busHandler.pushExpectedEvent(NextEvent.INVOICE);
-        assertTrue(busHandler.isCompleted(DELAY));
-
-        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId, callContext);
-        assertEquals(invoices.size(), 1);
-
-        // TODO: Jeff implement repair
-    }
 
     @Test(groups = "slow")
     public void testWithRecreatePlan() throws Exception {
@@ -515,7 +463,6 @@ public class TestIntegration extends TestIntegrationBase {
 
         // set clock to the initial start date
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
-        final SubscriptionBundle bundle = subscriptionUserApi.createBundleForAccount(account.getId(), "whatever2", callContext);
 
         String productName = "Shotgun";
         BillingPeriod term = BillingPeriod.MONTHLY;
@@ -527,15 +474,15 @@ public class TestIntegration extends TestIntegrationBase {
         busHandler.pushExpectedEvent(NextEvent.CREATE);
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
 
-        SubscriptionData subscription = subscriptionDataFromSubscription(subscriptionUserApi.createSubscription(bundle.getId(),
-                                                                                                               new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, callContext));
+        final DefaultEntitlement baseEntitlementAndCheckForCompletion = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
 
-        assertNotNull(subscription);
+        assertNotNull(baseEntitlementAndCheckForCompletion);
         assertTrue(busHandler.isCompleted(DELAY));
 
         //
         // VERIFY CTD HAS BEEN SET
         //
+        final SubscriptionData subscription = (SubscriptionData) baseEntitlementAndCheckForCompletion.getSubscription();
         final DateTime startDate = subscription.getCurrentPhaseStart();
         final BigDecimal rate = subscription.getCurrentPhase().getFixedPrice().getPrice(Currency.USD);
         final int invoiceItemCount = 1;
@@ -550,8 +497,8 @@ public class TestIntegration extends TestIntegrationBase {
         clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS);
         assertTrue(busHandler.isCompleted(DELAY));
 
-        subscription = subscriptionDataFromSubscription(subscriptionUserApi.getSubscriptionFromId(subscription.getId(), callContext));
-        subscription.cancel(clock.getUTCNow(), callContext);
+        final DefaultEntitlement entitlement = (DefaultEntitlement) entitlementApi.getEntitlementFromId(baseEntitlementAndCheckForCompletion.getId(), callContext);
+        entitlement.cancelEntitlementWithDate(clock.getUTCNow().toLocalDate(), callContext);
 
         // MOVE AFTER CANCEL DATE AND EXPECT EVENT : NextEvent.CANCEL
         busHandler.pushExpectedEvent(NextEvent.CANCEL);
@@ -587,14 +534,10 @@ public class TestIntegration extends TestIntegrationBase {
         final String productName = "Blowdart";
         final String planSetName = "DEFAULT";
 
-        busHandler.pushExpectedEvent(NextEvent.CREATE);
-        busHandler.pushExpectedEvent(NextEvent.INVOICE);
-        final SubscriptionBundle bundle = subscriptionUserApi.createBundleForAccount(accountId, "testKey", callContext);
-        subscriptionDataFromSubscription(subscriptionUserApi.createSubscription(bundle.getId(),
-                                                                               new PlanPhaseSpecifier(productName, ProductCategory.BASE,
-                                                                                                      BillingPeriod.MONTHLY, planSetName, PhaseType.TRIAL), null, callContext));
 
-        assertTrue(busHandler.isCompleted(DELAY));
+        final DefaultEntitlement baseEntitlementAndCheckForCompletion = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", productName, ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
+
+
         List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId, callContext);
         assertNotNull(invoices);
         assertTrue(invoices.size() == 1);

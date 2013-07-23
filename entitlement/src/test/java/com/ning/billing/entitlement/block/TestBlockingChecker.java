@@ -58,7 +58,6 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
         Mockito.when(subscription.getBundleId()).thenReturn(bundleId);
 
         try {
-            Mockito.when(subscriptionUserApi.getBundleFromId(Mockito.<UUID>any(), Mockito.<TenantContext>any())).thenReturn(bundle);
             Mockito.when(subscriptionInternalApi.getBundleFromId(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(bundle);
         } catch (SubscriptionUserApiException e) {
             Assert.fail(e.toString());

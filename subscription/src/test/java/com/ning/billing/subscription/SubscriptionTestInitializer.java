@@ -26,6 +26,8 @@ import com.ning.billing.subscription.api.SubscriptionService;
 import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.subscription.api.user.SubscriptionUserApi;
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
 import com.ning.billing.util.svcsapi.bus.BusService;
 
 public interface SubscriptionTestInitializer {
@@ -34,7 +36,7 @@ public interface SubscriptionTestInitializer {
 
     public AccountData initAccountData();
 
-    public SubscriptionBundle initBundle(final SubscriptionUserApi subscriptionApi, final CallContext callContext) throws Exception;
+    public SubscriptionBundle initBundle(final SubscriptionInternalApi subscriptionApi, final InternalCallContext callContext) throws Exception;
 
     public void startTestFamework(final TestApiListener testListener,
                                   final TestListenerStatus testListenerStatus,

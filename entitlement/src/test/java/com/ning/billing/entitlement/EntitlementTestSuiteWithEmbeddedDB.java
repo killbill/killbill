@@ -48,9 +48,6 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
     @Inject
     protected CatalogService catalogService;
     @Inject
-    @RealImplementation
-    protected SubscriptionUserApi subscriptionUserApi;
-    @Inject
     protected SubscriptionInternalApi subscriptionInternalApi;
     @Inject
     protected PersistentBus bus;

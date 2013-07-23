@@ -62,8 +62,6 @@ public class SubscriptionTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     @Inject
     protected SubscriptionService subscriptionService;
     @Inject
-    protected SubscriptionUserApi subscriptionApi;
-    @Inject
     protected SubscriptionInternalApi subscriptionInternalApi;
     @Inject
     protected SubscriptionTransferApi transferApi;
@@ -129,7 +127,7 @@ public class SubscriptionTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
         this.catalog = subscriptionTestInitializer.initCatalog(catalogService);
         this.accountData = subscriptionTestInitializer.initAccountData();
-        this.bundle = subscriptionTestInitializer.initBundle(subscriptionApi, callContext);
+        this.bundle = subscriptionTestInitializer.initBundle(subscriptionInternalApi, internalCallContext);
     }
 
     @AfterMethod(groups = "fast")

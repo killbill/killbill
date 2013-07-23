@@ -61,6 +61,7 @@ import com.ning.billing.subscription.api.timeline.SubscriptionTimeline.ExistingE
 import com.ning.billing.subscription.api.timeline.SubscriptionTimeline.NewEvent;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
+import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
@@ -71,7 +72,7 @@ public class TestSubscriptionHelper {
 
     private final Logger log = LoggerFactory.getLogger(TestSubscriptionHelper.class);
 
-    private final SubscriptionUserApi subscriptionApi;
+    private final SubscriptionInternalApi subscriptionApi;
 
     private final Clock clock;
 
@@ -83,7 +84,7 @@ public class TestSubscriptionHelper {
 
 
     @Inject
-    public TestSubscriptionHelper(final SubscriptionUserApi subscriptionApi, final Clock clock, final InternalCallContext callContext, final TestApiListener testListener, final SubscriptionDao dao) {
+    public TestSubscriptionHelper(final SubscriptionInternalApi subscriptionApi, final Clock clock, final InternalCallContext callContext, final TestApiListener testListener, final SubscriptionDao dao) {
         this.subscriptionApi = subscriptionApi;
         this.clock = clock;
         this.callContext = callContext;
@@ -107,7 +108,7 @@ public class TestSubscriptionHelper {
         testListener.pushExpectedEvent(NextEvent.CREATE);
         final SubscriptionData subscription = (SubscriptionData) subscriptionApi.createSubscription(bundleId,
                                                                                                    new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSet, null),
-                                                                                                   requestedDate == null ? clock.getUTCNow() : requestedDate, callContext.toCallContext());
+                                                                                                   requestedDate == null ? clock.getUTCNow() : requestedDate, callContext);
         assertNotNull(subscription);
 
         assertTrue(testListener.isCompleted(5000));

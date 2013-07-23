@@ -59,6 +59,10 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.entitlement.api.DefaultEntitlement;
+import com.ning.billing.entitlement.api.Entitlement;
+import com.ning.billing.entitlement.api.EntitlementApi;
+import com.ning.billing.entitlement.api.EntitlementApiException;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoicePayment;
@@ -81,7 +85,6 @@ import com.ning.billing.subscription.api.timeline.SubscriptionTimelineApi;
 import com.ning.billing.subscription.api.transfer.SubscriptionTransferApi;
 import com.ning.billing.subscription.api.user.Subscription;
 import com.ning.billing.subscription.api.user.SubscriptionData;
-import com.ning.billing.subscription.api.user.SubscriptionUserApi;
 import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
 import com.ning.billing.util.api.RecordIdApi;
 import com.ning.billing.util.api.TagUserApi;
@@ -135,9 +138,6 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     protected AccountService accountService;
 
     @Inject
-    protected SubscriptionUserApi subscriptionUserApi;
-
-    @Inject
     protected SubscriptionTransferApi transferApi;
 
     @Inject
@@ -157,6 +157,9 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
     @Inject
     protected PaymentApi paymentApi;
+
+    @Inject
+    protected EntitlementApi entitlementApi;
 
     @Named(BeatrixIntegrationModule.NON_OSGI_PLUGIN_NAME)
     @Inject
@@ -281,8 +284,10 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     protected void verifyTestResult(final UUID accountId, final UUID subscriptionId,
                                     final DateTime startDate, @Nullable final DateTime endDate,
                                     final BigDecimal amount, final DateTime chargeThroughDate,
-                                    final int totalInvoiceItemCount) throws SubscriptionUserApiException {
-        final SubscriptionData subscription = subscriptionDataFromSubscription(subscriptionUserApi.getSubscriptionFromId(subscriptionId, callContext));
+                                    final int totalInvoiceItemCount) throws EntitlementApiException {
+
+        final Entitlement entitlement = entitlementApi.getEntitlementFromId(subscriptionId, callContext);
+
 
         /*
                 final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId);
@@ -310,6 +315,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
                     fail();
                 }
         */
+        final Subscription subscription = ((DefaultEntitlement) entitlement).getSubscription();
         final DateTime ctd = subscription.getChargedThroughDate();
         assertNotNull(ctd);
         log.info("Checking CTD: " + ctd.toString() + "; clock is " + clock.getUTCNow().toString());
@@ -491,22 +497,25 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         }, events);
     }
 
-    protected Subscription createSubscriptionAndCheckForCompletion(final UUID bundleId,
-                                                                   final String productName,
-                                                                   final ProductCategory productCategory,
-                                                                   final BillingPeriod billingPeriod,
-                                                                   final NextEvent... events) {
-        return doCallAndCheckForCompletion(new Function<Void, Subscription>() {
+    protected DefaultEntitlement createBaseEntitlementAndCheckForCompletion(final UUID accountId,
+                                                                            final String bundleExternalKey,
+                                                                            final String productName,
+                                                                            final ProductCategory productCategory,
+                                                                            final BillingPeriod billingPeriod,
+                                                                            final NextEvent... events) {
+        if (productCategory == ProductCategory.ADD_ON) {
+            throw new RuntimeException("Unxepected Call for creating ADD_ON");
+        }
+
+        return (DefaultEntitlement) doCallAndCheckForCompletion(new Function<Void, Entitlement>() {
             @Override
-            public Subscription apply(@Nullable final Void dontcare) {
+            public Entitlement apply(@Nullable final Void dontcare) {
                 try {
-                    final Subscription subscription = subscriptionUserApi.createSubscription(bundleId,
-                                                                                             new PlanPhaseSpecifier(productName, productCategory, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, null),
-                                                                                             null,
-                                                                                             callContext);
-                    assertNotNull(subscription);
-                    return subscription;
-                } catch (SubscriptionUserApiException e) {
+                    final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, productCategory, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+                    final Entitlement entitlement =  entitlementApi.createBaseEntitlement(accountId, spec, bundleExternalKey, callContext);
+                    assertNotNull(entitlement);
+                    return entitlement;
+                } catch (EntitlementApiException e) {
                     fail();
                     return null;
                 }
@@ -514,19 +523,46 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         }, events);
     }
 
-    protected Subscription changeSubscriptionAndCheckForCompletion(final Subscription subscription,
-                                                                   final String productName,
-                                                                   final BillingPeriod billingPeriod,
-                                                                   final NextEvent... events) {
-        return doCallAndCheckForCompletion(new Function<Void, Subscription>() {
+    protected DefaultEntitlement addAOEntitlementAndCheckForCompletion(final UUID basePlanId,
+                                                                            final String productName,
+                                                                            final ProductCategory productCategory,
+                                                                            final BillingPeriod billingPeriod,
+                                                                            final NextEvent... events) {
+        if (productCategory != ProductCategory.ADD_ON) {
+            throw new RuntimeException("Unxepected Call for creating a productCatrgory " + productCategory);
+        }
+
+        return (DefaultEntitlement) doCallAndCheckForCompletion(new Function<Void, Entitlement>() {
             @Override
-            public Subscription apply(@Nullable final Void dontcare) {
+            public Entitlement apply(@Nullable final Void dontcare) {
+                try {
+                    final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, productCategory, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+                    final Entitlement entitlement = entitlementApi.addEntitlement(basePlanId, spec, callContext);
+                    assertNotNull(entitlement);
+                    return entitlement;
+                } catch (EntitlementApiException e) {
+                    fail();
+                    return null;
+                }
+            }
+        }, events);
+    }
+
+
+
+    protected DefaultEntitlement changeEntitlementAndCheckForCompletion(final Entitlement entitlement,
+                                                                 final String productName,
+                                                                 final BillingPeriod billingPeriod,
+                                                                 final NextEvent... events) {
+        return (DefaultEntitlement) doCallAndCheckForCompletion(new Function<Void, Entitlement>() {
+            @Override
+            public Entitlement apply(@Nullable final Void dontcare) {
                 try {
                     // Need to fetch again to get latest CTD updated from the system
-                    final Subscription refreshedSubscription = subscriptionUserApi.getSubscriptionFromId(subscription.getId(), callContext);
-                    refreshedSubscription.changePlan(productName, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow(), callContext);
-                    return refreshedSubscription;
-                } catch (SubscriptionUserApiException e) {
+                    final Entitlement refreshedEntitlement = entitlementApi.getEntitlementFromId(entitlement.getId(), callContext);
+                    refreshedEntitlement.changePlan(productName, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow().toLocalDate(), callContext);
+                    return refreshedEntitlement;
+                } catch (EntitlementApiException e) {
                     fail(e.getMessage());
                     return null;
                 }
@@ -534,18 +570,18 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         }, events);
     }
 
-    protected Subscription cancelSubscriptionAndCheckForCompletion(final Subscription subscription,
-                                                                   final DateTime requestedDate,
-                                                                   final NextEvent... events) {
-        return doCallAndCheckForCompletion(new Function<Void, Subscription>() {
+    protected DefaultEntitlement cancelEntitlementAndCheckForCompletion(final Entitlement entitlement,
+                                                                 final DateTime requestedDate,
+                                                                 final NextEvent... events) {
+        return (DefaultEntitlement) doCallAndCheckForCompletion(new Function<Void, Entitlement>() {
             @Override
-            public Subscription apply(@Nullable final Void dontcare) {
+            public Entitlement apply(@Nullable final Void dontcare) {
                 try {
                     // Need to fetch again to get latest CTD updated from the system
-                    final Subscription refreshedSubscription = subscriptionUserApi.getSubscriptionFromId(subscription.getId(), callContext);
-                    refreshedSubscription.cancel(requestedDate, callContext);
-                    return refreshedSubscription;
-                } catch (SubscriptionUserApiException e) {
+                    final Entitlement refreshedEntitlement = entitlementApi.getEntitlementFromId(entitlement.getId(), callContext);
+                    refreshedEntitlement.cancelEntitlementWithDate(requestedDate.toLocalDate(), callContext);
+                    return refreshedEntitlement;
+                } catch (EntitlementApiException e) {
                     fail();
                     return null;
                 }

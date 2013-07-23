@@ -16,12 +16,14 @@
 
 package com.ning.billing.osgi;
 
+import javax.inject.Inject;
+
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.api.CatalogUserApi;
+import com.ning.billing.entitlement.api.EntitlementApi;
 import com.ning.billing.invoice.api.InvoiceMigrationApi;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.api.InvoiceUserApi;
-import com.ning.billing.entitlement.api.EntitlementApi;
 import com.ning.billing.osgi.api.OSGIKillbill;
 import com.ning.billing.osgi.api.config.PluginConfigServiceApi;
 import com.ning.billing.overdue.OverdueUserApi;
@@ -29,7 +31,6 @@ import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.subscription.api.migration.SubscriptionMigrationApi;
 import com.ning.billing.subscription.api.timeline.SubscriptionTimelineApi;
 import com.ning.billing.subscription.api.transfer.SubscriptionTransferApi;
-import com.ning.billing.subscription.api.user.SubscriptionUserApi;
 import com.ning.billing.tenant.api.TenantUserApi;
 import com.ning.billing.usage.api.UsageUserApi;
 import com.ning.billing.util.api.AuditUserApi;
@@ -38,17 +39,12 @@ import com.ning.billing.util.api.ExportUserApi;
 import com.ning.billing.util.api.RecordIdApi;
 import com.ning.billing.util.api.TagUserApi;
 
-import javax.inject.Inject;
-
 public class DefaultOSGIKillbill implements OSGIKillbill {
 
     private final AccountUserApi accountUserApi;
     private final CatalogUserApi catalogUserApi;
-    private final SubscriptionMigrationApi subscriptionMigrationApi;
     private final SubscriptionTimelineApi subscriptionTimelineApi;
     private final SubscriptionTransferApi subscriptionTransferApi;
-    private final SubscriptionUserApi subscriptionUserApi;
-    private final InvoiceMigrationApi invoiceMigrationApi;
     private final InvoicePaymentApi invoicePaymentApi;
     private final InvoiceUserApi invoiceUserApi;
     private final OverdueUserApi overdueUserApi;
@@ -67,11 +63,8 @@ public class DefaultOSGIKillbill implements OSGIKillbill {
     @Inject
     public DefaultOSGIKillbill(final AccountUserApi accountUserApi,
                                final CatalogUserApi catalogUserApi,
-                               final SubscriptionMigrationApi subscriptionMigrationApi,
                                final SubscriptionTimelineApi subscriptionTimelineApi,
                                final SubscriptionTransferApi subscriptionTransferApi,
-                               final SubscriptionUserApi subscriptionUserApi,
-                               final InvoiceMigrationApi invoiceMigrationApi,
                                final InvoicePaymentApi invoicePaymentApi,
                                final InvoiceUserApi invoiceUserApi,
                                final OverdueUserApi overdueUserApi,
@@ -87,11 +80,8 @@ public class DefaultOSGIKillbill implements OSGIKillbill {
                                final PluginConfigServiceApi configServiceApi) {
         this.accountUserApi = accountUserApi;
         this.catalogUserApi = catalogUserApi;
-        this.subscriptionMigrationApi = subscriptionMigrationApi;
         this.subscriptionTimelineApi = subscriptionTimelineApi;
         this.subscriptionTransferApi = subscriptionTransferApi;
-        this.subscriptionUserApi = subscriptionUserApi;
-        this.invoiceMigrationApi = invoiceMigrationApi;
         this.invoicePaymentApi = invoicePaymentApi;
         this.invoiceUserApi = invoiceUserApi;
         this.overdueUserApi = overdueUserApi;
@@ -125,11 +115,6 @@ public class DefaultOSGIKillbill implements OSGIKillbill {
     @Override
     public SubscriptionTransferApi getSubscriptionTransferApi() {
         return subscriptionTransferApi;
-    }
-
-    @Override
-    public SubscriptionUserApi getSubscriptionUserApi() {
-        return subscriptionUserApi;
     }
 
     @Override

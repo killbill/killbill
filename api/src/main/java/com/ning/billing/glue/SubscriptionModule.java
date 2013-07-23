@@ -18,16 +18,14 @@ package com.ning.billing.glue;
 
 public interface SubscriptionModule {
 
-    public abstract void installSubscriptionService();
+    public void installSubscriptionService();
 
-    public abstract void installSubscriptionUserApi();
+    public void installSubscriptionTransferApi();
 
-    public abstract void installSubscriptionTransferApi();
+    public void installSubscriptionMigrationApi();
 
-    public abstract void installSubscriptionMigrationApi();
+    public void installSubscriptionInternalApi();
 
-    public abstract void installSubscriptionInternalApi();
-
-    public abstract void installSubscriptionTimelineApi();
+    public void installSubscriptionTimelineApi();
 
 }

@@ -35,10 +35,6 @@ public class MockSubscriptionModule extends AbstractModule implements Subscripti
         bind(SubscriptionService.class).toInstance(Mockito.mock(SubscriptionService.class));
     }
 
-    @Override
-    public void installSubscriptionUserApi() {
-        bind(SubscriptionUserApi.class).annotatedWith(RealImplementation.class).toInstance(Mockito.mock(SubscriptionUserApi.class));
-    }
 
     @Override
     public void installSubscriptionMigrationApi() {
@@ -53,7 +49,6 @@ public class MockSubscriptionModule extends AbstractModule implements Subscripti
     @Override
     protected void configure() {
         installSubscriptionService();
-        installSubscriptionUserApi();
         installSubscriptionMigrationApi();
         installSubscriptionInternalApi();
         installSubscriptionTimelineApi();

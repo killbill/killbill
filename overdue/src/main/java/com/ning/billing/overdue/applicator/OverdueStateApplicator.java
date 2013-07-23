@@ -75,18 +75,18 @@ public class OverdueStateApplicator<T extends Blockable> {
     private final OverdueCheckPoster poster;
     private final PersistentBus bus;
     private final AccountInternalApi accountApi;
-    private final SubscriptionInternalApi subscriptionUserApi;
+    private final SubscriptionInternalApi subscriptionInternalApi;
     private final OverdueEmailGenerator overdueEmailGenerator;
     final TagInternalApi tagApi;
     private final EmailSender emailSender;
 
     @Inject
-    public OverdueStateApplicator(final BlockingInternalApi accessApi, final AccountInternalApi accountApi, final SubscriptionInternalApi subscriptionUserApi,
+    public OverdueStateApplicator(final BlockingInternalApi accessApi, final AccountInternalApi accountApi, final SubscriptionInternalApi subscriptionInternalApi,
                                   final Clock clock, final OverdueCheckPoster poster, final OverdueEmailGenerator overdueEmailGenerator,
                                   final EmailConfig config, final PersistentBus bus, final TagInternalApi tagApi) {
         this.blockingApi = accessApi;
         this.accountApi = accountApi;
-        this.subscriptionUserApi = subscriptionUserApi;
+        this.subscriptionInternalApi = subscriptionInternalApi;
         this.clock = clock;
         this.poster = poster;
         this.overdueEmailGenerator = overdueEmailGenerator;
@@ -234,14 +234,14 @@ public class OverdueStateApplicator<T extends Blockable> {
         if (blockable instanceof Subscription) {
             result.add((Subscription) blockable);
         } else if (blockable instanceof SubscriptionBundle) {
-            for (final Subscription cur : subscriptionUserApi.getSubscriptionsForBundle(blockable.getId(), context)) {
+            for (final Subscription cur : subscriptionInternalApi.getSubscriptionsForBundle(blockable.getId(), context)) {
                 // Entitlement is smart enough and will cancel the associated add-ons
                 if (!ProductCategory.ADD_ON.equals(cur.getCategory())) {
                     computeSubscriptionsToCancel((T) cur, result, context);
                 }
             }
         } else if (blockable instanceof Account) {
-            for (final SubscriptionBundle cur : subscriptionUserApi.getBundlesForAccount(blockable.getId(), context)) {
+            for (final SubscriptionBundle cur : subscriptionInternalApi.getBundlesForAccount(blockable.getId(), context)) {
                 computeSubscriptionsToCancel((T) cur, result, context);
             }
         }
@@ -264,11 +264,11 @@ public class OverdueStateApplicator<T extends Blockable> {
         try {
             if (Type.SUBSCRIPTION.equals(overdueableType)) {
                 final UUID bundleId = ((Subscription) overdueable).getBundleId();
-                final SubscriptionBundle bundle = subscriptionUserApi.getBundleFromId(bundleId, context);
+                final SubscriptionBundle bundle = subscriptionInternalApi.getBundleFromId(bundleId, context);
                 account = accountApi.getAccountById(bundle.getAccountId(), context);
             } else if (Type.SUBSCRIPTION_BUNDLE.equals(overdueableType)) {
                 final UUID bundleId = ((SubscriptionBundle) overdueable).getId();
-                final SubscriptionBundle bundle = subscriptionUserApi.getBundleFromId(bundleId, context);
+                final SubscriptionBundle bundle = subscriptionInternalApi.getBundleFromId(bundleId, context);
                 account = accountApi.getAccountById(bundle.getAccountId(), context);
             } else if (Type.ACCOUNT.equals(overdueableType)) {
                 account = (Account) overdueable;
