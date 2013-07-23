@@ -17,11 +17,6 @@
 package com.ning.billing.glue;
 
 public interface EntitlementModule {
-    public void installAccountUserApi();
-
-    public void installSubscriptionUserApi();
-
-
     public void installBlockingStateDao();
 
     public void installBlockingApi();

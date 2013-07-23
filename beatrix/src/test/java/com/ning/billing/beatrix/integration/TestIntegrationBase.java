@@ -59,7 +59,6 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.entitlement.api.BlockingSubscription;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoicePayment;
@@ -320,7 +319,8 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     }
 
     protected SubscriptionData subscriptionDataFromSubscription(final Subscription sub) {
-        return (SubscriptionData) ((BlockingSubscription) sub).getDelegateSubscription();
+        // STEPH_ENT
+        return (SubscriptionData) sub;
     }
 
     protected Account createAccountWithOsgiPaymentMethod(final AccountData accountData) throws Exception {

@@ -16,10 +16,8 @@
 
 package com.ning.billing.beatrix.util;
 
-import com.ning.billing.entitlement.api.BlockingSubscription;
 import com.ning.billing.subscription.api.user.Subscription;
 import com.ning.billing.subscription.api.user.SubscriptionBundle;
-import com.ning.billing.subscription.api.user.SubscriptionData;
 import com.ning.billing.subscription.api.user.SubscriptionTransition;
 import com.ning.billing.subscription.api.user.SubscriptionTransitionData;
 import com.ning.billing.subscription.api.user.SubscriptionUserApi;
@@ -75,7 +73,8 @@ public class SubscriptionChecker {
     }
 
     private List<SubscriptionTransition> getSubscriptionEvents(final Subscription subscription) {
-        return ((SubscriptionData) ((BlockingSubscription) subscription).getDelegateSubscription()).getAllTransitions();
+        // STEPH_ENT
+        return subscription.getAllTransitions();
     }
 
 

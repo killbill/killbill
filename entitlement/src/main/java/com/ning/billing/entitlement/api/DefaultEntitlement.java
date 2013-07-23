@@ -24,6 +24,7 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.catalog.api.ActionPolicy;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.clock.Clock;
+import com.ning.billing.entitlement.block.BlockingChecker;
 import com.ning.billing.subscription.api.user.Subscription;
 import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
 import com.ning.billing.util.callcontext.CallContext;
@@ -38,14 +39,15 @@ public class DefaultEntitlement implements Entitlement {
     private final Subscription subscription;
     private final InternalCallContextFactory internalCallContextFactory;
     private final Clock clock;
+    private final BlockingChecker checker;
 
-    public DefaultEntitlement(final AccountInternalApi accountApi, final Subscription subscription, final InternalCallContextFactory internalCallContextFactory, final Clock clock) {
+    public DefaultEntitlement(final AccountInternalApi accountApi, final Subscription subscription, final InternalCallContextFactory internalCallContextFactory, final Clock clock, final BlockingChecker checker) {
         this.accountApi = accountApi;
         this.subscription = subscription;
         this.internalCallContextFactory = internalCallContextFactory;
         this.clock = clock;
+        this.checker = checker;
     }
-
 
 
     @Override
@@ -81,8 +83,18 @@ public class DefaultEntitlement implements Entitlement {
     }
 
     @Override
-    public boolean changePlan(final String s, final BillingPeriod billingPeriod, final String s2, final LocalDate localDate, final CallContext callContext) throws EntitlementApiException {
-        return false;
+    public boolean changePlan(final String productName, final BillingPeriod billingPeriod, final String priceList, final LocalDate localDate, final CallContext callContext) throws EntitlementApiException {
+
+        final InternalCallContext context = internalCallContextFactory.createInternalCallContext(callContext);
+        final DateTime requestedDate = fromLocalDateAndReferenceTime(localDate, subscription.getStartDate(), clock, context);
+        try {
+            checker.checkBlockedChange(subscription, context);
+            return subscription.changePlan(productName, billingPeriod, priceList, requestedDate, callContext);
+        } catch (BlockingApiException e) {
+            throw new EntitlementApiException(e, e.getCode(), e.getMessage());
+        } catch (SubscriptionUserApiException e) {
+            throw new EntitlementApiException(e);
+        }
     }
 
     @Override

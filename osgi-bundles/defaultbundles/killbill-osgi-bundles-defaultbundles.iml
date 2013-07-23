@@ -8,6 +8,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="Maven: com.ning.billing:killbill-api:0.3.3-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: com.ning.billing:killbill-osgi-bundles-analytics:0.3.3" level="project" />
     <orderEntry type="module" module-name="killbill-osgi-bundles-jruby" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: com.google.guava:guava:14.0.1" level="project" />

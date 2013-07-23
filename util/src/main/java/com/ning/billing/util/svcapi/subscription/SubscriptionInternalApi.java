@@ -19,17 +19,33 @@ package com.ning.billing.util.svcapi.subscription;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
 
+import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.subscription.api.user.Subscription;
 import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionStatusDryRun;
 import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
+import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 
 
 public interface SubscriptionInternalApi {
+
+    public Subscription createSubscription(final UUID bundleId, final PlanPhaseSpecifier spec, final DateTime requestedDateWithMs,
+                                           final InternalCallContext context) throws SubscriptionUserApiException;
+
+
+    public SubscriptionBundle createBundleForAccount(final UUID accountId, final String bundleName, final InternalCallContext context)
+            throws SubscriptionUserApiException;
+
+    public SubscriptionBundle getBundleForAccountAndKey(final UUID accountId, final String bundleKey, final InternalTenantContext context)
+            throws SubscriptionUserApiException;
 
     public List<SubscriptionBundle> getBundlesForAccount(final UUID accountId, final InternalTenantContext context);
 
@@ -48,4 +64,9 @@ public interface SubscriptionInternalApi {
     public List<EffectiveSubscriptionInternalEvent> getAllTransitions(final Subscription subscription, final InternalTenantContext context);
 
     public List<EffectiveSubscriptionInternalEvent> getBillingTransitions(final Subscription subscription, final InternalTenantContext context);
+
+    public DateTime getNextBillingDate(final UUID accountId, final InternalTenantContext context);
+
+    public List<SubscriptionStatusDryRun> getDryRunChangePlanStatus(final UUID subscriptionId, @Nullable final String baseProductName,
+                                                                    final DateTime requestedDate, final InternalTenantContext context) throws SubscriptionUserApiException;
 }

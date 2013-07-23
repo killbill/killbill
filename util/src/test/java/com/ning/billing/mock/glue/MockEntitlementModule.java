@@ -26,28 +26,14 @@ import org.mockito.Mockito;
 
 public class MockEntitlementModule extends AbstractModule implements EntitlementModule {
 
-    private final AccountUserApi userApi = Mockito.mock(AccountUserApi.class);
-    private final SubscriptionUserApi entUserApi = Mockito.mock(SubscriptionUserApi.class);
     private final BlockingInternalApi blockingApi = Mockito.mock(BlockingInternalApi.class);
     private final EntitlementApi entitlementApi = Mockito.mock(EntitlementApi.class);
 
     @Override
     protected void configure() {
-        installAccountUserApi();
-        installSubscriptionUserApi();
         installBlockingStateDao();
         installBlockingApi();
         installEntitlementApi();
-    }
-
-    @Override
-    public void installAccountUserApi() {
-        bind(AccountUserApi.class).toInstance(userApi);
-    }
-
-    @Override
-    public void installSubscriptionUserApi() {
-        bind(SubscriptionUserApi.class).toInstance(entUserApi);
     }
 
     @Override
