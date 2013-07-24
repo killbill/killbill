@@ -1,0 +1,3 @@
+0.3.6
+    Add all ISO currencies to the catalog
+    jaxrs: return properly formatted JSON in case of exception
