@@ -36,6 +36,7 @@ import com.ning.billing.beatrix.util.RefundChecker.ExpectedRefundCheck;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.entitlement.api.DefaultEntitlement;
 import com.ning.billing.subscription.api.user.SubscriptionData;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
@@ -47,6 +48,8 @@ import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
+
+import static org.testng.Assert.assertNotNull;
 
 public class TestPaymentRefund extends TestIntegrationBase {
 
@@ -103,17 +106,17 @@ public class TestPaymentRefund extends TestIntegrationBase {
 
         // set clock to the initial start date
         clock.setTime(initialCreationDate);
-        final SubscriptionBundle bundle = subscriptionUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
-
         invoiceItemCount = 0;
 
         //
         // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
         //
-        SubscriptionData subscription = subscriptionDataFromSubscription(createBaseEntitlementAndCheckForCompletion(bundle.getId(), "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE));
+        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
+        assertNotNull(bpEntitlement);
+
         invoiceChecker.checkInvoice(account.getId(), ++invoiceItemCount, callContext, new ExpectedInvoiceItemCheck(initialCreationDate.toLocalDate(), null, InvoiceItemType.FIXED, new BigDecimal("0")));
         // No end date for the trial item (fixed price of zero), and CTD should be today (i.e. when the trial started)
-        invoiceChecker.checkChargedThroughDate(subscription.getId(), clock.getUTCToday(), callContext);
+        invoiceChecker.checkChargedThroughDate(bpEntitlement.getId(), clock.getUTCToday(), callContext);
 
         setDateAndCheckForCompletion(new DateTime(2012, 3, 2, 23, 59, 59, 0, testTimeZone), NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
         invoice = invoiceChecker.checkInvoice(account.getId(), ++invoiceItemCount, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 2),

@@ -36,17 +36,15 @@ import com.ning.billing.beatrix.util.PaymentChecker.ExpectedPaymentCheck;
 import com.ning.billing.catalog.api.ActionPolicy;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.subscription.api.user.SubscriptionData;
+import com.ning.billing.entitlement.api.DefaultEntitlement;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.invoice.generator.DefaultInvoiceGeneratorWithSwitchRepairLogic;
 import com.ning.billing.invoice.generator.DefaultInvoiceGeneratorWithSwitchRepairLogic.REPAIR_INVOICE_LOGIC;
 import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.PaymentStatus;
-import com.ning.billing.subscription.api.user.SubscriptionBundle;
 
 import com.google.common.collect.ImmutableList;
 
@@ -80,20 +78,13 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         final BillingPeriod term = BillingPeriod.MONTHLY;
         final String pricelistName = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-        final SubscriptionBundle bundle = subscriptionUserApi.createBundleForAccount(account.getId(), UUID.randomUUID().toString(), callContext);
-        final PlanPhaseSpecifier bpPlanPhaseSpecifier = new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, pricelistName, null);
 
         //
         // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
         //
-        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.INVOICE);
-        final SubscriptionData bpSubscription = subscriptionDataFromSubscription(subscriptionUserApi.createSubscription(bundle.getId(),
-                                                                                                                       bpPlanPhaseSpecifier,
-                                                                                                                       null,
-                                                                                                                       callContext));
-        assertNotNull(bpSubscription);
-        assertTrue(busHandler.isCompleted(DELAY));
-        assertListenerStatus();
+
+        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
+        assertNotNull(bpEntitlement);
 
         List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
         assertEquals(invoices.size(), 1);
@@ -147,10 +138,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         //
         // Force a plan change
         //
-        busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.INVOICE_ADJUSTMENT);
-        bpSubscription.changePlanWithPolicy("Blowdart", term, pricelistName, clock.getUTCNow(), ActionPolicy.IMMEDIATE, callContext);
-        assertTrue(busHandler.isCompleted(DELAY));
-        assertListenerStatus();
+        changeEntitlementAndCheckForCompletion(bpEntitlement, "Blowdart", term, ActionPolicy.IMMEDIATE, NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.INVOICE_ADJUSTMENT);
 
         invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
         assertEquals(invoices.size(), 3);
@@ -188,20 +176,11 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         final BillingPeriod term = BillingPeriod.MONTHLY;
         final String pricelistName = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-        final SubscriptionBundle bundle = subscriptionUserApi.createBundleForAccount(account.getId(), UUID.randomUUID().toString(), callContext);
-        final PlanPhaseSpecifier bpPlanPhaseSpecifier = new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, pricelistName, null);
-
         //
         // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
         //
-        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.INVOICE);
-        final SubscriptionData bpSubscription = subscriptionDataFromSubscription(subscriptionUserApi.createSubscription(bundle.getId(),
-                                                                                                                       bpPlanPhaseSpecifier,
-                                                                                                                       null,
-                                                                                                                       callContext));
-        assertNotNull(bpSubscription);
-        assertTrue(busHandler.isCompleted(DELAY));
-        assertListenerStatus();
+        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
+        assertNotNull(bpEntitlement);
 
         List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
         assertEquals(invoices.size(), 1);
@@ -217,10 +196,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         //
         // Change plan in trial - there is no repair
         //
-        busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE);
-        bpSubscription.changePlanWithPolicy("Assault-Rifle", term, pricelistName, clock.getUTCNow(), ActionPolicy.IMMEDIATE, callContext);
-        assertTrue(busHandler.isCompleted(DELAY));
-        assertListenerStatus();
+        changeEntitlementAndCheckForCompletion(bpEntitlement, "Assault-Rifle", term, ActionPolicy.IMMEDIATE, NextEvent.CHANGE, NextEvent.INVOICE);
 
         invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
         assertEquals(invoices.size(), 2);
@@ -260,12 +236,9 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         //
         // Force another plan change
         //
-        busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.INVOICE_ADJUSTMENT);
         // Move the clock to 2012-05-07
         clock.addDays(5);
-        bpSubscription.changePlanWithPolicy("Blowdart", term, pricelistName, clock.getUTCNow(), ActionPolicy.IMMEDIATE, callContext);
-        assertTrue(busHandler.isCompleted(DELAY));
-        assertListenerStatus();
+        changeEntitlementAndCheckForCompletion(bpEntitlement, "Blowdart", term, ActionPolicy.IMMEDIATE, NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.INVOICE_ADJUSTMENT);
 
         invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
         assertEquals(invoices.size(), 4);
@@ -292,12 +265,9 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         //
         // Force another plan change
         //
-        busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.INVOICE_ADJUSTMENT);
         // Move the clock to 2012-05-08
         clock.addDays(1);
-        bpSubscription.changePlanWithPolicy("Pistol", term, pricelistName, clock.getUTCNow(), ActionPolicy.IMMEDIATE, callContext);
-        assertTrue(busHandler.isCompleted(DELAY));
-        assertListenerStatus();
+        changeEntitlementAndCheckForCompletion(bpEntitlement, "Pistol", term, ActionPolicy.IMMEDIATE, NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.INVOICE_ADJUSTMENT);
 
         invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
         assertEquals(invoices.size(), 5);
@@ -429,7 +399,6 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
 
         // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
         clock.setDeltaFromReality(today.toDateTimeAtCurrentTime(DateTimeZone.UTC).getMillis() - clock.getUTCNow().getMillis());
-        final SubscriptionBundle bundle = subscriptionUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
 
         final String productName = "Shotgun";
         final BillingPeriod term = BillingPeriod.ANNUAL;
@@ -438,18 +407,12 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         //
         // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
         //
-        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.INVOICE);
-        final PlanPhaseSpecifier bpPlanPhaseSpecifier = new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null);
-        final SubscriptionData bpSubscription = subscriptionDataFromSubscription(subscriptionUserApi.createSubscription(bundle.getId(),
-                                                                                                                       bpPlanPhaseSpecifier,
-                                                                                                                       null,
-                                                                                                                       callContext));
-        assertNotNull(bpSubscription);
-        assertTrue(busHandler.isCompleted(DELAY));
-        assertListenerStatus();
+        DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
+        assertNotNull(bpEntitlement);
+
         assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), callContext).size(), 1);
 
-        assertEquals(subscriptionUserApi.getSubscriptionFromId(bpSubscription.getId(), callContext).getCurrentPlan().getBillingPeriod(), BillingPeriod.ANNUAL);
+        assertEquals(bpEntitlement.getSubscription().getCurrentPlan().getBillingPeriod(), BillingPeriod.ANNUAL);
 
         // Move out of trials for interesting invoices adjustments
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
@@ -466,12 +429,9 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         //
         // FORCE AN IMMEDIATE CHANGE OF THE BILLING PERIOD
         //
-        busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.INVOICE_ADJUSTMENT);
-        assertTrue(bpSubscription.changePlanWithPolicy(productName, BillingPeriod.MONTHLY, planSetName, clock.getUTCNow(), ActionPolicy.IMMEDIATE, callContext));
-        assertTrue(busHandler.isCompleted(DELAY));
-        assertListenerStatus();
+        bpEntitlement = changeEntitlementAndCheckForCompletion(bpEntitlement, productName, term, ActionPolicy.IMMEDIATE, NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.INVOICE_ADJUSTMENT);
 
-        assertEquals(subscriptionUserApi.getSubscriptionFromId(bpSubscription.getId(), callContext).getCurrentPlan().getBillingPeriod(), BillingPeriod.MONTHLY);
+        assertEquals(bpEntitlement.getSubscription().getCurrentPlan().getBillingPeriod(), BillingPeriod.MONTHLY);
 
 
         invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
@@ -553,7 +513,6 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
 
         // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
         clock.setDeltaFromReality(today.toDateTimeAtCurrentTime(DateTimeZone.UTC).getMillis() - clock.getUTCNow().getMillis());
-        final SubscriptionBundle bundle = subscriptionUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
 
         final String productName = "Shotgun";
         final BillingPeriod term = BillingPeriod.ANNUAL;
@@ -562,18 +521,12 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         //
         // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
         //
-        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.INVOICE);
-        final PlanPhaseSpecifier bpPlanPhaseSpecifier = new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null);
-        final SubscriptionData bpSubscription = subscriptionDataFromSubscription(subscriptionUserApi.createSubscription(bundle.getId(),
-                                                                                                                       bpPlanPhaseSpecifier,
-                                                                                                                       null,
-                                                                                                                       callContext));
-        assertNotNull(bpSubscription);
-        assertTrue(busHandler.isCompleted(DELAY));
-        assertListenerStatus();
+        DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
+        assertNotNull(bpEntitlement);
+
         assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), callContext).size(), 1);
 
-        assertEquals(subscriptionUserApi.getSubscriptionFromId(bpSubscription.getId(), callContext).getCurrentPlan().getBillingPeriod(), BillingPeriod.ANNUAL);
+        assertEquals(bpEntitlement.getSubscription().getCurrentPlan().getBillingPeriod(), BillingPeriod.ANNUAL);
 
         // Move out of trials for interesting invoices adjustments
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
@@ -590,9 +543,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         //
         // FORCE AN IMMEDIATE CHANGE OF THE BILLING PERIOD
         //
-        busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.INVOICE_ADJUSTMENT);
-        assertTrue(bpSubscription.changePlanWithPolicy(productName, BillingPeriod.MONTHLY, planSetName, clock.getUTCNow(), ActionPolicy.IMMEDIATE, callContext));
-        assertEquals(subscriptionUserApi.getSubscriptionFromId(bpSubscription.getId(), callContext).getCurrentPlan().getBillingPeriod(), BillingPeriod.MONTHLY);
+        changeEntitlementAndCheckForCompletion(bpEntitlement, productName, BillingPeriod.MONTHLY, ActionPolicy.IMMEDIATE, NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.INVOICE_ADJUSTMENT);
 
         assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
@@ -669,7 +620,6 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
 
         // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
         clock.setDeltaFromReality(today.toDateTimeAtCurrentTime(DateTimeZone.UTC).getMillis() - clock.getUTCNow().getMillis());
-        final SubscriptionBundle bundle = subscriptionUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
 
         final String productName = "Shotgun";
         final BillingPeriod term = BillingPeriod.ANNUAL;
@@ -678,18 +628,11 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         //
         // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
         //
-        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.INVOICE);
-        final PlanPhaseSpecifier bpPlanPhaseSpecifier = new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null);
-        final SubscriptionData bpSubscription = subscriptionDataFromSubscription(subscriptionUserApi.createSubscription(bundle.getId(),
-                                                                                                                       bpPlanPhaseSpecifier,
-                                                                                                                       null,
-                                                                                                                       callContext));
-        assertNotNull(bpSubscription);
-        assertTrue(busHandler.isCompleted(DELAY));
-        assertListenerStatus();
+        DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
+        assertNotNull(bpEntitlement);
         assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), callContext).size(), 1);
 
-        assertEquals(subscriptionUserApi.getSubscriptionFromId(bpSubscription.getId(), callContext).getCurrentPlan().getBillingPeriod(), BillingPeriod.ANNUAL);
+        assertEquals(bpEntitlement.getSubscription().getCurrentPlan().getBillingPeriod(), BillingPeriod.ANNUAL);
 
         // Move out of trials for interesting invoices adjustments
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
@@ -733,11 +676,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         //
         // FORCE AN IMMEDIATE CHANGE OF THE BILLING PERIOD
         //
-        busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.INVOICE_ADJUSTMENT);
-        assertTrue(bpSubscription.changePlanWithPolicy(productName, BillingPeriod.MONTHLY, planSetName, clock.getUTCNow(), ActionPolicy.IMMEDIATE, callContext));
-        assertEquals(subscriptionUserApi.getSubscriptionFromId(bpSubscription.getId(), callContext).getCurrentPlan().getBillingPeriod(), BillingPeriod.MONTHLY);
-        assertTrue(busHandler.isCompleted(DELAY));
-        assertListenerStatus();
+        changeEntitlementAndCheckForCompletion(bpEntitlement, productName, BillingPeriod.MONTHLY, ActionPolicy.IMMEDIATE, NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.INVOICE_ADJUSTMENT);
 
         invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
         assertEquals(invoices.size(), 3);

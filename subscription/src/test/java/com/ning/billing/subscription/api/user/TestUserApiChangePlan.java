@@ -126,7 +126,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
             // RE READ SUBSCRIPTION + CHANGE PLAN
             testListener.setNonExpectedMode();
             testListener.pushExpectedEvent(NextEvent.CHANGE);
-            subscription = (SubscriptionData) subscriptionApi.getSubscriptionFromId(subscription.getId(), callContext);
+            subscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
             subscription.changePlan(toProd, toTerm, toPlanSet, clock.getUTCNow(), callContext);
             assertFalse(testListener.isCompleted(3000));
             testListener.reset();
@@ -149,7 +149,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
             clock.addDeltaFromReality(it.toDurationMillis());
             assertTrue(testListener.isCompleted(5000));
 
-            subscription = (SubscriptionData) subscriptionApi.getSubscriptionFromId(subscription.getId(), callContext);
+            subscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
             currentPhase = subscription.getCurrentPhase();
             checkChangePlan(subscription, toProd, ProductCategory.BASE, toTerm, PhaseType.DISCOUNT);
 
@@ -229,7 +229,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
             subscriptionInternalApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate, internalCallContext);
 
             // RE READ SUBSCRIPTION + CHECK CURRENT PHASE
-            subscription = (SubscriptionData) subscriptionApi.getSubscriptionFromId(subscription.getId(), callContext);
+            subscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
             PlanPhase currentPhase = subscription.getCurrentPhase();
             assertNotNull(currentPhase);
             assertEquals(currentPhase.getPhaseType(), PhaseType.EVERGREEN);
@@ -309,7 +309,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
             final Duration ctd = testUtil.getDurationMonth(1);
             final DateTime newChargedThroughDate = TestSubscriptionHelper.addDuration(startDiscountPhase, ctd);
             subscriptionInternalApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate, internalCallContext);
-            subscription = (SubscriptionData) subscriptionApi.getSubscriptionFromId(subscription.getId(), callContext);
+            subscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
 
             // CHANGE EOT
             testListener.setNonExpectedMode();
@@ -358,7 +358,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
             final Duration ctd = testUtil.getDurationMonth(1);
             final DateTime newChargedThroughDate = TestSubscriptionHelper.addDuration(startDiscountPhase, ctd);
             subscriptionInternalApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate, internalCallContext);
-            subscription = (SubscriptionData) subscriptionApi.getSubscriptionFromId(subscription.getId(), callContext);
+            subscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
 
             // CHANGE EOT
             testListener.setNonExpectedMode();
@@ -407,7 +407,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
             it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(6));
             clock.addDeltaFromReality(it.toDurationMillis());
             assertTrue(testListener.isCompleted(5000));
-            subscription = (SubscriptionData) subscriptionApi.getSubscriptionFromId(subscription.getId(), callContext);
+            subscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
 
             currentPlan = subscription.getCurrentPlan();
             assertNotNull(currentPlan);
@@ -464,7 +464,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
             trialPhase = subscription.getCurrentPhase();
             assertEquals(trialPhase.getPhaseType(), PhaseType.DISCOUNT);
 
-            subscription = (SubscriptionData) subscriptionApi.getSubscriptionFromId(subscription.getId(), callContext);
+            subscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
 
             final DateTime expectedNextPhaseDate = subscription.getStartDate().plusDays(30).plusMonths(6);
             final SubscriptionTransition nextPhase = subscription.getPendingTransition();

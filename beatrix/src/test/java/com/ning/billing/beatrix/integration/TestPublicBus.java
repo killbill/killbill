@@ -30,6 +30,7 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.entitlement.api.DefaultEntitlement;
 import com.ning.billing.subscription.api.user.SubscriptionData;
 import com.ning.billing.notification.plugin.api.ExtBusEvent;
 import com.ning.billing.subscription.api.user.SubscriptionBundle;
@@ -95,7 +96,6 @@ public class TestPublicBus extends TestIntegrationBase {
 
         // set clock to the initial start date
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
-        final SubscriptionBundle bundle = subscriptionUserApi.createBundleForAccount(account.getId(), "whatever2", callContext);
 
         String productName = "Shotgun";
         BillingPeriod term = BillingPeriod.MONTHLY;
@@ -104,14 +104,8 @@ public class TestPublicBus extends TestIntegrationBase {
         //
         // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
         //
-        busHandler.pushExpectedEvent(NextEvent.CREATE);
-        busHandler.pushExpectedEvent(NextEvent.INVOICE);
-
-        SubscriptionData subscription = subscriptionDataFromSubscription(subscriptionUserApi.createSubscription(bundle.getId(),
-                                                                                                               new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, callContext));
-
-        assertNotNull(subscription);
-        assertTrue(busHandler.isCompleted(DELAY));
+        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
+        assertNotNull(bpEntitlement);
 
         await().atMost(10, SECONDS).until(new Callable<Boolean>() {
             @Override
@@ -120,9 +114,5 @@ public class TestPublicBus extends TestIntegrationBase {
                 return externalBusCount.get() == 4;
             }
         });
-
-
     }
-
-
 }

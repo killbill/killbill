@@ -24,6 +24,7 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.entitlement.api.DefaultEntitlement;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
@@ -53,7 +54,6 @@ public class TestBundleTransfer extends TestIntegrationBase {
         final DateTime initialDate = new DateTime(2012, 4, 1, 0, 15, 42, 0, testTimeZone);
 
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
-        final SubscriptionBundle bundle = subscriptionUserApi.createBundleForAccount(account.getId(), "mycutebundle", callContext);
 
         final String productName = "Shotgun";
         final BillingPeriod term = BillingPeriod.ANNUAL;
@@ -61,18 +61,12 @@ public class TestBundleTransfer extends TestIntegrationBase {
         //
         // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
         //
-        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.INVOICE);
-        final PlanPhaseSpecifier bpPlanPhaseSpecifier = new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null);
-        final SubscriptionData bpSubscription = subscriptionDataFromSubscription(subscriptionUserApi.createSubscription(bundle.getId(),
-                bpPlanPhaseSpecifier,
-                null,
-                callContext));
-        assertNotNull(bpSubscription);
+        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
+        assertNotNull(bpEntitlement);
         assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
         assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), callContext).size(), 1);
-
-        assertEquals(subscriptionUserApi.getSubscriptionFromId(bpSubscription.getId(), callContext).getCurrentPlan().getBillingPeriod(), BillingPeriod.ANNUAL);
+        assertEquals(bpEntitlement.getSubscription().getCurrentPlan().getBillingPeriod(), BillingPeriod.ANNUAL);
 
         // Move out of trials for interesting invoices adjustments
         busHandler.pushExpectedEvent(NextEvent.PHASE);
@@ -113,7 +107,6 @@ public class TestBundleTransfer extends TestIntegrationBase {
         final DateTime initialDate = new DateTime(2012, 4, 1, 0, 15, 42, 0, testTimeZone);
 
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
-        final SubscriptionBundle bundle = subscriptionUserApi.createBundleForAccount(account.getId(), "mycutebundle", callContext);
 
         final String productName = "Shotgun";
         final BillingPeriod term = BillingPeriod.MONTHLY;
@@ -121,18 +114,12 @@ public class TestBundleTransfer extends TestIntegrationBase {
         //
         // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
         //
-        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.INVOICE);
-        final PlanPhaseSpecifier bpPlanPhaseSpecifier = new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null);
-        final SubscriptionData bpSubscription = subscriptionDataFromSubscription(subscriptionUserApi.createSubscription(bundle.getId(),
-                bpPlanPhaseSpecifier,
-                null,
-                callContext));
-        assertNotNull(bpSubscription);
-        assertTrue(busHandler.isCompleted(DELAY));
+        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
+        assertNotNull(bpEntitlement);
         assertListenerStatus();
         assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), callContext).size(), 1);
 
-        assertEquals(subscriptionUserApi.getSubscriptionFromId(bpSubscription.getId(), callContext).getCurrentPlan().getBillingPeriod(), BillingPeriod.MONTHLY);
+        assertEquals(bpEntitlement.getSubscription().getCurrentPlan().getBillingPeriod(), BillingPeriod.MONTHLY);
 
         // Move out of trials for interesting invoices adjustments
         busHandler.pushExpectedEvent(NextEvent.PHASE);
@@ -180,26 +167,20 @@ public class TestBundleTransfer extends TestIntegrationBase {
         final DateTime initialDate = new DateTime(2012, 4, 1, 0, 15, 42, 0, testTimeZone);
 
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
-        final SubscriptionBundle bundle = subscriptionUserApi.createBundleForAccount(account.getId(), "mycutebundle", callContext);
-
         final String productName = "Shotgun";
         final BillingPeriod term = BillingPeriod.MONTHLY;
         final String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
         //
         // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
         //
-        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.INVOICE);
         final PlanPhaseSpecifier bpPlanPhaseSpecifier = new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null);
-        final SubscriptionData bpSubscription = subscriptionDataFromSubscription(subscriptionUserApi.createSubscription(bundle.getId(),
-                bpPlanPhaseSpecifier,
-                null,
-                callContext));
-        assertNotNull(bpSubscription);
-        assertTrue(busHandler.isCompleted(DELAY));
+
+        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
+        assertNotNull(bpEntitlement);
         assertListenerStatus();
         assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), callContext).size(), 1);
 
-        assertEquals(subscriptionUserApi.getSubscriptionFromId(bpSubscription.getId(), callContext).getCurrentPlan().getBillingPeriod(), BillingPeriod.MONTHLY);
+        assertEquals(bpEntitlement.getSubscription().getCurrentPlan().getBillingPeriod(), BillingPeriod.MONTHLY);
 
         // Move out of trials for interesting invoices adjustments
         busHandler.pushExpectedEvent(NextEvent.PHASE);

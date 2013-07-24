@@ -65,12 +65,8 @@ public abstract class TestOverdueBase extends TestIntegrationBase {
         assertNotNull(account);
 
         paymentApi.addPaymentMethod(BeatrixIntegrationModule.NON_OSGI_PLUGIN_NAME, account, true, paymentMethodPlugin, callContext);
-
-        bundle = subscriptionUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
-
         productName = "Shotgun";
         term = BillingPeriod.MONTHLY;
-
         paymentPlugin.clear();
     }
 

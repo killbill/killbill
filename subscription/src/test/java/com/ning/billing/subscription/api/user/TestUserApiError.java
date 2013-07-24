@@ -98,7 +98,7 @@ public class TestUserApiError extends SubscriptionTestSuiteNoDB {
     public void testCreateSubscriptionAddOnNotAvailable() {
         try {
             final UUID accountId = UUID.randomUUID();
-            final SubscriptionBundle aoBundle = subscriptionApi.createBundleForAccount(accountId, "myAOBundle", callContext);
+            final SubscriptionBundle aoBundle = subscriptionInternalApi.createBundleForAccount(accountId, "myAOBundle", internalCallContext);
             testUtil.createSubscriptionWithBundle(aoBundle.getId(), "Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
             tCreateSubscriptionInternal(aoBundle.getId(), "Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.SUB_CREATE_AO_NOT_AVAILABLE);
         } catch (Exception e) {
@@ -111,7 +111,7 @@ public class TestUserApiError extends SubscriptionTestSuiteNoDB {
         log.info("Starting testCreateSubscriptionAddOnIncluded");
         try {
             final UUID accountId = UUID.randomUUID();
-            final SubscriptionBundle aoBundle = subscriptionApi.createBundleForAccount(accountId, "myAOBundle", callContext);
+            final SubscriptionBundle aoBundle = subscriptionInternalApi.createBundleForAccount(accountId, "myAOBundle", internalCallContext);
             testUtil.createSubscriptionWithBundle(aoBundle.getId(), "Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
             tCreateSubscriptionInternal(aoBundle.getId(), "Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.SUB_CREATE_AO_ALREADY_INCLUDED);
         } catch (Exception e) {
@@ -122,9 +122,9 @@ public class TestUserApiError extends SubscriptionTestSuiteNoDB {
     private void tCreateSubscriptionInternal(@Nullable final UUID bundleId, @Nullable final String productName,
                                              @Nullable final BillingPeriod term, final String planSet, final ErrorCode expected) {
         try {
-            subscriptionApi.createSubscription(bundleId,
+            subscriptionInternalApi.createSubscription(bundleId,
                                               testUtil.getProductSpecifier(productName, planSet, term, null),
-                                              clock.getUTCNow(), callContext);
+                                              clock.getUTCNow(), internalCallContext);
             Assert.fail("Exception expected, error code: " + expected);
         } catch (SubscriptionUserApiException e) {
             assertEquals(e.getCode(), expected.getCode());
@@ -167,11 +167,11 @@ public class TestUserApiError extends SubscriptionTestSuiteNoDB {
             Assert.fail();
         } catch (SubscriptionError error) {
             assertTrue(true);
-            assertEquals(subscriptionApi.getSubscriptionFromId(subscription.getId(), tenantContext).getCurrentPlan().getBillingPeriod(), BillingPeriod.ANNUAL);
+            assertEquals(subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext).getCurrentPlan().getBillingPeriod(), BillingPeriod.ANNUAL);
         }
 
         assertTrue(subscription.changePlanWithPolicy("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow(), ActionPolicy.IMMEDIATE, callContext));
-        assertEquals(subscriptionApi.getSubscriptionFromId(subscription.getId(), tenantContext).getCurrentPlan().getBillingPeriod(), BillingPeriod.MONTHLY);
+        assertEquals(subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext).getCurrentPlan().getBillingPeriod(), BillingPeriod.MONTHLY);
     }
 
     @Test(groups = "fast")
@@ -193,7 +193,7 @@ public class TestUserApiError extends SubscriptionTestSuiteNoDB {
             final DateTime newChargedThroughDate = TestSubscriptionHelper.addDuration(expectedPhaseTrialChange, ctd);
             subscriptionInternalApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate, internalCallContext);
 
-            subscription = subscriptionApi.getSubscriptionFromId(subscription.getId(), tenantContext);
+            subscription = subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
 
             subscription.cancel(clock.getUTCNow(), callContext);
             try {

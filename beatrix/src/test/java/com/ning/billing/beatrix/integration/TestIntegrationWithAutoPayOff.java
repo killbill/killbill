@@ -32,6 +32,7 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.entitlement.api.DefaultEntitlement;
 import com.ning.billing.subscription.api.user.SubscriptionData;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceUserApi;
@@ -75,9 +76,6 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
         super.beforeMethod();
         account = createAccountWithNonOsgiPaymentMethod(getAccountData(25));
         assertNotNull(account);
-
-        bundle = subscriptionUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
-
         productName = "Shotgun";
         term = BillingPeriod.MONTHLY;
         planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
@@ -88,12 +86,9 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
         add_AUTO_PAY_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
 
-        busHandler.pushExpectedEvents(NextEvent.INVOICE);
-        busHandler.pushExpectedEvents(NextEvent.CREATE);
-        final SubscriptionData baseSubscription = subscriptionDataFromSubscription(subscriptionUserApi.createSubscription(bundle.getId(),
-                                                                                                                         new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, callContext));
-        assertNotNull(baseSubscription);
-        assertTrue(busHandler.isCompleted(DELAY));
+
+        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
+        assertNotNull(bpEntitlement);
 
         Collection<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId(), callContext);
         assertEquals(invoices.size(), 1);
@@ -136,12 +131,8 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
         add_AUTO_PAY_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
 
-        busHandler.pushExpectedEvents(NextEvent.INVOICE);
-        busHandler.pushExpectedEvents(NextEvent.CREATE);
-        final SubscriptionData baseSubscription = subscriptionDataFromSubscription(subscriptionUserApi.createSubscription(bundle.getId(),
-                                                                                                                         new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, callContext));
-        assertNotNull(baseSubscription);
-        assertTrue(busHandler.isCompleted(DELAY));
+        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
+        assertNotNull(bpEntitlement);
 
         Collection<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId(), callContext);
         assertEquals(invoices.size(), 1);
@@ -202,12 +193,8 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
         add_AUTO_PAY_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
 
-        busHandler.pushExpectedEvents(NextEvent.INVOICE);
-        busHandler.pushExpectedEvents(NextEvent.CREATE);
-        final SubscriptionData baseSubscription = subscriptionDataFromSubscription(subscriptionUserApi.createSubscription(bundle.getId(),
-                                                                                                                         new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, callContext));
-        assertNotNull(baseSubscription);
-        assertTrue(busHandler.isCompleted(DELAY));
+        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
+        assertNotNull(bpEntitlement);
 
         Collection<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId(), callContext);
         assertEquals(invoices.size(), 1);

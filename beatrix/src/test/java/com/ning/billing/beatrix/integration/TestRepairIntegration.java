@@ -34,6 +34,8 @@ import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.entitlement.api.DefaultEntitlement;
+import com.ning.billing.entitlement.api.Entitlement;
 import com.ning.billing.subscription.api.user.SubscriptionData;
 import com.ning.billing.subscription.api.user.SubscriptionEvents;
 import com.ning.billing.subscription.api.SubscriptionTransitionType;
@@ -71,37 +73,19 @@ public class TestRepairIntegration extends TestIntegrationBase {
 
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(25));
 
-        final SubscriptionBundle bundle = subscriptionUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
-
         final String productName = "Shotgun";
         final BillingPeriod term = BillingPeriod.MONTHLY;
         final String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-        busHandler.pushExpectedEvent(NextEvent.CREATE);
-        busHandler.pushExpectedEvent(NextEvent.INVOICE);
-        final SubscriptionData baseSubscription = subscriptionDataFromSubscription(subscriptionUserApi.createSubscription(bundle.getId(),
-                                                                                                                         new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, callContext));
-        assertNotNull(baseSubscription);
-        assertTrue(busHandler.isCompleted(DELAY));
+        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
+        assertNotNull(bpEntitlement);
 
         // MOVE CLOCK A LITTLE BIT-- STILL IN TRIAL
         Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(3));
         clock.addDeltaFromReality(it.toDurationMillis());
 
-        busHandler.pushExpectedEvent(NextEvent.CREATE);
-        busHandler.pushExpectedEvent(NextEvent.INVOICE);
-        busHandler.pushExpectedEvent(NextEvent.PAYMENT);
-        final SubscriptionData aoSubscription = subscriptionDataFromSubscription(subscriptionUserApi.createSubscription(bundle.getId(),
-                                                                                                                       new PlanPhaseSpecifier("Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null), null, callContext));
-        assertTrue(busHandler.isCompleted(DELAY));
-
-        busHandler.pushExpectedEvent(NextEvent.CREATE);
-        busHandler.pushExpectedEvent(NextEvent.INVOICE);
-        busHandler.pushExpectedEvent(NextEvent.PAYMENT);
-        final SubscriptionData aoSubscription2 = subscriptionDataFromSubscription(subscriptionUserApi.createSubscription(bundle.getId(),
-                                                                                                                        new PlanPhaseSpecifier("Laser-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null), null, callContext));
-        assertTrue(busHandler.isCompleted(DELAY));
-
+        final DefaultEntitlement aoEntitlement1 = addAOEntitlementAndCheckForCompletion(bpEntitlement.getId(), "Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY,NextEvent.CREATE, NextEvent.INVOICE, NextEvent.PAYMENT);
+        final DefaultEntitlement aoEntitlement2 = addAOEntitlementAndCheckForCompletion(bpEntitlement.getId(), "Laser-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY,NextEvent.CREATE, NextEvent.INVOICE, NextEvent.PAYMENT);
 
         // MOVE CLOCK A LITTLE BIT MORE -- EITHER STAY IN TRIAL OR GET OUT
         final int duration = inTrial ? 3 : 35;
@@ -119,17 +103,17 @@ public class TestRepairIntegration extends TestIntegrationBase {
         }
         final boolean ifRepair = false;
         if (ifRepair) {
-            BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId(), callContext);
+            BundleTimeline bundleRepair = repairApi.getBundleTimeline(bpEntitlement.getSubscription().getBundleId(), callContext);
             sortEventsOnBundle(bundleRepair);
 
             // Quick check
-            SubscriptionTimeline bpRepair = getSubscriptionRepair(baseSubscription.getId(), bundleRepair);
+            SubscriptionTimeline bpRepair = getSubscriptionRepair(bpEntitlement.getId(), bundleRepair);
             assertEquals(bpRepair.getExistingEvents().size(), 2);
 
-            final SubscriptionTimeline aoRepair = getSubscriptionRepair(aoSubscription.getId(), bundleRepair);
+            final SubscriptionTimeline aoRepair = getSubscriptionRepair(aoEntitlement1.getId(), bundleRepair);
             assertEquals(aoRepair.getExistingEvents().size(), 2);
 
-            final SubscriptionTimeline aoRepair2 = getSubscriptionRepair(aoSubscription2.getId(), bundleRepair);
+            final SubscriptionTimeline aoRepair2 = getSubscriptionRepair(aoEntitlement2.getId(), bundleRepair);
             assertEquals(aoRepair2.getExistingEvents().size(), 2);
 
             final DateTime bpChangeDate = clock.getUTCNow().minusDays(1);
@@ -140,9 +124,9 @@ public class TestRepairIntegration extends TestIntegrationBase {
             final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.TRIAL);
             final NewEvent ne = createNewEvent(SubscriptionTransitionType.CHANGE, bpChangeDate, spec);
 
-            bpRepair = createSubscriptionReapir(baseSubscription.getId(), des, Collections.singletonList(ne));
+            bpRepair = createSubscriptionReapir(bpEntitlement.getId(), des, Collections.singletonList(ne));
 
-            bundleRepair = createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(bpRepair));
+            bundleRepair = createBundleRepair(bpEntitlement.getSubscription().getBundleId(), bundleRepair.getViewId(), Collections.singletonList(bpRepair));
 
             // TIME TO  REPAIR
             busHandler.pushExpectedEvent(NextEvent.INVOICE);
@@ -151,18 +135,19 @@ public class TestRepairIntegration extends TestIntegrationBase {
             repairApi.repairBundle(bundleRepair, false, callContext);
             assertTrue(busHandler.isCompleted(DELAY));
 
-            final SubscriptionData newAoSubscription = subscriptionDataFromSubscription(subscriptionUserApi.getSubscriptionFromId(aoSubscription.getId(), callContext));
+
+            final SubscriptionData newAoSubscription = (SubscriptionData) aoEntitlement1.getSubscription();
             assertEquals(newAoSubscription.getState(), SubscriptionState.CANCELLED);
             assertEquals(newAoSubscription.getAllTransitions().size(), 2);
             assertEquals(newAoSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
 
-            final SubscriptionData newAoSubscription2 = subscriptionDataFromSubscription(subscriptionUserApi.getSubscriptionFromId(aoSubscription2.getId(), callContext));
+            final SubscriptionData newAoSubscription2 = (SubscriptionData) aoEntitlement2.getSubscription();
             assertEquals(newAoSubscription2.getState(), SubscriptionState.ACTIVE);
             assertEquals(newAoSubscription2.getAllTransitions().size(), 2);
             assertEquals(newAoSubscription2.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
 
 
-            final SubscriptionData newBaseSubscription = subscriptionDataFromSubscription(subscriptionUserApi.getSubscriptionFromId(baseSubscription.getId(), callContext));
+            final SubscriptionData newBaseSubscription = (SubscriptionData) bpEntitlement.getSubscription();
             assertEquals(newBaseSubscription.getState(), SubscriptionState.ACTIVE);
             assertEquals(newBaseSubscription.getAllTransitions().size(), 3);
             assertEquals(newBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);

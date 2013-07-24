@@ -54,6 +54,7 @@ import com.ning.billing.beatrix.util.PaymentChecker;
 import com.ning.billing.beatrix.util.RefundChecker;
 import com.ning.billing.beatrix.util.SubscriptionChecker;
 import com.ning.billing.bus.api.PersistentBus;
+import com.ning.billing.catalog.api.ActionPolicy;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
@@ -288,33 +289,6 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
         final Entitlement entitlement = entitlementApi.getEntitlementFromId(subscriptionId, callContext);
 
-
-        /*
-                final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId);
-                final List<InvoiceItem> invoiceItems = new ArrayList<InvoiceItem>();
-                for (final Invoice invoice : invoices) {
-                    invoiceItems.addAll(invoice.getInvoiceItems());
-                }
-                assertEquals(invoiceItems.size(), totalInvoiceItemCount);
-
-                boolean wasFound = false;
-
-                // We implicitly assume here that the account timezone is the same as the one for startDate/endDate
-                for (final InvoiceItem item : invoiceItems) {
-                    if (item.getStartDate().compareTo(new LocalDate(startDate)) == 0) {
-                        if ((item.getEndDate() == null && endDate == null) || (item.getEndDate() != null && new LocalDate(endDate).compareTo(item.getEndDate()) == 0)) {
-                            if (item.getAmount().compareTo(amount) == 0) {
-                                wasFound = true;
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                if (!wasFound) {
-                    fail();
-                }
-        */
         final Subscription subscription = ((DefaultEntitlement) entitlement).getSubscription();
         final DateTime ctd = subscription.getChargedThroughDate();
         assertNotNull(ctd);
@@ -551,16 +525,21 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
 
     protected DefaultEntitlement changeEntitlementAndCheckForCompletion(final Entitlement entitlement,
-                                                                 final String productName,
-                                                                 final BillingPeriod billingPeriod,
-                                                                 final NextEvent... events) {
+                                                                        final String productName,
+                                                                        final BillingPeriod billingPeriod,
+                                                                        final ActionPolicy billingPolicy,
+                                                                        final NextEvent... events) {
         return (DefaultEntitlement) doCallAndCheckForCompletion(new Function<Void, Entitlement>() {
             @Override
             public Entitlement apply(@Nullable final Void dontcare) {
                 try {
                     // Need to fetch again to get latest CTD updated from the system
                     final Entitlement refreshedEntitlement = entitlementApi.getEntitlementFromId(entitlement.getId(), callContext);
-                    refreshedEntitlement.changePlan(productName, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow().toLocalDate(), callContext);
+                    if (billingPolicy == null) {
+                        refreshedEntitlement.changePlan(productName, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow().toLocalDate(), callContext);
+                    } else {
+                        refreshedEntitlement.changePlanOverrideBillingPolicy(productName, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow().toLocalDate(), billingPolicy ,callContext);
+                    }
                     return refreshedEntitlement;
                 } catch (EntitlementApiException e) {
                     fail(e.getMessage());

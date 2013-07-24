@@ -114,7 +114,7 @@ public class SubscriptionTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteW
 
         this.catalog = subscriptionTestInitializer.initCatalog(catalogService);
         this.accountData = subscriptionTestInitializer.initAccountData();
-        this.bundle = subscriptionTestInitializer.initBundle(subscriptionInternalApi, callContext);
+        this.bundle = subscriptionTestInitializer.initBundle(subscriptionInternalApi, internalCallContext);
     }
 
     @AfterMethod(groups = "slow")

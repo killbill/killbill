@@ -140,17 +140,17 @@ public class TestRepairWithAO extends SubscriptionTestSuiteWithEmbeddedDB {
             testUtil.validateExistingEventForAssertion(e, bpRepair.getExistingEvents().get(index++));
         }
 
-        SubscriptionData newAoSubscription = (SubscriptionData) subscriptionApi.getSubscriptionFromId(aoSubscription.getId(), callContext);
+        SubscriptionData newAoSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
         assertEquals(newAoSubscription.getState(), SubscriptionState.ACTIVE);
         assertEquals(newAoSubscription.getAllTransitions().size(), 2);
         assertEquals(newAoSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
 
-        SubscriptionData newAoSubscription2 = (SubscriptionData) subscriptionApi.getSubscriptionFromId(aoSubscription2.getId(), callContext);
+        SubscriptionData newAoSubscription2 = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(aoSubscription2.getId(), internalCallContext);
         assertEquals(newAoSubscription2.getState(), SubscriptionState.ACTIVE);
         assertEquals(newAoSubscription2.getAllTransitions().size(), 2);
         assertEquals(newAoSubscription2.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
 
-        SubscriptionData newBaseSubscription = (SubscriptionData) subscriptionApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
+        SubscriptionData newBaseSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
         assertEquals(newBaseSubscription.getState(), SubscriptionState.ACTIVE);
         assertEquals(newBaseSubscription.getAllTransitions().size(), 2);
         assertEquals(newBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
@@ -181,17 +181,17 @@ public class TestRepairWithAO extends SubscriptionTestSuiteWithEmbeddedDB {
             testUtil.validateExistingEventForAssertion(e, bpRepair.getExistingEvents().get(index++));
         }
 
-        newAoSubscription = (SubscriptionData) subscriptionApi.getSubscriptionFromId(aoSubscription.getId(), callContext);
+        newAoSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
         assertEquals(newAoSubscription.getState(), SubscriptionState.CANCELLED);
         assertEquals(newAoSubscription.getAllTransitions().size(), 2);
         assertEquals(newAoSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
 
-        newAoSubscription2 = (SubscriptionData) subscriptionApi.getSubscriptionFromId(aoSubscription2.getId(), callContext);
+        newAoSubscription2 = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(aoSubscription2.getId(), internalCallContext);
         assertEquals(newAoSubscription2.getState(), SubscriptionState.ACTIVE);
         assertEquals(newAoSubscription2.getAllTransitions().size(), 2);
         assertEquals(newAoSubscription2.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
 
-        newBaseSubscription = (SubscriptionData) subscriptionApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
+        newBaseSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
         assertEquals(newBaseSubscription.getState(), SubscriptionState.ACTIVE);
         assertEquals(newBaseSubscription.getAllTransitions().size(), 3);
         assertEquals(newBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
@@ -274,12 +274,12 @@ public class TestRepairWithAO extends SubscriptionTestSuiteWithEmbeddedDB {
             testUtil.validateExistingEventForAssertion(e, bpRepair.getExistingEvents().get(index++));
         }
 
-        SubscriptionData newAoSubscription = (SubscriptionData) subscriptionApi.getSubscriptionFromId(aoSubscription.getId(), callContext);
+        SubscriptionData newAoSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
         assertEquals(newAoSubscription.getState(), SubscriptionState.ACTIVE);
         assertEquals(newAoSubscription.getAllTransitions().size(), 2);
         assertEquals(newAoSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
 
-        SubscriptionData newBaseSubscription = (SubscriptionData) subscriptionApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
+        SubscriptionData newBaseSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
         assertEquals(newBaseSubscription.getState(), SubscriptionState.ACTIVE);
         assertEquals(newBaseSubscription.getAllTransitions().size(), 2);
         assertEquals(newBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
@@ -305,12 +305,12 @@ public class TestRepairWithAO extends SubscriptionTestSuiteWithEmbeddedDB {
             testUtil.validateExistingEventForAssertion(e, bpRepair.getExistingEvents().get(index++));
         }
 
-        newAoSubscription = (SubscriptionData) subscriptionApi.getSubscriptionFromId(aoSubscription.getId(), callContext);
+        newAoSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
         assertEquals(newAoSubscription.getState(), SubscriptionState.CANCELLED);
         assertEquals(newAoSubscription.getAllTransitions().size(), 3);
         assertEquals(newAoSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
 
-        newBaseSubscription = (SubscriptionData) subscriptionApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
+        newBaseSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
         assertEquals(newBaseSubscription.getState(), SubscriptionState.ACTIVE);
         assertEquals(newBaseSubscription.getAllTransitions().size(), 3);
         assertEquals(newBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
@@ -342,7 +342,7 @@ public class TestRepairWithAO extends SubscriptionTestSuiteWithEmbeddedDB {
         // SET CTD to BASE SUBSCRIPTION SP CANCEL OCCURS EOT
         final DateTime newChargedThroughDate = baseSubscription.getStartDate().plusDays(30).plusMonths(1);
         subscriptionInternalApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate, internalCallContext);
-        baseSubscription = (SubscriptionData) subscriptionApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
+        baseSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
 
         BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId(), callContext);
         testUtil.sortEventsOnBundle(bundleRepair);
@@ -395,12 +395,12 @@ public class TestRepairWithAO extends SubscriptionTestSuiteWithEmbeddedDB {
             testUtil.validateExistingEventForAssertion(e, bpRepair.getExistingEvents().get(index++));
         }
 
-        SubscriptionData newAoSubscription = (SubscriptionData) subscriptionApi.getSubscriptionFromId(aoSubscription.getId(), callContext);
+        SubscriptionData newAoSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
         assertEquals(newAoSubscription.getState(), SubscriptionState.ACTIVE);
         assertEquals(newAoSubscription.getAllTransitions().size(), 2);
         assertEquals(newAoSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
 
-        SubscriptionData newBaseSubscription = (SubscriptionData) subscriptionApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
+        SubscriptionData newBaseSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
         assertEquals(newBaseSubscription.getState(), SubscriptionState.ACTIVE);
         assertEquals(newBaseSubscription.getAllTransitions().size(), 2);
         assertEquals(newBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
@@ -426,12 +426,12 @@ public class TestRepairWithAO extends SubscriptionTestSuiteWithEmbeddedDB {
             testUtil.validateExistingEventForAssertion(e, bpRepair.getExistingEvents().get(index++));
         }
 
-        newAoSubscription = (SubscriptionData) subscriptionApi.getSubscriptionFromId(aoSubscription.getId(), callContext);
+        newAoSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
         assertEquals(newAoSubscription.getState(), SubscriptionState.ACTIVE);
         assertEquals(newAoSubscription.getAllTransitions().size(), 3);
         assertEquals(newAoSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
 
-        newBaseSubscription = (SubscriptionData) subscriptionApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
+        newBaseSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
         assertEquals(newBaseSubscription.getState(), SubscriptionState.ACTIVE);
         assertEquals(newBaseSubscription.getAllTransitions().size(), 3);
         assertEquals(newBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
@@ -444,12 +444,12 @@ public class TestRepairWithAO extends SubscriptionTestSuiteWithEmbeddedDB {
         clock.addDeltaFromReality(it.toDurationMillis());
         assertTrue(testListener.isCompleted(7000));
 
-        newAoSubscription = (SubscriptionData) subscriptionApi.getSubscriptionFromId(aoSubscription.getId(), callContext);
+        newAoSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
         assertEquals(newAoSubscription.getState(), SubscriptionState.CANCELLED);
         assertEquals(newAoSubscription.getAllTransitions().size(), 3);
         assertEquals(newAoSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
 
-        newBaseSubscription = (SubscriptionData) subscriptionApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
+        newBaseSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
         assertEquals(newBaseSubscription.getState(), SubscriptionState.CANCELLED);
         assertEquals(newBaseSubscription.getAllTransitions().size(), 3);
         assertEquals(newBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
@@ -512,12 +512,12 @@ public class TestRepairWithAO extends SubscriptionTestSuiteWithEmbeddedDB {
         for (final ExistingEvent e : expected) {
             testUtil.validateExistingEventForAssertion(e, aoRepair.getExistingEvents().get(index++));
         }
-        SubscriptionData newAoSubscription = (SubscriptionData) subscriptionApi.getSubscriptionFromId(aoSubscription.getId(), callContext);
+        SubscriptionData newAoSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
         assertEquals(newAoSubscription.getState(), SubscriptionState.ACTIVE);
         assertEquals(newAoSubscription.getAllTransitions().size(), 2);
         assertEquals(newAoSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
 
-        SubscriptionData newBaseSubscription = (SubscriptionData) subscriptionApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
+        SubscriptionData newBaseSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
         assertEquals(newBaseSubscription.getState(), SubscriptionState.ACTIVE);
         assertEquals(newBaseSubscription.getAllTransitions().size(), 2);
         assertEquals(newBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
@@ -534,12 +534,12 @@ public class TestRepairWithAO extends SubscriptionTestSuiteWithEmbeddedDB {
             testUtil.validateExistingEventForAssertion(e, aoRepair.getExistingEvents().get(index++));
         }
 
-        newAoSubscription = (SubscriptionData) subscriptionApi.getSubscriptionFromId(aoSubscription.getId(), callContext);
+        newAoSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
         assertEquals(newAoSubscription.getState(), SubscriptionState.CANCELLED);
         assertEquals(newAoSubscription.getAllTransitions().size(), 2);
         assertEquals(newAoSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
 
-        newBaseSubscription = (SubscriptionData) subscriptionApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
+        newBaseSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
         assertEquals(newBaseSubscription.getState(), SubscriptionState.ACTIVE);
         assertEquals(newBaseSubscription.getAllTransitions().size(), 2);
         assertEquals(newBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
@@ -601,7 +601,7 @@ public class TestRepairWithAO extends SubscriptionTestSuiteWithEmbeddedDB {
         for (final ExistingEvent e : expected) {
             testUtil.validateExistingEventForAssertion(e, aoRepair.getExistingEvents().get(index++));
         }
-        SubscriptionData newAoSubscription = (SubscriptionData) subscriptionApi.getSubscriptionFromId(aoSubscription.getId(), callContext);
+        SubscriptionData newAoSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
         assertEquals(newAoSubscription.getState(), SubscriptionState.ACTIVE);
         assertEquals(newAoSubscription.getAllTransitions().size(), 2);
         assertEquals(newAoSubscription.getStartDate(), aoSubscription.getStartDate());
@@ -620,7 +620,7 @@ public class TestRepairWithAO extends SubscriptionTestSuiteWithEmbeddedDB {
             testUtil.validateExistingEventForAssertion(e, aoRepair.getExistingEvents().get(index++));
         }
 
-        newAoSubscription = (SubscriptionData) subscriptionApi.getSubscriptionFromId(aoSubscription.getId(), callContext);
+        newAoSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
         assertEquals(newAoSubscription.getState(), SubscriptionState.ACTIVE);
         assertEquals(newAoSubscription.getAllTransitions().size(), 2);
         assertEquals(newAoSubscription.getStartDate(), aoRecreateDate);
@@ -694,7 +694,7 @@ public class TestRepairWithAO extends SubscriptionTestSuiteWithEmbeddedDB {
         for (final ExistingEvent e : expected) {
             testUtil.validateExistingEventForAssertion(e, aoRepair.getExistingEvents().get(index++));
         }
-        SubscriptionData newAoSubscription = (SubscriptionData) subscriptionApi.getSubscriptionFromId(aoSubscription.getId(), callContext);
+        SubscriptionData newAoSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
         assertEquals(newAoSubscription.getState(), SubscriptionState.ACTIVE);
         assertEquals(newAoSubscription.getAllTransitions().size(), 2);
 
@@ -711,7 +711,7 @@ public class TestRepairWithAO extends SubscriptionTestSuiteWithEmbeddedDB {
             testUtil.validateExistingEventForAssertion(e, aoRepair.getExistingEvents().get(index++));
         }
 
-        newAoSubscription = (SubscriptionData) subscriptionApi.getSubscriptionFromId(aoSubscription.getId(), callContext);
+        newAoSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
         assertEquals(newAoSubscription.getState(), SubscriptionState.ACTIVE);
         assertEquals(newAoSubscription.getAllTransitions().size(), 3);
 
@@ -737,7 +737,7 @@ public class TestRepairWithAO extends SubscriptionTestSuiteWithEmbeddedDB {
         clock.addDeltaFromReality(it.toDurationMillis());
         assertTrue(testListener.isCompleted(5000));
 
-        newAoSubscription = (SubscriptionData) subscriptionApi.getSubscriptionFromId(aoSubscription.getId(), callContext);
+        newAoSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
         currentPhase = newAoSubscription.getCurrentPhase();
         assertNotNull(currentPhase);
         assertEquals(currentPhase.getPhaseType(), PhaseType.EVERGREEN);

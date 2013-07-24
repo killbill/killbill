@@ -26,6 +26,7 @@ import org.testng.annotations.Test;
 import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.entitlement.api.DefaultEntitlement;
 import com.ning.billing.subscription.api.user.Subscription;
 import com.ning.billing.subscription.api.user.SubscriptionState;
 import com.ning.billing.invoice.api.InvoiceItemType;
@@ -64,16 +65,16 @@ public class TestOverdueWithSubscriptionCancellation extends TestOverdueBase {
 
         // Set next invoice to fail and create subscription
         paymentPlugin.makeAllInvoicesFailWithError(true);
-        final Subscription baseSubscription = createBaseEntitlementAndCheckForCompletion(bundle.getId(), productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
+        final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
 
         invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
-        invoiceChecker.checkChargedThroughDate(baseSubscription.getId(), new LocalDate(2012, 5, 1), callContext);
+        invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 5, 1), callContext);
 
         // DAY 30 have to get out of trial before first payment
         addDaysAndCheckForCompletion(30, NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR);
 
         invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 31), new LocalDate(2012, 6, 30), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
-        invoiceChecker.checkChargedThroughDate(baseSubscription.getId(), new LocalDate(2012, 6, 30), callContext);
+        invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 6, 30), callContext);
 
         // Should still be in clear state
         checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
@@ -84,7 +85,7 @@ public class TestOverdueWithSubscriptionCancellation extends TestOverdueBase {
         // Should be in OD1
         checkODState("OD1");
 
-        final Subscription cancelledBaseSubscription = subscriptionUserApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
+        final Subscription cancelledBaseSubscription =  ((DefaultEntitlement) entitlementApi.getEntitlementFromId(baseEntitlement.getId(), callContext)).getSubscription();
         assertTrue(cancelledBaseSubscription.getState() == SubscriptionState.CANCELLED);
     }
 }

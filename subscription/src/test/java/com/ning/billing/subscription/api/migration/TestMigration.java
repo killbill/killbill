@@ -58,11 +58,11 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
             migrationApi.migrate(toBeMigrated, callContext);
             assertTrue(testListener.isCompleted(5000));
 
-            final List<SubscriptionBundle> bundles = subscriptionApi.getBundlesForAccount(toBeMigrated.getAccountKey(), callContext);
+            final List<SubscriptionBundle> bundles = subscriptionInternalApi.getBundlesForAccount(toBeMigrated.getAccountKey(), internalCallContext);
             assertEquals(bundles.size(), 1);
             final SubscriptionBundle bundle = bundles.get(0);
 
-            final List<Subscription> subscriptions = subscriptionApi.getSubscriptionsForBundle(bundle.getId(), callContext);
+            final List<Subscription> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(bundle.getId(), internalCallContext);
             assertEquals(subscriptions.size(), 1);
             final Subscription subscription = subscriptions.get(0);
             assertTrue(subscription.getStartDate().compareTo(startDate) == 0);
@@ -93,11 +93,11 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
             migrationApi.migrate(toBeMigrated, callContext);
             assertTrue(testListener.isCompleted(5000));
 
-            final List<SubscriptionBundle> bundles = subscriptionApi.getBundlesForAccount(toBeMigrated.getAccountKey(), callContext);
+            final List<SubscriptionBundle> bundles = subscriptionInternalApi.getBundlesForAccount(toBeMigrated.getAccountKey(), internalCallContext);
             assertEquals(bundles.size(), 1);
             final SubscriptionBundle bundle = bundles.get(0);
 
-            final List<Subscription> subscriptions = subscriptionApi.getSubscriptionsForBundle(bundle.getId(), callContext);
+            final List<Subscription> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(bundle.getId(), internalCallContext);
             assertEquals(subscriptions.size(), 2);
 
             final Subscription baseSubscription = (subscriptions.get(0).getCurrentPlan().getProduct().getCategory() == ProductCategory.BASE) ?
@@ -141,12 +141,12 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
             migrationApi.migrate(toBeMigrated, callContext);
             assertTrue(testListener.isCompleted(5000));
 
-            final List<SubscriptionBundle> bundles = subscriptionApi.getBundlesForAccount(toBeMigrated.getAccountKey(), callContext);
+            final List<SubscriptionBundle> bundles = subscriptionInternalApi.getBundlesForAccount(toBeMigrated.getAccountKey(), internalCallContext);
             assertEquals(bundles.size(), 1);
             final SubscriptionBundle bundle = bundles.get(0);
             //assertEquals(bundle.getStartDate(), effectiveDate);
 
-            final List<Subscription> subscriptions = subscriptionApi.getSubscriptionsForBundle(bundle.getId(), callContext);
+            final List<Subscription> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(bundle.getId(), internalCallContext);
             assertEquals(subscriptions.size(), 1);
             final Subscription subscription = subscriptions.get(0);
             assertTrue(subscription.getStartDate().compareTo(startDate) == 0);
@@ -187,11 +187,11 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
             migrationApi.migrate(toBeMigrated, callContext);
             assertTrue(testListener.isCompleted(5000));
 
-            final List<SubscriptionBundle> bundles = subscriptionApi.getBundlesForAccount(toBeMigrated.getAccountKey(), callContext);
+            final List<SubscriptionBundle> bundles = subscriptionInternalApi.getBundlesForAccount(toBeMigrated.getAccountKey(), internalCallContext);
             assertEquals(bundles.size(), 1);
             final SubscriptionBundle bundle = bundles.get(0);
 
-            final List<Subscription> subscriptions = subscriptionApi.getSubscriptionsForBundle(bundle.getId(), callContext);
+            final List<Subscription> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(bundle.getId(), internalCallContext);
             assertEquals(subscriptions.size(), 1);
             final Subscription subscription = subscriptions.get(0);
 
@@ -235,11 +235,11 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
             migrationApi.migrate(toBeMigrated, callContext);
             assertTrue(testListener.isCompleted(5000));
 
-            final List<SubscriptionBundle> bundles = subscriptionApi.getBundlesForAccount(toBeMigrated.getAccountKey(), callContext);
+            final List<SubscriptionBundle> bundles = subscriptionInternalApi.getBundlesForAccount(toBeMigrated.getAccountKey(), internalCallContext);
             assertEquals(bundles.size(), 1);
             final SubscriptionBundle bundle = bundles.get(0);
 
-            final List<Subscription> subscriptions = subscriptionApi.getSubscriptionsForBundle(bundle.getId(), callContext);
+            final List<Subscription> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(bundle.getId(), internalCallContext);
             assertEquals(subscriptions.size(), 1);
             final Subscription subscription = subscriptions.get(0);
             //assertDateWithin(subscription.getStartDate(), beforeMigration, afterMigration);
@@ -284,10 +284,10 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
             assertTrue(testListener.isCompleted(5000));
             assertListenerStatus();
 
-            final List<SubscriptionBundle> bundles = subscriptionApi.getBundlesForAccount(toBeMigrated.getAccountKey(), callContext);
+            final List<SubscriptionBundle> bundles = subscriptionInternalApi.getBundlesForAccount(toBeMigrated.getAccountKey(), internalCallContext);
             assertEquals(bundles.size(), 1);
 
-            final List<Subscription> subscriptions = subscriptionApi.getSubscriptionsForBundle(bundles.get(0).getId(), callContext);
+            final List<Subscription> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(bundles.get(0).getId(), internalCallContext);
             assertEquals(subscriptions.size(), 1);
             final SubscriptionData subscription = (SubscriptionData) subscriptions.get(0);
 

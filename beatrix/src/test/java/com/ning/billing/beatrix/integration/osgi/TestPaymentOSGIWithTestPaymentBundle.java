@@ -26,6 +26,7 @@ import com.ning.billing.beatrix.util.PaymentChecker.ExpectedPaymentCheck;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.entitlement.api.DefaultEntitlement;
 import com.ning.billing.subscription.api.user.Subscription;
 import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.invoice.api.Invoice;
@@ -141,12 +142,10 @@ public class TestPaymentOSGIWithTestPaymentBundle extends TestOSGIBase {
         // We take april as it has 30 days (easier to play with BCD)
         // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
         clock.setDay(new LocalDate(2012, 4, 1));
-
-        final SubscriptionBundle bundle = subscriptionUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
         //
         // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
         //
-        final Subscription bpSubscription = createBaseEntitlementAndCheckForCompletion(bundle.getId(), "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
+        final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
         //
         // ADD ADD_ON ON THE SAME DAY TO TRIGGER PAYMENT
         //
@@ -164,7 +163,10 @@ public class TestPaymentOSGIWithTestPaymentBundle extends TestOSGIBase {
             paymentPluginApi.setPaymentRuntimeExceptionOnNextCalls(expectedRuntimeException);
         }
 
-        createBaseEntitlementAndCheckForCompletion(bundle.getId(), "Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, expectedEvents.toArray(new NextEvent[expectedEvents.size()]));
+        final DefaultEntitlement aoEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", "Telescopic-Scope", ProductCategory.BASE, BillingPeriod.MONTHLY,
+                                                                                            expectedEvents.toArray(new NextEvent[expectedEvents.size()]));
+
+
         Invoice invoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("399.95")));
 
         if (expectedException == null && expectedRuntimeException == null) {

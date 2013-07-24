@@ -27,9 +27,12 @@ import com.ning.billing.beatrix.integration.TestIntegrationBase;
 import com.ning.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.entitlement.api.DefaultEntitlement;
 import com.ning.billing.subscription.api.user.Subscription;
 import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.invoice.api.InvoiceItemType;
+
+import static org.testng.Assert.assertNotNull;
 
 public class TestBillingAlignment extends TestIntegrationBase {
 
@@ -49,13 +52,12 @@ public class TestBillingAlignment extends TestIntegrationBase {
         // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
         clock.setDay(new LocalDate(2012, 4, 1));
 
-        final SubscriptionBundle bundle = subscriptionUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
-
         //
         // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
         // (Start with monthly that has a 'Account' billing alignment
         //
-        final Subscription bpSubscription = createBaseEntitlementAndCheckForCompletion(bundle.getId(), "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
+        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
+        assertNotNull(bpEntitlement);
         invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
 
         // GET OUT TRIAL
@@ -63,7 +65,7 @@ public class TestBillingAlignment extends TestIntegrationBase {
 
         //
         // Change plan to annual that has been configured to have a 'Subscription' billing alignment
-        changeEntitlementAndCheckForCompletion(bpSubscription, "Shotgun", BillingPeriod.ANNUAL, NextEvent.CHANGE, NextEvent.INVOICE);
+        changeEntitlementAndCheckForCompletion(bpEntitlement, "Shotgun", BillingPeriod.ANNUAL, null, NextEvent.CHANGE, NextEvent.INVOICE);
 
 
         /*
