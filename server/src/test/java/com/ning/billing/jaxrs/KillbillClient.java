@@ -394,6 +394,10 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         return doGetInvoice(invoiceId, Boolean.FALSE, InvoiceJsonSimple.class);
     }
 
+    protected InvoiceJsonSimple getInvoice(final Integer invoiceNumber) throws IOException {
+        return getInvoice(invoiceNumber.toString());
+    }
+
     protected InvoiceJsonWithItems getInvoiceWithItems(final String invoiceId) throws IOException {
         return doGetInvoice(invoiceId, Boolean.TRUE, InvoiceJsonWithItems.class);
     }

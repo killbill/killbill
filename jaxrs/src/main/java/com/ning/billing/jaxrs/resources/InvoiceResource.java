@@ -157,6 +157,21 @@ public class InvoiceResource extends JaxRsResourceBase {
     }
 
     @GET
+    @Path("/{invoiceNumber:" + NUMBER_PATTERN + "}/")
+    @Produces(APPLICATION_JSON)
+    public Response getInvoiceByNumber(@PathParam("invoiceNumber") final Integer invoiceNumber,
+                                       @QueryParam(QUERY_INVOICE_WITH_ITEMS) @DefaultValue("false") final boolean withItems,
+                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws InvoiceApiException {
+        final Invoice invoice = invoiceApi.getInvoiceByNumber(invoiceNumber, context.createContext(request));
+        if (invoice == null) {
+            throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND, invoiceNumber);
+        } else {
+            final InvoiceJsonSimple json = withItems ? new InvoiceJsonWithItems(invoice) : new InvoiceJsonSimple(invoice);
+            return Response.status(Status.OK).entity(json).build();
+        }
+    }
+
+    @GET
     @Path("/{invoiceId:" + UUID_PATTERN + "}/html")
     @Produces(TEXT_HTML)
     public Response getInvoiceAsHTML(@PathParam("invoiceId") final String invoiceId,

@@ -39,6 +39,7 @@ public interface JaxrsResource {
      */
     public static String STRING_PATTERN = "[\\w-]+";
     public static String UUID_PATTERN = "\\w+-\\w+-\\w+-\\w+-\\w+";
+    public static String NUMBER_PATTERN = "[0-9]+";
 
     /*
      * Query parameters

@@ -52,6 +52,10 @@ public class TestInvoice extends TestJaxrsBase {
         final InvoiceJsonSimple firstInvoiceJson = getInvoice(invoiceJsonSimple.getInvoiceId());
         assertEquals(firstInvoiceJson, invoiceJsonSimple);
 
+        // Check we can retrieve the invoice by number
+        final InvoiceJsonSimple firstInvoiceByNumberJson = getInvoice(invoiceJsonSimple.getInvoiceNumber());
+        assertEquals(firstInvoiceByNumberJson, invoiceJsonSimple);
+
         // Then create a dryRun Invoice
         final DateTime futureDate = clock.getUTCNow().plusMonths(1).plusDays(3);
         createDryRunInvoice(accountJson.getAccountId(), futureDate);
