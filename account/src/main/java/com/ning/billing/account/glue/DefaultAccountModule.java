@@ -48,7 +48,9 @@ public class DefaultAccountModule extends AbstractModule implements AccountModul
 
     @Override
     public void installAccountUserApi() {
+        // STEPH_ENT should eliminate the RealImplementation if not nedded
         bind(AccountUserApi.class).annotatedWith(RealImplementation.class).to(DefaultAccountUserApi.class).asEagerSingleton();
+        bind(AccountUserApi.class).to(DefaultAccountUserApi.class).asEagerSingleton();
     }
 
     @Override

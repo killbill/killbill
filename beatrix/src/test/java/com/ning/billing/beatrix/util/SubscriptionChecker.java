@@ -16,36 +16,39 @@
 
 package com.ning.billing.beatrix.util;
 
-import com.ning.billing.subscription.api.user.Subscription;
-import com.ning.billing.subscription.api.user.SubscriptionBundle;
-import com.ning.billing.subscription.api.user.SubscriptionTransition;
-import com.ning.billing.subscription.api.user.SubscriptionTransitionData;
-import com.ning.billing.subscription.api.user.SubscriptionUserApi;
-import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
-import com.ning.billing.util.callcontext.CallContext;
+import java.util.List;
+import java.util.UUID;
+
+import javax.inject.Inject;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 
-import javax.inject.Inject;
-import java.util.List;
-import java.util.UUID;
+import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionTransition;
+import com.ning.billing.subscription.api.user.SubscriptionTransitionData;
+import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
 
 public class SubscriptionChecker {
 
 
     private static final Logger log = LoggerFactory.getLogger(SubscriptionChecker.class);
 
-    private final SubscriptionUserApi subscriptionApi;
+    private final SubscriptionInternalApi subscriptionApi;
     private final AuditChecker auditChecker;
 
     @Inject
-    public SubscriptionChecker(final SubscriptionUserApi subscriptionApi, final AuditChecker auditChecker) {
+    public SubscriptionChecker(final SubscriptionInternalApi subscriptionApi, final AuditChecker auditChecker) {
         this.subscriptionApi = subscriptionApi;
         this.auditChecker = auditChecker;
     }
 
-    public SubscriptionBundle checkBundleNoAudits(final UUID bundleId, final UUID expectedAccountId, final String expectedKey, final CallContext context) throws SubscriptionUserApiException {
+    public SubscriptionBundle checkBundleNoAudits(final UUID bundleId, final UUID expectedAccountId, final String expectedKey, final InternalTenantContext context) throws SubscriptionUserApiException {
         final SubscriptionBundle bundle = subscriptionApi.getBundleFromId(bundleId, context);
         Assert.assertNotNull(bundle);
         Assert.assertEquals(bundle.getAccountId(), expectedAccountId);
@@ -53,22 +56,22 @@ public class SubscriptionChecker {
         return bundle;
     }
 
-    public SubscriptionBundle checkBundleAuditUpdated(final UUID bundleId, final CallContext context) throws SubscriptionUserApiException {
+    public SubscriptionBundle checkBundleAuditUpdated(final UUID bundleId, final InternalCallContext context) throws SubscriptionUserApiException {
         final SubscriptionBundle bundle = subscriptionApi.getBundleFromId(bundleId, context);
-        auditChecker.checkBundleUpdated(bundle.getId(), context);
+        auditChecker.checkBundleUpdated(bundle.getId(), context.toCallContext());
         return bundle;
     }
 
-    public Subscription checkSubscriptionCreated(final UUID subscriptionId, final CallContext context) throws SubscriptionUserApiException {
+    public Subscription checkSubscriptionCreated(final UUID subscriptionId, final InternalCallContext context) throws SubscriptionUserApiException {
         final Subscription subscription = subscriptionApi.getSubscriptionFromId(subscriptionId, context);
         Assert.assertNotNull(subscription);
-        auditChecker.checkSubscriptionCreated(subscription.getBundleId(), subscriptionId, context);
+        auditChecker.checkSubscriptionCreated(subscription.getBundleId(), subscriptionId, context.toCallContext());
 
         List<SubscriptionTransition> subscriptionEvents = getSubscriptionEvents(subscription);
         Assert.assertTrue(subscriptionEvents.size() >= 1);
-        auditChecker.checkSubscriptionEventCreated(subscription.getBundleId(), ((SubscriptionTransitionData) subscriptionEvents.get(0)).getId(), context);
+        auditChecker.checkSubscriptionEventCreated(subscription.getBundleId(), ((SubscriptionTransitionData) subscriptionEvents.get(0)).getId(), context.toCallContext());
 
-        auditChecker.checkBundleCreated(subscription.getBundleId(), context);
+        auditChecker.checkBundleCreated(subscription.getBundleId(), context.toCallContext());
         return subscription;
     }
 

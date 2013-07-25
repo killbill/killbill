@@ -25,27 +25,34 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.catalog.api.ActionPolicy;
 import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.entitlement.block.BlockingChecker;
 import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
+import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
 import com.ning.billing.util.timezone.DateAndTimeZoneContext;
 
 public class DefaultEntitlement implements Entitlement {
 
     private final AccountInternalApi accountApi;
+    private final SubscriptionInternalApi subscriptionInternalApi;
     private final Subscription subscription;
     private final InternalCallContextFactory internalCallContextFactory;
     private final Clock clock;
     private final BlockingChecker checker;
+    private final UUID accountId;
 
-    public DefaultEntitlement(final AccountInternalApi accountApi, final Subscription subscription, final InternalCallContextFactory internalCallContextFactory, final Clock clock, final BlockingChecker checker) {
+    public DefaultEntitlement(final AccountInternalApi accountApi, final SubscriptionInternalApi subscriptionInternalApi, final Subscription subscription, final UUID accountId, final InternalCallContextFactory internalCallContextFactory, final Clock clock, final BlockingChecker checker) {
         this.accountApi = accountApi;
+        this.subscriptionInternalApi = subscriptionInternalApi;
         this.subscription = subscription;
+        this.accountId = accountId;
         this.internalCallContextFactory = internalCallContextFactory;
         this.clock = clock;
         this.checker = checker;
@@ -55,7 +62,7 @@ public class DefaultEntitlement implements Entitlement {
     @Override
     public boolean cancelEntitlementWithDate(final LocalDate localDate, final CallContext callContext) throws EntitlementApiException {
 
-        final InternalCallContext context = internalCallContextFactory.createInternalCallContext(callContext);
+        final InternalCallContext context = internalCallContextFactory.createInternalCallContext(accountId, callContext);
         final DateTime requestedDate = fromLocalDateAndReferenceTime(localDate, subscription.getStartDate(), clock, context);
         try {
             return subscription.cancel(requestedDate, callContext);
@@ -63,6 +70,7 @@ public class DefaultEntitlement implements Entitlement {
             throw new EntitlementApiException(e);
         }
     }
+
 
     @Override
     public boolean cancelEntitlementWithPolicy(final EntitlementActionPolicy entitlementActionPolicy, final CallContext callContext) throws EntitlementApiException {
@@ -87,7 +95,7 @@ public class DefaultEntitlement implements Entitlement {
     @Override
     public boolean changePlan(final String productName, final BillingPeriod billingPeriod, final String priceList, final LocalDate localDate, final CallContext callContext) throws EntitlementApiException {
 
-        final InternalCallContext context = internalCallContextFactory.createInternalCallContext(callContext);
+        final InternalCallContext context = internalCallContextFactory.createInternalCallContext(accountId, callContext);
         final DateTime requestedDate = fromLocalDateAndReferenceTime(localDate, subscription.getStartDate(), clock, context);
         try {
             checker.checkBlockedChange(subscription, context);
@@ -100,8 +108,17 @@ public class DefaultEntitlement implements Entitlement {
     }
 
     @Override
-    public boolean changePlanOverrideBillingPolicy(final String s, final BillingPeriod billingPeriod, final String s2, final LocalDate localDate, final ActionPolicy actionPolicy, final CallContext callContext) throws EntitlementApiException {
-        return false;
+    public boolean changePlanOverrideBillingPolicy(final String productName, final BillingPeriod billingPeriod, final String priceList, final LocalDate localDate, final ActionPolicy actionPolicy, final CallContext callContext) throws EntitlementApiException {
+        final InternalCallContext context = internalCallContextFactory.createInternalCallContext(accountId, callContext);
+        final DateTime requestedDate = fromLocalDateAndReferenceTime(localDate, subscription.getStartDate(), clock, context);
+        try {
+            checker.checkBlockedChange(subscription, context);
+            return subscription.changePlanWithPolicy(productName, billingPeriod, priceList, requestedDate, actionPolicy, callContext);
+        } catch (BlockingApiException e) {
+            throw new EntitlementApiException(e, e.getCode(), e.getMessage());
+        } catch (SubscriptionUserApiException e) {
+            throw new EntitlementApiException(e);
+        }
     }
 
     @Override
@@ -114,6 +131,9 @@ public class DefaultEntitlement implements Entitlement {
         return false;
     }
 
+    public UUID getAccountId() {
+        return accountId;
+    }
 
     public Subscription getSubscription() {
         return subscription;
@@ -163,14 +183,29 @@ public class DefaultEntitlement implements Entitlement {
      */
 
 
+    /**
+     * Returns a DateTime that is equals or beforeNow and whose LocalDate using the account timeZone is the one provided
+     *
+     * Relies on the subscriptionStartDate for the reference time
+     *
+     * @param requestedDate
+     * @param subscriptionStartDate
+     * @param clock
+     * @param callContext
+     * @return
+     * @throws EntitlementApiException
+     */
     private DateTime fromLocalDateAndReferenceTime(final LocalDate requestedDate, final DateTime subscriptionStartDate, final Clock clock, final InternalCallContext callContext) throws EntitlementApiException {
         try {
             final Account account = accountApi.getAccountByRecordId(callContext.getAccountRecordId(), callContext);
             final DateAndTimeZoneContext timeZoneContext = new DateAndTimeZoneContext(subscriptionStartDate, account.getTimeZone(), clock);
-            return timeZoneContext.computeUTCDateTimeFromLocalDate(requestedDate);
+            final DateTime computedTime = timeZoneContext.computeUTCDateTimeFromLocalDate(requestedDate);
+
+            return computedTime.isAfter(clock.getUTCNow()) ? clock.getUTCNow() : computedTime;
         } catch (AccountApiException e) {
             throw new EntitlementApiException(e);
         }
     }
+
 
 }

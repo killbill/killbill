@@ -503,7 +503,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
                                                                             final BillingPeriod billingPeriod,
                                                                             final NextEvent... events) {
         if (productCategory != ProductCategory.ADD_ON) {
-            throw new RuntimeException("Unxepected Call for creating a productCatrgory " + productCategory);
+            throw new RuntimeException("Unexpected Call for creating a productCategory " + productCategory);
         }
 
         return (DefaultEntitlement) doCallAndCheckForCompletion(new Function<Void, Entitlement>() {
@@ -515,7 +515,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
                     assertNotNull(entitlement);
                     return entitlement;
                 } catch (EntitlementApiException e) {
-                    fail();
+                    fail(e.getMessage());
                     return null;
                 }
             }
@@ -561,7 +561,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
                     refreshedEntitlement.cancelEntitlementWithDate(requestedDate.toLocalDate(), callContext);
                     return refreshedEntitlement;
                 } catch (EntitlementApiException e) {
-                    fail();
+                    fail(e.getMessage());
                     return null;
                 }
             }
@@ -608,6 +608,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         final T result = f.apply(null);
         assertTrue(busHandler.isCompleted(DELAY), "Were expecting events " + joiner.join(events));
         assertListenerStatus();
+
 
         log.info("            ************    DONE WITH BUS HANDLER CHECK    ********************");
         return result;

@@ -23,7 +23,11 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 
+import org.joda.time.DateTime;
+
 import com.ning.billing.ErrorCode;
+import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.clock.Clock;
@@ -40,6 +44,7 @@ import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
+import com.ning.billing.util.timezone.DateAndTimeZoneContext;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
@@ -71,7 +76,7 @@ public class DefaultEntitlementApi implements EntitlementApi {
         try {
             final SubscriptionBundle bundle = subscriptionInternalApi.createBundleForAccount(accountId, externalKey, context);
             final Subscription subscription = subscriptionInternalApi.createSubscription(bundle.getId(), planPhaseSpecifier, clock.getUTCNow(), context);
-            return new DefaultEntitlement(accountApi, subscription, internalCallContextFactory, clock, checker);
+            return new DefaultEntitlement(accountApi, subscriptionInternalApi, subscription, accountId, internalCallContextFactory, clock, checker);
         } catch (SubscriptionUserApiException e) {
             throw new EntitlementApiException(e);
         }
@@ -86,8 +91,13 @@ public class DefaultEntitlementApi implements EntitlementApi {
                 baseSubscription.getState() != SubscriptionState.ACTIVE) {
                 throw new EntitlementApiException(new SubscriptionUserApiException(ErrorCode.SUB_GET_NO_SUCH_BASE_SUBSCRIPTION, baseSubscription.getBundleId()));
             }
-            final Subscription subscription = subscriptionInternalApi.createSubscription(baseSubscription.getBundleId(), planPhaseSpecifier, clock.getUTCNow(), context);
-            return new DefaultEntitlement(accountApi, subscription, internalCallContextFactory, clock, checker);
+
+            final SubscriptionBundle bundle = subscriptionInternalApi.getBundleFromId(baseSubscription.getBundleId(), context);
+            final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(bundle.getAccountId(), callContext);
+
+            final DateTime requestedDate = fromNowAndReferenceTime(baseSubscription.getStartDate(), contextWithValidAccountRecordId);
+            final Subscription subscription = subscriptionInternalApi.createSubscription(baseSubscription.getBundleId(), planPhaseSpecifier, requestedDate, context);
+            return new DefaultEntitlement(accountApi, subscriptionInternalApi, subscription, bundle.getAccountId(), internalCallContextFactory, clock, checker);
         } catch (SubscriptionUserApiException e) {
             throw new EntitlementApiException(e);
         }
@@ -98,7 +108,8 @@ public class DefaultEntitlementApi implements EntitlementApi {
         final InternalTenantContext context = internalCallContextFactory.createInternalTenantContext(tenantContext);
         try {
             final Subscription subscription = subscriptionInternalApi.getSubscriptionFromId(uuid, context);
-            return new DefaultEntitlement(accountApi, subscription, internalCallContextFactory, clock, checker);
+            final SubscriptionBundle bundle = subscriptionInternalApi.getBundleFromId(subscription.getBundleId(), context);
+            return new DefaultEntitlement(accountApi, subscriptionInternalApi, subscription, bundle.getAccountId(), internalCallContextFactory, clock, checker);
         } catch (SubscriptionUserApiException e) {
             throw new EntitlementApiException(e);
         }
@@ -109,7 +120,8 @@ public class DefaultEntitlementApi implements EntitlementApi {
         final InternalTenantContext context = internalCallContextFactory.createInternalTenantContext(tenantContext);
         try {
             final Subscription baseSubscription = subscriptionInternalApi.getSubscriptionFromId(baseSubscriptionId, context);
-            return getAllEntitlementFromBundleId(baseSubscription.getBundleId(), context);
+            final SubscriptionBundle bundle = subscriptionInternalApi.getBundleFromId(baseSubscription.getBundleId(), context);
+            return getAllEntitlementFromBundleId(baseSubscription.getBundleId(), bundle.getAccountId(), context);
         } catch (SubscriptionUserApiException e) {
             throw new EntitlementApiException(e);
         }
@@ -121,20 +133,20 @@ public class DefaultEntitlementApi implements EntitlementApi {
 
         try {
             final SubscriptionBundle bundle = subscriptionInternalApi.getBundleForAccountAndKey(accountId, externalKey, context);
-            return getAllEntitlementFromBundleId(bundle.getId(), context);
+            return getAllEntitlementFromBundleId(bundle.getId(), bundle.getAccountId(), context);
         } catch (SubscriptionUserApiException e) {
             throw new EntitlementApiException(e);
         }
     }
 
 
-    private List<Entitlement> getAllEntitlementFromBundleId(final UUID bundleId, final InternalTenantContext context) throws EntitlementApiException {
+    private List<Entitlement> getAllEntitlementFromBundleId(final UUID bundleId, final UUID accountId, final InternalTenantContext context) throws EntitlementApiException {
         final List<Subscription> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(bundleId, context);
         return ImmutableList.<Entitlement>copyOf(Collections2.transform(subscriptions, new Function<Subscription, Entitlement>() {
             @Nullable
             @Override
             public Entitlement apply(@Nullable final Subscription input) {
-                return new DefaultEntitlement(accountApi, input, internalCallContextFactory, clock, checker);
+                return new DefaultEntitlement(accountApi, subscriptionInternalApi, input, accountId, internalCallContextFactory, clock, checker);
             }
         }));
     }
@@ -147,7 +159,7 @@ public class DefaultEntitlementApi implements EntitlementApi {
         final InternalTenantContext context = internalCallContextFactory.createInternalTenantContext(tenantContext);
         final List<SubscriptionBundle> bundles = subscriptionInternalApi.getBundlesForAccount(accountId, context);
         for (final SubscriptionBundle bundle : bundles) {
-            final List<Entitlement> entitlements = getAllEntitlementFromBundleId(bundle.getId(), context);
+            final List<Entitlement> entitlements = getAllEntitlementFromBundleId(bundle.getId(), bundle.getAccountId(), context);
             result.addAll(entitlements);
         }
         return result;
@@ -157,4 +169,15 @@ public class DefaultEntitlementApi implements EntitlementApi {
     public List<BlockingState> getBlockingHistory(final UUID overdueableId, final TenantContext context) {
         return dao.getBlockingHistoryFor(overdueableId, internalCallContextFactory.createInternalTenantContext(context));
     }
+
+    private DateTime fromNowAndReferenceTime(final DateTime subscriptionStartDate, final InternalCallContext callContext) throws EntitlementApiException {
+        try {
+            final Account account = accountApi.getAccountByRecordId(callContext.getAccountRecordId(), callContext);
+            final DateAndTimeZoneContext timeZoneContext = new DateAndTimeZoneContext(subscriptionStartDate, account.getTimeZone(), clock);
+            return timeZoneContext.computeUTCDateTimeFromNow();
+        } catch (AccountApiException e) {
+            throw new EntitlementApiException(e);
+        }
+    }
+
 }

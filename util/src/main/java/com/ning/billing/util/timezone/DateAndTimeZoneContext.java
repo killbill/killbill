@@ -28,6 +28,7 @@ public final class DateAndTimeZoneContext {
         return new LocalDate(targetDateTime, accountTimeZone);
     }
 
+
     public DateTime computeUTCDateTimeFromLocalDate(final LocalDate invoiceItemEndDate) {
         //
         // Since we create the targetDate for next invoice using the date from the notificationQ, we need to make sure
@@ -47,4 +48,10 @@ public final class DateAndTimeZoneContext {
         final int localToUTCOffest = -1 * utcOffest;
         return invoiceItemEndDate.toDateTime(referenceTime, DateTimeZone.UTC).plusMillis(localToUTCOffest);
     }
+
+    public DateTime computeUTCDateTimeFromNow() {
+        final LocalDate now = computeTargetDate(clock.getUTCNow());
+        return computeUTCDateTimeFromLocalDate(now);
+    }
+
 }

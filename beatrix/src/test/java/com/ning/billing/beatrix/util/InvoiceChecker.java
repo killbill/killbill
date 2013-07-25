@@ -28,14 +28,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 
+import com.ning.billing.entitlement.api.DefaultEntitlement;
+import com.ning.billing.entitlement.api.EntitlementApi;
+import com.ning.billing.entitlement.api.EntitlementApiException;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.subscription.api.user.Subscription;
-import com.ning.billing.subscription.api.user.SubscriptionUserApi;
-import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
 import com.ning.billing.util.callcontext.CallContext;
 
 import com.google.common.collect.ImmutableList;
@@ -51,13 +52,13 @@ public class InvoiceChecker {
     private static final Logger log = LoggerFactory.getLogger(InvoiceChecker.class);
 
     private final InvoiceUserApi invoiceUserApi;
-    private final SubscriptionUserApi subscriptionApi;
+    private final EntitlementApi entitlementApi;
     private final AuditChecker auditChecker;
 
     @Inject
-    public InvoiceChecker(final InvoiceUserApi invoiceUserApi, final SubscriptionUserApi subscriptionApi, final AuditChecker auditChecker) {
+    public InvoiceChecker(final InvoiceUserApi invoiceUserApi, final EntitlementApi entitlementApi, final AuditChecker auditChecker) {
         this.invoiceUserApi = invoiceUserApi;
-        this.subscriptionApi = subscriptionApi;
+        this.entitlementApi = entitlementApi;
         this.auditChecker = auditChecker;
     }
 
@@ -120,25 +121,26 @@ public class InvoiceChecker {
         auditChecker.checkInvoiceCreated(invoice, context);
     }
 
-    public void checkNullChargedThroughDate(final UUID subscriptionId, final CallContext context) {
-        checkChargedThroughDate(subscriptionId, null, context);
+    public void checkNullChargedThroughDate(final UUID entitlementId, final CallContext context) {
+        checkChargedThroughDate(entitlementId, null, context);
     }
 
-    public void checkChargedThroughDate(final UUID subscriptionId, final LocalDate expectedLocalCTD, final CallContext context) {
+    public void checkChargedThroughDate(final UUID entitlementId, final LocalDate expectedLocalCTD, final CallContext context) {
         try {
-            final Subscription subscription = subscriptionApi.getSubscriptionFromId(subscriptionId, context);
+            final DefaultEntitlement entitlement = (DefaultEntitlement) entitlementApi.getEntitlementFromId(entitlementId, context);
+            final Subscription subscription = entitlement.getSubscription();
             if (expectedLocalCTD == null) {
                 assertNull(subscription.getChargedThroughDate());
             } else {
                 final DateTime expectedCTD = expectedLocalCTD.toDateTime(new LocalTime(subscription.getStartDate().getMillis(), DateTimeZone.UTC), DateTimeZone.UTC);
-                final String msg = String.format("Checking CTD for subscription %s : expectedLocalCTD = %s => expectedCTD = %s, got %s",
-                                                 subscriptionId, expectedLocalCTD, expectedCTD, subscription.getChargedThroughDate());
+                final String msg = String.format("Checking CTD for entitlement %s : expectedLocalCTD = %s => expectedCTD = %s, got %s",
+                                                 entitlementId, expectedLocalCTD, expectedCTD, subscription.getChargedThroughDate());
                 log.info(msg);
                 assertNotNull(subscription.getChargedThroughDate());
                 assertTrue(subscription.getChargedThroughDate().compareTo(expectedCTD) == 0, msg);
             }
-        } catch (SubscriptionUserApiException e) {
-            fail("Failed to retrieve subscription for " + subscriptionId);
+        } catch (EntitlementApiException e) {
+            fail("Failed to retrieve entitlement for " + entitlementId);
         }
     }
 

@@ -16,7 +16,13 @@
 
 package com.ning.billing.beatrix.integration;
 
-import com.google.common.collect.ImmutableList;
+import java.math.BigDecimal;
+import java.util.List;
+
+import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
+import org.testng.annotations.Test;
+
 import com.ning.billing.account.api.Account;
 import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
@@ -28,14 +34,8 @@ import com.ning.billing.entitlement.api.DefaultEntitlement;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
-import com.ning.billing.subscription.api.user.SubscriptionBundle;
-import com.ning.billing.subscription.api.user.SubscriptionData;
-import org.joda.time.DateTime;
-import org.joda.time.LocalDate;
-import org.testng.annotations.Test;
 
-import java.math.BigDecimal;
-import java.util.List;
+import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -63,8 +63,7 @@ public class TestBundleTransfer extends TestIntegrationBase {
         //
         final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
         assertNotNull(bpEntitlement);
-        assertTrue(busHandler.isCompleted(DELAY));
-        assertListenerStatus();
+
         assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), callContext).size(), 1);
         assertEquals(bpEntitlement.getSubscription().getCurrentPlan().getBillingPeriod(), BillingPeriod.ANNUAL);
 
@@ -82,7 +81,7 @@ public class TestBundleTransfer extends TestIntegrationBase {
         busHandler.pushExpectedEvent(NextEvent.TRANSFER);
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
         busHandler.pushExpectedEvent(NextEvent.PAYMENT);
-        transferApi.transferBundle(account.getId(), newAccount.getId(), "mycutebundle", clock.getUTCNow(), false, false, callContext);
+        transferApi.transferBundle(account.getId(), newAccount.getId(), "externalKey", clock.getUTCNow(), false, false, callContext);
         assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
 
@@ -135,7 +134,7 @@ public class TestBundleTransfer extends TestIntegrationBase {
         busHandler.pushExpectedEvent(NextEvent.TRANSFER);
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
         busHandler.pushExpectedEvent(NextEvent.PAYMENT);
-        transferApi.transferBundle(account.getId(), newAccount.getId(), "mycutebundle", clock.getUTCNow(), false, false, callContext);
+        transferApi.transferBundle(account.getId(), newAccount.getId(), "externalKey", clock.getUTCNow(), false, false, callContext);
         assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
 
@@ -198,7 +197,7 @@ public class TestBundleTransfer extends TestIntegrationBase {
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
         busHandler.pushExpectedEvent(NextEvent.INVOICE_ADJUSTMENT);
         busHandler.pushExpectedEvent(NextEvent.PAYMENT);
-        transferApi.transferBundle(account.getId(), newAccount.getId(), "mycutebundle", clock.getUTCNow(), false, true, callContext);
+        transferApi.transferBundle(account.getId(), newAccount.getId(), "externalKey", clock.getUTCNow(), false, true, callContext);
         assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
 
