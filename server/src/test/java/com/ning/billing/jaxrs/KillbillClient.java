@@ -181,6 +181,18 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         return objFromJson;
     }
 
+    protected List<AccountJson> searchAccountsByKey(final String key) throws Exception {
+        final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + JaxrsResource.SEARCH + "/" + key;
+        final Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+
+        final String baseJson = response.getResponseBody();
+        final List<AccountJson> objFromJson = mapper.readValue(baseJson, new TypeReference<List<AccountJson>>() {});
+        Assert.assertNotNull(objFromJson);
+
+        return objFromJson;
+    }
+
     protected Response getAccountByExternalKeyNoValidation(final String externalKey) {
         final Map<String, String> queryParams = new HashMap<String, String>();
         queryParams.put(JaxrsResource.QUERY_EXTERNAL_KEY, externalKey);
@@ -569,14 +581,33 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
     protected PaymentMethodJson getPaymentMethodWithPluginInfo(final String paymentMethodId) throws IOException {
         final String paymentMethodURI = JaxrsResource.PAYMENT_METHODS_PATH + "/" + paymentMethodId;
 
-        final Map<String, String> queryPaymentMethods = new HashMap<String, String>();
-        final Response paymentMethodResponse = doGet(paymentMethodURI, queryPaymentMethods, DEFAULT_HTTP_TIMEOUT_SEC);
+        final Response paymentMethodResponse = doGet(paymentMethodURI,
+                                                     ImmutableMap.<String, String>of(JaxrsResource.QUERY_PAYMENT_METHOD_PLUGIN_INFO, "true"),
+                                                     DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(paymentMethodResponse.getStatusCode(), Status.OK.getStatusCode());
 
         final PaymentMethodJson paymentMethodJson = mapper.readValue(paymentMethodResponse.getResponseBody(), PaymentMethodJson.class);
         assertNotNull(paymentMethodJson);
 
         return paymentMethodJson;
+    }
+
+    protected List<PaymentMethodJson> searchPaymentMethodsByKey(final String key) throws Exception {
+        return searchPaymentMethodsByKeyAndPlugin(key, null);
+    }
+
+    protected List<PaymentMethodJson> searchPaymentMethodsByKeyAndPlugin(final String key, @Nullable final String pluginName) throws Exception {
+        final String uri = JaxrsResource.PAYMENT_METHODS_PATH + "/" + JaxrsResource.SEARCH + "/" + key;
+        final Response response = doGet(uri,
+                                        pluginName == null ? DEFAULT_EMPTY_QUERY : ImmutableMap.<String, String>of(JaxrsResource.QUERY_PAYMENT_METHOD_PLUGIN_NAME, pluginName),
+                                        DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+
+        final String baseJson = response.getResponseBody();
+        final List<PaymentMethodJson> objFromJson = mapper.readValue(baseJson, new TypeReference<List<PaymentMethodJson>>() {});
+        Assert.assertNotNull(objFromJson);
+
+        return objFromJson;
     }
 
     protected void deletePaymentMethod(final String paymentMethodId, final Boolean deleteDefault) throws IOException {

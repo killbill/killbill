@@ -104,6 +104,16 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
     }
 
     @Override
+    public List<AccountModelDao> searchAccounts(final String searchKey, final InternalTenantContext context) {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<AccountModelDao>>() {
+            @Override
+            public List<AccountModelDao> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+                return entitySqlDaoWrapperFactory.become(AccountSqlDao.class).searchAccounts(searchKey, context);
+            }
+        });
+    }
+
+    @Override
     public UUID getIdFromKey(final String externalKey, final InternalTenantContext context) throws AccountApiException {
         if (externalKey == null) {
             throw new AccountApiException(ErrorCode.ACCOUNT_CANNOT_MAP_NULL_KEY, "");

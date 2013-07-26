@@ -16,6 +16,9 @@
 
 package com.ning.billing.jaxrs.resources;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
@@ -46,6 +49,9 @@ import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TenantContext;
 
+import com.google.common.base.Function;
+import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -83,6 +89,40 @@ public class PaymentMethodResource extends JaxRsResourceBase {
         final Account account = accountApi.getAccountById(paymentMethod.getAccountId(), tenantContext);
         final PaymentMethodJson json = PaymentMethodJson.toPaymentMethodJson(account, paymentMethod);
 
+        return Response.status(Status.OK).entity(json).build();
+    }
+
+    @GET
+    @Path("/" + SEARCH + "/{searchKey:" + ANYTHING_PATTERN + "}")
+    @Produces(APPLICATION_JSON)
+    public Response searchPaymentMethods(@PathParam("searchKey") final String searchKey,
+                                         @QueryParam(QUERY_PAYMENT_METHOD_PLUGIN_NAME) final String pluginName,
+                                         @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+        final TenantContext tenantContext = context.createContext(request);
+
+        // Search the plugin(s)
+        final List<PaymentMethod> paymentMethods;
+        if (Strings.isNullOrEmpty(pluginName)) {
+            paymentMethods = paymentApi.searchPaymentMethods(searchKey, tenantContext);
+        } else {
+            paymentMethods = paymentApi.searchPaymentMethods(searchKey, pluginName, tenantContext);
+        }
+
+        // Lookup the associated account(s)
+        final Map<UUID, Account> accounts = new HashMap<UUID, Account>();
+        for (final PaymentMethod paymentMethod : paymentMethods) {
+            if (accounts.get(paymentMethod.getAccountId()) == null) {
+                final Account account = accountApi.getAccountById(paymentMethod.getAccountId(), tenantContext);
+                accounts.put(paymentMethod.getAccountId(), account);
+            }
+        }
+
+        final List<PaymentMethodJson> json = Lists.transform(paymentMethods, new Function<PaymentMethod, PaymentMethodJson>() {
+            @Override
+            public PaymentMethodJson apply(final PaymentMethod paymentMethod) {
+                return PaymentMethodJson.toPaymentMethodJson(accounts.get(paymentMethod.getAccountId()), paymentMethod);
+            }
+        });
         return Response.status(Status.OK).entity(json).build();
     }
 

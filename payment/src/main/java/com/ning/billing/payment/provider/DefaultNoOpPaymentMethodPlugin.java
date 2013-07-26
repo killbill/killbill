@@ -24,21 +24,30 @@ import com.ning.billing.payment.api.PaymentMethodPlugin;
 
 public class DefaultNoOpPaymentMethodPlugin implements PaymentMethodPlugin {
 
+    private final UUID kbPaymentMethodId;
     private final String externalId;
     private final boolean isDefault;
     private List<PaymentMethodKVInfo> props;
 
-    public DefaultNoOpPaymentMethodPlugin(final PaymentMethodPlugin src) {
+    public DefaultNoOpPaymentMethodPlugin(final UUID kbPaymentMethodId, final PaymentMethodPlugin src) {
+        this.kbPaymentMethodId = kbPaymentMethodId;
         this.externalId = UUID.randomUUID().toString();
         this.isDefault = src.isDefaultPaymentMethod();
         this.props = src.getProperties();
     }
 
-    public DefaultNoOpPaymentMethodPlugin(final String externalId, final boolean isDefault,
+    public DefaultNoOpPaymentMethodPlugin(final String externalId,
+                                          final boolean isDefault,
                                           final List<PaymentMethodKVInfo> props) {
+        this.kbPaymentMethodId = null;
         this.externalId = externalId;
         this.isDefault = isDefault;
         this.props = props;
+    }
+
+    @Override
+    public UUID getKbPaymentMethodId() {
+        return kbPaymentMethodId;
     }
 
     @Override

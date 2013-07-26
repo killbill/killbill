@@ -25,20 +25,22 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.payment.api.TestPaymentMethodPlugin;
+import com.ning.billing.clock.Clock;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
+import com.ning.billing.payment.api.TestPaymentMethodPlugin;
 import com.ning.billing.payment.plugin.api.NoOpPaymentPluginApi;
 import com.ning.billing.payment.plugin.api.PaymentInfoPlugin;
-import com.ning.billing.payment.plugin.api.PaymentPluginStatus;
 import com.ning.billing.payment.plugin.api.PaymentMethodInfoPlugin;
 import com.ning.billing.payment.plugin.api.PaymentPluginApiException;
+import com.ning.billing.payment.plugin.api.PaymentPluginStatus;
 import com.ning.billing.payment.plugin.api.RefundInfoPlugin;
 import com.ning.billing.payment.plugin.api.RefundPluginStatus;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TenantContext;
-import com.ning.billing.clock.Clock;
 
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.inject.Inject;
@@ -116,7 +118,7 @@ public class MockPaymentProviderPlugin implements NoOpPaymentPluginApi {
     @Override
     public void addPaymentMethod(final UUID kbAccountId, final UUID kbPaymentMethodId, final PaymentMethodPlugin paymentMethodProps, final boolean setDefault, final CallContext context) throws PaymentPluginApiException {
         // externalPaymentMethodId is set to a random value
-        final PaymentMethodPlugin realWithID = new TestPaymentMethodPlugin(paymentMethodProps, UUID.randomUUID().toString());
+        final PaymentMethodPlugin realWithID = new TestPaymentMethodPlugin(kbPaymentMethodId, paymentMethodProps, UUID.randomUUID().toString());
         paymentMethods.put(kbPaymentMethodId.toString(), realWithID);
 
         final PaymentMethodInfoPlugin realInfoWithID = new DefaultPaymentMethodInfoPlugin(kbAccountId, kbPaymentMethodId, setDefault, UUID.randomUUID().toString());
@@ -141,6 +143,22 @@ public class MockPaymentProviderPlugin implements NoOpPaymentPluginApi {
     @Override
     public List<PaymentMethodInfoPlugin> getPaymentMethods(final UUID kbAccountId, final boolean refreshFromGateway, final CallContext context) {
         return ImmutableList.<PaymentMethodInfoPlugin>copyOf(paymentMethodsInfo.values());
+    }
+
+    @Override
+    public List<PaymentMethodPlugin> searchPaymentMethods(final String searchKey, final TenantContext tenantContext) throws PaymentPluginApiException {
+        return ImmutableList.<PaymentMethodPlugin>copyOf(Iterables.<PaymentMethodPlugin>filter(paymentMethods.values(), new Predicate<PaymentMethodPlugin>() {
+            @Override
+            public boolean apply(final PaymentMethodPlugin input) {
+                return (input.getAddress1() != null && input.getAddress1().contains(searchKey)) ||
+                       (input.getAddress2() != null && input.getAddress2().contains(searchKey)) ||
+                       (input.getCCLast4() != null && input.getCCLast4().contains(searchKey)) ||
+                       (input.getCCName() != null && input.getCCName().contains(searchKey)) ||
+                       (input.getCity() != null && input.getCity().contains(searchKey)) ||
+                       (input.getState() != null && input.getState().contains(searchKey)) ||
+                       (input.getCountry() != null && input.getCountry().contains(searchKey));
+            }
+        }));
     }
 
     @Override

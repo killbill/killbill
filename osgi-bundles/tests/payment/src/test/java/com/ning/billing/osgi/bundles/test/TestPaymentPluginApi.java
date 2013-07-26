@@ -190,7 +190,12 @@ public class TestPaymentPluginApi implements PaymentPluginApiWithTestControl {
 
     @Override
     public List<PaymentMethodInfoPlugin> getPaymentMethods(final UUID kbAccountId, final boolean refreshFromGateway, final CallContext context) throws PaymentPluginApiException {
-        return null;
+        return Collections.emptyList();
+    }
+
+    @Override
+    public List<PaymentMethodPlugin> searchPaymentMethods(final String s, final TenantContext tenantContext) throws PaymentPluginApiException {
+        return Collections.emptyList();
     }
 
     @Override

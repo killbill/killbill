@@ -80,6 +80,11 @@ public class BlockingAccountUserApi implements AccountUserApi {
     }
 
     @Override
+    public List<Account> searchAccounts(final String searchKey, final TenantContext tenantContext) {
+        return userApi.searchAccounts(searchKey, tenantContext);
+    }
+
+    @Override
     public List<Account> getAccounts(final TenantContext context) {
         return userApi.getAccounts(context);
     }

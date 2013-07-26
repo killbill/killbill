@@ -173,6 +173,16 @@ public class DefaultPaymentApi implements PaymentApi {
     }
 
     @Override
+    public List<PaymentMethod> searchPaymentMethods(final String searchKey, final TenantContext context) {
+        return methodProcessor.searchPaymentMethods(searchKey, internalCallContextFactory.createInternalTenantContext(context));
+    }
+
+    @Override
+    public List<PaymentMethod> searchPaymentMethods(final String searchKey, final String pluginName, final TenantContext context) throws PaymentApiException {
+        return methodProcessor.searchPaymentMethods(searchKey, pluginName, internalCallContextFactory.createInternalTenantContext(context));
+    }
+
+    @Override
     public void deletedPaymentMethod(final Account account, final UUID paymentMethodId, final boolean deleteDefaultPaymentMethodWithAutoPayOff, final CallContext context)
             throws PaymentApiException {
         methodProcessor.deletedPaymentMethod(account, paymentMethodId, deleteDefaultPaymentMethodWithAutoPayOff, internalCallContextFactory.createInternalCallContext(account.getId(), context));

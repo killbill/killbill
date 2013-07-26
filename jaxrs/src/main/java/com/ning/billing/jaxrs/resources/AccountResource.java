@@ -23,6 +23,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -93,6 +94,7 @@ import com.ning.billing.util.tag.ControlTagType;
 import com.google.common.base.Function;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -142,7 +144,26 @@ public class AccountResource extends JaxRsResourceBase {
                                @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
         final TenantContext tenantContext = context.createContext(request);
         final Account account = accountApi.getAccountById(UUID.fromString(accountId), tenantContext);
-        return getAccount(account, accountWithBalance, accountWithBalanceAndCBA, tenantContext);
+        final AccountJson accountJson = getAccount(account, accountWithBalance, accountWithBalanceAndCBA, tenantContext);
+        return Response.status(Status.OK).entity(accountJson).build();
+    }
+
+    @GET
+    @Path("/" + SEARCH + "/{searchKey:" + ANYTHING_PATTERN + "}")
+    @Produces(APPLICATION_JSON)
+    public Response searchAccounts(@PathParam("searchKey") final String searchKey,
+                                   @QueryParam(QUERY_ACCOUNT_WITH_BALANCE) @DefaultValue("false") final Boolean accountWithBalance,
+                                   @QueryParam(QUERY_ACCOUNT_WITH_BALANCE_AND_CBA) @DefaultValue("false") final Boolean accountWithBalanceAndCBA,
+                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
+        final TenantContext tenantContext = context.createContext(request);
+        final List<Account> accounts = accountApi.searchAccounts(searchKey, tenantContext);
+        final List<AccountJson> accountsJson = ImmutableList.<AccountJson>copyOf(Collections2.transform(accounts, new Function<Account, AccountJson>() {
+            @Override
+            public AccountJson apply(final Account account) {
+                return getAccount(account, accountWithBalance, accountWithBalanceAndCBA, tenantContext);
+            }
+        }));
+        return Response.status(Status.OK).entity(accountsJson).build();
     }
 
     @GET
@@ -180,22 +201,22 @@ public class AccountResource extends JaxRsResourceBase {
                                     @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
         final TenantContext tenantContext = context.createContext(request);
         final Account account = accountApi.getAccountByKey(externalKey, tenantContext);
-        return getAccount(account, accountWithBalance, accountWithBalanceAndCBA, tenantContext);
+        final AccountJson accountJson = getAccount(account, accountWithBalance, accountWithBalanceAndCBA, tenantContext);
+        return Response.status(Status.OK).entity(accountJson).build();
     }
 
-    private Response getAccount(final Account account, final Boolean accountWithBalance, final Boolean accountWithBalanceAndCBA, final TenantContext tenantContext) {
+    private AccountJson getAccount(final Account account, final Boolean accountWithBalance, final Boolean accountWithBalanceAndCBA, final TenantContext tenantContext) {
         final AccountJson json;
         if (accountWithBalanceAndCBA) {
             final BigDecimal accountBalance = invoiceApi.getAccountBalance(account.getId(), tenantContext);
             final BigDecimal accountCBA = invoiceApi.getAccountCBA(account.getId(), tenantContext);
-            json = new AccountJsonWithBalanceAndCBA(account, accountBalance, accountCBA);
+            return new AccountJsonWithBalanceAndCBA(account, accountBalance, accountCBA);
         } else if (accountWithBalance) {
             final BigDecimal accountBalance = invoiceApi.getAccountBalance(account.getId(), tenantContext);
-            json = new AccountJsonWithBalance(account, accountBalance);
+            return new AccountJsonWithBalance(account, accountBalance);
         } else {
-            json = new AccountJson(account);
+            return new AccountJson(account);
         }
-        return Response.status(Status.OK).entity(json).build();
     }
 
     @POST

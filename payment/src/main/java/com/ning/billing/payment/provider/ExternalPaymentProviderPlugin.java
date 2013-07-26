@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.clock.Clock;
 import com.ning.billing.payment.api.PaymentMethodKVInfo;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.payment.plugin.api.PaymentInfoPlugin;
@@ -33,8 +34,8 @@ import com.ning.billing.payment.plugin.api.RefundInfoPlugin;
 import com.ning.billing.payment.plugin.api.RefundPluginStatus;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TenantContext;
-import com.ning.billing.clock.Clock;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
 /**
@@ -84,7 +85,7 @@ public class ExternalPaymentProviderPlugin implements PaymentPluginApi {
 
     @Override
     public PaymentMethodPlugin getPaymentMethodDetail(final UUID kbAccountId, final UUID kbPaymentMethodId, final TenantContext context) throws PaymentPluginApiException {
-        return new DefaultNoOpPaymentMethodPlugin("unknow", false, Collections.<PaymentMethodKVInfo>emptyList());
+        return new DefaultNoOpPaymentMethodPlugin("unknown", false, Collections.<PaymentMethodKVInfo>emptyList());
     }
 
     @Override
@@ -93,7 +94,12 @@ public class ExternalPaymentProviderPlugin implements PaymentPluginApi {
 
     @Override
     public List<PaymentMethodInfoPlugin> getPaymentMethods(final UUID kbAccountId, final boolean refreshFromGateway, final CallContext context) throws PaymentPluginApiException {
-        return null;
+        return ImmutableList.<PaymentMethodInfoPlugin>of();
+    }
+
+    @Override
+    public List<PaymentMethodPlugin> searchPaymentMethods(final String s, final TenantContext tenantContext) throws PaymentPluginApiException {
+        return ImmutableList.<PaymentMethodPlugin>of();
     }
 
     @Override

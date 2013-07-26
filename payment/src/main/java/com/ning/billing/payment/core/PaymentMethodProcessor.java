@@ -18,6 +18,7 @@ package com.ning.billing.payment.core;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -148,6 +149,45 @@ public class PaymentMethodProcessor extends ProcessorBase {
         }
 
         return new DefaultPaymentMethod(paymentMethodModelDao, paymentMethodPlugin);
+    }
+
+    public List<PaymentMethod> searchPaymentMethods(final String searchKey, final InternalTenantContext internalTenantContext) {
+        final List<PaymentMethod> results = new LinkedList<PaymentMethod>();
+
+        // Search in all plugins
+        for (final String pluginName : getAvailablePlugins()) {
+            try {
+                results.addAll(searchPaymentMethods(searchKey, pluginName, internalTenantContext));
+            } catch (PaymentApiException e) {
+                log.warn("Error while searching plugin " + pluginName, e);
+                // Non-fatal, continue to search other plugins
+            }
+        }
+
+        return results;
+    }
+
+    public List<PaymentMethod> searchPaymentMethods(final String searchKey, final String pluginName, final InternalTenantContext internalTenantContext) throws PaymentApiException {
+        final PaymentPluginApi pluginApi = getPaymentPluginApi(pluginName);
+        final List<PaymentMethodPlugin> paymentMethods;
+        try {
+            paymentMethods = pluginApi.searchPaymentMethods(searchKey, internalTenantContext.toTenantContext());
+        } catch (PaymentPluginApiException e) {
+            throw new PaymentApiException(e, ErrorCode.PAYMENT_PLUGIN_SEARCH_PAYMENT_METHODS, pluginName, searchKey);
+        }
+
+        final List<PaymentMethod> results = new LinkedList<PaymentMethod>();
+        for (final PaymentMethodPlugin paymentMethodPlugin : paymentMethods) {
+            final PaymentMethodModelDao paymentMethodModelDao = paymentDao.getPaymentMethodIncludedDeleted(paymentMethodPlugin.getKbPaymentMethodId(), internalTenantContext);
+            if (paymentMethodModelDao == null) {
+                log.warn("Unable to find payment method id " + paymentMethodPlugin.getKbPaymentMethodId() + " present in plugin " + pluginName);
+                continue;
+            }
+
+            results.add(new DefaultPaymentMethod(paymentMethodModelDao, paymentMethodPlugin));
+        }
+
+        return results;
     }
 
     public PaymentMethod getExternalPaymentMethod(final Account account, final InternalTenantContext context) throws PaymentApiException {

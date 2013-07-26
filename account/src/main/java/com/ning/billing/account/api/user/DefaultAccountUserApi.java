@@ -90,6 +90,17 @@ public class DefaultAccountUserApi implements AccountUserApi {
     }
 
     @Override
+    public List<Account> searchAccounts(final String searchKey, final TenantContext context) {
+        final List<AccountModelDao> accountModelDaos = accountDao.searchAccounts(searchKey, internalCallContextFactory.createInternalTenantContext(context));
+        return ImmutableList.<Account>copyOf(Collections2.transform(accountModelDaos, new Function<AccountModelDao, Account>() {
+            @Override
+            public Account apply(final AccountModelDao input) {
+                return new DefaultAccount(input);
+            }
+        }));
+    }
+
+    @Override
     public List<Account> getAccounts(final TenantContext context) {
         final List<AccountModelDao> accountModelDaos = accountDao.get(internalCallContextFactory.createInternalTenantContext(context));
         return ImmutableList.<Account>copyOf(Collections2.transform(accountModelDaos, new Function<AccountModelDao, Account>() {
