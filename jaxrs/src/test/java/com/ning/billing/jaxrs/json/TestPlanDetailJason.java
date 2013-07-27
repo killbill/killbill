@@ -84,6 +84,6 @@ public class TestPlanDetailJason extends JaxrsTestSuiteNoDB {
         Assert.assertEquals(planDetailJason.getPlanName(), plan.getName());
         Assert.assertEquals(planDetailJason.getBillingPeriod(), plan.getBillingPeriod());
         Assert.assertEquals(planDetailJason.getPriceListName(), priceList.getName());
-        Assert.assertEquals(planDetailJason.getFinalPhasePrice(), plan.getFinalPhase().getRecurringPrice());
+        Assert.assertEquals(planDetailJason.getFinalPhasePrice().size(), 0);
     }
 }

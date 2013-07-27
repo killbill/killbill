@@ -45,6 +45,7 @@ import com.ning.billing.jaxrs.json.AccountEmailJson;
 import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.AccountTimelineJson;
 import com.ning.billing.jaxrs.json.BundleJsonNoSubscriptions;
+import com.ning.billing.jaxrs.json.CatalogJsonSimple;
 import com.ning.billing.jaxrs.json.ChargebackJson;
 import com.ning.billing.jaxrs.json.CreditJson;
 import com.ning.billing.jaxrs.json.InvoiceItemJsonSimple;
@@ -56,6 +57,7 @@ import com.ning.billing.jaxrs.json.PaymentJsonWithBundleKeys;
 import com.ning.billing.jaxrs.json.PaymentMethodJson;
 import com.ning.billing.jaxrs.json.PaymentMethodJson.PaymentMethodPluginDetailJson;
 import com.ning.billing.jaxrs.json.PaymentMethodJson.PaymentMethodProperties;
+import com.ning.billing.jaxrs.json.PlanDetailJson;
 import com.ning.billing.jaxrs.json.RefundJson;
 import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
 import com.ning.billing.jaxrs.json.TenantJson;
@@ -892,6 +894,33 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
 
     protected Response pluginOPTIONS(final String uri, final Map<String, String> queryParams) throws Exception {
         return doOptions(JaxrsResource.PLUGINS_PATH + "/" + uri, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
+    }
+
+    //
+    // CATALOG
+    //
+
+    public CatalogJsonSimple getSimpleCatalog() throws Exception {
+        final Response response = doGet(JaxrsResource.CATALOG_PATH + "/simpleCatalog", DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+        final String body = response.getResponseBody();
+        return mapper.readValue(body, CatalogJsonSimple.class);
+    }
+
+    public List<PlanDetailJson> getAvailableAddons(final String baseProductName) throws Exception {
+        final Response response = doGet(JaxrsResource.CATALOG_PATH + "/availableAddons",
+                                        ImmutableMap.<String, String>of("baseProductName", baseProductName),
+                                        DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+        final String body = response.getResponseBody();
+        return mapper.readValue(body, new TypeReference<List<PlanDetailJson>>() {});
+    }
+
+    public List<PlanDetailJson> getBasePlans() throws Exception {
+        final Response response = doGet(JaxrsResource.CATALOG_PATH + "/availableBasePlans", DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+        final String body = response.getResponseBody();
+        return mapper.readValue(body, new TypeReference<List<PlanDetailJson>>() {});
     }
 
     //
