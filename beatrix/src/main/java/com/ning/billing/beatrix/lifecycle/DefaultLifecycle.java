@@ -142,7 +142,7 @@ public class DefaultLifecycle implements Lifecycle {
 
     // Used to disable valid injection failure from unit tests
     protected void logWarn(final String msg, final Exception e) {
-        log.warn(msg);
+        log.warn(msg, e);
     }
 
     private Multimap<LifecycleLevel, LifecycleHandler<? extends KillbillService>> findAllHandlers(final KillbillService service) {
