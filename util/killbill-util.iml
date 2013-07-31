@@ -38,14 +38,14 @@
     <orderEntry type="module" module-name="killbill-internal-api" />
     <orderEntry type="library" name="Maven: com.ning.billing.plugin:killbill-plugin-api-payment:0.3.0" level="project" />
     <orderEntry type="library" name="Maven: org.skife.config:config-magic:0.14" level="project" />
-    <orderEntry type="library" name="Maven: com.ning.billing.commons:killbill-clock:0.1.7" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing.commons:killbill-clock:test-jar:tests:0.1.7" level="project" />
-    <orderEntry type="library" name="Maven: com.ning.billing.commons:killbill-queue:0.1.7" level="project" />
-    <orderEntry type="library" name="Maven: com.ning.billing.commons:killbill-jdbi:0.1.7" level="project" />
+    <orderEntry type="library" name="Maven: com.ning.billing.commons:killbill-clock:0.2.0" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing.commons:killbill-clock:test-jar:tests:0.2.0" level="project" />
+    <orderEntry type="library" name="Maven: com.ning.billing.commons:killbill-queue:0.2.0" level="project" />
+    <orderEntry type="library" name="Maven: com.ning.billing.commons:killbill-jdbi:0.2.0" level="project" />
     <orderEntry type="library" name="Maven: org.jdbi:jdbi:2.39.1" level="project" />
     <orderEntry type="library" name="Maven: com.yammer.metrics:metrics-core:2.1.2" level="project" />
     <orderEntry type="library" name="Maven: org.weakref:jmxutils:1.12" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing.commons:killbill-queue:test-jar:tests:0.1.7" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing.commons:killbill-queue:test-jar:tests:0.2.0" level="project" />
     <orderEntry type="library" name="Maven: com.ning.billing.plugin:killbill-plugin-api-notification:0.3.0" level="project" />
     <orderEntry type="library" name="Maven: com.samskivert:jmustache:1.5" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: mysql:mysql-connector-java:5.1.22" level="project" />
