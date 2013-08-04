@@ -41,6 +41,9 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.bus.api.PersistentBus.EventBusException;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.commons.locker.GlobalLock;
+import com.ning.billing.commons.locker.GlobalLocker;
+import com.ning.billing.commons.locker.LockFailedException;
 import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
@@ -65,10 +68,7 @@ import com.ning.billing.util.events.BusInternalEvent;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 import com.ning.billing.util.events.InvoiceAdjustmentInternalEvent;
 import com.ning.billing.util.events.InvoiceInternalEvent;
-import com.ning.billing.util.globallocker.GlobalLock;
-import com.ning.billing.util.globallocker.GlobalLocker;
-import com.ning.billing.util.globallocker.GlobalLocker.LockerType;
-import com.ning.billing.util.globallocker.LockFailedException;
+import com.ning.billing.util.globallocker.LockerType;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
 import com.ning.billing.util.svcapi.junction.BillingEventSet;
@@ -140,7 +140,7 @@ public class InvoiceDispatcher {
                                   final boolean dryRun, final InternalCallContext context) throws InvoiceApiException {
         GlobalLock lock = null;
         try {
-            lock = locker.lockWithNumberOfTries(LockerType.ACCOUNT_FOR_INVOICE_PAYMENTS, accountId.toString(), NB_LOCK_TRY);
+            lock = locker.lockWithNumberOfTries(LockerType.ACCOUNT_FOR_INVOICE_PAYMENTS.toString(), accountId.toString(), NB_LOCK_TRY);
 
             return processAccountWithLock(accountId, targetDate, dryRun, context);
         } catch (LockFailedException e) {

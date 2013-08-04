@@ -161,13 +161,17 @@
         </dependency>
         <dependency>
             <groupId>com.ning.billing.commons</groupId>
+            <artifactId>killbill-embeddeddb</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing.commons</groupId>
             <artifactId>killbill-queue</artifactId>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
         </dependency>
-
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>

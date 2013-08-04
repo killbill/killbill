@@ -40,7 +40,7 @@ public class TestInternalCallContextFactory extends UtilTestSuiteWithEmbeddedDB 
         final UUID invoiceId = UUID.randomUUID();
         final Long accountRecordId = 19384012L;
 
-        getDBI().withHandle(new HandleCallback<Void>() {
+        dbi.withHandle(new HandleCallback<Void>() {
             @Override
             public Void withHandle(final Handle handle) throws Exception {
                 handle.execute("DROP TABLE IF EXISTS invoices;\n" +
@@ -75,7 +75,7 @@ public class TestInternalCallContextFactory extends UtilTestSuiteWithEmbeddedDB 
         final UUID accountId = UUID.randomUUID();
         final Long accountRecordId = 19384012L;
 
-        getDBTestingHelper().getDBI().withHandle(new HandleCallback<Void>() {
+        dbi.withHandle(new HandleCallback<Void>() {
             @Override
             public Void withHandle(final Handle handle) throws Exception {
                 // Note: we always create an accounts table, see MysqlTestingHelper

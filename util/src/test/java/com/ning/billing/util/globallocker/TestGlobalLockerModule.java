@@ -16,8 +16,7 @@
 
 package com.ning.billing.util.globallocker;
 
-import com.ning.billing.dbi.DBTestingHelper;
-import com.ning.billing.dbi.DBTestingHelper.DBEngine;
+import com.ning.billing.commons.embeddeddb.EmbeddedDB;
 import com.ning.billing.mock.glue.MockGlobalLockerModule;
 import com.ning.billing.util.glue.GlobalLockerModule;
 
@@ -25,15 +24,15 @@ import com.google.inject.AbstractModule;
 
 public class TestGlobalLockerModule extends AbstractModule {
 
-    private final DBTestingHelper helper;
+    private final EmbeddedDB helper;
 
-    public TestGlobalLockerModule(final DBTestingHelper helper) {
+    public TestGlobalLockerModule(final EmbeddedDB helper) {
         this.helper = helper;
     }
 
     @Override
     protected void configure() {
-        if (DBEngine.MYSQL.equals(helper.getDBEngine())) {
+        if (EmbeddedDB.DBEngine.MYSQL.equals(helper.getDBEngine())) {
             install(new GlobalLockerModule());
         } else {
             install(new MockGlobalLockerModule());

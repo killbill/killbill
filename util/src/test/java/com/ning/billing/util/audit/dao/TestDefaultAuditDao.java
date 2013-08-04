@@ -45,7 +45,7 @@ public class TestDefaultAuditDao extends UtilTestSuiteWithEmbeddedDB {
         addTag();
 
         // Verify we get an audit entry for the tag_history table
-        final Handle handle = getDBI().open();
+        final Handle handle = dbi.open();
         final String tagHistoryString = (String) handle.select("select id from tag_history limit 1").get(0).get("id");
         handle.close();
 

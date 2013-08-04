@@ -16,6 +16,8 @@
 
 package com.ning.billing.server.modules;
 
+import javax.sql.DataSource;
+
 import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
 import org.skife.config.ConfigSource;
 import org.skife.config.SimplePropertyConfigSource;
@@ -89,6 +91,7 @@ public class KillbillServerModule extends AbstractModule {
         } catch (final Exception ignore) {
         }
         bind(IDBI.class).to(DBI.class).asEagerSingleton();
+        bind(DataSource.class).toProvider(DataSourceProvider.class).asEagerSingleton();
         bind(DBI.class).toProvider(DBIProvider.class).asEagerSingleton();
     }
 

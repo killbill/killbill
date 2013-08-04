@@ -38,6 +38,7 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.commons.locker.GlobalLocker;
 import com.ning.billing.subscription.api.SubscriptionTransitionType;
 import com.ning.billing.subscription.api.user.Subscription;
 import com.ning.billing.invoice.api.Invoice;
@@ -60,7 +61,6 @@ import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.util.entity.EntityPersistenceException;
-import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
 import com.ning.billing.util.svcapi.junction.BillingEvent;
@@ -132,7 +132,7 @@ public class TestInvoiceHelper {
     private final SubscriptionInternalApi subscriptionApi;
     private final  BusService busService;
     private final  InvoiceDao invoiceDao;
-    private final  GlobalLocker locker;
+    private final GlobalLocker locker;
     private final  Clock clock;
     private final InternalCallContext internalCallContext;
 

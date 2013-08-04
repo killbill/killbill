@@ -16,38 +16,29 @@
 
 package com.ning.billing;
 
+import java.io.IOException;
+
+import javax.sql.DataSource;
 
 import org.skife.jdbi.v2.IDBI;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 
-import com.ning.billing.dbi.DBTestingHelper;
-import com.ning.billing.dbi.H2TestingHelper;
-import com.ning.billing.dbi.MysqlTestingHelper;
+import com.ning.billing.commons.embeddeddb.EmbeddedDB;
 
 public class GuicyKillbillTestWithEmbeddedDBModule extends GuicyKillbillTestModule {
-
-    private static final Logger log = LoggerFactory.getLogger(GuicyKillbillTestWithEmbeddedDBModule.class);
-
-    private static final DBTestingHelper instance = getDBTestingHelper();
-
-    public static synchronized DBTestingHelper getDBTestingHelper() {
-        if (instance == null) {
-            if ("true".equals(System.getProperty("com.ning.billing.dbi.test.h2"))) {
-                log.info("Using h2 as the embedded database");
-                return new H2TestingHelper();
-            } else {
-                log.info("Using MySQL as the embedded database");
-                return new MysqlTestingHelper();
-            }
-        }
-        return instance;
-    }
 
     @Override
     protected void configure() {
         super.configure();
-        bind(DBTestingHelper.class).toInstance(instance);
-        bind(IDBI.class).toInstance(instance.getDBI());
+
+        final EmbeddedDB instance = DBTestingHelper.get();
+        bind(EmbeddedDB.class).toInstance(instance);
+
+        try {
+            bind(DataSource.class).toInstance(DBTestingHelper.get().getDataSource());
+            bind(IDBI.class).toInstance(DBTestingHelper.getDBI());
+        } catch (IOException e) {
+            Assert.fail(e.toString());
+        }
     }
 }

@@ -16,40 +16,30 @@
 
 package com.ning.billing.entitlement.block;
 
-import com.ning.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
-import com.ning.billing.entitlement.api.BlockingState;
-import com.ning.billing.entitlement.api.Type;
-import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import com.ning.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
+import com.ning.billing.entitlement.api.BlockingState;
+import com.ning.billing.entitlement.api.Type;
+import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 
 public class TestDefaultBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testSetBlockingStateOnBundle() throws Exception {
         final UUID bundleId = UUID.randomUUID();
-        getDBI().withHandle(new HandleCallback<Void>() {
+        dbi.withHandle(new HandleCallback<Void>() {
             @Override
             public Void withHandle(final Handle handle) throws Exception {
-                handle.execute("DROP TABLE IF EXISTS bundles;\n" +
-                        "CREATE TABLE bundles (\n" +
-                        "    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,\n" +
-                        "    id char(36) NOT NULL,\n" +
-                        "    external_key varchar(64) NOT NULL,\n" +
-                        "    account_id char(36) NOT NULL,\n" +
-                        "    last_sys_update_date datetime,\n" +
-                        "    account_record_id int(11) unsigned default null,\n" +
-                        "    tenant_record_id int(11) unsigned default null,\n" +
-                        "    PRIMARY KEY(record_id)\n" +
-                        ") ENGINE=innodb;");
-                handle.execute("insert into bundles (id, external_key, account_id, account_record_id) values (?, 'foo', ?, ?)",
-                        bundleId.toString(), UUID.randomUUID().toString(), internalCallContext.getAccountRecordId());
+                handle.execute("insert into bundles (id, external_key, account_id, created_by, created_date, updated_by, updated_date, account_record_id) values (?, 'foo', ?, ?, ?, ?, ?, ?)",
+                               bundleId.toString(), UUID.randomUUID().toString(), "TestDefaultBlockingApi", clock.getUTCNow(), "TestDefaultBlockingApi", clock.getUTCNow(), internalCallContext.getAccountRecordId());
                 return null;
             }
         });
@@ -62,7 +52,7 @@ public class TestDefaultBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
 
         Assert.assertEquals(resultState.getStateName(), blockingState.getStateName());
         // Verify the account_record_id was populated
-        getDBI().withHandle(new HandleCallback<Void>() {
+        dbi.withHandle(new HandleCallback<Void>() {
             @Override
             public Void withHandle(final Handle handle) throws Exception {
                 final List<Map<String, Object>> values = handle.select("select account_record_id from blocking_states where blockable_id = ?", bundleId.toString());

@@ -31,6 +31,9 @@ import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.bus.api.PersistentBus.EventBusException;
+import com.ning.billing.commons.locker.GlobalLock;
+import com.ning.billing.commons.locker.GlobalLocker;
+import com.ning.billing.commons.locker.LockFailedException;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.osgi.api.OSGIServiceRegistration;
@@ -42,10 +45,7 @@ import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.events.BusInternalEvent;
-import com.ning.billing.util.globallocker.GlobalLock;
-import com.ning.billing.util.globallocker.GlobalLocker;
-import com.ning.billing.util.globallocker.GlobalLocker.LockerType;
-import com.ning.billing.util.globallocker.LockFailedException;
+import com.ning.billing.util.globallocker.LockerType;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
 import com.ning.billing.util.svcapi.tag.TagInternalApi;
@@ -181,7 +181,7 @@ public abstract class ProcessorBase {
                 throws PaymentApiException {
             GlobalLock lock = null;
             try {
-                lock = locker.lockWithNumberOfTries(LockerType.ACCOUNT_FOR_INVOICE_PAYMENTS, accountExternalKey, NB_LOCK_TRY);
+                lock = locker.lockWithNumberOfTries(LockerType.ACCOUNT_FOR_INVOICE_PAYMENTS.toString(), accountExternalKey, NB_LOCK_TRY);
                 return callback.doOperation();
             } catch (LockFailedException e) {
                 final String format = String.format("Failed to lock account %s", accountExternalKey);

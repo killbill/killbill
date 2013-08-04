@@ -50,7 +50,7 @@ public class TestDatabaseExportDao extends UtilTestSuiteWithEmbeddedDB {
 
         final String tableNameA = "test_database_export_dao_a";
         final String tableNameB = "test_database_export_dao_b";
-        getDBTestingHelper().getDBI().withHandle(new HandleCallback<Void>() {
+        dbi.withHandle(new HandleCallback<Void>() {
             @Override
             public Void withHandle(final Handle handle) throws Exception {
                 handle.execute("drop table if exists " + tableNameA);

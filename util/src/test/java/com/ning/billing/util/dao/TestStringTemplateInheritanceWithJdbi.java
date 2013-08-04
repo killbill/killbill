@@ -42,7 +42,7 @@ public class TestStringTemplateInheritanceWithJdbi extends UtilTestSuiteWithEmbe
 
     @Test(groups = "slow")
     public void testInheritQueries() throws Exception {
-        final KombuchaSqlDao dao = getDBI().onDemand(KombuchaSqlDao.class);
+        final KombuchaSqlDao dao = dbi.onDemand(KombuchaSqlDao.class);
 
         // Verify non inherited template
         Assert.assertEquals(dao.isIsTimeForKombucha(), clock.getUTCNow().getHourOfDay() == 17);

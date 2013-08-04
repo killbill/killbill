@@ -69,6 +69,11 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>com.ning.billing.commons</groupId>
+            <artifactId>killbill-embeddeddb</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>joda-time</groupId>
             <artifactId>joda-time</artifactId>
         </dependency>

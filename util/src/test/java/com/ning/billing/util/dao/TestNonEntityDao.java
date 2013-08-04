@@ -16,6 +16,7 @@
 
 package com.ning.billing.util.dao;
 
+import java.io.IOException;
 import java.util.Date;
 import java.util.UUID;
 
@@ -47,8 +48,7 @@ public class TestNonEntityDao extends UtilTestSuiteWithEmbeddedDB {
 
 
     @Test(groups = "slow")
-    public void testRetrieveRecordIdFromObject() {
-
+    public void testRetrieveRecordIdFromObject() throws IOException {
         insertAccount();
 
         final Long resultRecordId = nonEntityDao.retrieveRecordIdFromObject(accountId, ObjectType.ACCOUNT, null);
@@ -56,8 +56,7 @@ public class TestNonEntityDao extends UtilTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
-    public void testRetrieveAccountRecordIdFromAccountObject() {
-
+    public void testRetrieveAccountRecordIdFromAccountObject() throws IOException {
         insertAccount();
 
         final Long resultAccountRecordId = nonEntityDao.retrieveAccountRecordIdFromObject(accountId, ObjectType.ACCOUNT, null);
@@ -66,8 +65,7 @@ public class TestNonEntityDao extends UtilTestSuiteWithEmbeddedDB {
 
 
     @Test(groups = "slow")
-    public void testRetrieveAccountRecordIdFromTagDefinitionObject() {
-
+    public void testRetrieveAccountRecordIdFromTagDefinitionObject() throws IOException {
         insertTagDefinition();
 
         final Long resultAccountRecordId = nonEntityDao.retrieveAccountRecordIdFromObject(tagDefinitionId, ObjectType.TAG_DEFINITION, null);
@@ -76,8 +74,7 @@ public class TestNonEntityDao extends UtilTestSuiteWithEmbeddedDB {
 
     // Not Tag_definition or account which are special
     @Test(groups = "slow")
-    public void testRetrieveAccountRecordIdFromOtherObject() {
-
+    public void testRetrieveAccountRecordIdFromOtherObject() throws IOException {
         insertTag();
 
         final Long resultAccountRecordId = nonEntityDao.retrieveAccountRecordIdFromObject(tagId, ObjectType.TAG, null);
@@ -85,8 +82,7 @@ public class TestNonEntityDao extends UtilTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
-    public void testRetrieveTenantRecordIdFromObject() {
-
+    public void testRetrieveTenantRecordIdFromObject() throws IOException {
         insertAccount();
 
         final Long resultTenantRecordId = nonEntityDao.retrieveTenantRecordIdFromObject(accountId, ObjectType.ACCOUNT, null);
@@ -94,15 +90,14 @@ public class TestNonEntityDao extends UtilTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
-    public void testRetrieveTenantRecordIdFromTenantObject() {
-
+    public void testRetrieveTenantRecordIdFromTenantObject() throws IOException {
         insertTenant();
 
         final Long resultTenantRecordId = nonEntityDao.retrieveTenantRecordIdFromObject(tenantId, ObjectType.TENANT, null);
         Assert.assertEquals(resultTenantRecordId, tenantRecordId);
     }
-    private void insertAccount() {
-        getDBI().withHandle(new HandleCallback<Void>() {
+    private void insertAccount() throws IOException {
+        dbi.withHandle(new HandleCallback<Void>() {
             @Override
             public Void withHandle(final Handle handle) throws Exception {
                 // Note: we always create an accounts table, see MysqlTestingHelper
@@ -113,8 +108,8 @@ public class TestNonEntityDao extends UtilTestSuiteWithEmbeddedDB {
         });
     }
 
-    private void insertHistoryAccount() {
-        getDBI().withHandle(new HandleCallback<Void>() {
+    private void insertHistoryAccount() throws IOException {
+        dbi.withHandle(new HandleCallback<Void>() {
             @Override
             public Void withHandle(final Handle handle) throws Exception {
                 // Note: we always create an accounts table, see MysqlTestingHelper
@@ -126,8 +121,8 @@ public class TestNonEntityDao extends UtilTestSuiteWithEmbeddedDB {
     }
 
 
-    private void insertTagDefinition() {
-        getDBI().withHandle(new HandleCallback<Void>() {
+    private void insertTagDefinition() throws IOException {
+        dbi.withHandle(new HandleCallback<Void>() {
             @Override
             public Void withHandle(final Handle handle) throws Exception {
                 // Note: we always create an accounts table, see MysqlTestingHelper
@@ -138,8 +133,8 @@ public class TestNonEntityDao extends UtilTestSuiteWithEmbeddedDB {
         });
     }
 
-    private void insertTag() {
-        getDBI().withHandle(new HandleCallback<Void>() {
+    private void insertTag() throws IOException {
+        dbi.withHandle(new HandleCallback<Void>() {
             @Override
             public Void withHandle(final Handle handle) throws Exception {
                 // Note: we always create an accounts table, see MysqlTestingHelper
@@ -150,8 +145,8 @@ public class TestNonEntityDao extends UtilTestSuiteWithEmbeddedDB {
         });
     }
 
-    private void insertTenant() {
-        getDBI().withHandle(new HandleCallback<Void>() {
+    private void insertTenant() throws IOException {
+        dbi.withHandle(new HandleCallback<Void>() {
             @Override
             public Void withHandle(final Handle handle) throws Exception {
                 // Note: we always create an accounts table, see MysqlTestingHelper

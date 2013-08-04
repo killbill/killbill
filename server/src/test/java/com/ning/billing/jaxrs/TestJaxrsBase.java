@@ -26,11 +26,14 @@ import java.util.Map;
 import javax.inject.Inject;
 import javax.servlet.Servlet;
 
+import com.ning.billing.DBTestingHelper;
+import com.ning.billing.commons.embeddeddb.EmbeddedDB;
 import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.joda.time.LocalDate;
 import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
+import org.skife.jdbi.v2.DBI;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeClass;
@@ -44,8 +47,6 @@ import com.ning.billing.api.TestApiListener;
 import com.ning.billing.beatrix.glue.BeatrixModule;
 import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.catalog.glue.CatalogModule;
-import com.ning.billing.dbi.DBTestingHelper;
-import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.subscription.glue.DefaultSubscriptionModule;
 import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.invoice.glue.DefaultInvoiceModule;
@@ -126,7 +127,7 @@ public class TestJaxrsBase extends KillbillClient {
         private final TestKillbillServerModule module;
 
 
-        public TestKillbillGuiceListener(final DBTestingHelper helper) {
+        public TestKillbillGuiceListener(final EmbeddedDB helper) {
             super();
             this.module = new TestKillbillServerModule(helper);
         }
@@ -152,9 +153,9 @@ public class TestJaxrsBase extends KillbillClient {
 
     public static class TestKillbillServerModule extends KillbillServerModule {
 
-        private final DBTestingHelper helper;
+        private final EmbeddedDB helper;
 
-        public TestKillbillServerModule(final DBTestingHelper helper) {
+        public TestKillbillServerModule(final EmbeddedDB helper) {
             super();
             this.helper = helper;
         }
@@ -198,7 +199,7 @@ public class TestJaxrsBase extends KillbillClient {
             install(new EmailModule(configSource));
             install(new CacheModule(configSource));
             install(new NonEntityDaoModule());
-            install(new TestGlobalLockerModule(helper));
+            install(new TestGlobalLockerModule(DBTestingHelper.get()));
             install(new CustomFieldModule());
             install(new TagStoreModule());
             install(new AuditModule());
@@ -255,7 +256,7 @@ public class TestJaxrsBase extends KillbillClient {
 
         //mapper.setPropertyNamingStrategy(new PropertyNamingStrategy.LowerCaseWithUnderscoresStrategy());
 
-        busHandler = new TestApiListener(null, getDBTestingHelper().getDBI());
+        busHandler = new TestApiListener(null, dbi);
     }
 
     protected void loadConfig() {
@@ -264,9 +265,9 @@ public class TestJaxrsBase extends KillbillClient {
         }
 
         // For shiro (outside of Guice control)
-        System.setProperty("com.ning.jetty.jdbi.url", getDBTestingHelper().getJdbcConnectionString());
-        System.setProperty("com.ning.jetty.jdbi.user", MysqlTestingHelper.USERNAME);
-        System.setProperty("com.ning.jetty.jdbi.password", MysqlTestingHelper.PASSWORD);
+        System.setProperty("com.ning.jetty.jdbi.url", DBTestingHelper.get().getJdbcConnectionString());
+        System.setProperty("com.ning.jetty.jdbi.user", DBTestingHelper.get().getUsername());
+        System.setProperty("com.ning.jetty.jdbi.password", DBTestingHelper.get().getPassword());
     }
 
     @BeforeSuite(groups = "slow")
@@ -275,7 +276,7 @@ public class TestJaxrsBase extends KillbillClient {
         loadSystemPropertiesFromClasspath("/killbill.properties");
         loadConfig();
 
-        listener = new TestKillbillGuiceListener(getDBTestingHelper());
+        listener = new TestKillbillGuiceListener(helper);
         server = new HttpServer();
 
         server.configure(config, getListeners(), getFilters());

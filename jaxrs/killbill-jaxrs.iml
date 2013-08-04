@@ -31,10 +31,11 @@
     <orderEntry type="module" module-name="killbill-internal-api" />
     <orderEntry type="library" name="Maven: com.ning.billing.plugin:killbill-plugin-api-payment:0.3.0" level="project" />
     <orderEntry type="library" name="Maven: org.skife.config:config-magic:0.14" level="project" />
-    <orderEntry type="library" name="Maven: com.ning.billing.commons:killbill-clock:0.2.0" level="project" />
-    <orderEntry type="library" name="Maven: com.ning.billing.commons:killbill-queue:0.2.0" level="project" />
-    <orderEntry type="library" name="Maven: com.ning.billing.commons:killbill-jdbi:0.2.0" level="project" />
+    <orderEntry type="library" name="Maven: com.ning.billing.commons:killbill-clock:0.2.1" level="project" />
+    <orderEntry type="library" name="Maven: com.ning.billing.commons:killbill-locker:0.2.1" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: com.h2database:h2:1.3.158" level="project" />
+    <orderEntry type="library" name="Maven: com.ning.billing.commons:killbill-queue:0.2.1" level="project" />
+    <orderEntry type="library" name="Maven: com.ning.billing.commons:killbill-jdbi:0.2.1" level="project" />
     <orderEntry type="library" name="Maven: org.jdbi:jdbi:2.39.1" level="project" />
     <orderEntry type="library" name="Maven: com.yammer.metrics:metrics-core:2.1.2" level="project" />
     <orderEntry type="library" name="Maven: org.weakref:jmxutils:1.12" level="project" />
@@ -47,8 +48,8 @@
     <orderEntry type="library" name="Maven: javax.mail:mail:1.4.1" level="project" />
     <orderEntry type="library" name="Maven: javax.activation:activation:1.1" level="project" />
     <orderEntry type="module" module-name="killbill-util" scope="TEST" production-on-test="" />
-    <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing:killbill-util:test-jar:tests:0.3.7-SNAPSHOT" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing.commons:killbill-clock:test-jar:tests:0.2.0" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing:killbill-util:test-jar:tests:0.4.1-SNAPSHOT" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: com.ning.billing.commons:killbill-clock:test-jar:tests:0.2.1" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: javax.servlet:javax.servlet-api:3.0.1" level="project" />
     <orderEntry type="library" name="Maven: javax.ws.rs:jsr311-api:1.1.1" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.mockito:mockito-all:1.9.0" level="project" />

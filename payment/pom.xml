@@ -104,6 +104,11 @@
         </dependency>
         <dependency>
             <groupId>com.ning.billing.commons</groupId>
+            <artifactId>killbill-embeddeddb</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing.commons</groupId>
             <artifactId>killbill-queue</artifactId>
         </dependency>
         <dependency>
