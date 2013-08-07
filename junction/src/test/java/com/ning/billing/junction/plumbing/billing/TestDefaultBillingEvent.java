@@ -41,7 +41,7 @@ import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.subscription.api.SubscriptionTransitionType;
-import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.junction.JunctionTestSuiteNoDB;
 import com.ning.billing.mock.MockAccountBuilder;
 import com.ning.billing.util.svcapi.junction.BillingEvent;
@@ -176,11 +176,11 @@ public class TestDefaultBillingEvent extends JunctionTestSuiteNoDB {
         Assert.assertEquals(event.toString(), "DefaultBillingEvent{type=CREATE, effectiveDate=2012-01-01T00:02:04.000Z, planPhaseName=Test-trial, subscriptionId=00000000-0000-0000-0000-000000000000, totalOrdering=1, accountId=" + event.getAccount().getId().toString() + "}");
     }
 
-    private BillingEvent createEvent(final Subscription sub, final DateTime effectiveDate, final SubscriptionTransitionType type) {
+    private BillingEvent createEvent(final SubscriptionBase sub, final DateTime effectiveDate, final SubscriptionTransitionType type) {
         return createEvent(sub, effectiveDate, type, 1L);
     }
 
-    private BillingEvent createEvent(final Subscription sub, final DateTime effectiveDate, final SubscriptionTransitionType type, final long totalOrdering) {
+    private BillingEvent createEvent(final SubscriptionBase sub, final DateTime effectiveDate, final SubscriptionTransitionType type, final long totalOrdering) {
         final int billCycleDay = 1;
 
         final Plan shotgun = new MockPlan();
@@ -200,8 +200,8 @@ public class TestDefaultBillingEvent extends JunctionTestSuiteNoDB {
                                  BillingPeriod.MONTHLY, phaseType);
     }
 
-    private Subscription subscription(final UUID id) {
-        final Subscription subscription = Mockito.mock(Subscription.class);
+    private SubscriptionBase subscription(final UUID id) {
+        final SubscriptionBase subscription = Mockito.mock(SubscriptionBase.class);
         Mockito.when(subscription.getId()).thenReturn(id);
         return subscription;
     }

@@ -37,7 +37,7 @@ import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.subscription.api.SubscriptionTransitionType;
 import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
-import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
@@ -59,7 +59,7 @@ public class BillCycleDayCalculator {
         this.subscriptionApi = subscriptionApi;
     }
 
-    protected int calculateBcd(final SubscriptionBundle bundle, final Subscription subscription, final EffectiveSubscriptionInternalEvent transition, final Account account, final InternalCallContext context)
+    protected int calculateBcd(final SubscriptionBundle bundle, final SubscriptionBase subscription, final EffectiveSubscriptionInternalEvent transition, final Account account, final InternalCallContext context)
             throws CatalogApiException, AccountApiException, SubscriptionUserApiException {
 
         final Catalog catalog = catalogService.getFullCatalog();
@@ -87,7 +87,7 @@ public class BillCycleDayCalculator {
     }
 
     @VisibleForTesting
-    int calculateBcdForAlignment(final BillingAlignment alignment, final SubscriptionBundle bundle, final Subscription subscription,
+    int calculateBcdForAlignment(final BillingAlignment alignment, final SubscriptionBundle bundle, final SubscriptionBase subscription,
                                  final Account account, final Catalog catalog, final Plan plan, final InternalCallContext context) throws AccountApiException, SubscriptionUserApiException, CatalogApiException {
         int result = 0;
         switch (alignment) {
@@ -98,7 +98,7 @@ public class BillCycleDayCalculator {
                 }
                 break;
             case BUNDLE:
-                final Subscription baseSub = subscriptionApi.getBaseSubscription(bundle.getId(), context);
+                final SubscriptionBase baseSub = subscriptionApi.getBaseSubscription(bundle.getId(), context);
                 Plan basePlan = baseSub.getCurrentPlan();
                 if (basePlan == null) {
                     // The BP has been cancelled
@@ -119,7 +119,7 @@ public class BillCycleDayCalculator {
     }
 
     @VisibleForTesting
-    int calculateBcdFromSubscription(final Subscription subscription, final Plan plan, final Account account, final Catalog catalog, final InternalCallContext context)
+    int calculateBcdFromSubscription(final SubscriptionBase subscription, final Plan plan, final Account account, final Catalog catalog, final InternalCallContext context)
             throws AccountApiException, CatalogApiException {
         // Retrieve the initial phase type for that subscription
         // TODO - this should be extracted somewhere, along with this code above

@@ -32,7 +32,7 @@ import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
-import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
@@ -68,7 +68,7 @@ public class BillingStateCalculatorBundle extends BillingStateCalculator<Subscri
             final Account account = accountApi.getAccountById(bundle.getAccountId(), context);
             final SortedSet<Invoice> unpaidInvoices = unpaidInvoicesForBundle(bundle.getId(), bundle.getAccountId(), account.getTimeZone(), context);
 
-            final Subscription basePlan = getBasePlanIfExist(bundle.getId(), context);
+            final SubscriptionBase basePlan = getBasePlanIfExist(bundle.getId(), context);
 
             final UUID id = bundle.getId();
             final int numberOfUnpaidInvoices = unpaidInvoices.size();
@@ -133,9 +133,9 @@ public class BillingStateCalculatorBundle extends BillingStateCalculator<Subscri
         return result;
     }
 
-    private Subscription getBasePlanIfExist(UUID bundleId, final InternalTenantContext context) throws SubscriptionUserApiException {
+    private SubscriptionBase getBasePlanIfExist(UUID bundleId, final InternalTenantContext context) throws SubscriptionUserApiException {
         try {
-            final Subscription basePlan = subscriptionApi.getBaseSubscription(bundleId, context);
+            final SubscriptionBase basePlan = subscriptionApi.getBaseSubscription(bundleId, context);
             return basePlan;
         } catch (SubscriptionUserApiException e) {
             if (e.getCode() == ErrorCode.SUB_GET_NO_SUCH_BASE_SUBSCRIPTION.getCode()) {

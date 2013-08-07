@@ -135,7 +135,7 @@ public class PlanAligner extends BaseAligner {
     }
 
     /**
-     * Returns next Phase for that Subscription at a point in time
+     * Returns next Phase for that SubscriptionBase at a point in time
      *
      * @param subscription  the subscription for which we need to compute the next Phase event
      * @param requestedDate the requested date

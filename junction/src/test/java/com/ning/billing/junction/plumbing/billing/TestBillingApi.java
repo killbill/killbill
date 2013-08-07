@@ -36,7 +36,7 @@ import com.ning.billing.entitlement.api.Type;
 import com.ning.billing.mock.MockEffectiveSubscriptionEvent;
 import com.ning.billing.mock.MockSubscription;
 import com.ning.billing.subscription.api.SubscriptionTransitionType;
-import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.subscription.api.user.SubscriptionState;
 import com.ning.billing.util.api.TagApiException;
@@ -75,7 +75,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
     private static final UUID bunId = new UUID(2L, 0L);
 
     private List<EffectiveSubscriptionInternalEvent> effectiveSubscriptionTransitions;
-    private Subscription subscription;
+    private SubscriptionBase subscription;
     private MockCatalog catalog;
 
     @BeforeMethod(groups = "fast")
@@ -89,15 +89,15 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
 
         final DateTime subscriptionStartDate = clock.getUTCNow().minusDays(3);
         subscription = new MockSubscription(subId, bunId, null, subscriptionStartDate, effectiveSubscriptionTransitions);
-        final List<Subscription> subscriptions = ImmutableList.<Subscription>of(subscription);
+        final List<SubscriptionBase> subscriptions = ImmutableList.<SubscriptionBase>of(subscription);
 
         Mockito.when(subscriptionInternalApi.getBundlesForAccount(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(bundles);
         Mockito.when(subscriptionInternalApi.getSubscriptionsForBundle(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscriptions);
         Mockito.when(subscriptionInternalApi.getSubscriptionFromId(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
         Mockito.when(subscriptionInternalApi.getBundleFromId(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(bundle);
         Mockito.when(subscriptionInternalApi.getBaseSubscription(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
-        Mockito.when(subscriptionInternalApi.getBillingTransitions(Mockito.<Subscription>any(), Mockito.<InternalTenantContext>any())).thenReturn(effectiveSubscriptionTransitions);
-        Mockito.when(subscriptionInternalApi.getAllTransitions(Mockito.<Subscription>any(), Mockito.<InternalTenantContext>any())).thenReturn(effectiveSubscriptionTransitions);
+        Mockito.when(subscriptionInternalApi.getBillingTransitions(Mockito.<SubscriptionBase>any(), Mockito.<InternalTenantContext>any())).thenReturn(effectiveSubscriptionTransitions);
+        Mockito.when(subscriptionInternalApi.getAllTransitions(Mockito.<SubscriptionBase>any(), Mockito.<InternalTenantContext>any())).thenReturn(effectiveSubscriptionTransitions);
 
         catalog = ((MockCatalog) catalogService.getCurrentCatalog());
         // TODO The MockCatalog module returns two different things for full vs current catalog

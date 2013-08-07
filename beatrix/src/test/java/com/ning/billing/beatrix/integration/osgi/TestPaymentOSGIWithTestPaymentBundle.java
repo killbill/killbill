@@ -16,6 +16,19 @@
 
 package com.ning.billing.beatrix.integration.osgi;
 
+import java.math.BigDecimal;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.UUID;
+
+import javax.inject.Inject;
+
+import org.joda.time.LocalDate;
+import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.api.TestApiListener.NextEvent;
@@ -27,8 +40,6 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.DefaultEntitlement;
-import com.ning.billing.subscription.api.user.Subscription;
-import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.osgi.api.OSGIServiceRegistration;
@@ -36,17 +47,6 @@ import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 import com.ning.billing.payment.plugin.api.PaymentPluginApiException;
 import com.ning.billing.payment.plugin.api.PaymentPluginApiWithTestControl;
-import org.joda.time.LocalDate;
-import org.testng.Assert;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
-import javax.inject.Inject;
-import java.math.BigDecimal;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.UUID;
 
 public class TestPaymentOSGIWithTestPaymentBundle extends TestOSGIBase {
 

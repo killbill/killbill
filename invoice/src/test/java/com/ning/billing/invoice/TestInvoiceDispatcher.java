@@ -40,7 +40,7 @@ import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.subscription.api.SubscriptionTransitionType;
-import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.util.timezone.DateAndTimeZoneContext;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
@@ -59,7 +59,7 @@ import com.ning.billing.util.svcapi.junction.BillingModeType;
 public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
 
     private Account account;
-    private Subscription subscription;
+    private SubscriptionBase subscription;
 
     @Override
     @BeforeMethod(groups = "slow")

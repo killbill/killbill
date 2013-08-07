@@ -29,7 +29,7 @@ import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.entitlement.api.Type;
 import com.ning.billing.junction.plumbing.billing.BlockingCalculator.DisabledDuration;
 import com.ning.billing.subscription.api.SubscriptionTransitionType;
-import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.util.svcapi.junction.BillingEvent;
 import com.ning.billing.util.svcapi.junction.BillingModeType;
 import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
@@ -62,19 +62,19 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
     private final UUID bundleId2 = UUID.randomUUID();
 
     private Account account;
-    private Subscription subscription1;
-    private Subscription subscription2;
-    private Subscription subscription3;
-    private Subscription subscription4;
+    private SubscriptionBase subscription1;
+    private SubscriptionBase subscription2;
+    private SubscriptionBase subscription3;
+    private SubscriptionBase subscription4;
 
     @BeforeMethod(groups = "fast")
     public void beforeMethod() throws Exception {
         super.beforeMethod();
         account = Mockito.mock(Account.class);
-        subscription1 = Mockito.mock(Subscription.class);
-        subscription2 = Mockito.mock(Subscription.class);
-        subscription3 = Mockito.mock(Subscription.class);
-        subscription4 = Mockito.mock(Subscription.class);
+        subscription1 = Mockito.mock(SubscriptionBase.class);
+        subscription2 = Mockito.mock(SubscriptionBase.class);
+        subscription3 = Mockito.mock(SubscriptionBase.class);
+        subscription4 = Mockito.mock(SubscriptionBase.class);
         Mockito.when(account.getId()).thenReturn(UUID.randomUUID());
         Mockito.when(subscription1.getBundleId()).thenReturn(bundleId1);
         Mockito.when(subscription2.getBundleId()).thenReturn(bundleId1);
@@ -519,11 +519,11 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
 
     }
 
-    protected BillingEvent createRealEvent(final DateTime effectiveDate, final Subscription subscription) {
+    protected BillingEvent createRealEvent(final DateTime effectiveDate, final SubscriptionBase subscription) {
         return createRealEvent(effectiveDate, subscription, SubscriptionTransitionType.CHANGE);
     }
 
-    protected BillingEvent createRealEvent(final DateTime effectiveDate, final Subscription subscription, final SubscriptionTransitionType type) {
+    protected BillingEvent createRealEvent(final DateTime effectiveDate, final SubscriptionBase subscription, final SubscriptionTransitionType type) {
         final Account account = this.account;
         final Integer billCycleDay = 1;
         final PlanPhase planPhase = new MockPlanPhase();
@@ -622,7 +622,7 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         events.add(createBillingEvent(subscription3));
         events.add(createBillingEvent(subscription4));
 
-        final Hashtable<UUID, List<Subscription>> map = blockingCalculator.createBundleSubscriptionMap(events);
+        final Hashtable<UUID, List<SubscriptionBase>> map = blockingCalculator.createBundleSubscriptionMap(events);
 
         assertNotNull(map);
         assertEquals(map.keySet().size(), 2);
@@ -631,7 +631,7 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
 
     }
 
-    private BillingEvent createBillingEvent(final Subscription subscription) {
+    private BillingEvent createBillingEvent(final SubscriptionBase subscription) {
         final BillingEvent result = Mockito.mock(BillingEvent.class);
         Mockito.when(result.getSubscription()).thenReturn(subscription);
         Mockito.when(result.compareTo(Mockito.<BillingEvent>any())).thenReturn(1);

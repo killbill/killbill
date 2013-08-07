@@ -16,25 +16,27 @@
 
 package com.ning.billing.entitlement.block;
 
-import com.google.inject.Inject;
+import java.util.UUID;
+
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
-import com.ning.billing.entitlement.dao.BlockingStateDao;
 import com.ning.billing.entitlement.api.Blockable;
 import com.ning.billing.entitlement.api.BlockingApiException;
 import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.entitlement.api.Type;
-import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.entitlement.dao.BlockingStateDao;
+import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
 
-import java.util.UUID;
+import com.google.inject.Inject;
 
 public class DefaultBlockingChecker implements BlockingChecker {
 
     private static class BlockingAggregator {
+
         private boolean blockChange = false;
         private boolean blockEntitlement = false;
         private boolean blockBilling = false;
@@ -89,11 +91,11 @@ public class DefaultBlockingChecker implements BlockingChecker {
     }
 
     private BlockingAggregator getBlockedStateSubscriptionId(final UUID subscriptionId, final InternalTenantContext context) throws SubscriptionUserApiException {
-        final Subscription subscription = subscriptionApi.getSubscriptionFromId(subscriptionId, context);
+        final SubscriptionBase subscription = subscriptionApi.getSubscriptionFromId(subscriptionId, context);
         return getBlockedStateSubscription(subscription, context);
     }
 
-    private BlockingAggregator getBlockedStateSubscription(final Subscription subscription, final InternalTenantContext context) throws SubscriptionUserApiException {
+    private BlockingAggregator getBlockedStateSubscription(final SubscriptionBase subscription, final InternalTenantContext context) throws SubscriptionUserApiException {
         final BlockingAggregator result = new BlockingAggregator();
         if (subscription != null) {
             final BlockingAggregator subscriptionState = getBlockedStateForId(subscription.getId(), context);
@@ -147,7 +149,7 @@ public class DefaultBlockingChecker implements BlockingChecker {
     @Override
     public void checkBlockedChange(final Blockable blockable, final InternalTenantContext context) throws BlockingApiException {
         try {
-            if (blockable instanceof Subscription && getBlockedStateSubscription((Subscription) blockable, context).isBlockChange()) {
+            if (blockable instanceof SubscriptionBase && getBlockedStateSubscription((SubscriptionBase) blockable, context).isBlockChange()) {
                 throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION, ACTION_CHANGE, TYPE_SUBSCRIPTION, blockable.getId().toString());
             } else if (blockable instanceof SubscriptionBundle && getBlockedStateBundle((SubscriptionBundle) blockable, context).isBlockChange()) {
                 throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION, ACTION_CHANGE, TYPE_BUNDLE, blockable.getId().toString());
@@ -162,7 +164,8 @@ public class DefaultBlockingChecker implements BlockingChecker {
     @Override
     public void checkBlockedEntitlement(final Blockable blockable, final InternalTenantContext context) throws BlockingApiException {
         try {
-            if (blockable instanceof Subscription && getBlockedStateSubscription((Subscription) blockable, context).isBlockEntitlement()) {
+            // STEPH_ENT
+            if (blockable instanceof SubscriptionBase && getBlockedStateSubscription((SubscriptionBase) blockable, context).isBlockEntitlement()) {
                 throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION, ACTION_ENTITLEMENT, TYPE_SUBSCRIPTION, blockable.getId().toString());
             } else if (blockable instanceof SubscriptionBundle && getBlockedStateBundle((SubscriptionBundle) blockable, context).isBlockEntitlement()) {
                 throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION, ACTION_ENTITLEMENT, TYPE_BUNDLE, blockable.getId().toString());
@@ -177,7 +180,7 @@ public class DefaultBlockingChecker implements BlockingChecker {
     @Override
     public void checkBlockedBilling(final Blockable blockable, final InternalTenantContext context) throws BlockingApiException {
         try {
-            if (blockable instanceof Subscription && getBlockedStateSubscription((Subscription) blockable, context).isBlockBilling()) {
+            if (blockable instanceof SubscriptionBase && getBlockedStateSubscription((SubscriptionBase) blockable, context).isBlockBilling()) {
                 throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION, ACTION_BILLING, TYPE_SUBSCRIPTION, blockable.getId().toString());
             } else if (blockable instanceof SubscriptionBundle && getBlockedStateBundle((SubscriptionBundle) blockable, context).isBlockBilling()) {
                 throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION, ACTION_BILLING, TYPE_BUNDLE, blockable.getId().toString());

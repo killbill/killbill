@@ -29,7 +29,7 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.subscription.api.SubscriptionTransitionType;
-import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 import com.ning.billing.util.svcapi.junction.BillingEvent;
 import com.ning.billing.util.svcapi.junction.BillingModeType;
@@ -37,7 +37,7 @@ import com.ning.billing.util.svcapi.junction.BillingModeType;
 public class DefaultBillingEvent implements BillingEvent {
     private final Account account;
     private final int billCycleDayLocal;
-    private final Subscription subscription;
+    private final SubscriptionBase subscription;
     private final DateTime effectiveDate;
     private final PlanPhase planPhase;
     private final Plan plan;
@@ -51,7 +51,7 @@ public class DefaultBillingEvent implements BillingEvent {
     private final Long totalOrdering;
     private final DateTimeZone timeZone;
 
-    public DefaultBillingEvent(final Account account, final EffectiveSubscriptionInternalEvent transition, final Subscription subscription, final int billCycleDayLocal, final Currency currency, final Catalog catalog) throws CatalogApiException {
+    public DefaultBillingEvent(final Account account, final EffectiveSubscriptionInternalEvent transition, final SubscriptionBase subscription, final int billCycleDayLocal, final Currency currency, final Catalog catalog) throws CatalogApiException {
 
         this.account = account;
         this.billCycleDayLocal = billCycleDayLocal;
@@ -85,7 +85,7 @@ public class DefaultBillingEvent implements BillingEvent {
         timeZone = account.getTimeZone();
     }
 
-    public DefaultBillingEvent(final Account account, final Subscription subscription, final DateTime effectiveDate, final Plan plan, final PlanPhase planPhase,
+    public DefaultBillingEvent(final Account account, final SubscriptionBase subscription, final DateTime effectiveDate, final Plan plan, final PlanPhase planPhase,
                                final BigDecimal fixedPrice, final BigDecimal recurringPrice, final Currency currency,
                                final BillingPeriod billingPeriod, final int billCycleDayLocal, final BillingModeType billingModeType,
                                final String description, final long totalOrdering, final SubscriptionTransitionType type, final DateTimeZone timeZone) {
@@ -163,7 +163,7 @@ public class DefaultBillingEvent implements BillingEvent {
     }
 
     @Override
-    public Subscription getSubscription() {
+    public SubscriptionBase getSubscription() {
         return subscription;
     }
 

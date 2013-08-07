@@ -46,7 +46,7 @@ import com.ning.billing.subscription.events.SubscriptionEvent;
 import com.ning.billing.subscription.glue.DefaultSubscriptionModule;
 import com.ning.billing.subscription.api.SubscriptionTransitionType;
 import com.ning.billing.subscription.api.timeline.SubscriptionTimeline.NewEvent;
-import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.subscription.api.user.SubscriptionTransition;
 import com.ning.billing.util.callcontext.CallContext;
@@ -126,10 +126,10 @@ public class DefaultSubscriptionTimelineApi extends SubscriptionApiBase implemen
         }
     }
 
-    private List<SubscriptionDataRepair> convertToSubscriptionsDataRepair(List<Subscription> input) {
-        return new ArrayList<SubscriptionDataRepair>(Collections2.transform(input, new Function<Subscription, SubscriptionDataRepair>() {
+    private List<SubscriptionDataRepair> convertToSubscriptionsDataRepair(List<SubscriptionBase> input) {
+        return new ArrayList<SubscriptionDataRepair>(Collections2.transform(input, new Function<SubscriptionBase, SubscriptionDataRepair>() {
             @Override
-            public SubscriptionDataRepair apply(@Nullable final Subscription subscription) {
+            public SubscriptionDataRepair apply(@Nullable final SubscriptionBase subscription) {
                 return convertToSubscriptionDataRepair((SubscriptionData) subscription);
             }
         }));
@@ -167,7 +167,7 @@ public class DefaultSubscriptionTimelineApi extends SubscriptionApiBase implemen
             SubscriptionDataRepair baseSubscriptionRepair = null;
             final List<SubscriptionDataRepair> addOnSubscriptionInRepair = new LinkedList<SubscriptionDataRepair>();
             final List<SubscriptionDataRepair> inRepair = new LinkedList<SubscriptionDataRepair>();
-            for (final Subscription cur : subscriptions) {
+            for (final SubscriptionBase cur : subscriptions) {
                 final SubscriptionTimeline curRepair = findAndCreateSubscriptionRepair(cur.getId(), input.getSubscriptions());
                 if (curRepair != null) {
                     final SubscriptionDataRepair curInputRepair = ((SubscriptionDataRepair) cur);
@@ -221,7 +221,7 @@ public class DefaultSubscriptionTimelineApi extends SubscriptionApiBase implemen
             switch (repairType) {
                 case BASE_REPAIR:
                     // We need to add any existing addon that are not in the input repair list
-                    for (final Subscription cur : subscriptions) {
+                    for (final SubscriptionBase cur : subscriptions) {
                         if (cur.getCategory() == ProductCategory.ADD_ON && !inRepair.contains(cur)) {
                             final SubscriptionDataRepair curOutputRepair = createSubscriptionDataRepair((SubscriptionDataRepair) cur, newBundleStartDate, null, ((SubscriptionDataRepair) cur).getEvents());
                             repairDao.initializeRepair(curOutputRepair.getId(), ((SubscriptionDataRepair) cur).getEvents(), tenantContext);
@@ -269,7 +269,7 @@ public class DefaultSubscriptionTimelineApi extends SubscriptionApiBase implemen
         }
     }
 
-    private RepairType getRepairType(final Subscription firstSubscription, final boolean gotBaseSubscription) {
+    private RepairType getRepairType(final SubscriptionBase firstSubscription, final boolean gotBaseSubscription) {
         if (firstSubscription.getCategory() == ProductCategory.BASE) {
             return gotBaseSubscription ? RepairType.BASE_REPAIR : RepairType.ADD_ON_REPAIR;
         } else {
@@ -298,7 +298,7 @@ public class DefaultSubscriptionTimelineApi extends SubscriptionApiBase implemen
             throws SubscriptionRepairException {
         for (final SubscriptionTimeline cur : input) {
             boolean found = false;
-            for (final Subscription s : subscriptions) {
+            for (final SubscriptionBase s : subscriptions) {
                 if (s.getId().equals(cur.getId())) {
                     found = true;
                     break;
@@ -393,7 +393,7 @@ public class DefaultSubscriptionTimelineApi extends SubscriptionApiBase implemen
     private String getViewId(final DateTime lastUpdateBundleDate, final List<SubscriptionDataRepair> subscriptions) {
         final StringBuilder tmp = new StringBuilder();
         long lastOrderedId = -1;
-        for (final Subscription cur : subscriptions) {
+        for (final SubscriptionBase cur : subscriptions) {
             lastOrderedId = lastOrderedId < ((SubscriptionData) cur).getLastEventOrderedId() ? ((SubscriptionData) cur).getLastEventOrderedId() : lastOrderedId;
         }
         tmp.append(lastOrderedId);
@@ -446,7 +446,7 @@ public class DefaultSubscriptionTimelineApi extends SubscriptionApiBase implemen
             result.add(cur);
         }
 
-        for (final Subscription cur : subscriptions) {
+        for (final SubscriptionBase cur : subscriptions) {
             if (!repairIds.contains(cur.getId())) {
                 result.add(new DefaultSubscriptionTimeline((SubscriptionDataRepair) cur, catalogService.getFullCatalog()));
             }

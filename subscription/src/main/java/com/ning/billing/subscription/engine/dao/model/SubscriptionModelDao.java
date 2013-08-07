@@ -23,12 +23,12 @@ import org.joda.time.DateTime;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.subscription.api.user.SubscriptionBuilder;
 import com.ning.billing.subscription.api.user.SubscriptionData;
-import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.EntityBase;
 import com.ning.billing.util.entity.dao.EntityModelDao;
 
-public class SubscriptionModelDao extends EntityBase implements EntityModelDao<Subscription> {
+public class SubscriptionModelDao extends EntityBase implements EntityModelDao<SubscriptionBase> {
 
     private UUID bundleId;
     private ProductCategory category;
@@ -85,7 +85,7 @@ public class SubscriptionModelDao extends EntityBase implements EntityModelDao<S
         return paidThroughDate;
     }
 
-    public static Subscription toSubscription(final SubscriptionModelDao src) {
+    public static SubscriptionBase toSubscription(final SubscriptionModelDao src) {
         if (src == null) {
             return null;
         }

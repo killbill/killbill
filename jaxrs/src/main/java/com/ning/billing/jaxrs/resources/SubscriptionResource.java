@@ -48,7 +48,7 @@ import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.subscription.api.user.SubscriptionUserApi;
 import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
-import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
 import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
 import com.ning.billing.jaxrs.util.Context;
@@ -102,7 +102,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
     public Response getSubscription(@PathParam("subscriptionId") final String subscriptionId,
                                     @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionUserApiException {
         final UUID uuid = UUID.fromString(subscriptionId);
-        final Subscription subscription = subscriptionApi.getSubscriptionFromId(uuid, context.createContext(request));
+        final SubscriptionBase subscription = null; // STEPH_ENT  subscriptionApi.getSubscriptionFromId(uuid, context.createContext(request));
         final SubscriptionJsonNoEvents json = new SubscriptionJsonNoEvents(subscription, null);
         return Response.status(Status.OK).entity(json).build();
     }
@@ -120,9 +120,9 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                        @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionUserApiException {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
-        final SubscriptionCallCompletionCallback<Subscription> callback = new SubscriptionCallCompletionCallback<Subscription>() {
+        final SubscriptionCallCompletionCallback<SubscriptionBase> callback = new SubscriptionCallCompletionCallback<SubscriptionBase>() {
             @Override
-            public Subscription doOperation(final CallContext ctx) throws SubscriptionUserApiException, InterruptedException, TimeoutException {
+            public SubscriptionBase doOperation(final CallContext ctx) throws SubscriptionUserApiException, InterruptedException, TimeoutException {
 
                 final DateTime inputDate = (requestedDate != null) ? DATE_TIME_FORMATTER.parseDateTime(requestedDate) : null;
                 final UUID uuid = UUID.fromString(subscription.getBundleId());
@@ -130,7 +130,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                 final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(subscription.getProductName(),
                                                                        ProductCategory.valueOf(subscription.getProductCategory()),
                                                                        BillingPeriod.valueOf(subscription.getBillingPeriod()), subscription.getPriceList(), null);
-                return subscriptionApi.createSubscription(uuid, spec, inputDate, ctx);
+                return null; // STEPH_ENT  subscriptionApi.createSubscription(uuid, spec, inputDate, ctx);
             }
 
             @Override
@@ -139,12 +139,12 @@ public class SubscriptionResource extends JaxRsResourceBase {
             }
 
             @Override
-            public Response doResponseOk(final Subscription createdSubscription) {
+            public Response doResponseOk(final SubscriptionBase createdSubscription) {
                 return uriBuilder.buildResponse(SubscriptionResource.class, "getSubscription", createdSubscription.getId());
             }
         };
 
-        final SubscriptionCallCompletion<Subscription> callCompletionCreation = new SubscriptionCallCompletion<Subscription>();
+        final SubscriptionCallCompletion<SubscriptionBase> callCompletionCreation = new SubscriptionCallCompletion<SubscriptionBase>();
         return callCompletionCreation.withSynchronization(callback, timeoutSec, callCompletion, callContext);
     }
 
@@ -172,7 +172,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
             public Response doOperation(final CallContext ctx) throws SubscriptionUserApiException, InterruptedException,
                                                                       TimeoutException {
                 final UUID uuid = UUID.fromString(subscriptionId);
-                final Subscription current = subscriptionApi.getSubscriptionFromId(uuid, callContext);
+                final SubscriptionBase current = null; // STEPH_ENT subscriptionApi.getSubscriptionFromId(uuid, callContext);
                 final DateTime inputDate = (requestedDate != null) ? DATE_TIME_FORMATTER.parseDateTime(requestedDate) : null;
 
                 if (policyString == null) {
@@ -215,7 +215,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                              @HeaderParam(HDR_COMMENT) final String comment,
                                              @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionUserApiException {
         final UUID uuid = UUID.fromString(subscriptionId);
-        final Subscription current = subscriptionApi.getSubscriptionFromId(uuid, context.createContext(createdBy, reason, comment, request));
+        final SubscriptionBase current = null; // STEPH_ENT  subscriptionApi.getSubscriptionFromId(uuid, context.createContext(createdBy, reason, comment, request));
 
         current.uncancel(context.createContext(createdBy, reason, comment, request));
         return Response.status(Status.OK).build();
@@ -246,7 +246,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                            TimeoutException {
                 final UUID uuid = UUID.fromString(subscriptionId);
 
-                final Subscription current = subscriptionApi.getSubscriptionFromId(uuid, callContext);
+                final SubscriptionBase current = null; // STEPH_ENT  subscriptionApi.getSubscriptionFromId(uuid, callContext);
 
                 final DateTime inputDate = (requestedDate != null) ? DATE_TIME_FORMATTER.parseDateTime(requestedDate) : null;
                 if (policyString == null) {

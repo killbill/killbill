@@ -27,12 +27,9 @@ import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.DefaultEntitlement;
-import com.ning.billing.subscription.api.user.Subscription;
 import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 import com.ning.billing.util.tag.ControlTagType;
-
-import static junit.framework.Assert.assertTrue;
 
 @Test(groups = "slow")
 public class TestOverdueWithOverdueEnforcementOffTag extends TestOverdueBase {
@@ -42,7 +39,7 @@ public class TestOverdueWithOverdueEnforcementOffTag extends TestOverdueBase {
     public String getOverdueConfig() {
         final String configXml = "<overdueConfig>" +
                                  "   <bundleOverdueStates>" +
-           "       <state name=\"OD1\">" +
+                                 "       <state name=\"OD1\">" +
                                  "           <condition>" +
                                  "               <timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
                                  "                   <unit>DAYS</unit><number>5</number>" +
@@ -97,7 +94,6 @@ public class TestOverdueWithOverdueEnforcementOffTag extends TestOverdueBase {
     }
 
 
-
     @Test(groups = "slow")
     public void testOverdueAccountWithOverdueEnforcementOffTag() throws Exception {
 
@@ -134,7 +130,7 @@ public class TestOverdueWithOverdueEnforcementOffTag extends TestOverdueBase {
         busHandler.pushExpectedEvent(NextEvent.TAG);
         tagUserApi.removeTag(account.getId(), ObjectType.ACCOUNT, ControlTagType.OVERDUE_ENFORCEMENT_OFF.getId(), callContext);
         busHandler.isCompleted(DELAY);
-        
+
         // Account should be back in overdue
         checkODState("OD1");
     }

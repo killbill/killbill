@@ -27,7 +27,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.entitlement.api.Blockable;
 import com.ning.billing.ovedue.notification.DefaultOverdueCheckNotifier;
 import com.ning.billing.ovedue.notification.OverdueCheckNotificationKey;
@@ -78,7 +78,7 @@ public class TestOverdueCheckNotifier extends OverdueTestSuiteWithEmbeddedDB {
         final Account account = Mockito.mock(Account.class);
         Mockito.when(accountApi.getAccountById(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(account);
 
-        final Subscription subscription = Mockito.mock(Subscription.class);
+        final SubscriptionBase subscription = Mockito.mock(SubscriptionBase.class);
         Mockito.when(subscriptionApi.getSubscriptionFromId(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
 
         mockListener = new OverdueListenerMock(internalCallContextFactory);
@@ -98,7 +98,7 @@ public class TestOverdueCheckNotifier extends OverdueTestSuiteWithEmbeddedDB {
     @Test(groups = "slow")
     public void test() throws Exception {
         final UUID subscriptionId = new UUID(0L, 1L);
-        final Blockable blockable = Mockito.mock(Subscription.class);
+        final Blockable blockable = Mockito.mock(SubscriptionBase.class);
         Mockito.when(blockable.getId()).thenReturn(subscriptionId);
         final DateTime now = clock.getUTCNow();
         final DateTime readyTime = now.plusMillis(2000);

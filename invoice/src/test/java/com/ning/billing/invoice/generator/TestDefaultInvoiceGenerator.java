@@ -44,7 +44,7 @@ import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.subscription.api.SubscriptionTransitionType;
-import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.invoice.InvoiceTestSuiteNoDB;
 import com.ning.billing.invoice.MockBillingEventSet;
 import com.ning.billing.invoice.api.Invoice;
@@ -125,7 +125,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
     public void testWithSingleMonthlyEvent() throws InvoiceApiException, CatalogApiException {
         final BillingEventSet events = new MockBillingEventSet();
 
-        final Subscription sub = createZombieSubscription();
+        final SubscriptionBase sub = createZombieSubscription();
         final LocalDate startDate = invoiceUtil.buildDate(2011, 9, 1);
 
         final Plan plan = new MockPlan();
@@ -145,12 +145,12 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         assertEquals(invoice.getInvoiceItems().get(0).getSubscriptionId(), sub.getId());
     }
 
-    private Subscription createZombieSubscription() {
+    private SubscriptionBase createZombieSubscription() {
         return createZombieSubscription(UUID.randomUUID(), UUID.randomUUID());
     }
 
-    private Subscription createZombieSubscription(final UUID subscriptionId, final UUID bundleId) {
-        final Subscription sub = Mockito.mock(Subscription.class);
+    private SubscriptionBase createZombieSubscription(final UUID subscriptionId, final UUID bundleId) {
+        final SubscriptionBase sub = Mockito.mock(SubscriptionBase.class);
         Mockito.when(sub.getId()).thenReturn(subscriptionId);
         Mockito.when(sub.getBundleId()).thenReturn(bundleId);
 
@@ -160,7 +160,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
     @Test(groups = "fast")
     public void testSimpleWithTimeZone() throws InvoiceApiException, CatalogApiException {
         final UUID accountId = UUID.randomUUID();
-        final Subscription sub = createZombieSubscription();
+        final SubscriptionBase sub = createZombieSubscription();
         final Plan plan = new MockPlan();
         final BigDecimal rate = TEN;
         final PlanPhase phase = createMockMonthlyPlanPhase(rate);
@@ -188,7 +188,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
     @Test(groups = "fast")
     public void testSimpleWithSingleDiscountEvent() throws Exception {
         final UUID accountId = UUID.randomUUID();
-        final Subscription sub = createZombieSubscription();
+        final SubscriptionBase sub = createZombieSubscription();
         final Plan plan = new MockPlan("Plan with a single discount phase");
         final PlanPhase phaseEvergreen = createMockMonthlyPlanPhase(EIGHT, PhaseType.DISCOUNT);
         final int bcdLocal = 16;
@@ -211,7 +211,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
     public void testWithSingleMonthlyEventWithLeadingProRation() throws InvoiceApiException, CatalogApiException {
         final BillingEventSet events = new MockBillingEventSet();
 
-        final Subscription sub = createZombieSubscription();
+        final SubscriptionBase sub = createZombieSubscription();
         final LocalDate startDate = invoiceUtil.buildDate(2011, 9, 1);
 
         final Plan plan = new MockPlan();
@@ -245,7 +245,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         final BigDecimal rate2 = TEN;
         final PlanPhase phase2 = createMockMonthlyPlanPhase(rate2);
 
-        final Subscription sub = createZombieSubscription();
+        final SubscriptionBase sub = createZombieSubscription();
 
         final BillingEvent event1 = createBillingEvent(sub.getId(), sub.getBundleId(), invoiceUtil.buildDate(2011, 9, 1), plan1, phase1, 1);
         events.add(event1);
@@ -270,7 +270,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         final BigDecimal rate1 = FIVE;
         final PlanPhase phase1 = createMockMonthlyPlanPhase(rate1);
 
-        final Subscription sub = createZombieSubscription();
+        final SubscriptionBase sub = createZombieSubscription();
         final BillingEvent event1 = createBillingEvent(sub.getId(), sub.getBundleId(), invoiceUtil.buildDate(2011, 9, 1), plan1, phase1, 1);
         events.add(event1);
 
@@ -307,7 +307,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         final BigDecimal rate1 = FIVE;
         final PlanPhase phase1 = createMockMonthlyPlanPhase(rate1);
 
-        final Subscription sub = createZombieSubscription();
+        final SubscriptionBase sub = createZombieSubscription();
         final BillingEvent event1 = createBillingEvent(sub.getId(), sub.getBundleId(), invoiceUtil.buildDate(2011, 9, 1), plan1, phase1, 1);
         events.add(event1);
 
@@ -334,7 +334,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
     public void testSingleEventWithExistingInvoice() throws InvoiceApiException, CatalogApiException {
         final BillingEventSet events = new MockBillingEventSet();
 
-        final Subscription sub = createZombieSubscription();
+        final SubscriptionBase sub = createZombieSubscription();
         final LocalDate startDate = invoiceUtil.buildDate(2011, 9, 1);
 
         final Plan plan1 = new MockPlan();
@@ -412,59 +412,59 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         final List<Invoice> invoices = new ArrayList<Invoice>();
         final BillingEventSet events = new MockBillingEventSet();
 
-        // on 1/5/2011, create subscription 1 (trial)
+        // on 1/5/2011, create SubscriptionBase 1 (trial)
         events.add(createBillingEvent(subscriptionId1, bundleId, plan1StartDate, plan1, plan1Phase1, 5));
         expectedAmount = EIGHT;
         testInvoiceGeneration(accountId, events, invoices, plan1StartDate, 1, expectedAmount);
 
-        // on 2/5/2011, invoice subscription 1 (trial)
+        // on 2/5/2011, invoice SubscriptionBase 1 (trial)
         expectedAmount = EIGHT;
         testInvoiceGeneration(accountId, events, invoices, invoiceUtil.buildDate(2011, 2, 5), 1, expectedAmount);
 
-        // on 3/5/2011, invoice subscription 1 (trial)
+        // on 3/5/2011, invoice SubscriptionBase 1 (trial)
         expectedAmount = EIGHT;
         testInvoiceGeneration(accountId, events, invoices, invoiceUtil.buildDate(2011, 3, 5), 1, expectedAmount);
 
-        // on 3/10/2011, create subscription 2 (trial)
+        // on 3/10/2011, create SubscriptionBase 2 (trial)
         events.add(createBillingEvent(subscriptionId2, bundleId, plan2StartDate, plan2, plan2Phase1, 10));
         expectedAmount = TWENTY;
         testInvoiceGeneration(accountId, events, invoices, plan2StartDate, 1, expectedAmount);
 
-        // on 4/5/2011, invoice subscription 1 (discount)
+        // on 4/5/2011, invoice SubscriptionBase 1 (discount)
         events.add(createBillingEvent(subscriptionId1, bundleId, plan1PhaseChangeDate, plan1, plan1Phase2, 5));
         expectedAmount = TWELVE;
         testInvoiceGeneration(accountId, events, invoices, plan1PhaseChangeDate, 1, expectedAmount);
 
-        // on 4/10/2011, invoice subscription 2 (trial)
+        // on 4/10/2011, invoice SubscriptionBase 2 (trial)
         expectedAmount = TWENTY;
         testInvoiceGeneration(accountId, events, invoices, invoiceUtil.buildDate(2011, 4, 10), 1, expectedAmount);
 
-        // on 4/29/2011, cancel subscription 1
+        // on 4/29/2011, cancel SubscriptionBase 1
         events.add(createBillingEvent(subscriptionId1, bundleId, plan1CancelDate, plan1, plan1Phase3, 5));
 
         expectedAmount = ZERO;
         testInvoiceGeneration(accountId, events, invoices, plan1CancelDate, 1, expectedAmount);
 
-        // on 5/10/2011, invoice subscription 2 (trial)
+        // on 5/10/2011, invoice SubscriptionBase 2 (trial)
         expectedAmount = TWENTY;
         testInvoiceGeneration(accountId, events, invoices, invoiceUtil.buildDate(2011, 5, 10), 1, expectedAmount);
 
-        // on 5/20/2011, create subscription 3 (monthly)
+        // on 5/20/2011, create SubscriptionBase 3 (monthly)
         events.add(createBillingEvent(subscriptionId3, bundleId, plan3StartDate, plan3, plan3Phase1, 20));
         expectedAmount = TEN;
         testInvoiceGeneration(accountId, events, invoices, plan3StartDate, 1, expectedAmount);
 
-        // on 6/7/2011, create subscription 4
+        // on 6/7/2011, create SubscriptionBase 4
         events.add(createBillingEvent(subscriptionId4, bundleId, plan4StartDate, plan4a, plan4aPhase1, 7));
         expectedAmount = FIFTEEN;
         testInvoiceGeneration(accountId, events, invoices, plan4StartDate, 1, expectedAmount);
 
-        // on 6/10/2011, invoice subscription 2 (discount)
+        // on 6/10/2011, invoice SubscriptionBase 2 (discount)
         events.add(createBillingEvent(subscriptionId2, bundleId, plan2PhaseChangeToDiscountDate, plan2, plan2Phase2, 10));
         expectedAmount = THIRTY;
         testInvoiceGeneration(accountId, events, invoices, plan2PhaseChangeToDiscountDate, 1, expectedAmount);
 
-        // on 6/20/2011, invoice subscription 3 (monthly)
+        // on 6/20/2011, invoice SubscriptionBase 3 (monthly)
         expectedAmount = TEN;
         testInvoiceGeneration(accountId, events, invoices, invoiceUtil.buildDate(2011, 6, 20), 1, expectedAmount);
 
@@ -473,41 +473,41 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         expectedAmount = TWENTY.multiply(NINETEEN).divide(THIRTY, NUMBER_OF_DECIMALS, ROUNDING_METHOD);
         testInvoiceGeneration(accountId, events, invoices, plan5StartDate, 1, expectedAmount);
 
-        // on 7/7/2011, invoice subscription 4 (plan 1)
+        // on 7/7/2011, invoice SubscriptionBase 4 (plan 1)
         expectedAmount = FIFTEEN;
         testInvoiceGeneration(accountId, events, invoices, invoiceUtil.buildDate(2011, 7, 7), 1, expectedAmount);
 
-        // on 7/10/2011, invoice subscription 2 (discount), invoice subscription 5
+        // on 7/10/2011, invoice SubscriptionBase 2 (discount), invoice SubscriptionBase 5
         expectedAmount = THIRTY.add(TWENTY);
         testInvoiceGeneration(accountId, events, invoices, invoiceUtil.buildDate(2011, 7, 10), 2, expectedAmount);
 
-        // on 7/20/2011, invoice subscription 3 (monthly)
+        // on 7/20/2011, invoice SubscriptionBase 3 (monthly)
         expectedAmount = TEN;
         testInvoiceGeneration(accountId, events, invoices, invoiceUtil.buildDate(2011, 7, 20), 1, expectedAmount);
 
-        // on 7/31/2011, convert subscription 3 to annual
+        // on 7/31/2011, convert SubscriptionBase 3 to annual
         events.add(createBillingEvent(subscriptionId3, bundleId, plan3UpgradeToAnnualDate, plan3, plan3Phase2, 31));
         testInvoiceGeneration(accountId, events, invoices, plan3UpgradeToAnnualDate, 2, ONE_HUNDRED);
 
-        // on 8/7/2011, invoice subscription 4 (plan 2)
+        // on 8/7/2011, invoice SubscriptionBase 4 (plan 2)
         events.add(createBillingEvent(subscriptionId4, bundleId, plan4ChangeOfPlanDate, plan4b, plan4bPhase1, 7));
         expectedAmount = TWENTY_FOUR;
         testInvoiceGeneration(accountId, events, invoices, plan4ChangeOfPlanDate, 1, expectedAmount);
 
-        // on 8/10/2011, invoice plan 2 (discount), invoice subscription 5
+        // on 8/10/2011, invoice plan 2 (discount), invoice SubscriptionBase 5
         expectedAmount = THIRTY.add(TWENTY);
         testInvoiceGeneration(accountId, events, invoices, invoiceUtil.buildDate(2011, 8, 10), 2, expectedAmount);
 
-        // on 9/7/2011, invoice subscription 4 (plan 2)
+        // on 9/7/2011, invoice SubscriptionBase 4 (plan 2)
         expectedAmount = TWENTY_FOUR;
         testInvoiceGeneration(accountId, events, invoices, invoiceUtil.buildDate(2011, 9, 7), 1, expectedAmount);
 
-        // on 9/10/2011, invoice plan 2 (evergreen), invoice subscription 5
+        // on 9/10/2011, invoice plan 2 (evergreen), invoice SubscriptionBase 5
         events.add(createBillingEvent(subscriptionId2, bundleId, plan2PhaseChangeToEvergreenDate, plan2, plan2Phase3, 10));
         expectedAmount = FORTY.add(TWENTY);
         testInvoiceGeneration(accountId, events, invoices, plan2PhaseChangeToEvergreenDate, 2, expectedAmount);
 
-        // on 10/7/2011, invoice subscription 4 (plan 2), cancel subscription 5
+        // on 10/7/2011, invoice SubscriptionBase 4 (plan 2), cancel SubscriptionBase 5
         events.add(createBillingEvent(subscriptionId5, bundleId, plan5CancelDate, plan5, plan5Phase2, 10));
         testInvoiceGeneration(accountId, events, invoices, plan5CancelDate, 2, TWENTY_FOUR);
 
@@ -549,7 +549,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
     @Test(groups = "fast")
     public void testFixedPriceLifeCycle() throws InvoiceApiException {
         final UUID accountId = UUID.randomUUID();
-        final Subscription subscription = createZombieSubscription();
+        final SubscriptionBase subscription = createZombieSubscription();
 
         final Plan plan = new MockPlan("plan 1");
         final MockInternationalPrice zeroPrice = new MockInternationalPrice(new DefaultPrice(ZERO, Currency.USD));
@@ -591,7 +591,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testMixedModeLifeCycle() throws InvoiceApiException, CatalogApiException {
-        // create a subscription with a fixed price and recurring price
+        // create a SubscriptionBase with a fixed price and recurring price
         final Plan plan1 = new MockPlan();
         final BigDecimal monthlyRate = FIVE;
         final BigDecimal fixedCost = TEN;
@@ -627,7 +627,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testFixedModePlanChange() throws InvoiceApiException, CatalogApiException {
-        // create a subscription with a fixed price and recurring price
+        // create a SubscriptionBase with a fixed price and recurring price
         final Plan plan1 = new MockPlan();
         final BigDecimal fixedCost1 = TEN;
         final BigDecimal fixedCost2 = TWENTY;
@@ -672,7 +672,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         final UUID bundleId = UUID.randomUUID();
         final int BILL_CYCLE_DAY = 15;
 
-        // create subscription with a zero-dollar trial, a monthly discount period and a monthly evergreen
+        // create SubscriptionBase with a zero-dollar trial, a monthly discount period and a monthly evergreen
         final Plan plan1 = new MockPlan();
         final PlanPhase phase1 = createMockMonthlyPlanPhase(null, ZERO, PhaseType.TRIAL);
         final BigDecimal DISCOUNT_PRICE = new BigDecimal("9.95");
@@ -760,7 +760,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
     private BillingEvent createBillingEvent(final UUID subscriptionId, final UUID bundleId, final LocalDate startDate,
                                             final Plan plan, final PlanPhase planPhase, final int billCycleDayLocal) throws CatalogApiException {
-        final Subscription sub = createZombieSubscription(subscriptionId, bundleId);
+        final SubscriptionBase sub = createZombieSubscription(subscriptionId, bundleId);
         final Currency currency = Currency.USD;
 
         return invoiceUtil.createMockBillingEvent(null, sub, startDate.toDateTimeAtStartOfDay(), plan, planPhase,
@@ -789,7 +789,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
         // create a base plan on April 25th
         final UUID accountId = UUID.randomUUID();
-        final Subscription baseSubscription = createZombieSubscription();
+        final SubscriptionBase baseSubscription = createZombieSubscription();
 
         final Plan basePlan = new MockPlan("base Plan");
         final MockInternationalPrice price5 = new MockInternationalPrice(new DefaultPrice(FIVE, Currency.USD));
@@ -811,12 +811,12 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
         // create 2 add ons on April 28th
         final LocalDate april28 = new LocalDate(2012, 4, 28);
-        final Subscription addOnSubscription1 = createZombieSubscription();
+        final SubscriptionBase addOnSubscription1 = createZombieSubscription();
         final Plan addOn1Plan = new MockPlan("add on 1");
         final PlanPhase addOn1PlanPhaseEvergreen = new MockPlanPhase(price5, null, BillingPeriod.MONTHLY, PhaseType.EVERGREEN);
         events.add(createBillingEvent(addOnSubscription1.getId(), baseSubscription.getBundleId(), april28, addOn1Plan, addOn1PlanPhaseEvergreen, 25));
 
-        final Subscription addOnSubscription2 = createZombieSubscription();
+        final SubscriptionBase addOnSubscription2 = createZombieSubscription();
         final Plan addOn2Plan = new MockPlan("add on 2");
         final PlanPhase addOn2PlanPhaseEvergreen = new MockPlanPhase(price20, null, BillingPeriod.MONTHLY, PhaseType.EVERGREEN);
         events.add(createBillingEvent(addOnSubscription2.getId(), baseSubscription.getBundleId(), april28, addOn2Plan, addOn2PlanPhaseEvergreen, 25));
@@ -854,7 +854,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
         // create a base plan on April 25th
         final UUID accountId = UUID.randomUUID();
-        final Subscription originalSubscription = createZombieSubscription();
+        final SubscriptionBase originalSubscription = createZombieSubscription();
 
         final Plan originalPlan = new MockPlan("original plan");
         final MockInternationalPrice price10 = new MockInternationalPrice(new DefaultPrice(TEN, Currency.USD));
@@ -877,7 +877,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
         // change the plan (i.e. repair) on start date
         events.clear();
-        final Subscription newSubscription = createZombieSubscription();
+        final SubscriptionBase newSubscription = createZombieSubscription();
         final Plan newPlan = new MockPlan("new plan");
         final MockInternationalPrice price5 = new MockInternationalPrice(new DefaultPrice(FIVE, Currency.USD));
         final PlanPhase newPlanEvergreen = new MockPlanPhase(price5, null, BillingPeriod.MONTHLY, PhaseType.EVERGREEN);
@@ -931,7 +931,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         final MockBillingEventSet events = new MockBillingEventSet();
         events.setAccountInvoiceOff(true);
 
-        final Subscription sub = createZombieSubscription();
+        final SubscriptionBase sub = createZombieSubscription();
         final LocalDate startDate = invoiceUtil.buildDate(2011, 9, 1);
 
         final Plan plan = new MockPlan();
@@ -957,14 +957,14 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
         final LocalDate startDate = new LocalDate(2012, 1, 1);
 
-        // add first subscription creation event
+        // add first SubscriptionBase creation event
         final UUID subscriptionId1 = UUID.randomUUID();
         final Plan plan1 = new MockPlan();
         final PlanPhase plan1phase1 = createMockMonthlyPlanPhase(FIFTEEN, null, PhaseType.DISCOUNT);
         final BillingEvent subscription1creation = createBillingEvent(subscriptionId1, bundleId, startDate, plan1, plan1phase1, 1);
         eventSet.add(subscription1creation);
 
-        // add second subscription creation event
+        // add second SubscriptionBase creation event
         final UUID subscriptionId2 = UUID.randomUUID();
         final Plan plan2 = new MockPlan();
         final PlanPhase plan2phase1 = createMockMonthlyPlanPhase(TWELVE, null, PhaseType.EVERGREEN);
@@ -976,7 +976,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         assertTrue(invoice1.getBalance().compareTo(FIFTEEN.add(TWELVE)) == 0);
         invoices.add(invoice1);
 
-        // set auto invoice off for first subscription (i.e. remove event from BillingEventSet and add subscription id to the list
+        // set auto invoice off for first SubscriptionBase (i.e. remove event from BillingEventSet and add SubscriptionBase id to the list
         // generate invoice
         eventSet.remove(subscription1creation);
         eventSet.addSubscriptionWithAutoInvoiceOff(subscriptionId1);

@@ -32,7 +32,7 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.jaxrs.JaxrsTestSuiteNoDB;
 
 import static com.ning.billing.jaxrs.JaxrsTestUtils.createAuditLogsJson;
@@ -89,7 +89,7 @@ public class TestSubscriptionJsonNoEvents extends JaxrsTestSuiteNoDB {
 
         final PriceList priceList = Mockito.mock(PriceList.class);
 
-        final Subscription subscription = Mockito.mock(Subscription.class);
+        final SubscriptionBase subscription = Mockito.mock(SubscriptionBase.class);
         Mockito.when(subscription.getId()).thenReturn(UUID.randomUUID());
         Mockito.when(subscription.getBundleId()).thenReturn(UUID.randomUUID());
         Mockito.when(subscription.getStartDate()).thenReturn(new DateTime(DateTimeZone.UTC));

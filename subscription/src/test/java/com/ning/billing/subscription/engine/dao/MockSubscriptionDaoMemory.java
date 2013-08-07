@@ -52,7 +52,7 @@ import com.ning.billing.notificationq.api.NotificationEvent;
 import com.ning.billing.notificationq.api.NotificationQueue;
 import com.ning.billing.notificationq.api.NotificationQueueService;
 import com.ning.billing.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
-import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
@@ -66,7 +66,7 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
     protected static final Logger log = LoggerFactory.getLogger(SubscriptionDao.class);
 
     private final List<SubscriptionBundle> bundles;
-    private final List<Subscription> subscriptions;
+    private final List<SubscriptionBase> subscriptions;
     private final TreeSet<SubscriptionEvent> events;
     private final Clock clock;
     private final NotificationQueueService notificationQueueService;
@@ -81,7 +81,7 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
         this.catalogService = catalogService;
         this.notificationQueueService = notificationQueueService;
         this.bundles = new ArrayList<SubscriptionBundle>();
-        this.subscriptions = new ArrayList<Subscription>();
+        this.subscriptions = new ArrayList<SubscriptionBase>();
         this.events = new TreeSet<SubscriptionEvent>();
     }
 
@@ -140,8 +140,8 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
     }
 
     @Override
-    public Subscription getSubscriptionFromId(final UUID subscriptionId, final InternalTenantContext context) {
-        for (final Subscription cur : subscriptions) {
+    public SubscriptionBase getSubscriptionFromId(final UUID subscriptionId, final InternalTenantContext context) {
+        for (final SubscriptionBase cur : subscriptions) {
             if (cur.getId().equals(subscriptionId)) {
                 return buildSubscription((SubscriptionData) cur, context);
             }
@@ -155,7 +155,7 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
     }
 
     @Override
-    public List<Subscription> getSubscriptionsForAccountAndKey(final UUID accountId, final String bundleKey, final InternalTenantContext context) {
+    public List<SubscriptionBase> getSubscriptionsForAccountAndKey(final UUID accountId, final String bundleKey, final InternalTenantContext context) {
 
         for (final SubscriptionBundle cur : bundles) {
             if (cur.getExternalKey().equals(bundleKey) && cur.getAccountId().equals(bundleKey)) {
@@ -174,7 +174,7 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
                 recordFutureNotificationFromTransaction(null, cur.getEffectiveDate(), new SubscriptionNotificationKey(cur.getId()), context);
             }
         }
-        final Subscription updatedSubscription = buildSubscription(subscription, context);
+        final SubscriptionBase updatedSubscription = buildSubscription(subscription, context);
         subscriptions.add(updatedSubscription);
     }
 
@@ -189,9 +189,9 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
     }
 
     @Override
-    public List<Subscription> getSubscriptions(final UUID bundleId, final InternalTenantContext context) {
-        final List<Subscription> results = new ArrayList<Subscription>();
-        for (final Subscription cur : subscriptions) {
+    public List<SubscriptionBase> getSubscriptions(final UUID bundleId, final InternalTenantContext context) {
+        final List<SubscriptionBase> results = new ArrayList<SubscriptionBase>();
+        for (final SubscriptionBase cur : subscriptions) {
             if (cur.getBundleId().equals(bundleId)) {
                 results.add(buildSubscription((SubscriptionData) cur, context));
             }
@@ -228,8 +228,8 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
     }
 
     @Override
-    public Subscription getBaseSubscription(final UUID bundleId, final InternalTenantContext context) {
-        for (final Subscription cur : subscriptions) {
+    public SubscriptionBase getBaseSubscription(final UUID bundleId, final InternalTenantContext context) {
+        for (final SubscriptionBase cur : subscriptions) {
             if (cur.getBundleId().equals(bundleId) &&
                 cur.getCurrentPlan().getProduct().getCategory() == ProductCategory.BASE) {
                 return buildSubscription((SubscriptionData) cur, context);
@@ -244,7 +244,7 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
         insertEvent(nextPhase, context);
     }
 
-    private Subscription buildSubscription(final SubscriptionData in, final InternalTenantContext context) {
+    private SubscriptionBase buildSubscription(final SubscriptionData in, final InternalTenantContext context) {
         final SubscriptionData subscription = new SubscriptionData(new SubscriptionBuilder(in), null, clock);
         if (events.size() > 0) {
             subscription.rebuildTransitions(getEventsForSubscription(in.getId(), context), catalogService.getFullCatalog());
@@ -256,9 +256,9 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
     @Override
     public void updateChargedThroughDate(final SubscriptionData subscription, final InternalCallContext context) {
         boolean found = false;
-        final Iterator<Subscription> it = subscriptions.iterator();
+        final Iterator<SubscriptionBase> it = subscriptions.iterator();
         while (it.hasNext()) {
-            final Subscription cur = it.next();
+            final SubscriptionBase cur = it.next();
             if (cur.getId().equals(subscription.getId())) {
                 found = true;
                 it.remove();
@@ -308,7 +308,7 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
     }
 
     private void cancelNextPhaseEvent(final UUID subscriptionId, final InternalTenantContext context) {
-        final Subscription curSubscription = getSubscriptionFromId(subscriptionId, context);
+        final SubscriptionBase curSubscription = getSubscriptionFromId(subscriptionId, context);
         if (curSubscription.getCurrentPhase() == null ||
             curSubscription.getCurrentPhase().getDuration().getUnit() == TimeUnit.UNLIMITED) {
             return;

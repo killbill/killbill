@@ -37,7 +37,11 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.clock.Clock;
+import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.subscription.api.SubscriptionApiService;
+import com.ning.billing.subscription.api.SubscriptionBase;
+import com.ning.billing.subscription.api.SubscriptionTransitionType;
 import com.ning.billing.subscription.api.user.SubscriptionTransitionDataIterator.Kind;
 import com.ning.billing.subscription.api.user.SubscriptionTransitionDataIterator.Order;
 import com.ning.billing.subscription.api.user.SubscriptionTransitionDataIterator.TimeLimit;
@@ -48,13 +52,10 @@ import com.ning.billing.subscription.events.phase.PhaseEvent;
 import com.ning.billing.subscription.events.user.ApiEvent;
 import com.ning.billing.subscription.events.user.ApiEventType;
 import com.ning.billing.subscription.exceptions.SubscriptionError;
-import com.ning.billing.subscription.api.SubscriptionTransitionType;
-import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.clock.Clock;
 import com.ning.billing.util.entity.EntityBase;
 
-public class SubscriptionData extends EntityBase implements Subscription {
+public class SubscriptionData extends EntityBase implements SubscriptionBase {
 
     private static final Logger log = LoggerFactory.getLogger(SubscriptionData.class);
 
@@ -138,8 +139,8 @@ public class SubscriptionData extends EntityBase implements Subscription {
 
     @Override
     public SubscriptionState getState() {
-        return (getPreviousTransition()  == null) ? null
-                : getPreviousTransition().getNextState();
+        return (getPreviousTransition() == null) ? null
+                                                 : getPreviousTransition().getNextState();
     }
 
     @Override
@@ -149,32 +150,32 @@ public class SubscriptionData extends EntityBase implements Subscription {
         }
         final SubscriptionTransitionData initialTransition = (SubscriptionTransitionData) transitions.get(0);
         switch (initialTransition.getApiEventType()) {
-        case MIGRATE_BILLING:
-        case MIGRATE_ENTITLEMENT:
-            return SubscriptionSourceType.MIGRATED;
-        case TRANSFER:
-            return SubscriptionSourceType.TRANSFERED;
-        default:
-            return SubscriptionSourceType.NATIVE;
+            case MIGRATE_BILLING:
+            case MIGRATE_ENTITLEMENT:
+                return SubscriptionSourceType.MIGRATED;
+            case TRANSFER:
+                return SubscriptionSourceType.TRANSFERED;
+            default:
+                return SubscriptionSourceType.NATIVE;
         }
     }
 
     @Override
     public PlanPhase getCurrentPhase() {
         return (getPreviousTransition() == null) ? null
-                : getPreviousTransition().getNextPhase();
+                                                 : getPreviousTransition().getNextPhase();
     }
 
     @Override
     public Plan getCurrentPlan() {
         return (getPreviousTransition() == null) ? null
-                : getPreviousTransition().getNextPlan();
+                                                 : getPreviousTransition().getNextPlan();
     }
 
     @Override
     public PriceList getCurrentPriceList() {
         return (getPreviousTransition() == null) ? null :
-            getPreviousTransition().getNextPriceList();
+               getPreviousTransition().getNextPriceList();
 
     }
 
@@ -223,19 +224,19 @@ public class SubscriptionData extends EntityBase implements Subscription {
 
     @Override
     public boolean changePlan(final String productName, final BillingPeriod term, final String priceList,
-            final DateTime requestedDate, final CallContext context) throws SubscriptionUserApiException {
+                              final DateTime requestedDate, final CallContext context) throws SubscriptionUserApiException {
         return apiService.changePlan(this, productName, term, priceList, requestedDate, context);
     }
 
     @Override
     public boolean changePlanWithPolicy(final String productName, final BillingPeriod term, final String priceList,
-            final DateTime requestedDate, final ActionPolicy policy, final CallContext context) throws SubscriptionUserApiException {
+                                        final DateTime requestedDate, final ActionPolicy policy, final CallContext context) throws SubscriptionUserApiException {
         return apiService.changePlanWithPolicy(this, productName, term, priceList, requestedDate, policy, context);
     }
 
     @Override
     public boolean recreate(final PlanPhaseSpecifier spec, final DateTime requestedDate,
-            final CallContext context) throws SubscriptionUserApiException {
+                            final CallContext context) throws SubscriptionUserApiException {
         return apiService.recreatePlan(this, spec, requestedDate, context);
     }
 
@@ -353,7 +354,7 @@ public class SubscriptionData extends EntityBase implements Subscription {
         final int prime = 31;
         int result = 1;
         result = prime * result
-                + ((id == null) ? 0 : id.hashCode());
+                 + ((id == null) ? 0 : id.hashCode());
         return result;
     }
 
@@ -399,7 +400,7 @@ public class SubscriptionData extends EntityBase implements Subscription {
         // Since UNCANCEL are not part of the transitions, we compute a new 'UNCANCEL' transition based on the event right before that UNCANCEL
         // This is used to be able to send a bus event for uncancellation
         if (prev != null && event.getType() == EventType.API_USER && ((ApiEvent) event).getEventType() == ApiEventType.UNCANCEL) {
-             final SubscriptionTransitionData withSeq = new SubscriptionTransitionData((SubscriptionTransitionData)prev, EventType.API_USER, ApiEventType.UNCANCEL, seqId);
+            final SubscriptionTransitionData withSeq = new SubscriptionTransitionData((SubscriptionTransitionData) prev, EventType.API_USER, ApiEventType.UNCANCEL, seqId);
             return withSeq;
         }
         return null;
@@ -413,7 +414,7 @@ public class SubscriptionData extends EntityBase implements Subscription {
         final SubscriptionTransitionDataIterator it = new SubscriptionTransitionDataIterator(
                 clock, transitions, Order.DESC_FROM_FUTURE, Kind.SUBSCRIPTION,
                 Visibility.FROM_DISK_ONLY, TimeLimit.ALL);
-        return it.hasNext() ? ((SubscriptionTransitionData)it.next()).getTotalOrdering() : -1L;
+        return it.hasNext() ? ((SubscriptionTransitionData) it.next()).getTotalOrdering() : -1L;
     }
 
     public long getActiveVersion() {
@@ -436,8 +437,8 @@ public class SubscriptionData extends EntityBase implements Subscription {
             if (!foundInitialEvent) {
                 foundInitialEvent = curTransition.getEventType() == EventType.API_USER &&
                                     (curTransition.getApiEventType() == ApiEventType.CREATE ||
-                                       curTransition.getApiEventType() == ApiEventType.MIGRATE_BILLING ||
-                                       curTransition.getApiEventType() == ApiEventType.TRANSFER);
+                                     curTransition.getApiEventType() == ApiEventType.MIGRATE_BILLING ||
+                                     curTransition.getApiEventType() == ApiEventType.TRANSFER);
             }
             if (foundInitialEvent) {
                 result.add(curTransition);
@@ -453,19 +454,19 @@ public class SubscriptionData extends EntityBase implements Subscription {
         }
 
         final SubscriptionTransitionDataIterator it = new SubscriptionTransitionDataIterator(clock,
-                transitions,
-                Order.DESC_FROM_FUTURE,
-                Kind.SUBSCRIPTION,
-                Visibility.ALL,
-                TimeLimit.PAST_OR_PRESENT_ONLY);
+                                                                                             transitions,
+                                                                                             Order.DESC_FROM_FUTURE,
+                                                                                             Kind.SUBSCRIPTION,
+                                                                                             Visibility.ALL,
+                                                                                             TimeLimit.PAST_OR_PRESENT_ONLY);
 
         while (it.hasNext()) {
             final SubscriptionTransitionData cur = (SubscriptionTransitionData) it.next();
             if (cur.getTransitionType() == SubscriptionTransitionType.CREATE
-                    || cur.getTransitionType() == SubscriptionTransitionType.RE_CREATE
-                    || cur.getTransitionType() == SubscriptionTransitionType.TRANSFER
-                    || cur.getTransitionType() == SubscriptionTransitionType.CHANGE
-                    || cur.getTransitionType() == SubscriptionTransitionType.MIGRATE_ENTITLEMENT) {
+                || cur.getTransitionType() == SubscriptionTransitionType.RE_CREATE
+                || cur.getTransitionType() == SubscriptionTransitionType.TRANSFER
+                || cur.getTransitionType() == SubscriptionTransitionType.CHANGE
+                || cur.getTransitionType() == SubscriptionTransitionType.MIGRATE_ENTITLEMENT) {
                 return cur;
             }
         }
@@ -478,7 +479,7 @@ public class SubscriptionData extends EntityBase implements Subscription {
     }
 
     public DateTime getPlanChangeEffectiveDate(final ActionPolicy policy,
-            final DateTime requestedDate) {
+                                               final DateTime requestedDate) {
 
         if (policy == ActionPolicy.IMMEDIATE) {
             return requestedDate;
@@ -492,7 +493,7 @@ public class SubscriptionData extends EntityBase implements Subscription {
             return requestedDate;
         } else {
             return chargedThroughDate.isBefore(requestedDate) ? requestedDate
-                    : chargedThroughDate;
+                                                              : chargedThroughDate;
         }
     }
 
@@ -509,11 +510,11 @@ public class SubscriptionData extends EntityBase implements Subscription {
             final SubscriptionTransitionData cur = (SubscriptionTransitionData) it.next();
 
             if (cur.getTransitionType() == SubscriptionTransitionType.PHASE
-                    || cur.getTransitionType() == SubscriptionTransitionType.TRANSFER
-                    || cur.getTransitionType() == SubscriptionTransitionType.CREATE
-                    || cur.getTransitionType() == SubscriptionTransitionType.RE_CREATE
-                    || cur.getTransitionType() == SubscriptionTransitionType.CHANGE
-                    || cur.getTransitionType() == SubscriptionTransitionType.MIGRATE_ENTITLEMENT) {
+                || cur.getTransitionType() == SubscriptionTransitionType.TRANSFER
+                || cur.getTransitionType() == SubscriptionTransitionType.CREATE
+                || cur.getTransitionType() == SubscriptionTransitionType.RE_CREATE
+                || cur.getTransitionType() == SubscriptionTransitionType.CHANGE
+                || cur.getTransitionType() == SubscriptionTransitionType.MIGRATE_ENTITLEMENT) {
                 return cur.getEffectiveTransitionTime();
             }
         }
@@ -562,53 +563,53 @@ public class SubscriptionData extends EntityBase implements Subscription {
 
             switch (cur.getType()) {
 
-            case PHASE:
-                final PhaseEvent phaseEV = (PhaseEvent) cur;
-                nextPhaseName = phaseEV.getPhase();
-                break;
+                case PHASE:
+                    final PhaseEvent phaseEV = (PhaseEvent) cur;
+                    nextPhaseName = phaseEV.getPhase();
+                    break;
 
-            case API_USER:
-                final ApiEvent userEV = (ApiEvent) cur;
-                apiEventType = userEV.getEventType();
-                isFromDisk = userEV.isFromDisk();
+                case API_USER:
+                    final ApiEvent userEV = (ApiEvent) cur;
+                    apiEventType = userEV.getEventType();
+                    isFromDisk = userEV.isFromDisk();
 
-                switch (apiEventType) {
-                case TRANSFER:
-                case MIGRATE_BILLING:
-                case MIGRATE_ENTITLEMENT:
-                case CREATE:
-                case RE_CREATE:
-                    prevEventId = null;
-                    prevCreatedDate = null;
-                    previousState = null;
-                    previousPlan = null;
-                    previousPhase = null;
-                    previousPriceList = null;
-                    nextState = SubscriptionState.ACTIVE;
-                    nextPlanName = userEV.getEventPlan();
-                    nextPhaseName = userEV.getEventPlanPhase();
-                    nextPriceListName = userEV.getPriceList();
+                    switch (apiEventType) {
+                        case TRANSFER:
+                        case MIGRATE_BILLING:
+                        case MIGRATE_ENTITLEMENT:
+                        case CREATE:
+                        case RE_CREATE:
+                            prevEventId = null;
+                            prevCreatedDate = null;
+                            previousState = null;
+                            previousPlan = null;
+                            previousPhase = null;
+                            previousPriceList = null;
+                            nextState = SubscriptionState.ACTIVE;
+                            nextPlanName = userEV.getEventPlan();
+                            nextPhaseName = userEV.getEventPlanPhase();
+                            nextPriceListName = userEV.getPriceList();
+                            break;
+                        case CHANGE:
+                            nextPlanName = userEV.getEventPlan();
+                            nextPhaseName = userEV.getEventPlanPhase();
+                            nextPriceListName = userEV.getPriceList();
+                            break;
+                        case CANCEL:
+                            nextState = SubscriptionState.CANCELLED;
+                            nextPlanName = null;
+                            nextPhaseName = null;
+                            break;
+                        case UNCANCEL:
+                        default:
+                            throw new SubscriptionError(String.format(
+                                    "Unexpected UserEvent type = %s", userEV
+                                    .getEventType().toString()));
+                    }
                     break;
-                case CHANGE:
-                    nextPlanName = userEV.getEventPlan();
-                    nextPhaseName = userEV.getEventPlanPhase();
-                    nextPriceListName = userEV.getPriceList();
-                    break;
-                case CANCEL:
-                    nextState = SubscriptionState.CANCELLED;
-                    nextPlanName = null;
-                    nextPhaseName = null;
-                    break;
-                case UNCANCEL:
                 default:
                     throw new SubscriptionError(String.format(
-                            "Unexpected UserEvent type = %s", userEV
-                            .getEventType().toString()));
-                }
-                break;
-            default:
-                throw new SubscriptionError(String.format(
-                        "Unexpected Event type = %s", cur.getType()));
+                            "Unexpected Event type = %s", cur.getType()));
             }
 
             Plan nextPlan = null;

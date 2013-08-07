@@ -81,12 +81,11 @@ import com.ning.billing.payment.api.PaymentMethodKVInfo;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.payment.api.TestPaymentMethodPluginBase;
 import com.ning.billing.payment.provider.MockPaymentProviderPlugin;
+import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.SubscriptionService;
 import com.ning.billing.subscription.api.timeline.SubscriptionTimelineApi;
 import com.ning.billing.subscription.api.transfer.SubscriptionTransferApi;
-import com.ning.billing.subscription.api.user.Subscription;
 import com.ning.billing.subscription.api.user.SubscriptionData;
-import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
 import com.ning.billing.util.api.RecordIdApi;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
@@ -289,7 +288,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
         final Entitlement entitlement = entitlementApi.getEntitlementFromId(subscriptionId, callContext);
 
-        final Subscription subscription = ((DefaultEntitlement) entitlement).getSubscription();
+        final SubscriptionBase subscription = ((DefaultEntitlement) entitlement).getSubscription();
         final DateTime ctd = subscription.getChargedThroughDate();
         assertNotNull(ctd);
         log.info("Checking CTD: " + ctd.toString() + "; clock is " + clock.getUTCNow().toString());
@@ -298,7 +297,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         assertTrue(ctd.toDateTime(testTimeZone).toLocalDate().compareTo(new LocalDate(chargeThroughDate.getYear(), chargeThroughDate.getMonthOfYear(), chargeThroughDate.getDayOfMonth())) == 0);
     }
 
-    protected SubscriptionData subscriptionDataFromSubscription(final Subscription sub) {
+    protected SubscriptionData subscriptionDataFromSubscription(final SubscriptionBase sub) {
         // STEPH_ENT
         return (SubscriptionData) sub;
     }
@@ -486,7 +485,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             public Entitlement apply(@Nullable final Void dontcare) {
                 try {
                     final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, productCategory, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-                    final Entitlement entitlement =  entitlementApi.createBaseEntitlement(accountId, spec, bundleExternalKey, callContext);
+                    final Entitlement entitlement = entitlementApi.createBaseEntitlement(accountId, spec, bundleExternalKey, callContext);
                     assertNotNull(entitlement);
                     return entitlement;
                 } catch (EntitlementApiException e) {
@@ -498,10 +497,10 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     }
 
     protected DefaultEntitlement addAOEntitlementAndCheckForCompletion(final UUID basePlanId,
-                                                                            final String productName,
-                                                                            final ProductCategory productCategory,
-                                                                            final BillingPeriod billingPeriod,
-                                                                            final NextEvent... events) {
+                                                                       final String productName,
+                                                                       final ProductCategory productCategory,
+                                                                       final BillingPeriod billingPeriod,
+                                                                       final NextEvent... events) {
         if (productCategory != ProductCategory.ADD_ON) {
             throw new RuntimeException("Unexpected Call for creating a productCategory " + productCategory);
         }
@@ -523,7 +522,6 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     }
 
 
-
     protected DefaultEntitlement changeEntitlementAndCheckForCompletion(final Entitlement entitlement,
                                                                         final String productName,
                                                                         final BillingPeriod billingPeriod,
@@ -538,7 +536,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
                     if (billingPolicy == null) {
                         refreshedEntitlement.changePlan(productName, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow().toLocalDate(), callContext);
                     } else {
-                        refreshedEntitlement.changePlanOverrideBillingPolicy(productName, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow().toLocalDate(), billingPolicy ,callContext);
+                        refreshedEntitlement.changePlanOverrideBillingPolicy(productName, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow().toLocalDate(), billingPolicy, callContext);
                     }
                     return refreshedEntitlement;
                 } catch (EntitlementApiException e) {
@@ -550,8 +548,8 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     }
 
     protected DefaultEntitlement cancelEntitlementAndCheckForCompletion(final Entitlement entitlement,
-                                                                 final DateTime requestedDate,
-                                                                 final NextEvent... events) {
+                                                                        final DateTime requestedDate,
+                                                                        final NextEvent... events) {
         return (DefaultEntitlement) doCallAndCheckForCompletion(new Function<Void, Entitlement>() {
             @Override
             public Entitlement apply(@Nullable final Void dontcare) {

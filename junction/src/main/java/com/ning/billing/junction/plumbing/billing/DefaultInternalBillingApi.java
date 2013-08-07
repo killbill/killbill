@@ -31,7 +31,7 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.MutableAccountData;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
-import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
@@ -113,13 +113,13 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
     private void addBillingEventsForBundles(final List<SubscriptionBundle> bundles, final Account account, final InternalCallContext context,
                                             final DefaultBillingEventSet result) {
         for (final SubscriptionBundle bundle : bundles) {
-            final List<Subscription> subscriptions = subscriptionApi.getSubscriptionsForBundle(bundle.getId(), context);
+            final List<SubscriptionBase> subscriptions = subscriptionApi.getSubscriptionsForBundle(bundle.getId(), context);
 
             //Check if billing is off for the bundle
             final List<Tag> bundleTags = tagApi.getTags(bundle.getId(), ObjectType.BUNDLE, context);
             boolean found_AUTO_INVOICING_OFF = is_AUTO_INVOICING_OFF(bundleTags);
             if (found_AUTO_INVOICING_OFF) {
-                for (final Subscription subscription : subscriptions) { // billing is off so list sub ids in set to be excluded
+                for (final SubscriptionBase subscription : subscriptions) { // billing is off so list sub ids in set to be excluded
                     result.getSubscriptionIdsWithAutoInvoiceOff().add(subscription.getId());
                 }
             } else { // billing is not off
@@ -128,8 +128,8 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
         }
     }
 
-    private void addBillingEventsForSubscription(final List<Subscription> subscriptions, final SubscriptionBundle bundle, final Account account, final InternalCallContext context, final DefaultBillingEventSet result) {
-        for (final Subscription subscription : subscriptions) {
+    private void addBillingEventsForSubscription(final List<SubscriptionBase> subscriptions, final SubscriptionBundle bundle, final Account account, final InternalCallContext context, final DefaultBillingEventSet result) {
+        for (final SubscriptionBase subscription : subscriptions) {
             for (final EffectiveSubscriptionInternalEvent transition : subscriptionApi.getBillingTransitions(subscription, context)) {
                 try {
                     final int bcdLocal = bcdCalculator.calculateBcd(bundle, subscription, transition, account, context);

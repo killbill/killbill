@@ -24,7 +24,7 @@ import com.ning.billing.subscription.api.user.SubscriptionBuilder;
 import com.ning.billing.subscription.api.user.SubscriptionData;
 import com.ning.billing.subscription.engine.dao.SubscriptionDao;
 import com.ning.billing.subscription.events.SubscriptionEvent;
-import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.clock.Clock;
 
 import com.google.common.base.Function;
@@ -45,16 +45,16 @@ public class SubscriptionApiBase {
         this.catalogService = catalogService;
     }
 
-    protected List<Subscription> createSubscriptionsForApiUse(final List<Subscription> internalSubscriptions) {
-        return new ArrayList<Subscription>(Collections2.transform(internalSubscriptions, new Function<Subscription, Subscription>() {
+    protected List<SubscriptionBase> createSubscriptionsForApiUse(final List<SubscriptionBase> internalSubscriptions) {
+        return new ArrayList<SubscriptionBase>(Collections2.transform(internalSubscriptions, new Function<SubscriptionBase, SubscriptionBase>() {
             @Override
-            public Subscription apply(final Subscription subscription) {
+            public SubscriptionBase apply(final SubscriptionBase subscription) {
                 return createSubscriptionForApiUse((SubscriptionData) subscription);
             }
         }));
     }
 
-    protected SubscriptionData createSubscriptionForApiUse(final Subscription internalSubscription) {
+    protected SubscriptionData createSubscriptionForApiUse(final SubscriptionBase internalSubscription) {
         return new SubscriptionData((SubscriptionData) internalSubscription, apiService, clock);
     }
 

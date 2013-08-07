@@ -36,7 +36,7 @@ import com.ning.billing.subscription.api.user.SubscriptionBundleData;
 import com.ning.billing.subscription.api.user.SubscriptionData;
 import com.ning.billing.subscription.events.SubscriptionEvent;
 import com.ning.billing.subscription.exceptions.SubscriptionError;
-import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
@@ -239,7 +239,7 @@ public class RepairSubscriptionDao implements SubscriptionDao, RepairSubscriptio
     }
 
     @Override
-    public Subscription getSubscriptionFromId(final UUID subscriptionId, final InternalTenantContext context) {
+    public SubscriptionBase getSubscriptionFromId(final UUID subscriptionId, final InternalTenantContext context) {
         throw new SubscriptionError(NOT_IMPLEMENTED);
     }
 
@@ -249,17 +249,17 @@ public class RepairSubscriptionDao implements SubscriptionDao, RepairSubscriptio
     }
 
     @Override
-    public Subscription getBaseSubscription(final UUID bundleId, final InternalTenantContext context) {
+    public SubscriptionBase getBaseSubscription(final UUID bundleId, final InternalTenantContext context) {
         throw new SubscriptionError(NOT_IMPLEMENTED);
     }
 
     @Override
-    public List<Subscription> getSubscriptions(final UUID bundleId, final InternalTenantContext context) {
+    public List<SubscriptionBase> getSubscriptions(final UUID bundleId, final InternalTenantContext context) {
         throw new SubscriptionError(NOT_IMPLEMENTED);
     }
 
     @Override
-    public List<Subscription> getSubscriptionsForAccountAndKey(final UUID accountId,
+    public List<SubscriptionBase> getSubscriptionsForAccountAndKey(final UUID accountId,
                                                                final String bundleKey, final InternalTenantContext context) {
         throw new SubscriptionError(NOT_IMPLEMENTED);
     }

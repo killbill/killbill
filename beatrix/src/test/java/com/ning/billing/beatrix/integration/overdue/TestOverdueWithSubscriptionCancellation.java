@@ -13,9 +13,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.ning.billing.beatrix.integration.overdue;
 
-import static junit.framework.Assert.assertTrue;
+package com.ning.billing.beatrix.integration.overdue;
 
 import java.math.BigDecimal;
 
@@ -27,10 +26,12 @@ import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.DefaultEntitlement;
-import com.ning.billing.subscription.api.user.Subscription;
-import com.ning.billing.subscription.api.user.SubscriptionState;
 import com.ning.billing.invoice.api.InvoiceItemType;
+import com.ning.billing.subscription.api.SubscriptionBase;
+import com.ning.billing.subscription.api.user.SubscriptionState;
 import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
+
+import static junit.framework.Assert.assertTrue;
 
 @Test(groups = "slow")
 public class TestOverdueWithSubscriptionCancellation extends TestOverdueBase {
@@ -39,23 +40,23 @@ public class TestOverdueWithSubscriptionCancellation extends TestOverdueBase {
     @Override
     public String getOverdueConfig() {
         final String configXml = "<overdueConfig>" +
-        "   <bundleOverdueStates>" +
-           "       <state name=\"OD1\">" +
-        "           <condition>" +
-        "               <timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
-        "                   <unit>DAYS</unit><number>5</number>" +
-        "               </timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
-        "           </condition>" +
-        "           <externalMessage>Reached OD1</externalMessage>" +
-        "           <blockChanges>true</blockChanges>" +
-        "           <disableEntitlementAndChangesBlocked>false</disableEntitlementAndChangesBlocked>" +
-        "           <subscriptionCancellationPolicy>IMMEDIATE</subscriptionCancellationPolicy>" +
-        "           <autoReevaluationInterval>" +
-        "               <unit>DAYS</unit><number>5</number>" +
-        "           </autoReevaluationInterval>" +
-        "       </state>" +
-        "   </bundleOverdueStates>" +
-        "</overdueConfig>";
+                                 "   <bundleOverdueStates>" +
+                                 "       <state name=\"OD1\">" +
+                                 "           <condition>" +
+                                 "               <timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
+                                 "                   <unit>DAYS</unit><number>5</number>" +
+                                 "               </timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
+                                 "           </condition>" +
+                                 "           <externalMessage>Reached OD1</externalMessage>" +
+                                 "           <blockChanges>true</blockChanges>" +
+                                 "           <disableEntitlementAndChangesBlocked>false</disableEntitlementAndChangesBlocked>" +
+                                 "           <subscriptionCancellationPolicy>IMMEDIATE</subscriptionCancellationPolicy>" +
+                                 "           <autoReevaluationInterval>" +
+                                 "               <unit>DAYS</unit><number>5</number>" +
+                                 "           </autoReevaluationInterval>" +
+                                 "       </state>" +
+                                 "   </bundleOverdueStates>" +
+                                 "</overdueConfig>";
         return configXml;
     }
 
@@ -85,7 +86,7 @@ public class TestOverdueWithSubscriptionCancellation extends TestOverdueBase {
         // Should be in OD1
         checkODState("OD1");
 
-        final Subscription cancelledBaseSubscription =  ((DefaultEntitlement) entitlementApi.getEntitlementFromId(baseEntitlement.getId(), callContext)).getSubscription();
+        final SubscriptionBase cancelledBaseSubscription = ((DefaultEntitlement) entitlementApi.getEntitlementFromId(baseEntitlement.getId(), callContext)).getSubscription();
         assertTrue(cancelledBaseSubscription.getState() == SubscriptionState.CANCELLED);
     }
 }

@@ -43,7 +43,7 @@ import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.subscription.api.SubscriptionTransitionType;
-import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.invoice.InvoiceTestSuiteWithEmbeddedDB;
 import com.ning.billing.invoice.MockBillingEventSet;
 import com.ning.billing.invoice.api.Invoice;
@@ -1080,7 +1080,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         final MockPlanPhase phase1 = new MockPlanPhase(recurringPrice, null, BillingPeriod.MONTHLY, PhaseType.TRIAL);
         final MockPlan plan1 = new MockPlan(phase1);
 
-        final Subscription subscription = getZombieSubscription();
+        final SubscriptionBase subscription = getZombieSubscription();
 
         final DateTime effectiveDate1 = new DateTime(2011, 2, 1, 0, 0, 0);
         final BillingEvent event1 = invoiceUtil.createMockBillingEvent(null, subscription, effectiveDate1, plan1, phase1, null,
@@ -1130,7 +1130,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         final MockPlanPhase phase = new MockPlanPhase(recurringPrice, null);
         final MockPlan plan = new MockPlan(phase);
 
-        final Subscription subscription = getZombieSubscription();
+        final SubscriptionBase subscription = getZombieSubscription();
         final DateTime effectiveDate = invoiceUtil.buildDate(2011, 1, 1).toDateTimeAtStartOfDay();
 
         final BillingEvent event = invoiceUtil.createMockBillingEvent(null, subscription, effectiveDate, plan, phase, null,
@@ -1147,8 +1147,8 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         assertEquals(invoice.getBalance().compareTo(ZERO), 0);
     }
 
-    private Subscription getZombieSubscription() {
-        final Subscription subscription = Mockito.mock(Subscription.class);
+    private SubscriptionBase getZombieSubscription() {
+        final SubscriptionBase subscription = Mockito.mock(SubscriptionBase.class);
         Mockito.when(subscription.getId()).thenReturn(UUID.randomUUID());
         Mockito.when(subscription.getBundleId()).thenReturn(UUID.randomUUID());
         return subscription;
@@ -1169,7 +1169,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
         final MockPlan plan = new MockPlan();
 
-        final Subscription subscription = getZombieSubscription();
+        final SubscriptionBase subscription = getZombieSubscription();
         final DateTime effectiveDate1 = invoiceUtil.buildDate(2011, 1, 1).toDateTimeAtStartOfDay();
 
         final BillingEvent event1 = invoiceUtil.createMockBillingEvent(null, subscription, effectiveDate1, plan, phase1, fixedPrice.getPrice(currency),
@@ -1234,7 +1234,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
         final MockPlan plan = new MockPlan();
 
-        final Subscription subscription = getZombieSubscription();
+        final SubscriptionBase subscription = getZombieSubscription();
         final DateTime effectiveDate1 = invoiceUtil.buildDate(2011, 1, 1).toDateTimeAtStartOfDay();
 
         final BillingEvent event1 = invoiceUtil.createMockBillingEvent(null, subscription, effectiveDate1, plan, phase1,
@@ -1309,7 +1309,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
         // NOW COMPUTE A DIFFERENT ITEM TO TRIGGER REPAIR
         final BillingEventSet events = new MockBillingEventSet();
-        final Subscription subscription = getZombieSubscription();
+        final SubscriptionBase subscription = getZombieSubscription();
 
         final Plan plan = Mockito.mock(Plan.class);
         Mockito.when(plan.getName()).thenReturn("plan");
@@ -1340,7 +1340,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         final DateTime targetDate1 = clock.getUTCNow().plusMonths(1);
         final DateTime targetDate2 = clock.getUTCNow().plusMonths(2);
 
-        final Subscription subscription = getZombieSubscription();
+        final SubscriptionBase subscription = getZombieSubscription();
 
         final Plan plan = Mockito.mock(Plan.class);
         Mockito.when(plan.getName()).thenReturn("plan");

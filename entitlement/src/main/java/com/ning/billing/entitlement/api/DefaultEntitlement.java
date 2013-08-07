@@ -25,32 +25,32 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.catalog.api.ActionPolicy;
 import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.catalog.api.PriceList;
+import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.entitlement.block.BlockingChecker;
-import com.ning.billing.subscription.api.user.Subscription;
-import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
 import com.ning.billing.util.timezone.DateAndTimeZoneContext;
 
 public class DefaultEntitlement implements Entitlement {
 
     private final AccountInternalApi accountApi;
-    private final SubscriptionInternalApi subscriptionInternalApi;
-    private final Subscription subscription;
+    private final SubscriptionBase subscription;
     private final InternalCallContextFactory internalCallContextFactory;
     private final Clock clock;
     private final BlockingChecker checker;
     private final UUID accountId;
 
-    public DefaultEntitlement(final AccountInternalApi accountApi, final SubscriptionInternalApi subscriptionInternalApi, final Subscription subscription, final UUID accountId, final InternalCallContextFactory internalCallContextFactory, final Clock clock, final BlockingChecker checker) {
+    public DefaultEntitlement(final AccountInternalApi accountApi, final SubscriptionBase subscription, final UUID accountId, final InternalCallContextFactory internalCallContextFactory, final Clock clock, final BlockingChecker checker) {
         this.accountApi = accountApi;
-        this.subscriptionInternalApi = subscriptionInternalApi;
         this.subscription = subscription;
         this.accountId = accountId;
         this.internalCallContextFactory = internalCallContextFactory;
@@ -78,19 +78,15 @@ public class DefaultEntitlement implements Entitlement {
     }
 
     @Override
-    public boolean cancel(final LocalDate localDate, final ActionPolicy actionPolicy, final CallContext callContext) throws EntitlementApiException {
-        return false;
+    public boolean cancelEntitlementWithDateOverrideBillingPolicy(final LocalDate effectiveDate, final ActionPolicy billingPolicy, final CallContext context) throws EntitlementApiException {
+        return false;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
-    public boolean cancelEntitlementWithDateOverrideBillingPolicy(final EntitlementActionPolicy entitlementActionPolicy, final ActionPolicy actionPolicy, final CallContext callContext) throws EntitlementApiException {
-        return false;
+    public boolean cancelEntitlementWithPolicyOverrideBillingPolicy(final EntitlementActionPolicy policy, final ActionPolicy billingPolicy, final CallContext context) throws EntitlementApiException {
+        return false;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
-    @Override
-    public boolean uncancel(final CallContext callContext) throws EntitlementApiException {
-        return false;
-    }
 
     @Override
     public boolean changePlan(final String productName, final BillingPeriod billingPeriod, final String priceList, final LocalDate localDate, final CallContext callContext) throws EntitlementApiException {
@@ -135,7 +131,7 @@ public class DefaultEntitlement implements Entitlement {
         return accountId;
     }
 
-    public Subscription getSubscription() {
+    public SubscriptionBase getSubscription() {
         return subscription;
     }
 
@@ -144,48 +140,85 @@ public class DefaultEntitlement implements Entitlement {
         return subscription.getId();
     }
 
-    /*
-      public SubscriptionSourceType getSourceType();
+    @Override
+    public String getExternalKey() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
 
-    public DateTime getStartDate();
+    @Override
+    public EntitlementState getState() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
 
-    public DateTime getEndDate();
+    @Override
+    public EntitlementSourceType getSourceType() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
 
-    public DateTime getFutureEndDate();
+    @Override
+    public LocalDate getEffectiveStartDate() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
 
-    public Plan getCurrentPlan();
+    @Override
+    public LocalDate getEffectiveEndDate() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
 
-    public Plan getLastActivePlan();
+    @Override
+    public LocalDate getRequestedEndDate() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
 
-    public PriceList getCurrentPriceList();
+    @Override
+    public Product getProduct() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
 
-    public PlanPhase getCurrentPhase();
+    @Override
+    public Plan getPlan() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
 
-    public String getLastActiveProductName();
+    @Override
+    public PriceList getPriceList() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
 
-    public String getLastActivePriceListName();
+    @Override
+    public PlanPhase getCurrentPhase() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
 
-    public String getLastActiveCategoryName();
+    @Override
+    public ProductCategory getProductCategory() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
 
-    public String getLastActiveBillingPeriod();
+    @Override
+    public Product getLastActiveProduct() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
 
-    public DateTime getChargedThroughDate();
+    @Override
+    public Plan getLastActivePlan() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
 
-    public DateTime getPaidThroughDate();
+    @Override
+    public PriceList getLastActivePriceList() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
 
-    public ProductCategory getCategory();
-
-    public SubscriptionTransition getPendingTransition();
-
-    public SubscriptionTransition getPreviousTransition();
-
-    public List<SubscriptionTransition> getAllTransitions();
-     */
+    @Override
+    public String getLastActiveProductCategory() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
 
 
     /**
      * Returns a DateTime that is equals or beforeNow and whose LocalDate using the account timeZone is the one provided
-     *
+     * <p/>
      * Relies on the subscriptionStartDate for the reference time
      *
      * @param requestedDate

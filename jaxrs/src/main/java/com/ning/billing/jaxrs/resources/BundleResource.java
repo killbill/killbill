@@ -43,7 +43,7 @@ import com.ning.billing.subscription.api.transfer.SubscriptionTransferApi;
 import com.ning.billing.subscription.api.transfer.SubscriptionTransferApiException;
 import com.ning.billing.subscription.api.user.SubscriptionUserApi;
 import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
-import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.jaxrs.json.BundleJsonNoSubscriptions;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
@@ -123,10 +123,10 @@ public class BundleResource extends JaxRsResourceBase {
         if (bundle == null) {
             return Response.status(Status.NO_CONTENT).build();
         }
-        final List<Subscription> subscriptions = subscriptionApi.getSubscriptionsForBundle(uuid, tenantContext);
-        final Collection<SubscriptionJsonNoEvents> result = Collections2.transform(subscriptions, new Function<Subscription, SubscriptionJsonNoEvents>() {
+        final List<SubscriptionBase> subscriptions = null; // STEPH_ENT subscriptionApi.getSubscriptionsForBundle(uuid, tenantContext);
+        final Collection<SubscriptionJsonNoEvents> result = Collections2.transform(subscriptions, new Function<SubscriptionBase, SubscriptionJsonNoEvents>() {
             @Override
-            public SubscriptionJsonNoEvents apply(final Subscription input) {
+            public SubscriptionJsonNoEvents apply(final SubscriptionBase input) {
                 return new SubscriptionJsonNoEvents(input, null);
             }
         });

@@ -24,8 +24,6 @@ import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.clock.ClockMock;
 import com.ning.billing.subscription.api.SubscriptionService;
 import com.ning.billing.subscription.api.user.SubscriptionBundle;
-import com.ning.billing.subscription.api.user.SubscriptionUserApi;
-import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
 import com.ning.billing.util.svcsapi.bus.BusService;

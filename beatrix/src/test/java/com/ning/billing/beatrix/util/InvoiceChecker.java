@@ -36,7 +36,7 @@ import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.invoice.api.InvoiceUserApi;
-import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.util.callcontext.CallContext;
 
 import com.google.common.collect.ImmutableList;
@@ -128,7 +128,7 @@ public class InvoiceChecker {
     public void checkChargedThroughDate(final UUID entitlementId, final LocalDate expectedLocalCTD, final CallContext context) {
         try {
             final DefaultEntitlement entitlement = (DefaultEntitlement) entitlementApi.getEntitlementFromId(entitlementId, context);
-            final Subscription subscription = entitlement.getSubscription();
+            final SubscriptionBase subscription = entitlement.getSubscription();
             if (expectedLocalCTD == null) {
                 assertNull(subscription.getChargedThroughDate());
             } else {

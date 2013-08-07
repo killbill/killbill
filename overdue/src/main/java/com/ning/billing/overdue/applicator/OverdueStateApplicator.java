@@ -34,7 +34,7 @@ import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.catalog.api.ActionPolicy;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
-import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.Blockable;
 import com.ning.billing.entitlement.api.BlockingApiException;
@@ -218,10 +218,10 @@ public class OverdueStateApplicator<T extends Blockable> {
                 default:
                     throw new IllegalStateException("Unexpected OverdueCancellationPolicy " + nextOverdueState.getSubscriptionCancellationPolicy());
             }
-            final List<Subscription> toBeCancelled = new LinkedList<Subscription>();
+            final List<SubscriptionBase> toBeCancelled = new LinkedList<SubscriptionBase>();
             computeSubscriptionsToCancel(blockable, toBeCancelled, context);
-            for (final Subscription cur : toBeCancelled) {
-                // STEPH Need conversion toCallContext because we are calling a public API through the Subscription object
+            for (final SubscriptionBase cur : toBeCancelled) {
+                // STEPH Need conversion toCallContext because we are calling a public API through the SubscriptionBase object
                 cur.cancelWithPolicy(clock.getUTCNow(), actionPolicy, context.toCallContext());
             }
         } catch (SubscriptionUserApiException e) {
@@ -230,11 +230,11 @@ public class OverdueStateApplicator<T extends Blockable> {
     }
 
     @SuppressWarnings("unchecked")
-    private void computeSubscriptionsToCancel(final T blockable, final List<Subscription> result, final InternalTenantContext context) throws SubscriptionUserApiException {
-        if (blockable instanceof Subscription) {
-            result.add((Subscription) blockable);
+    private void computeSubscriptionsToCancel(final T blockable, final List<SubscriptionBase> result, final InternalTenantContext context) throws SubscriptionUserApiException {
+        if (blockable instanceof SubscriptionBase) {
+            result.add((SubscriptionBase) blockable);
         } else if (blockable instanceof SubscriptionBundle) {
-            for (final Subscription cur : subscriptionInternalApi.getSubscriptionsForBundle(blockable.getId(), context)) {
+            for (final SubscriptionBase cur : subscriptionInternalApi.getSubscriptionsForBundle(blockable.getId(), context)) {
                 // Entitlement is smart enough and will cancel the associated add-ons
                 if (!ProductCategory.ADD_ON.equals(cur.getCategory())) {
                     computeSubscriptionsToCancel((T) cur, result, context);
@@ -263,7 +263,7 @@ public class OverdueStateApplicator<T extends Blockable> {
         final Type overdueableType = Type.get(overdueable);
         try {
             if (Type.SUBSCRIPTION.equals(overdueableType)) {
-                final UUID bundleId = ((Subscription) overdueable).getBundleId();
+                final UUID bundleId = ((SubscriptionBase) overdueable).getBundleId();
                 final SubscriptionBundle bundle = subscriptionInternalApi.getBundleFromId(bundleId, context);
                 account = accountApi.getAccountById(bundle.getAccountId(), context);
             } else if (Type.SUBSCRIPTION_BUNDLE.equals(overdueableType)) {

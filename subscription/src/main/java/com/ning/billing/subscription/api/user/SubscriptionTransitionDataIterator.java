@@ -93,7 +93,7 @@ public class SubscriptionTransitionDataIterator implements Iterator<Subscription
     }
 
     private boolean shouldSkipForSubscriptionEvents(final SubscriptionTransitionData input) {
-        // Subscription system knows about all events except for MIGRATE_BILLING
+        // SubscriptionBase system knows about all events except for MIGRATE_BILLING
         return (input.getTransitionType() == SubscriptionTransitionType.MIGRATE_BILLING);
     }
 

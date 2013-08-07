@@ -1,0 +1,14 @@
+<component name="libraryTable">
+  <library name="Maven: com.ning.billing:killbill-api:0.3.3-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/ning/billing/killbill-api/0.3.3-SNAPSHOT/killbill-api-0.3.3-SNAPSHOT.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/com/ning/billing/killbill-api/0.3.3-SNAPSHOT/killbill-api-0.3.3-SNAPSHOT-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/ning/billing/killbill-api/0.3.3-SNAPSHOT/killbill-api-0.3.3-SNAPSHOT-sources.jar!/" />
+      <root url="file://$PROJECT_DIR$/../killbill-api/src/main/java" />
+    </SOURCES>
+  </library>
+</component>

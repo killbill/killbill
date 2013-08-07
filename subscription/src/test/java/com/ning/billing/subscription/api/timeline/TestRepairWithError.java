@@ -40,7 +40,7 @@ import com.ning.billing.subscription.api.user.TestSubscriptionHelper.TestWithExc
 import com.ning.billing.subscription.api.SubscriptionTransitionType;
 import com.ning.billing.subscription.api.timeline.SubscriptionTimeline.DeletedEvent;
 import com.ning.billing.subscription.api.timeline.SubscriptionTimeline.NewEvent;
-import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
 
 import static org.testng.Assert.assertTrue;
@@ -50,7 +50,7 @@ public class TestRepairWithError extends SubscriptionTestSuiteNoDB {
 
     private static final String baseProduct = "Shotgun";
     private TestWithException test;
-    private Subscription baseSubscription;
+    private SubscriptionBase baseSubscription;
 
     @Override
     @BeforeMethod(alwaysRun = true)

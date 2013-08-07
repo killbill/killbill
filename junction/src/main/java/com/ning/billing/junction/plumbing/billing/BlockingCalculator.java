@@ -34,7 +34,7 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.subscription.api.SubscriptionTransitionType;
-import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.svcapi.junction.BillingEvent;
@@ -86,7 +86,7 @@ public class BlockingCalculator {
 
         final Account account = billingEvents.first().getAccount();
 
-        final Hashtable<UUID, List<Subscription>> bundleMap = createBundleSubscriptionMap(billingEvents);
+        final Hashtable<UUID, List<SubscriptionBase>> bundleMap = createBundleSubscriptionMap(billingEvents);
 
         final SortedSet<BillingEvent> billingEventsToAdd = new TreeSet<BillingEvent>();
         final SortedSet<BillingEvent> billingEventsToRemove = new TreeSet<BillingEvent>();
@@ -96,7 +96,7 @@ public class BlockingCalculator {
             blockingEvents.addAll(blockingApi.getBlockingHistory(account.getId(), context));
             final List<DisabledDuration> blockingDurations = createBlockingDurations(blockingEvents);
 
-            for (final Subscription subscription : bundleMap.get(bundleId)) {
+            for (final SubscriptionBase subscription : bundleMap.get(bundleId)) {
                 billingEventsToAdd.addAll(createNewEvents(blockingDurations, billingEvents, account, subscription));
                 billingEventsToRemove.addAll(eventsToRemove(blockingDurations, billingEvents, subscription));
             }
@@ -112,7 +112,7 @@ public class BlockingCalculator {
     }
 
     protected SortedSet<BillingEvent> eventsToRemove(final List<DisabledDuration> disabledDuration,
-                                                     final SortedSet<BillingEvent> billingEvents, final Subscription subscription) {
+                                                     final SortedSet<BillingEvent> billingEvents, final SubscriptionBase subscription) {
         final SortedSet<BillingEvent> result = new TreeSet<BillingEvent>();
 
         final SortedSet<BillingEvent> filteredBillingEvents = filter(billingEvents, subscription);
@@ -130,7 +130,7 @@ public class BlockingCalculator {
         return result;
     }
 
-    protected SortedSet<BillingEvent> createNewEvents(final List<DisabledDuration> disabledDuration, final SortedSet<BillingEvent> billingEvents, final Account account, final Subscription subscription) {
+    protected SortedSet<BillingEvent> createNewEvents(final List<DisabledDuration> disabledDuration, final SortedSet<BillingEvent> billingEvents, final Account account, final SubscriptionBase subscription) {
         final SortedSet<BillingEvent> result = new TreeSet<BillingEvent>();
         for (final DisabledDuration duration : disabledDuration) {
             // The first one before the blocked duration
@@ -151,7 +151,7 @@ public class BlockingCalculator {
         return result;
     }
 
-    protected BillingEvent precedingBillingEventForSubscription(final DateTime datetime, final SortedSet<BillingEvent> billingEvents, final Subscription subscription) {
+    protected BillingEvent precedingBillingEventForSubscription(final DateTime datetime, final SortedSet<BillingEvent> billingEvents, final SubscriptionBase subscription) {
         if (datetime == null) { //second of a pair can be null if there's no re-enabling
             return null;
         }
@@ -174,7 +174,7 @@ public class BlockingCalculator {
         return result;
     }
 
-    protected SortedSet<BillingEvent> filter(final SortedSet<BillingEvent> billingEvents, final Subscription subscription) {
+    protected SortedSet<BillingEvent> filter(final SortedSet<BillingEvent> billingEvents, final SubscriptionBase subscription) {
         final SortedSet<BillingEvent> result = new TreeSet<BillingEvent>();
         for (final BillingEvent event : billingEvents) {
             if (event.getSubscription() == subscription) {
@@ -187,7 +187,7 @@ public class BlockingCalculator {
     protected BillingEvent createNewDisableEvent(final DateTime odEventTime, final BillingEvent previousEvent) {
         final Account account = previousEvent.getAccount();
         final int billCycleDay = previousEvent.getBillCycleDayLocal();
-        final Subscription subscription = previousEvent.getSubscription();
+        final SubscriptionBase subscription = previousEvent.getSubscription();
         final DateTime effectiveDate = odEventTime;
         final PlanPhase planPhase = previousEvent.getPlanPhase();
         final Plan plan = previousEvent.getPlan();
@@ -215,7 +215,7 @@ public class BlockingCalculator {
         // All fields are populated with the event state from before the blocking period, for invoice to resume invoicing
         final Account account = previousEvent.getAccount();
         final int billCycleDay = previousEvent.getBillCycleDayLocal();
-        final Subscription subscription = previousEvent.getSubscription();
+        final SubscriptionBase subscription = previousEvent.getSubscription();
         final DateTime effectiveDate = odEventTime;
         final PlanPhase planPhase = previousEvent.getPlanPhase();
         final Plan plan = previousEvent.getPlan();
@@ -235,13 +235,13 @@ public class BlockingCalculator {
                                        description, totalOrdering, type, tz);
     }
 
-    protected Hashtable<UUID, List<Subscription>> createBundleSubscriptionMap(final SortedSet<BillingEvent> billingEvents) {
-        final Hashtable<UUID, List<Subscription>> result = new Hashtable<UUID, List<Subscription>>();
+    protected Hashtable<UUID, List<SubscriptionBase>> createBundleSubscriptionMap(final SortedSet<BillingEvent> billingEvents) {
+        final Hashtable<UUID, List<SubscriptionBase>> result = new Hashtable<UUID, List<SubscriptionBase>>();
         for (final BillingEvent event : billingEvents) {
             final UUID bundleId = event.getSubscription().getBundleId();
-            List<Subscription> subs = result.get(bundleId);
+            List<SubscriptionBase> subs = result.get(bundleId);
             if (subs == null) {
-                subs = new ArrayList<Subscription>();
+                subs = new ArrayList<SubscriptionBase>();
                 result.put(bundleId, subs);
             }
             if (!result.get(bundleId).contains(event.getSubscription())) {

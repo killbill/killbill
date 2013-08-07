@@ -26,7 +26,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.Blockable;
 import com.ning.billing.entitlement.api.Type;
@@ -64,7 +64,7 @@ public class TestDefaultOverdueCheckPoster extends OverdueTestSuiteWithEmbeddedD
     @Test(groups = "slow")
     public void testShouldntInsertMultipleNotificationsPerOverdueable() throws Exception {
         final UUID subscriptionId = UUID.randomUUID();
-        final Blockable overdueable = Mockito.mock(Subscription.class);
+        final Blockable overdueable = Mockito.mock(SubscriptionBase.class);
         Mockito.when(overdueable.getId()).thenReturn(subscriptionId);
 
         insertOverdueCheckAndVerifyQueueContent(overdueable, 10, 10);

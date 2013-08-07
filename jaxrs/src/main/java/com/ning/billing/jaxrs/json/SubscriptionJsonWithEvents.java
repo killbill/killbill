@@ -28,7 +28,7 @@ import org.joda.time.DateTime;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.subscription.api.timeline.SubscriptionTimeline;
 import com.ning.billing.subscription.api.timeline.SubscriptionTimeline.ExistingEvent;
-import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.util.audit.AuditLog;
 import com.ning.billing.clock.DefaultClock;
 
@@ -276,7 +276,7 @@ public class SubscriptionJsonWithEvents extends SubscriptionJsonSimple {
         this.newEvents = newEvents;
     }
 
-    public SubscriptionJsonWithEvents(final Subscription data,
+    public SubscriptionJsonWithEvents(final SubscriptionBase data,
                                       @Nullable final List<SubscriptionReadEventJson> events,
                                       @Nullable final List<SubscriptionNewEventJson> newEvents,
                                       @Nullable final List<SubscriptionDeletedEventJson> deletedEvents,

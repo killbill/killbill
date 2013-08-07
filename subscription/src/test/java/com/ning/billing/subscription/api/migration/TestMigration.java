@@ -33,7 +33,7 @@ import com.ning.billing.subscription.api.migration.SubscriptionMigrationApi.Acco
 import com.ning.billing.subscription.api.user.SubscriptionData;
 import com.ning.billing.subscription.api.user.SubscriptionTransitionData;
 import com.ning.billing.subscription.events.user.ApiEventType;
-import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.subscription.api.user.SubscriptionState;
 import com.ning.billing.subscription.api.user.SubscriptionTransition;
@@ -62,9 +62,9 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
             assertEquals(bundles.size(), 1);
             final SubscriptionBundle bundle = bundles.get(0);
 
-            final List<Subscription> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(bundle.getId(), internalCallContext);
+            final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(bundle.getId(), internalCallContext);
             assertEquals(subscriptions.size(), 1);
-            final Subscription subscription = subscriptions.get(0);
+            final SubscriptionBase subscription = subscriptions.get(0);
             assertTrue(subscription.getStartDate().compareTo(startDate) == 0);
             assertEquals(subscription.getEndDate(), null);
             assertEquals(subscription.getCurrentPriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
@@ -97,10 +97,10 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
             assertEquals(bundles.size(), 1);
             final SubscriptionBundle bundle = bundles.get(0);
 
-            final List<Subscription> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(bundle.getId(), internalCallContext);
+            final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(bundle.getId(), internalCallContext);
             assertEquals(subscriptions.size(), 2);
 
-            final Subscription baseSubscription = (subscriptions.get(0).getCurrentPlan().getProduct().getCategory() == ProductCategory.BASE) ?
+            final SubscriptionBase baseSubscription = (subscriptions.get(0).getCurrentPlan().getProduct().getCategory() == ProductCategory.BASE) ?
                                                   subscriptions.get(0) : subscriptions.get(1);
             assertTrue(baseSubscription.getStartDate().compareTo(initalBPStart) == 0);
             assertEquals(baseSubscription.getEndDate(), null);
@@ -110,7 +110,7 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
             assertEquals(baseSubscription.getCurrentPlan().getName(), "shotgun-annual");
             assertEquals(baseSubscription.getChargedThroughDate(), initalBPStart.plusYears(1));
 
-            final Subscription aoSubscription = (subscriptions.get(0).getCurrentPlan().getProduct().getCategory() == ProductCategory.ADD_ON) ?
+            final SubscriptionBase aoSubscription = (subscriptions.get(0).getCurrentPlan().getProduct().getCategory() == ProductCategory.ADD_ON) ?
                                                 subscriptions.get(0) : subscriptions.get(1);
             // initalAddonStart.plusMonths(1).minusMonths(1) may be different from initalAddonStart, depending on exact date
             // e.g : March 31 + 1 month => April 30 and April 30 - 1 month = March 30 which is != March 31 !!!!
@@ -146,9 +146,9 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
             final SubscriptionBundle bundle = bundles.get(0);
             //assertEquals(bundle.getStartDate(), effectiveDate);
 
-            final List<Subscription> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(bundle.getId(), internalCallContext);
+            final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(bundle.getId(), internalCallContext);
             assertEquals(subscriptions.size(), 1);
-            final Subscription subscription = subscriptions.get(0);
+            final SubscriptionBase subscription = subscriptions.get(0);
             assertTrue(subscription.getStartDate().compareTo(startDate) == 0);
             assertEquals(subscription.getCurrentPriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
             assertEquals(subscription.getCurrentPhase().getPhaseType(), PhaseType.EVERGREEN);
@@ -191,9 +191,9 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
             assertEquals(bundles.size(), 1);
             final SubscriptionBundle bundle = bundles.get(0);
 
-            final List<Subscription> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(bundle.getId(), internalCallContext);
+            final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(bundle.getId(), internalCallContext);
             assertEquals(subscriptions.size(), 1);
-            final Subscription subscription = subscriptions.get(0);
+            final SubscriptionBase subscription = subscriptions.get(0);
 
             assertEquals(subscription.getStartDate(), trialDate);
             assertEquals(subscription.getEndDate(), null);
@@ -239,9 +239,9 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
             assertEquals(bundles.size(), 1);
             final SubscriptionBundle bundle = bundles.get(0);
 
-            final List<Subscription> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(bundle.getId(), internalCallContext);
+            final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(bundle.getId(), internalCallContext);
             assertEquals(subscriptions.size(), 1);
-            final Subscription subscription = subscriptions.get(0);
+            final SubscriptionBase subscription = subscriptions.get(0);
             //assertDateWithin(subscription.getStartDate(), beforeMigration, afterMigration);
             assertEquals(subscription.getEndDate(), null);
             assertEquals(subscription.getCurrentPriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
@@ -287,7 +287,7 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
             final List<SubscriptionBundle> bundles = subscriptionInternalApi.getBundlesForAccount(toBeMigrated.getAccountKey(), internalCallContext);
             assertEquals(bundles.size(), 1);
 
-            final List<Subscription> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(bundles.get(0).getId(), internalCallContext);
+            final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(bundles.get(0).getId(), internalCallContext);
             assertEquals(subscriptions.size(), 1);
             final SubscriptionData subscription = (SubscriptionData) subscriptions.get(0);
 

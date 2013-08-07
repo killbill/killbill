@@ -39,7 +39,7 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.subscription.api.SubscriptionTransitionType;
-import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
@@ -160,7 +160,7 @@ public class TestInvoiceHelper {
     }
 
     public UUID generateRegularInvoice(final Account account, final DateTime targetDate) throws Exception {
-        final Subscription subscription = Mockito.mock(Subscription.class);
+        final SubscriptionBase subscription = Mockito.mock(SubscriptionBase.class);
         Mockito.when(subscription.getId()).thenReturn(UUID.randomUUID());
         Mockito.when(subscription.getBundleId()).thenReturn(new UUID(0L, 0L));
         final BillingEventSet events = new MockBillingEventSet();
@@ -195,9 +195,9 @@ public class TestInvoiceHelper {
         return invoice.getId();
     }
 
-    public Subscription createSubscription() throws SubscriptionUserApiException {
+    public SubscriptionBase createSubscription() throws SubscriptionUserApiException {
         UUID uuid = UUID.randomUUID();
-        final Subscription subscription = Mockito.mock(Subscription.class);
+        final SubscriptionBase subscription = Mockito.mock(SubscriptionBase.class);
         Mockito.when(subscription.getId()).thenReturn(uuid);
         Mockito.when(subscriptionApi.getSubscriptionFromId(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
         return subscription;
@@ -287,7 +287,7 @@ public class TestInvoiceHelper {
         return new LocalDate(year, month, day);
     }
 
-    public BillingEvent createMockBillingEvent(@Nullable final Account account, final Subscription subscription,
+    public BillingEvent createMockBillingEvent(@Nullable final Account account, final SubscriptionBase subscription,
                                                final DateTime effectiveDate,
                                                final Plan plan, final PlanPhase planPhase,
                                                @Nullable final BigDecimal fixedPrice, @Nullable final BigDecimal recurringPrice,
@@ -308,7 +308,7 @@ public class TestInvoiceHelper {
             }
 
             @Override
-            public Subscription getSubscription() {
+            public SubscriptionBase getSubscription() {
                 return subscription;
             }
 

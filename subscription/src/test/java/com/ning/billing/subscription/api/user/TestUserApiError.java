@@ -34,6 +34,7 @@ import com.ning.billing.catalog.api.Duration;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.subscription.SubscriptionTestSuiteNoDB;
+import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.exceptions.SubscriptionError;
 import com.ning.billing.util.callcontext.TenantContext;
 
@@ -139,7 +140,7 @@ public class TestUserApiError extends SubscriptionTestSuiteNoDB {
     @Test(groups = "fast")
     public void testChangeSubscriptionNonActive() {
         try {
-            final Subscription subscription = testUtil.createSubscription(bundle, "Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME);
+            final SubscriptionBase subscription = testUtil.createSubscription(bundle, "Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME);
 
             testListener.pushExpectedEvent(NextEvent.CANCEL);
             subscription.cancel(clock.getUTCNow(), callContext);
@@ -160,7 +161,7 @@ public class TestUserApiError extends SubscriptionTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testChangeSubscriptionWithPolicy() throws Exception {
-        final Subscription subscription = testUtil.createSubscription(bundle, "Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME);
+        final SubscriptionBase subscription = testUtil.createSubscription(bundle, "Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME);
 
         try {
             subscription.changePlanWithPolicy("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow(), ActionPolicy.ILLEGAL, callContext);
@@ -177,7 +178,7 @@ public class TestUserApiError extends SubscriptionTestSuiteNoDB {
     @Test(groups = "fast")
     public void testChangeSubscriptionFutureCancelled() {
         try {
-            Subscription subscription = testUtil.createSubscription(bundle, "Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
+            SubscriptionBase subscription = testUtil.createSubscription(bundle, "Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
             final PlanPhase trialPhase = subscription.getCurrentPhase();
 
             // MOVE TO NEXT PHASE
@@ -220,7 +221,7 @@ public class TestUserApiError extends SubscriptionTestSuiteNoDB {
     @Test(groups = "fast")
     public void testUncancelBadState() {
         try {
-            final Subscription subscription = testUtil.createSubscription(bundle, "Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
+            final SubscriptionBase subscription = testUtil.createSubscription(bundle, "Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
 
             try {
                 subscription.uncancel(callContext);

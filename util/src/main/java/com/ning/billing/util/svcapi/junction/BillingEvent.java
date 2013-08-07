@@ -27,7 +27,7 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.subscription.api.SubscriptionTransitionType;
-import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.SubscriptionBase;
 
 public interface BillingEvent extends Comparable<BillingEvent> {
 
@@ -46,7 +46,7 @@ public interface BillingEvent extends Comparable<BillingEvent> {
     /**
      * @return the subscription
      */
-    public Subscription getSubscription();
+    public SubscriptionBase getSubscription();
 
     /**
      * @return the date for when that event became effective

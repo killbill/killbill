@@ -634,7 +634,7 @@ public class TestRepairWithAO extends SubscriptionTestSuiteWithEmbeddedDB {
     // Telescopic-Scope -> Laser-Scope
     // Tiered ADON logic
     // . Both multi phase
-    // . Telescopic-Scope (bundle align) and Laser-Scope is Subscription align
+    // . Telescopic-Scope (bundle align) and Laser-Scope is SubscriptionBase align
     //
     @Test(groups = "slow")
     public void testRepairChangeAOOK() throws Exception {
@@ -688,7 +688,7 @@ public class TestRepairWithAO extends SubscriptionTestSuiteWithEmbeddedDB {
                                                               ProductCategory.ADD_ON, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, aoChangeDate));
         expected.add(testUtil.createExistingEventForAssertion(SubscriptionTransitionType.PHASE, "Laser-Scope", PhaseType.EVERGREEN,
                                                               ProductCategory.ADD_ON, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY,
-                                                              aoSubscription.getStartDate().plusMonths(1) /* Subscription alignment */));
+                                                              aoSubscription.getStartDate().plusMonths(1) /* SubscriptionBase alignment */));
 
         int index = 0;
         for (final ExistingEvent e : expected) {

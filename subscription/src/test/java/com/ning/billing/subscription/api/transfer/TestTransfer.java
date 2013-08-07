@@ -36,7 +36,7 @@ import com.ning.billing.subscription.api.migration.SubscriptionMigrationApi.Acco
 import com.ning.billing.subscription.api.migration.SubscriptionMigrationApiException;
 import com.ning.billing.subscription.api.user.SubscriptionData;
 import com.ning.billing.subscription.api.SubscriptionTransitionType;
-import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.subscription.api.user.SubscriptionState;
 
@@ -69,9 +69,9 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
             assertEquals(bundles.size(), 1);
             final SubscriptionBundle bundle = bundles.get(0);
 
-            final List<Subscription> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(bundle.getId(), internalCallContext);
+            final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(bundle.getId(), internalCallContext);
             assertEquals(subscriptions.size(), 1);
-            final Subscription subscription = subscriptions.get(0);
+            final SubscriptionBase subscription = subscriptions.get(0);
             testUtil.assertDateWithin(subscription.getStartDate(), beforeMigration.minusMonths(2), afterMigration.minusMonths(2));
             assertEquals(subscription.getEndDate(), null);
             assertEquals(subscription.getCurrentPriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
@@ -96,7 +96,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
             transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getExternalKey(), transferRequestedDate, false, true, callContext);
             assertTrue(testListener.isCompleted(3000));
 
-            final Subscription oldBaseSubscription = subscriptionInternalApi.getBaseSubscription(bundle.getId(), internalCallContext);
+            final SubscriptionBase oldBaseSubscription = subscriptionInternalApi.getBaseSubscription(bundle.getId(), internalCallContext);
             assertTrue(oldBaseSubscription.getState() == SubscriptionState.CANCELLED);
             // The MIGRATE_BILLING event should have been invalidated
             assertEquals(subscriptionInternalApi.getBillingTransitions(oldBaseSubscription, internalCallContext).size(), 0);
@@ -119,7 +119,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
         // CREATE BP
-        final Subscription baseSubscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList);
+        final SubscriptionBase baseSubscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList);
 
         final DateTime evergreenPhaseDate = ((SubscriptionData) baseSubscription).getPendingTransition().getEffectiveTransitionTime();
 
@@ -136,7 +136,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         final DateTime afterTransferDate = clock.getUTCNow();
 
         // CHECK OLD BASE IS CANCEL AT THE TRANSFER DATE
-        final Subscription oldBaseSubscription = subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
+        final SubscriptionBase oldBaseSubscription = subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
         assertNotNull(oldBaseSubscription.getEndDate());
         testUtil.assertDateWithin(oldBaseSubscription.getEndDate(), beforeTransferDate, afterTransferDate);
         assertTrue(oldBaseSubscription.getEndDate().compareTo(transferRequestedDate) == 0);
@@ -144,10 +144,10 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         // CHECK NEW BUNDLE EXIST, WITH ONE SUBSCRIPTION STARTING ON TRANSFER_DATE
         final SubscriptionBundle newBundle = subscriptionInternalApi.getBundleForAccountAndKey(newAccountId, bundle.getExternalKey(), internalCallContext);
 
-        final List<Subscription> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(newBundle.getId(), internalCallContext);
+        final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(newBundle.getId(), internalCallContext);
         assertEquals(subscriptions.size(), 1);
 
-        final Subscription newBaseSubscription = subscriptions.get(0);
+        final SubscriptionBase newBaseSubscription = subscriptions.get(0);
         assertTrue(((SubscriptionData) newBaseSubscription).getAlignStartDate().compareTo(((SubscriptionData) oldBaseSubscription).getAlignStartDate()) == 0);
 
         // CHECK NEXT PENDING PHASE IS ALIGNED WITH OLD SUBSCRIPTION START DATE
@@ -170,7 +170,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
         // CREATE BP
-        final Subscription baseSubscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList);
+        final SubscriptionBase baseSubscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList);
         final DateTime ctd = baseSubscription.getStartDate().plusDays(30);
 
         subscriptionInternalApi.setChargedThroughDate(baseSubscription.getId(), ctd, internalCallContext);
@@ -186,17 +186,17 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         assertTrue(testListener.isCompleted(3000));
 
         // CHECK OLD BASE IS CANCEL AT THE TRANSFER DATE
-        final Subscription oldBaseSubscription = subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
+        final SubscriptionBase oldBaseSubscription = subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
         assertNotNull(oldBaseSubscription.getFutureEndDate());
         assertTrue(oldBaseSubscription.getFutureEndDate().compareTo(ctd) == 0);
 
         // CHECK NEW BUNDLE EXIST, WITH ONE SUBSCRIPTION STARTING ON TRANSFER_DATE
         final SubscriptionBundle newBundle = subscriptionInternalApi.getBundleForAccountAndKey(newAccountId, bundle.getExternalKey(), internalCallContext);
 
-        final List<Subscription> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(newBundle.getId(), internalCallContext);
+        final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(newBundle.getId(), internalCallContext);
         assertEquals(subscriptions.size(), 1);
 
-        final Subscription newBaseSubscription = subscriptions.get(0);
+        final SubscriptionBase newBaseSubscription = subscriptions.get(0);
         assertTrue(((SubscriptionData) newBaseSubscription).getAlignStartDate().compareTo(((SubscriptionData) oldBaseSubscription).getAlignStartDate()) == 0);
 
         // CHECK NEXT PENDING PHASE IS ALIGNED WITH OLD SUBSCRIPTION START DATE
@@ -219,7 +219,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
         // CREATE BP
-        final Subscription baseSubscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList);
+        final SubscriptionBase baseSubscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList);
 
         // MOVE AFTER TRIAL
         testListener.pushExpectedEvent(NextEvent.PHASE);
@@ -235,7 +235,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         final DateTime afterTransferDate = clock.getUTCNow();
 
         // CHECK OLD BASE IS CANCEL AT THE TRANSFER DATE
-        final Subscription oldBaseSubscription = subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
+        final SubscriptionBase oldBaseSubscription = subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
         assertNotNull(oldBaseSubscription.getEndDate());
         testUtil.assertDateWithin(oldBaseSubscription.getEndDate(), beforeTransferDate, afterTransferDate);
         assertTrue(oldBaseSubscription.getEndDate().compareTo(transferRequestedDate) == 0);
@@ -243,10 +243,10 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         // CHECK NEW BUNDLE EXIST, WITH ONE SUBSCRIPTION STARTING ON TRANSFER_DATE
         final SubscriptionBundle newBundle = subscriptionInternalApi.getBundleForAccountAndKey(newAccountId, bundle.getExternalKey(), internalCallContext);
 
-        final List<Subscription> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(newBundle.getId(), internalCallContext);
+        final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(newBundle.getId(), internalCallContext);
         assertEquals(subscriptions.size(), 1);
 
-        final Subscription newBaseSubscription = subscriptions.get(0);
+        final SubscriptionBase newBaseSubscription = subscriptions.get(0);
         assertTrue(((SubscriptionData) newBaseSubscription).getAlignStartDate().compareTo(((SubscriptionData) baseSubscription).getAlignStartDate()) == 0);
 
         // CHECK ONLY ONE PHASE EXISTS
@@ -267,7 +267,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
         // CREATE BP
-        final Subscription baseSubscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList);
+        final SubscriptionBase baseSubscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList);
 
         // MOVE AFTER TRIAL
         testListener.pushExpectedEvent(NextEvent.PHASE);
@@ -285,17 +285,17 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         assertTrue(testListener.isCompleted(3000));
 
         // CHECK OLD BASE IS CANCEL AT THE TRANSFER DATE
-        final Subscription oldBaseSubscription = subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
+        final SubscriptionBase oldBaseSubscription = subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
         assertNotNull(oldBaseSubscription.getFutureEndDate());
         assertTrue(oldBaseSubscription.getFutureEndDate().compareTo(ctd) == 0);
 
         // CHECK NEW BUNDLE EXIST, WITH ONE SUBSCRIPTION STARTING ON TRANSFER_DATE
         final SubscriptionBundle newBundle = subscriptionInternalApi.getBundleForAccountAndKey(newAccountId, bundle.getExternalKey(), internalCallContext);
 
-        final List<Subscription> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(newBundle.getId(), internalCallContext);
+        final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(newBundle.getId(), internalCallContext);
         assertEquals(subscriptions.size(), 1);
 
-        final Subscription newBaseSubscription = subscriptions.get(0);
+        final SubscriptionBase newBaseSubscription = subscriptions.get(0);
         assertTrue(((SubscriptionData) newBaseSubscription).getAlignStartDate().compareTo(((SubscriptionData) baseSubscription).getAlignStartDate()) == 0);
 
         // CHECK ONLY ONE PHASE EXISTS
@@ -322,7 +322,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
 
         final DateTime newCtd = newBaseSubscription.getStartDate().plusYears(1);
         subscriptionInternalApi.setChargedThroughDate(newBaseSubscription.getId(), newCtd, internalCallContext);
-        final Subscription newBaseSubscriptionWithCtd = subscriptionInternalApi.getSubscriptionFromId(newBaseSubscription.getId(), internalCallContext);
+        final SubscriptionBase newBaseSubscriptionWithCtd = subscriptionInternalApi.getSubscriptionFromId(newBaseSubscription.getId(), internalCallContext);
 
         final String newBaseProduct2 = "Pistol";
         final BillingPeriod newBaseTerm2 = BillingPeriod.ANNUAL;
@@ -347,7 +347,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
         // CREATE BP
-        final Subscription baseSubscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList);
+        final SubscriptionBase baseSubscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList);
 
         // MOVE 3 DAYS AND CREATE AO1
         clock.addDays(3);
@@ -383,12 +383,12 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
 
         // RETRIEVE NEW BUNDLE AND CHECK SUBSCRIPTIONS
         final SubscriptionBundle newBundle = subscriptionInternalApi.getBundleForAccountAndKey(newAccountId, bundle.getExternalKey(), internalCallContext);
-        final List<Subscription> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(newBundle.getId(), internalCallContext);
+        final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(newBundle.getId(), internalCallContext);
         assertEquals(subscriptions.size(), 3);
         boolean foundBP = false;
         boolean foundAO1 = false;
         boolean foundAO2 = false;
-        for (final Subscription cur : subscriptions) {
+        for (final SubscriptionBase cur : subscriptions) {
             final Plan curPlan = cur.getCurrentPlan();
             final Product curProduct = curPlan.getProduct();
             if (curProduct.getName().equals(baseProduct)) {
@@ -441,7 +441,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
         // CREATE BP
-        final Subscription baseSubscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList);
+        final SubscriptionBase baseSubscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList);
 
         // MOVE 3 DAYS AND CREATE AO1
         clock.addDays(3);
@@ -473,7 +473,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         assertTrue(testListener.isCompleted(3000));
 
         final SubscriptionBundle newBundle = subscriptionInternalApi.getBundleForAccountAndKey(newAccountId, bundle.getExternalKey(), internalCallContext);
-        final List<Subscription> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(newBundle.getId(), internalCallContext);
+        final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(newBundle.getId(), internalCallContext);
         assertEquals(subscriptions.size(), 1);
     }
 
@@ -487,7 +487,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
         // CREATE BP
-        Subscription baseSubscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList);
+        SubscriptionBase baseSubscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList);
 
         testListener.pushExpectedEvent(NextEvent.PHASE);
         clock.addDays(30);
@@ -516,7 +516,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         assertTrue(testListener.isCompleted(3000));
 
         final SubscriptionBundle newBundle = subscriptionInternalApi.getBundleForAccountAndKey(newAccountId, bundle.getExternalKey(), internalCallContext);
-        final List<Subscription> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(newBundle.getId(), internalCallContext);
+        final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(newBundle.getId(), internalCallContext);
         assertEquals(subscriptions.size(), 1);
     }
 }

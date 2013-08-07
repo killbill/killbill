@@ -25,7 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 
-import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.subscription.api.user.SubscriptionTransition;
 import com.ning.billing.subscription.api.user.SubscriptionTransitionData;
@@ -62,8 +62,8 @@ public class SubscriptionChecker {
         return bundle;
     }
 
-    public Subscription checkSubscriptionCreated(final UUID subscriptionId, final InternalCallContext context) throws SubscriptionUserApiException {
-        final Subscription subscription = subscriptionApi.getSubscriptionFromId(subscriptionId, context);
+    public SubscriptionBase checkSubscriptionCreated(final UUID subscriptionId, final InternalCallContext context) throws SubscriptionUserApiException {
+        final SubscriptionBase subscription = subscriptionApi.getSubscriptionFromId(subscriptionId, context);
         Assert.assertNotNull(subscription);
         auditChecker.checkSubscriptionCreated(subscription.getBundleId(), subscriptionId, context.toCallContext());
 
@@ -75,7 +75,7 @@ public class SubscriptionChecker {
         return subscription;
     }
 
-    private List<SubscriptionTransition> getSubscriptionEvents(final Subscription subscription) {
+    private List<SubscriptionTransition> getSubscriptionEvents(final SubscriptionBase subscription) {
         // STEPH_ENT
         return subscription.getAllTransitions();
     }

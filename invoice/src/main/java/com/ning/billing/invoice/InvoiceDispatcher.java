@@ -124,13 +124,13 @@ public class InvoiceDispatcher {
     public void processSubscription(final UUID subscriptionId, final DateTime targetDate, final InternalCallContext context) throws InvoiceApiException {
         try {
             if (subscriptionId == null) {
-                log.error("Failed handling Subscription change.", new InvoiceApiException(ErrorCode.INVOICE_INVALID_TRANSITION));
+                log.error("Failed handling SubscriptionBase change.", new InvoiceApiException(ErrorCode.INVOICE_INVALID_TRANSITION));
                 return;
             }
             final UUID accountId = subscriptionApi.getAccountIdFromSubscriptionId(subscriptionId, context);
             processAccount(accountId, targetDate, false, context);
         } catch (SubscriptionUserApiException e) {
-            log.error("Failed handling Subscription change.",
+            log.error("Failed handling SubscriptionBase change.",
                       new InvoiceApiException(ErrorCode.INVOICE_NO_ACCOUNT_ID_FOR_SUBSCRIPTION_ID, subscriptionId.toString()));
         }
     }
@@ -259,7 +259,7 @@ public class InvoiceDispatcher {
 
             return invoice;
         } catch (AccountApiException e) {
-            log.error("Failed handling Subscription change.", e);
+            log.error("Failed handling SubscriptionBase change.", e);
             return null;
         }
     }

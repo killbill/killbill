@@ -42,6 +42,7 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.subscription.alignment.PlanAligner;
 import com.ning.billing.subscription.alignment.TimedPhase;
 import com.ning.billing.subscription.api.SubscriptionApiService;
+import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.engine.addon.AddonUtils;
 import com.ning.billing.subscription.engine.dao.SubscriptionDao;
 import com.ning.billing.subscription.events.SubscriptionEvent;
@@ -374,12 +375,12 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
 
         final Product baseProduct = (baseSubscription.getState() == SubscriptionState.CANCELLED) ? null : baseSubscription.getCurrentPlan().getProduct();
 
-        final List<Subscription> subscriptions = dao.getSubscriptions(baseSubscription.getBundleId(), context);
+        final List<SubscriptionBase> subscriptions = dao.getSubscriptions(baseSubscription.getBundleId(), context);
 
         final List<SubscriptionData> subscriptionsToBeCancelled = new LinkedList<SubscriptionData>();
         final List<SubscriptionEvent> cancelEvents = new LinkedList<SubscriptionEvent>();
 
-        for (final Subscription subscription : subscriptions) {
+        for (final SubscriptionBase subscription : subscriptions) {
             final SubscriptionData cur = (SubscriptionData) subscription;
             if (cur.getState() == SubscriptionState.CANCELLED ||
                 cur.getCategory() != ProductCategory.ADD_ON) {

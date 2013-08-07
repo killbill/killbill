@@ -34,7 +34,7 @@ import com.ning.billing.catalog.MockPlan;
 import com.ning.billing.catalog.MockPriceList;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PriceList;
-import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
@@ -68,7 +68,7 @@ public class TestBillingStateCalculatorBundle extends TestBillingStateCalculator
         Mockito.when(bundle.getId()).thenReturn(bundleId);
 
         final SubscriptionInternalApi subscriptionApi = Mockito.mock(SubscriptionInternalApi.class);
-        final Subscription subscription = Mockito.mock(Subscription.class);
+        final SubscriptionBase subscription = Mockito.mock(SubscriptionBase.class);
         Mockito.when(subscriptionApi.getBaseSubscription(Mockito.eq(bundleId), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
 
         final BillingStateCalculatorBundle calc = new BillingStateCalculatorBundle(subscriptionApi, invoiceApi, accountApi, clock);
@@ -127,7 +127,7 @@ public class TestBillingStateCalculatorBundle extends TestBillingStateCalculator
         Mockito.when(bundle.getId()).thenReturn(thisBundleId);
         Mockito.when(bundle.getAccountId()).thenReturn(UUID.randomUUID());
 
-        final Subscription subscription = Mockito.mock(Subscription.class);
+        final SubscriptionBase subscription = Mockito.mock(SubscriptionBase.class);
         Mockito.when(subscriptionApi.getBaseSubscription(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
 
         final Plan plan = MockPlan.createBicycleNoTrialEvergreen1USD();
@@ -162,7 +162,7 @@ public class TestBillingStateCalculatorBundle extends TestBillingStateCalculator
         Mockito.when(bundle.getId()).thenReturn(thisBundleId);
         Mockito.when(bundle.getAccountId()).thenReturn(UUID.randomUUID());
 
-        final Subscription subscription = Mockito.mock(Subscription.class);
+        final SubscriptionBase subscription = Mockito.mock(SubscriptionBase.class);
         Mockito.when(subscriptionApi.getBaseSubscription(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
 
         final Plan plan = MockPlan.createBicycleNoTrialEvergreen1USD();

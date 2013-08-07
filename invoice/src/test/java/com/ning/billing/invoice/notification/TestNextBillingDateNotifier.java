@@ -23,7 +23,7 @@ import org.joda.time.DateTime;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.invoice.InvoiceTestSuiteWithEmbeddedDB;
 import com.ning.billing.invoice.api.DefaultInvoiceService;
 import com.ning.billing.notificationq.api.NotificationQueue;
@@ -38,7 +38,7 @@ public class TestNextBillingDateNotifier extends InvoiceTestSuiteWithEmbeddedDB 
     public void testInvoiceNotifier() throws Exception {
 
         final UUID accountId = UUID.randomUUID();
-        final Subscription subscription = invoiceUtil.createSubscription();
+        final SubscriptionBase subscription = invoiceUtil.createSubscription();
         final UUID subscriptionId = subscription.getId();
         final DateTime now = clock.getUTCNow();
 

@@ -75,7 +75,7 @@ import com.ning.billing.notificationq.api.NotificationEvent;
 import com.ning.billing.notificationq.api.NotificationQueue;
 import com.ning.billing.notificationq.api.NotificationQueueService;
 import com.ning.billing.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
-import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.callcontext.InternalCallContext;
@@ -214,15 +214,15 @@ public class DefaultSubscriptionDao implements SubscriptionDao {
     }
 
     @Override
-    public Subscription getBaseSubscription(final UUID bundleId, final InternalTenantContext context) {
+    public SubscriptionBase getBaseSubscription(final UUID bundleId, final InternalTenantContext context) {
         return getBaseSubscription(bundleId, true, context);
     }
 
     @Override
-    public Subscription getSubscriptionFromId(final UUID subscriptionId, final InternalTenantContext context) {
-        final Subscription shellSubscription = transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Subscription>() {
+    public SubscriptionBase getSubscriptionFromId(final UUID subscriptionId, final InternalTenantContext context) {
+        final SubscriptionBase shellSubscription = transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<SubscriptionBase>() {
             @Override
-            public Subscription inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+            public SubscriptionBase inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
                 final SubscriptionModelDao model = entitySqlDaoWrapperFactory.become(SubscriptionSqlDao.class).getById(subscriptionId.toString(), context);
                 return SubscriptionModelDao.toSubscription(model);
             }
@@ -232,18 +232,18 @@ public class DefaultSubscriptionDao implements SubscriptionDao {
 
 
     @Override
-    public List<Subscription> getSubscriptions(final UUID bundleId, final InternalTenantContext context) {
+    public List<SubscriptionBase> getSubscriptions(final UUID bundleId, final InternalTenantContext context) {
         return buildBundleSubscriptions(bundleId, getSubscriptionFromBundleId(bundleId, context), context);
     }
 
-    private List<Subscription> getSubscriptionFromBundleId(final UUID bundleId, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<Subscription>>() {
+    private List<SubscriptionBase> getSubscriptionFromBundleId(final UUID bundleId, final InternalTenantContext context) {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<SubscriptionBase>>() {
             @Override
-            public List<Subscription> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+            public List<SubscriptionBase> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
                 final List<SubscriptionModelDao> models = entitySqlDaoWrapperFactory.become(SubscriptionSqlDao.class).getSubscriptionsFromBundleId(bundleId.toString(), context);
-                return new ArrayList<Subscription>(Collections2.transform(models, new Function<SubscriptionModelDao, Subscription>() {
+                return new ArrayList<SubscriptionBase>(Collections2.transform(models, new Function<SubscriptionModelDao, SubscriptionBase>() {
                     @Override
-                    public Subscription apply(@Nullable final SubscriptionModelDao input) {
+                    public SubscriptionBase apply(@Nullable final SubscriptionModelDao input) {
                         return SubscriptionModelDao.toSubscription(input);
                     }
                 }));
@@ -253,11 +253,11 @@ public class DefaultSubscriptionDao implements SubscriptionDao {
 
 
     @Override
-    public List<Subscription> getSubscriptionsForAccountAndKey(final UUID accountId,
+    public List<SubscriptionBase> getSubscriptionsForAccountAndKey(final UUID accountId,
                                                                final String bundleKey, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<Subscription>>() {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<SubscriptionBase>>() {
             @Override
-            public List<Subscription> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
+            public List<SubscriptionBase> inTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> entitySqlDaoWrapperFactory) throws Exception {
                 final SubscriptionBundleModelDao bundleModel = entitySqlDaoWrapperFactory.become(BundleSqlDao.class).getBundleFromAccountAndKey(accountId.toString(), bundleKey, context);
                 if (bundleModel == null) {
                     return Collections.emptyList();
@@ -686,14 +686,14 @@ public class DefaultSubscriptionDao implements SubscriptionDao {
         }
     }
 
-    private Subscription buildSubscription(final Subscription input, final InternalTenantContext context) {
+    private SubscriptionBase buildSubscription(final SubscriptionBase input, final InternalTenantContext context) {
 
         if (input == null) {
             return null;
         }
-        final List<Subscription> bundleInput = new ArrayList<Subscription>();
+        final List<SubscriptionBase> bundleInput = new ArrayList<SubscriptionBase>();
         if (input.getCategory() == ProductCategory.ADD_ON) {
-            final Subscription baseSubscription = getBaseSubscription(input.getBundleId(), false, context);
+            final SubscriptionBase baseSubscription = getBaseSubscription(input.getBundleId(), false, context);
             if (baseSubscription == null) {
                 return null;
             }
@@ -704,8 +704,8 @@ public class DefaultSubscriptionDao implements SubscriptionDao {
             bundleInput.add(input);
         }
 
-        final List<Subscription> reloadedSubscriptions = buildBundleSubscriptions(input.getBundleId(), bundleInput, context);
-        for (final Subscription cur : reloadedSubscriptions) {
+        final List<SubscriptionBase> reloadedSubscriptions = buildBundleSubscriptions(input.getBundleId(), bundleInput, context);
+        for (final SubscriptionBase cur : reloadedSubscriptions) {
             if (cur.getId().equals(input.getId())) {
                 return cur;
             }
@@ -714,15 +714,15 @@ public class DefaultSubscriptionDao implements SubscriptionDao {
         throw new SubscriptionError("Unexpected code path in buildSubscription");
     }
 
-    private List<Subscription> buildBundleSubscriptions(final UUID bundleId, final List<Subscription> input, final InternalTenantContext context) {
+    private List<SubscriptionBase> buildBundleSubscriptions(final UUID bundleId, final List<SubscriptionBase> input, final InternalTenantContext context) {
         if (input == null || input.size() == 0) {
             return Collections.emptyList();
         }
 
         // Make sure BasePlan -- if exists-- is first
-        Collections.sort(input, new Comparator<Subscription>() {
+        Collections.sort(input, new Comparator<SubscriptionBase>() {
             @Override
-            public int compare(final Subscription o1, final Subscription o2) {
+            public int compare(final SubscriptionBase o1, final SubscriptionBase o2) {
                 if (o1.getCategory() == ProductCategory.BASE) {
                     return -1;
                 } else if (o2.getCategory() == ProductCategory.BASE) {
@@ -734,10 +734,10 @@ public class DefaultSubscriptionDao implements SubscriptionDao {
         });
 
         SubscriptionEvent futureBaseEvent = null;
-        final List<Subscription> result = new ArrayList<Subscription>(input.size());
-        for (final Subscription cur : input) {
+        final List<SubscriptionBase> result = new ArrayList<SubscriptionBase>(input.size());
+        for (final SubscriptionBase cur : input) {
             final List<SubscriptionEvent> events = getEventsForSubscription(cur.getId(), context);
-            Subscription reloaded = createSubscriptionForInternalUse(cur, events);
+            SubscriptionBase reloaded = createSubscriptionForInternalUse(cur, events);
 
             switch (cur.getCategory()) {
                 case BASE:
@@ -861,7 +861,7 @@ public class DefaultSubscriptionDao implements SubscriptionDao {
         });
     }
 
-    private SubscriptionData createSubscriptionForInternalUse(final Subscription shellSubscription, final List<SubscriptionEvent> events) {
+    private SubscriptionData createSubscriptionForInternalUse(final SubscriptionBase shellSubscription, final List<SubscriptionEvent> events) {
         final SubscriptionData result = new SubscriptionData(new SubscriptionBuilder(((SubscriptionData) shellSubscription)), null, clock);
         if (events.size() > 0) {
             result.rebuildTransitions(events, catalogService.getFullCatalog());
@@ -869,9 +869,9 @@ public class DefaultSubscriptionDao implements SubscriptionDao {
         return result;
     }
 
-    private Subscription getBaseSubscription(final UUID bundleId, final boolean rebuildSubscription, final InternalTenantContext context) {
-        final List<Subscription> subscriptions = getSubscriptionFromBundleId(bundleId, context);
-        for (final Subscription cur : subscriptions) {
+    private SubscriptionBase getBaseSubscription(final UUID bundleId, final boolean rebuildSubscription, final InternalTenantContext context) {
+        final List<SubscriptionBase> subscriptions = getSubscriptionFromBundleId(bundleId, context);
+        for (final SubscriptionBase cur : subscriptions) {
             if (cur.getCategory() == ProductCategory.BASE) {
                 return rebuildSubscription ? buildSubscription(cur, context) : cur;
             }

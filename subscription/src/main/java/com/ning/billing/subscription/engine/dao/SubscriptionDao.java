@@ -27,7 +27,7 @@ import com.ning.billing.subscription.api.transfer.TransferCancelData;
 import com.ning.billing.subscription.api.user.SubscriptionBundleData;
 import com.ning.billing.subscription.api.user.SubscriptionData;
 import com.ning.billing.subscription.events.SubscriptionEvent;
-import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
@@ -45,17 +45,17 @@ public interface SubscriptionDao {
 
     public SubscriptionBundle createSubscriptionBundle(SubscriptionBundleData bundle, InternalCallContext context);
 
-    public Subscription getSubscriptionFromId(UUID subscriptionId, InternalTenantContext context);
+    public SubscriptionBase getSubscriptionFromId(UUID subscriptionId, InternalTenantContext context);
 
     // ACCOUNT retrieval
     public UUID getAccountIdFromSubscriptionId(UUID subscriptionId, InternalTenantContext context);
 
-    // Subscription retrieval
-    public Subscription getBaseSubscription(UUID bundleId, InternalTenantContext context);
+    // SubscriptionBase retrieval
+    public SubscriptionBase getBaseSubscription(UUID bundleId, InternalTenantContext context);
 
-    public List<Subscription> getSubscriptions(UUID bundleId, InternalTenantContext context);
+    public List<SubscriptionBase> getSubscriptions(UUID bundleId, InternalTenantContext context);
 
-    public List<Subscription> getSubscriptionsForAccountAndKey(UUID accountId, String bundleKey, InternalTenantContext context);
+    public List<SubscriptionBase> getSubscriptionsForAccountAndKey(UUID accountId, String bundleKey, InternalTenantContext context);
 
     // Update
     public void updateChargedThroughDate(SubscriptionData subscription, InternalCallContext context);
@@ -71,7 +71,7 @@ public interface SubscriptionDao {
 
     public List<SubscriptionEvent> getPendingEventsForSubscription(UUID subscriptionId, InternalTenantContext context);
 
-    // Subscription creation, cancellation, changePlan apis
+    // SubscriptionBase creation, cancellation, changePlan apis
     public void createSubscription(SubscriptionData subscription, List<SubscriptionEvent> initialEvents, InternalCallContext context);
 
     public void recreateSubscription(SubscriptionData subscription, List<SubscriptionEvent> recreateEvents, InternalCallContext context);

@@ -31,7 +31,7 @@ import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
-import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionSourceType;
 import com.ning.billing.subscription.api.user.SubscriptionState;
 import com.ning.billing.subscription.api.user.SubscriptionTransition;
@@ -41,7 +41,7 @@ import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 
 import com.google.common.collect.ImmutableList;
 
-public class MockSubscription implements Subscription {
+public class MockSubscription implements SubscriptionBase {
 
     private final UUID id;
     private final UUID bundleId;
@@ -71,7 +71,7 @@ public class MockSubscription implements Subscription {
         this.transitions = ImmutableList.<EffectiveSubscriptionInternalEvent>of();
     }
 
-    Subscription sub = Mockito.mock(Subscription.class);
+    SubscriptionBase sub = Mockito.mock(SubscriptionBase.class);
 
     @Override
     public boolean cancel(final DateTime requestedDate, final CallContext context) throws SubscriptionUserApiException {

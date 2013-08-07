@@ -26,8 +26,6 @@ import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.entitlement.block.BlockingChecker;
 import com.ning.billing.entitlement.dao.BlockingStateDao;
 import com.ning.billing.entitlement.glue.TestEntitlementModuleNoDB;
-import com.ning.billing.subscription.api.user.SubscriptionUserApi;
-import com.ning.billing.util.glue.RealImplementation;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
 import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;

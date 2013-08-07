@@ -43,7 +43,7 @@ import com.ning.billing.subscription.api.SubscriptionTransitionType;
 import com.ning.billing.subscription.api.timeline.SubscriptionTimeline.DeletedEvent;
 import com.ning.billing.subscription.api.timeline.SubscriptionTimeline.ExistingEvent;
 import com.ning.billing.subscription.api.timeline.SubscriptionTimeline.NewEvent;
-import com.ning.billing.subscription.api.user.Subscription;
+import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionState;
 import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
 
@@ -61,7 +61,7 @@ public class TestRepairBP extends SubscriptionTestSuiteWithEmbeddedDB {
         final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
         // CREATE BP
-        final Subscription baseSubscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList);
+        final SubscriptionBase baseSubscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList);
 
         final String aoProduct = "Telescopic-Scope";
         final BillingPeriod aoTerm = BillingPeriod.MONTHLY;
@@ -123,7 +123,7 @@ public class TestRepairBP extends SubscriptionTestSuiteWithEmbeddedDB {
         final DateTime startDate = clock.getUTCNow();
 
         // CREATE BP
-        final Subscription baseSubscription = testUtil.createSubscription(bundle, baseProduct, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, startDate);
+        final SubscriptionBase baseSubscription = testUtil.createSubscription(bundle, baseProduct, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, startDate);
 
         // Stays in trial-- for instance
         final Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(10));
@@ -286,7 +286,7 @@ public class TestRepairBP extends SubscriptionTestSuiteWithEmbeddedDB {
     private UUID testBPRepairCreate(final boolean inTrial, final DateTime startDate, final int clockShift,
                                     final String baseProduct, final String newBaseProduct, final List<ExistingEvent> expectedEvents) throws Exception {
         // CREATE BP
-        final Subscription baseSubscription = testUtil.createSubscription(bundle, baseProduct, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, startDate);
+        final SubscriptionBase baseSubscription = testUtil.createSubscription(bundle, baseProduct, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, startDate);
 
         // MOVE CLOCK
         if (clockShift > 0) {
@@ -458,7 +458,7 @@ public class TestRepairBP extends SubscriptionTestSuiteWithEmbeddedDB {
     private UUID testBPRepairAddChange(final boolean inTrial, final DateTime startDate, final int clockShift,
                                        final String baseProduct, final String newBaseProduct, final List<ExistingEvent> expectedEvents, final int expectedTransitions) throws Exception {
         // CREATE BP
-        final Subscription baseSubscription = testUtil.createSubscription(bundle, baseProduct, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, startDate);
+        final SubscriptionBase baseSubscription = testUtil.createSubscription(bundle, baseProduct, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, startDate);
 
         // MOVE CLOCK
         if (!inTrial) {
@@ -567,7 +567,7 @@ public class TestRepairBP extends SubscriptionTestSuiteWithEmbeddedDB {
         final DateTime startDate = clock.getUTCNow();
 
         // CREATE BP
-        Subscription baseSubscription = testUtil.createSubscription(bundle, "Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, startDate);
+        SubscriptionBase baseSubscription = testUtil.createSubscription(bundle, "Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, startDate);
 
         // MOVE CLOCK -- OUT OF TRIAL
         testListener.pushExpectedEvent(NextEvent.PHASE);
@@ -636,7 +636,7 @@ public class TestRepairBP extends SubscriptionTestSuiteWithEmbeddedDB {
         final TestWithException test = new TestWithException();
         final DateTime startDate = clock.getUTCNow();
 
-        final Subscription baseSubscription = testUtil.createSubscription(bundle, "Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, startDate);
+        final SubscriptionBase baseSubscription = testUtil.createSubscription(bundle, "Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, startDate);
 
         test.withException(new TestWithExceptionCallback() {
             @Override
@@ -669,7 +669,7 @@ public class TestRepairBP extends SubscriptionTestSuiteWithEmbeddedDB {
         final TestWithException test = new TestWithException();
         final DateTime startDate = clock.getUTCNow();
 
-        final Subscription baseSubscription = testUtil.createSubscription(bundle, "Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, startDate);
+        final SubscriptionBase baseSubscription = testUtil.createSubscription(bundle, "Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, startDate);
 
         test.withException(new TestWithExceptionCallback() {
             @Override
