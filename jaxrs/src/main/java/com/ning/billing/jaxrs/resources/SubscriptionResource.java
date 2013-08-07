@@ -46,14 +46,13 @@ import com.ning.billing.catalog.api.ActionPolicy;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.subscription.api.user.SubscriptionUserApi;
-import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
-import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
 import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
 import com.ning.billing.jaxrs.util.KillbillEventHandler;
+import com.ning.billing.subscription.api.SubscriptionBase;
+import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
 import com.ning.billing.util.api.AuditUserApi;
 import com.ning.billing.util.api.CustomFieldApiException;
 import com.ning.billing.util.api.CustomFieldUserApi;
@@ -80,19 +79,16 @@ public class SubscriptionResource extends JaxRsResourceBase {
     private static final String CUSTOM_FIELD_URI = JaxrsResource.CUSTOM_FIELDS + "/{" + ID_PARAM_NAME + ":" + UUID_PATTERN + "}";
     private static final String TAG_URI = JaxrsResource.TAGS + "/{" + ID_PARAM_NAME + ":" + UUID_PATTERN + "}";
 
-    private final SubscriptionUserApi subscriptionApi;
     private final KillbillEventHandler killbillHandler;
 
     @Inject
-    public SubscriptionResource(final SubscriptionUserApi subscriptionApi,
-                                final KillbillEventHandler killbillHandler,
+    public SubscriptionResource(final KillbillEventHandler killbillHandler,
                                 final JaxrsUriBuilder uriBuilder,
                                 final TagUserApi tagUserApi,
                                 final CustomFieldUserApi customFieldUserApi,
                                 final AuditUserApi auditUserApi,
                                 final Context context) {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, context);
-        this.subscriptionApi = subscriptionApi;
         this.killbillHandler = killbillHandler;
     }
 

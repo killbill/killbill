@@ -29,10 +29,6 @@ import javax.ws.rs.core.Response.Status;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
-import com.ning.billing.subscription.api.user.SubscriptionUserApi;
-import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
-import com.ning.billing.subscription.api.SubscriptionBase;
-import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.jaxrs.json.OverdueStateJson;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
@@ -40,6 +36,9 @@ import com.ning.billing.overdue.OverdueApiException;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.OverdueUserApi;
 import com.ning.billing.overdue.config.api.OverdueException;
+import com.ning.billing.subscription.api.SubscriptionBase;
+import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
 import com.ning.billing.util.api.AuditUserApi;
 import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.api.TagUserApi;
@@ -56,12 +55,10 @@ public class OverdueResource extends JaxRsResourceBase {
 
     private final OverdueUserApi overdueApi;
     private final AccountUserApi accountApi;
-    private final SubscriptionUserApi subscriptionApi;
 
     @Inject
     public OverdueResource(final OverdueUserApi overdueApi,
                            final AccountUserApi accountApi,
-                           final SubscriptionUserApi subscriptionApi,
                            final JaxrsUriBuilder uriBuilder,
                            final TagUserApi tagUserApi,
                            final CustomFieldUserApi customFieldUserApi,
@@ -70,7 +67,6 @@ public class OverdueResource extends JaxRsResourceBase {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, context);
         this.overdueApi = overdueApi;
         this.accountApi = accountApi;
-        this.subscriptionApi = subscriptionApi;
     }
 
     @GET
@@ -93,7 +89,7 @@ public class OverdueResource extends JaxRsResourceBase {
                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionUserApiException, OverdueException, OverdueApiException {
         final TenantContext tenantContext = context.createContext(request);
 
-        final SubscriptionBundle bundle = subscriptionApi.getBundleFromId(UUID.fromString(bundleId), tenantContext);
+        final SubscriptionBundle bundle = null; // STEPH_ENT subscriptionApi.getBundleFromId(UUID.fromString(bundleId), tenantContext);
         final OverdueState<SubscriptionBundle> overdueState = overdueApi.getOverdueStateFor(bundle, tenantContext);
 
         return Response.status(Status.OK).entity(new OverdueStateJson(overdueState)).build();
