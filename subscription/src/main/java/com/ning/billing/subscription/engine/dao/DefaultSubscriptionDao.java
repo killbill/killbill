@@ -54,7 +54,7 @@ import com.ning.billing.subscription.api.user.DefaultRequestedSubscriptionEvent;
 import com.ning.billing.subscription.api.user.SubscriptionBuilder;
 import com.ning.billing.subscription.api.user.SubscriptionBundleData;
 import com.ning.billing.subscription.api.user.SubscriptionData;
-import com.ning.billing.subscription.api.user.SubscriptionTransitionData;
+import com.ning.billing.subscription.api.user.SubscriptionBaseTransitionData;
 import com.ning.billing.subscription.engine.addon.AddonUtils;
 import com.ning.billing.subscription.engine.core.DefaultSubscriptionService;
 import com.ning.billing.subscription.engine.core.SubscriptionNotificationKey;
@@ -905,7 +905,7 @@ public class DefaultSubscriptionDao implements SubscriptionDao {
         try {
             final SubscriptionData upToDateSubscription = createSubscriptionWithNewEvent(subscription, immediateEvent);
 
-            final SubscriptionTransitionData transition = upToDateSubscription.getTransitionFromEvent(immediateEvent, seqId);
+            final SubscriptionBaseTransitionData transition = upToDateSubscription.getTransitionFromEvent(immediateEvent, seqId);
             final EffectiveSubscriptionInternalEvent busEvent = new DefaultEffectiveSubscriptionEvent(transition, upToDateSubscription.getAlignStartDate(),
                                                                                                       context.getUserToken(),
                                                                                                       context.getAccountRecordId(), context.getTenantRecordId());

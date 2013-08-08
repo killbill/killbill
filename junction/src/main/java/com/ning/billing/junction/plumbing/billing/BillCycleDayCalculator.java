@@ -36,12 +36,12 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.subscription.api.SubscriptionTransitionType;
-import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
+import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
-import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
+import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -51,16 +51,16 @@ public class BillCycleDayCalculator {
     private static final Logger log = LoggerFactory.getLogger(BillCycleDayCalculator.class);
 
     private final CatalogService catalogService;
-    private final SubscriptionInternalApi subscriptionApi;
+    private final SubscriptionBaseInternalApi subscriptionApi;
 
     @Inject
-    public BillCycleDayCalculator(final CatalogService catalogService, final SubscriptionInternalApi subscriptionApi) {
+    public BillCycleDayCalculator(final CatalogService catalogService, final SubscriptionBaseInternalApi subscriptionApi) {
         this.catalogService = catalogService;
         this.subscriptionApi = subscriptionApi;
     }
 
     protected int calculateBcd(final SubscriptionBundle bundle, final SubscriptionBase subscription, final EffectiveSubscriptionInternalEvent transition, final Account account, final InternalCallContext context)
-            throws CatalogApiException, AccountApiException, SubscriptionUserApiException {
+            throws CatalogApiException, AccountApiException, SubscriptionBaseApiException {
 
         final Catalog catalog = catalogService.getFullCatalog();
 
@@ -88,7 +88,7 @@ public class BillCycleDayCalculator {
 
     @VisibleForTesting
     int calculateBcdForAlignment(final BillingAlignment alignment, final SubscriptionBundle bundle, final SubscriptionBase subscription,
-                                 final Account account, final Catalog catalog, final Plan plan, final InternalCallContext context) throws AccountApiException, SubscriptionUserApiException, CatalogApiException {
+                                 final Account account, final Catalog catalog, final Plan plan, final InternalCallContext context) throws AccountApiException, SubscriptionBaseApiException, CatalogApiException {
         int result = 0;
         switch (alignment) {
             case ACCOUNT:

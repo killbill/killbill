@@ -35,9 +35,8 @@ import com.ning.billing.mock.MockAccountBuilder;
 import com.ning.billing.subscription.api.SubscriptionService;
 import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.subscription.engine.core.DefaultSubscriptionService;
-import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
+import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
 import com.ning.billing.util.svcsapi.bus.BusService;
 
 import static org.testng.Assert.assertNotNull;
@@ -77,7 +76,7 @@ public class DefaultSubscriptionTestInitializer implements SubscriptionTestIniti
         return accountData;
     }
 
-    public SubscriptionBundle initBundle(final SubscriptionInternalApi subscriptionApi, final InternalCallContext callContext) throws Exception {
+    public SubscriptionBundle initBundle(final SubscriptionBaseInternalApi subscriptionApi, final InternalCallContext callContext) throws Exception {
         final UUID accountId = UUID.randomUUID();
         final SubscriptionBundle bundle = subscriptionApi.createBundleForAccount(accountId, "myDefaultBundle",  callContext);
         assertNotNull(bundle);

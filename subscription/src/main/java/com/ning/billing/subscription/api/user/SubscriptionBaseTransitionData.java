@@ -28,7 +28,7 @@ import com.ning.billing.subscription.events.user.ApiEventType;
 import com.ning.billing.subscription.exceptions.SubscriptionError;
 import com.ning.billing.subscription.api.SubscriptionTransitionType;
 
-public class SubscriptionTransitionData implements SubscriptionTransition {
+public class SubscriptionBaseTransitionData implements SubscriptionBaseTransition {
     private final Long totalOrdering;
     private final UUID subscriptionId;
     private final UUID bundleId;
@@ -53,28 +53,28 @@ public class SubscriptionTransitionData implements SubscriptionTransition {
     private final Integer remainingEventsForUserOperation;
     private final UUID userToken;
 
-    public SubscriptionTransitionData(final UUID eventId,
-                                      final UUID subscriptionId,
-                                      final UUID bundleId,
-                                      final EventType eventType,
-                                      final ApiEventType apiEventType,
-                                      final DateTime requestedTransitionTime,
-                                      final DateTime effectiveTransitionTime,
-                                      final UUID previousEventId,
-                                      final DateTime previousEventCreatedDate,
-                                      final SubscriptionState previousState,
-                                      final Plan previousPlan,
-                                      final PlanPhase previousPhase,
-                                      final PriceList previousPriceList,
-                                      final UUID nextEventId,
-                                      final DateTime nextEventCreatedDate,
-                                      final SubscriptionState nextState,
-                                      final Plan nextPlan,
-                                      final PlanPhase nextPhase,
-                                      final PriceList nextPriceList,
-                                      final Long totalOrdering,
-                                      final UUID userToken,
-                                      final Boolean isFromDisk) {
+    public SubscriptionBaseTransitionData(final UUID eventId,
+                                          final UUID subscriptionId,
+                                          final UUID bundleId,
+                                          final EventType eventType,
+                                          final ApiEventType apiEventType,
+                                          final DateTime requestedTransitionTime,
+                                          final DateTime effectiveTransitionTime,
+                                          final UUID previousEventId,
+                                          final DateTime previousEventCreatedDate,
+                                          final SubscriptionState previousState,
+                                          final Plan previousPlan,
+                                          final PlanPhase previousPhase,
+                                          final PriceList previousPriceList,
+                                          final UUID nextEventId,
+                                          final DateTime nextEventCreatedDate,
+                                          final SubscriptionState nextState,
+                                          final Plan nextPlan,
+                                          final PlanPhase nextPhase,
+                                          final PriceList nextPriceList,
+                                          final Long totalOrdering,
+                                          final UUID userToken,
+                                          final Boolean isFromDisk) {
         this.eventId = eventId;
         this.subscriptionId = subscriptionId;
         this.bundleId = bundleId;
@@ -100,12 +100,12 @@ public class SubscriptionTransitionData implements SubscriptionTransition {
         this.remainingEventsForUserOperation = 0;
     }
 
-    public SubscriptionTransitionData(final SubscriptionTransitionData input, int remainingEventsForUserOperation) {
+    public SubscriptionBaseTransitionData(final SubscriptionBaseTransitionData input, int remainingEventsForUserOperation) {
        this(input, input.getEventType(), input.getApiEventType(), remainingEventsForUserOperation);
     }
 
-    public SubscriptionTransitionData(final SubscriptionTransitionData input, final EventType eventType,
-                                      final ApiEventType apiEventType, int remainingEventsForUserOperation) {
+    public SubscriptionBaseTransitionData(final SubscriptionBaseTransitionData input, final EventType eventType,
+                                          final ApiEventType apiEventType, int remainingEventsForUserOperation) {
         super();
         this.eventId = input.getId();
         this.subscriptionId = input.getSubscriptionId();
@@ -259,7 +259,7 @@ public class SubscriptionTransitionData implements SubscriptionTransition {
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
-        sb.append("SubscriptionTransitionData");
+        sb.append("SubscriptionBaseTransitionData");
         sb.append("{apiEventType=").append(apiEventType);
         sb.append(", totalOrdering=").append(totalOrdering);
         sb.append(", subscriptionId=").append(subscriptionId);
@@ -292,7 +292,7 @@ public class SubscriptionTransitionData implements SubscriptionTransition {
             return false;
         }
 
-        final SubscriptionTransitionData that = (SubscriptionTransitionData) o;
+        final SubscriptionBaseTransitionData that = (SubscriptionBaseTransitionData) o;
 
         if (apiEventType != that.apiEventType) {
             return false;

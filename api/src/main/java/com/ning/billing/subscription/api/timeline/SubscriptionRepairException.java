@@ -19,13 +19,13 @@ package com.ning.billing.subscription.api.timeline;
 import com.ning.billing.BillingExceptionBase;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.CatalogApiException;
-import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
+import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 
 public class SubscriptionRepairException extends BillingExceptionBase {
 
     private static final long serialVersionUID = 19067233L;
 
-    public SubscriptionRepairException(final SubscriptionUserApiException e) {
+    public SubscriptionRepairException(final SubscriptionBaseApiException e) {
         super(e, e.getCode(), e.getMessage());
     }
 

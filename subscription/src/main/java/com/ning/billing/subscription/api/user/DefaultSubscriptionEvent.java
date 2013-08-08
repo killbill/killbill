@@ -48,7 +48,7 @@ public abstract class DefaultSubscriptionEvent extends BusEventBase implements S
     private final SubscriptionTransitionType transitionType;
     private final DateTime startDate;
 
-    public DefaultSubscriptionEvent(final SubscriptionTransitionData in, final DateTime startDate,
+    public DefaultSubscriptionEvent(final SubscriptionBaseTransitionData in, final DateTime startDate,
                                     final Long searchKey1,
                                     final Long searchKey2,
                                     final UUID userToken) {

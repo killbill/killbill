@@ -31,7 +31,7 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.Product;
-import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
+import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.invoice.api.Invoice;
@@ -42,7 +42,7 @@ import com.ning.billing.overdue.config.api.PaymentResponse;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
+import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
 import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
 import com.ning.billing.util.tag.Tag;
 
@@ -50,11 +50,11 @@ import com.google.inject.Inject;
 
 public class BillingStateCalculatorBundle extends BillingStateCalculator<SubscriptionBundle> {
 
-    private final SubscriptionInternalApi subscriptionApi;
+    private final SubscriptionBaseInternalApi subscriptionApi;
     private final AccountInternalApi accountApi;
 
     @Inject
-    public BillingStateCalculatorBundle(final SubscriptionInternalApi subscriptionApi, final InvoiceInternalApi invoiceApi,
+    public BillingStateCalculatorBundle(final SubscriptionBaseInternalApi subscriptionApi, final InvoiceInternalApi invoiceApi,
                                         final AccountInternalApi accountApi, final Clock clock) {
         super(invoiceApi, clock);
         this.subscriptionApi = subscriptionApi;
@@ -114,7 +114,7 @@ public class BillingStateCalculatorBundle extends BillingStateCalculator<Subscri
                                           basePlanBillingPeriod,
                                           basePlanPriceList,
                                           basePlanPhaseType);
-        } catch (SubscriptionUserApiException e) {
+        } catch (SubscriptionBaseApiException e) {
             throw new OverdueException(e);
         } catch (AccountApiException e) {
             throw new OverdueException(e);
@@ -133,11 +133,11 @@ public class BillingStateCalculatorBundle extends BillingStateCalculator<Subscri
         return result;
     }
 
-    private SubscriptionBase getBasePlanIfExist(UUID bundleId, final InternalTenantContext context) throws SubscriptionUserApiException {
+    private SubscriptionBase getBasePlanIfExist(UUID bundleId, final InternalTenantContext context) throws SubscriptionBaseApiException {
         try {
             final SubscriptionBase basePlan = subscriptionApi.getBaseSubscription(bundleId, context);
             return basePlan;
-        } catch (SubscriptionUserApiException e) {
+        } catch (SubscriptionBaseApiException e) {
             if (e.getCode() == ErrorCode.SUB_GET_NO_SUCH_BASE_SUBSCRIPTION.getCode()) {
                 // No base plan probably a STANDALONE subscription in a bundle
                 return null;

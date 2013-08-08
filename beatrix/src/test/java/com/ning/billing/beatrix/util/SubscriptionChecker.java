@@ -26,29 +26,29 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 
 import com.ning.billing.subscription.api.SubscriptionBase;
+import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
+import com.ning.billing.subscription.api.user.SubscriptionBaseTransition;
 import com.ning.billing.subscription.api.user.SubscriptionBundle;
-import com.ning.billing.subscription.api.user.SubscriptionTransition;
-import com.ning.billing.subscription.api.user.SubscriptionTransitionData;
-import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
+import com.ning.billing.subscription.api.user.SubscriptionBaseTransitionData;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
+import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
 
 public class SubscriptionChecker {
 
 
     private static final Logger log = LoggerFactory.getLogger(SubscriptionChecker.class);
 
-    private final SubscriptionInternalApi subscriptionApi;
+    private final SubscriptionBaseInternalApi subscriptionApi;
     private final AuditChecker auditChecker;
 
     @Inject
-    public SubscriptionChecker(final SubscriptionInternalApi subscriptionApi, final AuditChecker auditChecker) {
+    public SubscriptionChecker(final SubscriptionBaseInternalApi subscriptionApi, final AuditChecker auditChecker) {
         this.subscriptionApi = subscriptionApi;
         this.auditChecker = auditChecker;
     }
 
-    public SubscriptionBundle checkBundleNoAudits(final UUID bundleId, final UUID expectedAccountId, final String expectedKey, final InternalTenantContext context) throws SubscriptionUserApiException {
+    public SubscriptionBundle checkBundleNoAudits(final UUID bundleId, final UUID expectedAccountId, final String expectedKey, final InternalTenantContext context) throws SubscriptionBaseApiException {
         final SubscriptionBundle bundle = subscriptionApi.getBundleFromId(bundleId, context);
         Assert.assertNotNull(bundle);
         Assert.assertEquals(bundle.getAccountId(), expectedAccountId);
@@ -56,26 +56,26 @@ public class SubscriptionChecker {
         return bundle;
     }
 
-    public SubscriptionBundle checkBundleAuditUpdated(final UUID bundleId, final InternalCallContext context) throws SubscriptionUserApiException {
+    public SubscriptionBundle checkBundleAuditUpdated(final UUID bundleId, final InternalCallContext context) throws SubscriptionBaseApiException {
         final SubscriptionBundle bundle = subscriptionApi.getBundleFromId(bundleId, context);
         auditChecker.checkBundleUpdated(bundle.getId(), context.toCallContext());
         return bundle;
     }
 
-    public SubscriptionBase checkSubscriptionCreated(final UUID subscriptionId, final InternalCallContext context) throws SubscriptionUserApiException {
+    public SubscriptionBase checkSubscriptionCreated(final UUID subscriptionId, final InternalCallContext context) throws SubscriptionBaseApiException {
         final SubscriptionBase subscription = subscriptionApi.getSubscriptionFromId(subscriptionId, context);
         Assert.assertNotNull(subscription);
         auditChecker.checkSubscriptionCreated(subscription.getBundleId(), subscriptionId, context.toCallContext());
 
-        List<SubscriptionTransition> subscriptionEvents = getSubscriptionEvents(subscription);
+        List<SubscriptionBaseTransition> subscriptionEvents = getSubscriptionEvents(subscription);
         Assert.assertTrue(subscriptionEvents.size() >= 1);
-        auditChecker.checkSubscriptionEventCreated(subscription.getBundleId(), ((SubscriptionTransitionData) subscriptionEvents.get(0)).getId(), context.toCallContext());
+        auditChecker.checkSubscriptionEventCreated(subscription.getBundleId(), ((SubscriptionBaseTransitionData) subscriptionEvents.get(0)).getId(), context.toCallContext());
 
         auditChecker.checkBundleCreated(subscription.getBundleId(), context.toCallContext());
         return subscription;
     }
 
-    private List<SubscriptionTransition> getSubscriptionEvents(final SubscriptionBase subscription) {
+    private List<SubscriptionBaseTransition> getSubscriptionEvents(final SubscriptionBase subscription) {
         // STEPH_ENT
         return subscription.getAllTransitions();
     }

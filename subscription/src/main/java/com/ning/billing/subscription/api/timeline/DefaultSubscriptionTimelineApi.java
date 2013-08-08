@@ -36,10 +36,11 @@ import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.subscription.api.SubscriptionApiBase;
 import com.ning.billing.subscription.api.SubscriptionApiService;
+import com.ning.billing.subscription.api.user.SubscriptionBaseTransition;
 import com.ning.billing.subscription.api.user.SubscriptionBuilder;
 import com.ning.billing.subscription.api.user.SubscriptionBundleData;
 import com.ning.billing.subscription.api.user.SubscriptionData;
-import com.ning.billing.subscription.api.user.SubscriptionTransitionData;
+import com.ning.billing.subscription.api.user.SubscriptionBaseTransitionData;
 import com.ning.billing.subscription.engine.addon.AddonUtils;
 import com.ning.billing.subscription.engine.dao.SubscriptionDao;
 import com.ning.billing.subscription.events.SubscriptionEvent;
@@ -48,7 +49,6 @@ import com.ning.billing.subscription.api.SubscriptionTransitionType;
 import com.ning.billing.subscription.api.timeline.SubscriptionTimeline.NewEvent;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBundle;
-import com.ning.billing.subscription.api.user.SubscriptionTransition;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.InternalTenantContext;
@@ -375,8 +375,8 @@ public class DefaultSubscriptionTimelineApi extends SubscriptionApiBase implemen
         if (nbDeleted != deletedEvents.size()) {
             for (final SubscriptionTimeline.DeletedEvent d : deletedEvents) {
                 boolean found = false;
-                for (final SubscriptionTransition cur : data.getAllTransitions()) {
-                    if (((SubscriptionTransitionData) cur).getId().equals(d.getEventId())) {
+                for (final SubscriptionBaseTransition cur : data.getAllTransitions()) {
+                    if (((SubscriptionBaseTransitionData) cur).getId().equals(d.getEventId())) {
                         found = true;
                     }
                 }

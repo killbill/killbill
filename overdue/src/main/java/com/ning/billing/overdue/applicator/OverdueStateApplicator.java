@@ -31,9 +31,9 @@ import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.bus.api.PersistentBus;
-import com.ning.billing.catalog.api.ActionPolicy;
+import com.ning.billing.catalog.api.BillingActionPolicy;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
+import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.Blockable;
@@ -55,7 +55,7 @@ import com.ning.billing.util.email.EmailConfig;
 import com.ning.billing.util.email.EmailSender;
 import com.ning.billing.util.events.OverdueChangeInternalEvent;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
+import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
 import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
 import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 import com.ning.billing.util.svcapi.tag.TagInternalApi;
@@ -75,13 +75,13 @@ public class OverdueStateApplicator<T extends Blockable> {
     private final OverdueCheckPoster poster;
     private final PersistentBus bus;
     private final AccountInternalApi accountApi;
-    private final SubscriptionInternalApi subscriptionInternalApi;
+    private final SubscriptionBaseInternalApi subscriptionInternalApi;
     private final OverdueEmailGenerator overdueEmailGenerator;
     final TagInternalApi tagApi;
     private final EmailSender emailSender;
 
     @Inject
-    public OverdueStateApplicator(final BlockingInternalApi accessApi, final AccountInternalApi accountApi, final SubscriptionInternalApi subscriptionInternalApi,
+    public OverdueStateApplicator(final BlockingInternalApi accessApi, final AccountInternalApi accountApi, final SubscriptionBaseInternalApi subscriptionInternalApi,
                                   final Clock clock, final OverdueCheckPoster poster, final OverdueEmailGenerator overdueEmailGenerator,
                                   final EmailConfig config, final PersistentBus bus, final TagInternalApi tagApi) {
         this.blockingApi = accessApi;
@@ -207,13 +207,13 @@ public class OverdueStateApplicator<T extends Blockable> {
             return;
         }
         try {
-            final ActionPolicy actionPolicy;
+            final BillingActionPolicy actionPolicy;
             switch (nextOverdueState.getSubscriptionCancellationPolicy()) {
                 case END_OF_TERM:
-                    actionPolicy = ActionPolicy.END_OF_TERM;
+                    actionPolicy = BillingActionPolicy.END_OF_TERM;
                     break;
                 case IMMEDIATE:
-                    actionPolicy = ActionPolicy.IMMEDIATE;
+                    actionPolicy = BillingActionPolicy.IMMEDIATE;
                     break;
                 default:
                     throw new IllegalStateException("Unexpected OverdueCancellationPolicy " + nextOverdueState.getSubscriptionCancellationPolicy());
@@ -224,13 +224,13 @@ public class OverdueStateApplicator<T extends Blockable> {
                 // STEPH Need conversion toCallContext because we are calling a public API through the SubscriptionBase object
                 cur.cancelWithPolicy(clock.getUTCNow(), actionPolicy, context.toCallContext());
             }
-        } catch (SubscriptionUserApiException e) {
+        } catch (SubscriptionBaseApiException e) {
             throw new OverdueException(e);
         }
     }
 
     @SuppressWarnings("unchecked")
-    private void computeSubscriptionsToCancel(final T blockable, final List<SubscriptionBase> result, final InternalTenantContext context) throws SubscriptionUserApiException {
+    private void computeSubscriptionsToCancel(final T blockable, final List<SubscriptionBase> result, final InternalTenantContext context) throws SubscriptionBaseApiException {
         if (blockable instanceof SubscriptionBase) {
             result.add((SubscriptionBase) blockable);
         } else if (blockable instanceof SubscriptionBundle) {
@@ -276,7 +276,7 @@ public class OverdueStateApplicator<T extends Blockable> {
                 log.warn("Unable to retrieve account for overdueable {} (type {})", overdueable.getId(), overdueableType);
                 return;
             }
-        } catch (SubscriptionUserApiException e) {
+        } catch (SubscriptionBaseApiException e) {
             log.warn(String.format("Unable to retrieve account for overdueable %s (type %s)", overdueable.getId(), overdueableType), e);
             return;
         } catch (AccountApiException e) {

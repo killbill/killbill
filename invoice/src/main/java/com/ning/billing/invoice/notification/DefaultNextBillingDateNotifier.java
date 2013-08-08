@@ -22,7 +22,7 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
+import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.invoice.InvoiceListener;
 import com.ning.billing.invoice.api.DefaultInvoiceService;
@@ -34,7 +34,7 @@ import com.ning.billing.notificationq.api.NotificationQueueService.NotificationQ
 import com.ning.billing.notificationq.api.NotificationQueueService.NotificationQueueHandler;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.config.InvoiceConfig;
-import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
+import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
 
 import com.google.inject.Inject;
 
@@ -46,7 +46,7 @@ public class DefaultNextBillingDateNotifier implements NextBillingDateNotifier {
 
     private final NotificationQueueService notificationQueueService;
     private final InvoiceConfig config;
-    private final SubscriptionInternalApi subscriptionApi;
+    private final SubscriptionBaseInternalApi subscriptionApi;
     private final InvoiceListener listener;
     private final InternalCallContextFactory callContextFactory;
 
@@ -55,7 +55,7 @@ public class DefaultNextBillingDateNotifier implements NextBillingDateNotifier {
     @Inject
     public DefaultNextBillingDateNotifier(final NotificationQueueService notificationQueueService,
                                           final InvoiceConfig config,
-                                          final SubscriptionInternalApi subscriptionApi,
+                                          final SubscriptionBaseInternalApi subscriptionApi,
                                           final InvoiceListener listener,
                                           final InternalCallContextFactory callContextFactory) {
         this.notificationQueueService = notificationQueueService;
@@ -85,7 +85,7 @@ public class DefaultNextBillingDateNotifier implements NextBillingDateNotifier {
                         } else {
                             processEvent(key.getUuidKey(), eventDate, userToken, accountRecordId, tenantRecordId);
                         }
-                    } catch (SubscriptionUserApiException e) {
+                    } catch (SubscriptionBaseApiException e) {
                         log.warn("Next Billing Date Notification Queue handled spurious notification (key: " + key + ")", e);
                     }
                 } catch (IllegalArgumentException e) {

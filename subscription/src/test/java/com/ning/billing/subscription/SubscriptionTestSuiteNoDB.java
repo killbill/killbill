@@ -47,7 +47,7 @@ import com.ning.billing.subscription.engine.dao.MockSubscriptionDaoMemory;
 import com.ning.billing.subscription.engine.dao.SubscriptionDao;
 import com.ning.billing.subscription.glue.TestDefaultSubscriptionModuleNoDB;
 import com.ning.billing.util.config.SubscriptionConfig;
-import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
+import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
 import com.ning.billing.util.svcsapi.bus.BusService;
 
 import com.google.inject.Guice;
@@ -61,7 +61,7 @@ public class SubscriptionTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     @Inject
     protected SubscriptionService subscriptionService;
     @Inject
-    protected SubscriptionInternalApi subscriptionInternalApi;
+    protected SubscriptionBaseInternalApi subscriptionInternalApi;
     @Inject
     protected SubscriptionTransferApi transferApi;
 

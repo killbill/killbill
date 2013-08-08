@@ -42,6 +42,8 @@ import com.ning.billing.subscription.api.user.DefaultEffectiveSubscriptionEvent;
 import com.ning.billing.subscription.api.user.DefaultSubscriptionApiService;
 import com.ning.billing.subscription.api.user.DefaultSubscriptionStatusDryRun;
 import com.ning.billing.subscription.api.SubscriptionBase;
+import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
+import com.ning.billing.subscription.api.user.SubscriptionBaseTransition;
 import com.ning.billing.subscription.api.user.SubscriptionBuilder;
 import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.subscription.api.user.SubscriptionBundleData;
@@ -49,23 +51,21 @@ import com.ning.billing.subscription.api.user.SubscriptionData;
 import com.ning.billing.subscription.api.user.SubscriptionState;
 import com.ning.billing.subscription.api.user.SubscriptionStatusDryRun;
 import com.ning.billing.subscription.api.user.SubscriptionStatusDryRun.DryRunChangeReason;
-import com.ning.billing.subscription.api.user.SubscriptionTransition;
-import com.ning.billing.subscription.api.user.SubscriptionTransitionData;
-import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
+import com.ning.billing.subscription.api.user.SubscriptionBaseTransitionData;
 import com.ning.billing.subscription.engine.addon.AddonUtils;
 import com.ning.billing.subscription.engine.dao.SubscriptionDao;
 import com.ning.billing.subscription.exceptions.SubscriptionError;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
-import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
+import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
-public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implements SubscriptionInternalApi {
+public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implements SubscriptionBaseInternalApi {
 
     private final Logger log = LoggerFactory.getLogger(DefaultSubscriptionInternalApi.class);
 
@@ -82,13 +82,13 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
     }
 
     @Override
-    public SubscriptionBase createSubscription(final UUID bundleId, final PlanPhaseSpecifier spec, final DateTime requestedDateWithMs, final InternalCallContext context) throws SubscriptionUserApiException {
+    public SubscriptionBase createSubscription(final UUID bundleId, final PlanPhaseSpecifier spec, final DateTime requestedDateWithMs, final InternalCallContext context) throws SubscriptionBaseApiException {
         try {
             final String realPriceList = (spec.getPriceListName() == null) ? PriceListSet.DEFAULT_PRICELIST_NAME : spec.getPriceListName();
             final DateTime now = clock.getUTCNow();
             final DateTime requestedDate = (requestedDateWithMs != null) ? DefaultClock.truncateMs(requestedDateWithMs) : now;
             if (requestedDate.isAfter(now)) {
-                throw new SubscriptionUserApiException(ErrorCode.SUB_INVALID_REQUESTED_DATE, now.toString(), requestedDate.toString());
+                throw new SubscriptionBaseApiException(ErrorCode.SUB_INVALID_REQUESTED_DATE, now.toString(), requestedDate.toString());
             }
             final DateTime effectiveDate = requestedDate;
 
@@ -103,7 +103,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
 
             final SubscriptionBundle bundle = dao.getSubscriptionBundleFromId(bundleId, context);
             if (bundle == null) {
-                throw new SubscriptionUserApiException(ErrorCode.SUB_CREATE_NO_BUNDLE, bundleId);
+                throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_NO_BUNDLE, bundleId);
             }
 
             DateTime bundleStartDate = null;
@@ -112,7 +112,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                 case BASE:
                     if (baseSubscription != null) {
                         if (baseSubscription.getState() == SubscriptionState.ACTIVE) {
-                            throw new SubscriptionUserApiException(ErrorCode.SUB_CREATE_BP_EXISTS, bundleId);
+                            throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_BP_EXISTS, bundleId);
                         } else {
                             // If we do create on an existing CANCELLED BP, this is equivalent to call recreate on that Subscription.
                             final SubscriptionBase recreatedSubscriptionForApiUse = createSubscriptionForApiUse(baseSubscription);
@@ -124,17 +124,17 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                     break;
                 case ADD_ON:
                     if (baseSubscription == null) {
-                        throw new SubscriptionUserApiException(ErrorCode.SUB_CREATE_NO_BP, bundleId);
+                        throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_NO_BP, bundleId);
                     }
                     if (effectiveDate.isBefore(baseSubscription.getStartDate())) {
-                        throw new SubscriptionUserApiException(ErrorCode.SUB_INVALID_REQUESTED_DATE, effectiveDate.toString(), baseSubscription.getStartDate().toString());
+                        throw new SubscriptionBaseApiException(ErrorCode.SUB_INVALID_REQUESTED_DATE, effectiveDate.toString(), baseSubscription.getStartDate().toString());
                     }
                     addonUtils.checkAddonCreationRights(baseSubscription, plan);
                     bundleStartDate = baseSubscription.getStartDate();
                     break;
                 case STANDALONE:
                     if (baseSubscription != null) {
-                        throw new SubscriptionUserApiException(ErrorCode.SUB_CREATE_BP_EXISTS, bundleId);
+                        throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_BP_EXISTS, bundleId);
                     }
                     // Not really but we don't care, there is no alignment for STANDALONE subscriptions
                     bundleStartDate = requestedDate;
@@ -152,21 +152,21 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                                                  .setAlignStartDate(effectiveDate),
                                          plan, spec.getPhaseType(), realPriceList, requestedDate, effectiveDate, now, context.toCallContext());
         } catch (CatalogApiException e) {
-            throw new SubscriptionUserApiException(e);
+            throw new SubscriptionBaseApiException(e);
         }
     }
 
     @Override
-    public SubscriptionBundle createBundleForAccount(final UUID accountId, final String bundleName, final InternalCallContext context) throws SubscriptionUserApiException {
+    public SubscriptionBundle createBundleForAccount(final UUID accountId, final String bundleName, final InternalCallContext context) throws SubscriptionBaseApiException {
         final SubscriptionBundleData bundle = new SubscriptionBundleData(bundleName, accountId, clock.getUTCNow());
         return dao.createSubscriptionBundle(bundle, context);
     }
 
     @Override
-    public SubscriptionBundle getBundleForAccountAndKey(final UUID accountId, final String bundleKey, final InternalTenantContext context) throws SubscriptionUserApiException {
+    public SubscriptionBundle getBundleForAccountAndKey(final UUID accountId, final String bundleKey, final InternalTenantContext context) throws SubscriptionBaseApiException {
         final SubscriptionBundle result = dao.getSubscriptionBundleFromAccountAndKey(accountId, bundleKey, context);
         if (result == null) {
-            throw new SubscriptionUserApiException(ErrorCode.SUB_GET_INVALID_BUNDLE_KEY, bundleKey);
+            throw new SubscriptionBaseApiException(ErrorCode.SUB_GET_INVALID_BUNDLE_KEY, bundleKey);
         }
         return result;
     }
@@ -185,10 +185,10 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
 
     @Override
     public SubscriptionBase getBaseSubscription(UUID bundleId,
-                                            InternalTenantContext context) throws SubscriptionUserApiException {
+                                            InternalTenantContext context) throws SubscriptionBaseApiException {
         final SubscriptionBase result = dao.getBaseSubscription(bundleId, context);
         if (result == null) {
-            throw new SubscriptionUserApiException(ErrorCode.SUB_GET_NO_SUCH_BASE_SUBSCRIPTION, bundleId);
+            throw new SubscriptionBaseApiException(ErrorCode.SUB_GET_NO_SUCH_BASE_SUBSCRIPTION, bundleId);
         }
         return createSubscriptionForApiUse(result);
     }
@@ -196,25 +196,25 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
     @Override
 
     public SubscriptionBase getSubscriptionFromId(UUID id,
-                                              InternalTenantContext context) throws SubscriptionUserApiException {
+                                              InternalTenantContext context) throws SubscriptionBaseApiException {
         final SubscriptionBase result = dao.getSubscriptionFromId(id, context);
         if (result == null) {
-            throw new SubscriptionUserApiException(ErrorCode.SUB_INVALID_SUBSCRIPTION_ID, id);
+            throw new SubscriptionBaseApiException(ErrorCode.SUB_INVALID_SUBSCRIPTION_ID, id);
         }
         return createSubscriptionForApiUse(result);
     }
 
     @Override
-    public SubscriptionBundle getBundleFromId(final UUID id, final InternalTenantContext context) throws SubscriptionUserApiException {
+    public SubscriptionBundle getBundleFromId(final UUID id, final InternalTenantContext context) throws SubscriptionBaseApiException {
         final SubscriptionBundle result = dao.getSubscriptionBundleFromId(id, context);
         if (result == null) {
-            throw new SubscriptionUserApiException(ErrorCode.SUB_GET_INVALID_BUNDLE_ID, id.toString());
+            throw new SubscriptionBaseApiException(ErrorCode.SUB_GET_INVALID_BUNDLE_ID, id.toString());
         }
         return result;
     }
 
     @Override
-    public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId, final InternalTenantContext context) throws SubscriptionUserApiException {
+    public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId, final InternalTenantContext context) throws SubscriptionBaseApiException {
         return dao.getAccountIdFromSubscriptionId(subscriptionId, context);
     }
 
@@ -231,13 +231,13 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
 
     @Override
     public List<EffectiveSubscriptionInternalEvent> getAllTransitions(final SubscriptionBase subscription, final InternalTenantContext context) {
-        final List<SubscriptionTransition> transitions = ((SubscriptionData) subscription).getAllTransitions();
+        final List<SubscriptionBaseTransition> transitions = ((SubscriptionData) subscription).getAllTransitions();
         return convertEffectiveSubscriptionInternalEventFromSubscriptionTransitions(subscription, context, transitions);
     }
 
     @Override
     public List<EffectiveSubscriptionInternalEvent> getBillingTransitions(final SubscriptionBase subscription, final InternalTenantContext context) {
-        final List<SubscriptionTransition> transitions = ((SubscriptionData) subscription).getBillingTransitions();
+        final List<SubscriptionBaseTransition> transitions = ((SubscriptionData) subscription).getBillingTransitions();
         return convertEffectiveSubscriptionInternalEventFromSubscriptionTransitions(subscription, context, transitions);
     }
 
@@ -259,13 +259,13 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
     }
 
     @Override
-    public List<SubscriptionStatusDryRun> getDryRunChangePlanStatus(final UUID subscriptionId, @Nullable final String baseProductName, final DateTime requestedDate, final InternalTenantContext context) throws SubscriptionUserApiException {
+    public List<SubscriptionStatusDryRun> getDryRunChangePlanStatus(final UUID subscriptionId, @Nullable final String baseProductName, final DateTime requestedDate, final InternalTenantContext context) throws SubscriptionBaseApiException {
         final SubscriptionBase subscription = dao.getSubscriptionFromId(subscriptionId, context);
         if (subscription == null) {
-            throw new SubscriptionUserApiException(ErrorCode.SUB_INVALID_SUBSCRIPTION_ID, subscriptionId);
+            throw new SubscriptionBaseApiException(ErrorCode.SUB_INVALID_SUBSCRIPTION_ID, subscriptionId);
         }
         if (subscription.getCategory() != ProductCategory.BASE) {
-            throw new SubscriptionUserApiException(ErrorCode.SUB_CHANGE_DRY_RUN_NOT_BP);
+            throw new SubscriptionBaseApiException(ErrorCode.SUB_CHANGE_DRY_RUN_NOT_BP);
         }
 
         final List<SubscriptionStatusDryRun> result = new LinkedList<SubscriptionStatusDryRun>();
@@ -301,12 +301,12 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
     }
 
     private List<EffectiveSubscriptionInternalEvent> convertEffectiveSubscriptionInternalEventFromSubscriptionTransitions(final SubscriptionBase subscription,
-                                                                                                                          final InternalTenantContext context, final List<SubscriptionTransition> transitions) {
-        return ImmutableList.<EffectiveSubscriptionInternalEvent>copyOf(Collections2.transform(transitions, new Function<SubscriptionTransition, EffectiveSubscriptionInternalEvent>() {
+                                                                                                                          final InternalTenantContext context, final List<SubscriptionBaseTransition> transitions) {
+        return ImmutableList.<EffectiveSubscriptionInternalEvent>copyOf(Collections2.transform(transitions, new Function<SubscriptionBaseTransition, EffectiveSubscriptionInternalEvent>() {
             @Override
             @Nullable
-            public EffectiveSubscriptionInternalEvent apply(@Nullable SubscriptionTransition input) {
-                return new DefaultEffectiveSubscriptionEvent((SubscriptionTransitionData) input, ((SubscriptionData) subscription).getAlignStartDate(), null, context.getAccountRecordId(), context.getTenantRecordId());
+            public EffectiveSubscriptionInternalEvent apply(@Nullable SubscriptionBaseTransition input) {
+                return new DefaultEffectiveSubscriptionEvent((SubscriptionBaseTransitionData) input, ((SubscriptionData) subscription).getAlignStartDate(), null, context.getAccountRecordId(), context.getTenantRecordId());
             }
         }));
     }

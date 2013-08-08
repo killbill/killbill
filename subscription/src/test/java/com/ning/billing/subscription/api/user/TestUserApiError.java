@@ -28,7 +28,7 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.api.TestApiListener.NextEvent;
-import com.ning.billing.catalog.api.ActionPolicy;
+import com.ning.billing.catalog.api.BillingActionPolicy;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Duration;
 import com.ning.billing.catalog.api.PlanPhase;
@@ -87,7 +87,7 @@ public class TestUserApiError extends SubscriptionTestSuiteNoDB {
             try {
                 subscription.recreate(testUtil.getProductSpecifier("Pistol", PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, null), clock.getUTCNow(), callContext);
                 Assert.assertFalse(true);
-            } catch (SubscriptionUserApiException e) {
+            } catch (SubscriptionBaseApiException e) {
                 assertEquals(e.getCode(), ErrorCode.SUB_RECREATE_BAD_STATE.getCode());
             }
         } catch (Exception e) {
@@ -127,7 +127,7 @@ public class TestUserApiError extends SubscriptionTestSuiteNoDB {
                                               testUtil.getProductSpecifier(productName, planSet, term, null),
                                               clock.getUTCNow(), internalCallContext);
             Assert.fail("Exception expected, error code: " + expected);
-        } catch (SubscriptionUserApiException e) {
+        } catch (SubscriptionBaseApiException e) {
             assertEquals(e.getCode(), expected.getCode());
             try {
                 log.info(e.getMessage());
@@ -146,7 +146,7 @@ public class TestUserApiError extends SubscriptionTestSuiteNoDB {
             subscription.cancel(clock.getUTCNow(), callContext);
             try {
                 subscription.changePlan("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow(), callContext);
-            } catch (SubscriptionUserApiException e) {
+            } catch (SubscriptionBaseApiException e) {
                 assertEquals(e.getCode(), ErrorCode.SUB_CHANGE_NON_ACTIVE.getCode());
                 try {
                     log.info(e.getMessage());
@@ -164,14 +164,14 @@ public class TestUserApiError extends SubscriptionTestSuiteNoDB {
         final SubscriptionBase subscription = testUtil.createSubscription(bundle, "Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME);
 
         try {
-            subscription.changePlanWithPolicy("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow(), ActionPolicy.ILLEGAL, callContext);
+            subscription.changePlanWithPolicy("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow(), BillingActionPolicy.ILLEGAL, callContext);
             Assert.fail();
         } catch (SubscriptionError error) {
             assertTrue(true);
             assertEquals(subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext).getCurrentPlan().getBillingPeriod(), BillingPeriod.ANNUAL);
         }
 
-        assertTrue(subscription.changePlanWithPolicy("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow(), ActionPolicy.IMMEDIATE, callContext));
+        assertTrue(subscription.changePlanWithPolicy("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow(), BillingActionPolicy.IMMEDIATE, callContext));
         assertEquals(subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext).getCurrentPlan().getBillingPeriod(), BillingPeriod.MONTHLY);
     }
 
@@ -199,7 +199,7 @@ public class TestUserApiError extends SubscriptionTestSuiteNoDB {
             subscription.cancel(clock.getUTCNow(), callContext);
             try {
                 subscription.changePlan("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow(), callContext);
-            } catch (SubscriptionUserApiException e) {
+            } catch (SubscriptionBaseApiException e) {
                 assertEquals(e.getCode(), ErrorCode.SUB_CHANGE_FUTURE_CANCELLED.getCode());
                 try {
                     log.info(e.getMessage());
@@ -225,7 +225,7 @@ public class TestUserApiError extends SubscriptionTestSuiteNoDB {
 
             try {
                 subscription.uncancel(callContext);
-            } catch (SubscriptionUserApiException e) {
+            } catch (SubscriptionBaseApiException e) {
                 assertEquals(e.getCode(), ErrorCode.SUB_UNCANCEL_BAD_STATE.getCode());
                 try {
                     log.info(e.getMessage());

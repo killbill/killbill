@@ -23,7 +23,7 @@ import com.ning.billing.subscription.api.SubscriptionService;
 import com.ning.billing.subscription.api.migration.SubscriptionMigrationApi;
 import com.ning.billing.subscription.api.timeline.SubscriptionTimelineApi;
 import com.ning.billing.subscription.api.transfer.SubscriptionTransferApi;
-import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
+import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
 
 import com.google.inject.AbstractModule;
 
@@ -42,7 +42,7 @@ public class MockSubscriptionModule extends AbstractModule implements Subscripti
 
     @Override
     public void installSubscriptionInternalApi() {
-        bind(SubscriptionInternalApi.class).toInstance(Mockito.mock(SubscriptionInternalApi.class));
+        bind(SubscriptionBaseInternalApi.class).toInstance(Mockito.mock(SubscriptionBaseInternalApi.class));
     }
 
     @Override

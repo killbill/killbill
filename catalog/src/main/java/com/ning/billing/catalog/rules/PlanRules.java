@@ -23,7 +23,7 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 
 import com.ning.billing.catalog.DefaultPriceList;
 import com.ning.billing.catalog.StandaloneCatalog;
-import com.ning.billing.catalog.api.ActionPolicy;
+import com.ning.billing.catalog.api.BillingActionPolicy;
 import com.ning.billing.catalog.api.BillingAlignment;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.IllegalPlanChange;
@@ -66,7 +66,7 @@ public class PlanRules extends ValidatingConfig<StandaloneCatalog> {
         return Case.getResult(createAlignmentCase, specifier, catalog);
     }
 
-    public ActionPolicy getPlanCancelPolicy(final PlanPhaseSpecifier planPhase, final StandaloneCatalog catalog) throws CatalogApiException {
+    public BillingActionPolicy getPlanCancelPolicy(final PlanPhaseSpecifier planPhase, final StandaloneCatalog catalog) throws CatalogApiException {
         return CasePhase.getResult(cancelCase, planPhase, catalog);
     }
 
@@ -83,8 +83,8 @@ public class PlanRules extends ValidatingConfig<StandaloneCatalog> {
             toPriceList = catalog.findCurrentPriceList(to.getPriceListName());
         }
 
-        final ActionPolicy policy = getPlanChangePolicy(from, to, catalog);
-        if (policy == ActionPolicy.ILLEGAL) {
+        final BillingActionPolicy policy = getPlanChangePolicy(from, to, catalog);
+        if (policy == BillingActionPolicy.ILLEGAL) {
             throw new IllegalPlanChange(from, to);
         }
 
@@ -98,12 +98,12 @@ public class PlanRules extends ValidatingConfig<StandaloneCatalog> {
         return CaseChange.getResult(changeAlignmentCase, from, to, catalog);
     }
 
-    public ActionPolicy getPlanChangePolicy(final PlanPhaseSpecifier from,
+    public BillingActionPolicy getPlanChangePolicy(final PlanPhaseSpecifier from,
                                             final PlanSpecifier to, final StandaloneCatalog catalog) throws CatalogApiException {
         if (from.getProductName().equals(to.getProductName()) &&
                 from.getBillingPeriod() == to.getBillingPeriod() &&
                 from.getPriceListName().equals(to.getPriceListName())) {
-            return ActionPolicy.ILLEGAL;
+            return BillingActionPolicy.ILLEGAL;
         }
         //Plan toPlan = catalog.findPlan()
 

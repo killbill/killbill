@@ -34,6 +34,7 @@ import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.subscription.SubscriptionTestSuiteNoDB;
+import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.subscription.api.user.SubscriptionData;
 import com.ning.billing.subscription.api.user.TestSubscriptionHelper.TestWithException;
 import com.ning.billing.subscription.api.user.TestSubscriptionHelper.TestWithExceptionCallback;
@@ -41,7 +42,6 @@ import com.ning.billing.subscription.api.SubscriptionTransitionType;
 import com.ning.billing.subscription.api.timeline.SubscriptionTimeline.DeletedEvent;
 import com.ning.billing.subscription.api.timeline.SubscriptionTimeline.NewEvent;
 import com.ning.billing.subscription.api.SubscriptionBase;
-import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
 
 import static org.testng.Assert.assertTrue;
 import static org.testng.AssertJUnit.assertEquals;
@@ -92,7 +92,7 @@ public class TestRepairWithError extends SubscriptionTestSuiteNoDB {
     public void testENT_REPAIR_INVALID_DELETE_SET() throws Exception {
         test.withException(new TestWithExceptionCallback() {
             @Override
-            public void doTest() throws SubscriptionRepairException, SubscriptionUserApiException {
+            public void doTest() throws SubscriptionRepairException, SubscriptionBaseApiException {
 
                 Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(3));
                 clock.addDeltaFromReality(it.toDurationMillis());
@@ -203,7 +203,7 @@ public class TestRepairWithError extends SubscriptionTestSuiteNoDB {
     public void testENT_REPAIR_AO_CREATE_BEFORE_BP_START() throws Exception {
         test.withException(new TestWithExceptionCallback() {
             @Override
-            public void doTest() throws SubscriptionRepairException, SubscriptionUserApiException {
+            public void doTest() throws SubscriptionRepairException, SubscriptionBaseApiException {
                 // MOVE CLOCK A LITTLE BIT-- STILL IN TRIAL
                 Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(4));
                 clock.addDeltaFromReality(it.toDurationMillis());
@@ -245,7 +245,7 @@ public class TestRepairWithError extends SubscriptionTestSuiteNoDB {
     public void testENT_REPAIR_NEW_EVENT_BEFORE_LAST_AO_REMAINING() throws Exception {
         test.withException(new TestWithExceptionCallback() {
             @Override
-            public void doTest() throws SubscriptionRepairException, SubscriptionUserApiException {
+            public void doTest() throws SubscriptionRepairException, SubscriptionBaseApiException {
 
                 // MOVE CLOCK A LITTLE BIT-- STILL IN TRIAL
                 Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(4));
@@ -286,7 +286,7 @@ public class TestRepairWithError extends SubscriptionTestSuiteNoDB {
     public void testENT_REPAIR_BP_RECREATE_MISSING_AO() throws Exception {
         test.withException(new TestWithExceptionCallback() {
             @Override
-            public void doTest() throws SubscriptionRepairException, SubscriptionUserApiException {
+            public void doTest() throws SubscriptionRepairException, SubscriptionBaseApiException {
 
                 //testListener.pushExpectedEvent(NextEvent.PHASE);
 
@@ -326,7 +326,7 @@ public class TestRepairWithError extends SubscriptionTestSuiteNoDB {
     public void testENT_REPAIR_BP_RECREATE_MISSING_AO_CREATE() throws Exception {
         test.withException(new TestWithExceptionCallback() {
             @Override
-            public void doTest() throws SubscriptionRepairException, SubscriptionUserApiException {
+            public void doTest() throws SubscriptionRepairException, SubscriptionBaseApiException {
                 /*
               //testListener.pushExpectedEvent(NextEvent.PHASE);
 
@@ -372,7 +372,7 @@ public class TestRepairWithError extends SubscriptionTestSuiteNoDB {
     public void testENT_REPAIR_MISSING_AO_DELETE_EVENT() throws Exception {
         test.withException(new TestWithExceptionCallback() {
             @Override
-            public void doTest() throws SubscriptionRepairException, SubscriptionUserApiException {
+            public void doTest() throws SubscriptionRepairException, SubscriptionBaseApiException {
 
                 /*
                 // MOVE CLOCK -- JUST BEFORE END OF TRIAL

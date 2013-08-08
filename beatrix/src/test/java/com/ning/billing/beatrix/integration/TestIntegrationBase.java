@@ -54,7 +54,7 @@ import com.ning.billing.beatrix.util.PaymentChecker;
 import com.ning.billing.beatrix.util.RefundChecker;
 import com.ning.billing.beatrix.util.SubscriptionChecker;
 import com.ning.billing.bus.api.PersistentBus;
-import com.ning.billing.catalog.api.ActionPolicy;
+import com.ning.billing.catalog.api.BillingActionPolicy;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
@@ -525,7 +525,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     protected DefaultEntitlement changeEntitlementAndCheckForCompletion(final Entitlement entitlement,
                                                                         final String productName,
                                                                         final BillingPeriod billingPeriod,
-                                                                        final ActionPolicy billingPolicy,
+                                                                        final BillingActionPolicy billingPolicy,
                                                                         final NextEvent... events) {
         return (DefaultEntitlement) doCallAndCheckForCompletion(new Function<Void, Entitlement>() {
             @Override

@@ -45,7 +45,7 @@ import com.ning.billing.subscription.api.timeline.SubscriptionTimeline.ExistingE
 import com.ning.billing.subscription.api.timeline.SubscriptionTimeline.NewEvent;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionState;
-import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
+import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -640,7 +640,7 @@ public class TestRepairBP extends SubscriptionTestSuiteWithEmbeddedDB {
 
         test.withException(new TestWithExceptionCallback() {
             @Override
-            public void doTest() throws SubscriptionRepairException, SubscriptionUserApiException {
+            public void doTest() throws SubscriptionRepairException, SubscriptionBaseApiException {
 
                 final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId(), callContext);
                 testUtil.sortEventsOnBundle(bundleRepair);
@@ -673,7 +673,7 @@ public class TestRepairBP extends SubscriptionTestSuiteWithEmbeddedDB {
 
         test.withException(new TestWithExceptionCallback() {
             @Override
-            public void doTest() throws SubscriptionRepairException, SubscriptionUserApiException {
+            public void doTest() throws SubscriptionRepairException, SubscriptionBaseApiException {
 
                 final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId(), callContext);
                 testUtil.sortEventsOnBundle(bundleRepair);

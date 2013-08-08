@@ -36,7 +36,7 @@ import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
+import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
 import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
 import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
 import com.ning.billing.util.svcsapi.bus.BusService;
@@ -58,7 +58,7 @@ public abstract class OverdueTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     @Inject
     protected DefaultOverdueService service;
     @Inject
-    protected SubscriptionInternalApi subscriptionApi;
+    protected SubscriptionBaseInternalApi subscriptionApi;
     @Inject
     protected CacheControllerDispatcher cacheControllerDispatcher;
     @Inject

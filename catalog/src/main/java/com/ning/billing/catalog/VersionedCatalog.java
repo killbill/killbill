@@ -31,7 +31,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import org.joda.time.DateTime;
 
 import com.ning.billing.ErrorCode;
-import com.ning.billing.catalog.api.ActionPolicy;
+import com.ning.billing.catalog.api.BillingActionPolicy;
 import com.ning.billing.catalog.api.BillingAlignment;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Catalog;
@@ -286,13 +286,13 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
     // Rules
     //
     @Override
-    public ActionPolicy planChangePolicy(final PlanPhaseSpecifier from,
+    public BillingActionPolicy planChangePolicy(final PlanPhaseSpecifier from,
                                          final PlanSpecifier to, final DateTime requestedDate) throws CatalogApiException {
         return versionForDate(requestedDate).planChangePolicy(from, to);
     }
 
     @Override
-    public ActionPolicy planCancelPolicy(final PlanPhaseSpecifier planPhase, final DateTime requestedDate) throws CatalogApiException {
+    public BillingActionPolicy planCancelPolicy(final PlanPhaseSpecifier planPhase, final DateTime requestedDate) throws CatalogApiException {
         return versionForDate(requestedDate).planCancelPolicy(planPhase);
     }
 
@@ -406,7 +406,7 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
     }
 
     @Override
-    public ActionPolicy planChangePolicy(final PlanPhaseSpecifier from,
+    public BillingActionPolicy planChangePolicy(final PlanPhaseSpecifier from,
                                          final PlanSpecifier to) throws CatalogApiException {
         return versionForDate(clock.getUTCNow()).planChangePolicy(from, to);
     }
@@ -418,7 +418,7 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
     }
 
     @Override
-    public ActionPolicy planCancelPolicy(final PlanPhaseSpecifier planPhase)
+    public BillingActionPolicy planCancelPolicy(final PlanPhaseSpecifier planPhase)
             throws CatalogApiException {
         return versionForDate(clock.getUTCNow()).planCancelPolicy(planPhase);
     }

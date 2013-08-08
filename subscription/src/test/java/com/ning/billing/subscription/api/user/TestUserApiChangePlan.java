@@ -91,7 +91,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
             checkChangePlan(subscription, toProd, ProductCategory.BASE, toTerm, PhaseType.EVERGREEN);
 
             assertListenerStatus();
-        } catch (SubscriptionUserApiException e) {
+        } catch (SubscriptionBaseApiException e) {
             Assert.fail(e.getMessage());
         }
     }
@@ -154,7 +154,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
             checkChangePlan(subscription, toProd, ProductCategory.BASE, toTerm, PhaseType.DISCOUNT);
 
             assertListenerStatus();
-        } catch (SubscriptionUserApiException e) {
+        } catch (SubscriptionBaseApiException e) {
             Assert.fail(e.getMessage());
         }
     }
@@ -195,7 +195,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
             assertTrue(testListener.isCompleted(5000));
 
             assertListenerStatus();
-        } catch (SubscriptionUserApiException e) {
+        } catch (SubscriptionBaseApiException e) {
             Assert.fail(e.getMessage());
         }
     }
@@ -282,7 +282,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
             assertTrue(testListener.isCompleted(5000));
 
             assertListenerStatus();
-        } catch (SubscriptionUserApiException e) {
+        } catch (SubscriptionBaseApiException e) {
             Assert.fail(e.getMessage());
         }
     }
@@ -334,7 +334,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
             assertEquals(currentPhase.getPhaseType(), PhaseType.DISCOUNT);
 
             assertListenerStatus();
-        } catch (SubscriptionUserApiException e) {
+        } catch (SubscriptionBaseApiException e) {
             Assert.fail(e.getMessage());
         }
     }
@@ -420,7 +420,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
             assertEquals(currentPhase.getPhaseType(), PhaseType.EVERGREEN);
 
             assertListenerStatus();
-        } catch (SubscriptionUserApiException e) {
+        } catch (SubscriptionBaseApiException e) {
             Assert.fail(e.getMessage());
         }
     }
@@ -467,14 +467,14 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
             subscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
 
             final DateTime expectedNextPhaseDate = subscription.getStartDate().plusDays(30).plusMonths(6);
-            final SubscriptionTransition nextPhase = subscription.getPendingTransition();
+            final SubscriptionBaseTransition nextPhase = subscription.getPendingTransition();
 
             final DateTime nextPhaseEffectiveDate = nextPhase.getEffectiveTransitionTime();
             assertEquals(nextPhaseEffectiveDate, expectedNextPhaseDate);
 
             assertListenerStatus();
 
-        } catch (SubscriptionUserApiException e) {
+        } catch (SubscriptionBaseApiException e) {
             Assert.fail(e.getMessage());
         }
     }

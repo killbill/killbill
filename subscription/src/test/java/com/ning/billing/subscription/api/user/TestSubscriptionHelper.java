@@ -61,7 +61,7 @@ import com.ning.billing.subscription.api.timeline.SubscriptionTimeline.ExistingE
 import com.ning.billing.subscription.api.timeline.SubscriptionTimeline.NewEvent;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
-import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
+import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
@@ -72,7 +72,7 @@ public class TestSubscriptionHelper {
 
     private final Logger log = LoggerFactory.getLogger(TestSubscriptionHelper.class);
 
-    private final SubscriptionInternalApi subscriptionApi;
+    private final SubscriptionBaseInternalApi subscriptionApi;
 
     private final Clock clock;
 
@@ -84,7 +84,7 @@ public class TestSubscriptionHelper {
 
 
     @Inject
-    public TestSubscriptionHelper(final SubscriptionInternalApi subscriptionApi, final Clock clock, final InternalCallContext callContext, final TestApiListener testListener, final SubscriptionDao dao) {
+    public TestSubscriptionHelper(final SubscriptionBaseInternalApi subscriptionApi, final Clock clock, final InternalCallContext callContext, final TestApiListener testListener, final SubscriptionDao dao) {
         this.subscriptionApi = subscriptionApi;
         this.clock = clock;
         this.callContext = callContext;
@@ -94,17 +94,17 @@ public class TestSubscriptionHelper {
 
 
     public SubscriptionData createSubscription(final SubscriptionBundle bundle, final String productName, final BillingPeriod term, final String planSet, final DateTime requestedDate)
-            throws SubscriptionUserApiException {
+            throws SubscriptionBaseApiException {
         return createSubscriptionWithBundle(bundle.getId(), productName, term, planSet, requestedDate);
     }
 
     public SubscriptionData createSubscription(final SubscriptionBundle bundle, final String productName, final BillingPeriod term, final String planSet)
-            throws SubscriptionUserApiException {
+            throws SubscriptionBaseApiException {
         return createSubscriptionWithBundle(bundle.getId(), productName, term, planSet, null);
     }
 
     public SubscriptionData createSubscriptionWithBundle(final UUID bundleId, final String productName, final BillingPeriod term, final String planSet, final DateTime requestedDate)
-            throws SubscriptionUserApiException {
+            throws SubscriptionBaseApiException {
         testListener.pushExpectedEvent(NextEvent.CREATE);
         final SubscriptionData subscription = (SubscriptionData) subscriptionApi.createSubscription(bundleId,
                                                                                                    new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSet, null),
@@ -665,7 +665,7 @@ public class TestSubscriptionHelper {
 
     public interface TestWithExceptionCallback {
 
-        public void doTest() throws SubscriptionRepairException, SubscriptionUserApiException;
+        public void doTest() throws SubscriptionRepairException, SubscriptionBaseApiException;
     }
 
     public static class TestWithException {

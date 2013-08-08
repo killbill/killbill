@@ -40,7 +40,7 @@ public abstract class TestUserApiRecreate extends SubscriptionTestSuiteWithEmbed
         try {
             testCreateAndRecreate(false);
             assertListenerStatus();
-        } catch (SubscriptionUserApiException e) {
+        } catch (SubscriptionBaseApiException e) {
             log.error("Unexpected exception", e);
             Assert.fail(e.getMessage());
         }
@@ -51,13 +51,13 @@ public abstract class TestUserApiRecreate extends SubscriptionTestSuiteWithEmbed
         try {
             testCreateAndRecreate(true);
             assertListenerStatus();
-        } catch (SubscriptionUserApiException e) {
+        } catch (SubscriptionBaseApiException e) {
             log.error("Unexpected exception", e);
             Assert.fail(e.getMessage());
         }
     }
 
-    private SubscriptionData testCreateAndRecreate(final boolean fromUserAPi) throws SubscriptionUserApiException {
+    private SubscriptionData testCreateAndRecreate(final boolean fromUserAPi) throws SubscriptionBaseApiException {
         final DateTime init = clock.getUTCNow();
         final DateTime requestedDate = init.minusYears(1);
 
@@ -90,7 +90,7 @@ public abstract class TestUserApiRecreate extends SubscriptionTestSuiteWithEmbed
                 subscription.recreate(testUtil.getProductSpecifier(productName, planSetName, term, null), requestedDate, callContext);
             }
             Assert.fail("Expected Create API to fail since BP already exists");
-        } catch (SubscriptionUserApiException e) {
+        } catch (SubscriptionBaseApiException e) {
             assertTrue(true);
         }
 

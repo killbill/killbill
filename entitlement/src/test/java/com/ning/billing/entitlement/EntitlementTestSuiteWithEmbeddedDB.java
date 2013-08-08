@@ -27,7 +27,7 @@ import com.ning.billing.entitlement.dao.BlockingStateDao;
 import com.ning.billing.entitlement.glue.TestEntitlementModuleWithEmbeddedDB;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
-import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
+import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
 import com.ning.billing.util.svcapi.tag.TagInternalApi;
 import com.ning.billing.util.tag.dao.TagDao;
 
@@ -47,7 +47,7 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
     @Inject
     protected CatalogService catalogService;
     @Inject
-    protected SubscriptionInternalApi subscriptionInternalApi;
+    protected SubscriptionBaseInternalApi subscriptionInternalApi;
     @Inject
     protected PersistentBus bus;
     @Inject

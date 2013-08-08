@@ -35,7 +35,7 @@ import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.junction.JunctionTestSuiteNoDB;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
+import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
 
 public class TestBillCycleDayCalculator extends JunctionTestSuiteNoDB {
 
@@ -124,7 +124,7 @@ public class TestBillCycleDayCalculator extends JunctionTestSuiteNoDB {
     }
 
     private void verifyBCDCalculation(final DateTimeZone accountTimeZone, final DateTime startDateUTC, final int bcdLocal) throws AccountApiException, CatalogApiException {
-        final BillCycleDayCalculator billCycleDayCalculator = new BillCycleDayCalculator(Mockito.mock(CatalogService.class), Mockito.mock(SubscriptionInternalApi.class));
+        final BillCycleDayCalculator billCycleDayCalculator = new BillCycleDayCalculator(Mockito.mock(CatalogService.class), Mockito.mock(SubscriptionBaseInternalApi.class));
 
         final SubscriptionBase subscription = Mockito.mock(SubscriptionBase.class);
         Mockito.when(subscription.getStartDate()).thenReturn(startDateUTC);

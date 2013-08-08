@@ -32,7 +32,7 @@ import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.subscription.api.user.SubscriptionTransitionData;
+import com.ning.billing.subscription.api.user.SubscriptionBaseTransitionData;
 import com.ning.billing.subscription.events.SubscriptionEvent;
 import com.ning.billing.subscription.events.phase.PhaseEvent;
 import com.ning.billing.subscription.events.user.ApiEvent;
@@ -131,7 +131,7 @@ public class DefaultSubscriptionTimeline implements SubscriptionTimeline {
                     break;
             }
 
-            final SubscriptionTransitionType transitionType = SubscriptionTransitionData.toSubscriptionTransitionType(cur.getType(), apiType);
+            final SubscriptionTransitionType transitionType = SubscriptionBaseTransitionData.toSubscriptionTransitionType(cur.getType(), apiType);
 
             final String planPhaseNameWithClosure = planPhaseName;
             final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, category, billingPeriod, priceListName, phaseType);
@@ -226,7 +226,7 @@ public class DefaultSubscriptionTimeline implements SubscriptionTimeline {
                 break;
             }
 
-            final SubscriptionTransitionType transitionType = SubscriptionTransitionData.toSubscriptionTransitionType(cur.getType(), apiType);
+            final SubscriptionTransitionType transitionType = SubscriptionBaseTransitionData.toSubscriptionTransitionType(cur.getType(), apiType);
 
             final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, category, billingPeriod, priceListName, phaseType);
             result.add(new ExistingEvent() {

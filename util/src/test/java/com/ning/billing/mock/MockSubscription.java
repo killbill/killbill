@@ -23,18 +23,18 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.mockito.Mockito;
 
-import com.ning.billing.catalog.api.ActionPolicy;
+import com.ning.billing.catalog.api.BillingActionPolicy;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
+import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.subscription.api.SubscriptionBase;
+import com.ning.billing.subscription.api.user.SubscriptionBaseTransition;
 import com.ning.billing.subscription.api.user.SubscriptionSourceType;
 import com.ning.billing.subscription.api.user.SubscriptionState;
-import com.ning.billing.subscription.api.user.SubscriptionTransition;
 import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
@@ -74,37 +74,37 @@ public class MockSubscription implements SubscriptionBase {
     SubscriptionBase sub = Mockito.mock(SubscriptionBase.class);
 
     @Override
-    public boolean cancel(final DateTime requestedDate, final CallContext context) throws SubscriptionUserApiException {
+    public boolean cancel(final DateTime requestedDate, final CallContext context) throws SubscriptionBaseApiException {
         return sub.cancel(requestedDate, context);
     }
 
     @Override
     public boolean cancelWithPolicy(DateTime requestedDate,
-                                    ActionPolicy policy, CallContext context)
-            throws SubscriptionUserApiException {
+                                    BillingActionPolicy policy, CallContext context)
+            throws SubscriptionBaseApiException {
         return sub.cancelWithPolicy(requestedDate, policy, context);
     }
 
     @Override
-    public boolean uncancel(final CallContext context) throws SubscriptionUserApiException {
+    public boolean uncancel(final CallContext context) throws SubscriptionBaseApiException {
         return sub.uncancel(context);
     }
 
     @Override
     public boolean changePlan(final String productName, final BillingPeriod term, final String priceList, final DateTime requestedDate,
-                              final CallContext context) throws SubscriptionUserApiException {
+                              final CallContext context) throws SubscriptionBaseApiException {
         return sub.changePlan(productName, term, priceList, requestedDate, context);
     }
 
     @Override
     public boolean changePlanWithPolicy(final String productName, final BillingPeriod term, final String priceList,
-                                        final DateTime requestedDate, final ActionPolicy policy, final CallContext context) throws SubscriptionUserApiException {
+                                        final DateTime requestedDate, final BillingActionPolicy policy, final CallContext context) throws SubscriptionBaseApiException {
         return sub.changePlan(productName, term, priceList, requestedDate, context);
     }
 
     @Override
     public boolean recreate(final PlanPhaseSpecifier spec, final DateTime requestedDate, final CallContext context)
-            throws SubscriptionUserApiException {
+            throws SubscriptionBaseApiException {
         return sub.recreate(spec, requestedDate, context);
     }
 
@@ -218,19 +218,19 @@ public class MockSubscription implements SubscriptionBase {
     }
 
     @Override
-    public SubscriptionTransition getPendingTransition() {
+    public SubscriptionBaseTransition getPendingTransition() {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public SubscriptionTransition getPreviousTransition() {
+    public SubscriptionBaseTransition getPreviousTransition() {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public List<SubscriptionTransition> getAllTransitions() {
+    public List<SubscriptionBaseTransition> getAllTransitions() {
         return null;
     }
 }

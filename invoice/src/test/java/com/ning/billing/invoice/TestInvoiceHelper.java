@@ -55,14 +55,14 @@ import com.ning.billing.invoice.dao.InvoicePaymentSqlDao;
 import com.ning.billing.invoice.generator.InvoiceGenerator;
 import com.ning.billing.invoice.model.InvoicingConfiguration;
 import com.ning.billing.invoice.notification.NullInvoiceNotifier;
-import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
+import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.util.entity.EntityPersistenceException;
 import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
+import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
 import com.ning.billing.util.svcapi.junction.BillingEvent;
 import com.ning.billing.util.svcapi.junction.BillingEventSet;
 import com.ning.billing.util.svcapi.junction.BillingInternalApi;
@@ -129,7 +129,7 @@ public class TestInvoiceHelper {
     private final InvoiceGenerator generator;
     private final BillingInternalApi billingApi;
     private final AccountInternalApi accountApi;
-    private final SubscriptionInternalApi subscriptionApi;
+    private final SubscriptionBaseInternalApi subscriptionApi;
     private final  BusService busService;
     private final  InvoiceDao invoiceDao;
     private final  GlobalLocker locker;
@@ -144,7 +144,7 @@ public class TestInvoiceHelper {
 
     @Inject
     public TestInvoiceHelper(final InvoiceGenerator generator, final IDBI dbi,
-                             final BillingInternalApi billingApi, final AccountInternalApi accountApi, final SubscriptionInternalApi subscriptionApi, final BusService busService,
+                             final BillingInternalApi billingApi, final AccountInternalApi accountApi, final SubscriptionBaseInternalApi subscriptionApi, final BusService busService,
                              final InvoiceDao invoiceDao, final GlobalLocker locker, final Clock clock, final InternalCallContext internalCallContext) {
         this.generator = generator;
         this.billingApi = billingApi;
@@ -195,7 +195,7 @@ public class TestInvoiceHelper {
         return invoice.getId();
     }
 
-    public SubscriptionBase createSubscription() throws SubscriptionUserApiException {
+    public SubscriptionBase createSubscription() throws SubscriptionBaseApiException {
         UUID uuid = UUID.randomUUID();
         final SubscriptionBase subscription = Mockito.mock(SubscriptionBase.class);
         Mockito.when(subscription.getId()).thenReturn(uuid);

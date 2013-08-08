@@ -25,7 +25,7 @@ import org.joda.time.DateTime;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.ObjectType;
-import com.ning.billing.catalog.api.ActionPolicy;
+import com.ning.billing.catalog.api.BillingActionPolicy;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
@@ -89,7 +89,7 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
     @Override
     public SubscriptionData createPlan(final SubscriptionBuilder builder, final Plan plan, final PhaseType initialPhase,
                                        final String realPriceList, final DateTime requestedDate, final DateTime effectiveDate, final DateTime processedDate,
-                                       final CallContext context) throws SubscriptionUserApiException {
+                                       final CallContext context) throws SubscriptionBaseApiException {
         final SubscriptionData subscription = new SubscriptionData(builder, this, clock);
 
         createFromSubscription(subscription, plan, initialPhase, realPriceList, requestedDate, effectiveDate, processedDate, false, context);
@@ -98,10 +98,10 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
 
     @Override
     public boolean recreatePlan(final SubscriptionData subscription, final PlanPhaseSpecifier spec, final DateTime requestedDateWithMs, final CallContext context)
-            throws SubscriptionUserApiException {
+            throws SubscriptionBaseApiException {
         final SubscriptionState currentState = subscription.getState();
         if (currentState != null && currentState != SubscriptionState.CANCELLED) {
-            throw new SubscriptionUserApiException(ErrorCode.SUB_RECREATE_BAD_STATE, subscription.getId(), currentState);
+            throw new SubscriptionBaseApiException(ErrorCode.SUB_RECREATE_BAD_STATE, subscription.getId(), currentState);
         }
 
         final DateTime now = clock.getUTCNow();
@@ -123,13 +123,13 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
             createFromSubscription(subscription, plan, spec.getPhaseType(), realPriceList, requestedDate, effectiveDate, processedDate, true, context);
             return true;
         } catch (CatalogApiException e) {
-            throw new SubscriptionUserApiException(e);
+            throw new SubscriptionBaseApiException(e);
         }
     }
 
     private void createFromSubscription(final SubscriptionData subscription, final Plan plan, final PhaseType initialPhase,
                                         final String realPriceList, final DateTime requestedDate, final DateTime effectiveDate, final DateTime processedDate,
-                                        final boolean reCreate, final CallContext context) throws SubscriptionUserApiException {
+                                        final boolean reCreate, final CallContext context) throws SubscriptionBaseApiException {
         final InternalCallContext internalCallContext = createCallContextFromBundleId(subscription.getBundleId(), context);
 
         try {
@@ -163,16 +163,16 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
             }
             subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId(), internalCallContext), catalogService.getFullCatalog());
         } catch (CatalogApiException e) {
-            throw new SubscriptionUserApiException(e);
+            throw new SubscriptionBaseApiException(e);
         }
     }
 
     @Override
-    public boolean cancel(final SubscriptionData subscription, final DateTime requestedDateWithMs, final CallContext context) throws SubscriptionUserApiException {
+    public boolean cancel(final SubscriptionData subscription, final DateTime requestedDateWithMs, final CallContext context) throws SubscriptionBaseApiException {
         try {
             final SubscriptionState currentState = subscription.getState();
             if (currentState != SubscriptionState.ACTIVE) {
-                throw new SubscriptionUserApiException(ErrorCode.SUB_CANCEL_BAD_STATE, subscription.getId(), currentState);
+                throw new SubscriptionBaseApiException(ErrorCode.SUB_CANCEL_BAD_STATE, subscription.getId(), currentState);
             }
             final DateTime now = clock.getUTCNow();
             final DateTime requestedDate = (requestedDateWithMs != null) ? DefaultClock.truncateMs(requestedDateWithMs) : now;
@@ -184,25 +184,25 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
                                                                         subscription.getCurrentPriceList().getName(),
                                                                         subscription.getCurrentPhase().getPhaseType());
 
-            final ActionPolicy policy = catalogService.getFullCatalog().planCancelPolicy(planPhase, requestedDate);
+            final BillingActionPolicy policy = catalogService.getFullCatalog().planCancelPolicy(planPhase, requestedDate);
 
             return doCancelPlan(subscription, requestedDateWithMs, now, policy, context);
         } catch (CatalogApiException e) {
-            throw new SubscriptionUserApiException(e);
+            throw new SubscriptionBaseApiException(e);
         }
     }
 
     @Override
-    public boolean cancelWithPolicy(final SubscriptionData subscription, final DateTime requestedDateWithMs, final ActionPolicy policy, final CallContext context) throws SubscriptionUserApiException {
+    public boolean cancelWithPolicy(final SubscriptionData subscription, final DateTime requestedDateWithMs, final BillingActionPolicy policy, final CallContext context) throws SubscriptionBaseApiException {
         final SubscriptionState currentState = subscription.getState();
         if (currentState != SubscriptionState.ACTIVE) {
-            throw new SubscriptionUserApiException(ErrorCode.SUB_CANCEL_BAD_STATE, subscription.getId(), currentState);
+            throw new SubscriptionBaseApiException(ErrorCode.SUB_CANCEL_BAD_STATE, subscription.getId(), currentState);
         }
         final DateTime now = clock.getUTCNow();
         return doCancelPlan(subscription, requestedDateWithMs, now, policy, context);
     }
 
-    private boolean doCancelPlan(final SubscriptionData subscription, final DateTime requestedDateWithMs, final DateTime now, final ActionPolicy policy, final CallContext context) throws SubscriptionUserApiException {
+    private boolean doCancelPlan(final SubscriptionData subscription, final DateTime requestedDateWithMs, final DateTime now, final BillingActionPolicy policy, final CallContext context) throws SubscriptionBaseApiException {
 
         final DateTime requestedDate = (requestedDateWithMs != null) ? DefaultClock.truncateMs(requestedDateWithMs) : now;
         validateRequestedDate(subscription, now, requestedDate);
@@ -222,13 +222,13 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
 
         cancelAddOnsIfRequired(subscription, effectiveDate, internalCallContext);
 
-        return (policy == ActionPolicy.IMMEDIATE);
+        return (policy == BillingActionPolicy.IMMEDIATE);
     }
 
     @Override
-    public boolean uncancel(final SubscriptionData subscription, final CallContext context) throws SubscriptionUserApiException {
+    public boolean uncancel(final SubscriptionData subscription, final CallContext context) throws SubscriptionBaseApiException {
         if (!subscription.isSubscriptionFutureCancelled()) {
-            throw new SubscriptionUserApiException(ErrorCode.SUB_UNCANCEL_BAD_STATE, subscription.getId().toString());
+            throw new SubscriptionBaseApiException(ErrorCode.SUB_UNCANCEL_BAD_STATE, subscription.getId().toString());
         }
 
         final DateTime now = clock.getUTCNow();
@@ -261,7 +261,7 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
     @Override
     public boolean changePlan(final SubscriptionData subscription, final String productName, final BillingPeriod term,
                               final String priceList, final DateTime requestedDateWithMs, final CallContext context)
-            throws SubscriptionUserApiException {
+            throws SubscriptionBaseApiException {
         final DateTime now = clock.getUTCNow();
         final DateTime requestedDate = (requestedDateWithMs != null) ? DefaultClock.truncateMs(requestedDateWithMs) : now;
 
@@ -269,19 +269,19 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
         validateSubscriptionState(subscription);
 
         final PlanChangeResult planChangeResult = getPlanChangeResult(subscription, productName, term, priceList, requestedDate);
-        final ActionPolicy policy = planChangeResult.getPolicy();
+        final BillingActionPolicy policy = planChangeResult.getPolicy();
 
         try {
             return doChangePlan(subscription, planChangeResult, now, requestedDate, productName, term, policy, context);
         } catch (CatalogApiException e) {
-            throw new SubscriptionUserApiException(e);
+            throw new SubscriptionBaseApiException(e);
         }
     }
 
     @Override
     public boolean changePlanWithPolicy(final SubscriptionData subscription, final String productName, final BillingPeriod term,
-                                        final String priceList, final DateTime requestedDateWithMs, final ActionPolicy policy, final CallContext context)
-            throws SubscriptionUserApiException {
+                                        final String priceList, final DateTime requestedDateWithMs, final BillingActionPolicy policy, final CallContext context)
+            throws SubscriptionBaseApiException {
         final DateTime now = clock.getUTCNow();
         final DateTime requestedDate = (requestedDateWithMs != null) ? DefaultClock.truncateMs(requestedDateWithMs) : now;
 
@@ -293,12 +293,12 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
         try {
             return doChangePlan(subscription, planChangeResult, now, requestedDate, productName, term, policy, context);
         } catch (CatalogApiException e) {
-            throw new SubscriptionUserApiException(e);
+            throw new SubscriptionBaseApiException(e);
         }
     }
 
     private PlanChangeResult getPlanChangeResult(final SubscriptionData subscription, final String productName,
-                                                 final BillingPeriod term, final String priceList, final DateTime requestedDate) throws SubscriptionUserApiException {
+                                                 final BillingPeriod term, final String priceList, final DateTime requestedDate) throws SubscriptionBaseApiException {
         final PlanChangeResult planChangeResult;
         try {
             final Product destProduct = catalogService.getFullCatalog().findProduct(productName, requestedDate);
@@ -316,7 +316,7 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
 
             planChangeResult = catalogService.getFullCatalog().planChange(fromPlanPhase, toPlanPhase, requestedDate);
         } catch (CatalogApiException e) {
-            throw new SubscriptionUserApiException(e);
+            throw new SubscriptionBaseApiException(e);
         }
 
         return planChangeResult;
@@ -324,7 +324,7 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
 
     private boolean doChangePlan(final SubscriptionData subscription, final PlanChangeResult planChangeResult,
                                  final DateTime now, final DateTime requestedDate, final String productName,
-                                 final BillingPeriod term, final ActionPolicy policy, final CallContext context) throws SubscriptionUserApiException, CatalogApiException {
+                                 final BillingPeriod term, final BillingActionPolicy policy, final CallContext context) throws SubscriptionBaseApiException, CatalogApiException {
         final PriceList newPriceList = planChangeResult.getNewPriceList();
 
         final Plan newPlan = catalogService.getFullCatalog().findPlan(productName, term, newPriceList.getName(), requestedDate, subscription.getStartDate());
@@ -361,7 +361,7 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
 
         cancelAddOnsIfRequired(subscription, effectiveDate, internalCallContext);
 
-        return (policy == ActionPolicy.IMMEDIATE);
+        return (policy == BillingActionPolicy.IMMEDIATE);
     }
 
 
@@ -411,26 +411,26 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
     }
 
     private void validateRequestedDate(final SubscriptionData subscription, final DateTime now, final DateTime requestedDate)
-            throws SubscriptionUserApiException {
+            throws SubscriptionBaseApiException {
 
         if (requestedDate.isAfter(now)) {
-            throw new SubscriptionUserApiException(ErrorCode.SUB_INVALID_REQUESTED_FUTURE_DATE, requestedDate.toString());
+            throw new SubscriptionBaseApiException(ErrorCode.SUB_INVALID_REQUESTED_FUTURE_DATE, requestedDate.toString());
         }
 
-        final SubscriptionTransition previousTransition = subscription.getPreviousTransition();
+        final SubscriptionBaseTransition previousTransition = subscription.getPreviousTransition();
         if (previousTransition != null && previousTransition.getEffectiveTransitionTime().isAfter(requestedDate)) {
-            throw new SubscriptionUserApiException(ErrorCode.SUB_INVALID_REQUESTED_DATE,
+            throw new SubscriptionBaseApiException(ErrorCode.SUB_INVALID_REQUESTED_DATE,
                                                   requestedDate.toString(), previousTransition.getEffectiveTransitionTime());
         }
     }
 
-    private void validateSubscriptionState(final SubscriptionData subscription) throws SubscriptionUserApiException {
+    private void validateSubscriptionState(final SubscriptionData subscription) throws SubscriptionBaseApiException {
         final SubscriptionState currentState = subscription.getState();
         if (currentState != SubscriptionState.ACTIVE) {
-            throw new SubscriptionUserApiException(ErrorCode.SUB_CHANGE_NON_ACTIVE, subscription.getId(), currentState);
+            throw new SubscriptionBaseApiException(ErrorCode.SUB_CHANGE_NON_ACTIVE, subscription.getId(), currentState);
         }
         if (subscription.isSubscriptionFutureCancelled()) {
-            throw new SubscriptionUserApiException(ErrorCode.SUB_CHANGE_FUTURE_CANCELLED, subscription.getId());
+            throw new SubscriptionBaseApiException(ErrorCode.SUB_CHANGE_FUTURE_CANCELLED, subscription.getId());
         }
     }
 

@@ -26,7 +26,7 @@ import com.ning.billing.catalog.api.Product;
 import com.ning.billing.subscription.api.user.SubscriptionData;
 import com.ning.billing.subscription.exceptions.SubscriptionError;
 import com.ning.billing.subscription.api.user.SubscriptionState;
-import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
+import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 
 import com.google.inject.Inject;
 
@@ -39,20 +39,20 @@ public class AddonUtils {
     }
 
     public void checkAddonCreationRights(final SubscriptionData baseSubscription, final Plan targetAddOnPlan)
-            throws SubscriptionUserApiException, CatalogApiException {
+            throws SubscriptionBaseApiException, CatalogApiException {
 
         if (baseSubscription.getState() != SubscriptionState.ACTIVE) {
-            throw new SubscriptionUserApiException(ErrorCode.SUB_CREATE_AO_BP_NON_ACTIVE, targetAddOnPlan.getName());
+            throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_AO_BP_NON_ACTIVE, targetAddOnPlan.getName());
         }
 
         final Product baseProduct = baseSubscription.getCurrentPlan().getProduct();
         if (isAddonIncluded(baseProduct, targetAddOnPlan)) {
-            throw new SubscriptionUserApiException(ErrorCode.SUB_CREATE_AO_ALREADY_INCLUDED,
+            throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_AO_ALREADY_INCLUDED,
                                                   targetAddOnPlan.getName(), baseSubscription.getCurrentPlan().getProduct().getName());
         }
 
         if (!isAddonAvailable(baseProduct, targetAddOnPlan)) {
-            throw new SubscriptionUserApiException(ErrorCode.SUB_CREATE_AO_NOT_AVAILABLE,
+            throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_AO_NOT_AVAILABLE,
                                                   targetAddOnPlan.getName(), baseSubscription.getCurrentPlan().getProduct().getName());
         }
     }

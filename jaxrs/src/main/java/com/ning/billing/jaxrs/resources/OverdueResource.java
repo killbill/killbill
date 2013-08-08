@@ -16,8 +16,6 @@
 
 package com.ning.billing.jaxrs.resources;
 
-import java.util.UUID;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -26,8 +24,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.jaxrs.json.OverdueStateJson;
 import com.ning.billing.jaxrs.util.Context;
@@ -38,7 +34,7 @@ import com.ning.billing.overdue.OverdueUserApi;
 import com.ning.billing.overdue.config.api.OverdueException;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBundle;
-import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
+import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.util.api.AuditUserApi;
 import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.api.TagUserApi;
@@ -91,7 +87,7 @@ public class OverdueResource extends JaxRsResourceBase {
     @Path("/" + BUNDLES + "/{bundleId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
     public Response getOverdueBundle(@PathParam("bundleId") final String bundleId,
-                                     @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionUserApiException, OverdueException, OverdueApiException {
+                                     @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionBaseApiException, OverdueException, OverdueApiException {
         final TenantContext tenantContext = context.createContext(request);
 
         final SubscriptionBundle bundle = null; // STEPH_ENT subscriptionApi.getBundleFromId(UUID.fromString(bundleId), tenantContext);
@@ -104,7 +100,7 @@ public class OverdueResource extends JaxRsResourceBase {
     @Path("/" + SUBSCRIPTIONS + "/{subscriptionId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
     public Response getOverdueSubscription(@PathParam("subscriptionId") final String subscriptionId,
-                                           @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionUserApiException, OverdueException, OverdueApiException {
+                                           @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionBaseApiException, OverdueException, OverdueApiException {
         final TenantContext tenantContext = context.createContext(request);
 
         final SubscriptionBase subscription = null; // STEPH_ENT subscriptionApi.getSubscriptionFromId(UUID.fromString(subscriptionId), tenantContext);

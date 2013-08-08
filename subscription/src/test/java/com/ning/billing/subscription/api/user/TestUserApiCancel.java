@@ -80,7 +80,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
             testUtil.checkNextPhaseChange(subscription, 0, null);
 
             assertListenerStatus();
-        } catch (SubscriptionUserApiException e) {
+        } catch (SubscriptionBaseApiException e) {
             Assert.fail(e.getMessage());
         }
     }
@@ -157,7 +157,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
 
 
             assertListenerStatus();
-        } catch (SubscriptionUserApiException e) {
+        } catch (SubscriptionBaseApiException e) {
             Assert.fail(e.getMessage());
         }
     }
@@ -198,7 +198,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
             testUtil.checkNextPhaseChange(subscription, 0, null);
 
             assertListenerStatus();
-        } catch (SubscriptionUserApiException e) {
+        } catch (SubscriptionBaseApiException e) {
             Assert.fail(e.getMessage());
         }
     }
@@ -253,7 +253,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
             assertEquals(currentPhase.getPhaseType(), PhaseType.EVERGREEN);
 
             assertListenerStatus();
-        } catch (SubscriptionUserApiException e) {
+        } catch (SubscriptionBaseApiException e) {
             Assert.fail(e.getMessage());
         }
     }

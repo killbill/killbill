@@ -27,7 +27,7 @@ import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.Type;
 import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
 import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
+import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
 
 import com.google.inject.Inject;
 
@@ -35,11 +35,11 @@ public class OverdueDispatcher {
 
     Logger log = LoggerFactory.getLogger(OverdueDispatcher.class);
 
-    private final SubscriptionInternalApi subscriptionApi;
+    private final SubscriptionBaseInternalApi subscriptionApi;
     private final OverdueWrapperFactory factory;
 
     @Inject
-    public OverdueDispatcher(final SubscriptionInternalApi subscriptionApi,
+    public OverdueDispatcher(final SubscriptionBaseInternalApi subscriptionApi,
                              final OverdueWrapperFactory factory) {
         this.subscriptionApi = subscriptionApi;
         this.factory = factory;

@@ -36,10 +36,10 @@ import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.overdue.glue.ApplicatorMockJunctionModule.ApplicatorBlockingApi;
-import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
+import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
+import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
 import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
 import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
 
@@ -93,12 +93,12 @@ public class TestOverdueHelper {
             "</overdueConfig>";
 
     private final AccountInternalApi accountInternalApi;
-    private final SubscriptionInternalApi subscriptionInternalApi;
+    private final SubscriptionBaseInternalApi subscriptionInternalApi;
     private final InvoiceInternalApi invoiceInternalApi;
     private final BlockingInternalApi blockingInternalApi;
 
     @Inject
-    public TestOverdueHelper(final AccountInternalApi accountInternalApi, final SubscriptionInternalApi subscriptionInternalApi,
+    public TestOverdueHelper(final AccountInternalApi accountInternalApi, final SubscriptionBaseInternalApi subscriptionInternalApi,
                              final InvoiceInternalApi invoiceInternalApi, final BlockingInternalApi blockingInternalApi) {
         this.accountInternalApi = accountInternalApi;
         this.subscriptionInternalApi = subscriptionInternalApi;
@@ -118,7 +118,7 @@ public class TestOverdueHelper {
         Assert.assertEquals(result.isBlockBilling(), state.disableEntitlementAndChangesBlocked());
     }
 
-    public SubscriptionBundle createBundle(final LocalDate dateOfLastUnPaidInvoice) throws SubscriptionUserApiException, AccountApiException {
+    public SubscriptionBundle createBundle(final LocalDate dateOfLastUnPaidInvoice) throws SubscriptionBaseApiException, AccountApiException {
         final SubscriptionBundle bundle = Mockito.mock(SubscriptionBundle.class);
         final UUID bundleId = UUID.randomUUID();
         Mockito.when(bundle.getId()).thenReturn(bundleId);

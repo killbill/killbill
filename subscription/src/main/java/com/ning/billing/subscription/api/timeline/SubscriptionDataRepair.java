@@ -31,6 +31,8 @@ import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.subscription.api.SubscriptionApiService;
+import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
+import com.ning.billing.subscription.api.user.SubscriptionBaseTransition;
 import com.ning.billing.subscription.api.user.SubscriptionBuilder;
 import com.ning.billing.subscription.api.user.SubscriptionData;
 import com.ning.billing.subscription.engine.addon.AddonUtils;
@@ -41,8 +43,6 @@ import com.ning.billing.subscription.events.user.ApiEventBuilder;
 import com.ning.billing.subscription.events.user.ApiEventCancel;
 import com.ning.billing.subscription.api.SubscriptionTransitionType;
 import com.ning.billing.subscription.api.user.SubscriptionState;
-import com.ning.billing.subscription.api.user.SubscriptionTransition;
-import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.clock.Clock;
@@ -125,7 +125,7 @@ public class SubscriptionDataRepair extends SubscriptionData {
                 default:
                     throw new SubscriptionRepairException(ErrorCode.SUB_REPAIR_UNKNOWN_TYPE, input.getSubscriptionTransitionType(), id);
             }
-        } catch (SubscriptionUserApiException e) {
+        } catch (SubscriptionBaseApiException e) {
             throw new SubscriptionRepairException(e);
         } catch (CatalogApiException e) {
             throw new SubscriptionRepairException(e);
@@ -138,7 +138,7 @@ public class SubscriptionDataRepair extends SubscriptionData {
             return;
         }
 
-        final SubscriptionTransition pendingTransition = getPendingTransition();
+        final SubscriptionBaseTransition pendingTransition = getPendingTransition();
         if (pendingTransition == null) {
             return;
         }
@@ -149,7 +149,7 @@ public class SubscriptionDataRepair extends SubscriptionData {
     }
 
     private void trickleDownBPEffectForAddon(final List<SubscriptionDataRepair> addOnSubscriptionInRepair, final DateTime effectiveDate, final CallContext context)
-            throws SubscriptionUserApiException {
+            throws SubscriptionBaseApiException {
 
         if (getCategory() != ProductCategory.BASE) {
             return;
@@ -190,7 +190,7 @@ public class SubscriptionDataRepair extends SubscriptionData {
     }
 
     private void checkAddonRights(final SubscriptionDataRepair baseSubscription)
-            throws SubscriptionUserApiException, CatalogApiException {
+            throws SubscriptionBaseApiException, CatalogApiException {
         if (getCategory() == ProductCategory.ADD_ON) {
             addonUtils.checkAddonCreationRights(baseSubscription, getCurrentPlan());
         }

@@ -38,10 +38,10 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PlanSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
+import com.ning.billing.subscription.api.user.SubscriptionBaseTransitionData;
 import com.ning.billing.subscription.api.user.SubscriptionData;
-import com.ning.billing.subscription.api.user.SubscriptionTransitionData;
 import com.ning.billing.subscription.exceptions.SubscriptionError;
-import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
 
 /**
  * PlanAligner offers specific APIs to return the correct {@code TimedPhase} when creating, changing Plan or to compute
@@ -72,14 +72,14 @@ public class PlanAligner extends BaseAligner {
      * @param effectiveDate the effective creation date (driven by the catalog policy, i.e. when the creation occurs)
      * @return the current and next phases
      * @throws CatalogApiException         for catalog errors
-     * @throws SubscriptionUserApiException for subscription errors
+     * @throws com.ning.billing.subscription.api.user.SubscriptionBaseApiException for subscription errors
      */
     public TimedPhase[] getCurrentAndNextTimedPhaseOnCreate(final SubscriptionData subscription,
                                                             final Plan plan,
                                                             final PhaseType initialPhase,
                                                             final String priceList,
                                                             final DateTime requestedDate,
-                                                            final DateTime effectiveDate) throws CatalogApiException, SubscriptionUserApiException {
+                                                            final DateTime effectiveDate) throws CatalogApiException, SubscriptionBaseApiException {
         final List<TimedPhase> timedPhases = getTimedPhaseOnCreate(subscription.getAlignStartDate(),
                                                                    subscription.getBundleStartDate(),
                                                                    plan,
@@ -103,13 +103,13 @@ public class PlanAligner extends BaseAligner {
      * @param effectiveDate the effective change date (driven by the catalog policy, i.e. when the change occurs)
      * @return the current phase
      * @throws CatalogApiException         for catalog errors
-     * @throws SubscriptionUserApiException for subscription errors
+     * @throws com.ning.billing.subscription.api.user.SubscriptionBaseApiException for subscription errors
      */
     public TimedPhase getCurrentTimedPhaseOnChange(final SubscriptionData subscription,
                                                    final Plan plan,
                                                    final String priceList,
                                                    final DateTime requestedDate,
-                                                   final DateTime effectiveDate) throws CatalogApiException, SubscriptionUserApiException {
+                                                   final DateTime effectiveDate) throws CatalogApiException, SubscriptionBaseApiException {
         return getTimedPhaseOnChange(subscription, plan, priceList, requestedDate, effectiveDate, WhichPhase.CURRENT);
     }
 
@@ -124,13 +124,13 @@ public class PlanAligner extends BaseAligner {
      * @param effectiveDate the effective change date (driven by the catalog policy, i.e. when the change occurs)
      * @return the next phase
      * @throws CatalogApiException         for catalog errors
-     * @throws SubscriptionUserApiException for subscription errors
+     * @throws com.ning.billing.subscription.api.user.SubscriptionBaseApiException for subscription errors
      */
     public TimedPhase getNextTimedPhaseOnChange(final SubscriptionData subscription,
                                                 final Plan plan,
                                                 final String priceList,
                                                 final DateTime requestedDate,
-                                                final DateTime effectiveDate) throws CatalogApiException, SubscriptionUserApiException {
+                                                final DateTime effectiveDate) throws CatalogApiException, SubscriptionBaseApiException {
         return getTimedPhaseOnChange(subscription, plan, priceList, requestedDate, effectiveDate, WhichPhase.NEXT);
     }
 
@@ -144,7 +144,7 @@ public class PlanAligner extends BaseAligner {
      */
     public TimedPhase getNextTimedPhase(final SubscriptionData subscription, final DateTime requestedDate, final DateTime effectiveDate) {
         try {
-            final SubscriptionTransitionData lastPlanTransition = subscription.getInitialTransitionForCurrentPlan();
+            final SubscriptionBaseTransitionData lastPlanTransition = subscription.getInitialTransitionForCurrentPlan();
             if (effectiveDate.isBefore(lastPlanTransition.getEffectiveTransitionTime())) {
                 throw new SubscriptionError(String.format("Cannot specify an effectiveDate prior to last Plan Change, subscription = %s, effectiveDate = %s",
                                                          subscription.getId(), effectiveDate));
@@ -179,7 +179,7 @@ public class PlanAligner extends BaseAligner {
                     throw new SubscriptionError(String.format("Unexpected initial transition %s for current plan %s on subscription %s",
                                                              lastPlanTransition.getTransitionType(), subscription.getCurrentPlan(), subscription.getId()));
             }
-        } catch (Exception /* SubscriptionUserApiException, CatalogApiException */ e) {
+        } catch (Exception /* SubscriptionBaseApiException, CatalogApiException */ e) {
             throw new SubscriptionError(String.format("Could not compute next phase change for subscription %s", subscription.getId()), e);
         }
     }
@@ -190,7 +190,7 @@ public class PlanAligner extends BaseAligner {
                                                    final PhaseType initialPhase,
                                                    final String priceList,
                                                    final DateTime requestedDate)
-            throws CatalogApiException, SubscriptionUserApiException {
+            throws CatalogApiException, SubscriptionBaseApiException {
         final Catalog catalog = catalogService.getFullCatalog();
 
         final PlanSpecifier planSpecifier = new PlanSpecifier(plan.getProduct().getName(),
@@ -219,7 +219,7 @@ public class PlanAligner extends BaseAligner {
                                              final String nextPriceList,
                                              final DateTime requestedDate,
                                              final DateTime effectiveDate,
-                                             final WhichPhase which) throws CatalogApiException, SubscriptionUserApiException {
+                                             final WhichPhase which) throws CatalogApiException, SubscriptionBaseApiException {
         return getTimedPhaseOnChange(subscription.getAlignStartDate(),
                                      subscription.getBundleStartDate(),
                                      subscription.getCurrentPhase(),
@@ -241,7 +241,7 @@ public class PlanAligner extends BaseAligner {
                                              final String priceList,
                                              final DateTime requestedDate,
                                              final DateTime effectiveDate,
-                                             final WhichPhase which) throws CatalogApiException, SubscriptionUserApiException {
+                                             final WhichPhase which) throws CatalogApiException, SubscriptionBaseApiException {
         final Catalog catalog = catalogService.getFullCatalog();
         final ProductCategory currentCategory = currentPlan.getProduct().getCategory();
         final PlanPhaseSpecifier fromPlanPhaseSpecifier = new PlanPhaseSpecifier(currentPlan.getProduct().getName(),
@@ -277,7 +277,7 @@ public class PlanAligner extends BaseAligner {
         return getTimedPhase(timedPhases, effectiveDate, which);
     }
 
-    private List<TimedPhase> getPhaseAlignments(final Plan plan, @Nullable final PhaseType initialPhase, final DateTime initialPhaseStartDate) throws SubscriptionUserApiException {
+    private List<TimedPhase> getPhaseAlignments(final Plan plan, @Nullable final PhaseType initialPhase, final DateTime initialPhaseStartDate) throws SubscriptionBaseApiException {
         if (plan == null) {
             return Collections.emptyList();
         }
@@ -309,7 +309,7 @@ public class PlanAligner extends BaseAligner {
         }
 
         if (initialPhase != null && curPhaseStart == null) {
-            throw new SubscriptionUserApiException(ErrorCode.SUB_CREATE_BAD_PHASE, initialPhase);
+            throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_BAD_PHASE, initialPhase);
         }
 
         return result;

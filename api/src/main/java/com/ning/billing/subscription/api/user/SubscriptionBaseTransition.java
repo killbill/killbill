@@ -25,7 +25,7 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.subscription.api.SubscriptionTransitionType;
 
-public interface SubscriptionTransition {
+public interface SubscriptionBaseTransition {
 
     public UUID getSubscriptionId();
 

@@ -20,23 +20,23 @@ import com.ning.billing.BillingExceptionBase;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.CatalogApiException;
 
-public class SubscriptionUserApiException extends BillingExceptionBase {
+public class SubscriptionBaseApiException extends BillingExceptionBase {
 
     private static final long serialVersionUID = 19083233L;
 
-    public SubscriptionUserApiException(final CatalogApiException e) {
+    public SubscriptionBaseApiException(final CatalogApiException e) {
         super(e, e.getCode(), e.getMessage());
     }
 
-    public SubscriptionUserApiException(final Throwable e, final ErrorCode code, final Object... args) {
+    public SubscriptionBaseApiException(final Throwable e, final ErrorCode code, final Object... args) {
         super(e, code, args);
     }
 
-    public SubscriptionUserApiException(final Throwable e, final int code, final String message) {
+    public SubscriptionBaseApiException(final Throwable e, final int code, final String message) {
         super(e, code, message);
     }
 
-    public SubscriptionUserApiException(final ErrorCode code, final Object... args) {
+    public SubscriptionBaseApiException(final ErrorCode code, final Object... args) {
         super(code, args);
     }
 }

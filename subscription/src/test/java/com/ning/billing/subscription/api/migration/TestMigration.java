@@ -30,13 +30,13 @@ import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.subscription.SubscriptionTestSuiteWithEmbeddedDB;
 import com.ning.billing.subscription.api.migration.SubscriptionMigrationApi.AccountMigration;
+import com.ning.billing.subscription.api.user.SubscriptionBaseTransition;
 import com.ning.billing.subscription.api.user.SubscriptionData;
-import com.ning.billing.subscription.api.user.SubscriptionTransitionData;
+import com.ning.billing.subscription.api.user.SubscriptionBaseTransitionData;
 import com.ning.billing.subscription.events.user.ApiEventType;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.subscription.api.user.SubscriptionState;
-import com.ning.billing.subscription.api.user.SubscriptionTransition;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -291,28 +291,28 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
             assertEquals(subscriptions.size(), 1);
             final SubscriptionData subscription = (SubscriptionData) subscriptions.get(0);
 
-            final List<SubscriptionTransition> transitions = subscription.getAllTransitions();
+            final List<SubscriptionBaseTransition> transitions = subscription.getAllTransitions();
             assertEquals(transitions.size(), 2);
-            final SubscriptionTransitionData initialMigrateBilling = (SubscriptionTransitionData) transitions.get(1);
+            final SubscriptionBaseTransitionData initialMigrateBilling = (SubscriptionBaseTransitionData) transitions.get(1);
             assertEquals(initialMigrateBilling.getApiEventType(), ApiEventType.MIGRATE_BILLING);
             assertTrue(initialMigrateBilling.getEffectiveTransitionTime().compareTo(subscription.getChargedThroughDate()) == 0);
             assertEquals(initialMigrateBilling.getNextPlan().getName(), "shotgun-annual");
             assertEquals(initialMigrateBilling.getNextPhase().getName(), "shotgun-annual-evergreen");
 
-            final List<SubscriptionTransition> billingTransitions = subscription.getBillingTransitions();
+            final List<SubscriptionBaseTransition> billingTransitions = subscription.getBillingTransitions();
             assertEquals(billingTransitions.size(), 1);
             assertEquals(billingTransitions.get(0), initialMigrateBilling);
 
             // Now make an IMMEDIATE change of plan
             subscription.changePlan("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow(), callContext);
 
-            final List<SubscriptionTransition> newTransitions = subscription.getAllTransitions();
+            final List<SubscriptionBaseTransition> newTransitions = subscription.getAllTransitions();
             assertEquals(newTransitions.size(), 3);
 
-            final SubscriptionTransitionData changeTransition = (SubscriptionTransitionData) newTransitions.get(1);
+            final SubscriptionBaseTransitionData changeTransition = (SubscriptionBaseTransitionData) newTransitions.get(1);
             assertEquals(changeTransition.getApiEventType(), ApiEventType.CHANGE);
 
-            final SubscriptionTransitionData newMigrateBilling = (SubscriptionTransitionData) newTransitions.get(2);
+            final SubscriptionBaseTransitionData newMigrateBilling = (SubscriptionBaseTransitionData) newTransitions.get(2);
             assertEquals(newMigrateBilling.getApiEventType(), ApiEventType.MIGRATE_BILLING);
             assertTrue(newMigrateBilling.getEffectiveTransitionTime().compareTo(subscription.getChargedThroughDate()) == 0);
             assertTrue(newMigrateBilling.getEffectiveTransitionTime().compareTo(initialMigrateBilling.getEffectiveTransitionTime()) == 0);
@@ -320,7 +320,7 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
             assertEquals(newMigrateBilling.getNextPhase().getName(), "assault-rifle-monthly-evergreen");
 
 
-            final List<SubscriptionTransition> newBillingTransitions = subscription.getBillingTransitions();
+            final List<SubscriptionBaseTransition> newBillingTransitions = subscription.getBillingTransitions();
             assertEquals(newBillingTransitions.size(), 1);
             assertEquals(newBillingTransitions.get(0), newMigrateBilling);
 

@@ -31,7 +31,7 @@ import com.ning.billing.subscription.api.SubscriptionApiService;
 import com.ning.billing.subscription.api.SubscriptionService;
 import com.ning.billing.subscription.api.user.DefaultEffectiveSubscriptionEvent;
 import com.ning.billing.subscription.api.user.SubscriptionData;
-import com.ning.billing.subscription.api.user.SubscriptionTransitionData;
+import com.ning.billing.subscription.api.user.SubscriptionBaseTransitionData;
 import com.ning.billing.subscription.engine.addon.AddonUtils;
 import com.ning.billing.subscription.engine.dao.SubscriptionDao;
 import com.ning.billing.subscription.events.SubscriptionEvent;
@@ -167,7 +167,7 @@ public class DefaultSubscriptionService implements EventListener, SubscriptionSe
         }
 
         try {
-            final SubscriptionTransitionData transition = (subscription.getTransitionFromEvent(event, theRealSeqId));
+            final SubscriptionBaseTransitionData transition = (subscription.getTransitionFromEvent(event, theRealSeqId));
             final EffectiveSubscriptionInternalEvent busEvent = new DefaultEffectiveSubscriptionEvent(transition, subscription.getAlignStartDate(),
                                                                                                       context.getUserToken(),
                                                                                                       context.getAccountRecordId(), context.getTenantRecordId());

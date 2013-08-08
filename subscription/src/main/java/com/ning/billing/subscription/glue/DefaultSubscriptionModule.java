@@ -40,7 +40,7 @@ import com.ning.billing.subscription.engine.dao.DefaultSubscriptionDao;
 import com.ning.billing.subscription.engine.dao.RepairSubscriptionDao;
 import com.ning.billing.subscription.engine.dao.SubscriptionDao;
 import com.ning.billing.util.config.SubscriptionConfig;
-import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
+import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
@@ -109,7 +109,7 @@ public class DefaultSubscriptionModule extends AbstractModule implements Subscri
 
     @Override
     public void installSubscriptionInternalApi() {
-        bind(SubscriptionInternalApi.class).to(DefaultSubscriptionInternalApi.class).asEagerSingleton();
+        bind(SubscriptionBaseInternalApi.class).to(DefaultSubscriptionInternalApi.class).asEagerSingleton();
     }
 
     @Override

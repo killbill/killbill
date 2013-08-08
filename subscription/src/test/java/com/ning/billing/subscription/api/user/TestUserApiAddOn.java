@@ -130,7 +130,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
             assertTrue(baseSubscription.isSubscriptionFutureCancelled());
 
             aoSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
-            List<SubscriptionTransition> aoTransitions =  aoSubscription.getAllTransitions();
+            List<SubscriptionBaseTransition> aoTransitions =  aoSubscription.getAllTransitions();
             assertEquals(aoTransitions.size(), 3);
             assertEquals(aoTransitions.get(0).getTransitionType(), SubscriptionTransitionType.CREATE);
             assertEquals(aoTransitions.get(1).getTransitionType(), SubscriptionTransitionType.PHASE);
@@ -509,7 +509,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
             assertEquals(aoSubscription.getBundleStartDate(), baseSubscription.getBundleStartDate());
 
             // CHECK next AO PHASE EVENT IS INDEED A MONTH AFTER BP STARTED => BUNDLE ALIGNMENT
-            SubscriptionTransition aoPendingTranstion = aoSubscription.getPendingTransition();
+            SubscriptionBaseTransition aoPendingTranstion = aoSubscription.getPendingTransition();
             if (expAlignement == PlanAlignmentCreate.START_OF_BUNDLE) {
                 assertEquals(aoPendingTranstion.getEffectiveTransitionTime(), baseSubscription.getStartDate().plusMonths(1));
             } else {
@@ -542,7 +542,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
             aoSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
             aoPendingTranstion = aoSubscription.getPendingTransition();
             assertNull(aoPendingTranstion);
-        } catch (SubscriptionUserApiException e) {
+        } catch (SubscriptionBaseApiException e) {
             Assert.fail(e.getMessage());
         }
     }

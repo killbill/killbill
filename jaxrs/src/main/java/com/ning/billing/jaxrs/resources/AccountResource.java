@@ -148,7 +148,7 @@ public class AccountResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     public Response getAccountBundles(@PathParam("accountId") final String accountId,
                                       @QueryParam(QUERY_EXTERNAL_KEY) final String externalKey,
-                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, SubscriptionUserApiException {
+                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, SubscriptionBaseApiException {
         final TenantContext tenantContext = context.createContext(request);
 
         final UUID uuid = UUID.fromString(accountId);

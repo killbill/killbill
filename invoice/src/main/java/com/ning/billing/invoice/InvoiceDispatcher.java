@@ -39,7 +39,7 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.bus.api.PersistentBus.EventBusException;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
+import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
@@ -68,7 +68,7 @@ import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.globallocker.GlobalLocker.LockerType;
 import com.ning.billing.util.globallocker.LockFailedException;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
+import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
 import com.ning.billing.util.svcapi.junction.BillingEventSet;
 import com.ning.billing.util.svcapi.junction.BillingInternalApi;
 import com.ning.billing.util.timezone.DateAndTimeZoneContext;
@@ -87,7 +87,7 @@ public class InvoiceDispatcher {
     private final InvoiceGenerator generator;
     private final BillingInternalApi billingApi;
     private final AccountInternalApi accountApi;
-    private final SubscriptionInternalApi subscriptionApi;
+    private final SubscriptionBaseInternalApi subscriptionApi;
     private final InvoiceDao invoiceDao;
     private final InvoiceNotifier invoiceNotifier;
     private final GlobalLocker locker;
@@ -97,7 +97,7 @@ public class InvoiceDispatcher {
     @Inject
     public InvoiceDispatcher(final InvoiceGenerator generator, final AccountInternalApi accountApi,
                              final BillingInternalApi billingApi,
-                             final SubscriptionInternalApi SubscriptionApi,
+                             final SubscriptionBaseInternalApi SubscriptionApi,
                              final InvoiceDao invoiceDao,
                              final InvoiceNotifier invoiceNotifier,
                              final GlobalLocker locker,
@@ -129,7 +129,7 @@ public class InvoiceDispatcher {
             }
             final UUID accountId = subscriptionApi.getAccountIdFromSubscriptionId(subscriptionId, context);
             processAccount(accountId, targetDate, false, context);
-        } catch (SubscriptionUserApiException e) {
+        } catch (SubscriptionBaseApiException e) {
             log.error("Failed handling SubscriptionBase change.",
                       new InvoiceApiException(ErrorCode.INVOICE_NO_ACCOUNT_ID_FOR_SUBSCRIPTION_ID, subscriptionId.toString()));
         }

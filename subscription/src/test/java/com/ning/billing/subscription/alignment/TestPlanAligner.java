@@ -34,6 +34,8 @@ import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.io.VersionedCatalogLoader;
 import com.ning.billing.clock.DefaultClock;
 import com.ning.billing.subscription.SubscriptionTestSuiteNoDB;
+import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
+import com.ning.billing.subscription.api.user.SubscriptionBaseTransition;
 import com.ning.billing.subscription.api.user.SubscriptionBuilder;
 import com.ning.billing.subscription.api.user.SubscriptionData;
 import com.ning.billing.subscription.events.SubscriptionEvent;
@@ -41,8 +43,6 @@ import com.ning.billing.subscription.events.user.ApiEventBase;
 import com.ning.billing.subscription.events.user.ApiEventBuilder;
 import com.ning.billing.subscription.events.user.ApiEventType;
 import com.ning.billing.subscription.exceptions.SubscriptionError;
-import com.ning.billing.subscription.api.user.SubscriptionTransition;
-import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
 import com.ning.billing.util.config.CatalogConfig;
 
 import com.google.common.collect.ImmutableList;
@@ -206,7 +206,7 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
 
         subscriptionData.rebuildTransitions(ImmutableList.<SubscriptionEvent>of(previousEvent, event), catalogService.getFullCatalog());
 
-        final List<SubscriptionTransition> newTransitions = subscriptionData.getAllTransitions();
+        final List<SubscriptionBaseTransition> newTransitions = subscriptionData.getAllTransitions();
         Assert.assertEquals(newTransitions.size(), 2);
         Assert.assertNull(newTransitions.get(0).getPreviousPhase());
         Assert.assertEquals(newTransitions.get(0).getNextPhase(), newTransitions.get(1).getPreviousPhase());
@@ -234,7 +234,7 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
 
     private TimedPhase getNextTimedPhaseOnChange(final SubscriptionData subscriptionData,
                                                  final String newProductName,
-                                                 final DateTime effectiveChangeDate) throws CatalogApiException, SubscriptionUserApiException {
+                                                 final DateTime effectiveChangeDate) throws CatalogApiException, SubscriptionBaseApiException {
         // The date is used for different catalog versions - we don't care here
         final Plan newPlan = catalogService.getFullCatalog().findPlan(newProductName, clock.getUTCNow());
 
@@ -244,7 +244,7 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
     private TimedPhase[] getTimedPhasesOnCreate(final String productName,
                                                 final PhaseType initialPhase,
                                                 final SubscriptionData subscriptionData,
-                                                final DateTime effectiveDate) throws CatalogApiException, SubscriptionUserApiException {
+                                                final DateTime effectiveDate) throws CatalogApiException, SubscriptionBaseApiException {
         // The date is used for different catalog versions - we don't care here
         final Plan plan = catalogService.getFullCatalog().findPlan(productName, clock.getUTCNow());
 

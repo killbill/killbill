@@ -43,7 +43,7 @@ import com.ning.billing.subscription.api.user.TestSubscriptionHelper;
 import com.ning.billing.subscription.engine.dao.SubscriptionDao;
 import com.ning.billing.subscription.glue.TestDefaultSubscriptionModuleWithEmbeddedDB;
 import com.ning.billing.util.config.SubscriptionConfig;
-import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
+import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
 import com.ning.billing.util.svcsapi.bus.BusService;
 
 import com.google.inject.Guice;
@@ -57,7 +57,7 @@ public class SubscriptionTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteW
     @Inject
     protected SubscriptionService subscriptionService;
     @Inject
-    protected SubscriptionInternalApi subscriptionInternalApi;
+    protected SubscriptionBaseInternalApi subscriptionInternalApi;
     @Inject
     protected SubscriptionTransferApi transferApi;
 

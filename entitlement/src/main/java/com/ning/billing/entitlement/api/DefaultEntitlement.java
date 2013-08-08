@@ -23,7 +23,7 @@ import org.joda.time.LocalDate;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.catalog.api.ActionPolicy;
+import com.ning.billing.catalog.api.BillingActionPolicy;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
@@ -33,7 +33,7 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.entitlement.block.BlockingChecker;
 import com.ning.billing.subscription.api.SubscriptionBase;
-import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
+import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
@@ -66,24 +66,24 @@ public class DefaultEntitlement implements Entitlement {
         final DateTime requestedDate = fromLocalDateAndReferenceTime(localDate, subscription.getStartDate(), clock, context);
         try {
             return subscription.cancel(requestedDate, callContext);
-        } catch (SubscriptionUserApiException e) {
+        } catch (SubscriptionBaseApiException e) {
             throw new EntitlementApiException(e);
         }
     }
 
 
     @Override
-    public boolean cancelEntitlementWithPolicy(final EntitlementActionPolicy entitlementActionPolicy, final CallContext callContext) throws EntitlementApiException {
+    public boolean cancelEntitlementWithPolicy(final EntitlementActionPolicy entitlementBillingActionPolicy, final CallContext callContext) throws EntitlementApiException {
         return false;
     }
 
     @Override
-    public boolean cancelEntitlementWithDateOverrideBillingPolicy(final LocalDate effectiveDate, final ActionPolicy billingPolicy, final CallContext context) throws EntitlementApiException {
+    public boolean cancelEntitlementWithDateOverrideBillingPolicy(final LocalDate effectiveDate, final BillingActionPolicy billingPolicy, final CallContext context) throws EntitlementApiException {
         return false;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
-    public boolean cancelEntitlementWithPolicyOverrideBillingPolicy(final EntitlementActionPolicy policy, final ActionPolicy billingPolicy, final CallContext context) throws EntitlementApiException {
+    public boolean cancelEntitlementWithPolicyOverrideBillingPolicy(final EntitlementActionPolicy policy, final BillingActionPolicy billingPolicy, final CallContext context) throws EntitlementApiException {
         return false;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
@@ -98,13 +98,13 @@ public class DefaultEntitlement implements Entitlement {
             return subscription.changePlan(productName, billingPeriod, priceList, requestedDate, callContext);
         } catch (BlockingApiException e) {
             throw new EntitlementApiException(e, e.getCode(), e.getMessage());
-        } catch (SubscriptionUserApiException e) {
+        } catch (SubscriptionBaseApiException e) {
             throw new EntitlementApiException(e);
         }
     }
 
     @Override
-    public boolean changePlanOverrideBillingPolicy(final String productName, final BillingPeriod billingPeriod, final String priceList, final LocalDate localDate, final ActionPolicy actionPolicy, final CallContext callContext) throws EntitlementApiException {
+    public boolean changePlanOverrideBillingPolicy(final String productName, final BillingPeriod billingPeriod, final String priceList, final LocalDate localDate, final BillingActionPolicy actionPolicy, final CallContext callContext) throws EntitlementApiException {
         final InternalCallContext context = internalCallContextFactory.createInternalCallContext(accountId, callContext);
         final DateTime requestedDate = fromLocalDateAndReferenceTime(localDate, subscription.getStartDate(), clock, context);
         try {
@@ -112,7 +112,7 @@ public class DefaultEntitlement implements Entitlement {
             return subscription.changePlanWithPolicy(productName, billingPeriod, priceList, requestedDate, actionPolicy, callContext);
         } catch (BlockingApiException e) {
             throw new EntitlementApiException(e, e.getCode(), e.getMessage());
-        } catch (SubscriptionUserApiException e) {
+        } catch (SubscriptionBaseApiException e) {
             throw new EntitlementApiException(e);
         }
     }

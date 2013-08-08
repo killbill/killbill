@@ -25,7 +25,7 @@ import com.ning.billing.catalog.CatalogTestSuiteNoDB;
 import com.ning.billing.catalog.DefaultPriceList;
 import com.ning.billing.catalog.DefaultProduct;
 import com.ning.billing.catalog.MockCatalog;
-import com.ning.billing.catalog.api.ActionPolicy;
+import com.ning.billing.catalog.api.BillingActionPolicy;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.IllegalPlanChange;
@@ -46,7 +46,7 @@ public class TestPlanRules extends CatalogTestSuiteNoDB {
 
         final DefaultPriceList priceList2 = cat.getPriceLists().getChildPriceLists()[0];
 
-        final CaseChangePlanPolicy casePolicy = new CaseChangePlanPolicy().setPolicy(ActionPolicy.END_OF_TERM);
+        final CaseChangePlanPolicy casePolicy = new CaseChangePlanPolicy().setPolicy(BillingActionPolicy.END_OF_TERM);
         final CaseChangePlanAlignment caseAlignment = new CaseChangePlanAlignment().setAlignment(PlanAlignmentChange.START_OF_SUBSCRIPTION);
         final CasePriceList casePriceList = new CasePriceList().setToPriceList(priceList2);
 
@@ -91,7 +91,7 @@ public class TestPlanRules extends CatalogTestSuiteNoDB {
             Assert.fail("", e);
         }
 
-        Assert.assertEquals(result.getPolicy(), ActionPolicy.END_OF_TERM);
+        Assert.assertEquals(result.getPolicy(), BillingActionPolicy.END_OF_TERM);
         Assert.assertEquals(result.getAlignment(), PlanAlignmentChange.START_OF_SUBSCRIPTION);
         Assert.assertEquals(result.getNewPriceList(), priceList1);
     }
@@ -115,7 +115,7 @@ public class TestPlanRules extends CatalogTestSuiteNoDB {
             Assert.fail("", e);
         }
 
-        Assert.assertEquals(result.getPolicy(), ActionPolicy.END_OF_TERM);
+        Assert.assertEquals(result.getPolicy(), BillingActionPolicy.END_OF_TERM);
         Assert.assertEquals(result.getAlignment(), PlanAlignmentChange.START_OF_SUBSCRIPTION);
         Assert.assertEquals(result.getNewPriceList(), priceList2);
     }

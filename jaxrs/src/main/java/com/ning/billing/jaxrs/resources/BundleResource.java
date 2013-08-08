@@ -47,8 +47,8 @@ import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.transfer.SubscriptionTransferApi;
 import com.ning.billing.subscription.api.transfer.SubscriptionTransferApiException;
+import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.subscription.api.user.SubscriptionBundle;
-import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
 import com.ning.billing.util.api.AuditUserApi;
 import com.ning.billing.util.api.CustomFieldApiException;
 import com.ning.billing.util.api.CustomFieldUserApi;
@@ -88,7 +88,7 @@ public class BundleResource extends JaxRsResourceBase {
     @Path("/{bundleId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
     public Response getBundle(@PathParam("bundleId") final String bundleId,
-                              @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionUserApiException {
+                              @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionBaseApiException {
         final SubscriptionBundle bundle = null; // STEPH_ENT subscriptionApi.getBundleFromId(UUID.fromString(bundleId), context.createContext(request));
         final BundleJsonNoSubscriptions json = new BundleJsonNoSubscriptions(bundle);
         return Response.status(Status.OK).entity(json).build();
@@ -101,7 +101,7 @@ public class BundleResource extends JaxRsResourceBase {
                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                  @HeaderParam(HDR_REASON) final String reason,
                                  @HeaderParam(HDR_COMMENT) final String comment,
-                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionUserApiException {
+                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionBaseApiException {
         final UUID accountId = UUID.fromString(json.getAccountId());
         final SubscriptionBundle bundle = null; // STEPH_ENT subscriptionApi.createBundleForAccount(accountId, json.getExternalKey(),
         //context.createContext(createdBy, reason, comment, request));
@@ -112,7 +112,7 @@ public class BundleResource extends JaxRsResourceBase {
     @Path("/{bundleId:" + UUID_PATTERN + "}/" + SUBSCRIPTIONS)
     @Produces(APPLICATION_JSON)
     public Response getBundleSubscriptions(@PathParam("bundleId") final String bundleId,
-                                           @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionUserApiException {
+                                           @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionBaseApiException {
         final TenantContext tenantContext = context.createContext(request);
         final UUID uuid = UUID.fromString(bundleId);
         final SubscriptionBundle bundle = null; // STEPH_ENT subscriptionApi.getBundleFromId(uuid, tenantContext);
@@ -187,7 +187,7 @@ public class BundleResource extends JaxRsResourceBase {
                                    @HeaderParam(HDR_REASON) final String reason,
                                    @HeaderParam(HDR_COMMENT) final String comment,
                                    @javax.ws.rs.core.Context final UriInfo uriInfo,
-                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionUserApiException, SubscriptionTransferApiException {
+                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionBaseApiException, SubscriptionTransferApiException {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         final SubscriptionBundle bundle = null; // STEPH_ENT subscriptionApi.getBundleFromId(UUID.fromString(id), callContext);
         final DateTime inputDate = (requestedDate != null) ? DATE_TIME_FORMATTER.parseDateTime(requestedDate) : null;

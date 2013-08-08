@@ -20,7 +20,7 @@ import java.util.Date;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.catalog.api.ActionPolicy;
+import com.ning.billing.catalog.api.BillingActionPolicy;
 import com.ning.billing.catalog.api.BillingAlignment;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Catalog;
@@ -141,7 +141,7 @@ public class MockCatalog extends StandaloneCatalog implements Catalog {
     }
 
     @Override
-    public ActionPolicy planChangePolicy(final PlanPhaseSpecifier from, final PlanSpecifier to, final DateTime requestedDate)
+    public BillingActionPolicy planChangePolicy(final PlanPhaseSpecifier from, final PlanSpecifier to, final DateTime requestedDate)
             throws CatalogApiException {
         return planChangePolicy(from, to);
     }
@@ -153,7 +153,7 @@ public class MockCatalog extends StandaloneCatalog implements Catalog {
     }
 
     @Override
-    public ActionPolicy planCancelPolicy(final PlanPhaseSpecifier planPhase, final DateTime requestedDate)
+    public BillingActionPolicy planCancelPolicy(final PlanPhaseSpecifier planPhase, final DateTime requestedDate)
             throws CatalogApiException {
         return planCancelPolicy(planPhase);
     }
@@ -182,7 +182,7 @@ public class MockCatalog extends StandaloneCatalog implements Catalog {
     }
 
     @Override
-    public ActionPolicy planChangePolicy(final PlanPhaseSpecifier from, final PlanSpecifier to) throws CatalogApiException {
+    public BillingActionPolicy planChangePolicy(final PlanPhaseSpecifier from, final PlanSpecifier to) throws CatalogApiException {
         return super.planChangePolicy(from, to);
     }
 
@@ -193,7 +193,7 @@ public class MockCatalog extends StandaloneCatalog implements Catalog {
     }
 
     @Override
-    public ActionPolicy planCancelPolicy(final PlanPhaseSpecifier planPhase) throws CatalogApiException {
+    public BillingActionPolicy planCancelPolicy(final PlanPhaseSpecifier planPhase) throws CatalogApiException {
         return super.planCancelPolicy(planPhase);
     }
 

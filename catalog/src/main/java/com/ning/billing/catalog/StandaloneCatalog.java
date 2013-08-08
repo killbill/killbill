@@ -29,7 +29,7 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.ning.billing.ErrorCode;
-import com.ning.billing.catalog.api.ActionPolicy;
+import com.ning.billing.catalog.api.BillingActionPolicy;
 import com.ning.billing.catalog.api.BillingAlignment;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.CatalogApiException;
@@ -221,7 +221,7 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
     //
     //////////////////////////////////////////////////////////////////////////////
     @Override
-    public ActionPolicy planChangePolicy(final PlanPhaseSpecifier from, final PlanSpecifier to) throws CatalogApiException {
+    public BillingActionPolicy planChangePolicy(final PlanPhaseSpecifier from, final PlanSpecifier to) throws CatalogApiException {
         return planRules.getPlanChangePolicy(from, to, this);
     }
 
@@ -231,7 +231,7 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
     }
 
     @Override
-    public ActionPolicy planCancelPolicy(final PlanPhaseSpecifier planPhase) throws CatalogApiException {
+    public BillingActionPolicy planCancelPolicy(final PlanPhaseSpecifier planPhase) throws CatalogApiException {
         return planRules.getPlanCancelPolicy(planPhase, this);
     }
 

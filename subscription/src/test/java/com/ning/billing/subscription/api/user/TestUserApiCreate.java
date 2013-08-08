@@ -62,8 +62,8 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
             assertNotNull(subscription);
 
             //
-            // In addition to Alignment phase we also test SubscriptionTransition eventIds and created dates.
-            // Keep tracks of row events to compare with ids and created dates returned by SubscriptionTransition later.
+            // In addition to Alignment phase we also test SubscriptionBaseTransition eventIds and created dates.
+            // Keep tracks of row events to compare with ids and created dates returned by SubscriptionBaseTransition later.
             //
             final List<SubscriptionEvent> events = subscription.getEvents();
             Assert.assertEquals(events.size(), 2);
@@ -80,7 +80,7 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
             assertTrue(testListener.isCompleted(5000));
             assertListenerStatus();
 
-            final SubscriptionTransition transition = subscription.getPreviousTransition();
+            final SubscriptionBaseTransition transition = subscription.getPreviousTransition();
 
             assertEquals(transition.getPreviousEventId(), trialEvent.getId());
             assertEquals(transition.getNextEventId(), phaseEvent.getId());
@@ -88,7 +88,7 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
             assertEquals(transition.getPreviousEventCreatedDate().compareTo(trialEvent.getCreatedDate()), 0);
             assertEquals(transition.getNextEventCreatedDate().compareTo(phaseEvent.getCreatedDate()), 0);
 
-        } catch (SubscriptionUserApiException e) {
+        } catch (SubscriptionBaseApiException e) {
             log.error("Unexpected exception", e);
             Assert.fail(e.getMessage());
         }
@@ -127,7 +127,7 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
 
             assertListenerStatus();
 
-        } catch (SubscriptionUserApiException e) {
+        } catch (SubscriptionBaseApiException e) {
             Assert.fail(e.getMessage());
         }
     }
@@ -184,7 +184,7 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
             assertTrue(testListener.isCompleted(5000));
 
             assertListenerStatus();
-        } catch (SubscriptionUserApiException e) {
+        } catch (SubscriptionBaseApiException e) {
             Assert.fail(e.getMessage());
         }
     }
@@ -229,7 +229,7 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
             assertEquals(currentPhase.getPhaseType(), PhaseType.EVERGREEN);
 
             assertListenerStatus();
-        } catch (SubscriptionUserApiException e) {
+        } catch (SubscriptionBaseApiException e) {
             Assert.fail(e.getMessage());
         }
     }
@@ -248,7 +248,7 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
             assertNotNull(subscription);
 
             assertListenerStatus();
-        } catch (SubscriptionUserApiException e) {
+        } catch (SubscriptionBaseApiException e) {
             Assert.fail(e.getMessage());
         }
     }

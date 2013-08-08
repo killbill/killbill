@@ -41,7 +41,7 @@ import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.overdue.config.api.BillingStateBundle;
 import com.ning.billing.overdue.config.api.PaymentResponse;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
+import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
@@ -67,7 +67,7 @@ public class TestBillingStateCalculatorBundle extends TestBillingStateCalculator
         final SubscriptionBundle bundle = Mockito.mock(SubscriptionBundle.class);
         Mockito.when(bundle.getId()).thenReturn(bundleId);
 
-        final SubscriptionInternalApi subscriptionApi = Mockito.mock(SubscriptionInternalApi.class);
+        final SubscriptionBaseInternalApi subscriptionApi = Mockito.mock(SubscriptionBaseInternalApi.class);
         final SubscriptionBase subscription = Mockito.mock(SubscriptionBase.class);
         Mockito.when(subscriptionApi.getBaseSubscription(Mockito.eq(bundleId), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
 

@@ -29,7 +29,7 @@ import com.ning.billing.junction.plumbing.billing.BillCycleDayCalculator;
 import com.ning.billing.junction.plumbing.billing.BlockingCalculator;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.junction.BillingInternalApi;
-import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
+import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
 import com.ning.billing.util.svcapi.tag.TagInternalApi;
 import com.ning.billing.util.tag.dao.TagDao;
 
@@ -50,7 +50,7 @@ public abstract class JunctionTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     @Inject
     protected CatalogService catalogService;
     @Inject
-    protected SubscriptionInternalApi subscriptionInternalApi;
+    protected SubscriptionBaseInternalApi subscriptionInternalApi;
     @Inject
     protected PersistentBus bus;
     @Inject

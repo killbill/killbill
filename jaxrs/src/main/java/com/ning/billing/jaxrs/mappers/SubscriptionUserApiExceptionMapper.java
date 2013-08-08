@@ -24,11 +24,11 @@ import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
 import com.ning.billing.ErrorCode;
-import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
+import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 
 @Singleton
 @Provider
-public class SubscriptionUserApiExceptionMapper extends ExceptionMapperBase implements ExceptionMapper<SubscriptionUserApiException> {
+public class SubscriptionUserApiExceptionMapper extends ExceptionMapperBase implements ExceptionMapper<SubscriptionBaseApiException> {
 
     private final UriInfo uriInfo;
 
@@ -37,7 +37,7 @@ public class SubscriptionUserApiExceptionMapper extends ExceptionMapperBase impl
     }
 
     @Override
-    public Response toResponse(final SubscriptionUserApiException exception) {
+    public Response toResponse(final SubscriptionBaseApiException exception) {
         if (exception.getCode() == ErrorCode.SUB_ACCOUNT_IS_OVERDUE_BLOCKED.getCode()) {
             return buildBadRequestResponse(exception, uriInfo);
         } else if (exception.getCode() == ErrorCode.SUB_BUNDLE_IS_OVERDUE_BLOCKED.getCode()) {

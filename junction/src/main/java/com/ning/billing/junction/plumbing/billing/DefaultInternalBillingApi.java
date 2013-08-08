@@ -36,7 +36,7 @@ import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
+import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
 import com.ning.billing.util.svcapi.junction.BillingEvent;
 import com.ning.billing.util.svcapi.junction.BillingEventSet;
 import com.ning.billing.util.svcapi.junction.BillingInternalApi;
@@ -53,7 +53,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
     private static final Logger log = LoggerFactory.getLogger(DefaultInternalBillingApi.class);
     private final AccountInternalApi accountApi;
     private final BillCycleDayCalculator bcdCalculator;
-    private final SubscriptionInternalApi subscriptionApi;
+    private final SubscriptionBaseInternalApi subscriptionApi;
     private final CatalogService catalogService;
     private final BlockingCalculator blockCalculator;
     private final TagInternalApi tagApi;
@@ -61,7 +61,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
     @Inject
     public DefaultInternalBillingApi(final AccountInternalApi accountApi,
                                      final BillCycleDayCalculator bcdCalculator,
-                                     final SubscriptionInternalApi subscriptionApi,
+                                     final SubscriptionBaseInternalApi subscriptionApi,
                                      final BlockingCalculator blockCalculator,
                                      final CatalogService catalogService, final TagInternalApi tagApi) {
         this.accountApi = accountApi;

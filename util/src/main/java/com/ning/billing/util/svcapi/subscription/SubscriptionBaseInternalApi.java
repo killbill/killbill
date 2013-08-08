@@ -27,37 +27,35 @@ import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.subscription.api.user.SubscriptionStatusDryRun;
-import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
-import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 
 
-public interface SubscriptionInternalApi {
+public interface SubscriptionBaseInternalApi {
 
     public SubscriptionBase createSubscription(final UUID bundleId, final PlanPhaseSpecifier spec, final DateTime requestedDateWithMs,
-                                           final InternalCallContext context) throws SubscriptionUserApiException;
+                                           final InternalCallContext context) throws SubscriptionBaseApiException;
 
 
     public SubscriptionBundle createBundleForAccount(final UUID accountId, final String bundleName, final InternalCallContext context)
-            throws SubscriptionUserApiException;
+            throws SubscriptionBaseApiException;
 
     public SubscriptionBundle getBundleForAccountAndKey(final UUID accountId, final String bundleKey, final InternalTenantContext context)
-            throws SubscriptionUserApiException;
+            throws SubscriptionBaseApiException;
 
     public List<SubscriptionBundle> getBundlesForAccount(final UUID accountId, final InternalTenantContext context);
 
     public List<SubscriptionBase> getSubscriptionsForBundle(final UUID bundleId, final InternalTenantContext context);
 
-    public SubscriptionBase getBaseSubscription(final UUID bundleId, final InternalTenantContext context) throws SubscriptionUserApiException;
+    public SubscriptionBase getBaseSubscription(final UUID bundleId, final InternalTenantContext context) throws SubscriptionBaseApiException;
 
-    public SubscriptionBase getSubscriptionFromId(final UUID id, final InternalTenantContext context) throws SubscriptionUserApiException;
+    public SubscriptionBase getSubscriptionFromId(final UUID id, final InternalTenantContext context) throws SubscriptionBaseApiException;
 
-    public SubscriptionBundle getBundleFromId(final UUID id, final InternalTenantContext context) throws SubscriptionUserApiException;
+    public SubscriptionBundle getBundleFromId(final UUID id, final InternalTenantContext context) throws SubscriptionBaseApiException;
 
-    public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId, final InternalTenantContext context) throws SubscriptionUserApiException;
+    public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId, final InternalTenantContext context) throws SubscriptionBaseApiException;
 
     public void setChargedThroughDate(final UUID subscriptionId, final DateTime chargedThruDate, final InternalCallContext context);
 
@@ -68,5 +66,5 @@ public interface SubscriptionInternalApi {
     public DateTime getNextBillingDate(final UUID accountId, final InternalTenantContext context);
 
     public List<SubscriptionStatusDryRun> getDryRunChangePlanStatus(final UUID subscriptionId, @Nullable final String baseProductName,
-                                                                    final DateTime requestedDate, final InternalTenantContext context) throws SubscriptionUserApiException;
+                                                                    final DateTime requestedDate, final InternalTenantContext context) throws SubscriptionBaseApiException;
 }
