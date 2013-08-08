@@ -187,12 +187,12 @@ public class AuditChecker {
 
 
     private AuditLogsForBundles getAuditLogsForBundle(final UUID bundleId, final CallContext context) {
-        try {
+       // try {
             return auditUserApi.getAuditLogsForBundle(bundleId, AuditLevel.FULL, context);
-        } catch (SubscriptionRepairException e) {
-            Assert.fail(e.toString());
-            return null;
-        }
+        //} catch (SubscriptionRepairException e) {
+        //    Assert.fail(e.toString());
+        //    return null;
+       // }
     }
 
     private AuditLogsForInvoices getAuditLogForInvoice(final Invoice invoice, final CallContext context) {

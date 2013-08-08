@@ -22,14 +22,12 @@ import org.osgi.util.tracker.ServiceTracker;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.api.CatalogUserApi;
 import com.ning.billing.entitlement.api.EntitlementApi;
+import com.ning.billing.entitlement.api.SubscriptionApi;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.osgi.api.OSGIKillbill;
 import com.ning.billing.osgi.api.config.PluginConfigServiceApi;
-import com.ning.billing.overdue.OverdueUserApi;
 import com.ning.billing.payment.api.PaymentApi;
-import com.ning.billing.subscription.api.timeline.SubscriptionTimelineApi;
-import com.ning.billing.subscription.api.transfer.SubscriptionTransferApi;
 import com.ning.billing.tenant.api.TenantUserApi;
 import com.ning.billing.usage.api.UsageUserApi;
 import com.ning.billing.util.api.AuditUserApi;
@@ -77,24 +75,15 @@ public class OSGIKillbillAPI extends OSGIKillbillLibraryBase implements OSGIKill
     }
 
     @Override
-    public SubscriptionTimelineApi getSubscriptionTimelineApi() {
-        return withServiceTracker(killbillTracker, new APICallback<SubscriptionTimelineApi, OSGIKillbill>(KILLBILL_SERVICE_NAME) {
+    public SubscriptionApi getSubscriptionApi() {
+        return withServiceTracker(killbillTracker, new APICallback<SubscriptionApi, OSGIKillbill>(KILLBILL_SERVICE_NAME) {
             @Override
-            public SubscriptionTimelineApi executeWithService(final OSGIKillbill service) {
-                return service.getSubscriptionTimelineApi();
+            public SubscriptionApi executeWithService(final OSGIKillbill service) {
+                return service.getSubscriptionApi();
             }
         });
     }
 
-    @Override
-    public SubscriptionTransferApi getSubscriptionTransferApi() {
-        return withServiceTracker(killbillTracker, new APICallback<SubscriptionTransferApi, OSGIKillbill>(KILLBILL_SERVICE_NAME) {
-            @Override
-            public SubscriptionTransferApi executeWithService(final OSGIKillbill service) {
-                return service.getSubscriptionTransferApi();
-            }
-        });
-    }
 
     @Override
     public InvoicePaymentApi getInvoicePaymentApi() {
@@ -112,16 +101,6 @@ public class OSGIKillbillAPI extends OSGIKillbillLibraryBase implements OSGIKill
             @Override
             public InvoiceUserApi executeWithService(final OSGIKillbill service) {
                 return service.getInvoiceUserApi();
-            }
-        });
-    }
-
-    @Override
-    public OverdueUserApi getOverdueUserApi() {
-        return withServiceTracker(killbillTracker, new APICallback<OverdueUserApi, OSGIKillbill>(KILLBILL_SERVICE_NAME) {
-            @Override
-            public OverdueUserApi executeWithService(final OSGIKillbill service) {
-                return service.getOverdueUserApi();
             }
         });
     }

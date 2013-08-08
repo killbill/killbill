@@ -414,8 +414,4 @@ public class DefaultAccount extends EntityBase implements Account {
         return result;
     }
 
-    @Override
-    public BlockingState getBlockingState() {
-        return null;
-    }
 }

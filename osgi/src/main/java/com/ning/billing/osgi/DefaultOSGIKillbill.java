@@ -21,6 +21,7 @@ import javax.inject.Inject;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.api.CatalogUserApi;
 import com.ning.billing.entitlement.api.EntitlementApi;
+import com.ning.billing.entitlement.api.SubscriptionApi;
 import com.ning.billing.invoice.api.InvoiceMigrationApi;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.api.InvoiceUserApi;
@@ -43,11 +44,8 @@ public class DefaultOSGIKillbill implements OSGIKillbill {
 
     private final AccountUserApi accountUserApi;
     private final CatalogUserApi catalogUserApi;
-    private final SubscriptionTimelineApi subscriptionTimelineApi;
-    private final SubscriptionTransferApi subscriptionTransferApi;
     private final InvoicePaymentApi invoicePaymentApi;
     private final InvoiceUserApi invoiceUserApi;
-    private final OverdueUserApi overdueUserApi;
     private final PaymentApi paymentApi;
     private final TenantUserApi tenantUserApi;
     private final UsageUserApi usageUserApi;
@@ -56,6 +54,7 @@ public class DefaultOSGIKillbill implements OSGIKillbill {
     private final ExportUserApi exportUserApi;
     private final TagUserApi tagUserApi;
     private final EntitlementApi entitlementApi;
+    private final SubscriptionApi subscriptionApi;
     private final RecordIdApi recordIdApi;
 
     private final PluginConfigServiceApi configServiceApi;
@@ -63,11 +62,8 @@ public class DefaultOSGIKillbill implements OSGIKillbill {
     @Inject
     public DefaultOSGIKillbill(final AccountUserApi accountUserApi,
                                final CatalogUserApi catalogUserApi,
-                               final SubscriptionTimelineApi subscriptionTimelineApi,
-                               final SubscriptionTransferApi subscriptionTransferApi,
                                final InvoicePaymentApi invoicePaymentApi,
                                final InvoiceUserApi invoiceUserApi,
-                               final OverdueUserApi overdueUserApi,
                                final PaymentApi paymentApi,
                                final TenantUserApi tenantUserApi,
                                final UsageUserApi usageUserApi,
@@ -76,15 +72,13 @@ public class DefaultOSGIKillbill implements OSGIKillbill {
                                final ExportUserApi exportUserApi,
                                final TagUserApi tagUserApi,
                                final EntitlementApi entitlementApi,
+                               final SubscriptionApi subscriptionApi,
                                final RecordIdApi recordIdApi,
                                final PluginConfigServiceApi configServiceApi) {
         this.accountUserApi = accountUserApi;
         this.catalogUserApi = catalogUserApi;
-        this.subscriptionTimelineApi = subscriptionTimelineApi;
-        this.subscriptionTransferApi = subscriptionTransferApi;
         this.invoicePaymentApi = invoicePaymentApi;
         this.invoiceUserApi = invoiceUserApi;
-        this.overdueUserApi = overdueUserApi;
         this.paymentApi = paymentApi;
         this.tenantUserApi = tenantUserApi;
         this.usageUserApi = usageUserApi;
@@ -93,6 +87,7 @@ public class DefaultOSGIKillbill implements OSGIKillbill {
         this.exportUserApi = exportUserApi;
         this.tagUserApi = tagUserApi;
         this.entitlementApi = entitlementApi;
+        this.subscriptionApi = subscriptionApi;
         this.recordIdApi = recordIdApi;
         this.configServiceApi = configServiceApi;
     }
@@ -108,13 +103,8 @@ public class DefaultOSGIKillbill implements OSGIKillbill {
     }
 
     @Override
-    public SubscriptionTimelineApi getSubscriptionTimelineApi() {
-        return subscriptionTimelineApi;
-    }
-
-    @Override
-    public SubscriptionTransferApi getSubscriptionTransferApi() {
-        return subscriptionTransferApi;
+    public SubscriptionApi getSubscriptionApi() {
+        return subscriptionApi;
     }
 
     @Override
@@ -125,11 +115,6 @@ public class DefaultOSGIKillbill implements OSGIKillbill {
     @Override
     public InvoiceUserApi getInvoiceUserApi() {
         return invoiceUserApi;
-    }
-
-    @Override
-    public OverdueUserApi getOverdueUserApi() {
-        return overdueUserApi;
     }
 
     @Override

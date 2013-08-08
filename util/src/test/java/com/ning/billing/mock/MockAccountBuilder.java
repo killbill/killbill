@@ -319,11 +319,6 @@ public class MockAccountBuilder {
             }
 
             @Override
-            public BlockingState getBlockingState() {
-                return null;
-            }
-
-            @Override
             public MutableAccountData toMutableAccountData() {
                 throw new UnsupportedOperationException();
             }

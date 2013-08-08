@@ -75,11 +75,17 @@ public class DefaultAuditUserApi implements AuditUserApi {
     }
 
     @Override
-    public AuditLogsForBundles getAuditLogsForBundle(final UUID bundleId, final AuditLevel auditLevel, final TenantContext context) throws SubscriptionRepairException {
-        return getAuditLogsForBundles(ImmutableList.<BundleTimeline>of(timelineApi.getBundleTimeline(bundleId, context)), auditLevel, context);
+    public AuditLogsForBundles getAuditLogsForBundle(final UUID bundleId, final AuditLevel auditLevel, final TenantContext context)  {
+
+        try {
+            return getAuditLogsForBundles(ImmutableList.<BundleTimeline>of(timelineApi.getBundleTimeline(bundleId, context)), auditLevel, context);
+        } catch (SubscriptionRepairException e) {
+            // STEPH_ENT
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            return null;
+        }
     }
 
-    @Override
     public AuditLogsForBundles getAuditLogsForBundles(final List<BundleTimeline> bundles, final AuditLevel auditLevel, final TenantContext context) {
         final Map<UUID, List<AuditLog>> bundlesAuditLogs = new HashMap<UUID, List<AuditLog>>();
         final Map<UUID, List<AuditLog>> subscriptionsAuditLogs = new HashMap<UUID, List<AuditLog>>();

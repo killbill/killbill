@@ -69,6 +69,10 @@ public class OverdueResource extends JaxRsResourceBase {
         this.accountApi = accountApi;
     }
 
+    /*
+
+    STEPH_ENT
+
     @GET
     @Path("/" + ACCOUNTS + "/{accountId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
@@ -81,6 +85,7 @@ public class OverdueResource extends JaxRsResourceBase {
 
         return Response.status(Status.OK).entity(new OverdueStateJson(overdueState)).build();
     }
+    */
 
     @GET
     @Path("/" + BUNDLES + "/{bundleId:" + UUID_PATTERN + "}")

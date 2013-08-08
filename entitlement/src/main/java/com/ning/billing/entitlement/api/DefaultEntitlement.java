@@ -118,13 +118,13 @@ public class DefaultEntitlement implements Entitlement {
     }
 
     @Override
-    public boolean pause(final LocalDate localDate, final CallContext callContext) throws EntitlementApiException {
-        return false;
+    public boolean block(final String serviceName, final LocalDate effectiveDate, final CallContext context) throws EntitlementApiException {
+        return false;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
-    public boolean resume(final LocalDate localDate, final CallContext callContext) throws EntitlementApiException {
-        return false;
+    public boolean unblock(final String serviceName, final LocalDate effectiveDate, final CallContext context) throws EntitlementApiException {
+        return false;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     public UUID getAccountId() {

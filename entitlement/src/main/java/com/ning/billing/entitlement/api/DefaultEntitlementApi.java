@@ -89,7 +89,7 @@ public class DefaultEntitlementApi implements EntitlementApi {
             final SubscriptionBase baseSubscription = subscriptionInternalApi.getSubscriptionFromId(baseSubscriptionId, context);
             if (baseSubscription.getCategory() != ProductCategory.BASE ||
                 baseSubscription.getState() != SubscriptionState.ACTIVE) {
-                throw new EntitlementApiException(new SubscriptionUserApiException(ErrorCode.SUB_GET_NO_SUCH_BASE_SUBSCRIPTION, baseSubscription.getBundleId()));
+                throw new EntitlementApiException(ErrorCode.SUB_GET_NO_SUCH_BASE_SUBSCRIPTION, baseSubscription.getBundleId());
             }
 
             final SubscriptionBundle bundle = subscriptionInternalApi.getBundleFromId(baseSubscription.getBundleId(), context);
@@ -101,6 +101,16 @@ public class DefaultEntitlementApi implements EntitlementApi {
         } catch (SubscriptionUserApiException e) {
             throw new EntitlementApiException(e);
         }
+    }
+
+    @Override
+    public void block(final UUID baseEntitlementId, final String serviceName, final LocalDate effectiveDate, final CallContext context) throws EntitlementApiException {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public void unblock(final UUID baseEntitlementId, final String serviceName, final LocalDate effectiveDate, final CallContext context) throws EntitlementApiException {
+        //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
@@ -176,10 +186,6 @@ public class DefaultEntitlementApi implements EntitlementApi {
         return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
-    @Override
-    public EntitlementBundleTimeline getEntitlementBundleTimeline(final UUID accountId, final String externalKey, final TenantContext context) throws EntitlementApiException {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
 
     private DateTime fromNowAndReferenceTime(final DateTime subscriptionStartDate, final InternalCallContext callContext) throws EntitlementApiException {
         try {
