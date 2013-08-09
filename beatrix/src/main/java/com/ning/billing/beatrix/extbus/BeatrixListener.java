@@ -37,6 +37,7 @@ import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.events.AccountChangeInternalEvent;
 import com.ning.billing.util.events.AccountCreationInternalEvent;
 import com.ning.billing.util.events.BusInternalEvent;
@@ -70,17 +71,19 @@ public class
     private final PersistentBus externalBus;
     private final InternalCallContextFactory internalCallContextFactory;
     private final AccountInternalApi accountApi;
-
+    private final NonEntityDao nonEntityDao;
 
     protected final ObjectMapper objectMapper;
 
     @Inject
     public BeatrixListener(@Named(BeatrixModule.EXTERNAL_BUS) final PersistentBus externalBus,
                            final InternalCallContextFactory internalCallContextFactory,
-                           final AccountInternalApi accountApi) {
+                           final AccountInternalApi accountApi,
+                           final NonEntityDao nonEntityDao) {
         this.externalBus = externalBus;
         this.internalCallContextFactory = internalCallContextFactory;
         this.accountApi = accountApi;
+        this.nonEntityDao = nonEntityDao;
         this.objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JodaModule());
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
@@ -224,7 +227,7 @@ public class
             default:
         }
         final UUID accountId = getAccountIdFromRecordId(event.getBusEventType(), objectId, context.getAccountRecordId(), context);
-        final UUID tenantId = context.toTenantContext().getTenantId();
+        final UUID tenantId = nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT);
 
         return eventBusType != null ?
                new DefaultBusExternalEvent(objectId, objectType, eventBusType, accountId, tenantId, context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken()) :

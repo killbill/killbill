@@ -29,6 +29,12 @@ public interface JaxrsResource {
     public static final String SEARCH = "search";
 
     /*
+     * Multi-Tenancy headers
+     */
+    public static String HDR_API_KEY = "X-Killbill-ApiKey";
+    public static String HDR_API_SECRET = "X-Killbill-ApiSecret";
+
+    /*
      * Metadata Additional headers
      */
     public static String HDR_CREATED_BY = "X-Killbill-CreatedBy";

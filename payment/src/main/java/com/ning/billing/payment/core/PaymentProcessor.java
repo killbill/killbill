@@ -20,6 +20,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.inject.name.Named;
 import com.ning.billing.ErrorCode;
+import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.bus.api.PersistentBus;
@@ -48,7 +49,9 @@ import com.ning.billing.payment.retry.FailedPaymentRetryService.FailedPaymentRet
 import com.ning.billing.payment.retry.PluginFailureRetryService.PluginFailureRetryServiceScheduler;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.config.PaymentConfig;
+import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.events.BusInternalEvent;
 import com.ning.billing.util.events.PaymentErrorInternalEvent;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
@@ -99,12 +102,13 @@ public class PaymentProcessor extends ProcessorBase {
                             final PluginFailureRetryServiceScheduler pluginFailureRetryService,
                             final AutoPayRetryServiceScheduler autoPayoffRetryService,
                             final PaymentDao paymentDao,
+                            final NonEntityDao nonEntityDao,
                             final PersistentBus eventBus,
                             final Clock clock,
                             final GlobalLocker locker,
                             final PaymentConfig paymentConfig,
                             @Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor) {
-        super(pluginRegistry, accountUserApi, eventBus, paymentDao, tagUserApi, locker, executor, invoiceApi);
+        super(pluginRegistry, accountUserApi, eventBus, paymentDao, nonEntityDao, tagUserApi, locker, executor, invoiceApi);
         this.paymentMethodProcessor = paymentMethodProcessor;
         this.failedPaymentRetryService = failedPaymentRetryService;
         this.pluginFailureRetryService = pluginFailureRetryService;
@@ -125,14 +129,13 @@ public class PaymentProcessor extends ProcessorBase {
         PaymentInfoPlugin pluginInfo = null;
         if (plugin != null) {
             try {
-                pluginInfo = plugin.getPaymentInfo(model.getAccountId(), paymentId, context.toTenantContext());
+                pluginInfo = plugin.getPaymentInfo(model.getAccountId(), paymentId, buildTenantContext(context));
             } catch (PaymentPluginApiException e) {
                 throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_GET_PAYMENT_INFO, paymentId, e.toString());
             }
         }
         return fromPaymentModelDao(model, pluginInfo, context);
     }
-
 
     public List<Payment> getInvoicePayments(final UUID invoiceId, final InternalTenantContext context) {
         return getPayments(paymentDao.getPaymentsForInvoice(invoiceId, context), context);

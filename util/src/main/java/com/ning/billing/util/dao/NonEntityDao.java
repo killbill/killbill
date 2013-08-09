@@ -39,6 +39,8 @@ public interface NonEntityDao {
     // This retrieves from the history table the latest record for which targetId matches the one we are passing
     public Long retrieveLastHistoryRecordIdFromTransaction(final Long targetRecordId, final TableName tableName, final NonEntitySqlDao transactional);
 
-    //This is the reverse from retrieveLastHistoryRecordIdFromTransaction; this retrieves the record_id of the object matching a given history row
+    // This is the reverse from retrieveLastHistoryRecordIdFromTransaction; this retrieves the record_id of the object matching a given history row
     public Long retrieveHistoryTargetRecordId(final Long recordId, final TableName tableName);
+
+    public UUID retrieveIdFromObject(final Long recordId, final ObjectType objectType);
 }

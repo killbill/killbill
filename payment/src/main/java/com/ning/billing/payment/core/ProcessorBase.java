@@ -44,6 +44,8 @@ import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.callcontext.TenantContext;
+import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.events.BusInternalEvent;
 import com.ning.billing.util.globallocker.LockerType;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
@@ -65,6 +67,7 @@ public abstract class ProcessorBase {
     protected final GlobalLocker locker;
     protected final ExecutorService executor;
     protected final PaymentDao paymentDao;
+    protected final NonEntityDao nonEntityDao;
     protected final TagInternalApi tagInternalApi;
 
     private static final Logger log = LoggerFactory.getLogger(ProcessorBase.class);
@@ -74,6 +77,7 @@ public abstract class ProcessorBase {
                          final AccountInternalApi accountInternalApi,
                          final PersistentBus eventBus,
                          final PaymentDao paymentDao,
+                         final NonEntityDao nonEntityDao,
                          final TagInternalApi tagInternalApi,
                          final GlobalLocker locker,
                          final ExecutorService executor, final InvoiceInternalApi invoiceApi) {
@@ -81,6 +85,7 @@ public abstract class ProcessorBase {
         this.accountInternalApi = accountInternalApi;
         this.eventBus = eventBus;
         this.paymentDao = paymentDao;
+        this.nonEntityDao = nonEntityDao;
         this.locker = locker;
         this.executor = executor;
         this.tagInternalApi = tagInternalApi;
@@ -148,6 +153,10 @@ public abstract class ProcessorBase {
         invoiceApi.consumeExistingCBAOnAccountWithUnpaidInvoices(accountId, context);
         final Invoice invoice = invoiceApi.getInvoiceById(invoiceId, context);
         return invoice;
+    }
+
+    protected TenantContext buildTenantContext(final InternalTenantContext context) {
+        return context.toTenantContext(nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT));
     }
 
     public interface WithAccountLockCallback<T> {

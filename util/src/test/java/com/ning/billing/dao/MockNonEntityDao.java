@@ -52,4 +52,9 @@ public class MockNonEntityDao implements NonEntityDao {
     public Long retrieveHistoryTargetRecordId(final Long recordId, final TableName tableName) {
         return null;
     }
+
+    @Override
+    public UUID retrieveIdFromObject(final Long recordId, final ObjectType objectType) {
+        return null;
+    }
 }

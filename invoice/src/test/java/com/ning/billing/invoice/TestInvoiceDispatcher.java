@@ -89,7 +89,7 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
 
         final InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
         final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountApi, billingApi, subscriptionApi, invoiceDao,
-                                                                   invoiceNotifier, locker, busService.getBus(),
+                                                                   nonEntityDao, invoiceNotifier, locker, busService.getBus(),
                                                                    clock);
 
         Invoice invoice = dispatcher.processAccount(accountId, target, true, internalCallContext);
@@ -143,7 +143,7 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
         Mockito.when(billingApi.getBillingEventsForAccountAndUpdateAccountBCD(Mockito.<UUID>any(), Mockito.<InternalCallContext>any())).thenReturn(events);
         final InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
         final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountApi, billingApi, subscriptionApi, invoiceDao,
-                                                                   invoiceNotifier, locker, busService.getBus(),
+                                                                   nonEntityDao, invoiceNotifier, locker, busService.getBus(),
                                                                    clock);
 
         final Invoice invoice = dispatcher.processAccount(account.getId(), new DateTime("2012-07-30T00:00:00.000Z"), false, internalCallContext);
@@ -203,7 +203,7 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
 
         final InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
         final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountApi, billingApi, subscriptionApi, invoiceDao,
-                                                                   invoiceNotifier, locker, busService.getBus(),
+                                                                   nonEntityDao, invoiceNotifier, locker, busService.getBus(),
                                                                    clock);
 
         final DateTime expectedBefore = clock.getUTCNow();

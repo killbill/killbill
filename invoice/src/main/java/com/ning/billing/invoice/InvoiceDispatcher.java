@@ -36,6 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ning.billing.ErrorCode;
+import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.bus.api.PersistentBus;
@@ -64,6 +65,9 @@ import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.clock.Clock;
+import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.callcontext.TenantContext;
+import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.events.BusInternalEvent;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 import com.ning.billing.util.events.InvoiceAdjustmentInternalEvent;
@@ -90,6 +94,7 @@ public class InvoiceDispatcher {
     private final AccountInternalApi accountApi;
     private final SubscriptionInternalApi subscriptionApi;
     private final InvoiceDao invoiceDao;
+    private final NonEntityDao nonEntityDao;
     private final InvoiceNotifier invoiceNotifier;
     private final GlobalLocker locker;
     private final PersistentBus eventBus;
@@ -100,6 +105,7 @@ public class InvoiceDispatcher {
                              final BillingInternalApi billingApi,
                              final SubscriptionInternalApi SubscriptionApi,
                              final InvoiceDao invoiceDao,
+                             final NonEntityDao nonEntityDao,
                              final InvoiceNotifier invoiceNotifier,
                              final GlobalLocker locker,
                              final PersistentBus eventBus,
@@ -109,6 +115,7 @@ public class InvoiceDispatcher {
         this.subscriptionApi = SubscriptionApi;
         this.accountApi = accountApi;
         this.invoiceDao = invoiceDao;
+        this.nonEntityDao = nonEntityDao;
         this.invoiceNotifier = invoiceNotifier;
         this.locker = locker;
         this.eventBus = eventBus;
@@ -255,7 +262,7 @@ public class InvoiceDispatcher {
             if (account.isNotifiedForInvoices() && invoice != null && !dryRun) {
                 // Need to re-hydrate the invoice object to get the invoice number (record id)
                 // API_FIX InvoiceNotifier public API?
-                invoiceNotifier.notify(account, new DefaultInvoice(invoiceDao.getById(invoice.getId(), context)), context.toTenantContext());
+                invoiceNotifier.notify(account, new DefaultInvoice(invoiceDao.getById(invoice.getId(), context)), buildTenantContext(context));
             }
 
             return invoice;
@@ -265,6 +272,9 @@ public class InvoiceDispatcher {
         }
     }
 
+    private TenantContext buildTenantContext(final InternalTenantContext context) {
+        return context.toTenantContext(nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT));
+    }
 
     @VisibleForTesting
     Map<UUID, DateTime> createNextFutureNotificationDate(final List<InvoiceItemModelDao> invoiceItems, final DateAndTimeZoneContext dateAndTimeZoneContext) {

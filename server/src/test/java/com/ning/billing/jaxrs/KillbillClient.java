@@ -78,6 +78,8 @@ import com.google.common.collect.ImmutableMap;
 
 import static com.ning.billing.jaxrs.resources.JaxrsResource.ACCOUNTS;
 import static com.ning.billing.jaxrs.resources.JaxrsResource.BUNDLES;
+import static com.ning.billing.jaxrs.resources.JaxrsResource.HDR_API_KEY;
+import static com.ning.billing.jaxrs.resources.JaxrsResource.HDR_API_SECRET;
 import static com.ning.billing.jaxrs.resources.JaxrsResource.QUERY_DELETE_DEFAULT_PM_WITH_AUTO_PAY_OFF;
 import static com.ning.billing.jaxrs.resources.JaxrsResource.SUBSCRIPTIONS;
 import static org.testng.Assert.assertEquals;
@@ -87,7 +89,7 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
 
     protected static final String PLUGIN_NAME = "noop";
 
-    protected static final int DEFAULT_HTTP_TIMEOUT_SEC = 5;
+    protected static final int DEFAULT_HTTP_TIMEOUT_SEC = 20;
 
     protected static final Map<String, String> DEFAULT_EMPTY_QUERY = new HashMap<String, String>();
 
@@ -101,6 +103,12 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
     protected CoreConfig config;
     protected AsyncHttpClient httpClient;
     protected ObjectMapper mapper;
+
+    // Multi-Tenancy information, if enabled
+    protected String DEFAULT_API_KEY = UUID.randomUUID().toString();
+    protected String DEFAULT_API_SECRET = UUID.randomUUID().toString();
+    protected String apiKey = DEFAULT_API_KEY;
+    protected String apiSecret = DEFAULT_API_SECRET;
 
     // Context information to be passed around
     protected static final String createdBy = "Toto";
@@ -1031,6 +1039,8 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         }
 
         builder.addHeader(HEADER_CONTENT_TYPE, CONTENT_TYPE);
+        builder.addHeader(HDR_API_KEY, apiKey);
+        builder.addHeader(HDR_API_SECRET, apiSecret);
         for (final Entry<String, String> q : queryParams.entrySet()) {
             builder.addQueryParameter(q.getKey(), q.getValue());
         }

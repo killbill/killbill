@@ -257,7 +257,8 @@ public class TestAccount extends TestJaxrsBase {
 
     @Test(groups = "slow")
     public void testTags() throws Exception {
-        final String accountId = UUID.randomUUID().toString();
+        final AccountJson input = createAccount();
+        final String accountId = input.getAccountId();
         final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountId + "/" + JaxrsResource.TAGS;
         final String accountTagsUrl = getUrlFromUri(uri);
         // Use tag definition for AUTO_PAY_OFF
@@ -287,7 +288,6 @@ public class TestAccount extends TestJaxrsBase {
 
     @Test(groups = "slow")
     public void testCustomFields() throws Exception {
-
         final AccountJson accountJson = createAccount("yoyoq", "gfgrqe", "yoyoq@yahoo.com");
         assertNotNull(accountJson);
 

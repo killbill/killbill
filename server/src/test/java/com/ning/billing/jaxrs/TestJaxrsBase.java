@@ -234,6 +234,9 @@ public class TestJaxrsBase extends KillbillClient {
         busHandler.reset();
         clock.resetDeltaFromReality();
         clock.setDay(new LocalDate(2012, 8, 25));
+
+        // Recreate the tenant (tables have been cleaned-up)
+        createTenant(DEFAULT_API_KEY, DEFAULT_API_SECRET);
     }
 
     @AfterMethod(groups = "slow")
@@ -246,15 +249,13 @@ public class TestJaxrsBase extends KillbillClient {
     public void beforeClass() throws Exception {
         loadConfig();
 
-
         listener.getInstantiatedInjector().injectMembers(this);
 
         httpClient = new AsyncHttpClient(new AsyncHttpClientConfig.Builder().setRequestTimeoutInMs(DEFAULT_HTTP_TIMEOUT_SEC * 1000).build());
+
         mapper = new ObjectMapper();
         mapper.registerModule(new JodaModule());
         mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-
-        //mapper.setPropertyNamingStrategy(new PropertyNamingStrategy.LowerCaseWithUnderscoresStrategy());
 
         busHandler = new TestApiListener(null, dbi);
     }
@@ -277,13 +278,10 @@ public class TestJaxrsBase extends KillbillClient {
         loadConfig();
 
         listener = new TestKillbillGuiceListener(helper);
+
         server = new HttpServer();
-
         server.configure(config, getListeners(), getFilters());
-
         server.start();
-
-        listener.getInstantiatedInjector().injectMembers(this);
     }
 
     protected Iterable<EventListener> getListeners() {

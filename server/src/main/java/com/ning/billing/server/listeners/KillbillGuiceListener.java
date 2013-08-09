@@ -66,7 +66,7 @@ public class KillbillGuiceListener extends SetupServer {
 
     @Override
     public void contextInitialized(final ServletContextEvent event) {
-        final boolean multitenant = Boolean.parseBoolean(System.getProperty(KILLBILL_MULTITENANT_PROPERTY, "false"));
+        final boolean multitenant = Boolean.parseBoolean(System.getProperty(KILLBILL_MULTITENANT_PROPERTY, "true"));
 
         final ServerModuleBuilder builder = new ServerModuleBuilder()
                 .addConfig(KillbillServerConfig.class)

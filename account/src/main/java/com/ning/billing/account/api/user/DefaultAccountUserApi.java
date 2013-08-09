@@ -64,7 +64,7 @@ public class DefaultAccountUserApi implements AccountUserApi {
         }
 
         final AccountModelDao account = new AccountModelDao(data);
-        accountDao.create(account, internalCallContextFactory.createInternalCallContext(account.getId(), context));
+        accountDao.create(account, internalCallContextFactory.createInternalCallContext(context));
 
         return new DefaultAccount(account);
     }

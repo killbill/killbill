@@ -26,20 +26,28 @@ import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
-import org.apache.shiro.SecurityUtils;
-import org.apache.shiro.subject.Subject;
+import org.apache.shiro.authc.AuthenticationException;
+import org.apache.shiro.authc.AuthenticationToken;
+import org.apache.shiro.authc.UsernamePasswordToken;
+import org.apache.shiro.authc.pam.ModularRealmAuthenticator;
+import org.apache.shiro.realm.Realm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ning.billing.jaxrs.resources.JaxrsResource;
 import com.ning.billing.tenant.api.Tenant;
 import com.ning.billing.tenant.api.TenantApiException;
 import com.ning.billing.tenant.api.TenantUserApi;
 
+import com.google.common.collect.ImmutableList;
+
 @Singleton
 public class TenantFilter implements Filter {
 
-    public static final String SUBJECT = "killbill_subject";
+    // See com.ning.billing.jaxrs.util.Context
     public static final String TENANT = "killbill_tenant";
 
     private static final Logger log = LoggerFactory.getLogger(TenantFilter.class);
@@ -47,23 +55,55 @@ public class TenantFilter implements Filter {
     @Inject
     private TenantUserApi tenantUserApi;
 
+    private final ModularRealmAuthenticator modularRealmAuthenticator;
+
+    public TenantFilter() {
+        final Realm killbillJdbcRealm = new KillbillJdbcRealm();
+
+        // We use Shiro to verify the api credentials - but the Shiro Subject is only used for RBAC
+        modularRealmAuthenticator = new ModularRealmAuthenticator();
+        modularRealmAuthenticator.setRealms(ImmutableList.<Realm>of(killbillJdbcRealm));
+    }
+
     @Override
     public void init(final FilterConfig filterConfig) throws ServletException {
     }
 
     @Override
     public void doFilter(final ServletRequest request, final ServletResponse response, final FilterChain chain) throws IOException, ServletException {
-        final Subject subject = SecurityUtils.getSubject();
-        request.setAttribute(SUBJECT, subject);
-
-        final String apiKey = (String) subject.getPrincipal();
-        if (apiKey == null) {
-            // Resource not protected by Shiro?
+        if (shouldSkipFilter(request)) {
             chain.doFilter(request, response);
             return;
         }
 
+        // Lookup tenant information in the headers
+        String apiKey = null;
+        String apiSecret = null;
+        if (request instanceof HttpServletRequest) {
+            final HttpServletRequest httpServletRequest = (HttpServletRequest) request;
+            apiKey = httpServletRequest.getHeader(JaxrsResource.HDR_API_KEY);
+            apiSecret = httpServletRequest.getHeader(JaxrsResource.HDR_API_SECRET);
+        }
+
+        // Multi-tenancy is enabled if this filter is installed, we can't continue without credentials
+        if (apiKey == null || apiSecret == null) {
+            final String errorMessage = String.format("Make sure to set the %s and %s headers", JaxrsResource.HDR_API_KEY, JaxrsResource.HDR_API_SECRET);
+            sendAuthError(response, errorMessage);
+            return;
+        }
+
+        // Verify the apiKey/apiSecret combo
+        final AuthenticationToken token = new UsernamePasswordToken(apiKey, apiSecret);
         try {
+            modularRealmAuthenticator.authenticate(token);
+        } catch (AuthenticationException e) {
+            final String errorMessage = e.getLocalizedMessage();
+            sendAuthError(response, errorMessage);
+            return;
+        }
+
+        try {
+            // Load the tenant in the request object (apiKey is unique across tenants)
             final Tenant tenant = tenantUserApi.getTenantByApiKey(apiKey);
             request.setAttribute(TENANT, tenant);
 
@@ -76,5 +116,27 @@ public class TenantFilter implements Filter {
 
     @Override
     public void destroy() {
+    }
+
+    private boolean shouldSkipFilter(final ServletRequest request) {
+        boolean shouldSkip = false;
+
+        // Chicken - egg problem
+        if (request instanceof HttpServletRequest) {
+            final HttpServletRequest httpServletRequest = (HttpServletRequest) request;
+            final String path = httpServletRequest.getRequestURI();
+            if ("/1.0/kb/tenants".equals(path) && "POST".equals(httpServletRequest.getMethod())) {
+                shouldSkip = true;
+            }
+        }
+
+        return shouldSkip;
+    }
+
+    private void sendAuthError(final ServletResponse response, final String errorMessage) throws IOException {
+        if (response instanceof HttpServletResponse) {
+            final HttpServletResponse httpServletResponse = (HttpServletResponse) response;
+            httpServletResponse.sendError(401, errorMessage);
+        }
     }
 }

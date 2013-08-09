@@ -56,6 +56,7 @@ import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
 import com.ning.billing.util.svcapi.tag.TagInternalApi;
@@ -83,9 +84,10 @@ public class RefundProcessor extends ProcessorBase {
                            final InternalCallContextFactory internalCallContextFactory,
                            final TagInternalApi tagUserApi,
                            final PaymentDao paymentDao,
+                           final NonEntityDao nonEntityDao,
                            final GlobalLocker locker,
                            @Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor) {
-        super(pluginRegistry, accountApi, eventBus, paymentDao, tagUserApi, locker, executor, invoiceApi);
+        super(pluginRegistry, accountApi, eventBus, paymentDao, nonEntityDao, tagUserApi, locker, executor, invoiceApi);
         this.internalCallContextFactory = internalCallContextFactory;
     }
 

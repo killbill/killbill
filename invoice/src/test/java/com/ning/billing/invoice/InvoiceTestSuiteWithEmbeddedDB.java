@@ -43,6 +43,7 @@ import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.clock.Clock;
+import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.subscription.SubscriptionInternalApi;
 import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
@@ -83,6 +84,8 @@ public abstract class InvoiceTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     protected BusService busService;
     @Inject
     protected InvoiceDao invoiceDao;
+    @Inject
+    protected NonEntityDao nonEntityDao;
     @Inject
     protected TagUserApi tagUserApi;
     @Inject
