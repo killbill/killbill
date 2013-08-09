@@ -60,6 +60,6 @@ For example, to create the a tenant with the credentials bob/lazar:
     {"uri":"/1.0/kb/tenants/f07bc7d5-00e8-48bd-8b43-ef8537219171"}
 
 
-You can now access the API using basic auth, e.g.:
+You can now access the API, e.g.:
 
-    ~> curl -v http://127.0.0.1:8080/1.0/kb/tagDefinitions -ubob:lazar
+    ~> curl -v http://127.0.0.1:8080/1.0/kb/tagDefinitions -H'X-Killbill-ApiKey: bob' -H'X-Killbill-ApiSecret: lazar'
