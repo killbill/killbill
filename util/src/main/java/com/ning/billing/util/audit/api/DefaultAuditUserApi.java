@@ -21,9 +21,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import com.ning.billing.ObjectType;
+import com.ning.billing.entitlement.api.Subscription;
+import com.ning.billing.entitlement.api.SubscriptionBundle;
+import com.ning.billing.entitlement.api.SubscriptionBundleTimeline.SubscriptionEvent;
 import com.ning.billing.subscription.api.timeline.BundleBaseTimeline;
 import com.ning.billing.subscription.api.timeline.SubscriptionBaseRepairException;
 import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline;
@@ -53,18 +57,18 @@ import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.dao.TableName;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 
 public class DefaultAuditUserApi implements AuditUserApi {
 
     private final AuditDao auditDao;
-    private final SubscriptionBaseTimelineApi timelineApi;
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
     public DefaultAuditUserApi(final AuditDao auditDao, final SubscriptionBaseTimelineApi timelineApi, final InternalCallContextFactory internalCallContextFactory) {
         this.auditDao = auditDao;
-        this.timelineApi = timelineApi;
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
@@ -74,27 +78,23 @@ public class DefaultAuditUserApi implements AuditUserApi {
     }
 
     @Override
-    public AuditLogsForBundles getAuditLogsForBundle(final UUID bundleId, final AuditLevel auditLevel, final TenantContext context)  {
-
-        try {
-            return getAuditLogsForBundles(ImmutableList.<BundleBaseTimeline>of(timelineApi.getBundleTimeline(bundleId, context)), auditLevel, context);
-        } catch (SubscriptionBaseRepairException e) {
-            // STEPH_ENT
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-            return null;
-        }
-    }
-
-    public AuditLogsForBundles getAuditLogsForBundles(final List<BundleBaseTimeline> bundles, final AuditLevel auditLevel, final TenantContext context) {
+    public AuditLogsForBundles getAuditLogsForBundles(final List<SubscriptionBundle> bundles, final AuditLevel auditLevel, final TenantContext context) {
         final Map<UUID, List<AuditLog>> bundlesAuditLogs = new HashMap<UUID, List<AuditLog>>();
         final Map<UUID, List<AuditLog>> subscriptionsAuditLogs = new HashMap<UUID, List<AuditLog>>();
         final Map<UUID, List<AuditLog>> subscriptionEventsAuditLogs = new HashMap<UUID, List<AuditLog>>();
-        for (final BundleBaseTimeline bundle : bundles) {
+        for (final SubscriptionBundle bundle : bundles) {
             bundlesAuditLogs.put(bundle.getId(), getAuditLogs(bundle.getId(), ObjectType.BUNDLE, auditLevel, context));
-            for (final SubscriptionBaseTimeline subscriptionTimeline : bundle.getSubscriptions()) {
-                subscriptionsAuditLogs.put(subscriptionTimeline.getId(), getAuditLogs(subscriptionTimeline.getId(), ObjectType.SUBSCRIPTION, auditLevel, context));
-                for (final ExistingEvent event : subscriptionTimeline.getExistingEvents()) {
-                    subscriptionEventsAuditLogs.put(event.getEventId(), getAuditLogs(event.getEventId(), ObjectType.SUBSCRIPTION_EVENT, auditLevel, context));
+            for (final Subscription cur : bundle.getSubscriptions()) {
+
+                final ImmutableList<SubscriptionEvent> events =  ImmutableList.<SubscriptionEvent>copyOf(Collections2.filter(bundle.getTimeline().getSubscriptionEvents(), new Predicate<SubscriptionEvent>() {
+                    @Override
+                    public boolean apply(@Nullable final SubscriptionEvent input) {
+                        return input.getEntitlementId().equals(cur.getId());
+                    }
+                }));
+                subscriptionsAuditLogs.put(cur.getId(), getAuditLogs(cur.getId(), ObjectType.SUBSCRIPTION, auditLevel, context));
+                for (final SubscriptionEvent event : events) {
+                    subscriptionEventsAuditLogs.put(event.getId(), getAuditLogs(event.getId(), event.getSubscriptionEventType().getObjectType(), auditLevel, context));
                 }
             }
         }

@@ -19,6 +19,7 @@ package com.ning.billing.jaxrs.resources;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
@@ -72,14 +73,17 @@ import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.PaymentMethod;
 import com.ning.billing.payment.api.Refund;
+import com.ning.billing.subscription.api.timeline.BundleBaseTimeline;
 import com.ning.billing.subscription.api.timeline.SubscriptionBaseRepairException;
 import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimelineApi;
+import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.util.api.AuditUserApi;
 import com.ning.billing.util.api.CustomFieldApiException;
 import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.api.TagUserApi;
+import com.ning.billing.util.audit.AuditLogsForBundles;
 import com.ning.billing.util.audit.AuditLogsForInvoicePayments;
 import com.ning.billing.util.audit.AuditLogsForInvoices;
 import com.ning.billing.util.audit.AuditLogsForPayments;
@@ -250,7 +254,7 @@ public class AccountResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     public Response getAccountTimeline(@PathParam("accountId") final String accountIdString,
                                        @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
-                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException, SubscriptionBaseRepairException {
+                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException, SubscriptionApiException {
         final TenantContext tenantContext = context.createContext(request);
 
         final UUID accountId = UUID.fromString(accountIdString);
@@ -280,22 +284,14 @@ public class AccountResource extends JaxRsResourceBase {
             chargebacksByPayment.put(chargeback.getPaymentId(), chargeback);
         }
 
-        /*
         // Get the bundles
-        final List<SubscriptionBaseBundle> bundles = entitlementApi.getBundlesForAccount(account.getId(), tenantContext);
-        final List<BundleBaseTimeline> bundlesTimeline = new LinkedList<BundleBaseTimeline>();
-        for (final SubscriptionBaseBundle bundle : bundles) {
-            bundlesTimeline.add(timelineApi.getBundleTimeline(bundle.getId(), tenantContext));
-        }
-        final AuditLogsForBundles bundlesAuditLogs = auditUserApi.getAuditLogsForBundles(bundlesTimeline, auditMode.getLevel(), tenantContext);
+        final List<SubscriptionBundle> bundles = subscriptionApi.getSubscriptionBundlesForAccountId(account.getId(), tenantContext);
+        final AuditLogsForBundles bundlesAuditLogs = auditUserApi.getAuditLogsForBundles(bundles, auditMode.getLevel(), tenantContext);
 
-        final AccountTimelineJson json = new AccountTimelineJson(account, invoices, payments, bundlesTimeline,
+        final AccountTimelineJson json = new AccountTimelineJson(account, invoices, payments, bundles,
                                                                  refundsByPayment, chargebacksByPayment,
                                                                  invoicesAuditLogs, paymentsAuditLogs, refundsAuditLogs,
                                                                  chargebacksAuditLogs, bundlesAuditLogs);
-        // STEPH_ENT
-        */
-        final AccountTimelineJson json = null;
         return Response.status(Status.OK).entity(json).build();
     }
 

@@ -27,7 +27,6 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.entitlement.api.Subscription;
 import com.ning.billing.entitlement.api.SubscriptionBundle;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
@@ -35,7 +34,6 @@ import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.Refund;
-import com.ning.billing.subscription.api.timeline.BundleBaseTimeline;
 import com.ning.billing.util.audit.AuditLog;
 import com.ning.billing.util.audit.AuditLogsForBundles;
 import com.ning.billing.util.audit.AuditLogsForInvoicePayments;
@@ -96,7 +94,6 @@ public class AccountTimelineJson {
         }
         return tmp.toString();
     }
-
 
 
     public AccountTimelineJson(final Account account, final List<Invoice> invoices, final List<Payment> payments,

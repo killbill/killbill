@@ -32,6 +32,9 @@ import org.testng.Assert;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.dao.AccountSqlDao;
+import com.ning.billing.entitlement.api.SubscriptionApi;
+import com.ning.billing.entitlement.api.SubscriptionApiException;
+import com.ning.billing.entitlement.api.SubscriptionBundle;
 import com.ning.billing.subscription.engine.dao.BundleSqlDao;
 import com.ning.billing.subscription.engine.dao.SubscriptionEventSqlDao;
 import com.ning.billing.subscription.engine.dao.SubscriptionSqlDao;
@@ -56,6 +59,7 @@ import com.ning.billing.util.entity.Entity;
 import com.ning.billing.util.entity.dao.EntityModelDao;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 public class AuditChecker {
@@ -64,14 +68,16 @@ public class AuditChecker {
 
     private final AuditUserApi auditUserApi;
     private final IDBI dbi;
+    private final SubscriptionApi subscriptionApi;
     private final InternalCallContextFactory callContextFactory;
     private final NonEntityDao nonEntityDao;
 
 
     @Inject
-    public AuditChecker(final AuditUserApi auditUserApi, final IDBI dbi, final InternalCallContextFactory callContextFactory, final NonEntityDao nonEntityDao) {
+    public AuditChecker(final AuditUserApi auditUserApi, final IDBI dbi, final SubscriptionApi subscriptionApi, final InternalCallContextFactory callContextFactory, final NonEntityDao nonEntityDao) {
         this.auditUserApi = auditUserApi;
         this.dbi = dbi;
+        this.subscriptionApi = subscriptionApi;
         this.callContextFactory = callContextFactory;
         this.nonEntityDao = nonEntityDao;
     }
@@ -186,12 +192,13 @@ public class AuditChecker {
 
 
     private AuditLogsForBundles getAuditLogsForBundle(final UUID bundleId, final CallContext context) {
-       // try {
-            return auditUserApi.getAuditLogsForBundle(bundleId, AuditLevel.FULL, context);
-        //} catch (SubscriptionBaseRepairException e) {
-        //    Assert.fail(e.toString());
-        //    return null;
-       // }
+        try {
+            final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundle(bundleId, context);
+            return auditUserApi.getAuditLogsForBundles(Collections.singletonList(bundle), AuditLevel.FULL, context);
+        } catch (SubscriptionApiException e) {
+            Assert.fail(e.toString());
+            return null;
+        }
     }
 
     private AuditLogsForInvoices getAuditLogForInvoice(final Invoice invoice, final CallContext context) {
