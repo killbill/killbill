@@ -37,7 +37,7 @@ import com.ning.billing.subscription.api.user.SubscriptionData;
 import com.ning.billing.subscription.events.SubscriptionEvent;
 import com.ning.billing.subscription.exceptions.SubscriptionError;
 import com.ning.billing.subscription.api.SubscriptionBase;
-import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 
@@ -219,22 +219,22 @@ public class RepairSubscriptionDao implements SubscriptionDao, RepairSubscriptio
     }
 
     @Override
-    public List<SubscriptionBundle> getSubscriptionBundleForAccount(final UUID accountId, final InternalTenantContext context) {
+    public List<SubscriptionBaseBundle> getSubscriptionBundleForAccount(final UUID accountId, final InternalTenantContext context) {
         throw new SubscriptionError(NOT_IMPLEMENTED);
     }
 
     @Override
-    public SubscriptionBundle getSubscriptionBundleFromAccountAndKey(final UUID accountId, final String bundleKey, final InternalTenantContext context) {
+    public SubscriptionBaseBundle getSubscriptionBundleFromAccountAndKey(final UUID accountId, final String bundleKey, final InternalTenantContext context) {
         throw new SubscriptionError(NOT_IMPLEMENTED);
     }
 
     @Override
-    public SubscriptionBundle getSubscriptionBundleFromId(final UUID bundleId, final InternalTenantContext context) {
+    public SubscriptionBaseBundle getSubscriptionBundleFromId(final UUID bundleId, final InternalTenantContext context) {
         throw new SubscriptionError(NOT_IMPLEMENTED);
     }
 
     @Override
-    public SubscriptionBundle createSubscriptionBundle(final SubscriptionBundleData bundle, final InternalCallContext context) {
+    public SubscriptionBaseBundle createSubscriptionBundle(final SubscriptionBundleData bundle, final InternalCallContext context) {
         throw new SubscriptionError(NOT_IMPLEMENTED);
     }
 
@@ -307,7 +307,7 @@ public class RepairSubscriptionDao implements SubscriptionDao, RepairSubscriptio
     }
 
     @Override
-    public List<SubscriptionBundle> getSubscriptionBundlesForKey(final String bundleKey, final InternalTenantContext context) {
+    public List<SubscriptionBaseBundle> getSubscriptionBundlesForKey(final String bundleKey, final InternalTenantContext context) {
         throw new SubscriptionError(NOT_IMPLEMENTED);
     }
 }

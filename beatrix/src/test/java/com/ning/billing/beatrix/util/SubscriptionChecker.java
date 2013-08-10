@@ -27,8 +27,8 @@ import org.testng.Assert;
 
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
+import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.subscription.api.user.SubscriptionBaseTransition;
-import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.subscription.api.user.SubscriptionBaseTransitionData;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
@@ -48,16 +48,16 @@ public class SubscriptionChecker {
         this.auditChecker = auditChecker;
     }
 
-    public SubscriptionBundle checkBundleNoAudits(final UUID bundleId, final UUID expectedAccountId, final String expectedKey, final InternalTenantContext context) throws SubscriptionBaseApiException {
-        final SubscriptionBundle bundle = subscriptionApi.getBundleFromId(bundleId, context);
+    public SubscriptionBaseBundle checkBundleNoAudits(final UUID bundleId, final UUID expectedAccountId, final String expectedKey, final InternalTenantContext context) throws SubscriptionBaseApiException {
+        final SubscriptionBaseBundle bundle = subscriptionApi.getBundleFromId(bundleId, context);
         Assert.assertNotNull(bundle);
         Assert.assertEquals(bundle.getAccountId(), expectedAccountId);
         Assert.assertEquals(bundle.getExternalKey(), expectedKey);
         return bundle;
     }
 
-    public SubscriptionBundle checkBundleAuditUpdated(final UUID bundleId, final InternalCallContext context) throws SubscriptionBaseApiException {
-        final SubscriptionBundle bundle = subscriptionApi.getBundleFromId(bundleId, context);
+    public SubscriptionBaseBundle checkBundleAuditUpdated(final UUID bundleId, final InternalCallContext context) throws SubscriptionBaseApiException {
+        final SubscriptionBaseBundle bundle = subscriptionApi.getBundleFromId(bundleId, context);
         auditChecker.checkBundleUpdated(bundle.getId(), context.toCallContext());
         return bundle;
     }

@@ -31,6 +31,7 @@ import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.subscription.api.SubscriptionApiService;
+import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.subscription.api.user.SubscriptionBaseTransition;
 import com.ning.billing.subscription.api.user.SubscriptionBuilder;
@@ -41,7 +42,6 @@ import com.ning.billing.subscription.events.SubscriptionEvent;
 import com.ning.billing.subscription.events.SubscriptionEvent.EventType;
 import com.ning.billing.subscription.events.user.ApiEventBuilder;
 import com.ning.billing.subscription.events.user.ApiEventCancel;
-import com.ning.billing.subscription.api.SubscriptionTransitionType;
 import com.ning.billing.subscription.api.user.SubscriptionState;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
@@ -142,7 +142,7 @@ public class SubscriptionDataRepair extends SubscriptionData {
         if (pendingTransition == null) {
             return;
         }
-        final Product baseProduct = (pendingTransition.getTransitionType() == SubscriptionTransitionType.CANCEL) ? null :
+        final Product baseProduct = (pendingTransition.getTransitionType() == SubscriptionBaseTransitionType.CANCEL) ? null :
                                     pendingTransition.getNextPlan().getProduct();
 
         addAddonCancellationIfRequired(addOnSubscriptionInRepair, baseProduct, pendingTransition.getEffectiveTransitionTime(), context);

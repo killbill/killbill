@@ -36,7 +36,7 @@ public interface CompletionUserRequestWaiter {
 
     public void onAccountChange(final AccountChangeInternalEvent curEvent);
 
-    public void onSubscriptionTransition(final EffectiveSubscriptionInternalEvent curEventEffective);
+    public void onSubscriptionBaseTransition(final EffectiveSubscriptionInternalEvent curEventEffective);
 
     public void onInvoiceCreation(final InvoiceCreationInternalEvent curEvent);
 

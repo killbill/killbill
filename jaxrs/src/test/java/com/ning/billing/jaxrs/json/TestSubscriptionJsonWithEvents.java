@@ -29,15 +29,13 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.subscription.api.SubscriptionTransitionType;
+import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.subscription.api.timeline.SubscriptionTimeline;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.jaxrs.JaxrsTestSuiteNoDB;
-import com.ning.billing.util.audit.AuditLog;
 import com.ning.billing.clock.DefaultClock;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 import static com.ning.billing.jaxrs.JaxrsTestUtils.createAuditLogsJson;
 
@@ -50,24 +48,25 @@ public class TestSubscriptionJsonWithEvents extends JaxrsTestSuiteNoDB {
         final DateTime effectiveDate = DefaultClock.toUTCDateTime(new DateTime(DateTimeZone.UTC));
         final UUID eventId = UUID.randomUUID();
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
-        final SubscriptionJsonWithEvents.SubscriptionReadEventJson newEvent = new SubscriptionJsonWithEvents.SubscriptionReadEventJson(eventId.toString(),
+        final EntitlementJsonWithEvents.SubscriptionReadEventJson newEvent = new EntitlementJsonWithEvents.SubscriptionReadEventJson(eventId.toString(),
                                                                                                                                        BillingPeriod.NO_BILLING_PERIOD.toString(),
                                                                                                                                        requestedDate,
                                                                                                                                        effectiveDate,
                                                                                                                                        UUID.randomUUID().toString(),
                                                                                                                                        UUID.randomUUID().toString(),
-                                                                                                                                       SubscriptionTransitionType.CREATE.toString(),
+                                                                                                                                       SubscriptionBaseTransitionType.CREATE.toString(),
                                                                                                                                        PhaseType.DISCOUNT.toString(),
                                                                                                                                        auditLogs);
-        final SubscriptionJsonWithEvents subscriptionJsonWithEvents = new SubscriptionJsonWithEvents(subscriptionId,
-                                                                                                     ImmutableList.<SubscriptionJsonWithEvents.SubscriptionReadEventJson>of(newEvent),
+        final EntitlementJsonWithEvents subscriptionJsonWithEvents = null; /* STEPH_ENT new EntitlementJsonWithEvents(subscriptionId,
+                                                                                                     ImmutableList.<EntitlementJsonWithEvents.SubscriptionReadEventJson>of(newEvent),
                                                                                                      null,
                                                                                                      null,
                                                                                                      null);
+                                                                                                     */
 
         final String asJson = mapper.writeValueAsString(subscriptionJsonWithEvents);
 
-        final SubscriptionJsonWithEvents fromJson = mapper.readValue(asJson, SubscriptionJsonWithEvents.class);
+        final EntitlementJsonWithEvents fromJson = mapper.readValue(asJson, EntitlementJsonWithEvents.class);
         Assert.assertEquals(fromJson, subscriptionJsonWithEvents);
     }
 
@@ -77,25 +76,25 @@ public class TestSubscriptionJsonWithEvents extends JaxrsTestSuiteNoDB {
         final DateTime effectiveDate = DefaultClock.toUTCDateTime(new DateTime(DateTimeZone.UTC));
         final UUID eventId = UUID.randomUUID();
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
-        final SubscriptionJsonWithEvents.SubscriptionReadEventJson newEvent = new SubscriptionJsonWithEvents.SubscriptionReadEventJson(eventId.toString(),
+        final EntitlementJsonWithEvents.SubscriptionReadEventJson newEvent = new EntitlementJsonWithEvents.SubscriptionReadEventJson(eventId.toString(),
                                                                                                                                        BillingPeriod.NO_BILLING_PERIOD.toString(),
                                                                                                                                        requestedDate,
                                                                                                                                        effectiveDate,
                                                                                                                                        UUID.randomUUID().toString(),
                                                                                                                                        UUID.randomUUID().toString(),
-                                                                                                                                       SubscriptionTransitionType.CREATE.toString(),
+                                                                                                                                       SubscriptionBaseTransitionType.CREATE.toString(),
                                                                                                                                        PhaseType.DISCOUNT.toString(),
                                                                                                                                        auditLogs);
 
         final SubscriptionBase subscription = Mockito.mock(SubscriptionBase.class);
         Mockito.when(subscription.getId()).thenReturn(UUID.randomUUID());
 
-        final SubscriptionJsonWithEvents subscriptionJsonWithEvents = new SubscriptionJsonWithEvents(subscription,
-                                                                                                     ImmutableList.<SubscriptionJsonWithEvents.SubscriptionReadEventJson>of(newEvent),
+        final EntitlementJsonWithEvents subscriptionJsonWithEvents = null; /* STEPH_ENT new EntitlementJsonWithEvents(subscription,
+                                                                                                     ImmutableList.<EntitlementJsonWithEvents.SubscriptionReadEventJson>of(newEvent),
                                                                                                      null,
                                                                                                      null,
-                                                                                                     null);
-        Assert.assertEquals(subscriptionJsonWithEvents.getSubscriptionId(), subscription.getId().toString());
+                                                                                                     null); */
+        Assert.assertEquals(subscriptionJsonWithEvents.getEntitlementId(), subscription.getId().toString());
         Assert.assertNull(subscriptionJsonWithEvents.getNewEvents());
         Assert.assertNull(subscriptionJsonWithEvents.getDeletedEvents());
         Assert.assertEquals(subscriptionJsonWithEvents.getEvents().size(), 1);
@@ -114,7 +113,7 @@ public class TestSubscriptionJsonWithEvents extends JaxrsTestSuiteNoDB {
                                                                              PhaseType.EVERGREEN);
         Mockito.when(event.getEffectiveDate()).thenReturn(effectiveDate);
         Mockito.when(event.getEventId()).thenReturn(eventId);
-        Mockito.when(event.getSubscriptionTransitionType()).thenReturn(SubscriptionTransitionType.CREATE);
+        Mockito.when(event.getSubscriptionTransitionType()).thenReturn(SubscriptionBaseTransitionType.CREATE);
         Mockito.when(event.getPlanPhaseSpecifier()).thenReturn(planPhaseSpecifier);
 
         final SubscriptionTimeline subscriptionTimeline = Mockito.mock(SubscriptionTimeline.class);
@@ -123,9 +122,9 @@ public class TestSubscriptionJsonWithEvents extends JaxrsTestSuiteNoDB {
 
         final UUID bundleId = UUID.randomUUID();
 
-        final SubscriptionJsonWithEvents subscriptionJsonWithEvents = new SubscriptionJsonWithEvents(bundleId, subscriptionTimeline,
-                                                                                                     null, ImmutableMap.<UUID, List<AuditLog>>of());
-        Assert.assertEquals(subscriptionJsonWithEvents.getSubscriptionId(), subscriptionTimeline.getId().toString());
+        final EntitlementJsonWithEvents subscriptionJsonWithEvents = null; /* STEPH_ENT new EntitlementJsonWithEvents(bundleId, subscriptionTimeline,
+                                                                                                     null, ImmutableMap.<UUID, List<AuditLog>>of()); */
+        Assert.assertEquals(subscriptionJsonWithEvents.getEntitlementId(), subscriptionTimeline.getId().toString());
         Assert.assertNull(subscriptionJsonWithEvents.getNewEvents());
         Assert.assertNull(subscriptionJsonWithEvents.getDeletedEvents());
         Assert.assertEquals(subscriptionJsonWithEvents.getEvents().size(), 1);

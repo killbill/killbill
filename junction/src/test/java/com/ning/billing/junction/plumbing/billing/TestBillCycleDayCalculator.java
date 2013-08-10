@@ -32,7 +32,7 @@ import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.subscription.api.SubscriptionBase;
-import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.junction.JunctionTestSuiteNoDB;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
@@ -46,7 +46,7 @@ public class TestBillCycleDayCalculator extends JunctionTestSuiteNoDB {
         final int expectedBCDUTC = 16;
 
         // Create a Bundle associated with a subscription
-        final SubscriptionBundle bundle = Mockito.mock(SubscriptionBundle.class);
+        final SubscriptionBaseBundle bundle = Mockito.mock(SubscriptionBaseBundle.class);
         final SubscriptionBase subscription = Mockito.mock(SubscriptionBase.class);
         Mockito.when(subscription.getStartDate()).thenReturn(bpStartDateUTC);
 

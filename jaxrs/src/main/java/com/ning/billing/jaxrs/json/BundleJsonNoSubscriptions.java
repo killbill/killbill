@@ -20,7 +20,7 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.entitlement.api.SubscriptionBundle;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -33,7 +33,7 @@ public class BundleJsonNoSubscriptions extends BundleJsonSimple {
     public BundleJsonNoSubscriptions(@JsonProperty("bundleId") final String bundleId,
                                      @JsonProperty("accountId") final String accountId,
                                      @JsonProperty("externalKey") final String externalKey,
-                                     @JsonProperty("subscriptions") @Nullable final List<SubscriptionJsonWithEvents> subscriptions,
+                                     @JsonProperty("subscriptions") @Nullable final List<EntitlementJsonWithEvents> subscriptions,
                                      @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(bundleId, externalKey, auditLogs);
         this.accountId = accountId;

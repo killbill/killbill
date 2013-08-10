@@ -286,9 +286,9 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
                                     final BigDecimal amount, final DateTime chargeThroughDate,
                                     final int totalInvoiceItemCount) throws EntitlementApiException {
 
-        final Entitlement entitlement = entitlementApi.getEntitlementFromId(subscriptionId, callContext);
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(subscriptionId, callContext);
 
-        final SubscriptionBase subscription = ((DefaultEntitlement) entitlement).getSubscription();
+        final SubscriptionBase subscription = ((DefaultEntitlement) entitlement).getSubscriptionBase();
         final DateTime ctd = subscription.getChargedThroughDate();
         assertNotNull(ctd);
         log.info("Checking CTD: " + ctd.toString() + "; clock is " + clock.getUTCNow().toString());
@@ -532,7 +532,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             public Entitlement apply(@Nullable final Void dontcare) {
                 try {
                     // Need to fetch again to get latest CTD updated from the system
-                    final Entitlement refreshedEntitlement = entitlementApi.getEntitlementFromId(entitlement.getId(), callContext);
+                    final Entitlement refreshedEntitlement = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
                     if (billingPolicy == null) {
                         refreshedEntitlement.changePlan(productName, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow().toLocalDate(), callContext);
                     } else {
@@ -555,7 +555,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             public Entitlement apply(@Nullable final Void dontcare) {
                 try {
                     // Need to fetch again to get latest CTD updated from the system
-                    final Entitlement refreshedEntitlement = entitlementApi.getEntitlementFromId(entitlement.getId(), callContext);
+                    final Entitlement refreshedEntitlement = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
                     refreshedEntitlement.cancelEntitlementWithDate(requestedDate.toLocalDate(), callContext);
                     return refreshedEntitlement;
                 } catch (EntitlementApiException e) {

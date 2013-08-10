@@ -35,16 +35,14 @@ import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.DefaultEntitlement;
-import com.ning.billing.entitlement.api.Entitlement;
+import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.subscription.api.user.SubscriptionData;
 import com.ning.billing.subscription.api.user.SubscriptionEvents;
-import com.ning.billing.subscription.api.SubscriptionTransitionType;
 import com.ning.billing.subscription.api.timeline.BundleTimeline;
 import com.ning.billing.subscription.api.timeline.SubscriptionTimeline;
 import com.ning.billing.subscription.api.timeline.SubscriptionTimeline.DeletedEvent;
 import com.ning.billing.subscription.api.timeline.SubscriptionTimeline.ExistingEvent;
 import com.ning.billing.subscription.api.timeline.SubscriptionTimeline.NewEvent;
-import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.subscription.api.user.SubscriptionState;
 
 import static org.testng.Assert.assertEquals;
@@ -103,7 +101,7 @@ public class TestRepairIntegration extends TestIntegrationBase {
         }
         final boolean ifRepair = false;
         if (ifRepair) {
-            BundleTimeline bundleRepair = repairApi.getBundleTimeline(bpEntitlement.getSubscription().getBundleId(), callContext);
+            BundleTimeline bundleRepair = repairApi.getBundleTimeline(bpEntitlement.getSubscriptionBase().getBundleId(), callContext);
             sortEventsOnBundle(bundleRepair);
 
             // Quick check
@@ -122,11 +120,11 @@ public class TestRepairIntegration extends TestIntegrationBase {
             des.add(createDeletedEvent(bpRepair.getExistingEvents().get(1).getEventId()));
 
             final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.TRIAL);
-            final NewEvent ne = createNewEvent(SubscriptionTransitionType.CHANGE, bpChangeDate, spec);
+            final NewEvent ne = createNewEvent(SubscriptionBaseTransitionType.CHANGE, bpChangeDate, spec);
 
             bpRepair = createSubscriptionReapir(bpEntitlement.getId(), des, Collections.singletonList(ne));
 
-            bundleRepair = createBundleRepair(bpEntitlement.getSubscription().getBundleId(), bundleRepair.getViewId(), Collections.singletonList(bpRepair));
+            bundleRepair = createBundleRepair(bpEntitlement.getSubscriptionBase().getBundleId(), bundleRepair.getViewId(), Collections.singletonList(bpRepair));
 
             // TIME TO  REPAIR
             busHandler.pushExpectedEvent(NextEvent.INVOICE);
@@ -136,18 +134,18 @@ public class TestRepairIntegration extends TestIntegrationBase {
             assertTrue(busHandler.isCompleted(DELAY));
 
 
-            final SubscriptionData newAoSubscription = (SubscriptionData) aoEntitlement1.getSubscription();
+            final SubscriptionData newAoSubscription = (SubscriptionData) aoEntitlement1.getSubscriptionBase();
             assertEquals(newAoSubscription.getState(), SubscriptionState.CANCELLED);
             assertEquals(newAoSubscription.getAllTransitions().size(), 2);
             assertEquals(newAoSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
 
-            final SubscriptionData newAoSubscription2 = (SubscriptionData) aoEntitlement2.getSubscription();
+            final SubscriptionData newAoSubscription2 = (SubscriptionData) aoEntitlement2.getSubscriptionBase();
             assertEquals(newAoSubscription2.getState(), SubscriptionState.ACTIVE);
             assertEquals(newAoSubscription2.getAllTransitions().size(), 2);
             assertEquals(newAoSubscription2.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
 
 
-            final SubscriptionData newBaseSubscription = (SubscriptionData) bpEntitlement.getSubscription();
+            final SubscriptionData newBaseSubscription = (SubscriptionData) bpEntitlement.getSubscriptionBase();
             assertEquals(newBaseSubscription.getState(), SubscriptionState.ACTIVE);
             assertEquals(newBaseSubscription.getAllTransitions().size(), 3);
             assertEquals(newBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
@@ -230,14 +228,14 @@ public class TestRepairIntegration extends TestIntegrationBase {
         };
     }
 
-    protected ExistingEvent createExistingEventForAssertion(final SubscriptionTransitionType type,
+    protected ExistingEvent createExistingEventForAssertion(final SubscriptionBaseTransitionType type,
                                                             final String productName, final PhaseType phaseType, final ProductCategory category, final String priceListName, final BillingPeriod billingPeriod,
                                                             final DateTime effectiveDateTime) {
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, category, billingPeriod, priceListName, phaseType);
         final ExistingEvent ev = new ExistingEvent() {
             @Override
-            public SubscriptionTransitionType getSubscriptionTransitionType() {
+            public SubscriptionBaseTransitionType getSubscriptionTransitionType() {
                 return type;
             }
 
@@ -304,11 +302,11 @@ public class TestRepairIntegration extends TestIntegrationBase {
         };
     }
 
-    protected NewEvent createNewEvent(final SubscriptionTransitionType type, final DateTime requestedDate, final PlanPhaseSpecifier spec) {
+    protected NewEvent createNewEvent(final SubscriptionBaseTransitionType type, final DateTime requestedDate, final PlanPhaseSpecifier spec) {
 
         return new NewEvent() {
             @Override
-            public SubscriptionTransitionType getSubscriptionTransitionType() {
+            public SubscriptionBaseTransitionType getSubscriptionTransitionType() {
                 return type;
             }
 

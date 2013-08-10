@@ -23,9 +23,9 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.clock.DefaultClock;
 import com.ning.billing.payment.api.Payment;
 import com.ning.billing.util.audit.AuditLog;
-import com.ning.billing.clock.DefaultClock;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

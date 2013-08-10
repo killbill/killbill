@@ -22,11 +22,11 @@ import com.ning.billing.entitlement.api.Blockable;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.util.entity.Entity;
 
-public interface SubscriptionBundle extends Blockable, Entity {
+public interface SubscriptionBaseBundle extends Blockable, Entity {
 
     public UUID getAccountId();
 
     public String getExternalKey();
 
-    public OverdueState<SubscriptionBundle> getOverdueState();
+    public OverdueState<SubscriptionBaseBundle> getOverdueState();
 }

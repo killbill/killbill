@@ -31,7 +31,7 @@ import com.ning.billing.beatrix.glue.BeatrixModule;
 import com.ning.billing.bus.api.BusEvent;
 import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.bus.api.PersistentBus.EventBusException;
-import com.ning.billing.subscription.api.SubscriptionTransitionType;
+import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.notification.plugin.api.ExtBusEventType;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.InternalCallContext;
@@ -127,18 +127,18 @@ public class
                 SubscriptionInternalEvent realEventST = (SubscriptionInternalEvent) event;
                 objectType = ObjectType.SUBSCRIPTION;
                 objectId = realEventST.getSubscriptionId();
-                if (realEventST.getTransitionType() == SubscriptionTransitionType.CREATE ||
-                    realEventST.getTransitionType() == SubscriptionTransitionType.RE_CREATE ||
-                    realEventST.getTransitionType() == SubscriptionTransitionType.TRANSFER ||
-                    realEventST.getTransitionType() == SubscriptionTransitionType.MIGRATE_ENTITLEMENT) {
+                if (realEventST.getTransitionType() == SubscriptionBaseTransitionType.CREATE ||
+                    realEventST.getTransitionType() == SubscriptionBaseTransitionType.RE_CREATE ||
+                    realEventST.getTransitionType() == SubscriptionBaseTransitionType.TRANSFER ||
+                    realEventST.getTransitionType() == SubscriptionBaseTransitionType.MIGRATE_ENTITLEMENT) {
                     eventBusType = ExtBusEventType.SUBSCRIPTION_CREATION;
-                } else if (realEventST.getTransitionType() == SubscriptionTransitionType.CANCEL) {
+                } else if (realEventST.getTransitionType() == SubscriptionBaseTransitionType.CANCEL) {
                     eventBusType = ExtBusEventType.SUBSCRIPTION_CANCEL;
-                } else if (realEventST.getTransitionType() == SubscriptionTransitionType.PHASE) {
+                } else if (realEventST.getTransitionType() == SubscriptionBaseTransitionType.PHASE) {
                     eventBusType = ExtBusEventType.SUBSCRIPTION_PHASE;
-                } else if (realEventST.getTransitionType() == SubscriptionTransitionType.CHANGE) {
+                } else if (realEventST.getTransitionType() == SubscriptionBaseTransitionType.CHANGE) {
                     eventBusType = ExtBusEventType.SUBSCRIPTION_CHANGE;
-                } else if (realEventST.getTransitionType() == SubscriptionTransitionType.UNCANCEL) {
+                } else if (realEventST.getTransitionType() == SubscriptionBaseTransitionType.UNCANCEL) {
                     eventBusType = ExtBusEventType.SUBSCRIPTION_UNCANCEL;
                 }
                 break;

@@ -81,10 +81,9 @@ public class PaymentResource extends JaxRsResourceBase {
 
     private final PaymentApi paymentApi;
     private final InvoicePaymentApi invoicePaymentApi;
-    private final AccountUserApi accountApi;
 
     @Inject
-    public PaymentResource(final AccountUserApi accountApi,
+    public PaymentResource(final AccountUserApi accountUserApi,
                            final PaymentApi paymentApi,
                            final InvoicePaymentApi invoicePaymentApi,
                            final JaxrsUriBuilder uriBuilder,
@@ -92,10 +91,9 @@ public class PaymentResource extends JaxRsResourceBase {
                            final CustomFieldUserApi customFieldUserApi,
                            final AuditUserApi auditUserApi,
                            final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, context);
         this.paymentApi = paymentApi;
         this.invoicePaymentApi = invoicePaymentApi;
-        this.accountApi = accountApi;
     }
 
     @GET
@@ -151,7 +149,7 @@ public class PaymentResource extends JaxRsResourceBase {
 
         final UUID paymentId = UUID.fromString(paymentIdString);
         final Payment payment = paymentApi.getPayment(paymentId, false, callContext);
-        final Account account = accountApi.getAccountById(payment.getAccountId(), callContext);
+        final Account account = accountUserApi.getAccountById(payment.getAccountId(), callContext);
         final Payment newPayment = paymentApi.retryPayment(account, paymentId, callContext);
 
         return Response.status(Status.OK).entity(new PaymentJsonSimple(newPayment)).build();
@@ -190,7 +188,7 @@ public class PaymentResource extends JaxRsResourceBase {
 
         final UUID paymentUuid = UUID.fromString(paymentId);
         final Payment payment = paymentApi.getPayment(paymentUuid, false, callContext);
-        final Account account = accountApi.getAccountById(payment.getAccountId(), callContext);
+        final Account account = accountUserApi.getAccountById(payment.getAccountId(), callContext);
 
         final Refund result;
         if (json.isAdjusted()) {

@@ -22,7 +22,7 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ning.billing.subscription.api.SubscriptionTransitionType;
+import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.InternalCallContext;
@@ -63,8 +63,8 @@ public class InvoiceListener {
         try {
             //  Skip future uncancel event
             //  Skip events which are marked as not being the last one
-            if (event.getTransitionType() == SubscriptionTransitionType.UNCANCEL ||
-                event.getTransitionType() == SubscriptionTransitionType.MIGRATE_ENTITLEMENT
+            if (event.getTransitionType() == SubscriptionBaseTransitionType.UNCANCEL ||
+                event.getTransitionType() == SubscriptionBaseTransitionType.MIGRATE_ENTITLEMENT
                 || event.getRemainingEventsForUserOperation() > 0) {
                 return;
             }

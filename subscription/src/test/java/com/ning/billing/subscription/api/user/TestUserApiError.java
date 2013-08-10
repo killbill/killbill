@@ -99,7 +99,7 @@ public class TestUserApiError extends SubscriptionTestSuiteNoDB {
     public void testCreateSubscriptionAddOnNotAvailable() {
         try {
             final UUID accountId = UUID.randomUUID();
-            final SubscriptionBundle aoBundle = subscriptionInternalApi.createBundleForAccount(accountId, "myAOBundle", internalCallContext);
+            final SubscriptionBaseBundle aoBundle = subscriptionInternalApi.createBundleForAccount(accountId, "myAOBundle", internalCallContext);
             testUtil.createSubscriptionWithBundle(aoBundle.getId(), "Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
             tCreateSubscriptionInternal(aoBundle.getId(), "Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.SUB_CREATE_AO_NOT_AVAILABLE);
         } catch (Exception e) {
@@ -112,7 +112,7 @@ public class TestUserApiError extends SubscriptionTestSuiteNoDB {
         log.info("Starting testCreateSubscriptionAddOnIncluded");
         try {
             final UUID accountId = UUID.randomUUID();
-            final SubscriptionBundle aoBundle = subscriptionInternalApi.createBundleForAccount(accountId, "myAOBundle", internalCallContext);
+            final SubscriptionBaseBundle aoBundle = subscriptionInternalApi.createBundleForAccount(accountId, "myAOBundle", internalCallContext);
             testUtil.createSubscriptionWithBundle(aoBundle.getId(), "Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
             tCreateSubscriptionInternal(aoBundle.getId(), "Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.SUB_CREATE_AO_ALREADY_INCLUDED);
         } catch (Exception e) {

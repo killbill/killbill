@@ -19,7 +19,7 @@ package com.ning.billing.entitlement.dao;
 import com.ning.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
 import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.entitlement.api.Type;
-import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 import org.mockito.Mockito;
 import org.testng.Assert;
@@ -48,7 +48,7 @@ public class TestBlockingDao extends EntitlementTestSuiteWithEmbeddedDB {
         final BlockingState state2 = new DefaultBlockingState(uuid, overdueStateName2, Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement, blockBilling);
         blockingStateDao.setBlockingState(state2, clock, internalCallContext);
 
-        final SubscriptionBundle bundle = Mockito.mock(SubscriptionBundle.class);
+        final SubscriptionBaseBundle bundle = Mockito.mock(SubscriptionBaseBundle.class);
         Mockito.when(bundle.getId()).thenReturn(uuid);
 
         Assert.assertEquals(blockingStateDao.getBlockingStateFor(uuid, internalCallContext).getStateName(), state2.getStateName());
@@ -72,7 +72,7 @@ public class TestBlockingDao extends EntitlementTestSuiteWithEmbeddedDB {
         final BlockingState state2 = new DefaultBlockingState(uuid, overdueStateName2, Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement, blockBilling);
         blockingStateDao.setBlockingState(state2, clock, internalCallContext);
 
-        final SubscriptionBundle bundle = Mockito.mock(SubscriptionBundle.class);
+        final SubscriptionBaseBundle bundle = Mockito.mock(SubscriptionBaseBundle.class);
         Mockito.when(bundle.getId()).thenReturn(uuid);
 
         final List<BlockingState> history2 = blockingStateDao.getBlockingHistoryFor(bundle.getId(), internalCallContext);

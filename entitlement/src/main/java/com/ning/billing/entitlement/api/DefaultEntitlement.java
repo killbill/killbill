@@ -37,22 +37,26 @@ import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
+import com.ning.billing.util.entity.EntityBase;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.timezone.DateAndTimeZoneContext;
 
-public class DefaultEntitlement implements Entitlement {
+public class DefaultEntitlement extends EntityBase implements Entitlement {
 
     private final AccountInternalApi accountApi;
-    private final SubscriptionBase subscription;
+    private final SubscriptionBase subscriptionBase;
     private final InternalCallContextFactory internalCallContextFactory;
     private final Clock clock;
     private final BlockingChecker checker;
     private final UUID accountId;
+    private final String externalKey;
 
-    public DefaultEntitlement(final AccountInternalApi accountApi, final SubscriptionBase subscription, final UUID accountId, final InternalCallContextFactory internalCallContextFactory, final Clock clock, final BlockingChecker checker) {
+    public DefaultEntitlement(final AccountInternalApi accountApi, final SubscriptionBase subscriptionBase, final UUID accountId, final String externalKey, final InternalCallContextFactory internalCallContextFactory, final Clock clock, final BlockingChecker checker) {
+        super(subscriptionBase.getId(), subscriptionBase.getCreatedDate(), subscriptionBase.getUpdatedDate());
         this.accountApi = accountApi;
-        this.subscription = subscription;
+        this.subscriptionBase = subscriptionBase;
         this.accountId = accountId;
+        this.externalKey = externalKey;
         this.internalCallContextFactory = internalCallContextFactory;
         this.clock = clock;
         this.checker = checker;
@@ -63,9 +67,9 @@ public class DefaultEntitlement implements Entitlement {
     public boolean cancelEntitlementWithDate(final LocalDate localDate, final CallContext callContext) throws EntitlementApiException {
 
         final InternalCallContext context = internalCallContextFactory.createInternalCallContext(accountId, callContext);
-        final DateTime requestedDate = fromLocalDateAndReferenceTime(localDate, subscription.getStartDate(), clock, context);
+        final DateTime requestedDate = fromLocalDateAndReferenceTime(localDate, subscriptionBase.getStartDate(), clock, context);
         try {
-            return subscription.cancel(requestedDate, callContext);
+            return subscriptionBase.cancel(requestedDate, callContext);
         } catch (SubscriptionBaseApiException e) {
             throw new EntitlementApiException(e);
         }
@@ -87,15 +91,20 @@ public class DefaultEntitlement implements Entitlement {
         return false;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
+    @Override
+    public void uncancel(final CallContext context) throws EntitlementApiException {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
+
 
     @Override
     public boolean changePlan(final String productName, final BillingPeriod billingPeriod, final String priceList, final LocalDate localDate, final CallContext callContext) throws EntitlementApiException {
 
         final InternalCallContext context = internalCallContextFactory.createInternalCallContext(accountId, callContext);
-        final DateTime requestedDate = fromLocalDateAndReferenceTime(localDate, subscription.getStartDate(), clock, context);
+        final DateTime requestedDate = fromLocalDateAndReferenceTime(localDate, subscriptionBase.getStartDate(), clock, context);
         try {
-            checker.checkBlockedChange(subscription, context);
-            return subscription.changePlan(productName, billingPeriod, priceList, requestedDate, callContext);
+            checker.checkBlockedChange(subscriptionBase, context);
+            return subscriptionBase.changePlan(productName, billingPeriod, priceList, requestedDate, callContext);
         } catch (BlockingApiException e) {
             throw new EntitlementApiException(e, e.getCode(), e.getMessage());
         } catch (SubscriptionBaseApiException e) {
@@ -106,10 +115,10 @@ public class DefaultEntitlement implements Entitlement {
     @Override
     public boolean changePlanOverrideBillingPolicy(final String productName, final BillingPeriod billingPeriod, final String priceList, final LocalDate localDate, final BillingActionPolicy actionPolicy, final CallContext callContext) throws EntitlementApiException {
         final InternalCallContext context = internalCallContextFactory.createInternalCallContext(accountId, callContext);
-        final DateTime requestedDate = fromLocalDateAndReferenceTime(localDate, subscription.getStartDate(), clock, context);
+        final DateTime requestedDate = fromLocalDateAndReferenceTime(localDate, subscriptionBase.getStartDate(), clock, context);
         try {
-            checker.checkBlockedChange(subscription, context);
-            return subscription.changePlanWithPolicy(productName, billingPeriod, priceList, requestedDate, actionPolicy, callContext);
+            checker.checkBlockedChange(subscriptionBase, context);
+            return subscriptionBase.changePlanWithPolicy(productName, billingPeriod, priceList, requestedDate, actionPolicy, callContext);
         } catch (BlockingApiException e) {
             throw new EntitlementApiException(e, e.getCode(), e.getMessage());
         } catch (SubscriptionBaseApiException e) {
@@ -127,22 +136,30 @@ public class DefaultEntitlement implements Entitlement {
         return false;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
+
+    @Override
+    public UUID getBaseEntitlementId() {
+        return subscriptionBase.getId();
+    }
+
+    @Override
+    public UUID getBundleId() {
+        return subscriptionBase.getBundleId();
+    }
+
+    @Override
     public UUID getAccountId() {
         return accountId;
     }
 
-    public SubscriptionBase getSubscription() {
-        return subscription;
-    }
-
-    @Override
-    public UUID getId() {
-        return subscription.getId();
+    // STEPH_ENT should be remove but beatrix tests need to be changed
+    public SubscriptionBase getSubscriptionBase() {
+        return subscriptionBase;
     }
 
     @Override
     public String getExternalKey() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return externalKey;
     }
 
     @Override

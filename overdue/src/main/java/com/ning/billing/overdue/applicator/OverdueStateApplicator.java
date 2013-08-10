@@ -35,7 +35,7 @@ import com.ning.billing.catalog.api.BillingActionPolicy;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.subscription.api.SubscriptionBase;
-import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.entitlement.api.Blockable;
 import com.ning.billing.entitlement.api.BlockingApiException;
 import com.ning.billing.entitlement.api.Type;
@@ -233,7 +233,7 @@ public class OverdueStateApplicator<T extends Blockable> {
     private void computeSubscriptionsToCancel(final T blockable, final List<SubscriptionBase> result, final InternalTenantContext context) throws SubscriptionBaseApiException {
         if (blockable instanceof SubscriptionBase) {
             result.add((SubscriptionBase) blockable);
-        } else if (blockable instanceof SubscriptionBundle) {
+        } else if (blockable instanceof SubscriptionBaseBundle) {
             for (final SubscriptionBase cur : subscriptionInternalApi.getSubscriptionsForBundle(blockable.getId(), context)) {
                 // Entitlement is smart enough and will cancel the associated add-ons
                 if (!ProductCategory.ADD_ON.equals(cur.getCategory())) {
@@ -241,7 +241,7 @@ public class OverdueStateApplicator<T extends Blockable> {
                 }
             }
         } else if (blockable instanceof Account) {
-            for (final SubscriptionBundle cur : subscriptionInternalApi.getBundlesForAccount(blockable.getId(), context)) {
+            for (final SubscriptionBaseBundle cur : subscriptionInternalApi.getBundlesForAccount(blockable.getId(), context)) {
                 computeSubscriptionsToCancel((T) cur, result, context);
             }
         }
@@ -264,11 +264,11 @@ public class OverdueStateApplicator<T extends Blockable> {
         try {
             if (Type.SUBSCRIPTION.equals(overdueableType)) {
                 final UUID bundleId = ((SubscriptionBase) overdueable).getBundleId();
-                final SubscriptionBundle bundle = subscriptionInternalApi.getBundleFromId(bundleId, context);
+                final SubscriptionBaseBundle bundle = subscriptionInternalApi.getBundleFromId(bundleId, context);
                 account = accountApi.getAccountById(bundle.getAccountId(), context);
             } else if (Type.SUBSCRIPTION_BUNDLE.equals(overdueableType)) {
-                final UUID bundleId = ((SubscriptionBundle) overdueable).getId();
-                final SubscriptionBundle bundle = subscriptionInternalApi.getBundleFromId(bundleId, context);
+                final UUID bundleId = ((SubscriptionBaseBundle) overdueable).getId();
+                final SubscriptionBaseBundle bundle = subscriptionInternalApi.getBundleFromId(bundleId, context);
                 account = accountApi.getAccountById(bundle.getAccountId(), context);
             } else if (Type.ACCOUNT.equals(overdueableType)) {
                 account = (Account) overdueable;

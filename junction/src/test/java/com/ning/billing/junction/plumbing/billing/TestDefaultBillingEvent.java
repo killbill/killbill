@@ -40,7 +40,7 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
-import com.ning.billing.subscription.api.SubscriptionTransitionType;
+import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.junction.JunctionTestSuiteNoDB;
 import com.ning.billing.mock.MockAccountBuilder;
@@ -55,10 +55,10 @@ public class TestDefaultBillingEvent extends JunctionTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testEntitlementEventsHappeningAtTheSameTimeAsOverdueEvents() throws Exception {
-        final BillingEvent event0 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-31T00:02:04.000Z"), SubscriptionTransitionType.START_BILLING_DISABLED);
-        final BillingEvent event1 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-31T00:02:04.000Z"), SubscriptionTransitionType.CREATE);
-        final BillingEvent event2 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-31T00:02:05.000Z"), SubscriptionTransitionType.CHANGE);
-        final BillingEvent event3 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-31T00:02:05.000Z"), SubscriptionTransitionType.END_BILLING_DISABLED);
+        final BillingEvent event0 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-31T00:02:04.000Z"), SubscriptionBaseTransitionType.START_BILLING_DISABLED);
+        final BillingEvent event1 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-31T00:02:04.000Z"), SubscriptionBaseTransitionType.CREATE);
+        final BillingEvent event2 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-31T00:02:05.000Z"), SubscriptionBaseTransitionType.CHANGE);
+        final BillingEvent event3 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-31T00:02:05.000Z"), SubscriptionBaseTransitionType.END_BILLING_DISABLED);
 
         final SortedSet<BillingEvent> set = new TreeSet<BillingEvent>();
         set.add(event0);
@@ -76,12 +76,12 @@ public class TestDefaultBillingEvent extends JunctionTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testEdgeCaseAllEventsHappenAtTheSameTime() throws Exception {
-        final BillingEvent event0 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-31T00:02:04.000Z"), SubscriptionTransitionType.START_BILLING_DISABLED);
-        final BillingEvent event1 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-31T00:02:04.000Z"), SubscriptionTransitionType.CREATE, 1);
-        final BillingEvent event2 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-31T00:02:04.000Z"), SubscriptionTransitionType.CHANGE, 2);
+        final BillingEvent event0 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-31T00:02:04.000Z"), SubscriptionBaseTransitionType.START_BILLING_DISABLED);
+        final BillingEvent event1 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-31T00:02:04.000Z"), SubscriptionBaseTransitionType.CREATE, 1);
+        final BillingEvent event2 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-31T00:02:04.000Z"), SubscriptionBaseTransitionType.CHANGE, 2);
         // Note the time delta here. Having a blocking duration of zero and events at the same time won't work as the backing tree set does local
         // comparisons (and not global), making the END_BILLING_DISABLED start the first one in the set
-        final BillingEvent event3 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-31T00:02:05.000Z"), SubscriptionTransitionType.END_BILLING_DISABLED);
+        final BillingEvent event3 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-31T00:02:05.000Z"), SubscriptionBaseTransitionType.END_BILLING_DISABLED);
 
         final SortedSet<BillingEvent> set = new TreeSet<BillingEvent>();
         set.add(event0);
@@ -99,9 +99,9 @@ public class TestDefaultBillingEvent extends JunctionTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testEventOrderingSubscription() {
-        final BillingEvent event0 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-31T00:02:04.000Z"), SubscriptionTransitionType.CREATE);
-        final BillingEvent event1 = createEvent(subscription(ID_ONE), new DateTime("2012-01-31T00:02:04.000Z"), SubscriptionTransitionType.CREATE);
-        final BillingEvent event2 = createEvent(subscription(ID_TWO), new DateTime("2012-01-31T00:02:04.000Z"), SubscriptionTransitionType.CREATE);
+        final BillingEvent event0 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-31T00:02:04.000Z"), SubscriptionBaseTransitionType.CREATE);
+        final BillingEvent event1 = createEvent(subscription(ID_ONE), new DateTime("2012-01-31T00:02:04.000Z"), SubscriptionBaseTransitionType.CREATE);
+        final BillingEvent event2 = createEvent(subscription(ID_TWO), new DateTime("2012-01-31T00:02:04.000Z"), SubscriptionBaseTransitionType.CREATE);
 
         final SortedSet<BillingEvent> set = new TreeSet<BillingEvent>();
         set.add(event2);
@@ -117,9 +117,9 @@ public class TestDefaultBillingEvent extends JunctionTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testEventOrderingDate() {
-        final BillingEvent event0 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-01T00:02:04.000Z"), SubscriptionTransitionType.CREATE);
-        final BillingEvent event1 = createEvent(subscription(ID_ZERO), new DateTime("2012-02-01T00:02:04.000Z"), SubscriptionTransitionType.CREATE);
-        final BillingEvent event2 = createEvent(subscription(ID_ZERO), new DateTime("2012-03-01T00:02:04.000Z"), SubscriptionTransitionType.CREATE);
+        final BillingEvent event0 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-01T00:02:04.000Z"), SubscriptionBaseTransitionType.CREATE);
+        final BillingEvent event1 = createEvent(subscription(ID_ZERO), new DateTime("2012-02-01T00:02:04.000Z"), SubscriptionBaseTransitionType.CREATE);
+        final BillingEvent event2 = createEvent(subscription(ID_ZERO), new DateTime("2012-03-01T00:02:04.000Z"), SubscriptionBaseTransitionType.CREATE);
 
         final SortedSet<BillingEvent> set = new TreeSet<BillingEvent>();
         set.add(event2);
@@ -135,9 +135,9 @@ public class TestDefaultBillingEvent extends JunctionTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testEventTotalOrdering() {
-        final BillingEvent event0 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-01T00:02:04.000Z"), SubscriptionTransitionType.CREATE, 1L);
-        final BillingEvent event1 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-01T00:02:04.000Z"), SubscriptionTransitionType.CANCEL, 2L);
-        final BillingEvent event2 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-01T00:02:04.000Z"), SubscriptionTransitionType.RE_CREATE, 3L);
+        final BillingEvent event0 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-01T00:02:04.000Z"), SubscriptionBaseTransitionType.CREATE, 1L);
+        final BillingEvent event1 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-01T00:02:04.000Z"), SubscriptionBaseTransitionType.CANCEL, 2L);
+        final BillingEvent event2 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-01T00:02:04.000Z"), SubscriptionBaseTransitionType.RE_CREATE, 3L);
 
         final SortedSet<BillingEvent> set = new TreeSet<BillingEvent>();
         set.add(event2);
@@ -153,9 +153,9 @@ public class TestDefaultBillingEvent extends JunctionTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testEventOrderingMix() {
-        final BillingEvent event0 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-01T00:02:04.000Z"), SubscriptionTransitionType.CREATE);
-        final BillingEvent event1 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-02T00:02:04.000Z"), SubscriptionTransitionType.CHANGE);
-        final BillingEvent event2 = createEvent(subscription(ID_ONE), new DateTime("2012-01-01T00:02:04.000Z"), SubscriptionTransitionType.CANCEL);
+        final BillingEvent event0 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-01T00:02:04.000Z"), SubscriptionBaseTransitionType.CREATE);
+        final BillingEvent event1 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-02T00:02:04.000Z"), SubscriptionBaseTransitionType.CHANGE);
+        final BillingEvent event2 = createEvent(subscription(ID_ONE), new DateTime("2012-01-01T00:02:04.000Z"), SubscriptionBaseTransitionType.CANCEL);
 
         final SortedSet<BillingEvent> set = new TreeSet<BillingEvent>();
         set.add(event2);
@@ -172,15 +172,15 @@ public class TestDefaultBillingEvent extends JunctionTestSuiteNoDB {
     @Test(groups = "fast")
     public void testToString() throws Exception {
         // Simple test to ensure we have an easy to read toString representation
-        final BillingEvent event = createEvent(subscription(ID_ZERO), new DateTime("2012-01-01T00:02:04.000Z", DateTimeZone.UTC), SubscriptionTransitionType.CREATE);
+        final BillingEvent event = createEvent(subscription(ID_ZERO), new DateTime("2012-01-01T00:02:04.000Z", DateTimeZone.UTC), SubscriptionBaseTransitionType.CREATE);
         Assert.assertEquals(event.toString(), "DefaultBillingEvent{type=CREATE, effectiveDate=2012-01-01T00:02:04.000Z, planPhaseName=Test-trial, subscriptionId=00000000-0000-0000-0000-000000000000, totalOrdering=1, accountId=" + event.getAccount().getId().toString() + "}");
     }
 
-    private BillingEvent createEvent(final SubscriptionBase sub, final DateTime effectiveDate, final SubscriptionTransitionType type) {
+    private BillingEvent createEvent(final SubscriptionBase sub, final DateTime effectiveDate, final SubscriptionBaseTransitionType type) {
         return createEvent(sub, effectiveDate, type, 1L);
     }
 
-    private BillingEvent createEvent(final SubscriptionBase sub, final DateTime effectiveDate, final SubscriptionTransitionType type, final long totalOrdering) {
+    private BillingEvent createEvent(final SubscriptionBase sub, final DateTime effectiveDate, final SubscriptionBaseTransitionType type, final long totalOrdering) {
         final int billCycleDay = 1;
 
         final Plan shotgun = new MockPlan();

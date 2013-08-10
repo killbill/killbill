@@ -20,7 +20,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
-import com.ning.billing.subscription.api.SubscriptionTransitionType;
+import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.subscription.api.timeline.SubscriptionTimeline.NewEvent;
 
 public class DefaultNewEvent implements NewEvent {
@@ -28,9 +28,9 @@ public class DefaultNewEvent implements NewEvent {
     private final UUID subscriptionId;
     private final PlanPhaseSpecifier spec;
     private final DateTime requestedDate;
-    private final SubscriptionTransitionType transitionType;
+    private final SubscriptionBaseTransitionType transitionType;
 
-    public DefaultNewEvent(final UUID subscriptionId, final PlanPhaseSpecifier spec, final DateTime requestedDate, final SubscriptionTransitionType transitionType) {
+    public DefaultNewEvent(final UUID subscriptionId, final PlanPhaseSpecifier spec, final DateTime requestedDate, final SubscriptionBaseTransitionType transitionType) {
         this.subscriptionId = subscriptionId;
         this.spec = spec;
         this.requestedDate = requestedDate;
@@ -48,7 +48,7 @@ public class DefaultNewEvent implements NewEvent {
     }
 
     @Override
-    public SubscriptionTransitionType getSubscriptionTransitionType() {
+    public SubscriptionBaseTransitionType getSubscriptionTransitionType() {
         return transitionType;
     }
 

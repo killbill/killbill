@@ -28,8 +28,8 @@ public class TenantKeyJson {
 
 
     @JsonCreator
-    public TenantKeyJson(@JsonProperty("key")  final String key,
-            @JsonProperty("values") final List<String> values) {
+    public TenantKeyJson(@JsonProperty("key") final String key,
+                         @JsonProperty("values") final List<String> values) {
         this.key = key;
         this.values = values;
     }

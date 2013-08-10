@@ -18,8 +18,6 @@ package com.ning.billing.beatrix.integration.overdue;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.Callable;
 
 import org.testng.Assert;
@@ -29,7 +27,7 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.beatrix.integration.BeatrixIntegrationModule;
 import com.ning.billing.beatrix.integration.TestIntegrationBase;
 import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.overdue.config.OverdueConfig;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.payment.api.TestPaymentMethodPluginBase;
@@ -43,7 +41,7 @@ public abstract class TestOverdueBase extends TestIntegrationBase {
 
 
     protected Account account;
-    protected SubscriptionBundle bundle;
+    protected SubscriptionBaseBundle bundle;
     protected String productName;
     protected BillingPeriod term;
 

@@ -20,7 +20,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 
 import com.ning.billing.subscription.exceptions.SubscriptionError;
-import com.ning.billing.subscription.api.SubscriptionTransitionType;
+import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.clock.Clock;
 
 public class SubscriptionTransitionDataIterator implements Iterator<SubscriptionBaseTransition> {
@@ -94,12 +94,12 @@ public class SubscriptionTransitionDataIterator implements Iterator<Subscription
 
     private boolean shouldSkipForSubscriptionEvents(final SubscriptionBaseTransitionData input) {
         // SubscriptionBase system knows about all events except for MIGRATE_BILLING
-        return (input.getTransitionType() == SubscriptionTransitionType.MIGRATE_BILLING);
+        return (input.getTransitionType() == SubscriptionBaseTransitionType.MIGRATE_BILLING);
     }
 
     private boolean shouldSkipForBillingEvents(final SubscriptionBaseTransitionData input) {
         // Junction system knows about all events except for MIGRATE_ENTITLEMENT
-        return input.getTransitionType() == SubscriptionTransitionType.MIGRATE_ENTITLEMENT;
+        return input.getTransitionType() == SubscriptionBaseTransitionType.MIGRATE_ENTITLEMENT;
     }
 
 

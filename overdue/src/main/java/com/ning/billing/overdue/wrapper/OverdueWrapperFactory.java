@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
-import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.entitlement.api.Blockable;
 import com.ning.billing.entitlement.api.Type;
 import com.ning.billing.overdue.applicator.OverdueStateApplicator;
@@ -45,7 +45,7 @@ public class OverdueWrapperFactory {
 
     private final SubscriptionBaseInternalApi subscriptionApi;
     private final BillingStateCalculatorBundle billingStateCalcuatorBundle;
-    private final OverdueStateApplicator<SubscriptionBundle> overdueStateApplicatorBundle;
+    private final OverdueStateApplicator<SubscriptionBaseBundle> overdueStateApplicatorBundle;
     private final BlockingInternalApi api;
     private final Clock clock;
     private OverdueConfig config;
@@ -53,7 +53,7 @@ public class OverdueWrapperFactory {
     @Inject
     public OverdueWrapperFactory(final BlockingInternalApi api, final Clock clock,
                                  final BillingStateCalculatorBundle billingStateCalcuatorBundle,
-                                 final OverdueStateApplicator<SubscriptionBundle> overdueStateApplicatorBundle,
+                                 final OverdueStateApplicator<SubscriptionBaseBundle> overdueStateApplicatorBundle,
                                  final SubscriptionBaseInternalApi subscriptionApi) {
         this.billingStateCalcuatorBundle = billingStateCalcuatorBundle;
         this.overdueStateApplicatorBundle = overdueStateApplicatorBundle;
@@ -65,8 +65,8 @@ public class OverdueWrapperFactory {
     @SuppressWarnings("unchecked")
     public <T extends Blockable> OverdueWrapper<T> createOverdueWrapperFor(final T blockable) throws OverdueException {
 
-        if (blockable instanceof SubscriptionBundle) {
-            return (OverdueWrapper<T>) new OverdueWrapper<SubscriptionBundle>((SubscriptionBundle) blockable, api, getOverdueStateSetBundle(),
+        if (blockable instanceof SubscriptionBaseBundle) {
+            return (OverdueWrapper<T>) new OverdueWrapper<SubscriptionBaseBundle>((SubscriptionBaseBundle) blockable, api, getOverdueStateSetBundle(),
                                                                               clock, billingStateCalcuatorBundle, overdueStateApplicatorBundle);
         } else {
             throw new OverdueException(ErrorCode.OVERDUE_TYPE_NOT_SUPPORTED, blockable.getId(), blockable.getClass());
@@ -78,8 +78,8 @@ public class OverdueWrapperFactory {
         try {
             switch (type) {
                 case SUBSCRIPTION_BUNDLE: {
-                    final SubscriptionBundle bundle = subscriptionApi.getBundleFromId(id, context);
-                    return (OverdueWrapper<T>) new OverdueWrapper<SubscriptionBundle>(bundle, api, getOverdueStateSetBundle(),
+                    final SubscriptionBaseBundle bundle = subscriptionApi.getBundleFromId(id, context);
+                    return (OverdueWrapper<T>) new OverdueWrapper<SubscriptionBaseBundle>(bundle, api, getOverdueStateSetBundle(),
                                                                                       clock, billingStateCalcuatorBundle, overdueStateApplicatorBundle);
                 }
                 default: {
@@ -92,13 +92,13 @@ public class OverdueWrapperFactory {
         }
     }
 
-    private OverdueStateSet<SubscriptionBundle> getOverdueStateSetBundle() {
+    private OverdueStateSet<SubscriptionBaseBundle> getOverdueStateSetBundle() {
         if (config == null || config.getBundleStateSet() == null) {
-            return new DefaultOverdueStateSet<SubscriptionBundle>() {
+            return new DefaultOverdueStateSet<SubscriptionBaseBundle>() {
 
                 @SuppressWarnings("unchecked")
                 @Override
-                protected DefaultOverdueState<SubscriptionBundle>[] getStates() {
+                protected DefaultOverdueState<SubscriptionBaseBundle>[] getStates() {
                     return new DefaultOverdueState[0];
                 }
             };

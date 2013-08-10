@@ -89,6 +89,9 @@ public interface JaxrsResource {
     public static final String SUBSCRIPTIONS = "subscriptions";
     public static final String SUBSCRIPTIONS_PATH = PREFIX + "/" + SUBSCRIPTIONS;
 
+    public static final String ENTITLEMENTS = "entitlements";
+    public static final String ENTITLEMENTS_PATH = PREFIX + "/" + ENTITLEMENTS;
+
     public static final String TAG_DEFINITIONS = "tagDefinitions";
     public static final String TAG_DEFINITIONS_PATH = PREFIX + "/" + TAG_DEFINITIONS;
 

@@ -22,11 +22,11 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
-import com.ning.billing.subscription.api.SubscriptionTransitionType;
+import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.util.entity.Entity;
 
 /**
- * The interface {@code} shows a view of all the events for a particular {@code Subscription}.
+ * The interface {@code} shows a view of all the events for a particular {@code SubscriptionBase}.
  * <p/>
  * It can be used to display information, or it can be used to modify the subscription stream of events
  * and 'repair' the stream by versioning the events.
@@ -44,7 +44,7 @@ public interface SubscriptionTimeline extends Entity {
     public List<NewEvent> getNewEvents();
 
     /**
-     * @return the current list of events for that {@code Subscription}
+     * @return the current list of events for that {@code SubscriptionBase}
      */
     public List<ExistingEvent> getExistingEvents();
 
@@ -75,9 +75,9 @@ public interface SubscriptionTimeline extends Entity {
         public DateTime getRequestedDate();
 
         /**
-         * @return the {@code SubscriptionTransitionType} for the event
+         * @return the {@code SubscriptionBaseTransitionType} for the event
          */
-        public SubscriptionTransitionType getSubscriptionTransitionType();
+        public SubscriptionBaseTransitionType getSubscriptionTransitionType();
 
     }
 

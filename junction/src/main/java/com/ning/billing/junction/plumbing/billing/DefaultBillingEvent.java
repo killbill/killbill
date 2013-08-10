@@ -28,7 +28,7 @@ import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
-import com.ning.billing.subscription.api.SubscriptionTransitionType;
+import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 import com.ning.billing.util.svcapi.junction.BillingEvent;
@@ -47,7 +47,7 @@ public class DefaultBillingEvent implements BillingEvent {
     private final String description;
     private final BillingModeType billingModeType;
     private final BillingPeriod billingPeriod;
-    private final SubscriptionTransitionType type;
+    private final SubscriptionBaseTransitionType type;
     private final Long totalOrdering;
     private final DateTimeZone timeZone;
 
@@ -57,11 +57,11 @@ public class DefaultBillingEvent implements BillingEvent {
         this.billCycleDayLocal = billCycleDayLocal;
         this.subscription = subscription;
         effectiveDate = transition.getEffectiveTransitionTime();
-        final String planPhaseName = (transition.getTransitionType() != SubscriptionTransitionType.CANCEL) ?
+        final String planPhaseName = (transition.getTransitionType() != SubscriptionBaseTransitionType.CANCEL) ?
                 transition.getNextPhase() : transition.getPreviousPhase();
         planPhase = (planPhaseName != null) ? catalog.findPhase(planPhaseName, transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
 
-        final String planName = (transition.getTransitionType() != SubscriptionTransitionType.CANCEL) ?
+        final String planName = (transition.getTransitionType() != SubscriptionBaseTransitionType.CANCEL) ?
                 transition.getNextPlan() : transition.getPreviousPlan();
         plan = (planName != null) ? catalog.findPlan(planName, transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
 
@@ -78,7 +78,7 @@ public class DefaultBillingEvent implements BillingEvent {
         this.currency = currency;
         description = transition.getTransitionType().toString();
         billingModeType = BillingModeType.IN_ADVANCE;
-        billingPeriod = (transition.getTransitionType() != SubscriptionTransitionType.CANCEL) ?
+        billingPeriod = (transition.getTransitionType() != SubscriptionBaseTransitionType.CANCEL) ?
                 nextPhase.getBillingPeriod() : prevPhase.getBillingPeriod();
         type = transition.getTransitionType();
         totalOrdering = transition.getTotalOrdering();
@@ -88,7 +88,7 @@ public class DefaultBillingEvent implements BillingEvent {
     public DefaultBillingEvent(final Account account, final SubscriptionBase subscription, final DateTime effectiveDate, final Plan plan, final PlanPhase planPhase,
                                final BigDecimal fixedPrice, final BigDecimal recurringPrice, final Currency currency,
                                final BillingPeriod billingPeriod, final int billCycleDayLocal, final BillingModeType billingModeType,
-                               final String description, final long totalOrdering, final SubscriptionTransitionType type, final DateTimeZone timeZone) {
+                               final String description, final long totalOrdering, final SubscriptionBaseTransitionType type, final DateTimeZone timeZone) {
         this.account = account;
         this.subscription = subscription;
         this.effectiveDate = effectiveDate;
@@ -117,29 +117,29 @@ public class DefaultBillingEvent implements BillingEvent {
                 // If an subscription event and an overdue event happen at the exact same time,
                 // we assume we want the subscription event before the overdue event when entering
                 // the overdue period, and vice-versa when exiting the overdue period
-                if (SubscriptionTransitionType.START_BILLING_DISABLED.equals(getTransitionType())) {
-                    if (SubscriptionTransitionType.END_BILLING_DISABLED.equals(e1.getTransitionType())) {
+                if (SubscriptionBaseTransitionType.START_BILLING_DISABLED.equals(getTransitionType())) {
+                    if (SubscriptionBaseTransitionType.END_BILLING_DISABLED.equals(e1.getTransitionType())) {
                         // Make sure to always have START before END
                         return -1;
                     } else {
                         return 1;
                     }
-                } else if (SubscriptionTransitionType.START_BILLING_DISABLED.equals(e1.getTransitionType())) {
-                    if (SubscriptionTransitionType.END_BILLING_DISABLED.equals(getTransitionType())) {
+                } else if (SubscriptionBaseTransitionType.START_BILLING_DISABLED.equals(e1.getTransitionType())) {
+                    if (SubscriptionBaseTransitionType.END_BILLING_DISABLED.equals(getTransitionType())) {
                         // Make sure to always have START before END
                         return 1;
                     } else {
                         return -1;
                     }
-                } else if (SubscriptionTransitionType.END_BILLING_DISABLED.equals(getTransitionType())) {
-                    if (SubscriptionTransitionType.START_BILLING_DISABLED.equals(e1.getTransitionType())) {
+                } else if (SubscriptionBaseTransitionType.END_BILLING_DISABLED.equals(getTransitionType())) {
+                    if (SubscriptionBaseTransitionType.START_BILLING_DISABLED.equals(e1.getTransitionType())) {
                         // Make sure to always have START before END
                         return 1;
                     } else {
                         return -1;
                     }
-                } else if (SubscriptionTransitionType.END_BILLING_DISABLED.equals(e1.getTransitionType())) {
-                    if (SubscriptionTransitionType.START_BILLING_DISABLED.equals(getTransitionType())) {
+                } else if (SubscriptionBaseTransitionType.END_BILLING_DISABLED.equals(e1.getTransitionType())) {
+                    if (SubscriptionBaseTransitionType.START_BILLING_DISABLED.equals(getTransitionType())) {
                         // Make sure to always have START before END
                         return -1;
                     } else {
@@ -213,7 +213,7 @@ public class DefaultBillingEvent implements BillingEvent {
     }
 
     @Override
-    public SubscriptionTransitionType getTransitionType() {
+    public SubscriptionBaseTransitionType getTransitionType() {
         return type;
     }
 

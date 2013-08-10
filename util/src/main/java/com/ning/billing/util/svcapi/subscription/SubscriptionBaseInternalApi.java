@@ -25,7 +25,7 @@ import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.subscription.api.SubscriptionBase;
-import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.subscription.api.user.SubscriptionStatusDryRun;
 import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.util.callcontext.InternalCallContext;
@@ -39,13 +39,13 @@ public interface SubscriptionBaseInternalApi {
                                            final InternalCallContext context) throws SubscriptionBaseApiException;
 
 
-    public SubscriptionBundle createBundleForAccount(final UUID accountId, final String bundleName, final InternalCallContext context)
+    public SubscriptionBaseBundle createBundleForAccount(final UUID accountId, final String bundleName, final InternalCallContext context)
             throws SubscriptionBaseApiException;
 
-    public SubscriptionBundle getBundleForAccountAndKey(final UUID accountId, final String bundleKey, final InternalTenantContext context)
+    public SubscriptionBaseBundle getBundleForAccountAndKey(final UUID accountId, final String bundleKey, final InternalTenantContext context)
             throws SubscriptionBaseApiException;
 
-    public List<SubscriptionBundle> getBundlesForAccount(final UUID accountId, final InternalTenantContext context);
+    public List<SubscriptionBaseBundle> getBundlesForAccount(final UUID accountId, final InternalTenantContext context);
 
     public List<SubscriptionBase> getSubscriptionsForBundle(final UUID bundleId, final InternalTenantContext context);
 
@@ -53,7 +53,7 @@ public interface SubscriptionBaseInternalApi {
 
     public SubscriptionBase getSubscriptionFromId(final UUID id, final InternalTenantContext context) throws SubscriptionBaseApiException;
 
-    public SubscriptionBundle getBundleFromId(final UUID id, final InternalTenantContext context) throws SubscriptionBaseApiException;
+    public SubscriptionBaseBundle getBundleFromId(final UUID id, final InternalTenantContext context) throws SubscriptionBaseApiException;
 
     public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId, final InternalTenantContext context) throws SubscriptionBaseApiException;
 

@@ -32,7 +32,7 @@ public interface SubscriptionMigrationApi {
 
 
     /**
-     * The interface {@code AccountMigration} captures all the {@code SubscriptionBundle} associated with
+     * The interface {@code AccountMigration} captures all the {@code SubscriptionBaseBundle} associated with
      * that account.
      */
     public interface AccountMigration {
@@ -51,8 +51,8 @@ public interface SubscriptionMigrationApi {
     }
 
     /**
-     * The interface {@code BundleMigration} captures all the {@code Subscription} asociated with a given
-     * {@code SubscriptionBundle}
+     * The interface {@code BundleMigration} captures all the {@code SubscriptionBase} asociated with a given
+     * {@code SubscriptionBaseBundle}
      */
     public interface BundleMigration {
 
@@ -64,13 +64,13 @@ public interface SubscriptionMigrationApi {
 
         /**
          *
-         * @return an array of {@code Subscription}
+         * @return an array of {@code SubscriptionBase}
          */
         public SubscriptionMigration[] getSubscriptions();
     }
 
     /**
-     * The interface {@code SubscriptionMigration} captures the detail for each {@code Subscription} to be
+     * The interface {@code SubscriptionMigration} captures the detail for each {@code SubscriptionBase} to be
      * migrated.
      */
     public interface SubscriptionMigration {
@@ -83,20 +83,20 @@ public interface SubscriptionMigrationApi {
 
         /**
          *
-         * @return the chargeTroughDate for that {@code Subscription}
+         * @return the chargeTroughDate for that {@code SubscriptionBase}
          */
         public DateTime getChargedThroughDate();
 
         /**
          *
-         * @return the various phase information for that {@code Subscription}
+         * @return the various phase information for that {@code SubscriptionBase}
          */
         public SubscriptionMigrationCase[] getSubscriptionCases();
     }
 
     /**
      * The interface {@code SubscriptionMigrationCase} captures the details of
-     * phase for a {@code Subscription}.
+     * phase for a {@code SubscriptionBase}.
      *
      */
     public interface SubscriptionMigrationCase {
@@ -124,7 +124,7 @@ public interface SubscriptionMigrationApi {
      * Migrate all the existing entitlements associated with that account.
      * The semantics is 'all or nothing' (atomic operation)
      *
-     * @param toBeMigrated all the bundles and associated subscription that should be migrated for the account
+     * @param toBeMigrated all the bundles and associated SubscriptionBase that should be migrated for the account
      * @throws SubscriptionMigrationApiException
      *          an subscription api exception
      */

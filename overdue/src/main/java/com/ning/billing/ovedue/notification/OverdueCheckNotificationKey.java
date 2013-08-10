@@ -35,7 +35,7 @@ public class OverdueCheckNotificationKey extends DefaultUUIDNotificationKey {
         this.type = type;
     }
 
-    // Hack : We default to SubscriptionBundle which is the only one supported at the time
+    // Hack : We default to SubscriptionBaseBundle which is the only one supported at the time
     public Type getType() {
         return type == null ? Type.SUBSCRIPTION_BUNDLE : type;
     }

@@ -16,59 +16,59 @@
 
 package com.ning.billing.subscription.events.user;
 
-import com.ning.billing.subscription.api.SubscriptionTransitionType;
+import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 
 
 public enum ApiEventType {
     MIGRATE_ENTITLEMENT {
         @Override
-        public SubscriptionTransitionType getSubscriptionTransitionType() {
-            return SubscriptionTransitionType.MIGRATE_ENTITLEMENT;
+        public SubscriptionBaseTransitionType getSubscriptionTransitionType() {
+            return SubscriptionBaseTransitionType.MIGRATE_ENTITLEMENT;
         }
     },
     CREATE {
         @Override
-        public SubscriptionTransitionType getSubscriptionTransitionType() {
-            return SubscriptionTransitionType.CREATE;
+        public SubscriptionBaseTransitionType getSubscriptionTransitionType() {
+            return SubscriptionBaseTransitionType.CREATE;
         }
     },
     MIGRATE_BILLING {
         @Override
-        public SubscriptionTransitionType getSubscriptionTransitionType() {
-            return SubscriptionTransitionType.MIGRATE_BILLING;
+        public SubscriptionBaseTransitionType getSubscriptionTransitionType() {
+            return SubscriptionBaseTransitionType.MIGRATE_BILLING;
         }
     },
     TRANSFER {
         @Override
-        public SubscriptionTransitionType getSubscriptionTransitionType() {
-            return SubscriptionTransitionType.TRANSFER;
+        public SubscriptionBaseTransitionType getSubscriptionTransitionType() {
+            return SubscriptionBaseTransitionType.TRANSFER;
         }
     },
     CHANGE {
         @Override
-        public SubscriptionTransitionType getSubscriptionTransitionType() {
-            return SubscriptionTransitionType.CHANGE;
+        public SubscriptionBaseTransitionType getSubscriptionTransitionType() {
+            return SubscriptionBaseTransitionType.CHANGE;
         }
     },
     RE_CREATE {
         @Override
-        public SubscriptionTransitionType getSubscriptionTransitionType() {
-            return SubscriptionTransitionType.RE_CREATE;
+        public SubscriptionBaseTransitionType getSubscriptionTransitionType() {
+            return SubscriptionBaseTransitionType.RE_CREATE;
         }
     },
     CANCEL {
         @Override
-        public SubscriptionTransitionType getSubscriptionTransitionType() {
-            return SubscriptionTransitionType.CANCEL;
+        public SubscriptionBaseTransitionType getSubscriptionTransitionType() {
+            return SubscriptionBaseTransitionType.CANCEL;
         }
     },
     UNCANCEL {
         @Override
-        public SubscriptionTransitionType getSubscriptionTransitionType() {
-            return SubscriptionTransitionType.UNCANCEL;
+        public SubscriptionBaseTransitionType getSubscriptionTransitionType() {
+            return SubscriptionBaseTransitionType.UNCANCEL;
         }
     };
 
     // Used to map from internal events to User visible events (both user and phase)
-    public abstract SubscriptionTransitionType getSubscriptionTransitionType();
+    public abstract SubscriptionBaseTransitionType getSubscriptionTransitionType();
 }

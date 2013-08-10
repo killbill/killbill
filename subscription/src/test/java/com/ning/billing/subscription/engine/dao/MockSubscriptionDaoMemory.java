@@ -39,6 +39,7 @@ import com.ning.billing.subscription.api.migration.AccountMigrationData.BundleMi
 import com.ning.billing.subscription.api.migration.AccountMigrationData.SubscriptionMigrationData;
 import com.ning.billing.subscription.api.timeline.SubscriptionDataRepair;
 import com.ning.billing.subscription.api.transfer.TransferCancelData;
+import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.subscription.api.user.SubscriptionBuilder;
 import com.ning.billing.subscription.api.user.SubscriptionBundleData;
 import com.ning.billing.subscription.api.user.SubscriptionData;
@@ -53,7 +54,6 @@ import com.ning.billing.notificationq.api.NotificationQueue;
 import com.ning.billing.notificationq.api.NotificationQueueService;
 import com.ning.billing.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
 import com.ning.billing.subscription.api.SubscriptionBase;
-import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
@@ -65,7 +65,7 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
 
     protected static final Logger log = LoggerFactory.getLogger(SubscriptionDao.class);
 
-    private final List<SubscriptionBundle> bundles;
+    private final List<SubscriptionBaseBundle> bundles;
     private final List<SubscriptionBase> subscriptions;
     private final TreeSet<SubscriptionEvent> events;
     private final Clock clock;
@@ -80,7 +80,7 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
         this.clock = clock;
         this.catalogService = catalogService;
         this.notificationQueueService = notificationQueueService;
-        this.bundles = new ArrayList<SubscriptionBundle>();
+        this.bundles = new ArrayList<SubscriptionBaseBundle>();
         this.subscriptions = new ArrayList<SubscriptionBase>();
         this.events = new TreeSet<SubscriptionEvent>();
     }
@@ -92,9 +92,9 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
     }
 
     @Override
-    public List<SubscriptionBundle> getSubscriptionBundleForAccount(final UUID accountId, final InternalTenantContext context) {
-        final List<SubscriptionBundle> results = new ArrayList<SubscriptionBundle>();
-        for (final SubscriptionBundle cur : bundles) {
+    public List<SubscriptionBaseBundle> getSubscriptionBundleForAccount(final UUID accountId, final InternalTenantContext context) {
+        final List<SubscriptionBaseBundle> results = new ArrayList<SubscriptionBaseBundle>();
+        for (final SubscriptionBaseBundle cur : bundles) {
             if (cur.getAccountId().equals(accountId)) {
                 results.add(cur);
             }
@@ -103,9 +103,9 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
     }
 
     @Override
-    public List<SubscriptionBundle> getSubscriptionBundlesForKey(final String bundleKey, final InternalTenantContext context) {
-        final List<SubscriptionBundle> results = new ArrayList<SubscriptionBundle>();
-        for (final SubscriptionBundle cur : bundles) {
+    public List<SubscriptionBaseBundle> getSubscriptionBundlesForKey(final String bundleKey, final InternalTenantContext context) {
+        final List<SubscriptionBaseBundle> results = new ArrayList<SubscriptionBaseBundle>();
+        for (final SubscriptionBaseBundle cur : bundles) {
             if (cur.getExternalKey().equals(bundleKey)) {
                 results.add(cur);
             }
@@ -114,8 +114,8 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
     }
 
     @Override
-    public SubscriptionBundle getSubscriptionBundleFromId(final UUID bundleId, final InternalTenantContext context) {
-        for (final SubscriptionBundle cur : bundles) {
+    public SubscriptionBaseBundle getSubscriptionBundleFromId(final UUID bundleId, final InternalTenantContext context) {
+        for (final SubscriptionBaseBundle cur : bundles) {
             if (cur.getId().equals(bundleId)) {
                 return cur;
             }
@@ -124,8 +124,8 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
     }
 
     @Override
-    public SubscriptionBundle getSubscriptionBundleFromAccountAndKey(final UUID accountId, final String bundleKey, final InternalTenantContext context) {
-        for (final SubscriptionBundle cur : bundles) {
+    public SubscriptionBaseBundle getSubscriptionBundleFromAccountAndKey(final UUID accountId, final String bundleKey, final InternalTenantContext context) {
+        for (final SubscriptionBaseBundle cur : bundles) {
             if (cur.getExternalKey().equals(bundleKey) && cur.getAccountId().equals(accountId)) {
                 return cur;
             }
@@ -134,7 +134,7 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
     }
 
     @Override
-    public SubscriptionBundle createSubscriptionBundle(final SubscriptionBundleData bundle, final InternalCallContext context) {
+    public SubscriptionBaseBundle createSubscriptionBundle(final SubscriptionBundleData bundle, final InternalCallContext context) {
         bundles.add(bundle);
         return getSubscriptionBundleFromId(bundle.getId(), context);
     }
@@ -157,7 +157,7 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
     @Override
     public List<SubscriptionBase> getSubscriptionsForAccountAndKey(final UUID accountId, final String bundleKey, final InternalTenantContext context) {
 
-        for (final SubscriptionBundle cur : bundles) {
+        for (final SubscriptionBaseBundle cur : bundles) {
             if (cur.getExternalKey().equals(bundleKey) && cur.getAccountId().equals(bundleKey)) {
                 return getSubscriptions(cur.getId(), context);
             }

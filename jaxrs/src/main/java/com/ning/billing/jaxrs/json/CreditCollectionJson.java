@@ -17,12 +17,12 @@
 package com.ning.billing.jaxrs.json;
 
 import java.util.List;
-import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class CreditCollectionJson {
+
     private final String accountId;
     private final List<CreditJson> credits;
 

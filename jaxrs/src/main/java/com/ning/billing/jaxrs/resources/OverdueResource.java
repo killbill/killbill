@@ -16,6 +16,8 @@
 
 package com.ning.billing.jaxrs.resources;
 
+import java.util.UUID;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -24,6 +26,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.jaxrs.json.OverdueStateJson;
 import com.ning.billing.jaxrs.util.Context;
@@ -33,7 +37,7 @@ import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.OverdueUserApi;
 import com.ning.billing.overdue.config.api.OverdueException;
 import com.ning.billing.subscription.api.SubscriptionBase;
-import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.util.api.AuditUserApi;
 import com.ning.billing.util.api.CustomFieldUserApi;
@@ -50,7 +54,6 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 public class OverdueResource extends JaxRsResourceBase {
 
     private final OverdueUserApi overdueApi;
-    private final AccountUserApi accountApi;
 
     @Inject
     public OverdueResource(final OverdueUserApi overdueApi,
@@ -59,15 +62,12 @@ public class OverdueResource extends JaxRsResourceBase {
                            final TagUserApi tagUserApi,
                            final CustomFieldUserApi customFieldUserApi,
                            final AuditUserApi auditUserApi,
+                           final AccountUserApi accountUserApi,
                            final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, context);
         this.overdueApi = overdueApi;
-        this.accountApi = accountApi;
     }
 
-    /*
-
-    STEPH_ENT
 
     @GET
     @Path("/" + ACCOUNTS + "/{accountId:" + UUID_PATTERN + "}")
@@ -76,12 +76,12 @@ public class OverdueResource extends JaxRsResourceBase {
                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, OverdueException, OverdueApiException {
         final TenantContext tenantContext = context.createContext(request);
 
-        final Account account = accountApi.getAccountById(UUID.fromString(accountId), tenantContext);
-        final OverdueState<Account> overdueState = overdueApi.getOverdueStateFor(account, tenantContext);
+        final Account account = accountUserApi.getAccountById(UUID.fromString(accountId), tenantContext);
+        //final OverdueState<Account> overdueState = null;  STEPH_ENT overdueApi.getOverdueStateFor(account, tenantContext);
 
-        return Response.status(Status.OK).entity(new OverdueStateJson(overdueState)).build();
+        //return Response.status(Status.OK).entity(new OverdueStateJson(overdueState)).build();
+        return null;
     }
-    */
 
     @GET
     @Path("/" + BUNDLES + "/{bundleId:" + UUID_PATTERN + "}")
@@ -90,8 +90,8 @@ public class OverdueResource extends JaxRsResourceBase {
                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionBaseApiException, OverdueException, OverdueApiException {
         final TenantContext tenantContext = context.createContext(request);
 
-        final SubscriptionBundle bundle = null; // STEPH_ENT subscriptionApi.getBundleFromId(UUID.fromString(bundleId), tenantContext);
-        final OverdueState<SubscriptionBundle> overdueState = overdueApi.getOverdueStateFor(bundle, tenantContext);
+        final SubscriptionBaseBundle bundle = null; // STEPH_ENT subscriptionApi.getBundleFromId(UUID.fromString(bundleId), tenantContext);
+        final OverdueState<SubscriptionBaseBundle> overdueState = overdueApi.getOverdueStateFor(bundle, tenantContext);
 
         return Response.status(Status.OK).entity(new OverdueStateJson(overdueState)).build();
     }

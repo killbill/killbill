@@ -37,13 +37,11 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.DefaultEntitlement;
-import com.ning.billing.subscription.api.user.SubscriptionData;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.PaymentStatus;
-import com.ning.billing.subscription.api.user.SubscriptionBundle;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;

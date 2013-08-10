@@ -41,7 +41,7 @@ import com.ning.billing.subscription.api.SubscriptionService;
 import com.ning.billing.subscription.api.migration.SubscriptionMigrationApi;
 import com.ning.billing.subscription.api.timeline.SubscriptionTimelineApi;
 import com.ning.billing.subscription.api.transfer.SubscriptionTransferApi;
-import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.subscription.api.user.TestSubscriptionHelper;
 import com.ning.billing.subscription.engine.dao.MockSubscriptionDaoMemory;
 import com.ning.billing.subscription.engine.dao.SubscriptionDao;
@@ -96,7 +96,7 @@ public class SubscriptionTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
     protected Catalog catalog;
     protected AccountData accountData;
-    protected SubscriptionBundle bundle;
+    protected SubscriptionBaseBundle bundle;
 
     private void loadSystemPropertiesFromClasspath(final String resource) {
         final URL url = DefaultSubscriptionTestInitializer.class.getResource(resource);

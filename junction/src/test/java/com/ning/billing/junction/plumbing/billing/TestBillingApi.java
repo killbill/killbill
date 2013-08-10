@@ -35,9 +35,9 @@ import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.entitlement.api.Type;
 import com.ning.billing.mock.MockEffectiveSubscriptionEvent;
 import com.ning.billing.mock.MockSubscription;
-import com.ning.billing.subscription.api.SubscriptionTransitionType;
+import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.subscription.api.SubscriptionBase;
-import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.subscription.api.user.SubscriptionState;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.callcontext.InternalTenantContext;
@@ -81,9 +81,9 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
     @BeforeMethod(groups = "fast")
     public void beforeMethod() throws Exception {
         super.beforeMethod();
-        final SubscriptionBundle bundle = Mockito.mock(SubscriptionBundle.class);
+        final SubscriptionBaseBundle bundle = Mockito.mock(SubscriptionBaseBundle.class);
         Mockito.when(bundle.getId()).thenReturn(bunId);
-        final List<SubscriptionBundle> bundles = ImmutableList.<SubscriptionBundle>of(bundle);
+        final List<SubscriptionBaseBundle> bundles = ImmutableList.<SubscriptionBaseBundle>of(bundle);
 
         effectiveSubscriptionTransitions = new LinkedList<EffectiveSubscriptionInternalEvent>();
 
@@ -126,7 +126,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
         final Account account = createAccount(10);
 
         final SortedSet<BillingEvent> events = billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), internalCallContext);
-        checkFirstEvent(events, nextPlan, account.getBillCycleDayLocal(), subId, now, nextPhase, SubscriptionTransitionType.CREATE.toString());
+        checkFirstEvent(events, nextPlan, account.getBillCycleDayLocal(), subId, now, nextPhase, SubscriptionBaseTransitionType.CREATE.toString());
     }
 
     @Test(groups = "fast")
@@ -141,7 +141,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
 
         final SortedSet<BillingEvent> events = billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), internalCallContext);
         // The expected BCD is when the subscription started since we skip the trial phase
-        checkFirstEvent(events, nextPlan, subscription.getStartDate().getDayOfMonth(), subId, now, nextPhase, SubscriptionTransitionType.CREATE.toString());
+        checkFirstEvent(events, nextPlan, subscription.getStartDate().getDayOfMonth(), subId, now, nextPhase, SubscriptionBaseTransitionType.CREATE.toString());
     }
 
     @Test(groups = "fast")
@@ -154,7 +154,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
 
         final SortedSet<BillingEvent> events = billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), internalCallContext);
         // The expected BCD is the account BCD (account aligned by default)
-        checkFirstEvent(events, nextPlan, 32, subId, now, nextPhase, SubscriptionTransitionType.CREATE.toString());
+        checkFirstEvent(events, nextPlan, 32, subId, now, nextPhase, SubscriptionBaseTransitionType.CREATE.toString());
     }
 
     @Test(groups = "fast")
@@ -170,7 +170,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
 
         final SortedSet<BillingEvent> events = billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), internalCallContext);
         // The expected BCD is when the subscription started
-        checkFirstEvent(events, nextPlan, subscription.getStartDate().getDayOfMonth(), subId, now, nextPhase, SubscriptionTransitionType.CREATE.toString());
+        checkFirstEvent(events, nextPlan, subscription.getStartDate().getDayOfMonth(), subId, now, nextPhase, SubscriptionBaseTransitionType.CREATE.toString());
     }
 
     @Test(groups = "fast")
@@ -191,9 +191,9 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
         Assert.assertEquals(events.size(), 3);
         final Iterator<BillingEvent> it = events.iterator();
 
-        checkEvent(it.next(), nextPlan, account.getBillCycleDayLocal(), subId, now, nextPhase, SubscriptionTransitionType.CREATE.toString(), nextPhase.getFixedPrice(), nextPhase.getRecurringPrice());
-        checkEvent(it.next(), nextPlan, account.getBillCycleDayLocal(), subId, now.plusDays(1), nextPhase, SubscriptionTransitionType.START_BILLING_DISABLED.toString(), null, null);
-        checkEvent(it.next(), nextPlan, account.getBillCycleDayLocal(), subId, now.plusDays(2), nextPhase, SubscriptionTransitionType.END_BILLING_DISABLED.toString(), nextPhase.getFixedPrice(), nextPhase.getRecurringPrice());
+        checkEvent(it.next(), nextPlan, account.getBillCycleDayLocal(), subId, now, nextPhase, SubscriptionBaseTransitionType.CREATE.toString(), nextPhase.getFixedPrice(), nextPhase.getRecurringPrice());
+        checkEvent(it.next(), nextPlan, account.getBillCycleDayLocal(), subId, now.plusDays(1), nextPhase, SubscriptionBaseTransitionType.START_BILLING_DISABLED.toString(), null, null);
+        checkEvent(it.next(), nextPlan, account.getBillCycleDayLocal(), subId, now.plusDays(2), nextPhase, SubscriptionBaseTransitionType.END_BILLING_DISABLED.toString(), nextPhase.getFixedPrice(), nextPhase.getRecurringPrice());
     }
 
     @Test(groups = "fast")
@@ -254,7 +254,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
         Assert.assertEquals(time.getDayOfMonth(), event.getEffectiveDate().getDayOfMonth());
         Assert.assertEquals(nextPhase, event.getPlanPhase());
         Assert.assertEquals(nextPlan, event.getPlan());
-        if (!SubscriptionTransitionType.START_BILLING_DISABLED.equals(event.getTransitionType())) {
+        if (!SubscriptionBaseTransitionType.START_BILLING_DISABLED.equals(event.getTransitionType())) {
             Assert.assertEquals(nextPhase.getBillingPeriod(), event.getBillingPeriod());
         }
         Assert.assertEquals(BillingModeType.IN_ADVANCE, event.getBillingMode());
@@ -280,7 +280,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
                 eventId, subId, bunId, then, now, null, null, null, null, SubscriptionState.ACTIVE,
                 nextPlan.getName(), nextPhase.getName(),
                 nextPriceList.getName(), 1L,
-                SubscriptionTransitionType.CREATE, 1, null, 1L, 2L, null);
+                SubscriptionBaseTransitionType.CREATE, 1, null, 1L, 2L, null);
 
         effectiveSubscriptionTransitions.add(t);
         return now;

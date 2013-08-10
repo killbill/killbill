@@ -41,7 +41,7 @@ import com.ning.billing.catalog.api.PlanSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.subscription.SubscriptionTestSuiteWithEmbeddedDB;
-import com.ning.billing.subscription.api.SubscriptionTransitionType;
+import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.subscription.api.user.SubscriptionStatusDryRun.DryRunChangeReason;
 
 public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
@@ -132,9 +132,9 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
             aoSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
             List<SubscriptionBaseTransition> aoTransitions =  aoSubscription.getAllTransitions();
             assertEquals(aoTransitions.size(), 3);
-            assertEquals(aoTransitions.get(0).getTransitionType(), SubscriptionTransitionType.CREATE);
-            assertEquals(aoTransitions.get(1).getTransitionType(), SubscriptionTransitionType.PHASE);
-            assertEquals(aoTransitions.get(2).getTransitionType(), SubscriptionTransitionType.CANCEL);
+            assertEquals(aoTransitions.get(0).getTransitionType(), SubscriptionBaseTransitionType.CREATE);
+            assertEquals(aoTransitions.get(1).getTransitionType(), SubscriptionBaseTransitionType.PHASE);
+            assertEquals(aoTransitions.get(2).getTransitionType(), SubscriptionBaseTransitionType.CANCEL);
             assertTrue(aoSubscription.getFutureEndDate().compareTo(newAOChargedThroughDate) == 0);
 
             testListener.pushExpectedEvent(NextEvent.UNCANCEL);
@@ -144,9 +144,9 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
             aoSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
             aoTransitions =  aoSubscription.getAllTransitions();
             assertEquals(aoTransitions.size(), 3);
-            assertEquals(aoTransitions.get(0).getTransitionType(), SubscriptionTransitionType.CREATE);
-            assertEquals(aoTransitions.get(1).getTransitionType(), SubscriptionTransitionType.PHASE);
-            assertEquals(aoTransitions.get(2).getTransitionType(), SubscriptionTransitionType.CANCEL);
+            assertEquals(aoTransitions.get(0).getTransitionType(), SubscriptionBaseTransitionType.CREATE);
+            assertEquals(aoTransitions.get(1).getTransitionType(), SubscriptionBaseTransitionType.PHASE);
+            assertEquals(aoTransitions.get(2).getTransitionType(), SubscriptionBaseTransitionType.CANCEL);
             assertTrue(aoSubscription.getFutureEndDate().compareTo(newBPChargedThroughDate) == 0);
 
             assertListenerStatus();

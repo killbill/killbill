@@ -22,7 +22,7 @@ import java.io.InputStream;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.OverdueTestSuiteWithEmbeddedDB;
 import com.ning.billing.overdue.config.OverdueConfig;
@@ -37,9 +37,9 @@ public class TestOverdueWrapper extends OverdueTestSuiteWithEmbeddedDB {
         final OverdueConfig config = XMLLoader.getObjectFromStreamNoValidation(is, OverdueConfig.class);
         overdueWrapperFactory.setOverdueConfig(config);
 
-        SubscriptionBundle bundle;
-        OverdueWrapper<SubscriptionBundle> wrapper;
-        OverdueState<SubscriptionBundle> state;
+        SubscriptionBaseBundle bundle;
+        OverdueWrapper<SubscriptionBaseBundle> wrapper;
+        OverdueState<SubscriptionBaseBundle> state;
 
         state = config.getBundleStateSet().findState("OD1");
         bundle = testOverdueHelper.createBundle(clock.getUTCToday().minusDays(31));
@@ -64,16 +64,16 @@ public class TestOverdueWrapper extends OverdueTestSuiteWithEmbeddedDB {
     public void testWrapperNoConfig() throws Exception {
         overdueWrapperFactory.setOverdueConfig(null);
 
-        final SubscriptionBundle bundle;
-        final OverdueWrapper<SubscriptionBundle> wrapper;
-        final OverdueState<SubscriptionBundle> state;
+        final SubscriptionBaseBundle bundle;
+        final OverdueWrapper<SubscriptionBaseBundle> wrapper;
+        final OverdueState<SubscriptionBaseBundle> state;
 
         final InputStream is = new ByteArrayInputStream(testOverdueHelper.getConfigXml().getBytes());
         final OverdueConfig config = XMLLoader.getObjectFromStreamNoValidation(is, OverdueConfig.class);
         state = config.getBundleStateSet().findState(DefaultBlockingState.CLEAR_STATE_NAME);
         bundle = testOverdueHelper.createBundle(clock.getUTCToday().minusDays(31));
         wrapper = overdueWrapperFactory.createOverdueWrapperFor(bundle);
-        final OverdueState<SubscriptionBundle> result = wrapper.refresh(internalCallContext);
+        final OverdueState<SubscriptionBaseBundle> result = wrapper.refresh(internalCallContext);
 
         Assert.assertEquals(result.getName(), state.getName());
         Assert.assertEquals(result.blockChanges(), state.blockChanges());

@@ -21,12 +21,12 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import com.ning.billing.subscription.api.user.SubscriptionBundleData;
-import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.EntityBase;
 import com.ning.billing.util.entity.dao.EntityModelDao;
 
-public class SubscriptionBundleModelDao extends EntityBase implements EntityModelDao<SubscriptionBundle> {
+public class SubscriptionBundleModelDao extends EntityBase implements EntityModelDao<SubscriptionBaseBundle> {
 
     private String externalKey;
     private UUID accountId;
@@ -58,7 +58,7 @@ public class SubscriptionBundleModelDao extends EntityBase implements EntityMode
         return lastSysUpdateDate;
     }
 
-    public static SubscriptionBundle toSubscriptionbundle(final SubscriptionBundleModelDao src) {
+    public static SubscriptionBaseBundle toSubscriptionbundle(final SubscriptionBundleModelDao src) {
         if (src == null) {
             return null;
         }

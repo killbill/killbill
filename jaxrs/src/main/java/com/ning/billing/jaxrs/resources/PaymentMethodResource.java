@@ -56,19 +56,17 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 public class PaymentMethodResource extends JaxRsResourceBase {
 
     private final PaymentApi paymentApi;
-    private final AccountUserApi accountApi;
 
     @Inject
     public PaymentMethodResource(final PaymentApi paymentApi,
-                                 final AccountUserApi accountApi,
+                                 final AccountUserApi accountUserApi,
                                  final JaxrsUriBuilder uriBuilder,
                                  final TagUserApi tagUserApi,
                                  final CustomFieldUserApi customFieldUserApi,
                                  final AuditUserApi auditUserApi,
                                  final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, context);
         this.paymentApi = paymentApi;
-        this.accountApi = accountApi;
     }
 
     @GET
@@ -80,7 +78,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
         final TenantContext tenantContext = context.createContext(request);
 
         final PaymentMethod paymentMethod = paymentApi.getPaymentMethodById(UUID.fromString(paymentMethodId), false, withPluginInfo, tenantContext);
-        final Account account = accountApi.getAccountById(paymentMethod.getAccountId(), tenantContext);
+        final Account account = accountUserApi.getAccountById(paymentMethod.getAccountId(), tenantContext);
         final PaymentMethodJson json = PaymentMethodJson.toPaymentMethodJson(account, paymentMethod);
 
         return Response.status(Status.OK).entity(json).build();
@@ -98,7 +96,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
         final PaymentMethod paymentMethod = paymentApi.getPaymentMethodById(UUID.fromString(paymentMethodId), false, false, callContext);
-        final Account account = accountApi.getAccountById(paymentMethod.getAccountId(), callContext);
+        final Account account = accountUserApi.getAccountById(paymentMethod.getAccountId(), callContext);
 
         paymentApi.deletedPaymentMethod(account, UUID.fromString(paymentMethodId), deleteDefaultPaymentMethodWithAutoPayOff, callContext);
 

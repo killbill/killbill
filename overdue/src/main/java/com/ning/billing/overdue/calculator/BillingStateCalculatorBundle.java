@@ -33,7 +33,7 @@ import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.subscription.api.SubscriptionBase;
-import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.overdue.config.api.BillingStateBundle;
@@ -48,7 +48,7 @@ import com.ning.billing.util.tag.Tag;
 
 import com.google.inject.Inject;
 
-public class BillingStateCalculatorBundle extends BillingStateCalculator<SubscriptionBundle> {
+public class BillingStateCalculatorBundle extends BillingStateCalculator<SubscriptionBaseBundle> {
 
     private final SubscriptionBaseInternalApi subscriptionApi;
     private final AccountInternalApi accountApi;
@@ -63,7 +63,7 @@ public class BillingStateCalculatorBundle extends BillingStateCalculator<Subscri
 
 
     @Override
-    public BillingStateBundle calculateBillingState(final SubscriptionBundle bundle, final InternalTenantContext context) throws OverdueException {
+    public BillingStateBundle calculateBillingState(final SubscriptionBaseBundle bundle, final InternalTenantContext context) throws OverdueException {
         try {
             final Account account = accountApi.getAccountById(bundle.getAccountId(), context);
             final SortedSet<Invoice> unpaidInvoices = unpaidInvoicesForBundle(bundle.getId(), bundle.getAccountId(), account.getTimeZone(), context);

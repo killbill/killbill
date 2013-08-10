@@ -62,7 +62,7 @@ public class TestBillingAlignment extends TestIntegrationBase {
         addDaysAndCheckForCompletion(33, NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
 
         //
-        // Change plan to annual that has been configured to have a 'Subscription' billing alignment
+        // Change plan to annual that has been configured to have a 'SubscriptionBase' billing alignment
         changeEntitlementAndCheckForCompletion(bpEntitlement, "Shotgun", BillingPeriod.ANNUAL, null, NextEvent.CHANGE, NextEvent.INVOICE);
 
 

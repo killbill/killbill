@@ -38,7 +38,7 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
-import com.ning.billing.subscription.api.SubscriptionTransitionType;
+import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
@@ -171,7 +171,7 @@ public class TestInvoiceHelper {
         final BigDecimal fixedPrice = null;
         events.add(createMockBillingEvent(account, subscription, effectiveDate, plan, planPhase,
                                           fixedPrice, BigDecimal.ONE, currency, BillingPeriod.MONTHLY, 1,
-                                          BillingModeType.IN_ADVANCE, "", 1L, SubscriptionTransitionType.CREATE));
+                                          BillingModeType.IN_ADVANCE, "", 1L, SubscriptionBaseTransitionType.CREATE));
 
         Mockito.when(billingApi.getBillingEventsForAccountAndUpdateAccountBCD(Mockito.<UUID>any(), Mockito.<InternalCallContext>any())).thenReturn(events);
 
@@ -295,7 +295,7 @@ public class TestInvoiceHelper {
                                                final int billCycleDayLocal,
                                                final BillingModeType billingModeType, final String description,
                                                final long totalOrdering,
-                                               final SubscriptionTransitionType type) {
+                                               final SubscriptionBaseTransitionType type) {
         return new BillingEvent() {
             @Override
             public Account getAccount() {
@@ -358,7 +358,7 @@ public class TestInvoiceHelper {
             }
 
             @Override
-            public SubscriptionTransitionType getTransitionType() {
+            public SubscriptionBaseTransitionType getTransitionType() {
                 return type;
             }
 

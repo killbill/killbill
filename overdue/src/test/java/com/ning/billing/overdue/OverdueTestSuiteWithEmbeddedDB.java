@@ -22,7 +22,7 @@ import org.testng.annotations.BeforeMethod;
 
 import com.ning.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.bus.api.PersistentBus;
-import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.notificationq.api.NotificationQueueService;
 import com.ning.billing.ovedue.notification.OverdueCheckNotifier;
 import com.ning.billing.ovedue.notification.OverdueCheckPoster;
@@ -76,7 +76,7 @@ public abstract class OverdueTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     @Inject
     protected OverdueCheckPoster poster;
     @Inject
-    protected OverdueStateApplicator<SubscriptionBundle> applicator;
+    protected OverdueStateApplicator<SubscriptionBaseBundle> applicator;
     @Inject
     protected OverdueUserApi overdueApi;
     @Inject

@@ -17,39 +17,39 @@
 package com.ning.billing.subscription.api;
 
 /**
- * The {@code SubscriptionTransitionType}
+ * The {@code SubscriptionBaseTransitionType}
  */
-public enum SubscriptionTransitionType {
+public enum SubscriptionBaseTransitionType {
     /**
-     * Occurs when a {@code Subscription} got migrated to mark the start of the subscription
+     * Occurs when a {@code SubscriptionBase} got migrated to mark the start of the subscription
      */
     MIGRATE_ENTITLEMENT,
     /**
-     * Occurs when a a user created a {@code Subscription} (not migrated)
+     * Occurs when a a user created a {@code SubscriptionBase} (not migrated)
      */
     CREATE,
     /**
-     * Occurs when a {@code Subscription} got migrated to mark the start of the billing
+     * Occurs when a {@code SubscriptionBase} got migrated to mark the start of the billing
      */
     MIGRATE_BILLING,
     /**
-     * Occurs when a {@code Subscription} got transferred to mark the start of the subscription
+     * Occurs when a {@code SubscriptionBase} got transferred to mark the start of the subscription
      */
     TRANSFER,
     /**
-     * Occurs when a user changed the current {@code Plan} of the {@code Subscription}
+     * Occurs when a user changed the current {@code Plan} of the {@code SubscriptionBase}
      */
     CHANGE,
     /**
-     * Occurs when a user restarted a {@code Subscription} after it had been cancelled
+     * Occurs when a user restarted a {@code SubscriptionBase} after it had been cancelled
      */
     RE_CREATE,
     /**
-     * Occurs when a user cancelled the {@code Subscription}
+     * Occurs when a user cancelled the {@code SubscriptionBase}
      */
     CANCEL,
     /**
-     * Occurs when a user uncancelled the {@code Subscription} before it reached its cancellation date
+     * Occurs when a user uncancelled the {@code SubscriptionBase} before it reached its cancellation date
      */
     UNCANCEL,
     /**

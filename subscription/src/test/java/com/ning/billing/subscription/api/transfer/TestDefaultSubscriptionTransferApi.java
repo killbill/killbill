@@ -35,6 +35,7 @@ import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.subscription.SubscriptionTestSuiteNoDB;
 import com.ning.billing.subscription.api.SubscriptionApiService;
+import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.subscription.api.user.SubscriptionBuilder;
 import com.ning.billing.subscription.api.user.SubscriptionData;
 import com.ning.billing.subscription.engine.dao.SubscriptionDao;
@@ -42,7 +43,6 @@ import com.ning.billing.subscription.events.SubscriptionEvent;
 import com.ning.billing.subscription.events.SubscriptionEvent.EventType;
 import com.ning.billing.subscription.events.user.ApiEventTransfer;
 import com.ning.billing.subscription.events.user.ApiEventType;
-import com.ning.billing.subscription.api.SubscriptionTransitionType;
 import com.ning.billing.subscription.api.timeline.SubscriptionTimeline.ExistingEvent;
 import com.ning.billing.subscription.api.timeline.SubscriptionTimelineApi;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
@@ -73,8 +73,8 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
     public void testEventsForCancelledSubscriptionBeforeTransfer() throws Exception {
         final DateTime subscriptionStartTime = clock.getUTCNow();
         final DateTime subscriptionCancelTime = subscriptionStartTime.plusDays(1);
-        final ImmutableList<ExistingEvent> existingEvents = ImmutableList.<ExistingEvent>of(createEvent(subscriptionStartTime, SubscriptionTransitionType.CREATE),
-                                                                                            createEvent(subscriptionCancelTime, SubscriptionTransitionType.CANCEL));
+        final ImmutableList<ExistingEvent> existingEvents = ImmutableList.<ExistingEvent>of(createEvent(subscriptionStartTime, SubscriptionBaseTransitionType.CREATE),
+                                                                                            createEvent(subscriptionCancelTime, SubscriptionBaseTransitionType.CANCEL));
         final SubscriptionBuilder subscriptionBuilder = new SubscriptionBuilder();
         final SubscriptionData subscription = new SubscriptionData(subscriptionBuilder);
 
@@ -88,8 +88,8 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
     public void testEventsForCancelledSubscriptionAfterTransfer() throws Exception {
         final DateTime subscriptionStartTime = clock.getUTCNow();
         final DateTime subscriptionCancelTime = subscriptionStartTime.plusDays(1);
-        final ImmutableList<ExistingEvent> existingEvents = ImmutableList.<ExistingEvent>of(createEvent(subscriptionStartTime, SubscriptionTransitionType.CREATE),
-                                                                                            createEvent(subscriptionCancelTime, SubscriptionTransitionType.CANCEL));
+        final ImmutableList<ExistingEvent> existingEvents = ImmutableList.<ExistingEvent>of(createEvent(subscriptionStartTime, SubscriptionBaseTransitionType.CREATE),
+                                                                                            createEvent(subscriptionCancelTime, SubscriptionBaseTransitionType.CANCEL));
         final SubscriptionBuilder subscriptionBuilder = new SubscriptionBuilder();
         final SubscriptionData subscription = new SubscriptionData(subscriptionBuilder);
 
@@ -167,7 +167,7 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
         return transferApi.toEvents(existingEvents, subscription, transferDate, callContext);
     }
 
-    private ExistingEvent createEvent(final DateTime eventEffectiveDate, final SubscriptionTransitionType subscriptionTransitionType) {
+    private ExistingEvent createEvent(final DateTime eventEffectiveDate, final SubscriptionBaseTransitionType subscriptionTransitionType) {
         return new ExistingEvent() {
             @Override
             public DateTime getEffectiveDate() {
@@ -176,7 +176,7 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
 
             @Override
             public String getPlanPhaseName() {
-                return SubscriptionTransitionType.CANCEL.equals(subscriptionTransitionType) ? null : "BicycleTrialEvergreen1USD-trial";
+                return SubscriptionBaseTransitionType.CANCEL.equals(subscriptionTransitionType) ? null : "BicycleTrialEvergreen1USD-trial";
             }
 
             @Override
@@ -186,7 +186,7 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
 
             @Override
             public PlanPhaseSpecifier getPlanPhaseSpecifier() {
-                return SubscriptionTransitionType.CANCEL.equals(subscriptionTransitionType) ? null :
+                return SubscriptionBaseTransitionType.CANCEL.equals(subscriptionTransitionType) ? null :
                        new PlanPhaseSpecifier("BicycleTrialEvergreen1USD", ProductCategory.BASE, BillingPeriod.NO_BILLING_PERIOD,
                                               PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.FIXEDTERM);
             }
@@ -197,7 +197,7 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
             }
 
             @Override
-            public SubscriptionTransitionType getSubscriptionTransitionType() {
+            public SubscriptionBaseTransitionType getSubscriptionTransitionType() {
                 return subscriptionTransitionType;
             }
         };
@@ -232,8 +232,8 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
             }
 
             @Override
-            public SubscriptionTransitionType getSubscriptionTransitionType() {
-                return SubscriptionTransitionType.MIGRATE_ENTITLEMENT;
+            public SubscriptionBaseTransitionType getSubscriptionTransitionType() {
+                return SubscriptionBaseTransitionType.MIGRATE_ENTITLEMENT;
             }
         };
 
@@ -265,8 +265,8 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
             }
 
             @Override
-            public SubscriptionTransitionType getSubscriptionTransitionType() {
-                return SubscriptionTransitionType.MIGRATE_BILLING;
+            public SubscriptionBaseTransitionType getSubscriptionTransitionType() {
+                return SubscriptionBaseTransitionType.MIGRATE_BILLING;
             }
         };
 

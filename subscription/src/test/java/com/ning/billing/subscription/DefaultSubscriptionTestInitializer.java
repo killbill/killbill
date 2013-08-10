@@ -33,7 +33,7 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.clock.ClockMock;
 import com.ning.billing.mock.MockAccountBuilder;
 import com.ning.billing.subscription.api.SubscriptionService;
-import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.subscription.engine.core.DefaultSubscriptionService;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
@@ -76,9 +76,9 @@ public class DefaultSubscriptionTestInitializer implements SubscriptionTestIniti
         return accountData;
     }
 
-    public SubscriptionBundle initBundle(final SubscriptionBaseInternalApi subscriptionApi, final InternalCallContext callContext) throws Exception {
+    public SubscriptionBaseBundle initBundle(final SubscriptionBaseInternalApi subscriptionApi, final InternalCallContext callContext) throws Exception {
         final UUID accountId = UUID.randomUUID();
-        final SubscriptionBundle bundle = subscriptionApi.createBundleForAccount(accountId, "myDefaultBundle",  callContext);
+        final SubscriptionBaseBundle bundle = subscriptionApi.createBundleForAccount(accountId, "myDefaultBundle",  callContext);
         assertNotNull(bundle);
         return bundle;
     }

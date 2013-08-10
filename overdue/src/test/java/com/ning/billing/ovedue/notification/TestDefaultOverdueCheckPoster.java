@@ -27,7 +27,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.subscription.api.SubscriptionBase;
-import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.entitlement.api.Blockable;
 import com.ning.billing.entitlement.api.Type;
 import com.ning.billing.notificationq.api.NotificationEventWithMetadata;
@@ -73,7 +73,7 @@ public class TestDefaultOverdueCheckPoster extends OverdueTestSuiteWithEmbeddedD
 
         // Check we don't conflict with other overdueables
         final UUID bundleId = UUID.randomUUID();
-        final Blockable otherOverdueable = Mockito.mock(SubscriptionBundle.class);
+        final Blockable otherOverdueable = Mockito.mock(SubscriptionBaseBundle.class);
         Mockito.when(otherOverdueable.getId()).thenReturn(bundleId);
 
         insertOverdueCheckAndVerifyQueueContent(otherOverdueable, 10, 10);

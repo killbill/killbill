@@ -32,29 +32,32 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class BundleJsonWithSubscriptions extends BundleJsonSimple {
 
-    private final List<SubscriptionJsonWithEvents> subscriptions;
+    private final List<EntitlementJsonWithEvents> subscriptions;
 
     @JsonCreator
     public BundleJsonWithSubscriptions(@JsonProperty("bundleId") @Nullable final String bundleId,
                                        @JsonProperty("externalKey") @Nullable final String externalKey,
-                                       @JsonProperty("subscriptions") @Nullable final List<SubscriptionJsonWithEvents> subscriptions,
+                                       @JsonProperty("subscriptions") @Nullable final List<EntitlementJsonWithEvents> subscriptions,
                                        @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(bundleId, externalKey, auditLogs);
         this.subscriptions = subscriptions;
     }
 
     @JsonProperty("subscriptions")
-    public List<SubscriptionJsonWithEvents> getSubscriptions() {
+    public List<EntitlementJsonWithEvents> getSubscriptions() {
         return subscriptions;
     }
 
     public BundleJsonWithSubscriptions(final BundleTimeline bundle, final List<AuditLog> auditLogs,
                                        final Map<UUID, List<AuditLog>> subscriptionsAuditLogs, final Map<UUID, List<AuditLog>> subscriptionEventsAuditLogs) {
         super(bundle.getId(), bundle.getExternalKey(), auditLogs);
-        this.subscriptions = new LinkedList<SubscriptionJsonWithEvents>();
+        this.subscriptions = new LinkedList<EntitlementJsonWithEvents>();
         for (final SubscriptionTimeline subscriptionTimeline : bundle.getSubscriptions()) {
-            this.subscriptions.add(new SubscriptionJsonWithEvents(bundle.getId(), subscriptionTimeline,
+            // STEPH_ENT
+            /*
+            this.subscriptions.add(new EntitlementJsonWithEvents(bundle.getId(), subscriptionTimeline,
                                                                   subscriptionsAuditLogs.get(subscriptionTimeline.getId()), subscriptionEventsAuditLogs));
+        */
         }
     }
 

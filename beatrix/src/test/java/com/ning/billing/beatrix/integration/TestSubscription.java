@@ -28,14 +28,11 @@ import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import com.ning.billing.catalog.api.BillingActionPolicy;
 import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.DefaultEntitlement;
-import com.ning.billing.subscription.api.user.SubscriptionData;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItemType;
-import com.ning.billing.subscription.api.user.SubscriptionBundle;
 
 import com.google.common.collect.ImmutableList;
 
@@ -67,7 +64,7 @@ public class TestSubscription extends TestIntegrationBase {
         assertNotNull(bpEntitlement);
         assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), callContext).size(), 1);
 
-        assertEquals(bpEntitlement.getSubscription().getCurrentPlan().getBillingPeriod(), BillingPeriod.ANNUAL);
+        assertEquals(bpEntitlement.getSubscriptionBase().getCurrentPlan().getBillingPeriod(), BillingPeriod.ANNUAL);
 
         // Move out of trials for interesting invoices adjustments
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);

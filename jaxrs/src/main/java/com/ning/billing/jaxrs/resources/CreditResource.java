@@ -66,7 +66,7 @@ public class CreditResource extends JaxRsResourceBase {
                           final CustomFieldUserApi customFieldUserApi,
                           final AuditUserApi auditUserApi,
                           final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, context);
         this.invoiceUserApi = invoiceUserApi;
         this.accountUserApi = accountUserApi;
     }

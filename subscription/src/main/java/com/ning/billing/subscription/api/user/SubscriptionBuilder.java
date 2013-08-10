@@ -146,11 +146,11 @@ public class SubscriptionBuilder {
             try {
                 final Object value = cur.get(this);
                 if (value == null) {
-                    throw new SubscriptionError(String.format("Field %s has not been set for Subscription",
+                    throw new SubscriptionError(String.format("Field %s has not been set for SubscriptionBase",
                                                              cur.getName()));
                 }
             } catch (IllegalAccessException e) {
-                throw new SubscriptionError(String.format("Failed to access value for field %s for Subscription",
+                throw new SubscriptionError(String.format("Failed to access value for field %s for SubscriptionBase",
                                                          cur.getName()), e);
             }
         }

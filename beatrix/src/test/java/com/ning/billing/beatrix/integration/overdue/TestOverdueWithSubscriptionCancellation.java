@@ -86,7 +86,7 @@ public class TestOverdueWithSubscriptionCancellation extends TestOverdueBase {
         // Should be in OD1
         checkODState("OD1");
 
-        final SubscriptionBase cancelledBaseSubscription = ((DefaultEntitlement) entitlementApi.getEntitlementFromId(baseEntitlement.getId(), callContext)).getSubscription();
+        final SubscriptionBase cancelledBaseSubscription = ((DefaultEntitlement) entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext)).getSubscriptionBase();
         assertTrue(cancelledBaseSubscription.getState() == SubscriptionState.CANCELLED);
     }
 }

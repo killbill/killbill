@@ -26,10 +26,10 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.Product;
-import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.util.tag.Tag;
 
-public class BillingStateBundle extends BillingState<SubscriptionBundle> {
+public class BillingStateBundle extends BillingState<SubscriptionBaseBundle> {
 
     private final Product basePlanProduct;
     private final BillingPeriod basePlanBillingPeriod;

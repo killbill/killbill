@@ -23,7 +23,7 @@ import org.joda.time.DateTime;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PriceList;
-import com.ning.billing.subscription.api.SubscriptionTransitionType;
+import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 
 public interface SubscriptionBaseTransition {
 
@@ -59,5 +59,5 @@ public interface SubscriptionBaseTransition {
 
     public DateTime getEffectiveTransitionTime();
 
-    public SubscriptionTransitionType getTransitionType();
+    public SubscriptionBaseTransitionType getTransitionType();
 }

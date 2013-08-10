@@ -24,26 +24,26 @@ import com.ning.billing.subscription.api.migration.AccountMigrationData;
 import com.ning.billing.subscription.api.migration.AccountMigrationData.BundleMigrationData;
 import com.ning.billing.subscription.api.timeline.SubscriptionDataRepair;
 import com.ning.billing.subscription.api.transfer.TransferCancelData;
+import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.subscription.api.user.SubscriptionBundleData;
 import com.ning.billing.subscription.api.user.SubscriptionData;
 import com.ning.billing.subscription.events.SubscriptionEvent;
 import com.ning.billing.subscription.api.SubscriptionBase;
-import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 
 public interface SubscriptionDao {
 
     // Bundle apis
-    public List<SubscriptionBundle> getSubscriptionBundleForAccount(UUID accountId, InternalTenantContext context);
+    public List<SubscriptionBaseBundle> getSubscriptionBundleForAccount(UUID accountId, InternalTenantContext context);
 
-    public List<SubscriptionBundle> getSubscriptionBundlesForKey(String bundleKey, InternalTenantContext context);
+    public List<SubscriptionBaseBundle> getSubscriptionBundlesForKey(String bundleKey, InternalTenantContext context);
 
-    public SubscriptionBundle getSubscriptionBundleFromAccountAndKey(UUID accountId, String bundleKey, InternalTenantContext context);
+    public SubscriptionBaseBundle getSubscriptionBundleFromAccountAndKey(UUID accountId, String bundleKey, InternalTenantContext context);
 
-    public SubscriptionBundle getSubscriptionBundleFromId(UUID bundleId, InternalTenantContext context);
+    public SubscriptionBaseBundle getSubscriptionBundleFromId(UUID bundleId, InternalTenantContext context);
 
-    public SubscriptionBundle createSubscriptionBundle(SubscriptionBundleData bundle, InternalCallContext context);
+    public SubscriptionBaseBundle createSubscriptionBundle(SubscriptionBundleData bundle, InternalCallContext context);
 
     public SubscriptionBase getSubscriptionFromId(UUID subscriptionId, InternalTenantContext context);
 

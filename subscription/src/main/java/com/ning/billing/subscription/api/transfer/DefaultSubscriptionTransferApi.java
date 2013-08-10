@@ -33,6 +33,7 @@ import com.ning.billing.subscription.api.SubscriptionApiBase;
 import com.ning.billing.subscription.api.SubscriptionApiService;
 import com.ning.billing.subscription.api.migration.AccountMigrationData.BundleMigrationData;
 import com.ning.billing.subscription.api.migration.AccountMigrationData.SubscriptionMigrationData;
+import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.subscription.api.user.SubscriptionBuilder;
 import com.ning.billing.subscription.api.user.SubscriptionBundleData;
 import com.ning.billing.subscription.api.user.SubscriptionData;
@@ -51,7 +52,6 @@ import com.ning.billing.subscription.api.timeline.SubscriptionTimeline.ExistingE
 
 import com.ning.billing.subscription.api.timeline.SubscriptionTimelineApi;
 import com.ning.billing.subscription.api.user.SubscriptionState;
-import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
@@ -186,7 +186,7 @@ public class DefaultSubscriptionTransferApi extends SubscriptionApiBase implemen
     }
 
     @Override
-    public SubscriptionBundle transferBundle(final UUID sourceAccountId, final UUID destAccountId,
+    public SubscriptionBaseBundle transferBundle(final UUID sourceAccountId, final UUID destAccountId,
                                              final String bundleKey, final DateTime transferDate, final boolean transferAddOn,
                                              final boolean cancelImmediately, final CallContext context) throws SubscriptionTransferApiException {
         final InternalCallContext fromInternalCallContext = internalCallContextFactory.createInternalCallContext(sourceAccountId, context);
@@ -200,7 +200,7 @@ public class DefaultSubscriptionTransferApi extends SubscriptionApiBase implemen
                 throw new SubscriptionTransferApiException(ErrorCode.SUB_TRANSFER_INVALID_EFF_DATE, effectiveTransferDate);
             }
 
-            final SubscriptionBundle bundle = dao.getSubscriptionBundleFromAccountAndKey(sourceAccountId, bundleKey, fromInternalCallContext);
+            final SubscriptionBaseBundle bundle = dao.getSubscriptionBundleFromAccountAndKey(sourceAccountId, bundleKey, fromInternalCallContext);
             if (bundle == null) {
                 throw new SubscriptionTransferApiException(ErrorCode.SUB_CREATE_NO_BUNDLE, bundleKey);
             }

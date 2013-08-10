@@ -102,7 +102,7 @@ public class DefaultSubscriptionService implements EventListener, SubscriptionSe
                 @Override
                 public void handleReadyNotification(final NotificationEvent inputKey, final DateTime eventDateTime, final UUID fromNotificationQueueUserToken, final Long accountRecordId, final Long tenantRecordId) {
                     if (!(inputKey instanceof SubscriptionNotificationKey)) {
-                        log.error("Subscription service received an unexpected event type {}" + inputKey.getClass().getName());
+                        log.error("SubscriptionBase service received an unexpected event type {}" + inputKey.getClass().getName());
                         return;
                     }
 

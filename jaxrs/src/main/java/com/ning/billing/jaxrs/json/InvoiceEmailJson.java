@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class InvoiceEmailJson {
+
     private final String accountId;
     private final boolean isNotifiedForInvoices;
 

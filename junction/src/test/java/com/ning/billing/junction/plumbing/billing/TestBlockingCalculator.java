@@ -28,7 +28,7 @@ import com.ning.billing.junction.JunctionTestSuiteNoDB;
 import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.entitlement.api.Type;
 import com.ning.billing.junction.plumbing.billing.BlockingCalculator.DisabledDuration;
-import com.ning.billing.subscription.api.SubscriptionTransitionType;
+import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.util.svcapi.junction.BillingEvent;
 import com.ning.billing.util.svcapi.junction.BillingModeType;
@@ -125,14 +125,14 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         final SortedSet<BillingEvent> s1Events = blockingCalculator.filter(billingEvents, subscription1);
         final Iterator<BillingEvent> it1 = s1Events.iterator();
         assertEquals(it1.next(), A);
-        assertEquals(it1.next().getTransitionType(), SubscriptionTransitionType.START_BILLING_DISABLED);
-        assertEquals(it1.next().getTransitionType(), SubscriptionTransitionType.END_BILLING_DISABLED);
+        assertEquals(it1.next().getTransitionType(), SubscriptionBaseTransitionType.START_BILLING_DISABLED);
+        assertEquals(it1.next().getTransitionType(), SubscriptionBaseTransitionType.END_BILLING_DISABLED);
 
         final SortedSet<BillingEvent> s2Events = blockingCalculator.filter(billingEvents, subscription2);
         final Iterator<BillingEvent> it2 = s2Events.iterator();
         assertEquals(it2.next(), B);
-        assertEquals(it2.next().getTransitionType(), SubscriptionTransitionType.START_BILLING_DISABLED);
-        assertEquals(it2.next().getTransitionType(), SubscriptionTransitionType.END_BILLING_DISABLED);
+        assertEquals(it2.next().getTransitionType(), SubscriptionBaseTransitionType.START_BILLING_DISABLED);
+        assertEquals(it2.next().getTransitionType(), SubscriptionBaseTransitionType.END_BILLING_DISABLED);
 
         final SortedSet<BillingEvent> s3Events = blockingCalculator.filter(billingEvents, subscription3);
         final Iterator<BillingEvent> it3 = s3Events.iterator();
@@ -328,7 +328,7 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         assertNull(results.first().getFixedPrice());
         assertNull(results.first().getRecurringPrice());
         assertEquals(results.first().getBillingPeriod(), BillingPeriod.NO_BILLING_PERIOD);
-        assertEquals(results.first().getTransitionType(), SubscriptionTransitionType.START_BILLING_DISABLED);
+        assertEquals(results.first().getTransitionType(), SubscriptionBaseTransitionType.START_BILLING_DISABLED);
     }
 
     // Open with previous and following events
@@ -350,7 +350,7 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         assertNull(results.first().getFixedPrice());
         assertNull(results.first().getRecurringPrice());
         assertEquals(results.first().getBillingPeriod(), BillingPeriod.NO_BILLING_PERIOD);
-        assertEquals(results.first().getTransitionType(), SubscriptionTransitionType.START_BILLING_DISABLED);
+        assertEquals(results.first().getTransitionType(), SubscriptionBaseTransitionType.START_BILLING_DISABLED);
     }
 
     // Open with no previous event (only following)
@@ -387,10 +387,10 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         assertNull(results.first().getFixedPrice());
         assertNull(results.first().getRecurringPrice());
         assertEquals(results.first().getBillingPeriod(), BillingPeriod.NO_BILLING_PERIOD);
-        assertEquals(results.first().getTransitionType(), SubscriptionTransitionType.START_BILLING_DISABLED);
+        assertEquals(results.first().getTransitionType(), SubscriptionBaseTransitionType.START_BILLING_DISABLED);
         assertEquals(results.last().getEffectiveDate(), now.plusDays(2));
         assertEquals(results.last().getRecurringPrice(), billingEvents.first().getRecurringPrice());
-        assertEquals(results.last().getTransitionType(), SubscriptionTransitionType.END_BILLING_DISABLED);
+        assertEquals(results.last().getTransitionType(), SubscriptionBaseTransitionType.END_BILLING_DISABLED);
     }
 
     // Closed duration with a previous event and in-between event
@@ -412,10 +412,10 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         assertNull(results.first().getFixedPrice());
         assertNull(results.first().getRecurringPrice());
         assertEquals(results.first().getBillingPeriod(), BillingPeriod.NO_BILLING_PERIOD);
-        assertEquals(results.first().getTransitionType(), SubscriptionTransitionType.START_BILLING_DISABLED);
+        assertEquals(results.first().getTransitionType(), SubscriptionBaseTransitionType.START_BILLING_DISABLED);
         assertEquals(results.last().getEffectiveDate(), now.plusDays(2));
         assertEquals(results.last().getRecurringPrice(), billingEvents.first().getRecurringPrice());
-        assertEquals(results.last().getTransitionType(), SubscriptionTransitionType.END_BILLING_DISABLED);
+        assertEquals(results.last().getTransitionType(), SubscriptionBaseTransitionType.END_BILLING_DISABLED);
     }
 
     // Closed duration with a previous event and in-between event and following
@@ -438,10 +438,10 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         assertNull(results.first().getFixedPrice());
         assertNull(results.first().getRecurringPrice());
         assertEquals(results.first().getBillingPeriod(), BillingPeriod.NO_BILLING_PERIOD);
-        assertEquals(results.first().getTransitionType(), SubscriptionTransitionType.START_BILLING_DISABLED);
+        assertEquals(results.first().getTransitionType(), SubscriptionBaseTransitionType.START_BILLING_DISABLED);
         assertEquals(results.last().getEffectiveDate(), now.plusDays(2));
         assertEquals(results.last().getRecurringPrice(), billingEvents.first().getRecurringPrice());
-        assertEquals(results.last().getTransitionType(), SubscriptionTransitionType.END_BILLING_DISABLED);
+        assertEquals(results.last().getTransitionType(), SubscriptionBaseTransitionType.END_BILLING_DISABLED);
     }
 
     // Closed with no previous event but in-between events
@@ -460,7 +460,7 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         assertEquals(results.size(), 1);
         assertEquals(results.last().getEffectiveDate(), now.plusDays(2));
         assertEquals(results.last().getRecurringPrice(), billingEvents.first().getRecurringPrice());
-        assertEquals(results.last().getTransitionType(), SubscriptionTransitionType.END_BILLING_DISABLED);
+        assertEquals(results.last().getTransitionType(), SubscriptionBaseTransitionType.END_BILLING_DISABLED);
     }
 
     // Closed with no previous event but in-between events and following
@@ -479,7 +479,7 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         assertEquals(results.size(), 1);
         assertEquals(results.last().getEffectiveDate(), now.plusDays(2));
         assertEquals(results.last().getRecurringPrice(), billingEvents.first().getRecurringPrice());
-        assertEquals(results.last().getTransitionType(), SubscriptionTransitionType.END_BILLING_DISABLED);
+        assertEquals(results.last().getTransitionType(), SubscriptionBaseTransitionType.END_BILLING_DISABLED);
     }
 
     // Closed duration with only following
@@ -520,10 +520,10 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
     }
 
     protected BillingEvent createRealEvent(final DateTime effectiveDate, final SubscriptionBase subscription) {
-        return createRealEvent(effectiveDate, subscription, SubscriptionTransitionType.CHANGE);
+        return createRealEvent(effectiveDate, subscription, SubscriptionBaseTransitionType.CHANGE);
     }
 
-    protected BillingEvent createRealEvent(final DateTime effectiveDate, final SubscriptionBase subscription, final SubscriptionTransitionType type) {
+    protected BillingEvent createRealEvent(final DateTime effectiveDate, final SubscriptionBase subscription, final SubscriptionBaseTransitionType type) {
         final Account account = this.account;
         final Integer billCycleDay = 1;
         final PlanPhase planPhase = new MockPlanPhase();
@@ -580,7 +580,7 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         assertEquals(result.getDescription(), "");
         assertEquals(result.getBillingMode(), event.getBillingMode());
         assertEquals(result.getBillingPeriod(), BillingPeriod.NO_BILLING_PERIOD);
-        assertEquals(result.getTransitionType(), SubscriptionTransitionType.START_BILLING_DISABLED);
+        assertEquals(result.getTransitionType(), SubscriptionBaseTransitionType.START_BILLING_DISABLED);
         // TODO - ugly, fragile
         assertEquals(result.getTotalOrdering(), (Long) (BlockingCalculator.getGlobalTotalOrder().get() - 1));
     }
@@ -601,7 +601,7 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         assertEquals(result.getDescription(), "");
         assertEquals(result.getBillingMode(), event.getBillingMode());
         assertEquals(result.getBillingPeriod(), event.getBillingPeriod());
-        assertEquals(result.getTransitionType(), SubscriptionTransitionType.END_BILLING_DISABLED);
+        assertEquals(result.getTransitionType(), SubscriptionBaseTransitionType.END_BILLING_DISABLED);
         // TODO - ugly, fragile
         assertEquals(result.getTotalOrdering(), (Long) (BlockingCalculator.getGlobalTotalOrder().get() - 1));
     }
@@ -610,7 +610,7 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
 
         public MockBillingEvent() {
             super(account, subscription1, clock.getUTCNow(), null, null, BigDecimal.ZERO, BigDecimal.TEN, Currency.USD, BillingPeriod.ANNUAL,
-                    4, BillingModeType.IN_ADVANCE, "", 3L, SubscriptionTransitionType.CREATE, DateTimeZone.UTC);
+                    4, BillingModeType.IN_ADVANCE, "", 3L, SubscriptionBaseTransitionType.CREATE, DateTimeZone.UTC);
         }
     }
 
@@ -714,9 +714,9 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
     public void testSimpleWithClearBlockingDuration() throws Exception {
         final UUID ovdId = UUID.randomUUID();
 
-        final BillingEvent trial = createRealEvent(new LocalDate(2012, 5, 1).toDateTimeAtStartOfDay(DateTimeZone.UTC), subscription1, SubscriptionTransitionType.CREATE);
-        final BillingEvent phase = createRealEvent(new LocalDate(2012, 5, 31).toDateTimeAtStartOfDay(DateTimeZone.UTC), subscription1, SubscriptionTransitionType.PHASE);
-        final BillingEvent upgrade = createRealEvent(new LocalDate(2012, 7, 25).toDateTimeAtStartOfDay(DateTimeZone.UTC), subscription1, SubscriptionTransitionType.CHANGE);
+        final BillingEvent trial = createRealEvent(new LocalDate(2012, 5, 1).toDateTimeAtStartOfDay(DateTimeZone.UTC), subscription1, SubscriptionBaseTransitionType.CREATE);
+        final BillingEvent phase = createRealEvent(new LocalDate(2012, 5, 31).toDateTimeAtStartOfDay(DateTimeZone.UTC), subscription1, SubscriptionBaseTransitionType.PHASE);
+        final BillingEvent upgrade = createRealEvent(new LocalDate(2012, 7, 25).toDateTimeAtStartOfDay(DateTimeZone.UTC), subscription1, SubscriptionBaseTransitionType.CHANGE);
         final SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
         billingEvents.add(trial);
         billingEvents.add(phase);
@@ -735,15 +735,15 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         assertEquals(billingEvents.size(), 5);
         final List<BillingEvent> events = new ArrayList<BillingEvent>(billingEvents);
         assertEquals(events.get(0).getEffectiveDate(), new LocalDate(2012, 5, 1).toDateTimeAtStartOfDay(DateTimeZone.UTC));
-        assertEquals(events.get(0).getTransitionType(), SubscriptionTransitionType.CREATE);
+        assertEquals(events.get(0).getTransitionType(), SubscriptionBaseTransitionType.CREATE);
         assertEquals(events.get(1).getEffectiveDate(), new LocalDate(2012, 5, 31).toDateTimeAtStartOfDay(DateTimeZone.UTC));
-        assertEquals(events.get(1).getTransitionType(), SubscriptionTransitionType.PHASE);
+        assertEquals(events.get(1).getTransitionType(), SubscriptionBaseTransitionType.PHASE);
         assertEquals(events.get(2).getEffectiveDate(), new LocalDate(2012, 7, 15).toDateTimeAtStartOfDay(DateTimeZone.UTC));
-        assertEquals(events.get(2).getTransitionType(), SubscriptionTransitionType.START_BILLING_DISABLED);
+        assertEquals(events.get(2).getTransitionType(), SubscriptionBaseTransitionType.START_BILLING_DISABLED);
         assertEquals(events.get(3).getEffectiveDate(), new LocalDate(2012, 7, 25).toDateTimeAtStartOfDay(DateTimeZone.UTC));
-        assertEquals(events.get(3).getTransitionType(), SubscriptionTransitionType.END_BILLING_DISABLED);
+        assertEquals(events.get(3).getTransitionType(), SubscriptionBaseTransitionType.END_BILLING_DISABLED);
         assertEquals(events.get(4).getEffectiveDate(), new LocalDate(2012, 7, 25).toDateTimeAtStartOfDay(DateTimeZone.UTC));
-        assertEquals(events.get(4).getTransitionType(), SubscriptionTransitionType.CHANGE);
+        assertEquals(events.get(4).getTransitionType(), SubscriptionBaseTransitionType.CHANGE);
     }
 
     private void setBlockingStates(final UUID blockedId, final List<BlockingState> blockingStates) {

@@ -38,21 +38,25 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ning.billing.ObjectType;
+import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.api.BillingActionPolicy;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.entitlement.api.Entitlement;
+import com.ning.billing.entitlement.api.EntitlementApi;
+import com.ning.billing.entitlement.api.EntitlementApiException;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
-import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
+import com.ning.billing.jaxrs.json.EntitlementJsonNoEvents;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
 import com.ning.billing.jaxrs.util.KillbillEventHandler;
-import com.ning.billing.subscription.api.SubscriptionBase;
-import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.util.api.AuditUserApi;
 import com.ning.billing.util.api.CustomFieldApiException;
 import com.ning.billing.util.api.CustomFieldUserApi;
@@ -71,62 +75,70 @@ import com.google.inject.Inject;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
-@Path(JaxrsResource.SUBSCRIPTIONS_PATH)
-public class SubscriptionResource extends JaxRsResourceBase {
+@Path(JaxrsResource.ENTITLEMENTS_PATH)
+public class EntitlementResource extends JaxRsResourceBase {
 
-    private static final Logger log = LoggerFactory.getLogger(SubscriptionResource.class);
-    private static final String ID_PARAM_NAME = "subscriptionId";
+    private static final Logger log = LoggerFactory.getLogger(EntitlementResource.class);
+    private static final String ID_PARAM_NAME = "entitlementId";
     private static final String CUSTOM_FIELD_URI = JaxrsResource.CUSTOM_FIELDS + "/{" + ID_PARAM_NAME + ":" + UUID_PATTERN + "}";
     private static final String TAG_URI = JaxrsResource.TAGS + "/{" + ID_PARAM_NAME + ":" + UUID_PATTERN + "}";
 
     private final KillbillEventHandler killbillHandler;
+    private final EntitlementApi entitlementApi;
 
     @Inject
-    public SubscriptionResource(final KillbillEventHandler killbillHandler,
-                                final JaxrsUriBuilder uriBuilder,
-                                final TagUserApi tagUserApi,
-                                final CustomFieldUserApi customFieldUserApi,
-                                final AuditUserApi auditUserApi,
-                                final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, context);
+    public EntitlementResource(final KillbillEventHandler killbillHandler,
+                               final JaxrsUriBuilder uriBuilder,
+                               final TagUserApi tagUserApi,
+                               final CustomFieldUserApi customFieldUserApi,
+                               final AuditUserApi auditUserApi,
+                               final EntitlementApi entitlementApi,
+                               final AccountUserApi accountUserApi,
+                               final Context context) {
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, context);
         this.killbillHandler = killbillHandler;
+        this.entitlementApi = entitlementApi;
     }
 
     @GET
-    @Path("/{subscriptionId:" + UUID_PATTERN + "}")
+    @Path("/{entitlementId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
-    public Response getSubscription(@PathParam("subscriptionId") final String subscriptionId,
-                                    @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionBaseApiException {
-        final UUID uuid = UUID.fromString(subscriptionId);
-        final SubscriptionBase subscription = null; // STEPH_ENT  subscriptionApi.getSubscriptionFromId(uuid, context.createContext(request));
-        final SubscriptionJsonNoEvents json = new SubscriptionJsonNoEvents(subscription, null);
+    public Response getEntitlement(@PathParam("entitlementId") final String entitlementId,
+                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws EntitlementApiException {
+        final UUID uuid = UUID.fromString(entitlementId);
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(uuid, context.createContext(request));
+        final EntitlementJsonNoEvents json = new EntitlementJsonNoEvents(entitlement, null);
         return Response.status(Status.OK).entity(json).build();
     }
 
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    public Response createSubscription(final SubscriptionJsonNoEvents subscription,
-                                       @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
-                                       @QueryParam(QUERY_CALL_COMPLETION) @DefaultValue("false") final Boolean callCompletion,
-                                       @QueryParam(QUERY_CALL_TIMEOUT) @DefaultValue("3") final long timeoutSec,
-                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                       @HeaderParam(HDR_REASON) final String reason,
-                                       @HeaderParam(HDR_COMMENT) final String comment,
-                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionBaseApiException {
+    public Response createEntitlement(final EntitlementJsonNoEvents entitlement,
+                                      //@QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
+                                      @QueryParam(QUERY_CALL_COMPLETION) @DefaultValue("false") final Boolean callCompletion,
+                                      @QueryParam(QUERY_CALL_TIMEOUT) @DefaultValue("3") final long timeoutSec,
+                                      @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                      @HeaderParam(HDR_REASON) final String reason,
+                                      @HeaderParam(HDR_COMMENT) final String comment,
+                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws EntitlementApiException, AccountApiException {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
-        final SubscriptionCallCompletionCallback<SubscriptionBase> callback = new SubscriptionCallCompletionCallback<SubscriptionBase>() {
+        final EntitlementCallCompletionCallback<Entitlement> callback = new EntitlementCallCompletionCallback<Entitlement>() {
             @Override
-            public SubscriptionBase doOperation(final CallContext ctx) throws SubscriptionBaseApiException, InterruptedException, TimeoutException {
+            public Entitlement doOperation(final CallContext ctx) throws InterruptedException, TimeoutException, EntitlementApiException {
 
-                final DateTime inputDate = (requestedDate != null) ? DATE_TIME_FORMATTER.parseDateTime(requestedDate) : null;
-                final UUID uuid = UUID.fromString(subscription.getBundleId());
+                //final DateTime inputDate = (requestedDate != null) ? DATE_TIME_FORMATTER.parseDateTime(requestedDate) : null;
+                final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(entitlement.getProductName(),
+                                                                       ProductCategory.valueOf(entitlement.getProductCategory()),
+                                                                       BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList(), null);
 
-                final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(subscription.getProductName(),
-                                                                       ProductCategory.valueOf(subscription.getProductCategory()),
-                                                                       BillingPeriod.valueOf(subscription.getBillingPeriod()), subscription.getPriceList(), null);
-                return null; // STEPH_ENT  subscriptionApi.createSubscription(uuid, spec, inputDate, ctx);
+
+                final UUID accountId = entitlement.getAccountId() != null ? UUID.fromString(entitlement.getAccountId()) : null;
+                final UUID bundleId = entitlement.getBundleId() != null ? UUID.fromString(entitlement.getBundleId()) : null;
+                return (entitlement.getProductCategory().equals(ProductCategory.ADD_ON.toString())) ?
+                       entitlementApi.addEntitlement(bundleId, spec, callContext) :
+                       entitlementApi.createBaseEntitlement(accountId, spec, entitlement.getExternalKey(), callContext);
             }
 
             @Override
@@ -135,51 +147,50 @@ public class SubscriptionResource extends JaxRsResourceBase {
             }
 
             @Override
-            public Response doResponseOk(final SubscriptionBase createdSubscription) {
-                return uriBuilder.buildResponse(SubscriptionResource.class, "getSubscription", createdSubscription.getId());
+            public Response doResponseOk(final Entitlement createdEntitlement) {
+                return uriBuilder.buildResponse(EntitlementResource.class, "getEntitlement", createdEntitlement.getId());
             }
         };
 
-        final SubscriptionCallCompletion<SubscriptionBase> callCompletionCreation = new SubscriptionCallCompletion<SubscriptionBase>();
+        final EntitlementCallCompletion<Entitlement> callCompletionCreation = new EntitlementCallCompletion<Entitlement>();
         return callCompletionCreation.withSynchronization(callback, timeoutSec, callCompletion, callContext);
     }
 
     @PUT
     @Produces(APPLICATION_JSON)
     @Consumes(APPLICATION_JSON)
-    @Path("/{subscriptionId:" + UUID_PATTERN + "}")
-    public Response changeSubscriptionPlan(final SubscriptionJsonNoEvents subscription,
-                                           @PathParam("subscriptionId") final String subscriptionId,
-                                           @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
-                                           @QueryParam(QUERY_CALL_COMPLETION) @DefaultValue("false") final Boolean callCompletion,
-                                           @QueryParam(QUERY_CALL_TIMEOUT) @DefaultValue("3") final long timeoutSec,
-                                           @QueryParam(QUERY_POLICY) final String policyString,
-                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                           @HeaderParam(HDR_REASON) final String reason,
-                                           @HeaderParam(HDR_COMMENT) final String comment,
-                                           @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionBaseApiException {
+    @Path("/{entitlementId:" + UUID_PATTERN + "}")
+    public Response changeEntitlementPlan(final EntitlementJsonNoEvents entitlement,
+                                          @PathParam("entitlementId") final String entitlementId,
+                                          @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
+                                          @QueryParam(QUERY_CALL_COMPLETION) @DefaultValue("false") final Boolean callCompletion,
+                                          @QueryParam(QUERY_CALL_TIMEOUT) @DefaultValue("3") final long timeoutSec,
+                                          @QueryParam(QUERY_POLICY) final String policyString,
+                                          @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                          @HeaderParam(HDR_REASON) final String reason,
+                                          @HeaderParam(HDR_COMMENT) final String comment,
+                                          @javax.ws.rs.core.Context final HttpServletRequest request) throws EntitlementApiException, AccountApiException {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
-        final SubscriptionCallCompletionCallback<Response> callback = new SubscriptionCallCompletionCallback<Response>() {
+        final EntitlementCallCompletionCallback<Response> callback = new EntitlementCallCompletionCallback<Response>() {
 
             private boolean isImmediateOp = true;
 
             @Override
-            public Response doOperation(final CallContext ctx) throws SubscriptionBaseApiException, InterruptedException,
-                                                                      TimeoutException {
-                final UUID uuid = UUID.fromString(subscriptionId);
-                final SubscriptionBase current = null; // STEPH_ENT subscriptionApi.getSubscriptionFromId(uuid, callContext);
+            public Response doOperation(final CallContext ctx) throws EntitlementApiException, InterruptedException,
+                                                                      TimeoutException, AccountApiException {
+                final UUID uuid = UUID.fromString(entitlementId);
                 final DateTime inputDate = (requestedDate != null) ? DATE_TIME_FORMATTER.parseDateTime(requestedDate) : null;
 
+
+                final Entitlement current = entitlementApi.getEntitlementForId(uuid, callContext);
+                final LocalDate inputLocalDate = toLocalDate(current.getAccountId(), inputDate, callContext);
                 if (policyString == null) {
-                    isImmediateOp = current.changePlan(subscription.getProductName(), BillingPeriod.valueOf(subscription.getBillingPeriod()),
-                                                       subscription.getPriceList(), inputDate, ctx);
+                    isImmediateOp = current.changePlan(entitlement.getProductName(), BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList(), inputLocalDate, ctx);
                 } else {
                     final BillingActionPolicy policy = BillingActionPolicy.valueOf(policyString.toUpperCase());
-                    isImmediateOp = current.changePlanWithPolicy(subscription.getProductName(), BillingPeriod.valueOf(subscription.getBillingPeriod()),
-                                                                 subscription.getPriceList(), inputDate, policy, ctx);
+                    isImmediateOp = current.changePlanOverrideBillingPolicy(entitlement.getProductName(), BillingPeriod.valueOf(entitlement.getBillingPeriod()), entitlement.getPriceList(), inputLocalDate, policy, ctx);
                 }
-
                 return Response.status(Status.OK).build();
             }
 
@@ -189,67 +200,67 @@ public class SubscriptionResource extends JaxRsResourceBase {
             }
 
             @Override
-            public Response doResponseOk(final Response operationResponse) throws SubscriptionBaseApiException {
+            public Response doResponseOk(final Response operationResponse) throws EntitlementApiException {
                 if (operationResponse.getStatus() != Status.OK.getStatusCode()) {
                     return operationResponse;
                 }
-
-                return getSubscription(subscriptionId, request);
+                return getEntitlement(entitlementId, request);
             }
         };
 
-        final SubscriptionCallCompletion<Response> callCompletionCreation = new SubscriptionCallCompletion<Response>();
+        final EntitlementCallCompletion<Response> callCompletionCreation = new EntitlementCallCompletion<Response>();
         return callCompletionCreation.withSynchronization(callback, timeoutSec, callCompletion, callContext);
     }
 
     @PUT
-    @Path("/{subscriptionId:" + UUID_PATTERN + "}/uncancel")
+    @Path("/{entitlementId:" + UUID_PATTERN + "}/uncancel")
     @Produces(APPLICATION_JSON)
-    public Response uncancelSubscriptionPlan(@PathParam("subscriptionId") final String subscriptionId,
-                                             @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                             @HeaderParam(HDR_REASON) final String reason,
-                                             @HeaderParam(HDR_COMMENT) final String comment,
-                                             @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionBaseApiException {
-        final UUID uuid = UUID.fromString(subscriptionId);
-        final SubscriptionBase current = null; // STEPH_ENT  subscriptionApi.getSubscriptionFromId(uuid, context.createContext(createdBy, reason, comment, request));
-
+    public Response uncancelEntitlementPlan(@PathParam("entitlementId") final String entitlementId,
+                                            @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                            @HeaderParam(HDR_REASON) final String reason,
+                                            @HeaderParam(HDR_COMMENT) final String comment,
+                                            @javax.ws.rs.core.Context final HttpServletRequest request) throws EntitlementApiException {
+        final UUID uuid = UUID.fromString(entitlementId);
+        final Entitlement current = entitlementApi.getEntitlementForId(uuid, context.createContext(createdBy, reason, comment, request));
         current.uncancel(context.createContext(createdBy, reason, comment, request));
         return Response.status(Status.OK).build();
     }
 
     @DELETE
-    @Path("/{subscriptionId:" + UUID_PATTERN + "}")
+    @Path("/{entitlementId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
-    public Response cancelSubscriptionPlan(@PathParam("subscriptionId") final String subscriptionId,
-                                           @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
-                                           @QueryParam(QUERY_CALL_COMPLETION) @DefaultValue("false") final Boolean callCompletion,
-                                           @QueryParam(QUERY_CALL_TIMEOUT) @DefaultValue("5") final long timeoutSec,
-                                           @QueryParam(QUERY_POLICY) final String policyString,
-                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                           @HeaderParam(HDR_REASON) final String reason,
-                                           @HeaderParam(HDR_COMMENT) final String comment,
-                                           @javax.ws.rs.core.Context final UriInfo uriInfo,
-                                           @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionBaseApiException {
+    public Response cancelEntitlementPlan(@PathParam("entitlementId") final String entitlementId,
+                                          @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
+                                          @QueryParam(QUERY_CALL_COMPLETION) @DefaultValue("false") final Boolean callCompletion,
+                                          @QueryParam(QUERY_CALL_TIMEOUT) @DefaultValue("5") final long timeoutSec,
+                                          @QueryParam(QUERY_POLICY) final String policyString,
+                                          @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                          @HeaderParam(HDR_REASON) final String reason,
+                                          @HeaderParam(HDR_COMMENT) final String comment,
+                                          @javax.ws.rs.core.Context final UriInfo uriInfo,
+                                          @javax.ws.rs.core.Context final HttpServletRequest request) throws EntitlementApiException, AccountApiException {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
-        final SubscriptionCallCompletionCallback<Response> callback = new SubscriptionCallCompletionCallback<Response>() {
+        final EntitlementCallCompletionCallback<Response> callback = new EntitlementCallCompletionCallback<Response>() {
 
             private boolean isImmediateOp = true;
 
             @Override
             public Response doOperation(final CallContext ctx)
-                    throws SubscriptionBaseApiException, InterruptedException,
-                           TimeoutException {
-                final UUID uuid = UUID.fromString(subscriptionId);
+                    throws EntitlementApiException, InterruptedException,
+                           TimeoutException, AccountApiException {
+                final UUID uuid = UUID.fromString(entitlementId);
 
-                final SubscriptionBase current = null; // STEPH_ENT  subscriptionApi.getSubscriptionFromId(uuid, callContext);
+                final Entitlement current = entitlementApi.getEntitlementForId(uuid, ctx);
 
                 final DateTime inputDate = (requestedDate != null) ? DATE_TIME_FORMATTER.parseDateTime(requestedDate) : null;
+                final LocalDate inputLocalDate = toLocalDate(current.getAccountId(), inputDate, callContext);
+
                 if (policyString == null) {
-                    isImmediateOp = current.cancel(inputDate, ctx);
+                    isImmediateOp = current.cancelEntitlementWithDate(inputLocalDate, ctx);
                 } else {
                     final BillingActionPolicy policy = BillingActionPolicy.valueOf(policyString.toUpperCase());
-                    isImmediateOp = current.cancelWithPolicy(inputDate, policy, ctx);
+                    isImmediateOp = current.cancelEntitlementWithDateOverrideBillingPolicy(inputLocalDate, policy, ctx);
                 }
                 return Response.status(Status.OK).build();
             }
@@ -265,18 +276,18 @@ public class SubscriptionResource extends JaxRsResourceBase {
             }
         };
 
-        final SubscriptionCallCompletion<Response> callCompletionCreation = new SubscriptionCallCompletion<Response>();
+        final EntitlementCallCompletion<Response> callCompletionCreation = new EntitlementCallCompletion<Response>();
         return callCompletionCreation.withSynchronization(callback, timeoutSec, callCompletion, callContext);
     }
 
-    private static final class CompletionUserRequestSubscription extends CompletionUserRequestBase {
+    private static final class CompletionUserRequestEntitlement extends CompletionUserRequestBase {
 
-        public CompletionUserRequestSubscription(final UUID userToken) {
+        public CompletionUserRequestEntitlement(final UUID userToken) {
             super(userToken);
         }
 
         @Override
-        public void onSubscriptionTransition(final EffectiveSubscriptionInternalEvent event) {
+        public void onSubscriptionBaseTransition(final EffectiveSubscriptionInternalEvent event) {
 
             log.info(String.format("Got event SubscriptionBaseTransition token = %s, type = %s, remaining = %d ",
                                    event.getUserToken(), event.getTransitionType(), event.getRemainingEventsForUserOperation()));
@@ -310,22 +321,22 @@ public class SubscriptionResource extends JaxRsResourceBase {
         }
     }
 
-    private interface SubscriptionCallCompletionCallback<T> {
+    private interface EntitlementCallCompletionCallback<T> {
 
-        public T doOperation(final CallContext ctx) throws SubscriptionBaseApiException, InterruptedException, TimeoutException;
+        public T doOperation(final CallContext ctx) throws EntitlementApiException, InterruptedException, TimeoutException, AccountApiException;
 
         public boolean isImmOperation();
 
-        public Response doResponseOk(final T operationResponse) throws SubscriptionBaseApiException;
+        public Response doResponseOk(final T operationResponse) throws EntitlementApiException;
     }
 
-    private class SubscriptionCallCompletion<T> {
+    private class EntitlementCallCompletion<T> {
 
-        public Response withSynchronization(final SubscriptionCallCompletionCallback<T> callback,
+        public Response withSynchronization(final EntitlementCallCompletionCallback<T> callback,
                                             final long timeoutSec,
                                             final boolean callCompletion,
-                                            final CallContext callContext) throws SubscriptionBaseApiException {
-            final CompletionUserRequestSubscription waiter = callCompletion ? new CompletionUserRequestSubscription(callContext.getUserToken()) : null;
+                                            final CallContext callContext) throws EntitlementApiException, AccountApiException {
+            final CompletionUserRequestEntitlement waiter = callCompletion ? new CompletionUserRequestEntitlement(callContext.getUserToken()) : null;
             try {
                 if (waiter != null) {
                     killbillHandler.registerCompletionUserRequestWaiter(waiter);

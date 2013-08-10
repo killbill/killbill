@@ -24,7 +24,7 @@ import com.ning.billing.entitlement.api.BlockingApiException;
 import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.entitlement.api.Type;
 import com.ning.billing.subscription.api.SubscriptionBase;
-import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
@@ -36,7 +36,7 @@ import org.testng.annotations.Test;
 public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
 
     private Account account;
-    private SubscriptionBundle bundle;
+    private SubscriptionBaseBundle bundle;
     private SubscriptionBase subscription;
 
     @BeforeMethod(groups = "fast")
@@ -46,7 +46,7 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
         account = Mockito.mock(Account.class);
         Mockito.when(account.getId()).thenReturn(accountId);
 
-        bundle = Mockito.mock(SubscriptionBundle.class);
+        bundle = Mockito.mock(SubscriptionBaseBundle.class);
         Mockito.when(bundle.getAccountId()).thenReturn(accountId);
         final UUID bundleId = UUID.randomUUID();
         Mockito.when(bundle.getId()).thenReturn(bundleId);

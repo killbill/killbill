@@ -41,7 +41,7 @@ import com.ning.billing.clock.Clock;
 import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.subscription.api.SubscriptionApiService;
 import com.ning.billing.subscription.api.SubscriptionBase;
-import com.ning.billing.subscription.api.SubscriptionTransitionType;
+import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.subscription.api.user.SubscriptionTransitionDataIterator.Kind;
 import com.ning.billing.subscription.api.user.SubscriptionTransitionDataIterator.Order;
 import com.ning.billing.subscription.api.user.SubscriptionTransitionDataIterator.TimeLimit;
@@ -71,7 +71,7 @@ public class SubscriptionData extends EntityBase implements SubscriptionBase {
     private final ProductCategory category;
 
     //
-    // Those can be modified through non User APIs, and a new Subscription
+    // Those can be modified through non User APIs, and a new SubscriptionBase
     // object would be created
     //
     private final long activeVersion;
@@ -199,7 +199,7 @@ public class SubscriptionData extends EntityBase implements SubscriptionBase {
                 Visibility.ALL, TimeLimit.FUTURE_ONLY);
         while (it.hasNext()) {
             final SubscriptionBaseTransition cur = it.next();
-            if (cur.getTransitionType() == SubscriptionTransitionType.CANCEL) {
+            if (cur.getTransitionType() == SubscriptionBaseTransitionType.CANCEL) {
                 return cur.getEffectiveTransitionTime();
             }
         }
@@ -462,11 +462,11 @@ public class SubscriptionData extends EntityBase implements SubscriptionBase {
 
         while (it.hasNext()) {
             final SubscriptionBaseTransitionData cur = (SubscriptionBaseTransitionData) it.next();
-            if (cur.getTransitionType() == SubscriptionTransitionType.CREATE
-                || cur.getTransitionType() == SubscriptionTransitionType.RE_CREATE
-                || cur.getTransitionType() == SubscriptionTransitionType.TRANSFER
-                || cur.getTransitionType() == SubscriptionTransitionType.CHANGE
-                || cur.getTransitionType() == SubscriptionTransitionType.MIGRATE_ENTITLEMENT) {
+            if (cur.getTransitionType() == SubscriptionBaseTransitionType.CREATE
+                || cur.getTransitionType() == SubscriptionBaseTransitionType.RE_CREATE
+                || cur.getTransitionType() == SubscriptionBaseTransitionType.TRANSFER
+                || cur.getTransitionType() == SubscriptionBaseTransitionType.CHANGE
+                || cur.getTransitionType() == SubscriptionBaseTransitionType.MIGRATE_ENTITLEMENT) {
                 return cur;
             }
         }
@@ -509,12 +509,12 @@ public class SubscriptionData extends EntityBase implements SubscriptionBase {
         while (it.hasNext()) {
             final SubscriptionBaseTransitionData cur = (SubscriptionBaseTransitionData) it.next();
 
-            if (cur.getTransitionType() == SubscriptionTransitionType.PHASE
-                || cur.getTransitionType() == SubscriptionTransitionType.TRANSFER
-                || cur.getTransitionType() == SubscriptionTransitionType.CREATE
-                || cur.getTransitionType() == SubscriptionTransitionType.RE_CREATE
-                || cur.getTransitionType() == SubscriptionTransitionType.CHANGE
-                || cur.getTransitionType() == SubscriptionTransitionType.MIGRATE_ENTITLEMENT) {
+            if (cur.getTransitionType() == SubscriptionBaseTransitionType.PHASE
+                || cur.getTransitionType() == SubscriptionBaseTransitionType.TRANSFER
+                || cur.getTransitionType() == SubscriptionBaseTransitionType.CREATE
+                || cur.getTransitionType() == SubscriptionBaseTransitionType.RE_CREATE
+                || cur.getTransitionType() == SubscriptionBaseTransitionType.CHANGE
+                || cur.getTransitionType() == SubscriptionBaseTransitionType.MIGRATE_ENTITLEMENT) {
                 return cur.getEffectiveTransitionTime();
             }
         }

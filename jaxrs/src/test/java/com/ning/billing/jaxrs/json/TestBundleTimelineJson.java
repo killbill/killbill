@@ -17,7 +17,6 @@
 package com.ning.billing.jaxrs.json;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -31,13 +30,11 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.subscription.api.SubscriptionTransitionType;
+import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.subscription.api.timeline.SubscriptionTimeline;
 import com.ning.billing.jaxrs.JaxrsTestSuiteNoDB;
-import com.ning.billing.util.audit.AuditLog;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 public class TestBundleTimelineJson extends JaxrsTestSuiteNoDB {
 
@@ -71,7 +68,7 @@ public class TestBundleTimelineJson extends JaxrsTestSuiteNoDB {
                                                                              PhaseType.EVERGREEN);
         Mockito.when(event.getEffectiveDate()).thenReturn(effectiveDate);
         Mockito.when(event.getEventId()).thenReturn(eventId);
-        Mockito.when(event.getSubscriptionTransitionType()).thenReturn(SubscriptionTransitionType.CREATE);
+        Mockito.when(event.getSubscriptionTransitionType()).thenReturn(SubscriptionBaseTransitionType.CREATE);
         Mockito.when(event.getPlanPhaseSpecifier()).thenReturn(planPhaseSpecifier);
 
         final SubscriptionTimeline subscriptionTimeline = Mockito.mock(SubscriptionTimeline.class);
@@ -80,9 +77,9 @@ public class TestBundleTimelineJson extends JaxrsTestSuiteNoDB {
 
         final UUID bundleId = UUID.randomUUID();
         final String externalKey = UUID.randomUUID().toString();
-        final SubscriptionJsonWithEvents subscription = new SubscriptionJsonWithEvents(bundleId, subscriptionTimeline, null, ImmutableMap.<UUID, List<AuditLog>>of());
+        final EntitlementJsonWithEvents subscription = null; // STEPH_ENT new EntitlementJsonWithEvents(bundleId, subscriptionTimeline, null, ImmutableMap.<UUID, List<AuditLog>>of());
 
-        return new BundleJsonWithSubscriptions(bundleId.toString(), externalKey, ImmutableList.<SubscriptionJsonWithEvents>of(subscription), null);
+        return new BundleJsonWithSubscriptions(bundleId.toString(), externalKey, ImmutableList.<EntitlementJsonWithEvents>of(subscription), null);
     }
 
     private InvoiceJsonSimple createInvoice() {

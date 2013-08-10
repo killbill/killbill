@@ -22,7 +22,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.net.URI;
 
-import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.util.config.catalog.ValidatingConfig;
 import com.ning.billing.util.config.catalog.ValidationErrors;
 
@@ -33,7 +33,7 @@ public class OverdueConfig extends ValidatingConfig<OverdueConfig> {
     @XmlElement(required = true, name = "bundleOverdueStates")
     private OverdueStatesBundle bundleOverdueStates = new OverdueStatesBundle();
 
-    public DefaultOverdueStateSet<SubscriptionBundle> getBundleStateSet() {
+    public DefaultOverdueStateSet<SubscriptionBaseBundle> getBundleStateSet() {
         return bundleOverdueStates;
     }
 

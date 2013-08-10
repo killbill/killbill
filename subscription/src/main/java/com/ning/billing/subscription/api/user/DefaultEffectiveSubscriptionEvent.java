@@ -20,7 +20,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.subscription.api.SubscriptionTransitionType;
+import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -47,7 +47,7 @@ public class DefaultEffectiveSubscriptionEvent extends DefaultSubscriptionEvent 
                                              @JsonProperty("nextPhase") final String nextPhase,
                                              @JsonProperty("nextPriceList") final String nextPriceList,
                                              @JsonProperty("totalOrdering") final Long totalOrdering,
-                                             @JsonProperty("transitionType") final SubscriptionTransitionType transitionType,
+                                             @JsonProperty("transitionType") final SubscriptionBaseTransitionType transitionType,
                                              @JsonProperty("remainingEventsForUserOperation") final Integer remainingEventsForUserOperation,
                                              @JsonProperty("startDate") final DateTime startDate,
                                              @JsonProperty("searchKey1") final Long searchKey1,

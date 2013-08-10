@@ -29,7 +29,7 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.subscription.api.SubscriptionTransitionType;
+import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.subscription.api.timeline.BundleTimeline;
 import com.ning.billing.subscription.api.timeline.SubscriptionTimeline;
 import com.ning.billing.jaxrs.JaxrsTestSuiteNoDB;
@@ -53,7 +53,7 @@ public class TestBundleJsonWithSubscriptions extends JaxrsTestSuiteNoDB {
                                                                              PhaseType.EVERGREEN);
         Mockito.when(event.getEffectiveDate()).thenReturn(effectiveDate);
         Mockito.when(event.getEventId()).thenReturn(eventId);
-        Mockito.when(event.getSubscriptionTransitionType()).thenReturn(SubscriptionTransitionType.CREATE);
+        Mockito.when(event.getSubscriptionTransitionType()).thenReturn(SubscriptionBaseTransitionType.CREATE);
         Mockito.when(event.getPlanPhaseSpecifier()).thenReturn(planPhaseSpecifier);
 
         final SubscriptionTimeline subscriptionTimeline = Mockito.mock(SubscriptionTimeline.class);
@@ -62,9 +62,9 @@ public class TestBundleJsonWithSubscriptions extends JaxrsTestSuiteNoDB {
 
         final UUID bundleId = UUID.randomUUID();
         final String externalKey = UUID.randomUUID().toString();
-        final SubscriptionJsonWithEvents subscription = new SubscriptionJsonWithEvents(bundleId, subscriptionTimeline, null, ImmutableMap.<UUID, List<AuditLog>>of());
+        final EntitlementJsonWithEvents subscription = null; // STEPH_ENT new EntitlementJsonWithEvents(bundleId, subscriptionTimeline, null, ImmutableMap.<UUID, List<AuditLog>>of());
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
-        final BundleJsonWithSubscriptions bundleJsonWithSubscriptions = new BundleJsonWithSubscriptions(bundleId.toString(), externalKey, ImmutableList.<SubscriptionJsonWithEvents>of(subscription), auditLogs);
+        final BundleJsonWithSubscriptions bundleJsonWithSubscriptions = new BundleJsonWithSubscriptions(bundleId.toString(), externalKey, ImmutableList.<EntitlementJsonWithEvents>of(subscription), auditLogs);
         Assert.assertEquals(bundleJsonWithSubscriptions.getBundleId(), bundleId.toString());
         Assert.assertEquals(bundleJsonWithSubscriptions.getExternalKey(), externalKey);
         Assert.assertEquals(bundleJsonWithSubscriptions.getSubscriptions().size(), 1);
@@ -85,7 +85,7 @@ public class TestBundleJsonWithSubscriptions extends JaxrsTestSuiteNoDB {
                                                                              PhaseType.EVERGREEN);
         Mockito.when(event.getEffectiveDate()).thenReturn(effectiveDate);
         Mockito.when(event.getEventId()).thenReturn(eventId);
-        Mockito.when(event.getSubscriptionTransitionType()).thenReturn(SubscriptionTransitionType.CREATE);
+        Mockito.when(event.getSubscriptionTransitionType()).thenReturn(SubscriptionBaseTransitionType.CREATE);
         Mockito.when(event.getPlanPhaseSpecifier()).thenReturn(planPhaseSpecifier);
 
         final SubscriptionTimeline subscriptionTimeline = Mockito.mock(SubscriptionTimeline.class);
@@ -105,7 +105,7 @@ public class TestBundleJsonWithSubscriptions extends JaxrsTestSuiteNoDB {
         Assert.assertEquals(bundleJsonWithSubscriptions.getBundleId(), bundleId.toString());
         Assert.assertEquals(bundleJsonWithSubscriptions.getExternalKey(), externalKey);
         Assert.assertEquals(bundleJsonWithSubscriptions.getSubscriptions().size(), 1);
-        final SubscriptionJsonWithEvents events = bundleJsonWithSubscriptions.getSubscriptions().get(0);
+        final EntitlementJsonWithEvents events = bundleJsonWithSubscriptions.getSubscriptions().get(0);
         Assert.assertNull(events.getDeletedEvents());
         Assert.assertNull(events.getNewEvents());
         Assert.assertEquals(events.getEvents().size(), 1);

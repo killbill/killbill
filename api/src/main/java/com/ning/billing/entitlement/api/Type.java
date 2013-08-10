@@ -18,7 +18,7 @@ package com.ning.billing.entitlement.api;
 
 import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
-import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 
 public enum Type {
     ACCOUNT,
@@ -28,7 +28,7 @@ public enum Type {
     public static Type get(final Blockable o) {
         if (o instanceof Account) {
             return ACCOUNT;
-        } else if (o instanceof SubscriptionBundle) {
+        } else if (o instanceof SubscriptionBaseBundle) {
             return SUBSCRIPTION_BUNDLE;
         } else if (o instanceof Subscription) {
             return SUBSCRIPTION;

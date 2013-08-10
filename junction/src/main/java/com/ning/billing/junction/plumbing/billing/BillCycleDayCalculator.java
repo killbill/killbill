@@ -35,10 +35,10 @@ import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.Product;
-import com.ning.billing.subscription.api.SubscriptionTransitionType;
+import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.subscription.api.SubscriptionBase;
-import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
@@ -59,7 +59,7 @@ public class BillCycleDayCalculator {
         this.subscriptionApi = subscriptionApi;
     }
 
-    protected int calculateBcd(final SubscriptionBundle bundle, final SubscriptionBase subscription, final EffectiveSubscriptionInternalEvent transition, final Account account, final InternalCallContext context)
+    protected int calculateBcd(final SubscriptionBaseBundle bundle, final SubscriptionBase subscription, final EffectiveSubscriptionInternalEvent transition, final Account account, final InternalCallContext context)
             throws CatalogApiException, AccountApiException, SubscriptionBaseApiException {
 
         final Catalog catalog = catalogService.getFullCatalog();
@@ -67,13 +67,13 @@ public class BillCycleDayCalculator {
         final Plan prevPlan = (transition.getPreviousPlan() != null) ? catalog.findPlan(transition.getPreviousPlan(), transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
         final Plan nextPlan = (transition.getNextPlan() != null) ? catalog.findPlan(transition.getNextPlan(), transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
 
-        final Plan plan = (transition.getTransitionType() != SubscriptionTransitionType.CANCEL) ? nextPlan : prevPlan;
+        final Plan plan = (transition.getTransitionType() != SubscriptionBaseTransitionType.CANCEL) ? nextPlan : prevPlan;
         final Product product = plan.getProduct();
 
         final PlanPhase prevPhase = (transition.getPreviousPhase() != null) ? catalog.findPhase(transition.getPreviousPhase(), transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
         final PlanPhase nextPhase = (transition.getNextPhase() != null) ? catalog.findPhase(transition.getNextPhase(), transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
 
-        final PlanPhase phase = (transition.getTransitionType() != SubscriptionTransitionType.CANCEL) ? nextPhase : prevPhase;
+        final PlanPhase phase = (transition.getTransitionType() != SubscriptionBaseTransitionType.CANCEL) ? nextPhase : prevPhase;
 
         final BillingAlignment alignment = catalog.billingAlignment(
                 new PlanPhaseSpecifier(product.getName(),
@@ -87,7 +87,7 @@ public class BillCycleDayCalculator {
     }
 
     @VisibleForTesting
-    int calculateBcdForAlignment(final BillingAlignment alignment, final SubscriptionBundle bundle, final SubscriptionBase subscription,
+    int calculateBcdForAlignment(final BillingAlignment alignment, final SubscriptionBaseBundle bundle, final SubscriptionBase subscription,
                                  final Account account, final Catalog catalog, final Plan plan, final InternalCallContext context) throws AccountApiException, SubscriptionBaseApiException, CatalogApiException {
         int result = 0;
         switch (alignment) {

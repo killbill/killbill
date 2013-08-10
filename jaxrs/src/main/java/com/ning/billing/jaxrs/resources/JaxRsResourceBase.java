@@ -26,6 +26,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
+import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
 import org.slf4j.Logger;
@@ -33,6 +35,9 @@ import org.slf4j.LoggerFactory;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.ObjectType;
+import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
 import com.ning.billing.jaxrs.json.TagJson;
 import com.ning.billing.jaxrs.util.Context;
@@ -62,6 +67,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
     protected final TagUserApi tagUserApi;
     protected final CustomFieldUserApi customFieldUserApi;
     protected final AuditUserApi auditUserApi;
+    protected final AccountUserApi accountUserApi;
     protected final Context context;
 
     protected final DateTimeFormatter DATE_TIME_FORMATTER = ISODateTimeFormat.dateTimeParser();
@@ -70,11 +76,13 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
                              final TagUserApi tagUserApi,
                              final CustomFieldUserApi customFieldUserApi,
                              final AuditUserApi auditUserApi,
+                             final AccountUserApi accountUserApi,
                              final Context context) {
         this.uriBuilder = uriBuilder;
         this.tagUserApi = tagUserApi;
         this.customFieldUserApi = customFieldUserApi;
         this.auditUserApi = auditUserApi;
+        this.accountUserApi = accountUserApi;
         this.context = context;
     }
 
@@ -181,5 +189,13 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
                                           final CallContext context) {
         // STEPH missing API to delete custom fields
         return Response.status(Response.Status.OK).build();
+    }
+
+    protected LocalDate toLocalDate(final UUID accountId, final DateTime inputDate, final TenantContext context) throws AccountApiException {
+        if (inputDate == null) {
+            return null;
+        }
+        final Account account = accountUserApi.getAccountById(accountId, context);
+        return new LocalDate(inputDate, account.getTimeZone());
     }
 }

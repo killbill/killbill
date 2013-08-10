@@ -32,6 +32,7 @@ import javax.ws.rs.core.Response;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.ObjectType;
+import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
@@ -62,8 +63,9 @@ public class ChargebackResource extends JaxRsResourceBase {
                               final TagUserApi tagUserApi,
                               final CustomFieldUserApi customFieldUserApi,
                               final AuditUserApi auditUserApi,
+                              final AccountUserApi accountUserApi,
                               final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, context);
         this.invoicePaymentApi = invoicePaymentApi;
     }
 

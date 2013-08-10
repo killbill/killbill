@@ -32,7 +32,7 @@ import com.ning.billing.account.api.MutableAccountData;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.subscription.api.SubscriptionBase;
-import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
@@ -74,7 +74,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
 
     @Override
     public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(final UUID accountId, final InternalCallContext context) {
-        final List<SubscriptionBundle> bundles = subscriptionApi.getBundlesForAccount(accountId, context);
+        final List<SubscriptionBaseBundle> bundles = subscriptionApi.getBundlesForAccount(accountId, context);
         final DefaultBillingEventSet result = new DefaultBillingEventSet();
 
         try {
@@ -110,9 +110,9 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
         }
     }
 
-    private void addBillingEventsForBundles(final List<SubscriptionBundle> bundles, final Account account, final InternalCallContext context,
+    private void addBillingEventsForBundles(final List<SubscriptionBaseBundle> bundles, final Account account, final InternalCallContext context,
                                             final DefaultBillingEventSet result) {
-        for (final SubscriptionBundle bundle : bundles) {
+        for (final SubscriptionBaseBundle bundle : bundles) {
             final List<SubscriptionBase> subscriptions = subscriptionApi.getSubscriptionsForBundle(bundle.getId(), context);
 
             //Check if billing is off for the bundle
@@ -128,7 +128,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
         }
     }
 
-    private void addBillingEventsForSubscription(final List<SubscriptionBase> subscriptions, final SubscriptionBundle bundle, final Account account, final InternalCallContext context, final DefaultBillingEventSet result) {
+    private void addBillingEventsForSubscription(final List<SubscriptionBase> subscriptions, final SubscriptionBaseBundle bundle, final Account account, final InternalCallContext context, final DefaultBillingEventSet result) {
         for (final SubscriptionBase subscription : subscriptions) {
             for (final EffectiveSubscriptionInternalEvent transition : subscriptionApi.getBillingTransitions(subscription, context)) {
                 try {

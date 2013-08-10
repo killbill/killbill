@@ -26,12 +26,12 @@ import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.util.entity.EntityBase;
 
-public class SubscriptionBundleData extends EntityBase implements SubscriptionBundle {
+public class SubscriptionBundleData extends EntityBase implements SubscriptionBaseBundle {
 
     private final String key;
     private final UUID accountId;
     private final DateTime lastSysUpdateDate;
-    private final OverdueState<SubscriptionBundle> overdueState;
+    private final OverdueState<SubscriptionBaseBundle> overdueState;
 
     public SubscriptionBundleData(final String name, final UUID accountId, final DateTime startDate) {
         this(UUID.randomUUID(), name, accountId, startDate);
@@ -41,7 +41,7 @@ public class SubscriptionBundleData extends EntityBase implements SubscriptionBu
         this(id, key, accountId, lastSysUpdate, null);
     }
 
-    public SubscriptionBundleData(final UUID id, final String key, final UUID accountId, final DateTime lastSysUpdate, @Nullable final OverdueState<SubscriptionBundle> overdueState) {
+    public SubscriptionBundleData(final UUID id, final String key, final UUID accountId, final DateTime lastSysUpdate, @Nullable final OverdueState<SubscriptionBaseBundle> overdueState) {
         // TODO add column in bundles table
         super(id, null, null);
         this.key = key;
@@ -65,7 +65,7 @@ public class SubscriptionBundleData extends EntityBase implements SubscriptionBu
     }
 
     @Override
-    public OverdueState<SubscriptionBundle> getOverdueState() {
+    public OverdueState<SubscriptionBaseBundle> getOverdueState() {
         return overdueState;
     }
 

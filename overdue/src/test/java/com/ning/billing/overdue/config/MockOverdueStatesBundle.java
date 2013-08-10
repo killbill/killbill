@@ -16,14 +16,14 @@
 
 package com.ning.billing.overdue.config;
 
-import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 
 public class MockOverdueStatesBundle extends OverdueStatesBundle {
 
     public MockOverdueStatesBundle() {
     }
 
-    public MockOverdueStatesBundle(final DefaultOverdueState<SubscriptionBundle>[] states) {
+    public MockOverdueStatesBundle(final DefaultOverdueState<SubscriptionBaseBundle>[] states) {
         setBundleOverdueStates(states);
     }
 }

@@ -33,7 +33,7 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
-import com.ning.billing.subscription.api.SubscriptionTransitionType;
+import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.util.callcontext.InternalTenantContext;
@@ -201,7 +201,7 @@ public class BlockingCalculator {
         final Currency currency = previousEvent.getCurrency();
         final String description = "";
         final BillingModeType billingModeType = previousEvent.getBillingMode();
-        final SubscriptionTransitionType type = SubscriptionTransitionType.START_BILLING_DISABLED;
+        final SubscriptionBaseTransitionType type = SubscriptionBaseTransitionType.START_BILLING_DISABLED;
         final Long totalOrdering = globaltotalOrder.getAndIncrement();
         final DateTimeZone tz = previousEvent.getTimeZone();
 
@@ -225,7 +225,7 @@ public class BlockingCalculator {
         final String description = "";
         final BillingModeType billingModeType = previousEvent.getBillingMode();
         final BillingPeriod billingPeriod = previousEvent.getBillingPeriod();
-        final SubscriptionTransitionType type = SubscriptionTransitionType.END_BILLING_DISABLED;
+        final SubscriptionBaseTransitionType type = SubscriptionBaseTransitionType.END_BILLING_DISABLED;
         final Long totalOrdering = globaltotalOrder.getAndIncrement();
         final DateTimeZone tz = previousEvent.getTimeZone();
 

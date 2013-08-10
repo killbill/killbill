@@ -43,7 +43,7 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
-import com.ning.billing.subscription.api.SubscriptionTransitionType;
+import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.invoice.InvoiceTestSuiteNoDB;
 import com.ning.billing.invoice.MockBillingEventSet;
@@ -566,13 +566,13 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
                                                                        plan, phase1,
                                                                        ZERO, null, Currency.USD, BillingPeriod.NO_BILLING_PERIOD, 1,
                                                                        BillingModeType.IN_ADVANCE, "Test Event 1", 1L,
-                                                                       SubscriptionTransitionType.CREATE);
+                                                                       SubscriptionBaseTransitionType.CREATE);
 
         final BillingEvent event2 = invoiceUtil.createMockBillingEvent(null, subscription, changeDate,
                                                                        plan, phase2,
                                                                        ZERO, null, Currency.USD, BillingPeriod.NO_BILLING_PERIOD, 1,
                                                                        BillingModeType.IN_ADVANCE, "Test Event 2", 2L,
-                                                                       SubscriptionTransitionType.PHASE);
+                                                                       SubscriptionBaseTransitionType.PHASE);
 
         events.add(event2);
         events.add(event1);
@@ -767,7 +767,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
                                                   planPhase.getFixedPrice() == null ? null : planPhase.getFixedPrice().getPrice(currency),
                                                   planPhase.getRecurringPrice() == null ? null : planPhase.getRecurringPrice().getPrice(currency),
                                                   currency, planPhase.getBillingPeriod(),
-                                                  billCycleDayLocal, BillingModeType.IN_ADVANCE, "Test", 1L, SubscriptionTransitionType.CREATE);
+                                                  billCycleDayLocal, BillingModeType.IN_ADVANCE, "Test", 1L, SubscriptionBaseTransitionType.CREATE);
     }
 
     private void testInvoiceGeneration(final UUID accountId, final BillingEventSet events, final List<Invoice> existingInvoices,

@@ -45,7 +45,7 @@ import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.subscription.api.user.SubscriptionBaseTransition;
 import com.ning.billing.subscription.api.user.SubscriptionBuilder;
-import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.subscription.api.user.SubscriptionBundleData;
 import com.ning.billing.subscription.api.user.SubscriptionData;
 import com.ning.billing.subscription.api.user.SubscriptionState;
@@ -101,7 +101,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                                                           spec.getProductName(), spec.getBillingPeriod().toString(), realPriceList));
             }
 
-            final SubscriptionBundle bundle = dao.getSubscriptionBundleFromId(bundleId, context);
+            final SubscriptionBaseBundle bundle = dao.getSubscriptionBundleFromId(bundleId, context);
             if (bundle == null) {
                 throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_NO_BUNDLE, bundleId);
             }
@@ -114,7 +114,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                         if (baseSubscription.getState() == SubscriptionState.ACTIVE) {
                             throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_BP_EXISTS, bundleId);
                         } else {
-                            // If we do create on an existing CANCELLED BP, this is equivalent to call recreate on that Subscription.
+                            // If we do create on an existing CANCELLED BP, this is equivalent to call recreate on that SubscriptionBase.
                             final SubscriptionBase recreatedSubscriptionForApiUse = createSubscriptionForApiUse(baseSubscription);
                             recreatedSubscriptionForApiUse.recreate(spec, requestedDate, context.toCallContext());
                             return recreatedSubscriptionForApiUse;
@@ -157,14 +157,14 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
     }
 
     @Override
-    public SubscriptionBundle createBundleForAccount(final UUID accountId, final String bundleName, final InternalCallContext context) throws SubscriptionBaseApiException {
+    public SubscriptionBaseBundle createBundleForAccount(final UUID accountId, final String bundleName, final InternalCallContext context) throws SubscriptionBaseApiException {
         final SubscriptionBundleData bundle = new SubscriptionBundleData(bundleName, accountId, clock.getUTCNow());
         return dao.createSubscriptionBundle(bundle, context);
     }
 
     @Override
-    public SubscriptionBundle getBundleForAccountAndKey(final UUID accountId, final String bundleKey, final InternalTenantContext context) throws SubscriptionBaseApiException {
-        final SubscriptionBundle result = dao.getSubscriptionBundleFromAccountAndKey(accountId, bundleKey, context);
+    public SubscriptionBaseBundle getBundleForAccountAndKey(final UUID accountId, final String bundleKey, final InternalTenantContext context) throws SubscriptionBaseApiException {
+        final SubscriptionBaseBundle result = dao.getSubscriptionBundleFromAccountAndKey(accountId, bundleKey, context);
         if (result == null) {
             throw new SubscriptionBaseApiException(ErrorCode.SUB_GET_INVALID_BUNDLE_KEY, bundleKey);
         }
@@ -172,7 +172,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
     }
 
     @Override
-    public List<SubscriptionBundle> getBundlesForAccount(final UUID accountId, final InternalTenantContext context) {
+    public List<SubscriptionBaseBundle> getBundlesForAccount(final UUID accountId, final InternalTenantContext context) {
         return dao.getSubscriptionBundleForAccount(accountId, context);
     }
 
@@ -205,8 +205,8 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
     }
 
     @Override
-    public SubscriptionBundle getBundleFromId(final UUID id, final InternalTenantContext context) throws SubscriptionBaseApiException {
-        final SubscriptionBundle result = dao.getSubscriptionBundleFromId(id, context);
+    public SubscriptionBaseBundle getBundleFromId(final UUID id, final InternalTenantContext context) throws SubscriptionBaseApiException {
+        final SubscriptionBaseBundle result = dao.getSubscriptionBundleFromId(id, context);
         if (result == null) {
             throw new SubscriptionBaseApiException(ErrorCode.SUB_GET_INVALID_BUNDLE_ID, id.toString());
         }
@@ -243,9 +243,9 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
 
     @Override
     public DateTime getNextBillingDate(final UUID accountId, final InternalTenantContext context) {
-        final List<SubscriptionBundle> bundles = getBundlesForAccount(accountId, context);
+        final List<SubscriptionBaseBundle> bundles = getBundlesForAccount(accountId, context);
         DateTime result = null;
-        for (final SubscriptionBundle bundle : bundles) {
+        for (final SubscriptionBaseBundle bundle : bundles) {
             final List<SubscriptionBase> subscriptions = getSubscriptionsForBundle(bundle.getId(), context);
             for (final SubscriptionBase subscription : subscriptions) {
                 final DateTime chargedThruDate = subscription.getChargedThroughDate();

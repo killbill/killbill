@@ -36,6 +36,8 @@ import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.subscription.api.SubscriptionApiBase;
 import com.ning.billing.subscription.api.SubscriptionApiService;
+import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
+import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.subscription.api.user.SubscriptionBaseTransition;
 import com.ning.billing.subscription.api.user.SubscriptionBuilder;
 import com.ning.billing.subscription.api.user.SubscriptionBundleData;
@@ -45,10 +47,8 @@ import com.ning.billing.subscription.engine.addon.AddonUtils;
 import com.ning.billing.subscription.engine.dao.SubscriptionDao;
 import com.ning.billing.subscription.events.SubscriptionEvent;
 import com.ning.billing.subscription.glue.DefaultSubscriptionModule;
-import com.ning.billing.subscription.api.SubscriptionTransitionType;
 import com.ning.billing.subscription.api.timeline.SubscriptionTimeline.NewEvent;
 import com.ning.billing.subscription.api.SubscriptionBase;
-import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.InternalTenantContext;
@@ -90,7 +90,7 @@ public class DefaultSubscriptionTimelineApi extends SubscriptionApiBase implemen
     }
 
     @Override
-    public BundleTimeline getBundleTimeline(final SubscriptionBundle bundle, final TenantContext context)
+    public BundleTimeline getBundleTimeline(final SubscriptionBaseBundle bundle, final TenantContext context)
             throws SubscriptionRepairException {
         return getBundleTimelineInternal(bundle, bundle.getExternalKey(), context);
     }
@@ -98,18 +98,18 @@ public class DefaultSubscriptionTimelineApi extends SubscriptionApiBase implemen
     @Override
     public BundleTimeline getBundleTimeline(final UUID accountId, final String bundleName, final TenantContext context)
             throws SubscriptionRepairException {
-        final SubscriptionBundle bundle = dao.getSubscriptionBundleFromAccountAndKey(accountId, bundleName, internalCallContextFactory.createInternalTenantContext(context));
+        final SubscriptionBaseBundle bundle = dao.getSubscriptionBundleFromAccountAndKey(accountId, bundleName, internalCallContextFactory.createInternalTenantContext(context));
         return getBundleTimelineInternal(bundle, bundleName + " [accountId= " + accountId.toString() + "]", context);
     }
 
     @Override
     public BundleTimeline getBundleTimeline(final UUID bundleId, final TenantContext context) throws SubscriptionRepairException {
 
-        final SubscriptionBundle bundle = dao.getSubscriptionBundleFromId(bundleId, internalCallContextFactory.createInternalTenantContext(context));
+        final SubscriptionBaseBundle bundle = dao.getSubscriptionBundleFromId(bundleId, internalCallContextFactory.createInternalTenantContext(context));
         return getBundleTimelineInternal(bundle, bundleId.toString(), context);
     }
 
-    private BundleTimeline getBundleTimelineInternal(final SubscriptionBundle bundle, final String descBundle, final TenantContext context) throws SubscriptionRepairException {
+    private BundleTimeline getBundleTimelineInternal(final SubscriptionBaseBundle bundle, final String descBundle, final TenantContext context) throws SubscriptionRepairException {
         try {
             if (bundle == null) {
                 throw new SubscriptionRepairException(ErrorCode.SUB_REPAIR_UNKNOWN_BUNDLE, descBundle);
@@ -142,7 +142,7 @@ public class DefaultSubscriptionTimelineApi extends SubscriptionApiBase implemen
     public BundleTimeline repairBundle(final BundleTimeline input, final boolean dryRun, final CallContext context) throws SubscriptionRepairException {
         final InternalTenantContext tenantContext = internalCallContextFactory.createInternalTenantContext(context);
         try {
-            final SubscriptionBundle bundle = dao.getSubscriptionBundleFromId(input.getId(), tenantContext);
+            final SubscriptionBaseBundle bundle = dao.getSubscriptionBundleFromId(input.getId(), tenantContext);
             if (bundle == null) {
                 throw new SubscriptionRepairException(ErrorCode.SUB_REPAIR_UNKNOWN_BUNDLE, input.getId());
             }
@@ -174,8 +174,8 @@ public class DefaultSubscriptionTimelineApi extends SubscriptionApiBase implemen
                     final List<SubscriptionEvent> remaining = getRemainingEventsAndValidateDeletedEvents(curInputRepair, firstDeletedBPEventTime, curRepair.getDeletedEvents());
 
                     final boolean isPlanRecreate = (curRepair.getNewEvents().size() > 0
-                                                    && (curRepair.getNewEvents().get(0).getSubscriptionTransitionType() == SubscriptionTransitionType.CREATE
-                                                        || curRepair.getNewEvents().get(0).getSubscriptionTransitionType() == SubscriptionTransitionType.RE_CREATE));
+                                                    && (curRepair.getNewEvents().get(0).getSubscriptionTransitionType() == SubscriptionBaseTransitionType.CREATE
+                                                        || curRepair.getNewEvents().get(0).getSubscriptionTransitionType() == SubscriptionBaseTransitionType.RE_CREATE));
 
                     final DateTime newSubscriptionStartDate = isPlanRecreate ? curRepair.getNewEvents().get(0).getRequestedDate() : null;
 
@@ -287,8 +287,8 @@ public class DefaultSubscriptionTimelineApi extends SubscriptionApiBase implemen
         }
         for (final SubscriptionTimeline cur : input) {
             if (cur.getNewEvents().size() != 0
-                && (cur.getNewEvents().get(0).getSubscriptionTransitionType() != SubscriptionTransitionType.CREATE
-                    && cur.getNewEvents().get(0).getSubscriptionTransitionType() != SubscriptionTransitionType.RE_CREATE)) {
+                && (cur.getNewEvents().get(0).getSubscriptionTransitionType() != SubscriptionBaseTransitionType.CREATE
+                    && cur.getNewEvents().get(0).getSubscriptionTransitionType() != SubscriptionBaseTransitionType.RE_CREATE)) {
                 throw new SubscriptionRepairException(ErrorCode.SUB_REPAIR_BP_RECREATE_MISSING_AO_CREATE, subscriptions.get(0).getBundleId());
             }
         }

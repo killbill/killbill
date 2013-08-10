@@ -23,7 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ning.billing.BillingExceptionBase;
-import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.entitlement.api.Type;
 import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
 import com.ning.billing.util.callcontext.InternalCallContext;
@@ -46,15 +46,15 @@ public class OverdueDispatcher {
     }
 
     public void processOverdueForAccount(final UUID accountId, final InternalCallContext context) {
-        final List<SubscriptionBundle> bundles = subscriptionApi.getBundlesForAccount(accountId, context);
-        for (final SubscriptionBundle bundle : bundles) {
+        final List<SubscriptionBaseBundle> bundles = subscriptionApi.getBundlesForAccount(accountId, context);
+        for (final SubscriptionBaseBundle bundle : bundles) {
             processOverdue(Type.SUBSCRIPTION_BUNDLE, bundle.getId(), context);
         }
     }
 
     public void clearOverdueForAccount(final UUID accountId, final InternalCallContext context) {
-        final List<SubscriptionBundle> bundles = subscriptionApi.getBundlesForAccount(accountId, context);
-        for (final SubscriptionBundle bundle : bundles) {
+        final List<SubscriptionBaseBundle> bundles = subscriptionApi.getBundlesForAccount(accountId, context);
+        for (final SubscriptionBaseBundle bundle : bundles) {
             clearOverdue(Type.SUBSCRIPTION_BUNDLE, bundle.getId(), context);
         }
     }

@@ -26,7 +26,7 @@ import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.OverdueTestSuiteWithEmbeddedDB;
 import com.ning.billing.overdue.config.OverdueConfig;
@@ -45,10 +45,10 @@ public class TestOverdueStateApplicator extends OverdueTestSuiteWithEmbeddedDB {
         final OverdueConfig config = XMLLoader.getObjectFromStreamNoValidation(is, OverdueConfig.class);
         overdueWrapperFactory.setOverdueConfig(config);
 
-        final SubscriptionBundle bundle = Mockito.mock(SubscriptionBundle.class);
+        final SubscriptionBaseBundle bundle = Mockito.mock(SubscriptionBaseBundle.class);
         Mockito.when(bundle.getId()).thenReturn(UUID.randomUUID());
 
-        OverdueState<SubscriptionBundle> state;
+        OverdueState<SubscriptionBaseBundle> state;
 
         state = config.getBundleStateSet().findState("OD1");
         applicator.apply(null, null, bundle, DefaultBlockingState.CLEAR_STATE_NAME, state, internalCallContext);

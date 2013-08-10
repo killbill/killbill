@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.ObjectType;
-import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.entitlement.api.Blockable;
 import com.ning.billing.entitlement.api.Type;
 import com.ning.billing.overdue.OverdueApiException;
@@ -63,7 +63,7 @@ public class DefaultOverdueUserApi implements OverdueUserApi {
     public <T extends Blockable> OverdueState<T> getOverdueStateFor(final T overdueable, final TenantContext context) throws OverdueException {
         try {
             final String stateName = accessApi.getBlockingStateFor(overdueable, internalCallContextFactory.createInternalTenantContext(context)).getStateName();
-            final OverdueStateSet<SubscriptionBundle> states = overdueConfig.getBundleStateSet();
+            final OverdueStateSet<SubscriptionBaseBundle> states = overdueConfig.getBundleStateSet();
             return (OverdueState<T>) states.findState(stateName);
         } catch (OverdueApiException e) {
             throw new OverdueException(e, ErrorCode.OVERDUE_CAT_ERROR_ENCOUNTERED, overdueable.getId(), overdueable.getClass().getSimpleName());

@@ -32,13 +32,13 @@ public class TestSubscriptionJsonSimple extends JaxrsTestSuiteNoDB {
     public void testJson() throws Exception {
         final String subscriptionId = UUID.randomUUID().toString();
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
-        final SubscriptionJsonSimple subscriptionJsonSimple = new SubscriptionJsonSimple(subscriptionId, auditLogs);
-        Assert.assertEquals(subscriptionJsonSimple.getSubscriptionId(), subscriptionId);
+        final EntitlementJsonSimple subscriptionJsonSimple = null; // STEPH_ENT new EntitlementJsonSimple(subscriptionId, auditLogs);
+        Assert.assertEquals(subscriptionJsonSimple.getEntitlementId(), subscriptionId);
         Assert.assertEquals(subscriptionJsonSimple.getAuditLogs(), auditLogs);
 
         final String asJson = mapper.writeValueAsString(subscriptionJsonSimple);
 
-        final SubscriptionJsonSimple fromJson = mapper.readValue(asJson, SubscriptionJsonSimple.class);
+        final EntitlementJsonSimple fromJson = mapper.readValue(asJson, EntitlementJsonSimple.class);
         Assert.assertEquals(fromJson, subscriptionJsonSimple);
     }
 }

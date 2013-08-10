@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -37,18 +38,23 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 
 import com.ning.billing.ObjectType;
+import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.account.api.AccountUserApi;
+import com.ning.billing.entitlement.api.EntitlementApi;
+import com.ning.billing.entitlement.api.EntitlementApiException;
+import com.ning.billing.entitlement.api.Subscription;
+import com.ning.billing.entitlement.api.SubscriptionApi;
+import com.ning.billing.entitlement.api.SubscriptionApiException;
+import com.ning.billing.entitlement.api.SubscriptionBundle;
 import com.ning.billing.jaxrs.json.BundleJsonNoSubscriptions;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
 import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
-import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.transfer.SubscriptionTransferApi;
-import com.ning.billing.subscription.api.transfer.SubscriptionTransferApiException;
-import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
-import com.ning.billing.subscription.api.user.SubscriptionBundle;
 import com.ning.billing.util.api.AuditUserApi;
 import com.ning.billing.util.api.CustomFieldApiException;
 import com.ning.billing.util.api.CustomFieldUserApi;
@@ -56,7 +62,6 @@ import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.TenantContext;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
@@ -71,58 +76,47 @@ public class BundleResource extends JaxRsResourceBase {
     private static final String CUSTOM_FIELD_URI = JaxrsResource.CUSTOM_FIELDS;
     private static final String TAG_URI = JaxrsResource.TAGS;
 
-    private final SubscriptionTransferApi transferApi;
+    private final SubscriptionApi subscriptionApi;
+    private final EntitlementApi entitlementApi;
 
     @Inject
-    public BundleResource(final SubscriptionTransferApi transferApi,
-                          final JaxrsUriBuilder uriBuilder,
+    public BundleResource(final JaxrsUriBuilder uriBuilder,
                           final TagUserApi tagUserApi,
                           final CustomFieldUserApi customFieldUserApi,
                           final AuditUserApi auditUserApi,
+                          final AccountUserApi accountUserApi,
+                          final SubscriptionApi subscriptionApi,
+                          final EntitlementApi entitlementApi,
                           final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, context);
-        this.transferApi = transferApi;
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, context);
+        this.entitlementApi = entitlementApi;
+        this.subscriptionApi = subscriptionApi;
     }
 
     @GET
     @Path("/{bundleId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
     public Response getBundle(@PathParam("bundleId") final String bundleId,
-                              @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionBaseApiException {
-        final SubscriptionBundle bundle = null; // STEPH_ENT subscriptionApi.getBundleFromId(UUID.fromString(bundleId), context.createContext(request));
+                              @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException {
+
+        final UUID id = UUID.fromString(bundleId);
+        final SubscriptionBundle bundle = subscriptionApi.getAllSubscriptionsForBundle(id, context.createContext(request));
         final BundleJsonNoSubscriptions json = new BundleJsonNoSubscriptions(bundle);
         return Response.status(Status.OK).entity(json).build();
-    }
-
-    @POST
-    @Consumes(APPLICATION_JSON)
-    @Produces(APPLICATION_JSON)
-    public Response createBundle(final BundleJsonNoSubscriptions json,
-                                 @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                 @HeaderParam(HDR_REASON) final String reason,
-                                 @HeaderParam(HDR_COMMENT) final String comment,
-                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionBaseApiException {
-        final UUID accountId = UUID.fromString(json.getAccountId());
-        final SubscriptionBundle bundle = null; // STEPH_ENT subscriptionApi.createBundleForAccount(accountId, json.getExternalKey(),
-        //context.createContext(createdBy, reason, comment, request));
-        return uriBuilder.buildResponse(BundleResource.class, "getBundle", bundle.getId());
     }
 
     @GET
     @Path("/{bundleId:" + UUID_PATTERN + "}/" + SUBSCRIPTIONS)
     @Produces(APPLICATION_JSON)
     public Response getBundleSubscriptions(@PathParam("bundleId") final String bundleId,
-                                           @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionBaseApiException {
-        final TenantContext tenantContext = context.createContext(request);
-        final UUID uuid = UUID.fromString(bundleId);
-        final SubscriptionBundle bundle = null; // STEPH_ENT subscriptionApi.getBundleFromId(uuid, tenantContext);
-        if (bundle == null) {
-            return Response.status(Status.NO_CONTENT).build();
-        }
-        final List<SubscriptionBase> subscriptions = null; // STEPH_ENT subscriptionApi.getSubscriptionsForBundle(uuid, tenantContext);
-        final Collection<SubscriptionJsonNoEvents> result = Collections2.transform(subscriptions, new Function<SubscriptionBase, SubscriptionJsonNoEvents>() {
+                                           @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException {
+
+        final UUID id = UUID.fromString(bundleId);
+        final SubscriptionBundle bundle = subscriptionApi.getAllSubscriptionsForBundle(id, context.createContext(request));
+        final Collection<SubscriptionJsonNoEvents> result = Collections2.transform(bundle.getSubscriptions(), new Function<Subscription, SubscriptionJsonNoEvents>() {
+            @Nullable
             @Override
-            public SubscriptionJsonNoEvents apply(final SubscriptionBase input) {
+            public SubscriptionJsonNoEvents apply(@Nullable final Subscription input) {
                 return new SubscriptionJsonNoEvents(input, null);
             }
         });
@@ -187,14 +181,17 @@ public class BundleResource extends JaxRsResourceBase {
                                    @HeaderParam(HDR_REASON) final String reason,
                                    @HeaderParam(HDR_COMMENT) final String comment,
                                    @javax.ws.rs.core.Context final UriInfo uriInfo,
-                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionBaseApiException, SubscriptionTransferApiException {
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
-        final SubscriptionBundle bundle = null; // STEPH_ENT subscriptionApi.getBundleFromId(UUID.fromString(id), callContext);
-        final DateTime inputDate = (requestedDate != null) ? DATE_TIME_FORMATTER.parseDateTime(requestedDate) : null;
-        final SubscriptionBundle newBundle = transferApi.transferBundle(bundle.getAccountId(), UUID.fromString(json.getAccountId()), bundle.getExternalKey(), inputDate, transferAddOn,
-                                                                        cancelImmediatley, callContext);
+                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws EntitlementApiException, SubscriptionApiException, AccountApiException {
 
-        return uriBuilder.buildResponse(BundleResource.class, "getBundle", newBundle.getId(), uriInfo.getBaseUri().toString());
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final UUID bundleId = UUID.fromString(id);
+
+        final SubscriptionBundle bundle = subscriptionApi.getAllSubscriptionsForBundle(bundleId, callContext);
+        final DateTime inputDate = (requestedDate != null) ? DATE_TIME_FORMATTER.parseDateTime(requestedDate) : null;
+        final LocalDate inputLocalDate = toLocalDate(bundle.getAccountId(), inputDate, callContext);
+
+        final UUID newBundleId  = entitlementApi.transferEntitlements(bundle.getAccountId(), UUID.fromString(json.getAccountId()), bundle.getExternalKey(), inputLocalDate, callContext);
+        return uriBuilder.buildResponse(BundleResource.class, "getBundle", newBundleId, uriInfo.getBaseUri().toString());
     }
 
     @POST

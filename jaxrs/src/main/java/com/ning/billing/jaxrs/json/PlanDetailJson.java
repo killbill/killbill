@@ -16,13 +16,15 @@
 
 package com.ning.billing.jaxrs.json;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.InternationalPrice;
 import com.ning.billing.catalog.api.Listing;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class PlanDetailJson {
+
     final String productName;
     final String planName;
     final BillingPeriod billingPeriod;

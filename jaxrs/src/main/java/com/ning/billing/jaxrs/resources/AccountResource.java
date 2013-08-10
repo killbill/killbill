@@ -47,6 +47,9 @@ import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.api.MutableAccountData;
 import com.ning.billing.entitlement.api.EntitlementApi;
+import com.ning.billing.entitlement.api.SubscriptionApi;
+import com.ning.billing.entitlement.api.SubscriptionApiException;
+import com.ning.billing.entitlement.api.SubscriptionBundle;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
@@ -56,6 +59,7 @@ import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.AccountJsonWithBalance;
 import com.ning.billing.jaxrs.json.AccountJsonWithBalanceAndCBA;
 import com.ning.billing.jaxrs.json.AccountTimelineJson;
+import com.ning.billing.jaxrs.json.BundleJsonNoSubscriptions;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
 import com.ning.billing.jaxrs.json.InvoiceEmailJson;
 import com.ning.billing.jaxrs.json.PaymentJsonSimple;
@@ -70,6 +74,7 @@ import com.ning.billing.payment.api.PaymentMethod;
 import com.ning.billing.payment.api.Refund;
 import com.ning.billing.subscription.api.timeline.SubscriptionRepairException;
 import com.ning.billing.subscription.api.timeline.SubscriptionTimelineApi;
+import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.util.api.AuditUserApi;
 import com.ning.billing.util.api.CustomFieldApiException;
 import com.ning.billing.util.api.CustomFieldUserApi;
@@ -99,8 +104,8 @@ public class AccountResource extends JaxRsResourceBase {
 
     private static final String ID_PARAM_NAME = "accountId";
 
-    private final AccountUserApi accountApi;
     private final EntitlementApi entitlementApi;
+    private final SubscriptionApi subscriptionApi;
     private final SubscriptionTimelineApi timelineApi;
     private final InvoiceUserApi invoiceApi;
     private final InvoicePaymentApi invoicePaymentApi;
@@ -117,10 +122,11 @@ public class AccountResource extends JaxRsResourceBase {
                            final TagUserApi tagUserApi,
                            final AuditUserApi auditUserApi,
                            final CustomFieldUserApi customFieldUserApi,
+                           final SubscriptionApi subscriptionApi,
                            final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, context);
-        this.accountApi = accountApi;
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountApi, context);
         this.entitlementApi = entitlementApi;
+        this.subscriptionApi = subscriptionApi;
         this.invoiceApi = invoiceApi;
         this.invoicePaymentApi = invoicePaymentApi;
         this.paymentApi = paymentApi;
@@ -135,31 +141,28 @@ public class AccountResource extends JaxRsResourceBase {
                                @QueryParam(QUERY_ACCOUNT_WITH_BALANCE_AND_CBA) @DefaultValue("false") final Boolean accountWithBalanceAndCBA,
                                @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
         final TenantContext tenantContext = context.createContext(request);
-        final Account account = accountApi.getAccountById(UUID.fromString(accountId), tenantContext);
+        final Account account = accountUserApi.getAccountById(UUID.fromString(accountId), tenantContext);
         return getAccount(account, accountWithBalance, accountWithBalanceAndCBA, tenantContext);
     }
 
-    /*
-
-    STEPH_ENT
 
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + BUNDLES)
     @Produces(APPLICATION_JSON)
     public Response getAccountBundles(@PathParam("accountId") final String accountId,
                                       @QueryParam(QUERY_EXTERNAL_KEY) final String externalKey,
-                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, SubscriptionBaseApiException {
+                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, SubscriptionApiException {
         final TenantContext tenantContext = context.createContext(request);
 
         final UUID uuid = UUID.fromString(accountId);
-        accountApi.getAccountById(uuid, tenantContext);
-
+        accountUserApi.getAccountById(uuid, tenantContext);
         if (externalKey != null) {
-            final SubscriptionBundle bundle = entitlementApi.getBundleForAccountAndKey(uuid, externalKey, tenantContext);
+
+            final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundleForAccountIdAndExternalKey(uuid, externalKey, tenantContext);
             final BundleJsonNoSubscriptions json = new BundleJsonNoSubscriptions(bundle);
             return Response.status(Status.OK).entity(json).build();
         } else {
-            final List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(uuid, tenantContext);
+            final List<SubscriptionBundle> bundles = subscriptionApi.getSubscriptionBundlesForAccountId(uuid, tenantContext);
             final Collection<BundleJsonNoSubscriptions> result = Collections2.transform(bundles, new Function<SubscriptionBundle, BundleJsonNoSubscriptions>() {
                 @Override
                 public BundleJsonNoSubscriptions apply(final SubscriptionBundle input) {
@@ -169,7 +172,6 @@ public class AccountResource extends JaxRsResourceBase {
             return Response.status(Status.OK).entity(result).build();
         }
     }
-    */
 
     @GET
     @Produces(APPLICATION_JSON)
@@ -178,7 +180,7 @@ public class AccountResource extends JaxRsResourceBase {
                                     @QueryParam(QUERY_ACCOUNT_WITH_BALANCE_AND_CBA) @DefaultValue("false") final Boolean accountWithBalanceAndCBA,
                                     @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
         final TenantContext tenantContext = context.createContext(request);
-        final Account account = accountApi.getAccountByKey(externalKey, tenantContext);
+        final Account account = accountUserApi.getAccountByKey(externalKey, tenantContext);
         return getAccount(account, accountWithBalance, accountWithBalanceAndCBA, tenantContext);
     }
 
@@ -206,7 +208,7 @@ public class AccountResource extends JaxRsResourceBase {
                                   @HeaderParam(HDR_COMMENT) final String comment,
                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
         final AccountData data = json.toAccountData();
-        final Account account = accountApi.createAccount(data, context.createContext(createdBy, reason, comment, request));
+        final Account account = accountUserApi.createAccount(data, context.createContext(createdBy, reason, comment, request));
         return uriBuilder.buildResponse(AccountResource.class, "getAccount", account.getId());
     }
 
@@ -222,7 +224,7 @@ public class AccountResource extends JaxRsResourceBase {
                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
         final AccountData data = json.toAccountData();
         final UUID uuid = UUID.fromString(accountId);
-        accountApi.updateAccount(uuid, data, context.createContext(createdBy, reason, comment, request));
+        accountUserApi.updateAccount(uuid, data, context.createContext(createdBy, reason, comment, request));
         return getAccount(accountId, false, false, request);
     }
 
@@ -234,7 +236,7 @@ public class AccountResource extends JaxRsResourceBase {
                                   @javax.ws.rs.core.Context final HttpServletRequest request) {
         /*
         try {
-            accountApi.cancelAccount(accountId);
+            accountUserApi.cancelAccount(accountId);
             return Response.status(Status.NO_CONTENT).build();
         } catch (AccountApiException e) {
             log.info(String.format("Failed to cancel account %s", accountId), e);
@@ -253,7 +255,7 @@ public class AccountResource extends JaxRsResourceBase {
         final TenantContext tenantContext = context.createContext(request);
 
         final UUID accountId = UUID.fromString(accountIdString);
-        final Account account = accountApi.getAccountById(accountId, tenantContext);
+        final Account account = accountUserApi.getAccountById(accountId, tenantContext);
 
         // Get the invoices
         final List<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId(), tenantContext);
@@ -281,9 +283,9 @@ public class AccountResource extends JaxRsResourceBase {
 
         /*
         // Get the bundles
-        final List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(account.getId(), tenantContext);
+        final List<SubscriptionBaseBundle> bundles = entitlementApi.getBundlesForAccount(account.getId(), tenantContext);
         final List<BundleTimeline> bundlesTimeline = new LinkedList<BundleTimeline>();
-        for (final SubscriptionBundle bundle : bundles) {
+        for (final SubscriptionBaseBundle bundle : bundles) {
             bundlesTimeline.add(timelineApi.getBundleTimeline(bundle.getId(), tenantContext));
         }
         final AuditLogsForBundles bundlesAuditLogs = auditUserApi.getAuditLogsForBundles(bundlesTimeline, auditMode.getLevel(), tenantContext);
@@ -307,7 +309,7 @@ public class AccountResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     public Response getEmailNotificationsForAccount(@PathParam("accountId") final String accountId,
                                                     @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
-        final Account account = accountApi.getAccountById(UUID.fromString(accountId), context.createContext(request));
+        final Account account = accountUserApi.getAccountById(UUID.fromString(accountId), context.createContext(request));
         final InvoiceEmailJson invoiceEmailJson = new InvoiceEmailJson(accountId, account.isNotifiedForInvoices());
 
         return Response.status(Status.OK).entity(invoiceEmailJson).build();
@@ -326,11 +328,11 @@ public class AccountResource extends JaxRsResourceBase {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
         final UUID accountId = UUID.fromString(accountIdString);
-        final Account account = accountApi.getAccountById(accountId, callContext);
+        final Account account = accountUserApi.getAccountById(accountId, callContext);
 
         final MutableAccountData mutableAccountData = account.toMutableAccountData();
         mutableAccountData.setIsNotifiedForInvoices(json.isNotifiedForInvoices());
-        accountApi.updateAccount(accountId, mutableAccountData, callContext);
+        accountUserApi.updateAccount(accountId, mutableAccountData, callContext);
 
         return Response.status(Status.OK).build();
     }
@@ -388,7 +390,7 @@ public class AccountResource extends JaxRsResourceBase {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
         final PaymentMethod data = json.toPaymentMethod(accountId);
-        final Account account = accountApi.getAccountById(data.getAccountId(), callContext);
+        final Account account = accountUserApi.getAccountById(data.getAccountId(), callContext);
 
         final UUID paymentMethodId = paymentApi.addPaymentMethod(data.getPluginName(), account, isDefault, data.getPluginDetail(), callContext);
         return uriBuilder.buildResponse(PaymentMethodResource.class, "getPaymentMethod", paymentMethodId, uriInfo.getBaseUri().toString());
@@ -402,7 +404,7 @@ public class AccountResource extends JaxRsResourceBase {
                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException {
         final TenantContext tenantContext = context.createContext(request);
 
-        final Account account = accountApi.getAccountById(UUID.fromString(accountId), tenantContext);
+        final Account account = accountUserApi.getAccountById(UUID.fromString(accountId), tenantContext);
         final List<PaymentMethod> methods = paymentApi.getPaymentMethods(account, withPluginInfo, tenantContext);
         final List<PaymentMethodJson> json = new ArrayList<PaymentMethodJson>(Collections2.transform(methods, new Function<PaymentMethod, PaymentMethodJson>() {
             @Override
@@ -426,7 +428,7 @@ public class AccountResource extends JaxRsResourceBase {
                                             @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
-        final Account account = accountApi.getAccountById(UUID.fromString(accountId), callContext);
+        final Account account = accountUserApi.getAccountById(UUID.fromString(accountId), callContext);
         paymentApi.setDefaultPaymentMethod(account, UUID.fromString(paymentMethodId), callContext);
         return Response.status(Status.OK).build();
     }
@@ -441,7 +443,7 @@ public class AccountResource extends JaxRsResourceBase {
                                @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException {
         final TenantContext tenantContext = context.createContext(request);
 
-        final Account account = accountApi.getAccountById(UUID.fromString(accountId), tenantContext);
+        final Account account = accountUserApi.getAccountById(UUID.fromString(accountId), tenantContext);
         final List<Refund> refunds = paymentApi.getAccountRefunds(account, tenantContext);
         final List<RefundJson> result = new ArrayList<RefundJson>(Collections2.transform(refunds, new Function<Refund, RefundJson>() {
             @Override
@@ -545,7 +547,7 @@ public class AccountResource extends JaxRsResourceBase {
         }
         final UUID accountId = UUID.fromString(id);
         if (isTagAutoPayOff) {
-            final Account account = accountApi.getAccountById(accountId, callContext);
+            final Account account = accountUserApi.getAccountById(accountId, callContext);
             if (account.getPaymentMethodId() == null) {
                 throw new TagApiException(ErrorCode.TAG_CANNOT_BE_REMOVED, ControlTagType.AUTO_PAY_OFF, " the account does not have a default payment method");
             }
@@ -564,7 +566,7 @@ public class AccountResource extends JaxRsResourceBase {
     public Response getEmails(@PathParam(ID_PARAM_NAME) final String id,
                               @javax.ws.rs.core.Context final HttpServletRequest request) {
         final UUID accountId = UUID.fromString(id);
-        final List<AccountEmail> emails = accountApi.getEmails(accountId, context.createContext(request));
+        final List<AccountEmail> emails = accountUserApi.getEmails(accountId, context.createContext(request));
 
         final List<AccountEmailJson> emailsJson = new ArrayList<AccountEmailJson>();
         for (final AccountEmail email : emails) {
@@ -588,9 +590,9 @@ public class AccountResource extends JaxRsResourceBase {
         final UUID accountId = UUID.fromString(id);
 
         // Make sure the account exist or we will confuse the history and auditing code
-        accountApi.getAccountById(accountId, callContext);
+        accountUserApi.getAccountById(accountId, callContext);
 
-        accountApi.addEmail(accountId, json.toAccountEmail(UUID.randomUUID()), callContext);
+        accountUserApi.addEmail(accountId, json.toAccountEmail(UUID.randomUUID()), callContext);
 
         return uriBuilder.buildResponse(AccountResource.class, "getEmails", json.getAccountId());
     }
@@ -606,12 +608,12 @@ public class AccountResource extends JaxRsResourceBase {
                                 @javax.ws.rs.core.Context final HttpServletRequest request) {
         final UUID accountId = UUID.fromString(id);
 
-        final List<AccountEmail> emails = accountApi.getEmails(accountId, context.createContext(request));
+        final List<AccountEmail> emails = accountUserApi.getEmails(accountId, context.createContext(request));
         for (AccountEmail cur : emails) {
             if (cur.getEmail().equals(email)) {
                 final AccountEmailJson accountEmailJson = new AccountEmailJson(accountId.toString(), email);
                 final AccountEmail accountEmail = accountEmailJson.toAccountEmail(cur.getId());
-                accountApi.removeEmail(accountId, accountEmail, context.createContext(createdBy, reason, comment, request));
+                accountUserApi.removeEmail(accountId, accountEmail, context.createContext(createdBy, reason, comment, request));
             }
         }
         return Response.status(Status.OK).build();

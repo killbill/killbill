@@ -43,6 +43,7 @@ import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.catalog.api.TimeUnit;
 import com.ning.billing.clock.Clock;
+import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.subscription.api.migration.SubscriptionMigrationApi.AccountMigration;
 import com.ning.billing.subscription.api.migration.SubscriptionMigrationApi.BundleMigration;
 import com.ning.billing.subscription.api.migration.SubscriptionMigrationApi.SubscriptionMigration;
@@ -52,7 +53,6 @@ import com.ning.billing.subscription.events.SubscriptionEvent;
 import com.ning.billing.subscription.events.phase.PhaseEvent;
 import com.ning.billing.subscription.events.user.ApiEvent;
 import com.ning.billing.subscription.events.user.ApiEventType;
-import com.ning.billing.subscription.api.SubscriptionTransitionType;
 import com.ning.billing.subscription.api.timeline.BundleTimeline;
 import com.ning.billing.subscription.api.timeline.SubscriptionRepairException;
 import com.ning.billing.subscription.api.timeline.SubscriptionTimeline;
@@ -93,12 +93,12 @@ public class TestSubscriptionHelper {
     }
 
 
-    public SubscriptionData createSubscription(final SubscriptionBundle bundle, final String productName, final BillingPeriod term, final String planSet, final DateTime requestedDate)
+    public SubscriptionData createSubscription(final SubscriptionBaseBundle bundle, final String productName, final BillingPeriod term, final String planSet, final DateTime requestedDate)
             throws SubscriptionBaseApiException {
         return createSubscriptionWithBundle(bundle.getId(), productName, term, planSet, requestedDate);
     }
 
-    public SubscriptionData createSubscription(final SubscriptionBundle bundle, final String productName, final BillingPeriod term, final String planSet)
+    public SubscriptionData createSubscription(final SubscriptionBaseBundle bundle, final String productName, final BillingPeriod term, final String planSet)
             throws SubscriptionBaseApiException {
         return createSubscriptionWithBundle(bundle.getId(), productName, term, planSet, null);
     }
@@ -461,13 +461,13 @@ public class TestSubscriptionHelper {
         };
     }
 
-    public ExistingEvent createExistingEventForAssertion(final SubscriptionTransitionType type,
+    public ExistingEvent createExistingEventForAssertion(final SubscriptionBaseTransitionType type,
                                                          final String productName, final PhaseType phaseType, final ProductCategory category, final String priceListName, final BillingPeriod billingPeriod,
                                                          final DateTime effectiveDateTime) {
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, category, billingPeriod, priceListName, phaseType);
         return new ExistingEvent() {
             @Override
-            public SubscriptionTransitionType getSubscriptionTransitionType() {
+            public SubscriptionBaseTransitionType getSubscriptionTransitionType() {
                 return type;
             }
 
@@ -532,10 +532,10 @@ public class TestSubscriptionHelper {
         };
     }
 
-    public NewEvent createNewEvent(final SubscriptionTransitionType type, final DateTime requestedDate, final PlanPhaseSpecifier spec) {
+    public NewEvent createNewEvent(final SubscriptionBaseTransitionType type, final DateTime requestedDate, final PlanPhaseSpecifier spec) {
         return new NewEvent() {
             @Override
-            public SubscriptionTransitionType getSubscriptionTransitionType() {
+            public SubscriptionBaseTransitionType getSubscriptionTransitionType() {
                 return type;
             }
 

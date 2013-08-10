@@ -31,7 +31,7 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.catalog.MockPlan;
 import com.ning.billing.catalog.MockPriceList;
 import com.ning.billing.subscription.api.SubscriptionBase;
-import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.entitlement.api.BlockingState;
@@ -106,20 +106,20 @@ public class TestOverdueHelper {
         this.blockingInternalApi = blockingInternalApi;
     }
 
-    public void checkStateApplied(final OverdueState<SubscriptionBundle> state) {
+    public void checkStateApplied(final OverdueState<SubscriptionBaseBundle> state) {
         final BlockingState result = ((ApplicatorBlockingApi) blockingInternalApi).getBlockingState();
         checkStateApplied(result, state);
     }
 
-    public void checkStateApplied(final BlockingState result, final OverdueState<SubscriptionBundle> state) {
+    public void checkStateApplied(final BlockingState result, final OverdueState<SubscriptionBaseBundle> state) {
         Assert.assertEquals(result.getStateName(), state.getName());
         Assert.assertEquals(result.isBlockChange(), state.blockChanges());
         Assert.assertEquals(result.isBlockEntitlement(), state.disableEntitlementAndChangesBlocked());
         Assert.assertEquals(result.isBlockBilling(), state.disableEntitlementAndChangesBlocked());
     }
 
-    public SubscriptionBundle createBundle(final LocalDate dateOfLastUnPaidInvoice) throws SubscriptionBaseApiException, AccountApiException {
-        final SubscriptionBundle bundle = Mockito.mock(SubscriptionBundle.class);
+    public SubscriptionBaseBundle createBundle(final LocalDate dateOfLastUnPaidInvoice) throws SubscriptionBaseApiException, AccountApiException {
+        final SubscriptionBaseBundle bundle = Mockito.mock(SubscriptionBaseBundle.class);
         final UUID bundleId = UUID.randomUUID();
         Mockito.when(bundle.getId()).thenReturn(bundleId);
 

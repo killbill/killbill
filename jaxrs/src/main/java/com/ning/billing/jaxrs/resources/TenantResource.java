@@ -37,6 +37,7 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriBuilder;
 
 import com.ning.billing.ObjectType;
+import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.jaxrs.json.TenantJson;
 import com.ning.billing.jaxrs.json.TenantKeyJson;
 import com.ning.billing.jaxrs.util.Context;
@@ -67,8 +68,9 @@ public class TenantResource extends JaxRsResourceBase {
             final TagUserApi tagUserApi,
             final CustomFieldUserApi customFieldUserApi,
             final AuditUserApi auditUserApi,
+            final AccountUserApi accountUserApi,
             final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, context);
         this.tenantApi = tenantApi;
     }
 

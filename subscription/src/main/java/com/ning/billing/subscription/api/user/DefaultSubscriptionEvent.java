@@ -20,7 +20,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.subscription.api.SubscriptionTransitionType;
+import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.util.events.BusEventBase;
 import com.ning.billing.util.events.SubscriptionInternalEvent;
 
@@ -45,7 +45,7 @@ public abstract class DefaultSubscriptionEvent extends BusEventBase implements S
     private final String nextPlan;
     private final String nextPhase;
     private final Integer remainingEventsForUserOperation;
-    private final SubscriptionTransitionType transitionType;
+    private final SubscriptionBaseTransitionType transitionType;
     private final DateTime startDate;
 
     public DefaultSubscriptionEvent(final SubscriptionBaseTransitionData in, final DateTime startDate,
@@ -89,7 +89,7 @@ public abstract class DefaultSubscriptionEvent extends BusEventBase implements S
                                     @JsonProperty("nextPhase") final String nextPhase,
                                     @JsonProperty("nextPriceList") final String nextPriceList,
                                     @JsonProperty("totalOrdering") final Long totalOrdering,
-                                    @JsonProperty("transitionType") final SubscriptionTransitionType transitionType,
+                                    @JsonProperty("transitionType") final SubscriptionBaseTransitionType transitionType,
                                     @JsonProperty("remainingEventsForUserOperation") final Integer remainingEventsForUserOperation,
                                     @JsonProperty("startDate") final DateTime startDate,
                                     @JsonProperty("searchKey1") final Long searchKey1,
@@ -198,7 +198,7 @@ public abstract class DefaultSubscriptionEvent extends BusEventBase implements S
     }
 
     @Override
-    public SubscriptionTransitionType getTransitionType() {
+    public SubscriptionBaseTransitionType getTransitionType() {
         return transitionType;
     }
 

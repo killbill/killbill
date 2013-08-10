@@ -26,7 +26,7 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
-import com.ning.billing.subscription.api.SubscriptionTransitionType;
+import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.subscription.api.SubscriptionBase;
 
 public interface BillingEvent extends Comparable<BillingEvent> {
@@ -96,7 +96,7 @@ public interface BillingEvent extends Comparable<BillingEvent> {
     /**
      * @return the transition type of the underlying subscription event that triggered this
      */
-    public SubscriptionTransitionType getTransitionType();
+    public SubscriptionBaseTransitionType getTransitionType();
 
     /**
      * @return a unique long indicating the ordering on which events got inserted on disk-- used for sorting only

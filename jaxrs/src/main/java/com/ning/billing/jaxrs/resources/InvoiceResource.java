@@ -88,14 +88,13 @@ public class InvoiceResource extends JaxRsResourceBase {
     private static final String CUSTOM_FIELD_URI = JaxrsResource.CUSTOM_FIELDS + "/{" + ID_PARAM_NAME + ":" + UUID_PATTERN + "}";
     private static final String TAG_URI = JaxrsResource.TAGS + "/{" + ID_PARAM_NAME + ":" + UUID_PATTERN + "}";
 
-    private final AccountUserApi accountApi;
     private final InvoiceUserApi invoiceApi;
     private final PaymentApi paymentApi;
     private final InvoiceNotifier invoiceNotifier;
     private final Clock clock;
 
     @Inject
-    public InvoiceResource(final AccountUserApi accountApi,
+    public InvoiceResource(final AccountUserApi accountUserApi,
                            final InvoiceUserApi invoiceApi,
                            final PaymentApi paymentApi,
                            final InvoiceNotifier invoiceNotifier,
@@ -103,10 +102,9 @@ public class InvoiceResource extends JaxRsResourceBase {
                            final JaxrsUriBuilder uriBuilder,
                            final TagUserApi tagUserApi,
                            final CustomFieldUserApi customFieldUserApi,
-                           final AuditUserApi auditUserApi,
+                           final AuditUserApi auditUserApi,                           
                            final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, context);
-        this.accountApi = accountApi;
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, context);
         this.invoiceApi = invoiceApi;
         this.paymentApi = paymentApi;
         this.invoiceNotifier = invoiceNotifier;
@@ -121,7 +119,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         final TenantContext tenantContext = context.createContext(request);
 
         // Verify the account exists
-        accountApi.getAccountById(UUID.fromString(accountId), tenantContext);
+        accountUserApi.getAccountById(UUID.fromString(accountId), tenantContext);
 
         final List<Invoice> invoices = invoiceApi.getInvoicesByAccount(UUID.fromString(accountId), tenantContext);
         if (withItems) {
@@ -176,7 +174,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                                         @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, InvoiceApiException {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
-        final Account account = accountApi.getAccountById(UUID.fromString(accountId), callContext);
+        final Account account = accountUserApi.getAccountById(UUID.fromString(accountId), callContext);
 
         final DateTime inputDateTime =  targetDateTime != null ? DATE_TIME_FORMATTER.parseDateTime(targetDateTime) : clock.getUTCNow();
         final LocalDate inputDate = inputDateTime.toDateTime(account.getTimeZone()).toLocalDate();
@@ -203,7 +201,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                               @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, InvoiceApiException {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
-        final Account account = accountApi.getAccountById(UUID.fromString(accountId), callContext);
+        final Account account = accountUserApi.getAccountById(UUID.fromString(accountId), callContext);
 
         invoiceApi.deleteCBA(account.getId(), UUID.fromString(invoiceId), UUID.fromString(invoiceItemId), callContext);
 
@@ -223,7 +221,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, InvoiceApiException {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
-        final Account account = accountApi.getAccountById(UUID.fromString(json.getAccountId()), callContext);
+        final Account account = accountUserApi.getAccountById(UUID.fromString(json.getAccountId()), callContext);
 
         // Get the effective date of the adjustment, in the account timezone
         final LocalDate requestedDate;
@@ -267,7 +265,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                                          @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, InvoiceApiException {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
-        final Account account = accountApi.getAccountById(UUID.fromString(externalChargeJson.getAccountId()), callContext);
+        final Account account = accountUserApi.getAccountById(UUID.fromString(externalChargeJson.getAccountId()), callContext);
 
         // Get the effective date of the external charge, in the account timezone
         final LocalDate requestedDate;
@@ -307,7 +305,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                                                    @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, InvoiceApiException {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
-        final Account account = accountApi.getAccountById(UUID.fromString(externalChargeJson.getAccountId()), callContext);
+        final Account account = accountUserApi.getAccountById(UUID.fromString(externalChargeJson.getAccountId()), callContext);
 
         // Get the effective date of the external charge, in the account timezone
         final LocalDate requestedDate;
@@ -361,7 +359,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                                    @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
-        final Account account = accountApi.getAccountById(UUID.fromString(payment.getAccountId()), callContext);
+        final Account account = accountUserApi.getAccountById(UUID.fromString(payment.getAccountId()), callContext);
 
         final Collection<Invoice> unpaidInvoices = invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext);
         for (final Invoice invoice : unpaidInvoices) {
@@ -387,7 +385,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                                          @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
-        final Account account = accountApi.getAccountById(UUID.fromString(payment.getAccountId()), callContext);
+        final Account account = accountUserApi.getAccountById(UUID.fromString(payment.getAccountId()), callContext);
 
         final UUID invoiceId = UUID.fromString(payment.getInvoiceId());
         if (externalPayment) {
@@ -415,7 +413,7 @@ public class InvoiceResource extends JaxRsResourceBase {
             throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND, invoiceId);
         }
 
-        final Account account = accountApi.getAccountById(invoice.getAccountId(), callContext);
+        final Account account = accountUserApi.getAccountById(invoice.getAccountId(), callContext);
 
         // Send the email (synchronous send)
         invoiceNotifier.notify(account, invoice, callContext);

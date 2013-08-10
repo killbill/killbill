@@ -20,13 +20,13 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.subscription.api.SubscriptionTransitionType;
+import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.subscription.api.user.SubscriptionState;
 
 public interface SubscriptionInternalEvent extends BusInternalEvent {
     UUID getId();
 
-    SubscriptionTransitionType getTransitionType();
+    SubscriptionBaseTransitionType getTransitionType();
 
     UUID getBundleId();
 

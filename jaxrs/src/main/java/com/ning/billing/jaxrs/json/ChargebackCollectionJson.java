@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class ChargebackCollectionJson {
+
     private final String accountId;
     private final List<ChargebackJson> chargebacks;
 

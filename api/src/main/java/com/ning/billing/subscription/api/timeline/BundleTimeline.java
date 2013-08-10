@@ -23,7 +23,7 @@ import com.ning.billing.util.entity.Entity;
 
 /**
  * The interface {@code BundleTimeline} shows a view of all the subscription events for a specific
- * {@code SubscriptionBundle}.
+ * {@code SubscriptionBaseBundle}.
  */
 public interface BundleTimeline extends Entity {
 

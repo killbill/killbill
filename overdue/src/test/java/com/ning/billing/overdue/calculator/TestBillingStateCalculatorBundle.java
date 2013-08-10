@@ -35,7 +35,7 @@ import com.ning.billing.catalog.MockPriceList;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.subscription.api.SubscriptionBase;
-import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.overdue.config.api.BillingStateBundle;
@@ -64,7 +64,7 @@ public class TestBillingStateCalculatorBundle extends TestBillingStateCalculator
         Mockito.when(invoiceApi.getUnpaidInvoicesByAccountId(Mockito.<UUID>any(), Mockito.<LocalDate>any(), Mockito.<InternalTenantContext>any())).thenReturn(ImmutableList.<Invoice>of());
 
         final UUID bundleId = UUID.randomUUID();
-        final SubscriptionBundle bundle = Mockito.mock(SubscriptionBundle.class);
+        final SubscriptionBaseBundle bundle = Mockito.mock(SubscriptionBaseBundle.class);
         Mockito.when(bundle.getId()).thenReturn(bundleId);
 
         final SubscriptionBaseInternalApi subscriptionApi = Mockito.mock(SubscriptionBaseInternalApi.class);
@@ -123,7 +123,7 @@ public class TestBillingStateCalculatorBundle extends TestBillingStateCalculator
 
         Mockito.when(invoiceApi.getUnpaidInvoicesByAccountId(Mockito.<UUID>any(), Mockito.<LocalDate>any(), Mockito.<InternalTenantContext>any())).thenReturn(invoices);
 
-        final SubscriptionBundle bundle = Mockito.mock(SubscriptionBundle.class);
+        final SubscriptionBaseBundle bundle = Mockito.mock(SubscriptionBaseBundle.class);
         Mockito.when(bundle.getId()).thenReturn(thisBundleId);
         Mockito.when(bundle.getAccountId()).thenReturn(UUID.randomUUID());
 
@@ -158,7 +158,7 @@ public class TestBillingStateCalculatorBundle extends TestBillingStateCalculator
 
         Mockito.when(invoiceApi.getUnpaidInvoicesByAccountId(Mockito.<UUID>any(), Mockito.<LocalDate>any(), Mockito.<InternalTenantContext>any())).thenReturn(invoices);
 
-        final SubscriptionBundle bundle = Mockito.mock(SubscriptionBundle.class);
+        final SubscriptionBaseBundle bundle = Mockito.mock(SubscriptionBaseBundle.class);
         Mockito.when(bundle.getId()).thenReturn(thisBundleId);
         Mockito.when(bundle.getAccountId()).thenReturn(UUID.randomUUID());
 

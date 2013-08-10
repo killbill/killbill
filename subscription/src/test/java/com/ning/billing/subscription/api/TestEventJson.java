@@ -39,7 +39,7 @@ public class TestEventJson extends GuicyKillbillTestSuiteNoDB {
 
         final EffectiveSubscriptionInternalEvent e = new DefaultEffectiveSubscriptionEvent(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), new DateTime(), new DateTime(),
                                                                                            SubscriptionState.ACTIVE, "pro", "TRIAL", "DEFAULT", SubscriptionState.CANCELLED, null, null, null, 3L,
-                                                                                           SubscriptionTransitionType.CANCEL, 0, new DateTime(), 1L, 2L, null);
+                                                                                           SubscriptionBaseTransitionType.CANCEL, 0, new DateTime(), 1L, 2L, null);
 
         final String json = mapper.writeValueAsString(e);
 

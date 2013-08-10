@@ -32,12 +32,12 @@ import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.subscription.api.user.SubscriptionBaseTransitionData;
 import com.ning.billing.subscription.events.SubscriptionEvent;
 import com.ning.billing.subscription.events.phase.PhaseEvent;
 import com.ning.billing.subscription.events.user.ApiEvent;
 import com.ning.billing.subscription.events.user.ApiEventType;
-import com.ning.billing.subscription.api.SubscriptionTransitionType;
 
 
 public class DefaultSubscriptionTimeline implements SubscriptionTimeline {
@@ -131,13 +131,13 @@ public class DefaultSubscriptionTimeline implements SubscriptionTimeline {
                     break;
             }
 
-            final SubscriptionTransitionType transitionType = SubscriptionBaseTransitionData.toSubscriptionTransitionType(cur.getType(), apiType);
+            final SubscriptionBaseTransitionType transitionType = SubscriptionBaseTransitionData.toSubscriptionTransitionType(cur.getType(), apiType);
 
             final String planPhaseNameWithClosure = planPhaseName;
             final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, category, billingPeriod, priceListName, phaseType);
             result.add(new ExistingEvent() {
                 @Override
-                public SubscriptionTransitionType getSubscriptionTransitionType() {
+                public SubscriptionBaseTransitionType getSubscriptionTransitionType() {
                     return transitionType;
                 }
 
@@ -226,12 +226,12 @@ public class DefaultSubscriptionTimeline implements SubscriptionTimeline {
                 break;
             }
 
-            final SubscriptionTransitionType transitionType = SubscriptionBaseTransitionData.toSubscriptionTransitionType(cur.getType(), apiType);
+            final SubscriptionBaseTransitionType transitionType = SubscriptionBaseTransitionData.toSubscriptionTransitionType(cur.getType(), apiType);
 
             final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, category, billingPeriod, priceListName, phaseType);
             result.add(new ExistingEvent() {
                 @Override
-                public SubscriptionTransitionType getSubscriptionTransitionType() {
+                public SubscriptionBaseTransitionType getSubscriptionTransitionType() {
                     return transitionType;
                 }
                 @Override

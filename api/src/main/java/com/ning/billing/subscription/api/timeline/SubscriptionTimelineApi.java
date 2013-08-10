@@ -18,13 +18,13 @@ package com.ning.billing.subscription.api.timeline;
 
 import java.util.UUID;
 
-import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TenantContext;
 
 public interface SubscriptionTimelineApi {
 
-    public BundleTimeline getBundleTimeline(SubscriptionBundle bundle, TenantContext context)
+    public BundleTimeline getBundleTimeline(SubscriptionBaseBundle bundle, TenantContext context)
             throws SubscriptionRepairException;
 
     public BundleTimeline getBundleTimeline(UUID accountId, String bundleName, TenantContext context)

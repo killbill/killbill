@@ -27,13 +27,10 @@ import org.testng.annotations.Test;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.DefaultEntitlement;
-import com.ning.billing.subscription.api.user.SubscriptionData;
 import com.ning.billing.notification.plugin.api.ExtBusEvent;
-import com.ning.billing.subscription.api.user.SubscriptionBundle;
 
 import com.google.common.eventbus.Subscribe;
 

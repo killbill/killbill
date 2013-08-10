@@ -16,7 +16,7 @@
 
 package com.ning.billing.overdue.config;
 
-import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 
 public class MockOverdueRules extends OverdueConfig {
 
@@ -25,7 +25,7 @@ public class MockOverdueRules extends OverdueConfig {
     @SuppressWarnings("unchecked")
     public MockOverdueRules() {
         final OverdueStatesBundle bundleODS = new OverdueStatesBundle();
-        bundleODS.setBundleOverdueStates(new DefaultOverdueState[]{new DefaultOverdueState<SubscriptionBundle>().setName(CLEAR_STATE)});
+        bundleODS.setBundleOverdueStates(new DefaultOverdueState[]{new DefaultOverdueState<SubscriptionBaseBundle>().setName(CLEAR_STATE)});
         setOverdueStatesBundle(bundleODS);
 
     }

@@ -25,6 +25,7 @@ import org.skife.jdbi.v2.IDBI;
 import com.ning.billing.account.glue.DefaultAccountModule;
 import com.ning.billing.beatrix.glue.BeatrixModule;
 import com.ning.billing.catalog.glue.CatalogModule;
+import com.ning.billing.jaxrs.resources.EntitlementResource;
 import com.ning.billing.subscription.glue.DefaultSubscriptionModule;
 import com.ning.billing.invoice.glue.DefaultInvoiceModule;
 import com.ning.billing.jaxrs.resources.AccountResource;
@@ -37,7 +38,6 @@ import com.ning.billing.jaxrs.resources.PaymentMethodResource;
 import com.ning.billing.jaxrs.resources.PaymentResource;
 import com.ning.billing.jaxrs.resources.PluginResource;
 import com.ning.billing.jaxrs.resources.RefundResource;
-import com.ning.billing.jaxrs.resources.SubscriptionResource;
 import com.ning.billing.jaxrs.resources.TagResource;
 import com.ning.billing.jaxrs.resources.TenantResource;
 import com.ning.billing.jaxrs.util.KillbillEventHandler;
@@ -95,7 +95,7 @@ public class KillbillServerModule extends AbstractModule {
     protected void configureResources() {
         bind(AccountResource.class).asEagerSingleton();
         bind(BundleResource.class).asEagerSingleton();
-        bind(SubscriptionResource.class).asEagerSingleton();
+        bind(EntitlementResource.class).asEagerSingleton();
         bind(InvoiceResource.class).asEagerSingleton();
         bind(TagResource.class).asEagerSingleton();
         bind(CatalogResource.class).asEagerSingleton();

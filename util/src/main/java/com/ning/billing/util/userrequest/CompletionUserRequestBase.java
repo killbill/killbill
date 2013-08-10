@@ -108,7 +108,7 @@ public class CompletionUserRequestBase implements CompletionUserRequest {
                 // We only dispatch the event for the effective date and not the requested date since we have both
                 // for subscription events.
                 if (curEvent instanceof EffectiveSubscriptionInternalEvent) {
-                    onSubscriptionTransition((EffectiveSubscriptionInternalEvent) curEvent);
+                    onSubscriptionBaseTransition((EffectiveSubscriptionInternalEvent) curEvent);
                 }
                 break;
             case INVOICE_EMPTY:
@@ -138,7 +138,7 @@ public class CompletionUserRequestBase implements CompletionUserRequest {
     }
 
     @Override
-    public void onSubscriptionTransition(final EffectiveSubscriptionInternalEvent curEventEffective) {
+    public void onSubscriptionBaseTransition(final EffectiveSubscriptionInternalEvent curEventEffective) {
     }
 
     @Override

@@ -412,7 +412,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
 
         assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), callContext).size(), 1);
 
-        assertEquals(bpEntitlement.getSubscription().getCurrentPlan().getBillingPeriod(), BillingPeriod.ANNUAL);
+        assertEquals(bpEntitlement.getSubscriptionBase().getCurrentPlan().getBillingPeriod(), BillingPeriod.ANNUAL);
 
         // Move out of trials for interesting invoices adjustments
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
@@ -431,7 +431,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         //
         bpEntitlement = changeEntitlementAndCheckForCompletion(bpEntitlement, productName, term, BillingActionPolicy.IMMEDIATE, NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.INVOICE_ADJUSTMENT);
 
-        assertEquals(bpEntitlement.getSubscription().getCurrentPlan().getBillingPeriod(), BillingPeriod.MONTHLY);
+        assertEquals(bpEntitlement.getSubscriptionBase().getCurrentPlan().getBillingPeriod(), BillingPeriod.MONTHLY);
 
 
         invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), callContext);
@@ -526,7 +526,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
 
         assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), callContext).size(), 1);
 
-        assertEquals(bpEntitlement.getSubscription().getCurrentPlan().getBillingPeriod(), BillingPeriod.ANNUAL);
+        assertEquals(bpEntitlement.getSubscriptionBase().getCurrentPlan().getBillingPeriod(), BillingPeriod.ANNUAL);
 
         // Move out of trials for interesting invoices adjustments
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
@@ -632,7 +632,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         assertNotNull(bpEntitlement);
         assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), callContext).size(), 1);
 
-        assertEquals(bpEntitlement.getSubscription().getCurrentPlan().getBillingPeriod(), BillingPeriod.ANNUAL);
+        assertEquals(bpEntitlement.getSubscriptionBase().getCurrentPlan().getBillingPeriod(), BillingPeriod.ANNUAL);
 
         // Move out of trials for interesting invoices adjustments
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);

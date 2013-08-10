@@ -29,14 +29,12 @@ import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.DefaultEntitlement;
-import com.ning.billing.subscription.api.user.SubscriptionData;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceUserApi;
-import com.ning.billing.subscription.api.user.SubscriptionBundle;
+import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.api.TagUserApi;
@@ -64,7 +62,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
 
 
     private Account account;
-    private SubscriptionBundle bundle;
+    private SubscriptionBaseBundle bundle;
     private String productName;
     private BillingPeriod term;
     private String planSetName;
