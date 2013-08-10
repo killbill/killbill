@@ -100,7 +100,7 @@ public class BundleResource extends JaxRsResourceBase {
                               @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException {
 
         final UUID id = UUID.fromString(bundleId);
-        final SubscriptionBundle bundle = subscriptionApi.getAllSubscriptionsForBundle(id, context.createContext(request));
+        final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundle(id, context.createContext(request));
         final BundleJsonNoSubscriptions json = new BundleJsonNoSubscriptions(bundle);
         return Response.status(Status.OK).entity(json).build();
     }
@@ -112,7 +112,7 @@ public class BundleResource extends JaxRsResourceBase {
                                            @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException {
 
         final UUID id = UUID.fromString(bundleId);
-        final SubscriptionBundle bundle = subscriptionApi.getAllSubscriptionsForBundle(id, context.createContext(request));
+        final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundle(id, context.createContext(request));
         final Collection<SubscriptionJsonNoEvents> result = Collections2.transform(bundle.getSubscriptions(), new Function<Subscription, SubscriptionJsonNoEvents>() {
             @Nullable
             @Override
@@ -186,7 +186,7 @@ public class BundleResource extends JaxRsResourceBase {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         final UUID bundleId = UUID.fromString(id);
 
-        final SubscriptionBundle bundle = subscriptionApi.getAllSubscriptionsForBundle(bundleId, callContext);
+        final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundle(bundleId, callContext);
         final DateTime inputDate = (requestedDate != null) ? DATE_TIME_FORMATTER.parseDateTime(requestedDate) : null;
         final LocalDate inputLocalDate = toLocalDate(bundle.getAccountId(), inputDate, callContext);
 

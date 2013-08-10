@@ -26,6 +26,7 @@ import com.ning.billing.account.glue.DefaultAccountModule;
 import com.ning.billing.beatrix.glue.BeatrixModule;
 import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.jaxrs.resources.EntitlementResource;
+import com.ning.billing.jaxrs.resources.SubscriptionResource;
 import com.ning.billing.subscription.glue.DefaultSubscriptionModule;
 import com.ning.billing.invoice.glue.DefaultInvoiceModule;
 import com.ning.billing.jaxrs.resources.AccountResource;
@@ -96,6 +97,7 @@ public class KillbillServerModule extends AbstractModule {
         bind(AccountResource.class).asEagerSingleton();
         bind(BundleResource.class).asEagerSingleton();
         bind(EntitlementResource.class).asEagerSingleton();
+        bind(SubscriptionResource.class).asEagerSingleton();
         bind(InvoiceResource.class).asEagerSingleton();
         bind(TagResource.class).asEagerSingleton();
         bind(CatalogResource.class).asEagerSingleton();
