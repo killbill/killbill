@@ -27,8 +27,8 @@ import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ning.billing.clock.Clock;
 import com.ning.billing.entitlement.api.Blockable;
-import com.ning.billing.entitlement.api.Type;
 import com.ning.billing.notificationq.api.NotificationEventWithMetadata;
 import com.ning.billing.notificationq.api.NotificationQueue;
 import com.ning.billing.notificationq.api.NotificationQueueService;
@@ -36,7 +36,6 @@ import com.ning.billing.notificationq.api.NotificationQueueService.NoSuchNotific
 import com.ning.billing.overdue.service.DefaultOverdueService;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.clock.Clock;
 import com.ning.billing.util.dao.NonEntityDao;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
@@ -104,7 +103,7 @@ public class DefaultOverdueCheckPoster implements OverdueCheckPoster {
 
                     if (shouldInsertNewNotification) {
                         log.debug("Queuing overdue check notification. Overdueable id: {}, timestamp: {}", overdueable.getId().toString(), futureNotificationTime.toString());
-                        final OverdueCheckNotificationKey notificationKey = new OverdueCheckNotificationKey(overdueable.getId(), Type.get(overdueable));
+                        final OverdueCheckNotificationKey notificationKey = new OverdueCheckNotificationKey(overdueable.getId());
                         checkOverdueQueue.recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory.getSqlDao(), futureNotificationTime, notificationKey, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
                     } else {
                         log.debug("Skipping queuing overdue check notification. Overdueable id: {}, timestamp: {}", overdueable.getId().toString(), futureNotificationTime.toString());
@@ -152,7 +151,7 @@ public class DefaultOverdueCheckPoster implements OverdueCheckPoster {
             @Override
             public boolean apply(@Nullable final NotificationEventWithMetadata<OverdueCheckNotificationKey> input) {
                 final OverdueCheckNotificationKey notificationKey = input.getEvent();
-                return (Type.get(overdueable).equals(notificationKey.getType()) && overdueable.getId().equals(notificationKey.getUuidKey()));
+                return (overdueable.getId().equals(notificationKey.getUuidKey()));
             }
         });
 

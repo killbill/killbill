@@ -18,10 +18,11 @@ package com.ning.billing.overdue;
 
 import org.joda.time.Period;
 
+import com.ning.billing.account.api.Account;
 import com.ning.billing.entitlement.api.Blockable;
 
 
-public interface OverdueState<T extends Blockable> {
+public interface OverdueState {
 
     public String getName();
 
@@ -39,7 +40,7 @@ public interface OverdueState<T extends Blockable> {
 
     public Period getReevaluationInterval() throws OverdueApiException;
 
-    public Condition<T> getCondition();
+    public Condition getCondition();
 
     public EmailNotification getEnterStateEmailNotification();
 }

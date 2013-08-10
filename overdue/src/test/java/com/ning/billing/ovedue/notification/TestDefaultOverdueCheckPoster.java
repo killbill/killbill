@@ -26,14 +26,13 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.ning.billing.subscription.api.SubscriptionBase;
-import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.entitlement.api.Blockable;
-import com.ning.billing.entitlement.api.Type;
 import com.ning.billing.notificationq.api.NotificationEventWithMetadata;
 import com.ning.billing.notificationq.api.NotificationQueue;
 import com.ning.billing.overdue.OverdueTestSuiteWithEmbeddedDB;
 import com.ning.billing.overdue.service.DefaultOverdueService;
+import com.ning.billing.subscription.api.SubscriptionBase;
+import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import com.ning.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
@@ -88,7 +87,7 @@ public class TestDefaultOverdueCheckPoster extends OverdueTestSuiteWithEmbeddedD
         final DateTime futureNotificationTime = testReferenceTime.plusDays(nbDaysInFuture);
         poster.insertOverdueCheckNotification(overdueable, futureNotificationTime, internalCallContext);
 
-        final OverdueCheckNotificationKey notificationKey = new OverdueCheckNotificationKey(overdueable.getId(), Type.get(overdueable));
+        final OverdueCheckNotificationKey notificationKey = new OverdueCheckNotificationKey(overdueable.getId());
         final Collection<NotificationEventWithMetadata<OverdueCheckNotificationKey>> notificationsForKey = getNotificationsForOverdueable(overdueable);
         Assert.assertEquals(notificationsForKey.size(), 1);
         final NotificationEventWithMetadata nm = notificationsForKey.iterator().next();

@@ -21,7 +21,6 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import com.ning.billing.entitlement.api.BlockingState;
-import com.ning.billing.entitlement.api.Type;
 import com.ning.billing.util.entity.EntityBase;
 
 
@@ -32,7 +31,6 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
     private static BlockingState clearState = null;
 
     private final UUID blockingId;
-    private final Type type;
     private final String stateName;
     private final String service;
     private final boolean blockChange;
@@ -42,7 +40,8 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
 
     public static BlockingState getClearState() {
         if (clearState == null) {
-            clearState = new DefaultBlockingState(null, CLEAR_STATE_NAME, null, null, false, false, false);
+            // STEPH_ENT should we not always have a service name?
+            clearState = new DefaultBlockingState(null, CLEAR_STATE_NAME, null, false, false, false);
         }
         return clearState;
     }
@@ -51,7 +50,6 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
     public DefaultBlockingState(final UUID id,
                                 final UUID blockingId,
                                 final String stateName,
-                                final Type type,
                                 final String service,
                                 final boolean blockChange,
                                 final boolean blockEntitlement,
@@ -65,13 +63,11 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
         this.blockChange = blockChange;
         this.blockEntitlement = blockEntitlement;
         this.blockBilling = blockBilling;
-        this.type = type;
         this.timestamp = timestamp;
     }
 
     public DefaultBlockingState(final UUID blockingId,
                                  final String stateName,
-                                 final Type type,
                                  final String service,
                                  final boolean blockChange,
                                  final boolean blockEntitlement,
@@ -79,7 +75,6 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
         this(UUID.randomUUID(),
              blockingId,
              stateName,
-             type,
              service,
              blockChange,
              blockEntitlement,
@@ -99,11 +94,6 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
     @Override
     public String getStateName() {
         return stateName;
-    }
-
-    @Override
-    public Type getType() {
-        return type;
     }
 
     /* (non-Javadoc)
@@ -166,7 +156,6 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
         result = prime * result + ((service == null) ? 0 : service.hashCode());
         result = prime * result + ((stateName == null) ? 0 : stateName.hashCode());
         result = prime * result + ((timestamp == null) ? 0 : timestamp.hashCode());
-        result = prime * result + ((type == null) ? 0 : type.hashCode());
         return result;
     }
 
@@ -219,9 +208,6 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
         } else if (timestamp.compareTo(other.timestamp) != 0) {
             return false;
         }
-        if (type != other.type) {
-            return false;
-        }
         return true;
     }
 
@@ -247,7 +233,7 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
 
     @Override
     public String toString() {
-        return "BlockingState [blockingId=" + blockingId + ", type=" + type + ", stateName=" + stateName + ", service="
+        return "BlockingState [blockingId=" + blockingId + ", stateName=" + stateName + ", service="
                 + service + ", blockChange=" + blockChange + ", blockEntitlement=" + blockEntitlement
                 + ", blockBilling=" + blockBilling + ", timestamp=" + timestamp + "]";
     }

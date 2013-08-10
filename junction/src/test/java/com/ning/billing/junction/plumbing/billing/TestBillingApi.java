@@ -32,7 +32,6 @@ import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.entitlement.dao.MockBlockingStateDao;
 import com.ning.billing.junction.JunctionTestSuiteNoDB;
 import com.ning.billing.entitlement.api.BlockingState;
-import com.ning.billing.entitlement.api.Type;
 import com.ning.billing.mock.MockEffectiveSubscriptionEvent;
 import com.ning.billing.mock.MockSubscription;
 import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
@@ -182,8 +181,8 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
         final Account account = createAccount(32);
 
         final List<BlockingState> blockingStates = new ArrayList<BlockingState>();
-        blockingStates.add(new DefaultBlockingState(UUID.randomUUID(), bunId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now.plusDays(1), null));
-        blockingStates.add(new DefaultBlockingState(UUID.randomUUID(), bunId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now.plusDays(2), null));
+        blockingStates.add(new DefaultBlockingState(UUID.randomUUID(), bunId, DISABLED_BUNDLE, "test", true, true, true, now.plusDays(1), null));
+        blockingStates.add(new DefaultBlockingState(UUID.randomUUID(), bunId, CLEAR_BUNDLE, "test", false, false, false, now.plusDays(2), null));
 
         ((MockBlockingStateDao) blockingStateDao).setBlockingStates(bunId, blockingStates);
         final SortedSet<BillingEvent> events = billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), internalCallContext);

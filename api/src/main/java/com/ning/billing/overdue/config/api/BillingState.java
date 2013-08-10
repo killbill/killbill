@@ -22,10 +22,9 @@ import java.util.UUID;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 
-import com.ning.billing.entitlement.api.Blockable;
 import com.ning.billing.util.tag.Tag;
 
-public class BillingState<T extends Blockable> {
+public class BillingState {
 
     private final UUID objectId;
     private final int numberOfUnpaidInvoices;

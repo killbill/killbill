@@ -83,29 +83,4 @@ public class OverdueResource extends JaxRsResourceBase {
         return null;
     }
 
-    @GET
-    @Path("/" + BUNDLES + "/{bundleId:" + UUID_PATTERN + "}")
-    @Produces(APPLICATION_JSON)
-    public Response getOverdueBundle(@PathParam("bundleId") final String bundleId,
-                                     @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionBaseApiException, OverdueException, OverdueApiException {
-        final TenantContext tenantContext = context.createContext(request);
-
-        final SubscriptionBaseBundle bundle = null; // STEPH_ENT subscriptionApi.getBundleFromId(UUID.fromString(bundleId), tenantContext);
-        final OverdueState<SubscriptionBaseBundle> overdueState = overdueApi.getOverdueStateFor(bundle, tenantContext);
-
-        return Response.status(Status.OK).entity(new OverdueStateJson(overdueState)).build();
-    }
-
-    @GET
-    @Path("/" + SUBSCRIPTIONS + "/{subscriptionId:" + UUID_PATTERN + "}")
-    @Produces(APPLICATION_JSON)
-    public Response getOverdueSubscription(@PathParam("subscriptionId") final String subscriptionId,
-                                           @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionBaseApiException, OverdueException, OverdueApiException {
-        final TenantContext tenantContext = context.createContext(request);
-
-        final SubscriptionBase subscription = null; // STEPH_ENT subscriptionApi.getSubscriptionFromId(UUID.fromString(subscriptionId), tenantContext);
-        final OverdueState<SubscriptionBase> overdueState = overdueApi.getOverdueStateFor(subscription, tenantContext);
-
-        return Response.status(Status.OK).entity(new OverdueStateJson(overdueState)).build();
-    }
 }

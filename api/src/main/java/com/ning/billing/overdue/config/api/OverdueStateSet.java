@@ -22,11 +22,11 @@ import com.ning.billing.entitlement.api.Blockable;
 import com.ning.billing.overdue.OverdueApiException;
 import com.ning.billing.overdue.OverdueState;
 
-public interface OverdueStateSet<T extends Blockable> {
+public interface OverdueStateSet {
 
-    public abstract OverdueState<T> getClearState() throws OverdueApiException;
+    public abstract OverdueState getClearState() throws OverdueApiException;
 
-    public abstract OverdueState<T> findState(String stateName) throws OverdueApiException;
+    public abstract OverdueState findState(String stateName) throws OverdueApiException;
 
     /**
      * Compute an overdue state, given a billing state, at a given day.
@@ -36,9 +36,9 @@ public interface OverdueStateSet<T extends Blockable> {
      * @return the overdue state
      * @throws OverdueApiException
      */
-    public abstract OverdueState<T> calculateOverdueState(BillingState<T> billingState, LocalDate now) throws OverdueApiException;
+    public abstract OverdueState calculateOverdueState(BillingState billingState, LocalDate now) throws OverdueApiException;
 
     public abstract int size();
 
-    public abstract OverdueState<T> getFirstState();
+    public abstract OverdueState getFirstState();
 }

@@ -18,13 +18,10 @@ package com.ning.billing.util.events;
 
 import java.util.UUID;
 
-import com.ning.billing.entitlement.api.Type;
-
 
 public interface OverdueChangeInternalEvent extends BusInternalEvent {
-    UUID getOverdueObjectId();
 
-    Type getOverdueObjectType();
+    UUID getOverdueObjectId();
 
     String getPreviousOverdueStateName();
 

@@ -22,7 +22,7 @@ import com.ning.billing.entitlement.api.Blockable;
 import com.ning.billing.overdue.config.api.BillingState;
 
 
-public interface Condition<T extends Blockable> {
+public interface Condition {
 
     /**
      * Evaluate the condition in a given state, at a given date.
@@ -31,5 +31,5 @@ public interface Condition<T extends Blockable> {
      * @param now   the day to use to evaluate the condition, in the account timezone
      * @return true if the condition is true, false otherwise
      */
-    public boolean evaluate(BillingState<T> state, LocalDate now);
+    public boolean evaluate(BillingState state, LocalDate now);
 }

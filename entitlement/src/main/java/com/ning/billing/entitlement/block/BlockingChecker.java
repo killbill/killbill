@@ -16,11 +16,8 @@
 
 package com.ning.billing.entitlement.block;
 
-import java.util.UUID;
-
 import com.ning.billing.entitlement.api.Blockable;
 import com.ning.billing.entitlement.api.BlockingApiException;
-import com.ning.billing.entitlement.api.Type;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 
 public interface BlockingChecker {
@@ -30,10 +27,4 @@ public interface BlockingChecker {
     public void checkBlockedEntitlement(Blockable blockable, InternalTenantContext context) throws BlockingApiException;
 
     public void checkBlockedBilling(Blockable blockable, InternalTenantContext context) throws BlockingApiException;
-
-    public void checkBlockedChange(UUID bundleId, Type type, InternalTenantContext context) throws BlockingApiException;
-
-    public void checkBlockedEntitlement(UUID bundleId, Type type, InternalTenantContext context) throws BlockingApiException;
-
-    public void checkBlockedBilling(UUID bundleId, Type type, InternalTenantContext context) throws BlockingApiException;
 }

@@ -29,8 +29,6 @@ import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import com.ning.billing.entitlement.api.Type;
-import com.ning.billing.entitlement.api.BlockingApiException;
 import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.dao.MapperBase;
@@ -62,23 +60,17 @@ public interface BlockingStateSqlDao extends EntitySqlDao<BlockingStateModelDao,
             final boolean blockChange;
             final boolean blockEntitlement;
             final boolean blockBilling;
-            final Type type;
             final DateTime createdDate;
 
-            try {
-                id = UUID.fromString(r.getString("id"));
-                blockableId = UUID.fromString(r.getString("blockable_id"));
-                stateName = r.getString("state") == null ? DefaultBlockingState.CLEAR_STATE_NAME : r.getString("state");
-                type = Type.get(r.getString("type"));
-                service = r.getString("service");
-                blockChange = r.getBoolean("block_change");
-                blockEntitlement = r.getBoolean("block_entitlement");
-                blockBilling = r.getBoolean("block_billing");
-                createdDate = getDateTime(r, "created_date");
-            } catch (BlockingApiException e) {
-                throw new SQLException(e);
-            }
-            return new BlockingStateModelDao(id, blockableId, type, stateName, service, blockChange, blockEntitlement, blockBilling, createdDate, createdDate);
+            id = UUID.fromString(r.getString("id"));
+            blockableId = UUID.fromString(r.getString("blockable_id"));
+            stateName = r.getString("state") == null ? DefaultBlockingState.CLEAR_STATE_NAME : r.getString("state");
+            service = r.getString("service");
+            blockChange = r.getBoolean("block_change");
+            blockEntitlement = r.getBoolean("block_entitlement");
+            blockBilling = r.getBoolean("block_billing");
+            createdDate = getDateTime(r, "created_date");
+            return new BlockingStateModelDao(id, blockableId, stateName, service, blockChange, blockEntitlement, blockBilling, createdDate, createdDate);
         }
     }
 }

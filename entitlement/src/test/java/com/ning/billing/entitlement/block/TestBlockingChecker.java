@@ -22,7 +22,6 @@ import com.ning.billing.entitlement.EntitlementTestSuiteNoDB;
 import com.ning.billing.entitlement.dao.MockBlockingStateDao;
 import com.ning.billing.entitlement.api.BlockingApiException;
 import com.ning.billing.entitlement.api.BlockingState;
-import com.ning.billing.entitlement.api.Type;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
@@ -67,18 +66,18 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
     }
 
     private void setStateBundle(final boolean bC, final boolean bE, final boolean bB) {
-        final BlockingState bundleState = new DefaultBlockingState(bundle.getId(), "state", Type.SUBSCRIPTION_BUNDLE, "test-service", bC, bE, bB);
+        final BlockingState bundleState = new DefaultBlockingState(bundle.getId(), "state", "test-service", bC, bE, bB);
         Mockito.when(bundle.getBlockingState()).thenReturn(bundleState);
         blockingStateDao.setBlockingState(bundleState, clock, internalCallContext);
     }
 
     private void setStateAccount(final boolean bC, final boolean bE, final boolean bB) {
-        final BlockingState accountState = new DefaultBlockingState(account.getId(), "state", Type.SUBSCRIPTION_BUNDLE, "test-service", bC, bE, bB);
+        final BlockingState accountState = new DefaultBlockingState(account.getId(), "state", "test-service", bC, bE, bB);
         blockingStateDao.setBlockingState(accountState, clock, internalCallContext);
     }
 
     private void setStateSubscription(final boolean bC, final boolean bE, final boolean bB) {
-        final BlockingState subscriptionState = new DefaultBlockingState(subscription.getId(), "state", Type.SUBSCRIPTION_BUNDLE, "test-service", bC, bE, bB);
+        final BlockingState subscriptionState = new DefaultBlockingState(subscription.getId(), "state", "test-service", bC, bE, bB);
         Mockito.when(subscription.getBlockingState()).thenReturn(subscriptionState);
         blockingStateDao.setBlockingState(subscriptionState, clock, internalCallContext);
     }

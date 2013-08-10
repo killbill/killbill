@@ -23,7 +23,6 @@ import org.joda.time.LocalDate;
 import org.joda.time.Period;
 
 import com.ning.billing.ErrorCode;
-import com.ning.billing.entitlement.api.Blockable;
 import com.ning.billing.overdue.OverdueApiException;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.config.api.BillingState;
@@ -33,18 +32,19 @@ import com.ning.billing.util.config.catalog.ValidationErrors;
 import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public abstract class DefaultOverdueStateSet<T extends Blockable> extends ValidatingConfig<OverdueConfig> implements OverdueStateSet<T> {
-    private static final Period ZERO_PERIOD = new Period();
-    private final DefaultOverdueState<T> clearState = new DefaultOverdueState<T>().setName(DefaultBlockingState.CLEAR_STATE_NAME).setClearState(true);
+public abstract class DefaultOverdueStateSet extends ValidatingConfig<OverdueConfig> implements OverdueStateSet {
 
-    protected abstract DefaultOverdueState<T>[] getStates();
+    private static final Period ZERO_PERIOD = new Period();
+    private final DefaultOverdueState clearState = new DefaultOverdueState().setName(DefaultBlockingState.CLEAR_STATE_NAME).setClearState(true);
+
+    protected abstract DefaultOverdueState[] getStates();
 
     @Override
-    public OverdueState<T> findState(final String stateName) throws OverdueApiException {
+    public OverdueState findState(final String stateName) throws OverdueApiException {
         if (stateName.equals(DefaultBlockingState.CLEAR_STATE_NAME)) {
             return clearState;
         }
-        for (final DefaultOverdueState<T> state : getStates()) {
+        for (final DefaultOverdueState state : getStates()) {
             if (state.getName().equals(stateName)) {
                 return state;
             }
@@ -57,13 +57,13 @@ public abstract class DefaultOverdueStateSet<T extends Blockable> extends Valida
      * @see com.ning.billing.catalog.overdue.OverdueBillingState#findClearState()
      */
     @Override
-    public DefaultOverdueState<T> getClearState() throws OverdueApiException {
+    public DefaultOverdueState getClearState() throws OverdueApiException {
         return clearState;
     }
 
     @Override
-    public DefaultOverdueState<T> calculateOverdueState(final BillingState<T> billingState, final LocalDate now) throws OverdueApiException {
-        for (final DefaultOverdueState<T> overdueState : getStates()) {
+    public DefaultOverdueState calculateOverdueState(final BillingState billingState, final LocalDate now) throws OverdueApiException {
+        for (final DefaultOverdueState overdueState : getStates()) {
             if (overdueState.getCondition().evaluate(billingState, now)) {
                 return overdueState;
             }
@@ -74,7 +74,7 @@ public abstract class DefaultOverdueStateSet<T extends Blockable> extends Valida
     @Override
     public ValidationErrors validate(final OverdueConfig root,
                                      final ValidationErrors errors) {
-        for (final DefaultOverdueState<T> state : getStates()) {
+        for (final DefaultOverdueState state : getStates()) {
             state.validate(root, errors);
         }
         try {
@@ -95,7 +95,7 @@ public abstract class DefaultOverdueStateSet<T extends Blockable> extends Valida
     }
 
     @Override
-    public OverdueState<T> getFirstState() {
+    public OverdueState getFirstState() {
         return getStates()[0];
     }
 }

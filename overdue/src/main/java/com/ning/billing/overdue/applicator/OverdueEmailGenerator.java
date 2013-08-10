@@ -40,8 +40,8 @@ public class OverdueEmailGenerator {
         this.overdueEmailFormatterFactory = overdueEmailFormatterFactory;
     }
 
-    public <T extends Blockable> String generateEmail(final Account account, final BillingState<T> billingState,
-                                                      final T overdueable, final OverdueState<T> nextOverdueState) throws IOException {
+    public <T extends Blockable> String generateEmail(final Account account, final BillingState billingState,
+                                                      final T overdueable, final OverdueState nextOverdueState) throws IOException {
         final Map<String, Object> data = new HashMap<String, Object>();
 
         // TODO raw objects for now. We eventually should respect the account locale and support translations

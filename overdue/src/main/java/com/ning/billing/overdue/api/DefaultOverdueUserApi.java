@@ -21,9 +21,8 @@ import org.slf4j.LoggerFactory;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.ObjectType;
-import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
+import com.ning.billing.account.api.Account;
 import com.ning.billing.entitlement.api.Blockable;
-import com.ning.billing.entitlement.api.Type;
 import com.ning.billing.overdue.OverdueApiException;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.OverdueUserApi;
@@ -60,37 +59,36 @@ public class DefaultOverdueUserApi implements OverdueUserApi {
 
     @SuppressWarnings("unchecked")
     @Override
-    public <T extends Blockable> OverdueState<T> getOverdueStateFor(final T overdueable, final TenantContext context) throws OverdueException {
+    public OverdueState getOverdueStateFor(final Account overdueable, final TenantContext context) throws OverdueException {
         try {
             final String stateName = accessApi.getBlockingStateFor(overdueable, internalCallContextFactory.createInternalTenantContext(context)).getStateName();
-            final OverdueStateSet<SubscriptionBaseBundle> states = overdueConfig.getBundleStateSet();
-            return (OverdueState<T>) states.findState(stateName);
+            final OverdueStateSet states = overdueConfig.getBundleStateSet();
+            return states.findState(stateName);
         } catch (OverdueApiException e) {
             throw new OverdueException(e, ErrorCode.OVERDUE_CAT_ERROR_ENCOUNTERED, overdueable.getId(), overdueable.getClass().getSimpleName());
         }
     }
 
     @Override
-    public <T extends Blockable> BillingState<T> getBillingStateFor(final T overdueable, final TenantContext context) throws OverdueException {
+    public BillingState getBillingStateFor(final Account overdueable, final TenantContext context) throws OverdueException {
         log.debug("Billing state of of {} requested", overdueable.getId());
-        final OverdueWrapper<T> wrapper = factory.createOverdueWrapperFor(overdueable);
+        final OverdueWrapper wrapper = factory.createOverdueWrapperFor(overdueable);
         return wrapper.billingState(internalCallContextFactory.createInternalTenantContext(context));
     }
 
     @Override
-    public <T extends Blockable> OverdueState<T> refreshOverdueStateFor(final T blockable, final CallContext context) throws OverdueException, OverdueApiException {
+    public OverdueState refreshOverdueStateFor(final Account blockable, final CallContext context) throws OverdueException, OverdueApiException {
         log.info("Refresh of blockable {} ({}) requested", blockable.getId(), blockable.getClass());
-        final OverdueWrapper<T> wrapper = factory.createOverdueWrapperFor(blockable);
+        final OverdueWrapper wrapper = factory.createOverdueWrapperFor(blockable);
         return wrapper.refresh(createInternalCallContext(blockable, context));
     }
 
-    private <T extends Blockable> InternalCallContext createInternalCallContext(final T blockable, final CallContext context) {
-        final ObjectType objectType = Type.getObjectType(blockable);
-        return internalCallContextFactory.createInternalCallContext(blockable.getId(), objectType, context);
+    private <T extends Blockable> InternalCallContext createInternalCallContext(final Account blockable, final CallContext context) {
+        return internalCallContextFactory.createInternalCallContext(blockable.getId(), ObjectType.ACCOUNT, context);
     }
 
     @Override
-    public <T extends Blockable> void setOverrideBillingStateForAccount(final T overdueable, final BillingState<T> state, final CallContext context) {
+    public void setOverrideBillingStateForAccount(final Account overdueable, final BillingState state, final CallContext context) {
         throw new UnsupportedOperationException();
     }
 

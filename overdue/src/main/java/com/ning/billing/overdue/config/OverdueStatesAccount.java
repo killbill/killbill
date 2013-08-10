@@ -18,21 +18,19 @@ package com.ning.billing.overdue.config;
 
 import javax.xml.bind.annotation.XmlElement;
 
-import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
-
-public class OverdueStatesBundle extends DefaultOverdueStateSet<SubscriptionBaseBundle> {
+public class OverdueStatesAccount extends DefaultOverdueStateSet {
 
     @SuppressWarnings("unchecked")
     @XmlElement(required = true, name = "state")
-    private DefaultOverdueState<SubscriptionBaseBundle>[] bundleOverdueStates = new DefaultOverdueState[0];
+    private DefaultOverdueState[] accountOverdueStates = new DefaultOverdueState[0];
 
     @Override
-    protected DefaultOverdueState<SubscriptionBaseBundle>[] getStates() {
-        return bundleOverdueStates;
+    protected DefaultOverdueState[] getStates() {
+        return accountOverdueStates;
     }
 
-    protected OverdueStatesBundle setBundleOverdueStates(final DefaultOverdueState<SubscriptionBaseBundle>[] bundleOverdueStates) {
-        this.bundleOverdueStates = bundleOverdueStates;
+    protected OverdueStatesAccount setBundleOverdueStates(final DefaultOverdueState[] bundleOverdueStates) {
+        this.accountOverdueStates = bundleOverdueStates;
         return this;
     }
 }

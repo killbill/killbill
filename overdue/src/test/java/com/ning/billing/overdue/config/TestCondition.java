@@ -29,7 +29,6 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.ObjectType;
-import com.ning.billing.entitlement.api.Blockable;
 import com.ning.billing.overdue.OverdueTestSuiteNoDB;
 import com.ning.billing.overdue.config.api.BillingState;
 import com.ning.billing.overdue.config.api.PaymentResponse;
@@ -42,7 +41,7 @@ import com.ning.billing.util.tag.Tag;
 public class TestCondition extends OverdueTestSuiteNoDB {
 
     @XmlRootElement(name = "condition")
-    private static class MockCondition extends DefaultCondition<Blockable> {}
+    private static class MockCondition extends DefaultCondition {}
 
     @Test(groups = "fast")
     public void testNumberOfUnpaidInvoicesEqualsOrExceeds() throws Exception {
@@ -54,12 +53,12 @@ public class TestCondition extends OverdueTestSuiteNoDB {
         final MockCondition c = XMLLoader.getObjectFromStreamNoValidation(is, MockCondition.class);
         final UUID unpaidInvoiceId = UUID.randomUUID();
 
-        final BillingState<Blockable> state0 = new BillingState<Blockable>(new UUID(0L, 1L), 0, BigDecimal.ZERO, new LocalDate(),
-                                                                           DateTimeZone.UTC, unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
-        final BillingState<Blockable> state1 = new BillingState<Blockable>(new UUID(0L, 1L), 1, BigDecimal.ZERO, new LocalDate(),
-                                                                           DateTimeZone.UTC, unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
-        final BillingState<Blockable> state2 = new BillingState<Blockable>(new UUID(0L, 1L), 2, BigDecimal.ZERO, new LocalDate(),
-                                                                           DateTimeZone.UTC, unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
+        final BillingState state0 = new BillingState(new UUID(0L, 1L), 0, BigDecimal.ZERO, new LocalDate(),
+                                                     DateTimeZone.UTC, unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
+        final BillingState state1 = new BillingState(new UUID(0L, 1L), 1, BigDecimal.ZERO, new LocalDate(),
+                                                     DateTimeZone.UTC, unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
+        final BillingState state2 = new BillingState(new UUID(0L, 1L), 2, BigDecimal.ZERO, new LocalDate(),
+                                                     DateTimeZone.UTC, unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
 
         Assert.assertTrue(!c.evaluate(state0, new LocalDate()));
         Assert.assertTrue(c.evaluate(state1, new LocalDate()));
@@ -76,12 +75,12 @@ public class TestCondition extends OverdueTestSuiteNoDB {
         final MockCondition c = XMLLoader.getObjectFromStreamNoValidation(is, MockCondition.class);
         final UUID unpaidInvoiceId = UUID.randomUUID();
 
-        final BillingState<Blockable> state0 = new BillingState<Blockable>(new UUID(0L, 1L), 0, BigDecimal.ZERO, new LocalDate(),
-                                                                           DateTimeZone.UTC, unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
-        final BillingState<Blockable> state1 = new BillingState<Blockable>(new UUID(0L, 1L), 1, new BigDecimal("100.00"), new LocalDate(),
-                                                                           DateTimeZone.UTC, unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
-        final BillingState<Blockable> state2 = new BillingState<Blockable>(new UUID(0L, 1L), 1, new BigDecimal("200.00"), new LocalDate(),
-                                                                           DateTimeZone.UTC, unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
+        final BillingState state0 = new BillingState(new UUID(0L, 1L), 0, BigDecimal.ZERO, new LocalDate(),
+                                                     DateTimeZone.UTC, unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
+        final BillingState state1 = new BillingState(new UUID(0L, 1L), 1, new BigDecimal("100.00"), new LocalDate(),
+                                                     DateTimeZone.UTC, unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
+        final BillingState state2 = new BillingState(new UUID(0L, 1L), 1, new BigDecimal("200.00"), new LocalDate(),
+                                                     DateTimeZone.UTC, unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
 
         Assert.assertTrue(!c.evaluate(state0, new LocalDate()));
         Assert.assertTrue(c.evaluate(state1, new LocalDate()));
@@ -100,12 +99,12 @@ public class TestCondition extends OverdueTestSuiteNoDB {
 
         final LocalDate now = new LocalDate();
 
-        final BillingState<Blockable> state0 = new BillingState<Blockable>(new UUID(0L, 1L), 0, BigDecimal.ZERO, null,
-                                                                           DateTimeZone.UTC, unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
-        final BillingState<Blockable> state1 = new BillingState<Blockable>(new UUID(0L, 1L), 1, new BigDecimal("100.00"), now.minusDays(10),
-                                                                           DateTimeZone.UTC, unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
-        final BillingState<Blockable> state2 = new BillingState<Blockable>(new UUID(0L, 1L), 1, new BigDecimal("200.00"), now.minusDays(20),
-                                                                           DateTimeZone.UTC, unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
+        final BillingState state0 = new BillingState(new UUID(0L, 1L), 0, BigDecimal.ZERO, null,
+                                                     DateTimeZone.UTC, unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
+        final BillingState state1 = new BillingState(new UUID(0L, 1L), 1, new BigDecimal("100.00"), now.minusDays(10),
+                                                     DateTimeZone.UTC, unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
+        final BillingState state2 = new BillingState(new UUID(0L, 1L), 1, new BigDecimal("200.00"), now.minusDays(20),
+                                                     DateTimeZone.UTC, unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
 
         Assert.assertTrue(!c.evaluate(state0, now));
         Assert.assertTrue(c.evaluate(state1, now));
@@ -124,12 +123,12 @@ public class TestCondition extends OverdueTestSuiteNoDB {
 
         final LocalDate now = new LocalDate();
 
-        final BillingState<Blockable> state0 = new BillingState<Blockable>(new UUID(0L, 1L), 0, BigDecimal.ZERO, null,
-                                                                           DateTimeZone.UTC, unpaidInvoiceId, PaymentResponse.LOST_OR_STOLEN_CARD, new Tag[]{});
-        final BillingState<Blockable> state1 = new BillingState<Blockable>(new UUID(0L, 1L), 1, new BigDecimal("100.00"), now.minusDays(10),
-                                                                           DateTimeZone.UTC, unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
-        final BillingState<Blockable> state2 = new BillingState<Blockable>(new UUID(0L, 1L), 1, new BigDecimal("200.00"), now.minusDays(20),
-                                                                           DateTimeZone.UTC, unpaidInvoiceId, PaymentResponse.DO_NOT_HONOR, new Tag[]{});
+        final BillingState state0 = new BillingState(new UUID(0L, 1L), 0, BigDecimal.ZERO, null,
+                                                     DateTimeZone.UTC, unpaidInvoiceId, PaymentResponse.LOST_OR_STOLEN_CARD, new Tag[]{});
+        final BillingState state1 = new BillingState(new UUID(0L, 1L), 1, new BigDecimal("100.00"), now.minusDays(10),
+                                                     DateTimeZone.UTC, unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
+        final BillingState state2 = new BillingState(new UUID(0L, 1L), 1, new BigDecimal("200.00"), now.minusDays(20),
+                                                     DateTimeZone.UTC, unpaidInvoiceId, PaymentResponse.DO_NOT_HONOR, new Tag[]{});
 
         Assert.assertTrue(!c.evaluate(state0, now));
         Assert.assertTrue(c.evaluate(state1, now));
@@ -151,21 +150,21 @@ public class TestCondition extends OverdueTestSuiteNoDB {
         final ObjectType objectType = ObjectType.BUNDLE;
 
         final UUID objectId = new UUID(0L, 1L);
-        final BillingState<Blockable> state0 = new BillingState<Blockable>(objectId, 0, BigDecimal.ZERO, null,
-                                                                           DateTimeZone.UTC, unpaidInvoiceId, PaymentResponse.LOST_OR_STOLEN_CARD,
-                                                                           new Tag[]{new DefaultControlTag(ControlTagType.AUTO_INVOICING_OFF, objectType, objectId, clock.getUTCNow()),
-                                                                                     new DescriptiveTag(UUID.randomUUID(), objectType, objectId, clock.getUTCNow())});
+        final BillingState state0 = new BillingState(objectId, 0, BigDecimal.ZERO, null,
+                                                     DateTimeZone.UTC, unpaidInvoiceId, PaymentResponse.LOST_OR_STOLEN_CARD,
+                                                     new Tag[]{new DefaultControlTag(ControlTagType.AUTO_INVOICING_OFF, objectType, objectId, clock.getUTCNow()),
+                                                             new DescriptiveTag(UUID.randomUUID(), objectType, objectId, clock.getUTCNow())});
 
-        final BillingState<Blockable> state1 = new BillingState<Blockable>(objectId, 1, new BigDecimal("100.00"), now.minusDays(10),
-                                                                           DateTimeZone.UTC, unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS,
-                                                                           new Tag[]{new DefaultControlTag(ControlTagType.OVERDUE_ENFORCEMENT_OFF, objectType, objectId, clock.getUTCNow())});
+        final BillingState state1 = new BillingState(objectId, 1, new BigDecimal("100.00"), now.minusDays(10),
+                                                     DateTimeZone.UTC, unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS,
+                                                     new Tag[]{new DefaultControlTag(ControlTagType.OVERDUE_ENFORCEMENT_OFF, objectType, objectId, clock.getUTCNow())});
 
-        final BillingState<Blockable> state2 = new BillingState<Blockable>(objectId, 1, new BigDecimal("200.00"), now.minusDays(20),
-                                                                           DateTimeZone.UTC, unpaidInvoiceId,
-                                                                           PaymentResponse.DO_NOT_HONOR,
-                                                                           new Tag[]{new DefaultControlTag(ControlTagType.OVERDUE_ENFORCEMENT_OFF, objectType, objectId, clock.getUTCNow()),
-                                                                                     new DefaultControlTag(ControlTagType.AUTO_INVOICING_OFF, objectType, objectId, clock.getUTCNow()),
-                                                                                     new DescriptiveTag(UUID.randomUUID(), objectType, objectId, clock.getUTCNow())});
+        final BillingState state2 = new BillingState(objectId, 1, new BigDecimal("200.00"), now.minusDays(20),
+                                                     DateTimeZone.UTC, unpaidInvoiceId,
+                                                     PaymentResponse.DO_NOT_HONOR,
+                                                     new Tag[]{new DefaultControlTag(ControlTagType.OVERDUE_ENFORCEMENT_OFF, objectType, objectId, clock.getUTCNow()),
+                                                             new DefaultControlTag(ControlTagType.AUTO_INVOICING_OFF, objectType, objectId, clock.getUTCNow()),
+                                                             new DescriptiveTag(UUID.randomUUID(), objectType, objectId, clock.getUTCNow())});
 
         Assert.assertTrue(!c.evaluate(state0, now));
         Assert.assertTrue(c.evaluate(state1, now));

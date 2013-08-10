@@ -18,12 +18,9 @@ package com.ning.billing.subscription.api.user;
 
 import java.util.UUID;
 
-import javax.annotation.Nullable;
-
 import org.joda.time.DateTime;
 
 import com.ning.billing.entitlement.api.BlockingState;
-import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.util.entity.EntityBase;
 
 public class DefaultSubscriptionBaseBundle extends EntityBase implements SubscriptionBaseBundle {
@@ -31,23 +28,18 @@ public class DefaultSubscriptionBaseBundle extends EntityBase implements Subscri
     private final String key;
     private final UUID accountId;
     private final DateTime lastSysUpdateDate;
-    private final OverdueState<SubscriptionBaseBundle> overdueState;
 
     public DefaultSubscriptionBaseBundle(final String name, final UUID accountId, final DateTime startDate) {
         this(UUID.randomUUID(), name, accountId, startDate);
     }
 
-    public DefaultSubscriptionBaseBundle(final UUID id, final String key, final UUID accountId, final DateTime lastSysUpdate) {
-        this(id, key, accountId, lastSysUpdate, null);
-    }
 
-    public DefaultSubscriptionBaseBundle(final UUID id, final String key, final UUID accountId, final DateTime lastSysUpdate, @Nullable final OverdueState<SubscriptionBaseBundle> overdueState) {
+    public DefaultSubscriptionBaseBundle(final UUID id, final String key, final UUID accountId, final DateTime lastSysUpdate) {
         // TODO add column in bundles table
         super(id, null, null);
         this.key = key;
         this.accountId = accountId;
         this.lastSysUpdateDate = lastSysUpdate;
-        this.overdueState = overdueState;
     }
 
     @Override
@@ -65,11 +57,6 @@ public class DefaultSubscriptionBaseBundle extends EntityBase implements Subscri
     }
 
     @Override
-    public OverdueState<SubscriptionBaseBundle> getOverdueState() {
-        return overdueState;
-    }
-
-    @Override
     public BlockingState getBlockingState() {
         throw new UnsupportedOperationException();
     }
@@ -82,7 +69,6 @@ public class DefaultSubscriptionBaseBundle extends EntityBase implements Subscri
         sb.append(", id=").append(id);
         sb.append(", key='").append(key).append('\'');
         sb.append(", lastSysUpdateDate=").append(lastSysUpdateDate);
-        sb.append(", overdueState=").append(overdueState);
         sb.append('}');
         return sb.toString();
     }
@@ -110,10 +96,6 @@ public class DefaultSubscriptionBaseBundle extends EntityBase implements Subscri
         if (lastSysUpdateDate != null ? !lastSysUpdateDate.equals(that.lastSysUpdateDate) : that.lastSysUpdateDate != null) {
             return false;
         }
-        if (overdueState != null ? !overdueState.equals(that.overdueState) : that.overdueState != null) {
-            return false;
-        }
-
         return true;
     }
 
@@ -123,7 +105,6 @@ public class DefaultSubscriptionBaseBundle extends EntityBase implements Subscri
         result = 31 * result + (key != null ? key.hashCode() : 0);
         result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
         result = 31 * result + (lastSysUpdateDate != null ? lastSysUpdateDate.hashCode() : 0);
-        result = 31 * result + (overdueState != null ? overdueState.hashCode() : 0);
         return result;
     }
 }

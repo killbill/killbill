@@ -23,7 +23,6 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.entitlement.api.Blockable;
 import com.ning.billing.entitlement.api.BlockingApiException;
 import com.ning.billing.entitlement.api.BlockingState;
-import com.ning.billing.entitlement.api.Type;
 import com.ning.billing.entitlement.dao.BlockingStateDao;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
@@ -191,53 +190,4 @@ public class DefaultBlockingChecker implements BlockingChecker {
             throw new BlockingApiException(e, ErrorCode.fromCode(e.getCode()));
         }
     }
-
-
-    @Override
-    public void checkBlockedChange(final UUID blockableId, final Type type, final InternalTenantContext context) throws BlockingApiException {
-        try {
-            if (type == Type.SUBSCRIPTION && getBlockedStateSubscriptionId(blockableId, context).isBlockChange()) {
-                throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION, ACTION_CHANGE, TYPE_SUBSCRIPTION, blockableId.toString());
-            } else if (type == Type.SUBSCRIPTION_BUNDLE && getBlockedStateBundleId(blockableId, context).isBlockChange()) {
-                throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION, ACTION_CHANGE, TYPE_BUNDLE, blockableId.toString());
-            } else if (type == Type.ACCOUNT && getBlockedStateAccountId(blockableId, context).isBlockChange()) {
-                throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION, ACTION_CHANGE, TYPE_ACCOUNT, blockableId.toString());
-
-            }
-        } catch (SubscriptionBaseApiException e) {
-            throw new BlockingApiException(e, ErrorCode.fromCode(e.getCode()));
-        }
-    }
-
-    @Override
-    public void checkBlockedEntitlement(final UUID blockableId, final Type type, final InternalTenantContext context) throws BlockingApiException {
-        try {
-            if (type == Type.SUBSCRIPTION && getBlockedStateSubscriptionId(blockableId, context).isBlockEntitlement()) {
-                throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION, ACTION_ENTITLEMENT, TYPE_SUBSCRIPTION, blockableId.toString());
-            } else if (type == Type.SUBSCRIPTION_BUNDLE && getBlockedStateBundleId(blockableId, context).isBlockEntitlement()) {
-                throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION, ACTION_ENTITLEMENT, TYPE_BUNDLE, blockableId.toString());
-            } else if (type == Type.ACCOUNT && getBlockedStateAccountId(blockableId, context).isBlockEntitlement()) {
-                throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION, ACTION_ENTITLEMENT, TYPE_ACCOUNT, blockableId.toString());
-            }
-        } catch (SubscriptionBaseApiException e) {
-            throw new BlockingApiException(e, ErrorCode.fromCode(e.getCode()));
-        }
-    }
-
-    @Override
-    public void checkBlockedBilling(final UUID blockableId, final Type type, final InternalTenantContext context) throws BlockingApiException {
-        try {
-            if (type == Type.SUBSCRIPTION && getBlockedStateSubscriptionId(blockableId, context).isBlockBilling()) {
-                throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION, ACTION_BILLING, TYPE_SUBSCRIPTION, blockableId.toString());
-            } else if (type == Type.SUBSCRIPTION_BUNDLE && getBlockedStateBundleId(blockableId, context).isBlockBilling()) {
-                throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION, ACTION_BILLING, TYPE_BUNDLE, blockableId.toString());
-            } else if (type == Type.ACCOUNT && getBlockedStateAccountId(blockableId, context).isBlockBilling()) {
-                throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION, ACTION_BILLING, TYPE_ACCOUNT, blockableId.toString());
-            }
-        } catch (SubscriptionBaseApiException e) {
-            throw new BlockingApiException(e, ErrorCode.fromCode(e.getCode()));
-        }
-    }
-
-
 }

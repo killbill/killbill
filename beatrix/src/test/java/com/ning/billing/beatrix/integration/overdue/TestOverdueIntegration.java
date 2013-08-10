@@ -481,7 +481,8 @@ public class TestOverdueIntegration extends TestOverdueBase {
 
         // Should still be in clear state - the invoice for the bundle has been paid, but not the invoice with the external charge
         // We refresh overdue just to be safe, see below
-        overdueUserApi.refreshOverdueStateFor(bundle, callContext);
+        // STEPH_ENT account level
+        //overdueUserApi.refreshOverdueStateFor(bundle, callContext);
         checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
 
         // Past 30 days since the external charge
@@ -489,7 +490,8 @@ public class TestOverdueIntegration extends TestOverdueBase {
         // Note! We need to explicitly refresh here because overdue won't get notified to refresh up until the next
         // payment (when the next invoice is generated)
         // TODO - we should fix this
-        overdueUserApi.refreshOverdueStateFor(bundle, callContext);
+        // STEPH_ENT account level
+        //overdueUserApi.refreshOverdueStateFor(bundle, callContext);
         // We should now be in OD1
         checkODState("OD1");
 

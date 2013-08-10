@@ -16,6 +16,7 @@
 
 package com.ning.billing.overdue.wrapper;
 
+import com.ning.billing.account.api.Account;
 import com.ning.billing.entitlement.api.Blockable;
 import com.ning.billing.overdue.OverdueApiException;
 import com.ning.billing.overdue.OverdueState;
@@ -29,19 +30,19 @@ import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
 
-public class OverdueWrapper<T extends Blockable> {
-    private final T overdueable;
+public class OverdueWrapper {
+    private final Account overdueable;
     private final BlockingInternalApi api;
     private final Clock clock;
-    private final OverdueStateSet<T> overdueStateSet;
-    private final BillingStateCalculator<T> billingStateCalcuator;
-    private final OverdueStateApplicator<T> overdueStateApplicator;
+    private final OverdueStateSet overdueStateSet;
+    private final BillingStateCalculator billingStateCalcuator;
+    private final OverdueStateApplicator overdueStateApplicator;
 
-    public OverdueWrapper(final T overdueable, final BlockingInternalApi api,
-                          final OverdueStateSet<T> overdueStateSet,
+    public OverdueWrapper(final Account overdueable, final BlockingInternalApi api,
+                          final OverdueStateSet overdueStateSet,
                           final Clock clock,
-                          final BillingStateCalculator<T> billingStateCalcuator,
-                          final OverdueStateApplicator<T> overdueStateApplicator) {
+                          final BillingStateCalculator billingStateCalcuator,
+                          final OverdueStateApplicator overdueStateApplicator) {
         this.overdueable = overdueable;
         this.overdueStateSet = overdueStateSet;
         this.api = api;
@@ -50,14 +51,14 @@ public class OverdueWrapper<T extends Blockable> {
         this.overdueStateApplicator = overdueStateApplicator;
     }
 
-    public OverdueState<T> refresh(final InternalCallContext context) throws OverdueException, OverdueApiException {
+    public OverdueState refresh(final InternalCallContext context) throws OverdueException, OverdueApiException {
         if (overdueStateSet.size() < 1) { // No configuration available
             return overdueStateSet.getClearState();
         }
 
-        final BillingState<T> billingState = billingState(context);
+        final BillingState billingState = billingState(context);
         final String previousOverdueStateName = api.getBlockingStateFor(overdueable, context).getStateName();
-        final OverdueState<T> nextOverdueState = overdueStateSet.calculateOverdueState(billingState, clock.getToday(billingState.getAccountTimeZone()));
+        final OverdueState nextOverdueState = overdueStateSet.calculateOverdueState(billingState, clock.getToday(billingState.getAccountTimeZone()));
 
         overdueStateApplicator.apply(overdueStateSet.getFirstState(), billingState, overdueable, previousOverdueStateName, nextOverdueState, context);
 
@@ -69,7 +70,7 @@ public class OverdueWrapper<T extends Blockable> {
         overdueStateApplicator.clear(overdueable, previousOverdueStateName, overdueStateSet.getClearState(), context);
     }
 
-    public BillingState<T> billingState(final InternalTenantContext context) throws OverdueException {
+    public BillingState billingState(final InternalTenantContext context) throws OverdueException {
         return billingStateCalcuator.calculateBillingState(overdueable, context);
     }
 }

@@ -27,6 +27,4 @@ public interface SubscriptionBaseBundle extends Blockable, Entity {
     public UUID getAccountId();
 
     public String getExternalKey();
-
-    public OverdueState<SubscriptionBaseBundle> getOverdueState();
 }

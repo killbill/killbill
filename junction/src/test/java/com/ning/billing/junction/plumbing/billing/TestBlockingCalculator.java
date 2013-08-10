@@ -26,7 +26,6 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.entitlement.dao.MockBlockingStateDao;
 import com.ning.billing.junction.JunctionTestSuiteNoDB;
 import com.ning.billing.entitlement.api.BlockingState;
-import com.ning.billing.entitlement.api.Type;
 import com.ning.billing.junction.plumbing.billing.BlockingCalculator.DisabledDuration;
 import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.subscription.api.SubscriptionBase;
@@ -113,8 +112,8 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         billingEvents.add(D);
 
         final List<BlockingState> blockingStates = new ArrayList<BlockingState>();
-        blockingStates.add(new DefaultBlockingState(UUID.randomUUID(), bundleId1, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now, null));
-        blockingStates.add(new DefaultBlockingState(UUID.randomUUID(), bundleId1, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now.plusDays(2), null));
+        blockingStates.add(new DefaultBlockingState(UUID.randomUUID(), bundleId1, DISABLED_BUNDLE, "test", true, true, true, now, null));
+        blockingStates.add(new DefaultBlockingState(UUID.randomUUID(), bundleId1, CLEAR_BUNDLE,  "test", false, false, false, now.plusDays(2), null));
 
         setBlockingStates(bundleId1, blockingStates);
 
@@ -646,8 +645,8 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
 
         //simple events open clear -> disabled
         blockingEvents = new ArrayList<BlockingState>();
-        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now, null));
-        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now.plusDays(1), null));
+        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, CLEAR_BUNDLE, "test", false, false, false, now, null));
+        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, DISABLED_BUNDLE, "test", true, true, true, now.plusDays(1), null));
 
         List<DisabledDuration> pairs = blockingCalculator.createBlockingDurations(blockingEvents);
         assertEquals(pairs.size(), 1);
@@ -657,9 +656,9 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
 
         //simple events closed clear -> disabled
         blockingEvents = new ArrayList<BlockingState>();
-        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now, null));
-        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now.plusDays(1), null));
-        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now.plusDays(2), null));
+        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, CLEAR_BUNDLE, "test", false, false, false, now, null));
+        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, DISABLED_BUNDLE, "test", true, true, true, now.plusDays(1), null));
+        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, CLEAR_BUNDLE, "test", false, false, false, now.plusDays(2), null));
 
         pairs = blockingCalculator.createBlockingDurations(blockingEvents);
         assertEquals(pairs.size(), 1);
@@ -670,9 +669,9 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
 
         //simple BUNDLE events closed clear -> disabled
         blockingEvents = new ArrayList<BlockingState>();
-        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now, null));
-        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now.plusDays(1), null));
-        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now.plusDays(2), null));
+        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, CLEAR_BUNDLE, "test", false, false, false, now, null));
+        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, DISABLED_BUNDLE, "test", true, true, true, now.plusDays(1), null));
+        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, CLEAR_BUNDLE, "test", false, false, false, now.plusDays(2), null));
 
         pairs = blockingCalculator.createBlockingDurations(blockingEvents);
         assertEquals(pairs.size(), 1);
@@ -683,10 +682,10 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
 
         //two or more disableds in a row
         blockingEvents = new ArrayList<BlockingState>();
-        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now, null));
-        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now.plusDays(1), null));
-        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now.plusDays(2), null));
-        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now.plusDays(3), null));
+        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, CLEAR_BUNDLE, "test", false, false, false, now, null));
+        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, DISABLED_BUNDLE, "test", true, true, true, now.plusDays(1), null));
+        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, DISABLED_BUNDLE, "test", true, true, true, now.plusDays(2), null));
+        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, CLEAR_BUNDLE, "test", false, false, false, now.plusDays(3), null));
 
         pairs = blockingCalculator.createBlockingDurations(blockingEvents);
         assertEquals(pairs.size(), 1);
@@ -696,11 +695,11 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         assertEquals(pairs.get(0).getEnd(), now.plusDays(3));
 
         blockingEvents = new ArrayList<BlockingState>();
-        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now, null));
-        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now.plusDays(1), null));
-        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now.plusDays(2), null));
-        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now.plusDays(3), null));
-        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now.plusDays(4), null));
+        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, CLEAR_BUNDLE, "test", false, false, false, now, null));
+        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, DISABLED_BUNDLE, "test", true, true, true, now.plusDays(1), null));
+        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, DISABLED_BUNDLE, "test", true, true, true, now.plusDays(2), null));
+        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, DISABLED_BUNDLE, "test", true, true, true, now.plusDays(3), null));
+        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, CLEAR_BUNDLE, "test", false, false, false, now.plusDays(4), null));
 
         pairs = blockingCalculator.createBlockingDurations(blockingEvents);
         assertEquals(pairs.size(), 1);
@@ -723,10 +722,10 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         billingEvents.add(upgrade);
 
         final List<BlockingState> blockingEvents = new ArrayList<BlockingState>();
-        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, false, false, new LocalDate(2012, 7, 5).toDateTimeAtStartOfDay(DateTimeZone.UTC), null));
-        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, new LocalDate(2012, 7, 15).toDateTimeAtStartOfDay(DateTimeZone.UTC), null));
-        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, new LocalDate(2012, 7, 25).toDateTimeAtStartOfDay(DateTimeZone.UTC), null));
-        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, new LocalDate(2012, 7, 25).toDateTimeAtStartOfDay(DateTimeZone.UTC), null));
+        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, DISABLED_BUNDLE, "test", true, false, false, new LocalDate(2012, 7, 5).toDateTimeAtStartOfDay(DateTimeZone.UTC), null));
+        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, DISABLED_BUNDLE, "test", true, true, true, new LocalDate(2012, 7, 15).toDateTimeAtStartOfDay(DateTimeZone.UTC), null));
+        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, DISABLED_BUNDLE, "test", true, true, true, new LocalDate(2012, 7, 25).toDateTimeAtStartOfDay(DateTimeZone.UTC), null));
+        blockingEvents.add(new DefaultBlockingState(UUID.randomUUID(), ovdId, CLEAR_BUNDLE, "test", false, false, false, new LocalDate(2012, 7, 25).toDateTimeAtStartOfDay(DateTimeZone.UTC), null));
 
         setBlockingStates(bundleId1, blockingEvents);
 

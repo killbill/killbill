@@ -106,12 +106,12 @@ public class TestOverdueHelper {
         this.blockingInternalApi = blockingInternalApi;
     }
 
-    public void checkStateApplied(final OverdueState<SubscriptionBaseBundle> state) {
+    public void checkStateApplied(final OverdueState state) {
         final BlockingState result = ((ApplicatorBlockingApi) blockingInternalApi).getBlockingState();
         checkStateApplied(result, state);
     }
 
-    public void checkStateApplied(final BlockingState result, final OverdueState<SubscriptionBaseBundle> state) {
+    public void checkStateApplied(final BlockingState result, final OverdueState state) {
         Assert.assertEquals(result.getStateName(), state.getName());
         Assert.assertEquals(result.isBlockChange(), state.blockChanges());
         Assert.assertEquals(result.isBlockEntitlement(), state.disableEntitlementAndChangesBlocked());

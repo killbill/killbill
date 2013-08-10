@@ -21,7 +21,6 @@ import java.util.UUID;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.entitlement.api.Type;
 import com.ning.billing.ovedue.notification.OverdueCheckNotificationKey;
 import com.ning.billing.util.jackson.ObjectMapper;
 
@@ -34,9 +33,7 @@ public class TestOverdueNotificationKeyJson {
     @Test(groups = "fast")
     public void testOverdueNotificationKeyJson() throws Exception {
         final UUID uuid = UUID.randomUUID();
-        final Type type = Type.SUBSCRIPTION;
-
-        final OverdueCheckNotificationKey e = new OverdueCheckNotificationKey(uuid, type);
+        final OverdueCheckNotificationKey e = new OverdueCheckNotificationKey(uuid);
 
         final String json = mapper.writeValueAsString(e);
 
@@ -53,6 +50,5 @@ public class TestOverdueNotificationKeyJson {
         final Class<?> claz = Class.forName(OverdueCheckNotificationKey.class.getName());
         final OverdueCheckNotificationKey obj = (OverdueCheckNotificationKey) mapper.readValue(json, claz);
         assertEquals(obj.getUuidKey().toString(), uuidString);
-        assertEquals(obj.getType(), Type.SUBSCRIPTION_BUNDLE);
     }
 }

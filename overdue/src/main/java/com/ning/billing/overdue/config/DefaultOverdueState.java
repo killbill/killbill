@@ -26,7 +26,6 @@ import org.joda.time.Period;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.TimeUnit;
-import com.ning.billing.entitlement.api.Blockable;
 import com.ning.billing.overdue.EmailNotification;
 import com.ning.billing.overdue.OverdueApiException;
 import com.ning.billing.overdue.OverdueCancellationPolicicy;
@@ -36,12 +35,12 @@ import com.ning.billing.util.config.catalog.ValidationError;
 import com.ning.billing.util.config.catalog.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class DefaultOverdueState<T extends Blockable> extends ValidatingConfig<OverdueConfig> implements OverdueState<T> {
+public class DefaultOverdueState extends ValidatingConfig<OverdueConfig> implements OverdueState {
 
     private static final int MAX_NAME_LENGTH = 50;
 
     @XmlElement(required = false, name = "condition")
-    private DefaultCondition<T> condition;
+    private DefaultCondition condition;
 
     @XmlAttribute(required = true, name = "name")
     @XmlID
@@ -109,41 +108,41 @@ public class DefaultOverdueState<T extends Blockable> extends ValidatingConfig<O
     }
 
     @Override
-    public DefaultCondition<T> getCondition() {
+    public DefaultCondition getCondition() {
         return condition;
     }
 
-    protected DefaultOverdueState<T> setName(final String name) {
+    protected DefaultOverdueState setName(final String name) {
         this.name = name;
         return this;
     }
 
-    protected DefaultOverdueState<T> setClearState(final boolean isClearState) {
+    protected DefaultOverdueState setClearState(final boolean isClearState) {
         this.isClearState = isClearState;
         return this;
     }
 
-    protected DefaultOverdueState<T> setExternalMessage(final String externalMessage) {
+    protected DefaultOverdueState setExternalMessage(final String externalMessage) {
         this.externalMessage = externalMessage;
         return this;
     }
 
-    protected DefaultOverdueState<T> setDisableEntitlement(final boolean cancel) {
+    protected DefaultOverdueState setDisableEntitlement(final boolean cancel) {
         this.disableEntitlement = cancel;
         return this;
     }
 
-    public DefaultOverdueState<T> setSubscriptionCancellationPolicy(final OverdueCancellationPolicicy policy) {
+    public DefaultOverdueState setSubscriptionCancellationPolicy(final OverdueCancellationPolicicy policy) {
         this.subscriptionCancellationPolicy = policy;
         return this;
     }
 
-    protected DefaultOverdueState<T> setBlockChanges(final boolean cancel) {
+    protected DefaultOverdueState setBlockChanges(final boolean cancel) {
         this.blockChanges = cancel;
         return this;
     }
 
-    protected DefaultOverdueState<T> setCondition(final DefaultCondition<T> condition) {
+    protected DefaultOverdueState setCondition(final DefaultCondition condition) {
         this.condition = condition;
         return this;
     }

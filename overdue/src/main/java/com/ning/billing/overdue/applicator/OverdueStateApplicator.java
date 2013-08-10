@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.joda.time.Period;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,12 +34,14 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.catalog.api.BillingActionPolicy;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.entitlement.api.Entitlement;
+import com.ning.billing.entitlement.api.EntitlementApi;
+import com.ning.billing.entitlement.api.EntitlementApiException;
 import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.entitlement.api.Blockable;
 import com.ning.billing.entitlement.api.BlockingApiException;
-import com.ning.billing.entitlement.api.Type;
 import com.ning.billing.ovedue.notification.OverdueCheckPoster;
 import com.ning.billing.overdue.OverdueApiException;
 import com.ning.billing.overdue.OverdueCancellationPolicicy;
@@ -75,18 +78,18 @@ public class OverdueStateApplicator<T extends Blockable> {
     private final OverdueCheckPoster poster;
     private final PersistentBus bus;
     private final AccountInternalApi accountApi;
-    private final SubscriptionBaseInternalApi subscriptionInternalApi;
+    private final EntitlementApi entitlementApi;
     private final OverdueEmailGenerator overdueEmailGenerator;
     final TagInternalApi tagApi;
     private final EmailSender emailSender;
 
     @Inject
-    public OverdueStateApplicator(final BlockingInternalApi accessApi, final AccountInternalApi accountApi, final SubscriptionBaseInternalApi subscriptionInternalApi,
+    public OverdueStateApplicator(final BlockingInternalApi accessApi, final AccountInternalApi accountApi, final EntitlementApi entitlementApi,
                                   final Clock clock, final OverdueCheckPoster poster, final OverdueEmailGenerator overdueEmailGenerator,
                                   final EmailConfig config, final PersistentBus bus, final TagInternalApi tagApi) {
         this.blockingApi = accessApi;
         this.accountApi = accountApi;
-        this.subscriptionInternalApi = subscriptionInternalApi;
+        this.entitlementApi = entitlementApi;
         this.clock = clock;
         this.poster = poster;
         this.overdueEmailGenerator = overdueEmailGenerator;
@@ -96,9 +99,9 @@ public class OverdueStateApplicator<T extends Blockable> {
     }
 
 
-    public void apply(final OverdueState<T> firstOverdueState, final BillingState<T> billingState,
-                      final T overdueable, final String previousOverdueStateName,
-                      final OverdueState<T> nextOverdueState, final InternalCallContext context) throws OverdueException {
+    public void apply(final OverdueState firstOverdueState, final BillingState billingState,
+                      final Account overdueable, final String previousOverdueStateName,
+                      final OverdueState nextOverdueState, final InternalCallContext context) throws OverdueException {
         try {
 
             if (isAccountTaggedWith_OVERDUE_ENFORCEMENT_OFF(context)) {
@@ -146,7 +149,7 @@ public class OverdueStateApplicator<T extends Blockable> {
         }
     }
 
-    public void clear(final T overdueable, final String previousOverdueStateName, final OverdueState<T> clearState, final InternalCallContext context) throws OverdueException {
+    public void clear(final Account overdueable, final String previousOverdueStateName, final OverdueState clearState, final InternalCallContext context) throws OverdueException {
 
         log.debug("OverdueStateApplicator:clear : time = " + clock.getUTCNow() + ", previousState = " + previousOverdueStateName);
 
@@ -161,16 +164,15 @@ public class OverdueStateApplicator<T extends Blockable> {
         }
     }
 
-    private OverdueChangeInternalEvent createOverdueEvent(final T overdueable, final String previousOverdueStateName, final String nextOverdueStateName, final InternalCallContext context) throws BlockingApiException {
-        return new DefaultOverdueChangeEvent(overdueable.getId(), Type.get(overdueable), previousOverdueStateName, nextOverdueStateName,
+    private OverdueChangeInternalEvent createOverdueEvent(final Account overdueable, final String previousOverdueStateName, final String nextOverdueStateName, final InternalCallContext context) throws BlockingApiException {
+        return new DefaultOverdueChangeEvent(overdueable.getId(),  previousOverdueStateName, nextOverdueStateName,
                                              context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
     }
 
-    protected void storeNewState(final T blockable, final OverdueState<T> nextOverdueState, final InternalCallContext context) throws OverdueException {
+    protected void storeNewState(final Account blockable, final OverdueState nextOverdueState, final InternalCallContext context) throws OverdueException {
         try {
             blockingApi.setBlockingState(new DefaultBlockingState(blockable.getId(),
                                                                   nextOverdueState.getName(),
-                                                                  Type.get(blockable),
                                                                   OverdueService.OVERDUE_SERVICE_NAME,
                                                                   blockChanges(nextOverdueState),
                                                                   blockEntitlement(nextOverdueState),
@@ -181,28 +183,28 @@ public class OverdueStateApplicator<T extends Blockable> {
         }
     }
 
-    private boolean blockChanges(final OverdueState<T> nextOverdueState) {
+    private boolean blockChanges(final OverdueState nextOverdueState) {
         return nextOverdueState.blockChanges();
     }
 
-    private boolean blockBilling(final OverdueState<T> nextOverdueState) {
+    private boolean blockBilling(final OverdueState nextOverdueState) {
         return nextOverdueState.disableEntitlementAndChangesBlocked();
     }
 
-    private boolean blockEntitlement(final OverdueState<T> nextOverdueState) {
+    private boolean blockEntitlement(final OverdueState nextOverdueState) {
         return nextOverdueState.disableEntitlementAndChangesBlocked();
     }
 
-    protected void createFutureNotification(final T overdueable, final DateTime timeOfNextCheck, final InternalCallContext context) {
+    protected void createFutureNotification(final Account overdueable, final DateTime timeOfNextCheck, final InternalCallContext context) {
         poster.insertOverdueCheckNotification(overdueable, timeOfNextCheck, context);
     }
 
-    protected void clearFutureNotification(final T blockable, final InternalCallContext context) {
+    protected void clearFutureNotification(final Account blockable, final InternalCallContext context) {
         // Need to clear the override table here too (when we add it)
         poster.clearNotificationsFor(blockable, context);
     }
 
-    private void cancelSubscriptionsIfRequired(final T blockable, final OverdueState<T> nextOverdueState, final InternalCallContext context) throws OverdueException {
+    private void cancelSubscriptionsIfRequired(final Account account, final OverdueState nextOverdueState, final InternalCallContext context) throws OverdueException {
         if (nextOverdueState.getSubscriptionCancellationPolicy() == OverdueCancellationPolicicy.NONE) {
             return;
         }
@@ -218,69 +220,29 @@ public class OverdueStateApplicator<T extends Blockable> {
                 default:
                     throw new IllegalStateException("Unexpected OverdueCancellationPolicy " + nextOverdueState.getSubscriptionCancellationPolicy());
             }
-            final List<SubscriptionBase> toBeCancelled = new LinkedList<SubscriptionBase>();
-            computeSubscriptionsToCancel(blockable, toBeCancelled, context);
-            for (final SubscriptionBase cur : toBeCancelled) {
-                // STEPH Need conversion toCallContext because we are calling a public API through the SubscriptionBase object
-                cur.cancelWithPolicy(clock.getUTCNow(), actionPolicy, context.toCallContext());
+            final List<Entitlement> toBeCancelled = new LinkedList<Entitlement>();
+            computeEntitlementsToCancel(account, toBeCancelled, context);
+            for (final Entitlement cur : toBeCancelled) {
+                cur.cancelEntitlementWithDateOverrideBillingPolicy(new LocalDate(clock.getUTCNow(), account.getTimeZone()), actionPolicy, context.toCallContext());
             }
-        } catch (SubscriptionBaseApiException e) {
+        } catch (EntitlementApiException e) {
             throw new OverdueException(e);
         }
     }
 
     @SuppressWarnings("unchecked")
-    private void computeSubscriptionsToCancel(final T blockable, final List<SubscriptionBase> result, final InternalTenantContext context) throws SubscriptionBaseApiException {
-        if (blockable instanceof SubscriptionBase) {
-            result.add((SubscriptionBase) blockable);
-        } else if (blockable instanceof SubscriptionBaseBundle) {
-            for (final SubscriptionBase cur : subscriptionInternalApi.getSubscriptionsForBundle(blockable.getId(), context)) {
-                // Entitlement is smart enough and will cancel the associated add-ons
-                if (!ProductCategory.ADD_ON.equals(cur.getCategory())) {
-                    computeSubscriptionsToCancel((T) cur, result, context);
-                }
-            }
-        } else if (blockable instanceof Account) {
-            for (final SubscriptionBaseBundle cur : subscriptionInternalApi.getBundlesForAccount(blockable.getId(), context)) {
-                computeSubscriptionsToCancel((T) cur, result, context);
-            }
-        }
+    private void computeEntitlementsToCancel(final Account blockable, final List<Entitlement> result, final InternalTenantContext context) throws EntitlementApiException {
+        result.addAll(entitlementApi.getAllEntitlementsForAccountId(blockable.getId(), context.toTenantContext()));
     }
 
-    private void sendEmailIfRequired(final BillingState<T> billingState, final T overdueable,
-                                     final OverdueState<T> nextOverdueState, final InternalTenantContext context) {
+    private void sendEmailIfRequired(final BillingState billingState, final Account account,
+                                     final OverdueState nextOverdueState, final InternalTenantContext context) {
         // Note: we don't want to fail the full refresh call because sending the email failed.
         // That's the reason why we catch all exceptions here.
         // The alternative would be to: throw new OverdueApiException(e, ErrorCode.EMAIL_SENDING_FAILED);
 
         // If sending is not configured, skip
         if (nextOverdueState.getEnterStateEmailNotification() == null) {
-            return;
-        }
-
-        // Retrieve the account
-        final Account account;
-        final Type overdueableType = Type.get(overdueable);
-        try {
-            if (Type.SUBSCRIPTION.equals(overdueableType)) {
-                final UUID bundleId = ((SubscriptionBase) overdueable).getBundleId();
-                final SubscriptionBaseBundle bundle = subscriptionInternalApi.getBundleFromId(bundleId, context);
-                account = accountApi.getAccountById(bundle.getAccountId(), context);
-            } else if (Type.SUBSCRIPTION_BUNDLE.equals(overdueableType)) {
-                final UUID bundleId = ((SubscriptionBaseBundle) overdueable).getId();
-                final SubscriptionBaseBundle bundle = subscriptionInternalApi.getBundleFromId(bundleId, context);
-                account = accountApi.getAccountById(bundle.getAccountId(), context);
-            } else if (Type.ACCOUNT.equals(overdueableType)) {
-                account = (Account) overdueable;
-            } else {
-                log.warn("Unable to retrieve account for overdueable {} (type {})", overdueable.getId(), overdueableType);
-                return;
-            }
-        } catch (SubscriptionBaseApiException e) {
-            log.warn(String.format("Unable to retrieve account for overdueable %s (type %s)", overdueable.getId(), overdueableType), e);
-            return;
-        } catch (AccountApiException e) {
-            log.warn(String.format("Unable to retrieve account for overdueable %s (type %s)", overdueable.getId(), overdueableType), e);
             return;
         }
 
@@ -291,18 +253,18 @@ public class OverdueStateApplicator<T extends Blockable> {
 
         try {
             // Generate and send the email
-            final String emailBody = overdueEmailGenerator.generateEmail(account, billingState, overdueable, nextOverdueState);
+            final String emailBody = overdueEmailGenerator.generateEmail(account, billingState, account, nextOverdueState);
             if (nextOverdueState.getEnterStateEmailNotification().isHTML()) {
                 emailSender.sendHTMLEmail(to, cc, subject, emailBody);
             } else {
                 emailSender.sendPlainTextEmail(to, cc, subject, emailBody);
             }
         } catch (IOException e) {
-            log.warn(String.format("Unable to generate or send overdue notification email for account %s and overdueable %s", account.getId(), overdueable.getId()), e);
+            log.warn(String.format("Unable to generate or send overdue notification email for account %s and overdueable %s", account.getId(), account.getId()), e);
         } catch (EmailApiException e) {
-            log.warn(String.format("Unable to send overdue notification email for account %s and overdueable %s", account.getId(), overdueable.getId()), e);
+            log.warn(String.format("Unable to send overdue notification email for account %s and overdueable %s", account.getId(), account.getId()), e);
         } catch (MustacheException e) {
-            log.warn(String.format("Unable to generate overdue notification email for account %s and overdueable %s", account.getId(), overdueable.getId()), e);
+            log.warn(String.format("Unable to generate overdue notification email for account %s and overdueable %s", account.getId(), account.getId()), e);
         }
     }
 

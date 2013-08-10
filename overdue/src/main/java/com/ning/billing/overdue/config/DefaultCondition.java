@@ -28,7 +28,6 @@ import org.joda.time.LocalDate;
 
 import com.ning.billing.catalog.api.Duration;
 import com.ning.billing.catalog.api.TimeUnit;
-import com.ning.billing.entitlement.api.Blockable;
 import com.ning.billing.overdue.Condition;
 import com.ning.billing.overdue.config.api.BillingState;
 import com.ning.billing.overdue.config.api.PaymentResponse;
@@ -39,7 +38,7 @@ import com.ning.billing.util.tag.Tag;
 
 @XmlAccessorType(XmlAccessType.NONE)
 
-public class DefaultCondition<T extends Blockable> extends ValidatingConfig<OverdueConfig> implements Condition<T> {
+public class DefaultCondition extends ValidatingConfig<OverdueConfig> implements Condition {
 
     @XmlElement(required = false, name = "numberOfUnpaidInvoicesEqualsOrExceeds")
     private Integer numberOfUnpaidInvoicesEqualsOrExceeds;
@@ -58,7 +57,7 @@ public class DefaultCondition<T extends Blockable> extends ValidatingConfig<Over
     private ControlTagType controlTag;
 
     @Override
-    public boolean evaluate(final BillingState<T> state, final LocalDate date) {
+    public boolean evaluate(final BillingState state, final LocalDate date) {
         LocalDate unpaidInvoiceTriggerDate = null;
         if (timeSinceEarliestUnpaidInvoiceEqualsOrExceeds != null && state.getDateOfEarliestUnpaidInvoice() != null) {  // no date => no unpaid invoices
             unpaidInvoiceTriggerDate = state.getDateOfEarliestUnpaidInvoice().plus(timeSinceEarliestUnpaidInvoiceEqualsOrExceeds.toJodaPeriod());

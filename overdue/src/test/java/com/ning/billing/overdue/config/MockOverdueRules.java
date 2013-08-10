@@ -24,8 +24,8 @@ public class MockOverdueRules extends OverdueConfig {
 
     @SuppressWarnings("unchecked")
     public MockOverdueRules() {
-        final OverdueStatesBundle bundleODS = new OverdueStatesBundle();
-        bundleODS.setBundleOverdueStates(new DefaultOverdueState[]{new DefaultOverdueState<SubscriptionBaseBundle>().setName(CLEAR_STATE)});
+        final OverdueStatesAccount bundleODS = new OverdueStatesAccount();
+        bundleODS.setBundleOverdueStates(new DefaultOverdueState[]{new DefaultOverdueState().setName(CLEAR_STATE)});
         setOverdueStatesBundle(bundleODS);
 
     }

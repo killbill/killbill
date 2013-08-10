@@ -18,7 +18,6 @@ package com.ning.billing.entitlement.block;
 
 import com.ning.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
 import com.ning.billing.entitlement.api.BlockingState;
-import com.ning.billing.entitlement.api.Type;
 import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.tweak.HandleCallback;
@@ -54,7 +53,7 @@ public class TestDefaultBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
             }
         });
 
-        final BlockingState blockingState = new DefaultBlockingState(UUID.randomUUID(), bundleId, "BLOCKED", Type.SUBSCRIPTION_BUNDLE, "myService", true, true, true, internalCallContext.getCreatedDate(), null);
+        final BlockingState blockingState = new DefaultBlockingState(UUID.randomUUID(), bundleId, "BLOCKED", "myService", true, true, true, internalCallContext.getCreatedDate(), null);
         blockingInternalApi.setBlockingState(blockingState, internalCallContext);
 
         // Verify the blocking state was applied
