@@ -22,7 +22,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.subscription.exceptions.SubscriptionError;
+import com.ning.billing.subscription.exceptions.SubscriptionBaseError;
 
 public class SubscriptionBuilder {
     private UUID id;
@@ -40,7 +40,7 @@ public class SubscriptionBuilder {
         this.activeVersion = SubscriptionEvents.INITIAL_VERSION;
     }
 
-    public SubscriptionBuilder(final SubscriptionData original) {
+    public SubscriptionBuilder(final DefaultSubscriptionBase original) {
         this.id = original.getId();
         this.bundleId = original.getBundleId();
         this.alignStartDate = original.getAlignStartDate();
@@ -146,11 +146,11 @@ public class SubscriptionBuilder {
             try {
                 final Object value = cur.get(this);
                 if (value == null) {
-                    throw new SubscriptionError(String.format("Field %s has not been set for SubscriptionBase",
+                    throw new SubscriptionBaseError(String.format("Field %s has not been set for SubscriptionBase",
                                                              cur.getName()));
                 }
             } catch (IllegalAccessException e) {
-                throw new SubscriptionError(String.format("Failed to access value for field %s for SubscriptionBase",
+                throw new SubscriptionBaseError(String.format("Failed to access value for field %s for SubscriptionBase",
                                                          cur.getName()), e);
             }
         }

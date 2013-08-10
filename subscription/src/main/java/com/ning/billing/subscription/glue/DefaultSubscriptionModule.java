@@ -22,20 +22,20 @@ import org.skife.config.ConfigurationObjectFactory;
 import com.ning.billing.glue.SubscriptionModule;
 import com.ning.billing.subscription.alignment.MigrationPlanAligner;
 import com.ning.billing.subscription.alignment.PlanAligner;
-import com.ning.billing.subscription.api.SubscriptionApiService;
-import com.ning.billing.subscription.api.SubscriptionService;
-import com.ning.billing.subscription.api.migration.DefaultSubscriptionMigrationApi;
-import com.ning.billing.subscription.api.migration.SubscriptionMigrationApi;
+import com.ning.billing.subscription.api.SubscriptionBaseApiService;
+import com.ning.billing.subscription.api.SubscriptionBaseService;
+import com.ning.billing.subscription.api.migration.DefaultSubscriptionBaseMigrationApi;
+import com.ning.billing.subscription.api.migration.SubscriptionBaseMigrationApi;
 import com.ning.billing.subscription.api.svcs.DefaultSubscriptionInternalApi;
-import com.ning.billing.subscription.api.timeline.DefaultSubscriptionTimelineApi;
+import com.ning.billing.subscription.api.timeline.DefaultSubscriptionBaseTimelineApi;
 import com.ning.billing.subscription.api.timeline.RepairSubscriptionApiService;
 import com.ning.billing.subscription.api.timeline.RepairSubscriptionLifecycleDao;
-import com.ning.billing.subscription.api.timeline.SubscriptionTimelineApi;
-import com.ning.billing.subscription.api.transfer.DefaultSubscriptionTransferApi;
-import com.ning.billing.subscription.api.transfer.SubscriptionTransferApi;
-import com.ning.billing.subscription.api.user.DefaultSubscriptionApiService;
+import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimelineApi;
+import com.ning.billing.subscription.api.transfer.DefaultSubscriptionBaseTransferApi;
+import com.ning.billing.subscription.api.transfer.SubscriptionBaseTransferApi;
+import com.ning.billing.subscription.api.user.DefaultSubscriptionBaseApiService;
 import com.ning.billing.subscription.engine.addon.AddonUtils;
-import com.ning.billing.subscription.engine.core.DefaultSubscriptionService;
+import com.ning.billing.subscription.engine.core.DefaultSubscriptionBaseService;
 import com.ning.billing.subscription.engine.dao.DefaultSubscriptionDao;
 import com.ning.billing.subscription.engine.dao.RepairSubscriptionDao;
 import com.ning.billing.subscription.engine.dao.SubscriptionDao;
@@ -69,10 +69,10 @@ public class DefaultSubscriptionModule extends AbstractModule implements Subscri
 
     protected void installSubscriptionCore() {
 
-        bind(SubscriptionApiService.class).annotatedWith(Names.named(REPAIR_NAMED)).to(RepairSubscriptionApiService.class).asEagerSingleton();
-        bind(SubscriptionApiService.class).to(DefaultSubscriptionApiService.class).asEagerSingleton();
+        bind(SubscriptionBaseApiService.class).annotatedWith(Names.named(REPAIR_NAMED)).to(RepairSubscriptionApiService.class).asEagerSingleton();
+        bind(SubscriptionBaseApiService.class).to(DefaultSubscriptionBaseApiService.class).asEagerSingleton();
 
-        bind(DefaultSubscriptionService.class).asEagerSingleton();
+        bind(DefaultSubscriptionBaseService.class).asEagerSingleton();
         bind(PlanAligner.class).asEagerSingleton();
         bind(AddonUtils.class).asEagerSingleton();
         bind(MigrationPlanAligner.class).asEagerSingleton();
@@ -93,17 +93,17 @@ public class DefaultSubscriptionModule extends AbstractModule implements Subscri
 
     @Override
     public void installSubscriptionService() {
-        bind(SubscriptionService.class).to(DefaultSubscriptionService.class).asEagerSingleton();
+        bind(SubscriptionBaseService.class).to(DefaultSubscriptionBaseService.class).asEagerSingleton();
     }
 
     @Override
     public void installSubscriptionTimelineApi() {
-        bind(SubscriptionTimelineApi.class).to(DefaultSubscriptionTimelineApi.class).asEagerSingleton();
+        bind(SubscriptionBaseTimelineApi.class).to(DefaultSubscriptionBaseTimelineApi.class).asEagerSingleton();
     }
 
     @Override
     public void installSubscriptionMigrationApi() {
-        bind(SubscriptionMigrationApi.class).to(DefaultSubscriptionMigrationApi.class).asEagerSingleton();
+        bind(SubscriptionBaseMigrationApi.class).to(DefaultSubscriptionBaseMigrationApi.class).asEagerSingleton();
     }
 
 
@@ -114,6 +114,6 @@ public class DefaultSubscriptionModule extends AbstractModule implements Subscri
 
     @Override
     public void installSubscriptionTransferApi() {
-        bind(SubscriptionTransferApi.class).to(DefaultSubscriptionTransferApi.class).asEagerSingleton();
+        bind(SubscriptionBaseTransferApi.class).to(DefaultSubscriptionBaseTransferApi.class).asEagerSingleton();
     }
 }

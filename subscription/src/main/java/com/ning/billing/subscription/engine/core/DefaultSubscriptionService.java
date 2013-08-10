@@ -28,7 +28,7 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.subscription.alignment.PlanAligner;
 import com.ning.billing.subscription.alignment.TimedPhase;
 import com.ning.billing.subscription.api.SubscriptionApiService;
-import com.ning.billing.subscription.api.SubscriptionService;
+import com.ning.billing.subscription.api.SubscriptionBaseService;
 import com.ning.billing.subscription.api.user.DefaultEffectiveSubscriptionEvent;
 import com.ning.billing.subscription.api.user.SubscriptionData;
 import com.ning.billing.subscription.api.user.SubscriptionBaseTransitionData;
@@ -57,7 +57,7 @@ import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 
 import com.google.inject.Inject;
 
-public class DefaultSubscriptionService implements EventListener, SubscriptionService {
+public class DefaultSubscriptionService implements EventListener, SubscriptionBaseService {
 
     public static final String NOTIFICATION_QUEUE_NAME = "subscription-events";
     public static final String SUBSCRIPTION_SERVICE_NAME = "subscription-service";

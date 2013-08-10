@@ -21,9 +21,9 @@ import org.joda.time.DateTime;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.subscription.alignment.PlanAligner;
-import com.ning.billing.subscription.api.SubscriptionApiService;
-import com.ning.billing.subscription.api.user.DefaultSubscriptionApiService;
-import com.ning.billing.subscription.api.user.SubscriptionData;
+import com.ning.billing.subscription.api.SubscriptionBaseApiService;
+import com.ning.billing.subscription.api.user.DefaultSubscriptionBase;
+import com.ning.billing.subscription.api.user.DefaultSubscriptionBaseApiService;
 import com.ning.billing.subscription.engine.addon.AddonUtils;
 import com.ning.billing.subscription.engine.dao.SubscriptionDao;
 import com.ning.billing.subscription.glue.DefaultSubscriptionModule;
@@ -33,7 +33,7 @@ import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
-public class RepairSubscriptionApiService extends DefaultSubscriptionApiService implements SubscriptionApiService {
+public class RepairSubscriptionApiService extends DefaultSubscriptionBaseApiService implements SubscriptionBaseApiService {
 
     @Inject
     public RepairSubscriptionApiService(final Clock clock,
@@ -47,7 +47,7 @@ public class RepairSubscriptionApiService extends DefaultSubscriptionApiService 
 
     // Nothing to do for repair as we pass all the repair events in the stream
     @Override
-    public int cancelAddOnsIfRequired(final SubscriptionData baseSubscription, final DateTime effectiveDate, final InternalCallContext context) {
+    public int cancelAddOnsIfRequired(final DefaultSubscriptionBase baseSubscription, final DateTime effectiveDate, final InternalCallContext context) {
         return 0;
     }
 }

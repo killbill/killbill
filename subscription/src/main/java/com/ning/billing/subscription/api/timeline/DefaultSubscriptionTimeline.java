@@ -40,7 +40,7 @@ import com.ning.billing.subscription.events.user.ApiEvent;
 import com.ning.billing.subscription.events.user.ApiEventType;
 
 
-public class DefaultSubscriptionTimeline implements SubscriptionTimeline {
+public class DefaultSubscriptionTimeline implements SubscriptionBaseTimeline {
 
     private final UUID id;
     private final List<ExistingEvent> existingEvents;
@@ -51,21 +51,21 @@ public class DefaultSubscriptionTimeline implements SubscriptionTimeline {
     public DefaultSubscriptionTimeline(final UUID id, final long activeVersion) {
         this.id = id;
         this.activeVersion = activeVersion;
-        this.existingEvents = Collections.<SubscriptionTimeline.ExistingEvent>emptyList();
-        this.deletedEvents = Collections.<SubscriptionTimeline.DeletedEvent>emptyList();
-        this.newEvents = Collections.<SubscriptionTimeline.NewEvent>emptyList();
+        this.existingEvents = Collections.<SubscriptionBaseTimeline.ExistingEvent>emptyList();
+        this.deletedEvents = Collections.<SubscriptionBaseTimeline.DeletedEvent>emptyList();
+        this.newEvents = Collections.<SubscriptionBaseTimeline.NewEvent>emptyList();
     }
 
-    public DefaultSubscriptionTimeline(final SubscriptionTimeline input) {
+    public DefaultSubscriptionTimeline(final SubscriptionBaseTimeline input) {
         this.id = input.getId();
         this.activeVersion = input.getActiveVersion();
-        this.existingEvents = (input.getExistingEvents() != null) ? new ArrayList<SubscriptionTimeline.ExistingEvent>(input.getExistingEvents()) :
-                              Collections.<SubscriptionTimeline.ExistingEvent>emptyList();
+        this.existingEvents = (input.getExistingEvents() != null) ? new ArrayList<SubscriptionBaseTimeline.ExistingEvent>(input.getExistingEvents()) :
+                              Collections.<SubscriptionBaseTimeline.ExistingEvent>emptyList();
         sortExistingEvent(this.existingEvents);
-        this.deletedEvents = (input.getDeletedEvents() != null) ? new ArrayList<SubscriptionTimeline.DeletedEvent>(input.getDeletedEvents()) :
-                             Collections.<SubscriptionTimeline.DeletedEvent>emptyList();
-        this.newEvents = (input.getNewEvents() != null) ? new ArrayList<SubscriptionTimeline.NewEvent>(input.getNewEvents()) :
-                         Collections.<SubscriptionTimeline.NewEvent>emptyList();
+        this.deletedEvents = (input.getDeletedEvents() != null) ? new ArrayList<SubscriptionBaseTimeline.DeletedEvent>(input.getDeletedEvents()) :
+                             Collections.<SubscriptionBaseTimeline.DeletedEvent>emptyList();
+        this.newEvents = (input.getNewEvents() != null) ? new ArrayList<SubscriptionBaseTimeline.NewEvent>(input.getNewEvents()) :
+                         Collections.<SubscriptionBaseTimeline.NewEvent>emptyList();
         sortNewEvent(this.newEvents);
     }
 
@@ -81,7 +81,7 @@ public class DefaultSubscriptionTimeline implements SubscriptionTimeline {
     private List<ExistingEvent> toExistingEvents(final Catalog catalog, final long activeVersion, final ProductCategory category, final List<SubscriptionEvent> events)
             throws CatalogApiException {
 
-        final List<ExistingEvent> result = new LinkedList<SubscriptionTimeline.ExistingEvent>();
+        final List<ExistingEvent> result = new LinkedList<SubscriptionBaseTimeline.ExistingEvent>();
 
         String prevProductName = null;
         BillingPeriod prevBillingPeriod = null;

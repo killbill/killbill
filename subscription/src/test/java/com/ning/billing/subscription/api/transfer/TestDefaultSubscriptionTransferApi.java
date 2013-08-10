@@ -34,27 +34,27 @@ import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.subscription.SubscriptionTestSuiteNoDB;
-import com.ning.billing.subscription.api.SubscriptionApiService;
+import com.ning.billing.subscription.api.SubscriptionBaseApiService;
 import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
+import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimelineApi;
+import com.ning.billing.subscription.api.user.DefaultSubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBuilder;
-import com.ning.billing.subscription.api.user.SubscriptionData;
 import com.ning.billing.subscription.engine.dao.SubscriptionDao;
 import com.ning.billing.subscription.events.SubscriptionEvent;
 import com.ning.billing.subscription.events.SubscriptionEvent.EventType;
 import com.ning.billing.subscription.events.user.ApiEventTransfer;
 import com.ning.billing.subscription.events.user.ApiEventType;
-import com.ning.billing.subscription.api.timeline.SubscriptionTimeline.ExistingEvent;
-import com.ning.billing.subscription.api.timeline.SubscriptionTimelineApi;
+import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline.ExistingEvent;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.dao.NonEntityDao;
 
 import com.google.common.collect.ImmutableList;
 
-// Simple unit tests for DefaultSubscriptionTransferApi, see TestTransfer for more advanced tests with dao
+// Simple unit tests for DefaultSubscriptionBaseTransferApi, see TestTransfer for more advanced tests with dao
 public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoDB {
 
-    private DefaultSubscriptionTransferApi transferApi;
+    private DefaultSubscriptionBaseTransferApi transferApi;
 
     @Override
     @BeforeMethod(groups = "fast")
@@ -63,10 +63,10 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
         final NonEntityDao nonEntityDao = Mockito.mock(NonEntityDao.class);
         final SubscriptionDao dao = Mockito.mock(SubscriptionDao.class);
         final CatalogService catalogService = new MockCatalogService(new MockCatalog());
-        final SubscriptionApiService apiService = Mockito.mock(SubscriptionApiService.class);
-        final SubscriptionTimelineApi timelineApi = Mockito.mock(SubscriptionTimelineApi.class);
+        final SubscriptionBaseApiService apiService = Mockito.mock(SubscriptionBaseApiService.class);
+        final SubscriptionBaseTimelineApi timelineApi = Mockito.mock(SubscriptionBaseTimelineApi.class);
         final InternalCallContextFactory internalCallContextFactory = new InternalCallContextFactory(clock, nonEntityDao, new CacheControllerDispatcher());
-        transferApi = new DefaultSubscriptionTransferApi(clock, dao, timelineApi, catalogService, apiService, internalCallContextFactory);
+        transferApi = new DefaultSubscriptionBaseTransferApi(clock, dao, timelineApi, catalogService, apiService, internalCallContextFactory);
     }
 
     @Test(groups = "fast")
@@ -76,7 +76,7 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
         final ImmutableList<ExistingEvent> existingEvents = ImmutableList.<ExistingEvent>of(createEvent(subscriptionStartTime, SubscriptionBaseTransitionType.CREATE),
                                                                                             createEvent(subscriptionCancelTime, SubscriptionBaseTransitionType.CANCEL));
         final SubscriptionBuilder subscriptionBuilder = new SubscriptionBuilder();
-        final SubscriptionData subscription = new SubscriptionData(subscriptionBuilder);
+        final DefaultSubscriptionBase subscription = new DefaultSubscriptionBase(subscriptionBuilder);
 
         final DateTime transferDate = subscriptionStartTime.plusDays(10);
         final List<SubscriptionEvent> events = transferApi.toEvents(existingEvents, subscription, transferDate, callContext);
@@ -91,7 +91,7 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
         final ImmutableList<ExistingEvent> existingEvents = ImmutableList.<ExistingEvent>of(createEvent(subscriptionStartTime, SubscriptionBaseTransitionType.CREATE),
                                                                                             createEvent(subscriptionCancelTime, SubscriptionBaseTransitionType.CANCEL));
         final SubscriptionBuilder subscriptionBuilder = new SubscriptionBuilder();
-        final SubscriptionData subscription = new SubscriptionData(subscriptionBuilder);
+        final DefaultSubscriptionBase subscription = new DefaultSubscriptionBase(subscriptionBuilder);
 
         final DateTime transferDate = subscriptionStartTime.plusHours(1);
         final List<SubscriptionEvent> events = transferApi.toEvents(existingEvents, subscription, transferDate, callContext);
@@ -159,10 +159,10 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
     }
 
     private List<SubscriptionEvent> transferBundle(final DateTime migrateSubscriptionEventEffectiveDate, final DateTime migrateBillingEventEffectiveDate,
-                                                  final DateTime transferDate) throws SubscriptionTransferApiException {
+                                                  final DateTime transferDate) throws SubscriptionBaseTransferApiException {
         final ImmutableList<ExistingEvent> existingEvents = createMigrateEvents(migrateSubscriptionEventEffectiveDate, migrateBillingEventEffectiveDate);
         final SubscriptionBuilder subscriptionBuilder = new SubscriptionBuilder();
-        final SubscriptionData subscription = new SubscriptionData(subscriptionBuilder);
+        final DefaultSubscriptionBase subscription = new DefaultSubscriptionBase(subscriptionBuilder);
 
         return transferApi.toEvents(existingEvents, subscription, transferDate, callContext);
     }

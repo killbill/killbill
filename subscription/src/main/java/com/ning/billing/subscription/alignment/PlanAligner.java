@@ -40,8 +40,8 @@ import com.ning.billing.catalog.api.PlanSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.subscription.api.user.SubscriptionBaseTransitionData;
-import com.ning.billing.subscription.api.user.SubscriptionData;
-import com.ning.billing.subscription.exceptions.SubscriptionError;
+import com.ning.billing.subscription.api.user.DefaultSubscriptionBase;
+import com.ning.billing.subscription.exceptions.SubscriptionBaseError;
 
 /**
  * PlanAligner offers specific APIs to return the correct {@code TimedPhase} when creating, changing Plan or to compute
@@ -74,7 +74,7 @@ public class PlanAligner extends BaseAligner {
      * @throws CatalogApiException         for catalog errors
      * @throws com.ning.billing.subscription.api.user.SubscriptionBaseApiException for subscription errors
      */
-    public TimedPhase[] getCurrentAndNextTimedPhaseOnCreate(final SubscriptionData subscription,
+    public TimedPhase[] getCurrentAndNextTimedPhaseOnCreate(final DefaultSubscriptionBase subscription,
                                                             final Plan plan,
                                                             final PhaseType initialPhase,
                                                             final String priceList,
@@ -105,7 +105,7 @@ public class PlanAligner extends BaseAligner {
      * @throws CatalogApiException         for catalog errors
      * @throws com.ning.billing.subscription.api.user.SubscriptionBaseApiException for subscription errors
      */
-    public TimedPhase getCurrentTimedPhaseOnChange(final SubscriptionData subscription,
+    public TimedPhase getCurrentTimedPhaseOnChange(final DefaultSubscriptionBase subscription,
                                                    final Plan plan,
                                                    final String priceList,
                                                    final DateTime requestedDate,
@@ -126,7 +126,7 @@ public class PlanAligner extends BaseAligner {
      * @throws CatalogApiException         for catalog errors
      * @throws com.ning.billing.subscription.api.user.SubscriptionBaseApiException for subscription errors
      */
-    public TimedPhase getNextTimedPhaseOnChange(final SubscriptionData subscription,
+    public TimedPhase getNextTimedPhaseOnChange(final DefaultSubscriptionBase subscription,
                                                 final Plan plan,
                                                 final String priceList,
                                                 final DateTime requestedDate,
@@ -142,11 +142,11 @@ public class PlanAligner extends BaseAligner {
      * @param effectiveDate the date at which we look to compute that event. effective needs to be after last Plan change or initial Plan
      * @return the next phase
      */
-    public TimedPhase getNextTimedPhase(final SubscriptionData subscription, final DateTime requestedDate, final DateTime effectiveDate) {
+    public TimedPhase getNextTimedPhase(final DefaultSubscriptionBase subscription, final DateTime requestedDate, final DateTime effectiveDate) {
         try {
             final SubscriptionBaseTransitionData lastPlanTransition = subscription.getInitialTransitionForCurrentPlan();
             if (effectiveDate.isBefore(lastPlanTransition.getEffectiveTransitionTime())) {
-                throw new SubscriptionError(String.format("Cannot specify an effectiveDate prior to last Plan Change, subscription = %s, effectiveDate = %s",
+                throw new SubscriptionBaseError(String.format("Cannot specify an effectiveDate prior to last Plan Change, subscription = %s, effectiveDate = %s",
                                                          subscription.getId(), effectiveDate));
             }
 
@@ -176,11 +176,11 @@ public class PlanAligner extends BaseAligner {
                                                  effectiveDate,
                                                  WhichPhase.NEXT);
                 default:
-                    throw new SubscriptionError(String.format("Unexpected initial transition %s for current plan %s on subscription %s",
+                    throw new SubscriptionBaseError(String.format("Unexpected initial transition %s for current plan %s on subscription %s",
                                                              lastPlanTransition.getTransitionType(), subscription.getCurrentPlan(), subscription.getId()));
             }
         } catch (Exception /* SubscriptionBaseApiException, CatalogApiException */ e) {
-            throw new SubscriptionError(String.format("Could not compute next phase change for subscription %s", subscription.getId()), e);
+            throw new SubscriptionBaseError(String.format("Could not compute next phase change for subscription %s", subscription.getId()), e);
         }
     }
 
@@ -208,13 +208,13 @@ public class PlanAligner extends BaseAligner {
                 planStartDate = bundleStartDate;
                 break;
             default:
-                throw new SubscriptionError(String.format("Unknown PlanAlignmentCreate %s", alignment));
+                throw new SubscriptionBaseError(String.format("Unknown PlanAlignmentCreate %s", alignment));
         }
 
         return getPhaseAlignments(plan, initialPhase, planStartDate);
     }
 
-    private TimedPhase getTimedPhaseOnChange(final SubscriptionData subscription,
+    private TimedPhase getTimedPhaseOnChange(final DefaultSubscriptionBase subscription,
                                              final Plan nextPlan,
                                              final String nextPriceList,
                                              final DateTime requestedDate,
@@ -268,9 +268,9 @@ public class PlanAligner extends BaseAligner {
                 planStartDate = effectiveDate;
                 break;
             case CHANGE_OF_PRICELIST:
-                throw new SubscriptionError(String.format("Not implemented yet %s", alignment));
+                throw new SubscriptionBaseError(String.format("Not implemented yet %s", alignment));
             default:
-                throw new SubscriptionError(String.format("Unknown PlanAlignmentChange %s", alignment));
+                throw new SubscriptionBaseError(String.format("Unknown PlanAlignmentChange %s", alignment));
         }
 
         final List<TimedPhase> timedPhases = getPhaseAlignments(nextPlan, null, planStartDate);
@@ -301,7 +301,7 @@ public class PlanAligner extends BaseAligner {
                 final Duration curPhaseDuration = cur.getDuration();
                 nextPhaseStart = addDuration(curPhaseStart, curPhaseDuration);
                 if (nextPhaseStart == null) {
-                    throw new SubscriptionError(String.format("Unexpected non ending UNLIMITED phase for plan %s",
+                    throw new SubscriptionBaseError(String.format("Unexpected non ending UNLIMITED phase for plan %s",
                                                              plan.getName()));
                 }
                 curPhaseStart = nextPhaseStart;
@@ -333,7 +333,7 @@ public class PlanAligner extends BaseAligner {
             case NEXT:
                 return next;
             default:
-                throw new SubscriptionError(String.format("Unexpected %s TimedPhase", which));
+                throw new SubscriptionBaseError(String.format("Unexpected %s TimedPhase", which));
         }
     }
 

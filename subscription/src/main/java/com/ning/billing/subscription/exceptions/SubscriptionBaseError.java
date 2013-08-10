@@ -14,12 +14,25 @@
  * under the License.
  */
 
-package com.ning.billing.subscription.api;
+package com.ning.billing.subscription.exceptions;
 
-import com.ning.billing.lifecycle.KillbillService;
+public class SubscriptionBaseError extends Error {
 
-/**
- * The interface {@code SubscriptionService} is a {@code KillbillService} required to handle subscription operations
- */
-public interface SubscriptionService extends KillbillService {
+    private static final long serialVersionUID = 131398536;
+
+    public SubscriptionBaseError() {
+        super();
+    }
+
+    public SubscriptionBaseError(final String msg, final Throwable arg1) {
+        super(msg, arg1);
+    }
+
+    public SubscriptionBaseError(final String msg) {
+        super(msg);
+    }
+
+    public SubscriptionBaseError(final Throwable msg) {
+        super(msg);
+    }
 }

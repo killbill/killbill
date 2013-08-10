@@ -72,9 +72,8 @@ import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.PaymentMethod;
 import com.ning.billing.payment.api.Refund;
-import com.ning.billing.subscription.api.timeline.SubscriptionRepairException;
-import com.ning.billing.subscription.api.timeline.SubscriptionTimelineApi;
-import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
+import com.ning.billing.subscription.api.timeline.SubscriptionBaseRepairException;
+import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimelineApi;
 import com.ning.billing.util.api.AuditUserApi;
 import com.ning.billing.util.api.CustomFieldApiException;
 import com.ning.billing.util.api.CustomFieldUserApi;
@@ -106,7 +105,7 @@ public class AccountResource extends JaxRsResourceBase {
 
     private final EntitlementApi entitlementApi;
     private final SubscriptionApi subscriptionApi;
-    private final SubscriptionTimelineApi timelineApi;
+    private final SubscriptionBaseTimelineApi timelineApi;
     private final InvoiceUserApi invoiceApi;
     private final InvoicePaymentApi invoicePaymentApi;
     private final PaymentApi paymentApi;
@@ -118,7 +117,7 @@ public class AccountResource extends JaxRsResourceBase {
                            final InvoiceUserApi invoiceApi,
                            final InvoicePaymentApi invoicePaymentApi,
                            final PaymentApi paymentApi,
-                           final SubscriptionTimelineApi timelineApi,
+                           final SubscriptionBaseTimelineApi timelineApi,
                            final TagUserApi tagUserApi,
                            final AuditUserApi auditUserApi,
                            final CustomFieldUserApi customFieldUserApi,
@@ -251,7 +250,7 @@ public class AccountResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     public Response getAccountTimeline(@PathParam("accountId") final String accountIdString,
                                        @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
-                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException, SubscriptionRepairException {
+                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException, SubscriptionBaseRepairException {
         final TenantContext tenantContext = context.createContext(request);
 
         final UUID accountId = UUID.fromString(accountIdString);
@@ -284,7 +283,7 @@ public class AccountResource extends JaxRsResourceBase {
         /*
         // Get the bundles
         final List<SubscriptionBaseBundle> bundles = entitlementApi.getBundlesForAccount(account.getId(), tenantContext);
-        final List<BundleTimeline> bundlesTimeline = new LinkedList<BundleTimeline>();
+        final List<BundleBaseTimeline> bundlesTimeline = new LinkedList<BundleBaseTimeline>();
         for (final SubscriptionBaseBundle bundle : bundles) {
             bundlesTimeline.add(timelineApi.getBundleTimeline(bundle.getId(), tenantContext));
         }

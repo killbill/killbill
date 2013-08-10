@@ -47,7 +47,7 @@ import com.ning.billing.subscription.engine.addon.AddonUtils;
 import com.ning.billing.subscription.engine.dao.SubscriptionDao;
 import com.ning.billing.subscription.events.SubscriptionEvent;
 import com.ning.billing.subscription.glue.DefaultSubscriptionModule;
-import com.ning.billing.subscription.api.timeline.SubscriptionTimeline.NewEvent;
+import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline.NewEvent;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
@@ -90,26 +90,26 @@ public class DefaultSubscriptionTimelineApi extends SubscriptionApiBase implemen
     }
 
     @Override
-    public BundleTimeline getBundleTimeline(final SubscriptionBaseBundle bundle, final TenantContext context)
+    public BundleBaseTimeline getBundleTimeline(final SubscriptionBaseBundle bundle, final TenantContext context)
             throws SubscriptionRepairException {
         return getBundleTimelineInternal(bundle, bundle.getExternalKey(), context);
     }
 
     @Override
-    public BundleTimeline getBundleTimeline(final UUID accountId, final String bundleName, final TenantContext context)
+    public BundleBaseTimeline getBundleTimeline(final UUID accountId, final String bundleName, final TenantContext context)
             throws SubscriptionRepairException {
         final SubscriptionBaseBundle bundle = dao.getSubscriptionBundleFromAccountAndKey(accountId, bundleName, internalCallContextFactory.createInternalTenantContext(context));
         return getBundleTimelineInternal(bundle, bundleName + " [accountId= " + accountId.toString() + "]", context);
     }
 
     @Override
-    public BundleTimeline getBundleTimeline(final UUID bundleId, final TenantContext context) throws SubscriptionRepairException {
+    public BundleBaseTimeline getBundleTimeline(final UUID bundleId, final TenantContext context) throws SubscriptionRepairException {
 
         final SubscriptionBaseBundle bundle = dao.getSubscriptionBundleFromId(bundleId, internalCallContextFactory.createInternalTenantContext(context));
         return getBundleTimelineInternal(bundle, bundleId.toString(), context);
     }
 
-    private BundleTimeline getBundleTimelineInternal(final SubscriptionBaseBundle bundle, final String descBundle, final TenantContext context) throws SubscriptionRepairException {
+    private BundleBaseTimeline getBundleTimelineInternal(final SubscriptionBaseBundle bundle, final String descBundle, final TenantContext context) throws SubscriptionRepairException {
         try {
             if (bundle == null) {
                 throw new SubscriptionRepairException(ErrorCode.SUB_REPAIR_UNKNOWN_BUNDLE, descBundle);
@@ -119,7 +119,7 @@ public class DefaultSubscriptionTimelineApi extends SubscriptionApiBase implemen
                 throw new SubscriptionRepairException(ErrorCode.SUB_REPAIR_NO_ACTIVE_SUBSCRIPTIONS, bundle.getId());
             }
             final String viewId = getViewId(((SubscriptionBundleData) bundle).getLastSysUpdateDate(), subscriptions);
-            final List<SubscriptionTimeline> repairs = createGetSubscriptionRepairList(subscriptions, Collections.<SubscriptionTimeline>emptyList());
+            final List<SubscriptionBaseTimeline> repairs = createGetSubscriptionRepairList(subscriptions, Collections.<SubscriptionBaseTimeline>emptyList());
             return createGetBundleRepair(bundle.getId(), bundle.getExternalKey(), viewId, repairs);
         } catch (CatalogApiException e) {
             throw new SubscriptionRepairException(e);
@@ -139,7 +139,7 @@ public class DefaultSubscriptionTimelineApi extends SubscriptionApiBase implemen
     }
 
     @Override
-    public BundleTimeline repairBundle(final BundleTimeline input, final boolean dryRun, final CallContext context) throws SubscriptionRepairException {
+    public BundleBaseTimeline repairBundle(final BundleBaseTimeline input, final boolean dryRun, final CallContext context) throws SubscriptionRepairException {
         final InternalTenantContext tenantContext = internalCallContextFactory.createInternalTenantContext(context);
         try {
             final SubscriptionBaseBundle bundle = dao.getSubscriptionBundleFromId(input.getId(), tenantContext);
@@ -168,7 +168,7 @@ public class DefaultSubscriptionTimelineApi extends SubscriptionApiBase implemen
             final List<SubscriptionDataRepair> addOnSubscriptionInRepair = new LinkedList<SubscriptionDataRepair>();
             final List<SubscriptionDataRepair> inRepair = new LinkedList<SubscriptionDataRepair>();
             for (final SubscriptionBase cur : subscriptions) {
-                final SubscriptionTimeline curRepair = findAndCreateSubscriptionRepair(cur.getId(), input.getSubscriptions());
+                final SubscriptionBaseTimeline curRepair = findAndCreateSubscriptionRepair(cur.getId(), input.getSubscriptions());
                 if (curRepair != null) {
                     final SubscriptionDataRepair curInputRepair = ((SubscriptionDataRepair) cur);
                     final List<SubscriptionEvent> remaining = getRemainingEventsAndValidateDeletedEvents(curInputRepair, firstDeletedBPEventTime, curRepair.getDeletedEvents());
@@ -256,7 +256,7 @@ public class DefaultSubscriptionTimelineApi extends SubscriptionApiBase implemen
             if (dryRun) {
                 baseSubscriptionRepair.addFutureAddonCancellation(addOnSubscriptionInRepair, context);
 
-                final List<SubscriptionTimeline> repairs = createGetSubscriptionRepairList(subscriptions, convertDataRepair(inRepair));
+                final List<SubscriptionBaseTimeline> repairs = createGetSubscriptionRepairList(subscriptions, convertDataRepair(inRepair));
                 return createGetBundleRepair(input.getId(), bundle.getExternalKey(), input.getViewId(), repairs);
             } else {
                 dao.repair(bundle.getAccountId(), input.getId(), inRepair, internalCallContextFactory.createInternalCallContext(bundle.getAccountId(), context));
@@ -277,7 +277,7 @@ public class DefaultSubscriptionTimelineApi extends SubscriptionApiBase implemen
         }
     }
 
-    private void validateBasePlanRecreate(final boolean isBasePlanRecreate, final List<SubscriptionDataRepair> subscriptions, final List<SubscriptionTimeline> input)
+    private void validateBasePlanRecreate(final boolean isBasePlanRecreate, final List<SubscriptionDataRepair> subscriptions, final List<SubscriptionBaseTimeline> input)
             throws SubscriptionRepairException {
         if (!isBasePlanRecreate) {
             return;
@@ -285,7 +285,7 @@ public class DefaultSubscriptionTimelineApi extends SubscriptionApiBase implemen
         if (subscriptions.size() != input.size()) {
             throw new SubscriptionRepairException(ErrorCode.SUB_REPAIR_BP_RECREATE_MISSING_AO, subscriptions.get(0).getBundleId());
         }
-        for (final SubscriptionTimeline cur : input) {
+        for (final SubscriptionBaseTimeline cur : input) {
             if (cur.getNewEvents().size() != 0
                 && (cur.getNewEvents().get(0).getSubscriptionTransitionType() != SubscriptionBaseTransitionType.CREATE
                     && cur.getNewEvents().get(0).getSubscriptionTransitionType() != SubscriptionBaseTransitionType.RE_CREATE)) {
@@ -294,9 +294,9 @@ public class DefaultSubscriptionTimelineApi extends SubscriptionApiBase implemen
         }
     }
 
-    private void validateInputSubscriptionsKnown(final List<SubscriptionDataRepair> subscriptions, final List<SubscriptionTimeline> input)
+    private void validateInputSubscriptionsKnown(final List<SubscriptionDataRepair> subscriptions, final List<SubscriptionBaseTimeline> input)
             throws SubscriptionRepairException {
-        for (final SubscriptionTimeline cur : input) {
+        for (final SubscriptionBaseTimeline cur : input) {
             boolean found = false;
             for (final SubscriptionBase s : subscriptions) {
                 if (s.getId().equals(cur.getId())) {
@@ -323,14 +323,14 @@ public class DefaultSubscriptionTimelineApi extends SubscriptionApiBase implemen
 
     }
 
-    private Collection<NewEvent> createOrderedNewEventInput(final List<SubscriptionTimeline> subscriptionsReapir) {
-        final TreeSet<NewEvent> newEventSet = new TreeSet<SubscriptionTimeline.NewEvent>(new Comparator<NewEvent>() {
+    private Collection<NewEvent> createOrderedNewEventInput(final List<SubscriptionBaseTimeline> subscriptionsReapir) {
+        final TreeSet<NewEvent> newEventSet = new TreeSet<SubscriptionBaseTimeline.NewEvent>(new Comparator<NewEvent>() {
             @Override
             public int compare(final NewEvent o1, final NewEvent o2) {
                 return o1.getRequestedDate().compareTo(o2.getRequestedDate());
             }
         });
-        for (final SubscriptionTimeline cur : subscriptionsReapir) {
+        for (final SubscriptionBaseTimeline cur : subscriptionsReapir) {
             for (final NewEvent e : cur.getNewEvents()) {
                 newEventSet.add(new DefaultNewEvent(cur.getId(), e.getPlanPhaseSpecifier(), e.getRequestedDate(), e.getSubscriptionTransitionType()));
             }
@@ -340,7 +340,7 @@ public class DefaultSubscriptionTimelineApi extends SubscriptionApiBase implemen
     }
 
     private List<SubscriptionEvent> getRemainingEventsAndValidateDeletedEvents(final SubscriptionDataRepair data, final DateTime firstBPDeletedTime,
-                                                                              final List<SubscriptionTimeline.DeletedEvent> deletedEvents)
+                                                                              final List<SubscriptionBaseTimeline.DeletedEvent> deletedEvents)
             throws SubscriptionRepairException {
         if (deletedEvents == null || deletedEvents.size() == 0) {
             return data.getEvents();
@@ -351,7 +351,7 @@ public class DefaultSubscriptionTimelineApi extends SubscriptionApiBase implemen
         for (final SubscriptionEvent cur : data.getEvents()) {
 
             boolean foundDeletedEvent = false;
-            for (final SubscriptionTimeline.DeletedEvent d : deletedEvents) {
+            for (final SubscriptionBaseTimeline.DeletedEvent d : deletedEvents) {
                 if (cur.getId().equals(d.getEventId())) {
                     foundDeletedEvent = true;
                     nbDeleted++;
@@ -373,7 +373,7 @@ public class DefaultSubscriptionTimelineApi extends SubscriptionApiBase implemen
         }
 
         if (nbDeleted != deletedEvents.size()) {
-            for (final SubscriptionTimeline.DeletedEvent d : deletedEvents) {
+            for (final SubscriptionBaseTimeline.DeletedEvent d : deletedEvents) {
                 boolean found = false;
                 for (final SubscriptionBaseTransition cur : data.getAllTransitions()) {
                     if (((SubscriptionBaseTransitionData) cur).getId().equals(d.getEventId())) {
@@ -403,15 +403,15 @@ public class DefaultSubscriptionTimelineApi extends SubscriptionApiBase implemen
         return tmp.toString();
     }
 
-    private BundleTimeline createGetBundleRepair(final UUID bundleId, final String externalKey, final String viewId, final List<SubscriptionTimeline> repairList) {
-        return new BundleTimeline() {
+    private BundleBaseTimeline createGetBundleRepair(final UUID bundleId, final String externalKey, final String viewId, final List<SubscriptionBaseTimeline> repairList) {
+        return new BundleBaseTimeline() {
             @Override
             public String getViewId() {
                 return viewId;
             }
 
             @Override
-            public List<SubscriptionTimeline> getSubscriptions() {
+            public List<SubscriptionBaseTimeline> getSubscriptions() {
                 return repairList;
             }
 
@@ -437,11 +437,11 @@ public class DefaultSubscriptionTimelineApi extends SubscriptionApiBase implemen
         };
     }
 
-    private List<SubscriptionTimeline> createGetSubscriptionRepairList(final List<SubscriptionDataRepair> subscriptions, final List<SubscriptionTimeline> inRepair) throws CatalogApiException {
+    private List<SubscriptionBaseTimeline> createGetSubscriptionRepairList(final List<SubscriptionDataRepair> subscriptions, final List<SubscriptionBaseTimeline> inRepair) throws CatalogApiException {
 
-        final List<SubscriptionTimeline> result = new LinkedList<SubscriptionTimeline>();
+        final List<SubscriptionBaseTimeline> result = new LinkedList<SubscriptionBaseTimeline>();
         final Set<UUID> repairIds = new TreeSet<UUID>();
-        for (final SubscriptionTimeline cur : inRepair) {
+        for (final SubscriptionBaseTimeline cur : inRepair) {
             repairIds.add(cur.getId());
             result.add(cur);
         }
@@ -455,8 +455,8 @@ public class DefaultSubscriptionTimelineApi extends SubscriptionApiBase implemen
         return result;
     }
 
-    private List<SubscriptionTimeline> convertDataRepair(final List<SubscriptionDataRepair> input) throws CatalogApiException {
-        final List<SubscriptionTimeline> result = new LinkedList<SubscriptionTimeline>();
+    private List<SubscriptionBaseTimeline> convertDataRepair(final List<SubscriptionDataRepair> input) throws CatalogApiException {
+        final List<SubscriptionBaseTimeline> result = new LinkedList<SubscriptionBaseTimeline>();
         for (final SubscriptionDataRepair cur : input) {
             result.add(new DefaultSubscriptionTimeline(cur, catalogService.getFullCatalog()));
         }
@@ -494,8 +494,8 @@ public class DefaultSubscriptionTimelineApi extends SubscriptionApiBase implemen
         return subscriptiondataRepair;
     }
 
-    private SubscriptionTimeline findAndCreateSubscriptionRepair(final UUID target, final List<SubscriptionTimeline> input) {
-        for (final SubscriptionTimeline cur : input) {
+    private SubscriptionBaseTimeline findAndCreateSubscriptionRepair(final UUID target, final List<SubscriptionBaseTimeline> input) {
+        for (final SubscriptionBaseTimeline cur : input) {
             if (target.equals(cur.getId())) {
                 return new DefaultSubscriptionTimeline(cur);
             }

@@ -35,7 +35,7 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.subscription.SubscriptionTestSuiteNoDB;
 import com.ning.billing.subscription.api.SubscriptionBase;
-import com.ning.billing.subscription.exceptions.SubscriptionError;
+import com.ning.billing.subscription.exceptions.SubscriptionBaseError;
 import com.ning.billing.util.callcontext.TenantContext;
 
 import static org.testng.Assert.assertEquals;
@@ -83,7 +83,7 @@ public class TestUserApiError extends SubscriptionTestSuiteNoDB {
     @Test(groups = "fast")
     public void testRecreateSubscriptionBPNotCancelled() {
         try {
-            final SubscriptionData subscription = testUtil.createSubscription(bundle, "Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME);
+            final DefaultSubscriptionBase subscription = testUtil.createSubscription(bundle, "Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME);
             try {
                 subscription.recreate(testUtil.getProductSpecifier("Pistol", PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, null), clock.getUTCNow(), callContext);
                 Assert.assertFalse(true);
@@ -166,7 +166,7 @@ public class TestUserApiError extends SubscriptionTestSuiteNoDB {
         try {
             subscription.changePlanWithPolicy("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow(), BillingActionPolicy.ILLEGAL, callContext);
             Assert.fail();
-        } catch (SubscriptionError error) {
+        } catch (SubscriptionBaseError error) {
             assertTrue(true);
             assertEquals(subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext).getCurrentPlan().getBillingPeriod(), BillingPeriod.ANNUAL);
         }

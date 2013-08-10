@@ -22,10 +22,10 @@ import java.util.UUID;
 import com.ning.billing.util.entity.Entity;
 
 /**
- * The interface {@code BundleTimeline} shows a view of all the subscription events for a specific
+ * The interface {@code BundleBaseTimeline} shows a view of all the subscription events for a specific
  * {@code SubscriptionBaseBundle}.
  */
-public interface BundleTimeline extends Entity {
+public interface BundleBaseTimeline extends Entity {
 
     /**
      * @return a unique viewId to identify whether two calls who display the same view or a different view
@@ -43,7 +43,7 @@ public interface BundleTimeline extends Entity {
     String getExternalKey();
 
     /**
-     * @return the list of {@code SubscriptionTimeline}
+     * @return the list of {@code SubscriptionBaseTimeline}
      */
-    List<SubscriptionTimeline> getSubscriptions();
+    List<SubscriptionBaseTimeline> getSubscriptions();
 }

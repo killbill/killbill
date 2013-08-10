@@ -53,13 +53,13 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
             final BillingPeriod baseTerm = BillingPeriod.ANNUAL;
             final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-            SubscriptionData baseSubscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList);
+            DefaultSubscriptionBase baseSubscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList);
 
             final String aoProduct = "Telescopic-Scope";
             final BillingPeriod aoTerm = BillingPeriod.MONTHLY;
             final String aoPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-            SubscriptionData aoSubscription = testUtil.createSubscription(bundle, aoProduct, aoTerm, aoPriceList);
+            DefaultSubscriptionBase aoSubscription = testUtil.createSubscription(bundle, aoProduct, aoTerm, aoPriceList);
             assertEquals(aoSubscription.getState(), SubscriptionState.ACTIVE);
 
             testListener.pushExpectedEvent(NextEvent.CANCEL);
@@ -67,7 +67,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
             aoSubscription.cancel(now, callContext);
 
             assertTrue(testListener.isCompleted(5000));
-            aoSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
+            aoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
             assertEquals(aoSubscription.getState(), SubscriptionState.CANCELLED);
 
 
@@ -84,13 +84,13 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
             final BillingPeriod baseTerm = BillingPeriod.ANNUAL;
             final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-            SubscriptionData baseSubscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList);
+            DefaultSubscriptionBase baseSubscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList);
 
             final String aoProduct = "Telescopic-Scope";
             final BillingPeriod aoTerm = BillingPeriod.MONTHLY;
             final String aoPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-            SubscriptionData aoSubscription = testUtil.createSubscription(bundle, aoProduct, aoTerm, aoPriceList);
+            DefaultSubscriptionBase aoSubscription = testUtil.createSubscription(bundle, aoProduct, aoTerm, aoPriceList);
             assertEquals(aoSubscription.getState(), SubscriptionState.ACTIVE);
 
             // Move clock after a month
@@ -111,25 +111,25 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
             final DateTime newBPChargedThroughDate = TestSubscriptionHelper.addDuration(now, bpCtd);
             subscriptionInternalApi.setChargedThroughDate(baseSubscription.getId(), newBPChargedThroughDate, internalCallContext);
 
-            baseSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
-            aoSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
+            baseSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
+            aoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
 
             it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(1));
             clock.addDeltaFromReality(it.toDurationMillis());
 
             // CANCEL AO
             aoSubscription.cancel(clock.getUTCNow(), callContext);
-            aoSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
+            aoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
             assertEquals(aoSubscription.getState(), SubscriptionState.ACTIVE);
             assertTrue(aoSubscription.isSubscriptionFutureCancelled());
 
             // CANCEL BASE NOW
             baseSubscription.cancel(clock.getUTCNow(), callContext);
-            baseSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
+            baseSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
             assertEquals(baseSubscription.getState(), SubscriptionState.ACTIVE);
             assertTrue(baseSubscription.isSubscriptionFutureCancelled());
 
-            aoSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
+            aoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
             List<SubscriptionBaseTransition> aoTransitions =  aoSubscription.getAllTransitions();
             assertEquals(aoTransitions.size(), 3);
             assertEquals(aoTransitions.get(0).getTransitionType(), SubscriptionBaseTransitionType.CREATE);
@@ -141,7 +141,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
             aoSubscription.uncancel(callContext);
             assertTrue(testListener.isCompleted(5000));
 
-            aoSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
+            aoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
             aoTransitions =  aoSubscription.getAllTransitions();
             assertEquals(aoTransitions.size(), 3);
             assertEquals(aoTransitions.get(0).getTransitionType(), SubscriptionBaseTransitionType.CREATE);
@@ -166,13 +166,13 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
             final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
             // CREATE BP
-            SubscriptionData baseSubscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList);
+            DefaultSubscriptionBase baseSubscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList);
 
             final String aoProduct = "Telescopic-Scope";
             final BillingPeriod aoTerm = BillingPeriod.MONTHLY;
             final String aoPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-            SubscriptionData aoSubscription = testUtil.createSubscription(bundle, aoProduct, aoTerm, aoPriceList);
+            DefaultSubscriptionBase aoSubscription = testUtil.createSubscription(bundle, aoProduct, aoTerm, aoPriceList);
 
             testListener.reset();
             testListener.pushExpectedEvent(NextEvent.PHASE);
@@ -189,13 +189,13 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
             // Why not just use clock.getUTCNow().plusMonths(1) ?
             final DateTime newChargedThroughDate = TestSubscriptionHelper.addDuration(now, ctd);
             subscriptionInternalApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate, internalCallContext);
-            baseSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
+            baseSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
 
             // FUTURE CANCELLATION
             baseSubscription.cancel(now, callContext);
 
             // REFETCH AO SUBSCRIPTION AND CHECK THIS IS ACTIVE
-            aoSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
+            aoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
             assertEquals(aoSubscription.getState(), SubscriptionState.ACTIVE);
             assertTrue(aoSubscription.isSubscriptionFutureCancelled());
 
@@ -209,7 +209,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
             assertTrue(testListener.isCompleted(5000));
 
             // REFETCH AO SUBSCRIPTION AND CHECK THIS IS CANCELLED
-            aoSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
+            aoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
             assertEquals(aoSubscription.getState(), SubscriptionState.CANCELLED);
 
             assertListenerStatus();
@@ -228,13 +228,13 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
             final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
             // CREATE BP
-            SubscriptionData baseSubscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList);
+            DefaultSubscriptionBase baseSubscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList);
 
             final String aoProduct = "Telescopic-Scope";
             final BillingPeriod aoTerm = BillingPeriod.MONTHLY;
             final String aoPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-            SubscriptionData aoSubscription = testUtil.createSubscription(bundle, aoProduct, aoTerm, aoPriceList);
+            DefaultSubscriptionBase aoSubscription = testUtil.createSubscription(bundle, aoProduct, aoTerm, aoPriceList);
 
             testListener.reset();
             testListener.pushExpectedEvent(NextEvent.PHASE);
@@ -251,24 +251,24 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
             // Why not just use clock.getUTCNow().plusMonths(1) ?
             final DateTime newChargedThroughDate = TestSubscriptionHelper.addDuration(now, ctd);
             subscriptionInternalApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate, internalCallContext);
-            baseSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
+            baseSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
 
             // FUTURE CANCELLATION
             baseSubscription.cancel(now, callContext);
 
             // REFETCH AO SUBSCRIPTION AND CHECK THIS IS ACTIVE
-            aoSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
+            aoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
             assertEquals(aoSubscription.getState(), SubscriptionState.ACTIVE);
             assertTrue(aoSubscription.isSubscriptionFutureCancelled());
 
 
             testListener.reset();
             testListener.pushExpectedEvent(NextEvent.UNCANCEL);
-            baseSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
+            baseSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
             baseSubscription.uncancel(callContext);
             assertTrue(testListener.isCompleted(5000));
 
-            aoSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
+            aoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
             assertEquals(aoSubscription.getState(), SubscriptionState.ACTIVE);
             assertFalse(aoSubscription.isSubscriptionFutureCancelled());
 
@@ -276,13 +276,13 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
             it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(1));
             clock.addDeltaFromReality(it.toDurationMillis());
 
-            baseSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
+            baseSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
             baseSubscription.cancel(clock.getUTCNow(), callContext);
-            baseSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
+            baseSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
             assertEquals(baseSubscription.getState(), SubscriptionState.ACTIVE);
             assertTrue(baseSubscription.isSubscriptionFutureCancelled());
 
-            aoSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
+            aoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
             assertEquals(aoSubscription.getState(), SubscriptionState.ACTIVE);
             assertTrue(aoSubscription.isSubscriptionFutureCancelled());
             assertListenerStatus();
@@ -303,13 +303,13 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
             final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
             // CREATE BP
-            SubscriptionData baseSubscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList);
+            DefaultSubscriptionBase baseSubscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList);
 
             final String aoProduct = "Telescopic-Scope";
             final BillingPeriod aoTerm = BillingPeriod.MONTHLY;
             final String aoPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-            SubscriptionData aoSubscription = testUtil.createSubscription(bundle, aoProduct, aoTerm, aoPriceList);
+            DefaultSubscriptionBase aoSubscription = testUtil.createSubscription(bundle, aoProduct, aoTerm, aoPriceList);
 
             testListener.reset();
             testListener.pushExpectedEvent(NextEvent.PHASE);
@@ -325,7 +325,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
             final Duration ctd = testUtil.getDurationMonth(1);
             final DateTime newChargedThroughDate = TestSubscriptionHelper.addDuration(now, ctd);
             subscriptionInternalApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate, internalCallContext);
-            baseSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
+            baseSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
 
             // CHANGE IMMEDIATELY WITH TO BP WITH NON INCLUDED ADDON
             final String newBaseProduct = "Assault-Rifle";
@@ -349,7 +349,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
             assertTrue(testListener.isCompleted(5000));
 
             // REFETCH AO SUBSCRIPTION AND CHECK THIS CANCELLED
-            aoSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
+            aoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
             assertEquals(aoSubscription.getState(), SubscriptionState.CANCELLED);
 
             assertListenerStatus();
@@ -366,13 +366,13 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
             final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
             // CREATE BP
-            SubscriptionData baseSubscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList);
+            DefaultSubscriptionBase baseSubscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList);
 
             final String aoProduct = "Telescopic-Scope";
             final BillingPeriod aoTerm = BillingPeriod.MONTHLY;
             final String aoPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-            SubscriptionData aoSubscription = testUtil.createSubscription(bundle, aoProduct, aoTerm, aoPriceList);
+            DefaultSubscriptionBase aoSubscription = testUtil.createSubscription(bundle, aoProduct, aoTerm, aoPriceList);
 
             testListener.reset();
             testListener.pushExpectedEvent(NextEvent.PHASE);
@@ -388,7 +388,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
             final Duration ctd = testUtil.getDurationMonth(1);
             final DateTime newChargedThroughDate = TestSubscriptionHelper.addDuration(now, ctd);
             subscriptionInternalApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate, internalCallContext);
-            baseSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
+            baseSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
 
             // CHANGE IMMEDIATELY WITH TO BP WITH NON AVAILABLE ADDON
             final String newBaseProduct = "Pistol";
@@ -408,7 +408,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
             baseSubscription.changePlan(newBaseProduct, newBaseTerm, newBasePriceList, now, callContext);
 
             // REFETCH AO SUBSCRIPTION AND CHECK THIS IS ACTIVE
-            aoSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
+            aoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
             assertEquals(aoSubscription.getState(), SubscriptionState.ACTIVE);
             assertTrue(aoSubscription.isSubscriptionFutureCancelled());
 
@@ -421,7 +421,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
             assertTrue(testListener.isCompleted(5000));
 
             // REFETCH AO SUBSCRIPTION AND CHECK THIS CANCELLED
-            aoSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
+            aoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
             assertEquals(aoSubscription.getState(), SubscriptionState.CANCELLED);
 
             assertListenerStatus();
@@ -483,7 +483,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
             final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
             // CREATE BP
-            final SubscriptionData baseSubscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList);
+            final DefaultSubscriptionBase baseSubscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList);
 
             // MOVE CLOCK 14 DAYS LATER
             Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(14));
@@ -491,7 +491,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
 
             // CREATE ADDON
             final DateTime beforeAOCreation = clock.getUTCNow();
-            SubscriptionData aoSubscription = testUtil.createSubscription(bundle, aoProduct, aoTerm, aoPriceList);
+            DefaultSubscriptionBase aoSubscription = testUtil.createSubscription(bundle, aoProduct, aoTerm, aoPriceList);
             final DateTime afterAOCreation = clock.getUTCNow();
 
             // CHECK EVERYTHING
@@ -527,7 +527,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
             assertTrue(testListener.isCompleted(5000));
 
             // CHECK EVERYTHING AGAIN
-            aoSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
+            aoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
 
             aoCurrentPlan = aoSubscription.getCurrentPlan();
             assertNotNull(aoCurrentPlan);
@@ -539,7 +539,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
             assertNotNull(aoCurrentPhase);
             assertEquals(aoCurrentPhase.getPhaseType(), PhaseType.EVERGREEN);
 
-            aoSubscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
+            aoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
             aoPendingTranstion = aoSubscription.getPendingTransition();
             assertNull(aoPendingTranstion);
         } catch (SubscriptionBaseApiException e) {

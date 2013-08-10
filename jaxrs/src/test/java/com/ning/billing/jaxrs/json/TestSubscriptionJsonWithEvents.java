@@ -30,7 +30,7 @@ import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
-import com.ning.billing.subscription.api.timeline.SubscriptionTimeline;
+import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.jaxrs.JaxrsTestSuiteNoDB;
 import com.ning.billing.clock.DefaultClock;
@@ -105,7 +105,7 @@ public class TestSubscriptionJsonWithEvents extends JaxrsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testFromSubscriptionTimeline() throws Exception {
-        final SubscriptionTimeline.ExistingEvent event = Mockito.mock(SubscriptionTimeline.ExistingEvent.class);
+        final SubscriptionBaseTimeline.ExistingEvent event = Mockito.mock(SubscriptionBaseTimeline.ExistingEvent.class);
         final DateTime effectiveDate = DefaultClock.toUTCDateTime(new DateTime(DateTimeZone.UTC));
         final UUID eventId = UUID.randomUUID();
         final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier(UUID.randomUUID().toString(), ProductCategory.BASE,
@@ -116,9 +116,9 @@ public class TestSubscriptionJsonWithEvents extends JaxrsTestSuiteNoDB {
         Mockito.when(event.getSubscriptionTransitionType()).thenReturn(SubscriptionBaseTransitionType.CREATE);
         Mockito.when(event.getPlanPhaseSpecifier()).thenReturn(planPhaseSpecifier);
 
-        final SubscriptionTimeline subscriptionTimeline = Mockito.mock(SubscriptionTimeline.class);
+        final SubscriptionBaseTimeline subscriptionTimeline = Mockito.mock(SubscriptionBaseTimeline.class);
         Mockito.when(subscriptionTimeline.getId()).thenReturn(UUID.randomUUID());
-        Mockito.when(subscriptionTimeline.getExistingEvents()).thenReturn(ImmutableList.<SubscriptionTimeline.ExistingEvent>of(event));
+        Mockito.when(subscriptionTimeline.getExistingEvents()).thenReturn(ImmutableList.<SubscriptionBaseTimeline.ExistingEvent>of(event));
 
         final UUID bundleId = UUID.randomUUID();
 

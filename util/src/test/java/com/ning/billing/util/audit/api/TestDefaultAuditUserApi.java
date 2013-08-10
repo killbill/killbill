@@ -24,27 +24,23 @@ import java.util.UUID;
 import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 import com.ning.billing.ObjectType;
-import com.ning.billing.subscription.api.timeline.BundleTimeline;
+import com.ning.billing.subscription.api.timeline.BundleBaseTimeline;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.Refund;
 import com.ning.billing.util.api.AuditLevel;
-import com.ning.billing.util.api.AuditUserApi;
 import com.ning.billing.util.audit.AuditLog;
-import com.ning.billing.util.audit.AuditLogsForBundles;
 import com.ning.billing.util.audit.AuditLogsForInvoicePayments;
 import com.ning.billing.util.audit.AuditLogsForInvoices;
 import com.ning.billing.util.audit.AuditLogsForPayments;
 import com.ning.billing.util.audit.AuditLogsForRefunds;
 import com.ning.billing.util.audit.AuditLogsTestBase;
 import com.ning.billing.util.audit.dao.MockAuditDao;
-import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.Entity;
 
@@ -76,9 +72,9 @@ public class TestDefaultAuditUserApi extends AuditLogsTestBase {
 
     @Test(groups = "fast")
     public void testForBundles() throws Exception {
-        final List<BundleTimeline> bundles = new ArrayList<BundleTimeline>();
+        final List<BundleBaseTimeline> bundles = new ArrayList<BundleBaseTimeline>();
         for (final UUID objectId : objectIds) {
-            final BundleTimeline entity = Mockito.mock(BundleTimeline.class);
+            final BundleBaseTimeline entity = Mockito.mock(BundleBaseTimeline.class);
             Mockito.when(entity.getId()).thenReturn(objectId);
             bundles.add(entity);
         }

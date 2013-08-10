@@ -19,7 +19,7 @@ package com.ning.billing.subscription.events.phase;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.subscription.api.user.SubscriptionData;
+import com.ning.billing.subscription.api.user.DefaultSubscriptionBase;
 import com.ning.billing.subscription.events.EventBase;
 
 
@@ -56,7 +56,7 @@ public class PhaseEventData extends EventBase implements PhaseEvent {
                 + ", isActive()=" + isActive() + "]\n";
     }
 
-    public static PhaseEvent createNextPhaseEvent(final String phaseName, final SubscriptionData subscription, final DateTime now, final DateTime effectiveDate) {
+    public static PhaseEvent createNextPhaseEvent(final String phaseName, final DefaultSubscriptionBase subscription, final DateTime now, final DateTime effectiveDate) {
         return (phaseName == null) ?
                 null :
                 new PhaseEventData(new PhaseEventBuilder()

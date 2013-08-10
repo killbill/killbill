@@ -23,8 +23,8 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import com.ning.billing.subscription.api.timeline.BundleTimeline;
-import com.ning.billing.subscription.api.timeline.SubscriptionTimeline;
+import com.ning.billing.subscription.api.timeline.BundleBaseTimeline;
+import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline;
 import com.ning.billing.util.audit.AuditLog;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -48,11 +48,11 @@ public class BundleJsonWithSubscriptions extends BundleJsonSimple {
         return subscriptions;
     }
 
-    public BundleJsonWithSubscriptions(final BundleTimeline bundle, final List<AuditLog> auditLogs,
+    public BundleJsonWithSubscriptions(final BundleBaseTimeline bundle, final List<AuditLog> auditLogs,
                                        final Map<UUID, List<AuditLog>> subscriptionsAuditLogs, final Map<UUID, List<AuditLog>> subscriptionEventsAuditLogs) {
         super(bundle.getId(), bundle.getExternalKey(), auditLogs);
         this.subscriptions = new LinkedList<EntitlementJsonWithEvents>();
-        for (final SubscriptionTimeline subscriptionTimeline : bundle.getSubscriptions()) {
+        for (final SubscriptionBaseTimeline subscriptionTimeline : bundle.getSubscriptions()) {
             // STEPH_ENT
             /*
             this.subscriptions.add(new EntitlementJsonWithEvents(bundle.getId(), subscriptionTimeline,

@@ -32,10 +32,10 @@ import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.subscription.SubscriptionTestSuiteWithEmbeddedDB;
-import com.ning.billing.subscription.api.migration.SubscriptionMigrationApi.AccountMigration;
-import com.ning.billing.subscription.api.migration.SubscriptionMigrationApiException;
+import com.ning.billing.subscription.api.migration.SubscriptionBaseMigrationApi.AccountMigration;
+import com.ning.billing.subscription.api.migration.SubscriptionBaseMigrationApiException;
+import com.ning.billing.subscription.api.user.DefaultSubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
-import com.ning.billing.subscription.api.user.SubscriptionData;
 import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionState;
@@ -102,7 +102,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
             assertEquals(subscriptionInternalApi.getBillingTransitions(oldBaseSubscription, internalCallContext).size(), 0);
             //assertEquals(subscriptionInternalApi.getBillingTransitions(oldBaseSubscription, internalCallContext).get(0).getTransitionType(), SubscriptionBaseTransitionType.CANCEL);
 
-        } catch (SubscriptionMigrationApiException e) {
+        } catch (SubscriptionBaseMigrationApiException e) {
             Assert.fail("", e);
         }
 
@@ -121,7 +121,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         // CREATE BP
         final SubscriptionBase baseSubscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList);
 
-        final DateTime evergreenPhaseDate = ((SubscriptionData) baseSubscription).getPendingTransition().getEffectiveTransitionTime();
+        final DateTime evergreenPhaseDate = ((DefaultSubscriptionBase) baseSubscription).getPendingTransition().getEffectiveTransitionTime();
 
         // MOVE A LITTLE, STILL IN TRIAL
         clock.addDays(20);
@@ -148,7 +148,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         assertEquals(subscriptions.size(), 1);
 
         final SubscriptionBase newBaseSubscription = subscriptions.get(0);
-        assertTrue(((SubscriptionData) newBaseSubscription).getAlignStartDate().compareTo(((SubscriptionData) oldBaseSubscription).getAlignStartDate()) == 0);
+        assertTrue(((DefaultSubscriptionBase) newBaseSubscription).getAlignStartDate().compareTo(((DefaultSubscriptionBase) oldBaseSubscription).getAlignStartDate()) == 0);
 
         // CHECK NEXT PENDING PHASE IS ALIGNED WITH OLD SUBSCRIPTION START DATE
         assertEquals(subscriptionInternalApi.getAllTransitions(newBaseSubscription, internalCallContext).size(), 2);
@@ -175,7 +175,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
 
         subscriptionInternalApi.setChargedThroughDate(baseSubscription.getId(), ctd, internalCallContext);
 
-        final DateTime evergreenPhaseDate = ((SubscriptionData) baseSubscription).getPendingTransition().getEffectiveTransitionTime();
+        final DateTime evergreenPhaseDate = ((DefaultSubscriptionBase) baseSubscription).getPendingTransition().getEffectiveTransitionTime();
 
         // MOVE A LITTLE, STILL IN TRIAL
         clock.addDays(20);
@@ -197,7 +197,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         assertEquals(subscriptions.size(), 1);
 
         final SubscriptionBase newBaseSubscription = subscriptions.get(0);
-        assertTrue(((SubscriptionData) newBaseSubscription).getAlignStartDate().compareTo(((SubscriptionData) oldBaseSubscription).getAlignStartDate()) == 0);
+        assertTrue(((DefaultSubscriptionBase) newBaseSubscription).getAlignStartDate().compareTo(((DefaultSubscriptionBase) oldBaseSubscription).getAlignStartDate()) == 0);
 
         // CHECK NEXT PENDING PHASE IS ALIGNED WITH OLD SUBSCRIPTION START DATE
         assertEquals(subscriptionInternalApi.getAllTransitions(newBaseSubscription, internalCallContext).size(), 2);
@@ -247,7 +247,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         assertEquals(subscriptions.size(), 1);
 
         final SubscriptionBase newBaseSubscription = subscriptions.get(0);
-        assertTrue(((SubscriptionData) newBaseSubscription).getAlignStartDate().compareTo(((SubscriptionData) baseSubscription).getAlignStartDate()) == 0);
+        assertTrue(((DefaultSubscriptionBase) newBaseSubscription).getAlignStartDate().compareTo(((DefaultSubscriptionBase) baseSubscription).getAlignStartDate()) == 0);
 
         // CHECK ONLY ONE PHASE EXISTS
         assertEquals(subscriptionInternalApi.getAllTransitions(newBaseSubscription, internalCallContext).size(), 1);
@@ -296,7 +296,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         assertEquals(subscriptions.size(), 1);
 
         final SubscriptionBase newBaseSubscription = subscriptions.get(0);
-        assertTrue(((SubscriptionData) newBaseSubscription).getAlignStartDate().compareTo(((SubscriptionData) baseSubscription).getAlignStartDate()) == 0);
+        assertTrue(((DefaultSubscriptionBase) newBaseSubscription).getAlignStartDate().compareTo(((DefaultSubscriptionBase) baseSubscription).getAlignStartDate()) == 0);
 
         // CHECK ONLY ONE PHASE EXISTS
         assertEquals(subscriptionInternalApi.getAllTransitions(newBaseSubscription, internalCallContext).size(), 1);
@@ -333,8 +333,8 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         assertEquals(newPlan.getProduct().getName(), newBaseProduct1);
         assertEquals(newBaseSubscriptionWithCtd.getCurrentPhase().getPhaseType(), PhaseType.EVERGREEN);
 
-        assertNotNull(((SubscriptionData) newBaseSubscriptionWithCtd).getPendingTransition());
-        assertEquals(((SubscriptionData) newBaseSubscriptionWithCtd).getPendingTransition().getEffectiveTransitionTime(), newCtd);
+        assertNotNull(((DefaultSubscriptionBase) newBaseSubscriptionWithCtd).getPendingTransition());
+        assertEquals(((DefaultSubscriptionBase) newBaseSubscriptionWithCtd).getPendingTransition().getEffectiveTransitionTime(), newCtd);
     }
 
     @Test(groups = "slow")
@@ -353,7 +353,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         clock.addDays(3);
         final String aoProduct1 = "Telescopic-Scope";
         final BillingPeriod aoTerm1 = BillingPeriod.MONTHLY;
-        final SubscriptionData aoSubscription1 = testUtil.createSubscription(bundle, aoProduct1, aoTerm1, basePriceList);
+        final DefaultSubscriptionBase aoSubscription1 = testUtil.createSubscription(bundle, aoProduct1, aoTerm1, basePriceList);
         assertEquals(aoSubscription1.getState(), SubscriptionState.ACTIVE);
 
         // MOVE ANOTHER 25 DAYS AND CREATE AO2 [ BP STILL IN TRIAL]
@@ -361,7 +361,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         clock.addDays(25);
         final String aoProduct2 = "Laser-Scope";
         final BillingPeriod aoTerm2 = BillingPeriod.MONTHLY;
-        final SubscriptionData aoSubscription2 = testUtil.createSubscription(bundle, aoProduct2, aoTerm2, basePriceList);
+        final DefaultSubscriptionBase aoSubscription2 = testUtil.createSubscription(bundle, aoProduct2, aoTerm2, basePriceList);
         assertEquals(aoSubscription2.getState(), SubscriptionState.ACTIVE);
 
         // MOVE AFTER TRIAL AND AO DISCOUNT PHASE [LASER SCOPE STILL IN DISCOUNT]
@@ -393,16 +393,16 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
             final Product curProduct = curPlan.getProduct();
             if (curProduct.getName().equals(baseProduct)) {
                 foundBP = true;
-                assertTrue(((SubscriptionData) cur).getAlignStartDate().compareTo(((SubscriptionData) baseSubscription).getAlignStartDate()) == 0);
-                assertNull(((SubscriptionData) cur).getPendingTransition());
+                assertTrue(((DefaultSubscriptionBase) cur).getAlignStartDate().compareTo(((DefaultSubscriptionBase) baseSubscription).getAlignStartDate()) == 0);
+                assertNull(((DefaultSubscriptionBase) cur).getPendingTransition());
             } else if (curProduct.getName().equals(aoProduct1)) {
                 foundAO1 = true;
-                assertTrue(((SubscriptionData) cur).getAlignStartDate().compareTo((aoSubscription1).getAlignStartDate()) == 0);
-                assertNull(((SubscriptionData) cur).getPendingTransition());
+                assertTrue(((DefaultSubscriptionBase) cur).getAlignStartDate().compareTo((aoSubscription1).getAlignStartDate()) == 0);
+                assertNull(((DefaultSubscriptionBase) cur).getPendingTransition());
             } else if (curProduct.getName().equals(aoProduct2)) {
                 foundAO2 = true;
-                assertTrue(((SubscriptionData) cur).getAlignStartDate().compareTo((aoSubscription2).getAlignStartDate()) == 0);
-                assertNotNull(((SubscriptionData) cur).getPendingTransition());
+                assertTrue(((DefaultSubscriptionBase) cur).getAlignStartDate().compareTo((aoSubscription2).getAlignStartDate()) == 0);
+                assertNotNull(((DefaultSubscriptionBase) cur).getPendingTransition());
             } else {
                 Assert.fail("Unexpected product " + curProduct.getName());
             }
@@ -447,7 +447,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         clock.addDays(3);
         final String aoProduct1 = "Telescopic-Scope";
         final BillingPeriod aoTerm1 = BillingPeriod.MONTHLY;
-        final SubscriptionData aoSubscription1 = testUtil.createSubscription(bundle, aoProduct1, aoTerm1, basePriceList);
+        final DefaultSubscriptionBase aoSubscription1 = testUtil.createSubscription(bundle, aoProduct1, aoTerm1, basePriceList);
         assertEquals(aoSubscription1.getState(), SubscriptionState.ACTIVE);
 
         testListener.pushExpectedEvent(NextEvent.PHASE);

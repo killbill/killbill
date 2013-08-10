@@ -19,7 +19,7 @@ package com.ning.billing.mock.glue;
 import org.mockito.Mockito;
 
 import com.ning.billing.glue.SubscriptionModule;
-import com.ning.billing.subscription.api.SubscriptionService;
+import com.ning.billing.subscription.api.SubscriptionBaseService;
 import com.ning.billing.subscription.api.migration.SubscriptionMigrationApi;
 import com.ning.billing.subscription.api.timeline.SubscriptionTimelineApi;
 import com.ning.billing.subscription.api.transfer.SubscriptionTransferApi;
@@ -31,7 +31,7 @@ public class MockSubscriptionModule extends AbstractModule implements Subscripti
 
     @Override
     public void installSubscriptionService() {
-        bind(SubscriptionService.class).toInstance(Mockito.mock(SubscriptionService.class));
+        bind(SubscriptionBaseService.class).toInstance(Mockito.mock(SubscriptionBaseService.class));
     }
 
 

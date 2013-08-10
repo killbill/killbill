@@ -22,7 +22,7 @@ import com.ning.billing.api.TestListenerStatus;
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.clock.ClockMock;
-import com.ning.billing.subscription.api.SubscriptionService;
+import com.ning.billing.subscription.api.SubscriptionBaseService;
 import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
@@ -40,9 +40,9 @@ public interface SubscriptionTestInitializer {
                                   final TestListenerStatus testListenerStatus,
                                   final ClockMock clock,
                                   final BusService busService,
-                                  final SubscriptionService subscriptionService) throws Exception;
+                                  final SubscriptionBaseService subscriptionBaseService) throws Exception;
 
     public void stopTestFramework(final TestApiListener testListener,
                                   final BusService busService,
-                                  final SubscriptionService subscriptionService) throws Exception;
+                                  final SubscriptionBaseService subscriptionBaseService) throws Exception;
 }

@@ -44,21 +44,21 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.catalog.api.TimeUnit;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
-import com.ning.billing.subscription.api.migration.SubscriptionMigrationApi.AccountMigration;
-import com.ning.billing.subscription.api.migration.SubscriptionMigrationApi.BundleMigration;
-import com.ning.billing.subscription.api.migration.SubscriptionMigrationApi.SubscriptionMigration;
-import com.ning.billing.subscription.api.migration.SubscriptionMigrationApi.SubscriptionMigrationCase;
+import com.ning.billing.subscription.api.migration.SubscriptionBaseMigrationApi.AccountMigration;
+import com.ning.billing.subscription.api.migration.SubscriptionBaseMigrationApi.BundleMigration;
+import com.ning.billing.subscription.api.migration.SubscriptionBaseMigrationApi.SubscriptionMigration;
+import com.ning.billing.subscription.api.migration.SubscriptionBaseMigrationApi.SubscriptionMigrationCase;
+import com.ning.billing.subscription.api.timeline.SubscriptionBaseRepairException;
+import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline;
 import com.ning.billing.subscription.engine.dao.SubscriptionDao;
 import com.ning.billing.subscription.events.SubscriptionEvent;
 import com.ning.billing.subscription.events.phase.PhaseEvent;
 import com.ning.billing.subscription.events.user.ApiEvent;
 import com.ning.billing.subscription.events.user.ApiEventType;
-import com.ning.billing.subscription.api.timeline.BundleTimeline;
-import com.ning.billing.subscription.api.timeline.SubscriptionRepairException;
-import com.ning.billing.subscription.api.timeline.SubscriptionTimeline;
-import com.ning.billing.subscription.api.timeline.SubscriptionTimeline.DeletedEvent;
-import com.ning.billing.subscription.api.timeline.SubscriptionTimeline.ExistingEvent;
-import com.ning.billing.subscription.api.timeline.SubscriptionTimeline.NewEvent;
+import com.ning.billing.subscription.api.timeline.BundleBaseTimeline;
+import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline.DeletedEvent;
+import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline.ExistingEvent;
+import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline.NewEvent;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
@@ -93,20 +93,20 @@ public class TestSubscriptionHelper {
     }
 
 
-    public SubscriptionData createSubscription(final SubscriptionBaseBundle bundle, final String productName, final BillingPeriod term, final String planSet, final DateTime requestedDate)
+    public DefaultSubscriptionBase createSubscription(final SubscriptionBaseBundle bundle, final String productName, final BillingPeriod term, final String planSet, final DateTime requestedDate)
             throws SubscriptionBaseApiException {
         return createSubscriptionWithBundle(bundle.getId(), productName, term, planSet, requestedDate);
     }
 
-    public SubscriptionData createSubscription(final SubscriptionBaseBundle bundle, final String productName, final BillingPeriod term, final String planSet)
+    public DefaultSubscriptionBase createSubscription(final SubscriptionBaseBundle bundle, final String productName, final BillingPeriod term, final String planSet)
             throws SubscriptionBaseApiException {
         return createSubscriptionWithBundle(bundle.getId(), productName, term, planSet, null);
     }
 
-    public SubscriptionData createSubscriptionWithBundle(final UUID bundleId, final String productName, final BillingPeriod term, final String planSet, final DateTime requestedDate)
+    public DefaultSubscriptionBase createSubscriptionWithBundle(final UUID bundleId, final String productName, final BillingPeriod term, final String planSet, final DateTime requestedDate)
             throws SubscriptionBaseApiException {
         testListener.pushExpectedEvent(NextEvent.CREATE);
-        final SubscriptionData subscription = (SubscriptionData) subscriptionApi.createSubscription(bundleId,
+        final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) subscriptionApi.createSubscription(bundleId,
                                                                                                    new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSet, null),
                                                                                                    requestedDate == null ? clock.getUTCNow() : requestedDate, callContext);
         assertNotNull(subscription);
@@ -115,7 +115,7 @@ public class TestSubscriptionHelper {
         return subscription;
     }
 
-    public void checkNextPhaseChange(final SubscriptionData subscription, final int expPendingEvents, final DateTime expPhaseChange) {
+    public void checkNextPhaseChange(final DefaultSubscriptionBase subscription, final int expPendingEvents, final DateTime expPhaseChange) {
         final List<SubscriptionEvent> events = dao.getPendingEventsForSubscription(subscription.getId(), callContext);
         assertNotNull(events);
         printEvents(events);
@@ -388,8 +388,8 @@ public class TestSubscriptionHelper {
     }
 
 
-    public SubscriptionTimeline createSubscriptionRepair(final UUID id, final List<DeletedEvent> deletedEvents, final List<NewEvent> newEvents) {
-        return new SubscriptionTimeline() {
+    public SubscriptionBaseTimeline createSubscriptionRepair(final UUID id, final List<DeletedEvent> deletedEvents, final List<NewEvent> newEvents) {
+        return new SubscriptionBaseTimeline() {
             @Override
             public UUID getId() {
                 return id;
@@ -427,15 +427,15 @@ public class TestSubscriptionHelper {
         };
     }
 
-    public BundleTimeline createBundleRepair(final UUID bundleId, final String viewId, final List<SubscriptionTimeline> subscriptionRepair) {
-        return new BundleTimeline() {
+    public BundleBaseTimeline createBundleRepair(final UUID bundleId, final String viewId, final List<SubscriptionBaseTimeline> subscriptionRepair) {
+        return new BundleBaseTimeline() {
             @Override
             public String getViewId() {
                 return viewId;
             }
 
             @Override
-            public List<SubscriptionTimeline> getSubscriptions() {
+            public List<SubscriptionBaseTimeline> getSubscriptions() {
                 return subscriptionRepair;
             }
 
@@ -498,8 +498,8 @@ public class TestSubscriptionHelper {
         };
     }
 
-    public SubscriptionTimeline getSubscriptionRepair(final UUID id, final BundleTimeline bundleRepair) {
-        for (final SubscriptionTimeline cur : bundleRepair.getSubscriptions()) {
+    public SubscriptionBaseTimeline getSubscriptionRepair(final UUID id, final BundleBaseTimeline bundleRepair) {
+        for (final SubscriptionBaseTimeline cur : bundleRepair.getSubscriptions()) {
             if (cur.getId().equals(id)) {
                 return cur;
             }
@@ -551,11 +551,11 @@ public class TestSubscriptionHelper {
         };
     }
 
-    public void sortEventsOnBundle(final BundleTimeline bundle) {
+    public void sortEventsOnBundle(final BundleBaseTimeline bundle) {
         if (bundle.getSubscriptions() == null) {
             return;
         }
-        for (final SubscriptionTimeline cur : bundle.getSubscriptions()) {
+        for (final SubscriptionBaseTimeline cur : bundle.getSubscriptions()) {
             if (cur.getExistingEvents() != null) {
                 sortExistingEvent(cur.getExistingEvents());
             }
@@ -665,7 +665,7 @@ public class TestSubscriptionHelper {
 
     public interface TestWithExceptionCallback {
 
-        public void doTest() throws SubscriptionRepairException, SubscriptionBaseApiException;
+        public void doTest() throws SubscriptionBaseRepairException, SubscriptionBaseApiException;
     }
 
     public static class TestWithException {
@@ -674,7 +674,7 @@ public class TestSubscriptionHelper {
             try {
                 callback.doTest();
                 Assert.fail("Failed to catch exception " + code);
-            } catch (SubscriptionRepairException e) {
+            } catch (SubscriptionBaseRepairException e) {
                 assertEquals(e.getCode(), code.getCode());
             }
         }

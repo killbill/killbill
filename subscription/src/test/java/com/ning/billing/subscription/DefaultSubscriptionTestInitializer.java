@@ -32,9 +32,9 @@ import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.clock.ClockMock;
 import com.ning.billing.mock.MockAccountBuilder;
-import com.ning.billing.subscription.api.SubscriptionService;
+import com.ning.billing.subscription.api.SubscriptionBaseService;
 import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
-import com.ning.billing.subscription.engine.core.DefaultSubscriptionService;
+import com.ning.billing.subscription.engine.core.DefaultSubscriptionBaseService;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
 import com.ning.billing.util.svcsapi.bus.BusService;
@@ -88,7 +88,7 @@ public class DefaultSubscriptionTestInitializer implements SubscriptionTestIniti
                                   final TestListenerStatus testListenerStatus,
                                   final ClockMock clock,
                                   final BusService busService,
-                                  final SubscriptionService subscriptionService) throws Exception {
+                                  final SubscriptionBaseService subscriptionBaseService) throws Exception {
         log.warn("STARTING TEST FRAMEWORK");
 
         resetTestListener(testListener, testListenerStatus);
@@ -97,18 +97,18 @@ public class DefaultSubscriptionTestInitializer implements SubscriptionTestIniti
 
         startBusAndRegisterListener(busService, testListener);
 
-        restartSubscriptionService(subscriptionService);
+        restartSubscriptionService(subscriptionBaseService);
 
         log.warn("STARTED TEST FRAMEWORK");
     }
 
     public void stopTestFramework(final TestApiListener testListener,
                                   final BusService busService,
-                                  final SubscriptionService subscriptionService) throws Exception {
+                                  final SubscriptionBaseService subscriptionBaseService) throws Exception {
         log.warn("STOPPING TEST FRAMEWORK");
         stopBusAndUnregisterListener(busService, testListener);
 
-        stopSubscriptionService(subscriptionService);
+        stopSubscriptionService(subscriptionBaseService);
 
         log.warn("STOPPED TEST FRAMEWORK");
     }
@@ -135,10 +135,10 @@ public class DefaultSubscriptionTestInitializer implements SubscriptionTestIniti
         busService.getBus().register(testListener);
     }
 
-    private void restartSubscriptionService(final SubscriptionService subscriptionService) {
+    private void restartSubscriptionService(final SubscriptionBaseService subscriptionBaseService) {
         // START NOTIFICATION QUEUE FOR SUBSCRIPTION
-        ((DefaultSubscriptionService) subscriptionService).initialize();
-        ((DefaultSubscriptionService) subscriptionService).start();
+        ((DefaultSubscriptionBaseService) subscriptionBaseService).initialize();
+        ((DefaultSubscriptionBaseService) subscriptionBaseService).start();
     }
 
     private void stopBusAndUnregisterListener(final BusService busService, final TestApiListener testListener) throws Exception {
@@ -146,7 +146,7 @@ public class DefaultSubscriptionTestInitializer implements SubscriptionTestIniti
         busService.getBus().stop();
     }
 
-    private void stopSubscriptionService(final SubscriptionService subscriptionService) throws Exception {
-        ((DefaultSubscriptionService) subscriptionService).stop();
+    private void stopSubscriptionService(final SubscriptionBaseService subscriptionBaseService) throws Exception {
+        ((DefaultSubscriptionBaseService) subscriptionBaseService).stop();
     }
 }

@@ -24,12 +24,11 @@ import java.util.UUID;
 import javax.inject.Inject;
 
 import com.ning.billing.ObjectType;
-import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.subscription.api.timeline.BundleTimeline;
+import com.ning.billing.subscription.api.timeline.BundleBaseTimeline;
+import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline;
 import com.ning.billing.subscription.api.timeline.SubscriptionRepairException;
 import com.ning.billing.subscription.api.timeline.SubscriptionTimelineApi;
-import com.ning.billing.subscription.api.timeline.SubscriptionTimeline;
-import com.ning.billing.subscription.api.timeline.SubscriptionTimeline.ExistingEvent;
+import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline.ExistingEvent;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
@@ -78,7 +77,7 @@ public class DefaultAuditUserApi implements AuditUserApi {
     public AuditLogsForBundles getAuditLogsForBundle(final UUID bundleId, final AuditLevel auditLevel, final TenantContext context)  {
 
         try {
-            return getAuditLogsForBundles(ImmutableList.<BundleTimeline>of(timelineApi.getBundleTimeline(bundleId, context)), auditLevel, context);
+            return getAuditLogsForBundles(ImmutableList.<BundleBaseTimeline>of(timelineApi.getBundleTimeline(bundleId, context)), auditLevel, context);
         } catch (SubscriptionRepairException e) {
             // STEPH_ENT
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
@@ -86,13 +85,13 @@ public class DefaultAuditUserApi implements AuditUserApi {
         }
     }
 
-    public AuditLogsForBundles getAuditLogsForBundles(final List<BundleTimeline> bundles, final AuditLevel auditLevel, final TenantContext context) {
+    public AuditLogsForBundles getAuditLogsForBundles(final List<BundleBaseTimeline> bundles, final AuditLevel auditLevel, final TenantContext context) {
         final Map<UUID, List<AuditLog>> bundlesAuditLogs = new HashMap<UUID, List<AuditLog>>();
         final Map<UUID, List<AuditLog>> subscriptionsAuditLogs = new HashMap<UUID, List<AuditLog>>();
         final Map<UUID, List<AuditLog>> subscriptionEventsAuditLogs = new HashMap<UUID, List<AuditLog>>();
-        for (final BundleTimeline bundle : bundles) {
+        for (final BundleBaseTimeline bundle : bundles) {
             bundlesAuditLogs.put(bundle.getId(), getAuditLogs(bundle.getId(), ObjectType.BUNDLE, auditLevel, context));
-            for (final SubscriptionTimeline subscriptionTimeline : bundle.getSubscriptions()) {
+            for (final SubscriptionBaseTimeline subscriptionTimeline : bundle.getSubscriptions()) {
                 subscriptionsAuditLogs.put(subscriptionTimeline.getId(), getAuditLogs(subscriptionTimeline.getId(), ObjectType.SUBSCRIPTION, auditLevel, context));
                 for (final ExistingEvent event : subscriptionTimeline.getExistingEvents()) {
                     subscriptionEventsAuditLogs.put(event.getEventId(), getAuditLogs(event.getEventId(), ObjectType.SUBSCRIPTION_EVENT, auditLevel, context));

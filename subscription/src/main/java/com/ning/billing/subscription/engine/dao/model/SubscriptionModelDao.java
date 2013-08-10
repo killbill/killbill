@@ -22,7 +22,7 @@ import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.subscription.api.user.SubscriptionBuilder;
-import com.ning.billing.subscription.api.user.SubscriptionData;
+import com.ning.billing.subscription.api.user.DefaultSubscriptionBase;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.EntityBase;
@@ -52,7 +52,7 @@ public class SubscriptionModelDao extends EntityBase implements EntityModelDao<S
         this.paidThroughDate = paidThroughDate;
     }
 
-    public SubscriptionModelDao(final SubscriptionData src) {
+    public SubscriptionModelDao(final DefaultSubscriptionBase src) {
         this(src.getId(), src.getBundleId(), src.getCategory(), src.getAlignStartDate(), src.getBundleStartDate(), src.getActiveVersion(),
              src.getChargedThroughDate(), src.getPaidThroughDate(), src.getCreatedDate(), src.getUpdatedDate());
     }
@@ -89,7 +89,7 @@ public class SubscriptionModelDao extends EntityBase implements EntityModelDao<S
         if (src == null) {
             return null;
         }
-        return new SubscriptionData(new SubscriptionBuilder()
+        return new DefaultSubscriptionBase(new SubscriptionBuilder()
                                             .setId(src.getId())
                                             .setBundleId(src.getBundleId())
                                             .setCategory(src.getCategory())

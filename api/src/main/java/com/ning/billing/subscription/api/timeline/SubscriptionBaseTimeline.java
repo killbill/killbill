@@ -31,7 +31,7 @@ import com.ning.billing.util.entity.Entity;
  * It can be used to display information, or it can be used to modify the subscription stream of events
  * and 'repair' the stream by versioning the events.
  */
-public interface SubscriptionTimeline extends Entity {
+public interface SubscriptionBaseTimeline extends Entity {
 
     /**
      * @return the list of events that should be deleted when repairing the stream.

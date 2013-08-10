@@ -16,21 +16,21 @@
 
 package com.ning.billing.subscription.api.transfer;
 
-import com.ning.billing.subscription.api.user.SubscriptionData;
+import com.ning.billing.subscription.api.user.DefaultSubscriptionBase;
 import com.ning.billing.subscription.events.SubscriptionEvent;
 
 public class TransferCancelData {
 
-    final SubscriptionData subscription;
+    final DefaultSubscriptionBase subscription;
     final SubscriptionEvent cancelEvent;
 
-    public TransferCancelData(final SubscriptionData subscription,
+    public TransferCancelData(final DefaultSubscriptionBase subscription,
                               final SubscriptionEvent cancelEvent) {
         this.subscription = subscription;
         this.cancelEvent = cancelEvent;
     }
 
-    public SubscriptionData getSubscription() {
+    public DefaultSubscriptionBase getSubscription() {
         return subscription;
     }
 

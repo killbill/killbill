@@ -24,11 +24,11 @@ import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
 import com.ning.billing.ErrorCode;
-import com.ning.billing.subscription.api.timeline.SubscriptionRepairException;
+import com.ning.billing.subscription.api.timeline.SubscriptionBaseRepairException;
 
 @Singleton
 @Provider
-public class SubscriptionRepairExceptionMapper extends ExceptionMapperBase implements ExceptionMapper<SubscriptionRepairException> {
+public class SubscriptionRepairExceptionMapper extends ExceptionMapperBase implements ExceptionMapper<SubscriptionBaseRepairException> {
 
     private final UriInfo uriInfo;
 
@@ -37,7 +37,7 @@ public class SubscriptionRepairExceptionMapper extends ExceptionMapperBase imple
     }
 
     @Override
-    public Response toResponse(final SubscriptionRepairException exception) {
+    public Response toResponse(final SubscriptionBaseRepairException exception) {
         if (exception.getCode() == ErrorCode.SUB_REPAIR_AO_CREATE_BEFORE_BP_START.getCode()) {
             return buildBadRequestResponse(exception, uriInfo);
         } else if (exception.getCode() == ErrorCode.SUB_REPAIR_BP_RECREATE_MISSING_AO.getCode()) {

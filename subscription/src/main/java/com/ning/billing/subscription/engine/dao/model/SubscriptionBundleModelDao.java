@@ -20,7 +20,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.subscription.api.user.SubscriptionBundleData;
+import com.ning.billing.subscription.api.user.DefaultSubscriptionBaseBundle;
 import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.EntityBase;
@@ -42,7 +42,7 @@ public class SubscriptionBundleModelDao extends EntityBase implements EntityMode
         this.lastSysUpdateDate = lastSysUpdateDate;
     }
 
-    public SubscriptionBundleModelDao(final SubscriptionBundleData input) {
+    public SubscriptionBundleModelDao(final DefaultSubscriptionBaseBundle input) {
         this(input.getId(), input.getExternalKey(), input.getAccountId(), input.getLastSysUpdateDate(), input.getCreatedDate(), input.getUpdatedDate());
     }
 
@@ -62,7 +62,7 @@ public class SubscriptionBundleModelDao extends EntityBase implements EntityMode
         if (src == null) {
             return null;
         }
-        return new SubscriptionBundleData(src.getId(), src.getExternalKey(), src.getAccountId(), src.getLastSysUpdateDate());
+        return new DefaultSubscriptionBaseBundle(src.getId(), src.getExternalKey(), src.getAccountId(), src.getLastSysUpdateDate());
     }
 
     @Override

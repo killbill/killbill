@@ -31,7 +31,7 @@ public class TestUtilModule extends AbstractModule {
         this.configSource = configSource;
     }
 
-    // TODO STEPH this is bad-- because DefaultAuditUserApi is using SubscriptionTimeline API
+    // TODO STEPH this is bad-- because DefaultAuditUserApi is using SubscriptionBaseTimeline API
     public void installHack() {
         bind(SubscriptionTimelineApi.class).toInstance(Mockito.mock(SubscriptionTimelineApi.class));
     }

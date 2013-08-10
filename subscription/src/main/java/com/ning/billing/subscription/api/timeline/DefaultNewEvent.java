@@ -21,7 +21,7 @@ import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
-import com.ning.billing.subscription.api.timeline.SubscriptionTimeline.NewEvent;
+import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline.NewEvent;
 
 public class DefaultNewEvent implements NewEvent {
 

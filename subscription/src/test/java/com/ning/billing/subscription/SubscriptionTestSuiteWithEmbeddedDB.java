@@ -34,10 +34,10 @@ import com.ning.billing.api.TestListenerStatus;
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.clock.ClockMock;
-import com.ning.billing.subscription.api.SubscriptionService;
-import com.ning.billing.subscription.api.migration.SubscriptionMigrationApi;
-import com.ning.billing.subscription.api.timeline.SubscriptionTimelineApi;
-import com.ning.billing.subscription.api.transfer.SubscriptionTransferApi;
+import com.ning.billing.subscription.api.SubscriptionBaseService;
+import com.ning.billing.subscription.api.migration.SubscriptionBaseMigrationApi;
+import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimelineApi;
+import com.ning.billing.subscription.api.transfer.SubscriptionBaseTransferApi;
 import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.subscription.api.user.TestSubscriptionHelper;
 import com.ning.billing.subscription.engine.dao.SubscriptionDao;
@@ -55,16 +55,16 @@ public class SubscriptionTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteW
     protected static final Logger log = LoggerFactory.getLogger(SubscriptionTestSuiteWithEmbeddedDB.class);
 
     @Inject
-    protected SubscriptionService subscriptionService;
+    protected SubscriptionBaseService subscriptionBaseService;
     @Inject
     protected SubscriptionBaseInternalApi subscriptionInternalApi;
     @Inject
-    protected SubscriptionTransferApi transferApi;
+    protected SubscriptionBaseTransferApi transferApi;
 
     @Inject
-    protected SubscriptionMigrationApi migrationApi;
+    protected SubscriptionBaseMigrationApi migrationApi;
     @Inject
-    protected SubscriptionTimelineApi repairApi;
+    protected SubscriptionBaseTimelineApi repairApi;
 
     @Inject
     protected CatalogService catalogService;
@@ -109,7 +109,7 @@ public class SubscriptionTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteW
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
         super.beforeMethod();
-        subscriptionTestInitializer.startTestFamework(testListener, testListenerStatus, clock, busService, subscriptionService);
+        subscriptionTestInitializer.startTestFamework(testListener, testListenerStatus, clock, busService, subscriptionBaseService);
 
         this.catalog = subscriptionTestInitializer.initCatalog(catalogService);
         this.accountData = subscriptionTestInitializer.initAccountData();
@@ -118,7 +118,7 @@ public class SubscriptionTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteW
 
     @AfterMethod(groups = "slow")
     public void afterMethod() throws Exception {
-        subscriptionTestInitializer.stopTestFramework(testListener, busService, subscriptionService);
+        subscriptionTestInitializer.stopTestFramework(testListener, busService, subscriptionBaseService);
     }
 
     protected void assertListenerStatus() {

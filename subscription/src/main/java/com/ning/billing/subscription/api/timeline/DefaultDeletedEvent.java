@@ -19,7 +19,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.subscription.api.timeline.SubscriptionTimeline.DeletedEvent;
+import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline.DeletedEvent;
 
 public class DefaultDeletedEvent implements DeletedEvent {
 

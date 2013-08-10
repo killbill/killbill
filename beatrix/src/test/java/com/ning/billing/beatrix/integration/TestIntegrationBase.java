@@ -82,7 +82,7 @@ import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.payment.api.TestPaymentMethodPluginBase;
 import com.ning.billing.payment.provider.MockPaymentProviderPlugin;
 import com.ning.billing.subscription.api.SubscriptionBase;
-import com.ning.billing.subscription.api.SubscriptionService;
+import com.ning.billing.subscription.api.SubscriptionBaseService;
 import com.ning.billing.subscription.api.timeline.SubscriptionTimelineApi;
 import com.ning.billing.subscription.api.transfer.SubscriptionTransferApi;
 import com.ning.billing.subscription.api.user.SubscriptionData;
@@ -129,7 +129,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     protected BusService busService;
 
     @Inject
-    protected SubscriptionService subscriptionService;
+    protected SubscriptionBaseService subscriptionBaseService;
 
     @Inject
     protected InvoiceService invoiceService;

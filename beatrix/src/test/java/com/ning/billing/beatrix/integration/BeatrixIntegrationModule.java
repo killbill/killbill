@@ -39,7 +39,7 @@ import com.ning.billing.beatrix.util.PaymentChecker;
 import com.ning.billing.beatrix.util.RefundChecker;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.glue.CatalogModule;
-import com.ning.billing.subscription.api.SubscriptionService;
+import com.ning.billing.subscription.api.SubscriptionBaseService;
 import com.ning.billing.invoice.api.InvoiceService;
 import com.ning.billing.invoice.generator.DefaultInvoiceGeneratorWithSwitchRepairLogic;
 import com.ning.billing.invoice.generator.InvoiceGenerator;
@@ -182,7 +182,7 @@ public class BeatrixIntegrationModule extends AbstractModule {
                     .add(injector.getInstance(AccountService.class))
                     .add(injector.getInstance(BusService.class))
                     .add(injector.getInstance(CatalogService.class))
-                    .add(injector.getInstance(SubscriptionService.class))
+                    .add(injector.getInstance(SubscriptionBaseService.class))
                     .add(injector.getInstance(InvoiceService.class))
                     .add(injector.getInstance(PaymentService.class))
                     .add(injector.getInstance(OverdueService.class))

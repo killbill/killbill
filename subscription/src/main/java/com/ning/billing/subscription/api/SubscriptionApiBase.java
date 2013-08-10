@@ -20,11 +20,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.ning.billing.catalog.api.CatalogService;
+import com.ning.billing.subscription.api.user.DefaultSubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBuilder;
-import com.ning.billing.subscription.api.user.SubscriptionData;
 import com.ning.billing.subscription.engine.dao.SubscriptionDao;
 import com.ning.billing.subscription.events.SubscriptionEvent;
-import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.clock.Clock;
 
 import com.google.common.base.Function;
@@ -34,11 +33,11 @@ public class SubscriptionApiBase {
 
     protected final SubscriptionDao dao;
 
-    protected final SubscriptionApiService apiService;
+    protected final SubscriptionBaseApiService apiService;
     protected final Clock clock;
     protected final CatalogService catalogService;
 
-    public SubscriptionApiBase(final SubscriptionDao dao, final SubscriptionApiService apiService, final Clock clock, final CatalogService catalogService) {
+    public SubscriptionApiBase(final SubscriptionDao dao, final SubscriptionBaseApiService apiService, final Clock clock, final CatalogService catalogService) {
         this.dao = dao;
         this.apiService = apiService;
         this.clock = clock;
@@ -49,17 +48,17 @@ public class SubscriptionApiBase {
         return new ArrayList<SubscriptionBase>(Collections2.transform(internalSubscriptions, new Function<SubscriptionBase, SubscriptionBase>() {
             @Override
             public SubscriptionBase apply(final SubscriptionBase subscription) {
-                return createSubscriptionForApiUse((SubscriptionData) subscription);
+                return createSubscriptionForApiUse((DefaultSubscriptionBase) subscription);
             }
         }));
     }
 
-    protected SubscriptionData createSubscriptionForApiUse(final SubscriptionBase internalSubscription) {
-        return new SubscriptionData((SubscriptionData) internalSubscription, apiService, clock);
+    protected DefaultSubscriptionBase createSubscriptionForApiUse(final SubscriptionBase internalSubscription) {
+        return new DefaultSubscriptionBase((DefaultSubscriptionBase) internalSubscription, apiService, clock);
     }
 
-    protected SubscriptionData createSubscriptionForApiUse(SubscriptionBuilder builder, List<SubscriptionEvent> events) {
-        final SubscriptionData subscription = new SubscriptionData(builder, apiService, clock);
+    protected DefaultSubscriptionBase createSubscriptionForApiUse(SubscriptionBuilder builder, List<SubscriptionEvent> events) {
+        final DefaultSubscriptionBase subscription = new DefaultSubscriptionBase(builder, apiService, clock);
         if (events.size() > 0) {
             subscription.rebuildTransitions(events, catalogService.getFullCatalog());
         }

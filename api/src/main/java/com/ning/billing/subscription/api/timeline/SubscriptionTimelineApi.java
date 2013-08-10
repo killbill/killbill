@@ -24,15 +24,15 @@ import com.ning.billing.util.callcontext.TenantContext;
 
 public interface SubscriptionTimelineApi {
 
-    public BundleTimeline getBundleTimeline(SubscriptionBaseBundle bundle, TenantContext context)
+    public BundleBaseTimeline getBundleTimeline(SubscriptionBaseBundle bundle, TenantContext context)
             throws SubscriptionRepairException;
 
-    public BundleTimeline getBundleTimeline(UUID accountId, String bundleName, TenantContext context)
+    public BundleBaseTimeline getBundleTimeline(UUID accountId, String bundleName, TenantContext context)
             throws SubscriptionRepairException;
 
-    public BundleTimeline getBundleTimeline(UUID bundleId, TenantContext context)
+    public BundleBaseTimeline getBundleTimeline(UUID bundleId, TenantContext context)
             throws SubscriptionRepairException;
 
-    public BundleTimeline repairBundle(BundleTimeline input, boolean dryRun, CallContext context)
+    public BundleBaseTimeline repairBundle(BundleBaseTimeline input, boolean dryRun, CallContext context)
             throws SubscriptionRepairException;
 }

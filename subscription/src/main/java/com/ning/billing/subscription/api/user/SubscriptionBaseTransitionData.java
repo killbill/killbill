@@ -26,7 +26,7 @@ import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.subscription.events.SubscriptionEvent.EventType;
 import com.ning.billing.subscription.events.user.ApiEventType;
-import com.ning.billing.subscription.exceptions.SubscriptionError;
+import com.ning.billing.subscription.exceptions.SubscriptionBaseError;
 
 public class SubscriptionBaseTransitionData implements SubscriptionBaseTransition {
     private final Long totalOrdering;
@@ -226,7 +226,7 @@ public class SubscriptionBaseTransitionData implements SubscriptionBaseTransitio
             case PHASE:
                 return SubscriptionBaseTransitionType.PHASE;
             default:
-                throw new SubscriptionError("Unexpected event type " + eventType);
+                throw new SubscriptionBaseError("Unexpected event type " + eventType);
         }
     }
 

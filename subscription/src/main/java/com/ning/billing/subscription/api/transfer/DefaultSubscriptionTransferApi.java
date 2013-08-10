@@ -33,6 +33,7 @@ import com.ning.billing.subscription.api.SubscriptionApiBase;
 import com.ning.billing.subscription.api.SubscriptionApiService;
 import com.ning.billing.subscription.api.migration.AccountMigrationData.BundleMigrationData;
 import com.ning.billing.subscription.api.migration.AccountMigrationData.SubscriptionMigrationData;
+import com.ning.billing.subscription.api.timeline.BundleBaseTimeline;
 import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.subscription.api.user.SubscriptionBuilder;
 import com.ning.billing.subscription.api.user.SubscriptionBundleData;
@@ -45,10 +46,9 @@ import com.ning.billing.subscription.events.user.ApiEventCancel;
 import com.ning.billing.subscription.events.user.ApiEventChange;
 import com.ning.billing.subscription.events.user.ApiEventTransfer;
 import com.ning.billing.subscription.exceptions.SubscriptionError;
-import com.ning.billing.subscription.api.timeline.BundleTimeline;
 import com.ning.billing.subscription.api.timeline.SubscriptionRepairException;
-import com.ning.billing.subscription.api.timeline.SubscriptionTimeline;
-import com.ning.billing.subscription.api.timeline.SubscriptionTimeline.ExistingEvent;
+import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline;
+import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline.ExistingEvent;
 
 import com.ning.billing.subscription.api.timeline.SubscriptionTimelineApi;
 import com.ning.billing.subscription.api.user.SubscriptionState;
@@ -206,7 +206,7 @@ public class DefaultSubscriptionTransferApi extends SubscriptionApiBase implemen
             }
 
             // Get the bundle timeline for the old account
-            final BundleTimeline bundleTimeline = timelineApi.getBundleTimeline(bundle, context);
+            final BundleBaseTimeline bundleBaseTimeline = timelineApi.getBundleTimeline(bundle, context);
 
             final SubscriptionBundleData subscriptionBundleData = new SubscriptionBundleData(bundleKey, destAccountId, effectiveTransferDate);
             final List<SubscriptionMigrationData> subscriptionMigrationDataList = new LinkedList<SubscriptionMigrationData>();
@@ -215,7 +215,7 @@ public class DefaultSubscriptionTransferApi extends SubscriptionApiBase implemen
 
             DateTime bundleStartdate = null;
 
-            for (final SubscriptionTimeline cur : bundleTimeline.getSubscriptions()) {
+            for (final SubscriptionBaseTimeline cur : bundleBaseTimeline.getSubscriptions()) {
                 final SubscriptionData oldSubscription = (SubscriptionData) dao.getSubscriptionFromId(cur.getId(), fromInternalCallContext);
                 // Skip already cancelled subscriptions
                 if (oldSubscription.getState() == SubscriptionState.CANCELLED) {

@@ -29,10 +29,10 @@ import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.subscription.SubscriptionTestSuiteWithEmbeddedDB;
-import com.ning.billing.subscription.api.migration.SubscriptionMigrationApi.AccountMigration;
+import com.ning.billing.subscription.api.migration.SubscriptionBaseMigrationApi.AccountMigration;
+import com.ning.billing.subscription.api.user.DefaultSubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.subscription.api.user.SubscriptionBaseTransition;
-import com.ning.billing.subscription.api.user.SubscriptionData;
 import com.ning.billing.subscription.api.user.SubscriptionBaseTransitionData;
 import com.ning.billing.subscription.events.user.ApiEventType;
 import com.ning.billing.subscription.api.SubscriptionBase;
@@ -74,7 +74,7 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
             assertEquals(subscription.getChargedThroughDate(), startDate.plusYears(1));
 
             assertListenerStatus();
-        } catch (SubscriptionMigrationApiException e) {
+        } catch (SubscriptionBaseMigrationApiException e) {
             Assert.fail("", e);
         }
     }
@@ -123,7 +123,7 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
             assertEquals(aoSubscription.getChargedThroughDate(), initalAddonStart.plusMonths(1));
 
             assertListenerStatus();
-        } catch (SubscriptionMigrationApiException e) {
+        } catch (SubscriptionBaseMigrationApiException e) {
             Assert.fail("", e);
         }
     }
@@ -172,7 +172,7 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
             assertNull(subscription.getCurrentPlan());
 
             assertListenerStatus();
-        } catch (SubscriptionMigrationApiException e) {
+        } catch (SubscriptionBaseMigrationApiException e) {
             Assert.fail("", e);
         }
     }
@@ -219,7 +219,7 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
             assertEquals(subscription.getCurrentPhase().getName(), "assault-rifle-monthly-evergreen");
 
             assertListenerStatus();
-        } catch (SubscriptionMigrationApiException e) {
+        } catch (SubscriptionBaseMigrationApiException e) {
             Assert.fail("", e);
         }
     }
@@ -266,7 +266,7 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
 
             assertListenerStatus();
 
-        } catch (SubscriptionMigrationApiException e) {
+        } catch (SubscriptionBaseMigrationApiException e) {
             Assert.fail("", e);
         }
     }
@@ -289,7 +289,7 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
 
             final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(bundles.get(0).getId(), internalCallContext);
             assertEquals(subscriptions.size(), 1);
-            final SubscriptionData subscription = (SubscriptionData) subscriptions.get(0);
+            final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) subscriptions.get(0);
 
             final List<SubscriptionBaseTransition> transitions = subscription.getAllTransitions();
             assertEquals(transitions.size(), 2);
@@ -325,7 +325,7 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
             assertEquals(newBillingTransitions.get(0), newMigrateBilling);
 
 
-        } catch (SubscriptionMigrationApiException e) {
+        } catch (SubscriptionBaseMigrationApiException e) {
             Assert.fail("", e);
         }
 

@@ -31,7 +31,7 @@ import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
-import com.ning.billing.subscription.api.timeline.SubscriptionTimeline;
+import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline;
 import com.ning.billing.jaxrs.JaxrsTestSuiteNoDB;
 
 import com.google.common.collect.ImmutableList;
@@ -60,7 +60,7 @@ public class TestBundleTimelineJson extends JaxrsTestSuiteNoDB {
     }
 
     private BundleJsonWithSubscriptions createBundleWithSubscriptions() {
-        final SubscriptionTimeline.ExistingEvent event = Mockito.mock(SubscriptionTimeline.ExistingEvent.class);
+        final SubscriptionBaseTimeline.ExistingEvent event = Mockito.mock(SubscriptionBaseTimeline.ExistingEvent.class);
         final DateTime effectiveDate = clock.getUTCNow();
         final UUID eventId = UUID.randomUUID();
         final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier(UUID.randomUUID().toString(), ProductCategory.BASE,
@@ -71,9 +71,9 @@ public class TestBundleTimelineJson extends JaxrsTestSuiteNoDB {
         Mockito.when(event.getSubscriptionTransitionType()).thenReturn(SubscriptionBaseTransitionType.CREATE);
         Mockito.when(event.getPlanPhaseSpecifier()).thenReturn(planPhaseSpecifier);
 
-        final SubscriptionTimeline subscriptionTimeline = Mockito.mock(SubscriptionTimeline.class);
+        final SubscriptionBaseTimeline subscriptionTimeline = Mockito.mock(SubscriptionBaseTimeline.class);
         Mockito.when(subscriptionTimeline.getId()).thenReturn(UUID.randomUUID());
-        Mockito.when(subscriptionTimeline.getExistingEvents()).thenReturn(ImmutableList.<SubscriptionTimeline.ExistingEvent>of(event));
+        Mockito.when(subscriptionTimeline.getExistingEvents()).thenReturn(ImmutableList.<SubscriptionBaseTimeline.ExistingEvent>of(event));
 
         final UUID bundleId = UUID.randomUUID();
         final String externalKey = UUID.randomUUID().toString();

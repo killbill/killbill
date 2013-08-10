@@ -55,7 +55,7 @@ public class DefaultRequestedSubscriptionEvent extends DefaultSubscriptionEvent 
               transitionType, remainingEventsForUserOperation, startDate, searchKey1, searchKey2, userToken);
     }
 
-    public DefaultRequestedSubscriptionEvent(final SubscriptionData subscription,
+    public DefaultRequestedSubscriptionEvent(final DefaultSubscriptionBase subscription,
                                              final SubscriptionEvent nextEvent,
                                              final Long searchKey1,
                                              final Long searchKey2,

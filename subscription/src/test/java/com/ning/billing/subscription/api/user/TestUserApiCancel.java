@@ -48,7 +48,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
             final String planSet = PriceListSet.DEFAULT_PRICELIST_NAME;
 
             // CREATE
-            final SubscriptionData subscription = testUtil.createSubscription(bundle, prod, term, planSet);
+            final DefaultSubscriptionBase subscription = testUtil.createSubscription(bundle, prod, term, planSet);
             PlanPhase currentPhase = subscription.getCurrentPhase();
             assertEquals(currentPhase.getPhaseType(), PhaseType.TRIAL);
 
@@ -93,7 +93,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
             final String planSet = PriceListSet.DEFAULT_PRICELIST_NAME;
 
             // CREATE
-            SubscriptionData subscription = testUtil.createSubscription(bundle, prod, term, planSet);
+            DefaultSubscriptionBase subscription = testUtil.createSubscription(bundle, prod, term, planSet);
             PlanPhase trialPhase = subscription.getCurrentPhase();
             assertEquals(trialPhase.getPhaseType(), PhaseType.TRIAL);
 
@@ -114,7 +114,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
             final Duration ctd = testUtil.getDurationMonth(1);
             final DateTime newChargedThroughDate = TestSubscriptionHelper.addDuration(expectedPhaseTrialChange, ctd);
             subscriptionInternalApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate, internalCallContext);
-            subscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
+            subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
 
             assertEquals(subscription.getLastActiveProductName(), prod);
             assertEquals(subscription.getLastActivePriceListName(), planSet);
@@ -170,7 +170,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
             final String planSet = PriceListSet.DEFAULT_PRICELIST_NAME;
 
             // CREATE
-            final SubscriptionData subscription = testUtil.createSubscription(bundle, prod, term, planSet);
+            final DefaultSubscriptionBase subscription = testUtil.createSubscription(bundle, prod, term, planSet);
             PlanPhase trialPhase = subscription.getCurrentPhase();
             assertEquals(trialPhase.getPhaseType(), PhaseType.TRIAL);
 
@@ -214,7 +214,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
             final String planSet = PriceListSet.DEFAULT_PRICELIST_NAME;
 
             // CREATE
-            SubscriptionData subscription = testUtil.createSubscription(bundle, prod, term, planSet);
+            DefaultSubscriptionBase subscription = testUtil.createSubscription(bundle, prod, term, planSet);
             final PlanPhase trialPhase = subscription.getCurrentPhase();
             assertEquals(trialPhase.getPhaseType(), PhaseType.TRIAL);
 
@@ -234,7 +234,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
             final Duration ctd = testUtil.getDurationMonth(1);
             final DateTime newChargedThroughDate = TestSubscriptionHelper.addDuration(expectedPhaseTrialChange, ctd);
             subscriptionInternalApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate, internalCallContext);
-            subscription = (SubscriptionData) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
+            subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
 
             // CANCEL EOT
             subscription.cancel(clock.getUTCNow(), callContext);

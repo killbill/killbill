@@ -36,13 +36,13 @@ import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.DefaultEntitlement;
 import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
+import com.ning.billing.subscription.api.timeline.BundleBaseTimeline;
+import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline;
 import com.ning.billing.subscription.api.user.SubscriptionData;
 import com.ning.billing.subscription.api.user.SubscriptionEvents;
-import com.ning.billing.subscription.api.timeline.BundleTimeline;
-import com.ning.billing.subscription.api.timeline.SubscriptionTimeline;
-import com.ning.billing.subscription.api.timeline.SubscriptionTimeline.DeletedEvent;
-import com.ning.billing.subscription.api.timeline.SubscriptionTimeline.ExistingEvent;
-import com.ning.billing.subscription.api.timeline.SubscriptionTimeline.NewEvent;
+import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline.DeletedEvent;
+import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline.ExistingEvent;
+import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline.NewEvent;
 import com.ning.billing.subscription.api.user.SubscriptionState;
 
 import static org.testng.Assert.assertEquals;
@@ -101,22 +101,22 @@ public class TestRepairIntegration extends TestIntegrationBase {
         }
         final boolean ifRepair = false;
         if (ifRepair) {
-            BundleTimeline bundleRepair = repairApi.getBundleTimeline(bpEntitlement.getSubscriptionBase().getBundleId(), callContext);
+            BundleBaseTimeline bundleRepair = repairApi.getBundleTimeline(bpEntitlement.getSubscriptionBase().getBundleId(), callContext);
             sortEventsOnBundle(bundleRepair);
 
             // Quick check
-            SubscriptionTimeline bpRepair = getSubscriptionRepair(bpEntitlement.getId(), bundleRepair);
+            SubscriptionBaseTimeline bpRepair = getSubscriptionRepair(bpEntitlement.getId(), bundleRepair);
             assertEquals(bpRepair.getExistingEvents().size(), 2);
 
-            final SubscriptionTimeline aoRepair = getSubscriptionRepair(aoEntitlement1.getId(), bundleRepair);
+            final SubscriptionBaseTimeline aoRepair = getSubscriptionRepair(aoEntitlement1.getId(), bundleRepair);
             assertEquals(aoRepair.getExistingEvents().size(), 2);
 
-            final SubscriptionTimeline aoRepair2 = getSubscriptionRepair(aoEntitlement2.getId(), bundleRepair);
+            final SubscriptionBaseTimeline aoRepair2 = getSubscriptionRepair(aoEntitlement2.getId(), bundleRepair);
             assertEquals(aoRepair2.getExistingEvents().size(), 2);
 
             final DateTime bpChangeDate = clock.getUTCNow().minusDays(1);
 
-            final List<DeletedEvent> des = new LinkedList<SubscriptionTimeline.DeletedEvent>();
+            final List<DeletedEvent> des = new LinkedList<SubscriptionBaseTimeline.DeletedEvent>();
             des.add(createDeletedEvent(bpRepair.getExistingEvents().get(1).getEventId()));
 
             final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.TRIAL);
@@ -154,8 +154,8 @@ public class TestRepairIntegration extends TestIntegrationBase {
         }
     }
 
-    protected SubscriptionTimeline createSubscriptionReapir(final UUID id, final List<DeletedEvent> deletedEvents, final List<NewEvent> newEvents) {
-        return new SubscriptionTimeline() {
+    protected SubscriptionBaseTimeline createSubscriptionReapir(final UUID id, final List<DeletedEvent> deletedEvents, final List<NewEvent> newEvents) {
+        return new SubscriptionBaseTimeline() {
             @Override
             public UUID getId() {
                 return id;
@@ -194,15 +194,15 @@ public class TestRepairIntegration extends TestIntegrationBase {
     }
 
 
-    protected BundleTimeline createBundleRepair(final UUID bundleId, final String viewId, final List<SubscriptionTimeline> subscriptionRepair) {
-        return new BundleTimeline() {
+    protected BundleBaseTimeline createBundleRepair(final UUID bundleId, final String viewId, final List<SubscriptionBaseTimeline> subscriptionRepair) {
+        return new BundleBaseTimeline() {
             @Override
             public String getViewId() {
                 return viewId;
             }
 
             @Override
-            public List<SubscriptionTimeline> getSubscriptions() {
+            public List<SubscriptionBaseTimeline> getSubscriptions() {
                 return subscriptionRepair;
             }
 
@@ -267,8 +267,8 @@ public class TestRepairIntegration extends TestIntegrationBase {
         return ev;
     }
 
-    protected SubscriptionTimeline getSubscriptionRepair(final UUID id, final BundleTimeline bundleRepair) {
-        for (final SubscriptionTimeline cur : bundleRepair.getSubscriptions()) {
+    protected SubscriptionBaseTimeline getSubscriptionRepair(final UUID id, final BundleBaseTimeline bundleRepair) {
+        for (final SubscriptionBaseTimeline cur : bundleRepair.getSubscriptions()) {
             if (cur.getId().equals(id)) {
                 return cur;
             }
@@ -322,11 +322,11 @@ public class TestRepairIntegration extends TestIntegrationBase {
         };
     }
 
-    protected void sortEventsOnBundle(final BundleTimeline bundle) {
+    protected void sortEventsOnBundle(final BundleBaseTimeline bundle) {
         if (bundle.getSubscriptions() == null) {
             return;
         }
-        for (final SubscriptionTimeline cur : bundle.getSubscriptions()) {
+        for (final SubscriptionBaseTimeline cur : bundle.getSubscriptions()) {
             if (cur.getExistingEvents() != null) {
                 sortExistingEvent(cur.getExistingEvents());
             }

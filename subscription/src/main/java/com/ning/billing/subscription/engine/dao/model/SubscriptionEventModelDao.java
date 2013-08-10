@@ -37,7 +37,7 @@ import com.ning.billing.subscription.events.user.ApiEventReCreate;
 import com.ning.billing.subscription.events.user.ApiEventTransfer;
 import com.ning.billing.subscription.events.user.ApiEventType;
 import com.ning.billing.subscription.events.user.ApiEventUncancel;
-import com.ning.billing.subscription.exceptions.SubscriptionError;
+import com.ning.billing.subscription.exceptions.SubscriptionBaseError;
 import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.EntityBase;
 import com.ning.billing.util.entity.dao.EntityModelDao;
@@ -193,7 +193,7 @@ public class SubscriptionEventModelDao extends EntityBase implements EntityModel
                 result = new ApiEventUncancel(builder);
             }
         } else {
-            throw new SubscriptionError(String.format("Can't figure out event %s", src.getEventType()));
+            throw new SubscriptionBaseError(String.format("Can't figure out event %s", src.getEventType()));
         }
         return result;
     }

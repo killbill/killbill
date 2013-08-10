@@ -39,11 +39,11 @@ import com.ning.billing.subscription.api.migration.AccountMigrationData.BundleMi
 import com.ning.billing.subscription.api.migration.AccountMigrationData.SubscriptionMigrationData;
 import com.ning.billing.subscription.api.timeline.SubscriptionDataRepair;
 import com.ning.billing.subscription.api.transfer.TransferCancelData;
+import com.ning.billing.subscription.api.user.DefaultSubscriptionBase;
+import com.ning.billing.subscription.api.user.DefaultSubscriptionBaseBundle;
 import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.subscription.api.user.SubscriptionBuilder;
-import com.ning.billing.subscription.api.user.SubscriptionBundleData;
-import com.ning.billing.subscription.api.user.SubscriptionData;
-import com.ning.billing.subscription.engine.core.DefaultSubscriptionService;
+import com.ning.billing.subscription.engine.core.DefaultSubscriptionBaseService;
 import com.ning.billing.subscription.engine.core.SubscriptionNotificationKey;
 import com.ning.billing.subscription.events.SubscriptionEvent;
 import com.ning.billing.subscription.events.SubscriptionEvent.EventType;
@@ -134,7 +134,7 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
     }
 
     @Override
-    public SubscriptionBaseBundle createSubscriptionBundle(final SubscriptionBundleData bundle, final InternalCallContext context) {
+    public SubscriptionBaseBundle createSubscriptionBundle(final DefaultSubscriptionBaseBundle bundle, final InternalCallContext context) {
         bundles.add(bundle);
         return getSubscriptionBundleFromId(bundle.getId(), context);
     }
@@ -143,7 +143,7 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
     public SubscriptionBase getSubscriptionFromId(final UUID subscriptionId, final InternalTenantContext context) {
         for (final SubscriptionBase cur : subscriptions) {
             if (cur.getId().equals(subscriptionId)) {
-                return buildSubscription((SubscriptionData) cur, context);
+                return buildSubscription((DefaultSubscriptionBase) cur, context);
             }
         }
         return null;
@@ -166,7 +166,7 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
     }
 
     @Override
-    public void createSubscription(final SubscriptionData subscription, final List<SubscriptionEvent> initialEvents,
+    public void createSubscription(final DefaultSubscriptionBase subscription, final List<SubscriptionEvent> initialEvents,
                                    final InternalCallContext context) {
         synchronized (events) {
             events.addAll(initialEvents);
@@ -179,7 +179,7 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
     }
 
     @Override
-    public void recreateSubscription(final SubscriptionData subscription, final List<SubscriptionEvent> recreateEvents, final InternalCallContext context) {
+    public void recreateSubscription(final DefaultSubscriptionBase subscription, final List<SubscriptionEvent> recreateEvents, final InternalCallContext context) {
         synchronized (events) {
             events.addAll(recreateEvents);
             for (final SubscriptionEvent cur : recreateEvents) {
@@ -193,7 +193,7 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
         final List<SubscriptionBase> results = new ArrayList<SubscriptionBase>();
         for (final SubscriptionBase cur : subscriptions) {
             if (cur.getBundleId().equals(bundleId)) {
-                results.add(buildSubscription((SubscriptionData) cur, context));
+                results.add(buildSubscription((DefaultSubscriptionBase) cur, context));
             }
         }
         return results;
@@ -232,20 +232,20 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
         for (final SubscriptionBase cur : subscriptions) {
             if (cur.getBundleId().equals(bundleId) &&
                 cur.getCurrentPlan().getProduct().getCategory() == ProductCategory.BASE) {
-                return buildSubscription((SubscriptionData) cur, context);
+                return buildSubscription((DefaultSubscriptionBase) cur, context);
             }
         }
         return null;
     }
 
     @Override
-    public void createNextPhaseEvent(final SubscriptionData subscription, final SubscriptionEvent nextPhase, final InternalCallContext context) {
+    public void createNextPhaseEvent(final DefaultSubscriptionBase subscription, final SubscriptionEvent nextPhase, final InternalCallContext context) {
         cancelNextPhaseEvent(subscription.getId(), context);
         insertEvent(nextPhase, context);
     }
 
-    private SubscriptionBase buildSubscription(final SubscriptionData in, final InternalTenantContext context) {
-        final SubscriptionData subscription = new SubscriptionData(new SubscriptionBuilder(in), null, clock);
+    private SubscriptionBase buildSubscription(final DefaultSubscriptionBase in, final InternalTenantContext context) {
+        final DefaultSubscriptionBase subscription = new DefaultSubscriptionBase(new SubscriptionBuilder(in), null, clock);
         if (events.size() > 0) {
             subscription.rebuildTransitions(getEventsForSubscription(in.getId(), context), catalogService.getFullCatalog());
         }
@@ -254,7 +254,7 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
     }
 
     @Override
-    public void updateChargedThroughDate(final SubscriptionData subscription, final InternalCallContext context) {
+    public void updateChargedThroughDate(final DefaultSubscriptionBase subscription, final InternalCallContext context) {
         boolean found = false;
         final Iterator<SubscriptionBase> it = subscriptions.iterator();
         while (it.hasNext()) {
@@ -271,7 +271,7 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
     }
 
     @Override
-    public void cancelSubscription(final SubscriptionData subscription, final SubscriptionEvent cancelEvent,
+    public void cancelSubscription(final DefaultSubscriptionBase subscription, final SubscriptionEvent cancelEvent,
                                    final InternalCallContext context, final int seqId) {
         synchronized (events) {
             cancelNextPhaseEvent(subscription.getId(), context);
@@ -280,7 +280,7 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
     }
 
     @Override
-    public void cancelSubscriptions(final List<SubscriptionData> subscriptions, final List<SubscriptionEvent> cancelEvents, final InternalCallContext context) {
+    public void cancelSubscriptions(final List<DefaultSubscriptionBase> subscriptions, final List<SubscriptionEvent> cancelEvents, final InternalCallContext context) {
         synchronized (events) {
             for (int i = 0; i < subscriptions.size(); i++) {
                 cancelSubscription(subscriptions.get(i), cancelEvents.get(i), context, 0);
@@ -289,7 +289,7 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
     }
 
     @Override
-    public void changePlan(final SubscriptionData subscription, final List<SubscriptionEvent> changeEvents, final InternalCallContext context) {
+    public void changePlan(final DefaultSubscriptionBase subscription, final List<SubscriptionEvent> changeEvents, final InternalCallContext context) {
         synchronized (events) {
             cancelNextChangeEvent(subscription.getId());
             cancelNextPhaseEvent(subscription.getId(), context);
@@ -353,7 +353,7 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
     }
 
     @Override
-    public void uncancelSubscription(final SubscriptionData subscription, final List<SubscriptionEvent> uncancelEvents,
+    public void uncancelSubscription(final DefaultSubscriptionBase subscription, final List<SubscriptionEvent> uncancelEvents,
                                      final InternalCallContext context) {
 
         synchronized (events) {
@@ -384,9 +384,9 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
         synchronized (events) {
 
             for (final BundleMigrationData curBundle : accountData.getData()) {
-                final SubscriptionBundleData bundleData = curBundle.getData();
+                final DefaultSubscriptionBaseBundle bundleData = curBundle.getData();
                 for (final SubscriptionMigrationData curSubscription : curBundle.getSubscriptions()) {
-                    final SubscriptionData subData = curSubscription.getData();
+                    final DefaultSubscriptionBase subData = curSubscription.getData();
                     for (final SubscriptionEvent curEvent : curSubscription.getInitialEvents()) {
                         events.add(curEvent);
                         recordFutureNotificationFromTransaction(null, curEvent.getEffectiveDate(),
@@ -415,8 +415,8 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
     private void recordFutureNotificationFromTransaction(final EntitySqlDaoWrapperFactory<EntitySqlDao> transactionalDao, final DateTime effectiveDate,
                                                          final NotificationEvent notificationKey, final InternalCallContext context) {
         try {
-            final NotificationQueue subscriptionEventQueue = notificationQueueService.getNotificationQueue(DefaultSubscriptionService.SUBSCRIPTION_SERVICE_NAME,
-                                                                                                           DefaultSubscriptionService.NOTIFICATION_QUEUE_NAME);
+            final NotificationQueue subscriptionEventQueue = notificationQueueService.getNotificationQueue(DefaultSubscriptionBaseService.SUBSCRIPTION_SERVICE_NAME,
+                                                                                                           DefaultSubscriptionBaseService.NOTIFICATION_QUEUE_NAME);
             subscriptionEventQueue.recordFutureNotificationFromTransaction(null, effectiveDate, notificationKey, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
         } catch (NoSuchNotificationQueue e) {
             throw new RuntimeException(e);

@@ -57,7 +57,7 @@ public abstract class TestUserApiRecreate extends SubscriptionTestSuiteWithEmbed
         }
     }
 
-    private SubscriptionData testCreateAndRecreate(final boolean fromUserAPi) throws SubscriptionBaseApiException {
+    private DefaultSubscriptionBase testCreateAndRecreate(final boolean fromUserAPi) throws SubscriptionBaseApiException {
         final DateTime init = clock.getUTCNow();
         final DateTime requestedDate = init.minusYears(1);
 
@@ -67,7 +67,7 @@ public abstract class TestUserApiRecreate extends SubscriptionTestSuiteWithEmbed
 
         testListener.pushExpectedEvent(NextEvent.PHASE);
         testListener.pushExpectedEvent(NextEvent.CREATE);
-        SubscriptionData subscription = (SubscriptionData) subscriptionInternalApi.createSubscription(bundle.getId(),
+        DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) subscriptionInternalApi.createSubscription(bundle.getId(),
                                                                                              testUtil.getProductSpecifier(productName, planSetName, term, null), requestedDate, internalCallContext);
         assertNotNull(subscription);
         assertEquals(subscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
@@ -84,7 +84,7 @@ public abstract class TestUserApiRecreate extends SubscriptionTestSuiteWithEmbed
         try {
 
             if (fromUserAPi) {
-                subscription = (SubscriptionData) subscriptionInternalApi.createSubscription(bundle.getId(),
+                subscription = (DefaultSubscriptionBase) subscriptionInternalApi.createSubscription(bundle.getId(),
                                                                                     testUtil.getProductSpecifier(productName, planSetName, term, null), requestedDate, internalCallContext);
             } else {
                 subscription.recreate(testUtil.getProductSpecifier(productName, planSetName, term, null), requestedDate, callContext);
@@ -109,7 +109,7 @@ public abstract class TestUserApiRecreate extends SubscriptionTestSuiteWithEmbed
         }
 
         if (fromUserAPi) {
-            subscription = (SubscriptionData) subscriptionInternalApi.createSubscription(bundle.getId(),
+            subscription = (DefaultSubscriptionBase) subscriptionInternalApi.createSubscription(bundle.getId(),
                                                                                 testUtil.getProductSpecifier(productName, planSetName, term, null), requestedDate, internalCallContext);
         } else {
             subscription.recreate(testUtil.getProductSpecifier(productName, planSetName, term, null), clock.getUTCNow(), callContext);

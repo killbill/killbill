@@ -25,8 +25,8 @@ import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
-import com.ning.billing.subscription.api.migration.SubscriptionMigrationApi.SubscriptionMigrationCase;
-import com.ning.billing.subscription.api.migration.SubscriptionMigrationApiException;
+import com.ning.billing.subscription.api.migration.SubscriptionBaseMigrationApi.SubscriptionMigrationCase;
+import com.ning.billing.subscription.api.migration.SubscriptionBaseMigrationApiException;
 import com.ning.billing.subscription.events.SubscriptionEvent.EventType;
 import com.ning.billing.subscription.events.user.ApiEventType;
 
@@ -43,7 +43,7 @@ public class MigrationPlanAligner extends BaseAligner {
 
 
     public TimedMigration[] getEventsMigration(final SubscriptionMigrationCase[] input, final DateTime now)
-            throws SubscriptionMigrationApiException {
+            throws SubscriptionBaseMigrationApiException {
 
         try {
             TimedMigration[] events;
@@ -82,7 +82,7 @@ public class MigrationPlanAligner extends BaseAligner {
                     }
                 }
                 if (curPhaseDuration == null) {
-                    throw new SubscriptionMigrationApiException(String.format("Failed to compute current phase duration for plan %s and phase %s",
+                    throw new SubscriptionBaseMigrationApiException(String.format("Failed to compute current phase duration for plan %s and phase %s",
                                                                              plan0.getName(), curPhaseType));
                 }
 
@@ -104,12 +104,12 @@ public class MigrationPlanAligner extends BaseAligner {
                                                               input[1].getEffectiveDate());
 
             } else {
-                throw new SubscriptionMigrationApiException("Unknown migration type");
+                throw new SubscriptionBaseMigrationApiException("Unknown migration type");
             }
 
             return events;
         } catch (CatalogApiException e) {
-            throw new SubscriptionMigrationApiException(e);
+            throw new SubscriptionBaseMigrationApiException(e);
         }
     }
 
@@ -120,7 +120,7 @@ public class MigrationPlanAligner extends BaseAligner {
     }
 
     private TimedMigration[] getEventsOnFuturePhaseChangeMigration(final Plan plan, final PlanPhase initialPhase, final String priceList, final DateTime effectiveDate, final DateTime effectiveDateForNextPhase)
-            throws SubscriptionMigrationApiException {
+            throws SubscriptionBaseMigrationApiException {
 
         final TimedMigration[] result = new TimedMigration[2];
 
@@ -137,7 +137,7 @@ public class MigrationPlanAligner extends BaseAligner {
             }
         }
         if (nextPhase == null) {
-            throw new SubscriptionMigrationApiException(String.format("Cannot find next phase for Plan %s and current Phase %s",
+            throw new SubscriptionBaseMigrationApiException(String.format("Cannot find next phase for Plan %s and current Phase %s",
                                                                      plan.getName(), initialPhase.getName()));
         }
         result[1] = new TimedMigration(effectiveDateForNextPhase, EventType.PHASE, null, plan, nextPhase, priceList);
@@ -160,13 +160,13 @@ public class MigrationPlanAligner extends BaseAligner {
 
 
     // STEPH should be in catalog
-    private PlanPhase getPlanPhase(final Plan plan, final PhaseType phaseType) throws SubscriptionMigrationApiException {
+    private PlanPhase getPlanPhase(final Plan plan, final PhaseType phaseType) throws SubscriptionBaseMigrationApiException {
         for (final PlanPhase cur : plan.getAllPhases()) {
             if (cur.getPhaseType() == phaseType) {
                 return cur;
             }
         }
-        throw new SubscriptionMigrationApiException(String.format("Cannot find PlanPhase from Plan %s and type %s", plan.getName(), phaseType));
+        throw new SubscriptionBaseMigrationApiException(String.format("Cannot find PlanPhase from Plan %s and type %s", plan.getName(), phaseType));
     }
 
     private boolean isRegularMigratedSubscription(final SubscriptionMigrationCase[] input) {

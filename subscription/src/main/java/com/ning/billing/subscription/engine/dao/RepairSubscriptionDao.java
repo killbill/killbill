@@ -32,10 +32,10 @@ import com.ning.billing.subscription.api.migration.AccountMigrationData.BundleMi
 import com.ning.billing.subscription.api.timeline.RepairSubscriptionLifecycleDao;
 import com.ning.billing.subscription.api.timeline.SubscriptionDataRepair;
 import com.ning.billing.subscription.api.transfer.TransferCancelData;
-import com.ning.billing.subscription.api.user.SubscriptionBundleData;
-import com.ning.billing.subscription.api.user.SubscriptionData;
+import com.ning.billing.subscription.api.user.DefaultSubscriptionBase;
+import com.ning.billing.subscription.api.user.DefaultSubscriptionBaseBundle;
 import com.ning.billing.subscription.events.SubscriptionEvent;
-import com.ning.billing.subscription.exceptions.SubscriptionError;
+import com.ning.billing.subscription.exceptions.SubscriptionBaseError;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.util.callcontext.InternalCallContext;
@@ -157,17 +157,17 @@ public class RepairSubscriptionDao implements SubscriptionDao, RepairSubscriptio
     }
 
     @Override
-    public void createSubscription(final SubscriptionData subscription, final List<SubscriptionEvent> createEvents, final InternalCallContext context) {
+    public void createSubscription(final DefaultSubscriptionBase subscription, final List<SubscriptionEvent> createEvents, final InternalCallContext context) {
         addEvents(subscription.getId(), createEvents);
     }
 
     @Override
-    public void recreateSubscription(final SubscriptionData subscription, final List<SubscriptionEvent> recreateEvents, final InternalCallContext context) {
+    public void recreateSubscription(final DefaultSubscriptionBase subscription, final List<SubscriptionEvent> recreateEvents, final InternalCallContext context) {
         addEvents(subscription.getId(), recreateEvents);
     }
 
     @Override
-    public void cancelSubscription(final SubscriptionData subscription, final SubscriptionEvent cancelEvent, final InternalCallContext context, final int cancelSeq) {
+    public void cancelSubscription(final DefaultSubscriptionBase subscription, final SubscriptionEvent cancelEvent, final InternalCallContext context, final int cancelSeq) {
         final UUID subscriptionId = subscription.getId();
         final long activeVersion = cancelEvent.getActiveVersion();
         addEvents(subscriptionId, Collections.singletonList(cancelEvent));
@@ -183,11 +183,11 @@ public class RepairSubscriptionDao implements SubscriptionDao, RepairSubscriptio
     }
 
     @Override
-    public void cancelSubscriptions(final List<SubscriptionData> subscriptions, final List<SubscriptionEvent> cancelEvents, final InternalCallContext context) {
+    public void cancelSubscriptions(final List<DefaultSubscriptionBase> subscriptions, final List<SubscriptionEvent> cancelEvents, final InternalCallContext context) {
     }
 
     @Override
-    public void changePlan(final SubscriptionData subscription, final List<SubscriptionEvent> changeEvents, final InternalCallContext context) {
+    public void changePlan(final DefaultSubscriptionBase subscription, final List<SubscriptionEvent> changeEvents, final InternalCallContext context) {
         addEvents(subscription.getId(), changeEvents);
     }
 
@@ -198,7 +198,7 @@ public class RepairSubscriptionDao implements SubscriptionDao, RepairSubscriptio
             final SubscriptionRepairEvent value = new SubscriptionRepairEvent(initialEvents);
             map.put(subscriptionId, value);
         } else {
-            throw new SubscriptionError(String.format("Unexpected SubscriptionRepairEvent %s for thread %s", subscriptionId, Thread.currentThread().getName()));
+            throw new SubscriptionBaseError(String.format("Unexpected SubscriptionRepairEvent %s for thread %s", subscriptionId, Thread.currentThread().getName()));
         }
     }
 
@@ -214,100 +214,100 @@ public class RepairSubscriptionDao implements SubscriptionDao, RepairSubscriptio
     }
 
     @Override
-    public void uncancelSubscription(final SubscriptionData subscription, final List<SubscriptionEvent> uncancelEvents, final InternalCallContext context) {
-        throw new SubscriptionError(NOT_IMPLEMENTED);
+    public void uncancelSubscription(final DefaultSubscriptionBase subscription, final List<SubscriptionEvent> uncancelEvents, final InternalCallContext context) {
+        throw new SubscriptionBaseError(NOT_IMPLEMENTED);
     }
 
     @Override
     public List<SubscriptionBaseBundle> getSubscriptionBundleForAccount(final UUID accountId, final InternalTenantContext context) {
-        throw new SubscriptionError(NOT_IMPLEMENTED);
+        throw new SubscriptionBaseError(NOT_IMPLEMENTED);
     }
 
     @Override
     public SubscriptionBaseBundle getSubscriptionBundleFromAccountAndKey(final UUID accountId, final String bundleKey, final InternalTenantContext context) {
-        throw new SubscriptionError(NOT_IMPLEMENTED);
+        throw new SubscriptionBaseError(NOT_IMPLEMENTED);
     }
 
     @Override
     public SubscriptionBaseBundle getSubscriptionBundleFromId(final UUID bundleId, final InternalTenantContext context) {
-        throw new SubscriptionError(NOT_IMPLEMENTED);
+        throw new SubscriptionBaseError(NOT_IMPLEMENTED);
     }
 
     @Override
-    public SubscriptionBaseBundle createSubscriptionBundle(final SubscriptionBundleData bundle, final InternalCallContext context) {
-        throw new SubscriptionError(NOT_IMPLEMENTED);
+    public SubscriptionBaseBundle createSubscriptionBundle(final DefaultSubscriptionBaseBundle bundle, final InternalCallContext context) {
+        throw new SubscriptionBaseError(NOT_IMPLEMENTED);
     }
 
     @Override
     public SubscriptionBase getSubscriptionFromId(final UUID subscriptionId, final InternalTenantContext context) {
-        throw new SubscriptionError(NOT_IMPLEMENTED);
+        throw new SubscriptionBaseError(NOT_IMPLEMENTED);
     }
 
     @Override
     public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId, final InternalTenantContext context) {
-        throw new SubscriptionError(NOT_IMPLEMENTED);
+        throw new SubscriptionBaseError(NOT_IMPLEMENTED);
     }
 
     @Override
     public SubscriptionBase getBaseSubscription(final UUID bundleId, final InternalTenantContext context) {
-        throw new SubscriptionError(NOT_IMPLEMENTED);
+        throw new SubscriptionBaseError(NOT_IMPLEMENTED);
     }
 
     @Override
     public List<SubscriptionBase> getSubscriptions(final UUID bundleId, final InternalTenantContext context) {
-        throw new SubscriptionError(NOT_IMPLEMENTED);
+        throw new SubscriptionBaseError(NOT_IMPLEMENTED);
     }
 
     @Override
     public List<SubscriptionBase> getSubscriptionsForAccountAndKey(final UUID accountId,
                                                                final String bundleKey, final InternalTenantContext context) {
-        throw new SubscriptionError(NOT_IMPLEMENTED);
+        throw new SubscriptionBaseError(NOT_IMPLEMENTED);
     }
 
     @Override
-    public void updateChargedThroughDate(final SubscriptionData subscription, final InternalCallContext context) {
-        throw new SubscriptionError(NOT_IMPLEMENTED);
+    public void updateChargedThroughDate(final DefaultSubscriptionBase subscription, final InternalCallContext context) {
+        throw new SubscriptionBaseError(NOT_IMPLEMENTED);
     }
 
     @Override
-    public void createNextPhaseEvent(final SubscriptionData subscription, final SubscriptionEvent nextPhase, final InternalCallContext context) {
-        throw new SubscriptionError(NOT_IMPLEMENTED);
+    public void createNextPhaseEvent(final DefaultSubscriptionBase subscription, final SubscriptionEvent nextPhase, final InternalCallContext context) {
+        throw new SubscriptionBaseError(NOT_IMPLEMENTED);
     }
 
     @Override
     public SubscriptionEvent getEventById(final UUID eventId, final InternalTenantContext context) {
-        throw new SubscriptionError(NOT_IMPLEMENTED);
+        throw new SubscriptionBaseError(NOT_IMPLEMENTED);
     }
 
     @Override
     public Map<UUID, List<SubscriptionEvent>> getEventsForBundle(final UUID bundleId, final InternalTenantContext context) {
-        throw new SubscriptionError(NOT_IMPLEMENTED);
+        throw new SubscriptionBaseError(NOT_IMPLEMENTED);
     }
 
     @Override
     public List<SubscriptionEvent> getPendingEventsForSubscription(final UUID subscriptionId, final InternalTenantContext context) {
-        throw new SubscriptionError(NOT_IMPLEMENTED);
+        throw new SubscriptionBaseError(NOT_IMPLEMENTED);
     }
 
     @Override
     public void migrate(final UUID accountId, final AccountMigrationData data, final InternalCallContext context) {
-        throw new SubscriptionError(NOT_IMPLEMENTED);
+        throw new SubscriptionBaseError(NOT_IMPLEMENTED);
     }
 
     @Override
     public void repair(final UUID accountId, final UUID bundleId, final List<SubscriptionDataRepair> inRepair, final InternalCallContext context) {
-        throw new SubscriptionError(NOT_IMPLEMENTED);
+        throw new SubscriptionBaseError(NOT_IMPLEMENTED);
     }
 
     @Override
     public void transfer(final UUID srcAccountId, final UUID destAccountId, final BundleMigrationData data,
                          final List<TransferCancelData> transferCancelData, final InternalCallContext fromContext,
                          final InternalCallContext toContext) {
-        throw new SubscriptionError(NOT_IMPLEMENTED);
+        throw new SubscriptionBaseError(NOT_IMPLEMENTED);
     }
 
     @Override
     public List<SubscriptionBaseBundle> getSubscriptionBundlesForKey(final String bundleKey, final InternalTenantContext context) {
-        throw new SubscriptionError(NOT_IMPLEMENTED);
+        throw new SubscriptionBaseError(NOT_IMPLEMENTED);
     }
 }

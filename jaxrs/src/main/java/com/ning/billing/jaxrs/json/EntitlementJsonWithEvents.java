@@ -283,7 +283,7 @@ public class EntitlementJsonWithEvents extends EntitlementJsonSimple {
         this(data.getId().toString(), events, newEvents, deletedEvents, toAuditLogJson(auditLogs));
     }
 
-    public EntitlementJsonWithEvents(final UUID accountId, final UUID bundleId, final UUID entitlementId, final SubscriptionTimeline input,
+    public EntitlementJsonWithEvents(final UUID accountId, final UUID bundleId, final UUID entitlementId, final SubscriptionBaseTimeline input,
                                       final List<AuditLog> bundleAuditLogs, final Map<UUID, List<AuditLog>> subscriptionEventsAuditLogs) {
         super(input. input.getId().toString(), toAuditLogJson(bundleAuditLogs));
 

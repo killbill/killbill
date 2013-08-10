@@ -23,8 +23,8 @@ import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.Product;
-import com.ning.billing.subscription.api.user.SubscriptionData;
-import com.ning.billing.subscription.exceptions.SubscriptionError;
+import com.ning.billing.subscription.api.user.DefaultSubscriptionBase;
+import com.ning.billing.subscription.exceptions.SubscriptionBaseError;
 import com.ning.billing.subscription.api.user.SubscriptionState;
 import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 
@@ -38,7 +38,7 @@ public class AddonUtils {
         this.catalogService = catalogService;
     }
 
-    public void checkAddonCreationRights(final SubscriptionData baseSubscription, final Plan targetAddOnPlan)
+    public void checkAddonCreationRights(final DefaultSubscriptionBase baseSubscription, final Plan targetAddOnPlan)
             throws SubscriptionBaseApiException, CatalogApiException {
 
         if (baseSubscription.getState() != SubscriptionState.ACTIVE) {
@@ -62,7 +62,7 @@ public class AddonUtils {
             final Product product = catalogService.getFullCatalog().findProduct(baseProductName, requestedDate);
             return isAddonAvailable(product, targetAddOnPlan);
         } catch (CatalogApiException e) {
-            throw new SubscriptionError(e);
+            throw new SubscriptionBaseError(e);
         }
     }
 
@@ -72,7 +72,7 @@ public class AddonUtils {
             final Product product = plan.getProduct();
             return isAddonAvailable(product, targetAddOnPlan);
         } catch (CatalogApiException e) {
-            throw new SubscriptionError(e);
+            throw new SubscriptionBaseError(e);
         }
     }
 
@@ -93,7 +93,7 @@ public class AddonUtils {
             final Product product = catalogService.getFullCatalog().findProduct(baseProductName, requestedDate);
             return isAddonIncluded(product, targetAddOnPlan);
         } catch (CatalogApiException e) {
-            throw new SubscriptionError(e);
+            throw new SubscriptionBaseError(e);
         }
 
     }
@@ -104,7 +104,7 @@ public class AddonUtils {
             final Product product = plan.getProduct();
             return isAddonIncluded(product, targetAddOnPlan);
         } catch (CatalogApiException e) {
-            throw new SubscriptionError(e);
+            throw new SubscriptionBaseError(e);
         }
     }
 

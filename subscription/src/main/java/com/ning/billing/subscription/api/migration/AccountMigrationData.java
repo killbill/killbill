@@ -21,8 +21,8 @@ import java.util.List;
 import org.joda.time.DateTime;
 
 import com.ning.billing.subscription.api.user.SubscriptionBuilder;
-import com.ning.billing.subscription.api.user.SubscriptionBundleData;
-import com.ning.billing.subscription.api.user.SubscriptionData;
+import com.ning.billing.subscription.api.user.DefaultSubscriptionBaseBundle;
+import com.ning.billing.subscription.api.user.DefaultSubscriptionBase;
 import com.ning.billing.subscription.events.SubscriptionEvent;
 
 
@@ -41,17 +41,17 @@ public class AccountMigrationData {
 
     public static class BundleMigrationData {
 
-        private final SubscriptionBundleData data;
+        private final DefaultSubscriptionBaseBundle data;
         private final List<SubscriptionMigrationData> subscriptions;
 
-        public BundleMigrationData(final SubscriptionBundleData data,
+        public BundleMigrationData(final DefaultSubscriptionBaseBundle data,
                                    final List<SubscriptionMigrationData> subscriptions) {
             super();
             this.data = data;
             this.subscriptions = subscriptions;
         }
 
-        public SubscriptionBundleData getData() {
+        public DefaultSubscriptionBaseBundle getData() {
             return data;
         }
 
@@ -62,10 +62,10 @@ public class AccountMigrationData {
 
     public static class SubscriptionMigrationData {
 
-        private final SubscriptionData data;
+        private final DefaultSubscriptionBase data;
         private final List<SubscriptionEvent> initialEvents;
 
-        public SubscriptionMigrationData(final SubscriptionData data,
+        public SubscriptionMigrationData(final DefaultSubscriptionBase data,
                                          final List<SubscriptionEvent> initialEvents,
                                          final DateTime ctd) {
             super();
@@ -74,11 +74,11 @@ public class AccountMigrationData {
             if (ctd != null) {
                 builder.setChargedThroughDate(ctd);
             }
-            this.data = new SubscriptionData(builder);
+            this.data = new DefaultSubscriptionBase(builder);
             this.initialEvents = initialEvents;
         }
 
-        public SubscriptionData getData() {
+        public DefaultSubscriptionBase getData() {
             return data;
         }
 

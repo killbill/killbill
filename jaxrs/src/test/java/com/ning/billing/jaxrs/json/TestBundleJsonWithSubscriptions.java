@@ -30,8 +30,8 @@ import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
-import com.ning.billing.subscription.api.timeline.BundleTimeline;
-import com.ning.billing.subscription.api.timeline.SubscriptionTimeline;
+import com.ning.billing.subscription.api.timeline.BundleBaseTimeline;
+import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline;
 import com.ning.billing.jaxrs.JaxrsTestSuiteNoDB;
 import com.ning.billing.util.audit.AuditLog;
 import com.ning.billing.clock.DefaultClock;
@@ -45,7 +45,7 @@ public class TestBundleJsonWithSubscriptions extends JaxrsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testJson() throws Exception {
-        final SubscriptionTimeline.ExistingEvent event = Mockito.mock(SubscriptionTimeline.ExistingEvent.class);
+        final SubscriptionBaseTimeline.ExistingEvent event = Mockito.mock(SubscriptionBaseTimeline.ExistingEvent.class);
         final DateTime effectiveDate = DefaultClock.toUTCDateTime(new DateTime(DateTimeZone.UTC));
         final UUID eventId = UUID.randomUUID();
         final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier(UUID.randomUUID().toString(), ProductCategory.BASE,
@@ -56,9 +56,9 @@ public class TestBundleJsonWithSubscriptions extends JaxrsTestSuiteNoDB {
         Mockito.when(event.getSubscriptionTransitionType()).thenReturn(SubscriptionBaseTransitionType.CREATE);
         Mockito.when(event.getPlanPhaseSpecifier()).thenReturn(planPhaseSpecifier);
 
-        final SubscriptionTimeline subscriptionTimeline = Mockito.mock(SubscriptionTimeline.class);
+        final SubscriptionBaseTimeline subscriptionTimeline = Mockito.mock(SubscriptionBaseTimeline.class);
         Mockito.when(subscriptionTimeline.getId()).thenReturn(UUID.randomUUID());
-        Mockito.when(subscriptionTimeline.getExistingEvents()).thenReturn(ImmutableList.<SubscriptionTimeline.ExistingEvent>of(event));
+        Mockito.when(subscriptionTimeline.getExistingEvents()).thenReturn(ImmutableList.<SubscriptionBaseTimeline.ExistingEvent>of(event));
 
         final UUID bundleId = UUID.randomUUID();
         final String externalKey = UUID.randomUUID().toString();
@@ -77,7 +77,7 @@ public class TestBundleJsonWithSubscriptions extends JaxrsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testFromBundleTimeline() throws Exception {
-        final SubscriptionTimeline.ExistingEvent event = Mockito.mock(SubscriptionTimeline.ExistingEvent.class);
+        final SubscriptionBaseTimeline.ExistingEvent event = Mockito.mock(SubscriptionBaseTimeline.ExistingEvent.class);
         final DateTime effectiveDate = DefaultClock.toUTCDateTime(new DateTime(DateTimeZone.UTC));
         final UUID eventId = UUID.randomUUID();
         final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier(UUID.randomUUID().toString(), ProductCategory.BASE,
@@ -88,18 +88,18 @@ public class TestBundleJsonWithSubscriptions extends JaxrsTestSuiteNoDB {
         Mockito.when(event.getSubscriptionTransitionType()).thenReturn(SubscriptionBaseTransitionType.CREATE);
         Mockito.when(event.getPlanPhaseSpecifier()).thenReturn(planPhaseSpecifier);
 
-        final SubscriptionTimeline subscriptionTimeline = Mockito.mock(SubscriptionTimeline.class);
+        final SubscriptionBaseTimeline subscriptionTimeline = Mockito.mock(SubscriptionBaseTimeline.class);
         Mockito.when(subscriptionTimeline.getId()).thenReturn(UUID.randomUUID());
-        Mockito.when(subscriptionTimeline.getExistingEvents()).thenReturn(ImmutableList.<SubscriptionTimeline.ExistingEvent>of(event));
+        Mockito.when(subscriptionTimeline.getExistingEvents()).thenReturn(ImmutableList.<SubscriptionBaseTimeline.ExistingEvent>of(event));
 
-        final BundleTimeline bundleTimeline = Mockito.mock(BundleTimeline.class);
+        final BundleBaseTimeline bundleBaseTimeline = Mockito.mock(BundleBaseTimeline.class);
         final UUID bundleId = UUID.randomUUID();
         final String externalKey = UUID.randomUUID().toString();
-        Mockito.when(bundleTimeline.getId()).thenReturn(bundleId);
-        Mockito.when(bundleTimeline.getExternalKey()).thenReturn(externalKey);
-        Mockito.when(bundleTimeline.getSubscriptions()).thenReturn(ImmutableList.<SubscriptionTimeline>of(subscriptionTimeline));
+        Mockito.when(bundleBaseTimeline.getId()).thenReturn(bundleId);
+        Mockito.when(bundleBaseTimeline.getExternalKey()).thenReturn(externalKey);
+        Mockito.when(bundleBaseTimeline.getSubscriptions()).thenReturn(ImmutableList.<SubscriptionBaseTimeline>of(subscriptionTimeline));
 
-        final BundleJsonWithSubscriptions bundleJsonWithSubscriptions = new BundleJsonWithSubscriptions(bundleTimeline, null,
+        final BundleJsonWithSubscriptions bundleJsonWithSubscriptions = new BundleJsonWithSubscriptions(bundleBaseTimeline, null,
                                                                                                         ImmutableMap.<UUID, List<AuditLog>>of(),
                                                                                                         ImmutableMap.<UUID, List<AuditLog>>of());
         Assert.assertEquals(bundleJsonWithSubscriptions.getBundleId(), bundleId.toString());
@@ -117,7 +117,7 @@ public class TestBundleJsonWithSubscriptions extends JaxrsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testFromSubscriptionBundle() throws Exception {
-        final BundleTimeline bundle = Mockito.mock(BundleTimeline.class);
+        final BundleBaseTimeline bundle = Mockito.mock(BundleBaseTimeline.class);
         final UUID bundleId = UUID.randomUUID();
         final String externalKey = UUID.randomUUID().toString();
         Mockito.when(bundle.getId()).thenReturn(bundleId);
