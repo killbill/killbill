@@ -38,7 +38,7 @@ import com.ning.billing.entitlement.api.DefaultEntitlement;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.payment.api.PaymentStatus;
-import com.ning.billing.subscription.api.user.SubscriptionData;
+import com.ning.billing.subscription.api.user.DefaultSubscriptionBase;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -101,7 +101,7 @@ public class TestIntegration extends TestIntegrationBase {
         // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
         //
         DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
-        SubscriptionData subscription = subscriptionDataFromSubscription(baseEntitlement.getSubscriptionBase());
+        DefaultSubscriptionBase subscription = subscriptionDataFromSubscription(baseEntitlement.getSubscriptionBase());
         invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(initialCreationDate.toLocalDate(), null, InvoiceItemType.FIXED, new BigDecimal("0")));
         // No end date for the trial item (fixed price of zero), and CTD should be today (i.e. when the trial started)
         invoiceChecker.checkChargedThroughDate(subscription.getId(), clock.getUTCToday(), callContext);
@@ -183,7 +183,7 @@ public class TestIntegration extends TestIntegrationBase {
         // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
         //
         DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
-        SubscriptionData subscription = subscriptionDataFromSubscription(baseEntitlement.getSubscriptionBase());
+        DefaultSubscriptionBase subscription = subscriptionDataFromSubscription(baseEntitlement.getSubscriptionBase());
         invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(initialCreationDate.toLocalDate(), null, InvoiceItemType.FIXED, new BigDecimal("0")));
         // No end date for the trial item (fixed price of zero), and CTD should be today (i.e. when the trial started)
         invoiceChecker.checkChargedThroughDate(subscription.getId(), clock.getUTCToday(), callContext);
@@ -265,7 +265,7 @@ public class TestIntegration extends TestIntegrationBase {
         // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
         //
         DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE);
-        SubscriptionData subscription = subscriptionDataFromSubscription(baseEntitlement.getSubscriptionBase());
+        DefaultSubscriptionBase subscription = subscriptionDataFromSubscription(baseEntitlement.getSubscriptionBase());
 
 
         invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(initialCreationDate.toLocalDate(), null, InvoiceItemType.FIXED, new BigDecimal("0")));
@@ -475,7 +475,7 @@ public class TestIntegration extends TestIntegrationBase {
         //
         // VERIFY CTD HAS BEEN SET
         //
-        SubscriptionData subscription = (SubscriptionData) baseEntitlement.getSubscriptionBase();
+        DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) baseEntitlement.getSubscriptionBase();
         final DateTime startDate = subscription.getCurrentPhaseStart();
         final BigDecimal rate = subscription.getCurrentPhase().getFixedPrice().getPrice(Currency.USD);
         final int invoiceItemCount = 1;
@@ -492,7 +492,7 @@ public class TestIntegration extends TestIntegrationBase {
 
         DefaultEntitlement entitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
         entitlement.cancelEntitlementWithDate(clock.getUTCNow().toLocalDate(), callContext);
-        subscription = (SubscriptionData) baseEntitlement.getSubscriptionBase();
+        subscription = (DefaultSubscriptionBase) baseEntitlement.getSubscriptionBase();
 
         // MOVE AFTER CANCEL DATE AND EXPECT EVENT : NextEvent.CANCEL
         busHandler.pushExpectedEvent(NextEvent.CANCEL);

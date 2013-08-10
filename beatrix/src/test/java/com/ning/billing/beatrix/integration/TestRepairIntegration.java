@@ -38,7 +38,7 @@ import com.ning.billing.entitlement.api.DefaultEntitlement;
 import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.subscription.api.timeline.BundleBaseTimeline;
 import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline;
-import com.ning.billing.subscription.api.user.SubscriptionData;
+import com.ning.billing.subscription.api.user.DefaultSubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionEvents;
 import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline.DeletedEvent;
 import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline.ExistingEvent;
@@ -134,18 +134,18 @@ public class TestRepairIntegration extends TestIntegrationBase {
             assertTrue(busHandler.isCompleted(DELAY));
 
 
-            final SubscriptionData newAoSubscription = (SubscriptionData) aoEntitlement1.getSubscriptionBase();
+            final DefaultSubscriptionBase newAoSubscription = (DefaultSubscriptionBase) aoEntitlement1.getSubscriptionBase();
             assertEquals(newAoSubscription.getState(), SubscriptionState.CANCELLED);
             assertEquals(newAoSubscription.getAllTransitions().size(), 2);
             assertEquals(newAoSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
 
-            final SubscriptionData newAoSubscription2 = (SubscriptionData) aoEntitlement2.getSubscriptionBase();
+            final DefaultSubscriptionBase newAoSubscription2 = (DefaultSubscriptionBase) aoEntitlement2.getSubscriptionBase();
             assertEquals(newAoSubscription2.getState(), SubscriptionState.ACTIVE);
             assertEquals(newAoSubscription2.getAllTransitions().size(), 2);
             assertEquals(newAoSubscription2.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
 
 
-            final SubscriptionData newBaseSubscription = (SubscriptionData) bpEntitlement.getSubscriptionBase();
+            final DefaultSubscriptionBase newBaseSubscription = (DefaultSubscriptionBase) bpEntitlement.getSubscriptionBase();
             assertEquals(newBaseSubscription.getState(), SubscriptionState.ACTIVE);
             assertEquals(newBaseSubscription.getAllTransitions().size(), 3);
             assertEquals(newBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);

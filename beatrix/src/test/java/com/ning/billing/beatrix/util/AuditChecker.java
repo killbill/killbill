@@ -41,7 +41,6 @@ import com.ning.billing.invoice.dao.InvoiceItemSqlDao;
 import com.ning.billing.invoice.dao.InvoiceSqlDao;
 import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.dao.PaymentSqlDao;
-import com.ning.billing.subscription.api.timeline.SubscriptionRepairException;
 import com.ning.billing.util.api.AuditLevel;
 import com.ning.billing.util.api.AuditUserApi;
 import com.ning.billing.util.audit.AuditLog;
@@ -189,7 +188,7 @@ public class AuditChecker {
     private AuditLogsForBundles getAuditLogsForBundle(final UUID bundleId, final CallContext context) {
        // try {
             return auditUserApi.getAuditLogsForBundle(bundleId, AuditLevel.FULL, context);
-        //} catch (SubscriptionRepairException e) {
+        //} catch (SubscriptionBaseRepairException e) {
         //    Assert.fail(e.toString());
         //    return null;
        // }

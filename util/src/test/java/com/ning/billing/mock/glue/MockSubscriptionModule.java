@@ -20,9 +20,9 @@ import org.mockito.Mockito;
 
 import com.ning.billing.glue.SubscriptionModule;
 import com.ning.billing.subscription.api.SubscriptionBaseService;
-import com.ning.billing.subscription.api.migration.SubscriptionMigrationApi;
-import com.ning.billing.subscription.api.timeline.SubscriptionTimelineApi;
-import com.ning.billing.subscription.api.transfer.SubscriptionTransferApi;
+import com.ning.billing.subscription.api.migration.SubscriptionBaseMigrationApi;
+import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimelineApi;
+import com.ning.billing.subscription.api.transfer.SubscriptionBaseTransferApi;
 import com.ning.billing.util.svcapi.subscription.SubscriptionBaseInternalApi;
 
 import com.google.inject.AbstractModule;
@@ -37,7 +37,7 @@ public class MockSubscriptionModule extends AbstractModule implements Subscripti
 
     @Override
     public void installSubscriptionMigrationApi() {
-        bind(SubscriptionMigrationApi.class).toInstance(Mockito.mock(SubscriptionMigrationApi.class));
+        bind(SubscriptionBaseMigrationApi.class).toInstance(Mockito.mock(SubscriptionBaseMigrationApi.class));
     }
 
     @Override
@@ -55,12 +55,12 @@ public class MockSubscriptionModule extends AbstractModule implements Subscripti
 
     @Override
     public void installSubscriptionTimelineApi() {
-        bind(SubscriptionTimelineApi.class).toInstance(Mockito.mock(SubscriptionTimelineApi.class));
+        bind(SubscriptionBaseTimelineApi.class).toInstance(Mockito.mock(SubscriptionBaseTimelineApi.class));
     }
 
     @Override
     public void installSubscriptionTransferApi() {
-        bind(SubscriptionTransferApi.class).toInstance(Mockito.mock(SubscriptionTransferApi.class));
+        bind(SubscriptionBaseTransferApi.class).toInstance(Mockito.mock(SubscriptionBaseTransferApi.class));
 
     }
 }

@@ -19,7 +19,7 @@ package com.ning.billing.util.glue;
 import org.mockito.Mockito;
 import org.skife.config.ConfigSource;
 
-import com.ning.billing.subscription.api.timeline.SubscriptionTimelineApi;
+import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimelineApi;
 
 import com.google.inject.AbstractModule;
 
@@ -33,7 +33,7 @@ public class TestUtilModule extends AbstractModule {
 
     // TODO STEPH this is bad-- because DefaultAuditUserApi is using SubscriptionBaseTimeline API
     public void installHack() {
-        bind(SubscriptionTimelineApi.class).toInstance(Mockito.mock(SubscriptionTimelineApi.class));
+        bind(SubscriptionBaseTimelineApi.class).toInstance(Mockito.mock(SubscriptionBaseTimelineApi.class));
     }
 
     @Override

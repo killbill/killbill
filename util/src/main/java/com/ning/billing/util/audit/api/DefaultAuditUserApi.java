@@ -25,9 +25,9 @@ import javax.inject.Inject;
 
 import com.ning.billing.ObjectType;
 import com.ning.billing.subscription.api.timeline.BundleBaseTimeline;
+import com.ning.billing.subscription.api.timeline.SubscriptionBaseRepairException;
 import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline;
-import com.ning.billing.subscription.api.timeline.SubscriptionRepairException;
-import com.ning.billing.subscription.api.timeline.SubscriptionTimelineApi;
+import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimelineApi;
 import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline.ExistingEvent;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
@@ -58,11 +58,11 @@ import com.google.common.collect.ImmutableList;
 public class DefaultAuditUserApi implements AuditUserApi {
 
     private final AuditDao auditDao;
-    private final SubscriptionTimelineApi timelineApi;
+    private final SubscriptionBaseTimelineApi timelineApi;
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
-    public DefaultAuditUserApi(final AuditDao auditDao, final SubscriptionTimelineApi timelineApi, final InternalCallContextFactory internalCallContextFactory) {
+    public DefaultAuditUserApi(final AuditDao auditDao, final SubscriptionBaseTimelineApi timelineApi, final InternalCallContextFactory internalCallContextFactory) {
         this.auditDao = auditDao;
         this.timelineApi = timelineApi;
         this.internalCallContextFactory = internalCallContextFactory;
@@ -78,7 +78,7 @@ public class DefaultAuditUserApi implements AuditUserApi {
 
         try {
             return getAuditLogsForBundles(ImmutableList.<BundleBaseTimeline>of(timelineApi.getBundleTimeline(bundleId, context)), auditLevel, context);
-        } catch (SubscriptionRepairException e) {
+        } catch (SubscriptionBaseRepairException e) {
             // STEPH_ENT
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
             return null;

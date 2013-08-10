@@ -83,9 +83,9 @@ import com.ning.billing.payment.api.TestPaymentMethodPluginBase;
 import com.ning.billing.payment.provider.MockPaymentProviderPlugin;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.SubscriptionBaseService;
-import com.ning.billing.subscription.api.timeline.SubscriptionTimelineApi;
-import com.ning.billing.subscription.api.transfer.SubscriptionTransferApi;
-import com.ning.billing.subscription.api.user.SubscriptionData;
+import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimelineApi;
+import com.ning.billing.subscription.api.transfer.SubscriptionBaseTransferApi;
+import com.ning.billing.subscription.api.user.DefaultSubscriptionBase;
 import com.ning.billing.util.api.RecordIdApi;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.cache.CacheControllerDispatcher;
@@ -138,10 +138,10 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     protected AccountService accountService;
 
     @Inject
-    protected SubscriptionTransferApi transferApi;
+    protected SubscriptionBaseTransferApi transferApi;
 
     @Inject
-    protected SubscriptionTimelineApi repairApi;
+    protected SubscriptionBaseTimelineApi repairApi;
 
     @Inject
     protected OverdueUserApi overdueUserApi;
@@ -297,9 +297,9 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         assertTrue(ctd.toDateTime(testTimeZone).toLocalDate().compareTo(new LocalDate(chargeThroughDate.getYear(), chargeThroughDate.getMonthOfYear(), chargeThroughDate.getDayOfMonth())) == 0);
     }
 
-    protected SubscriptionData subscriptionDataFromSubscription(final SubscriptionBase sub) {
+    protected DefaultSubscriptionBase subscriptionDataFromSubscription(final SubscriptionBase sub) {
         // STEPH_ENT
-        return (SubscriptionData) sub;
+        return (DefaultSubscriptionBase) sub;
     }
 
     protected Account createAccountWithOsgiPaymentMethod(final AccountData accountData) throws Exception {
