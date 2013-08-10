@@ -23,12 +23,18 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import com.ning.billing.entitlement.api.Subscription;
+import com.ning.billing.entitlement.api.SubscriptionBundle;
+import com.ning.billing.entitlement.api.SubscriptionBundleTimeline.SubscriptionEvent;
 import com.ning.billing.subscription.api.timeline.BundleBaseTimeline;
 import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline;
 import com.ning.billing.util.audit.AuditLog;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
 
 public class BundleJsonWithSubscriptions extends BundleJsonSimple {
 
@@ -48,16 +54,21 @@ public class BundleJsonWithSubscriptions extends BundleJsonSimple {
         return subscriptions;
     }
 
-    public BundleJsonWithSubscriptions(final BundleBaseTimeline bundle, final List<AuditLog> auditLogs,
+    public BundleJsonWithSubscriptions(final SubscriptionBundle bundle, final List<AuditLog> auditLogs,
                                        final Map<UUID, List<AuditLog>> subscriptionsAuditLogs, final Map<UUID, List<AuditLog>> subscriptionEventsAuditLogs) {
         super(bundle.getId(), bundle.getExternalKey(), auditLogs);
         this.subscriptions = new LinkedList<EntitlementJsonWithEvents>();
-        for (final SubscriptionBaseTimeline subscriptionTimeline : bundle.getSubscriptions()) {
-            // STEPH_ENT
-            /*
-            this.subscriptions.add(new EntitlementJsonWithEvents(bundle.getId(), subscriptionTimeline,
-                                                                  subscriptionsAuditLogs.get(subscriptionTimeline.getId()), subscriptionEventsAuditLogs));
-        */
+        for (final Subscription cur : bundle.getSubscriptions()) {
+
+            final ImmutableList<SubscriptionEvent> events =  ImmutableList.<SubscriptionEvent>copyOf(Collections2.filter(bundle.getTimeline().getSubscriptionEvents(), new Predicate<SubscriptionEvent>() {
+                @Override
+                public boolean apply(@Nullable final SubscriptionEvent input) {
+                    return input.getEntitlementId().equals(cur.getId());
+                }
+            }));
+            this.subscriptions.add(new EntitlementJsonWithEvents(cur,
+                                                                 events,
+                                                                 subscriptionsAuditLogs.get(cur.getId()), subscriptionEventsAuditLogs));
         }
     }
 

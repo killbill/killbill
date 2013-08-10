@@ -16,13 +16,22 @@
 
 package com.ning.billing.jaxrs.json;
 
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 
-import com.ning.billing.clock.DefaultClock;
+import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.catalog.api.PriceList;
+import com.ning.billing.catalog.api.Product;
+import com.ning.billing.entitlement.api.Subscription;
+import com.ning.billing.entitlement.api.SubscriptionBundleTimeline.SubscriptionEvent;
+import com.ning.billing.util.audit.AuditLog;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -38,13 +47,13 @@ public class EntitlementJsonWithEvents extends EntitlementJsonSimple {
     public static class SubscriptionReadEventJson extends SubscriptionBaseEventJson {
 
         private final String eventId;
-        private final DateTime effectiveDate;
+        private final LocalDate effectiveDate;
 
         @JsonCreator
         public SubscriptionReadEventJson(@JsonProperty("eventId") final String eventId,
                                          @JsonProperty("billingPeriod") final String billingPeriod,
-                                         @JsonProperty("requestedDt") final DateTime requestedDate,
-                                         @JsonProperty("effectiveDt") final DateTime effectiveDate,
+                                         @JsonProperty("requestedDt") final LocalDate requestedDate,
+                                         @JsonProperty("effectiveDt") final LocalDate effectiveDate,
                                          @JsonProperty("product") final String product,
                                          @JsonProperty("priceList") final String priceList,
                                          @JsonProperty("eventType") final String eventType,
@@ -59,8 +68,8 @@ public class EntitlementJsonWithEvents extends EntitlementJsonSimple {
             return eventId;
         }
 
-        public DateTime getEffectiveDate() {
-            return DefaultClock.toUTCDateTime(effectiveDate);
+        public LocalDate getEffectiveDate() {
+            return effectiveDate;
         }
 
         @Override
@@ -110,8 +119,8 @@ public class EntitlementJsonWithEvents extends EntitlementJsonSimple {
         @JsonCreator
         public SubscriptionDeletedEventJson(@JsonProperty("eventId") final String eventId,
                                             @JsonProperty("billingPeriod") final String billingPeriod,
-                                            @JsonProperty("requestedDate") final DateTime requestedDate,
-                                            @JsonProperty("effectiveDate") final DateTime effectiveDate,
+                                            @JsonProperty("requestedDate") final LocalDate requestedDate,
+                                            @JsonProperty("effectiveDate") final LocalDate effectiveDate,
                                             @JsonProperty("product") final String product,
                                             @JsonProperty("priceList") final String priceList,
                                             @JsonProperty("eventType") final String eventType,
@@ -125,7 +134,7 @@ public class EntitlementJsonWithEvents extends EntitlementJsonSimple {
 
         @JsonCreator
         public SubscriptionNewEventJson(@JsonProperty("billingPeriod") final String billingPeriod,
-                                        @JsonProperty("requestedDate") final DateTime requestedDate,
+                                        @JsonProperty("requestedDate") final LocalDate requestedDate,
                                         @JsonProperty("product") final String product,
                                         @JsonProperty("priceList") final String priceList,
                                         @JsonProperty("eventType") final String eventType,
@@ -150,7 +159,7 @@ public class EntitlementJsonWithEvents extends EntitlementJsonSimple {
     public abstract static class SubscriptionBaseEventJson extends JsonBase {
 
         private final String billingPeriod;
-        private final DateTime requestedDate;
+        private final LocalDate requestedDate;
         private final String product;
         private final String priceList;
         private final String eventType;
@@ -158,7 +167,7 @@ public class EntitlementJsonWithEvents extends EntitlementJsonSimple {
 
         @JsonCreator
         public SubscriptionBaseEventJson(@JsonProperty("billingPeriod") final String billingPeriod,
-                                         @JsonProperty("requestedDate") final DateTime requestedDate,
+                                         @JsonProperty("requestedDate") final LocalDate requestedDate,
                                          @JsonProperty("product") final String product,
                                          @JsonProperty("priceList") final String priceList,
                                          @JsonProperty("eventType") final String eventType,
@@ -166,7 +175,7 @@ public class EntitlementJsonWithEvents extends EntitlementJsonSimple {
                                          @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
             super(auditLogs);
             this.billingPeriod = billingPeriod;
-            this.requestedDate = DefaultClock.toUTCDateTime(requestedDate);
+            this.requestedDate = requestedDate;
             this.product = product;
             this.priceList = priceList;
             this.eventType = eventType;
@@ -177,8 +186,8 @@ public class EntitlementJsonWithEvents extends EntitlementJsonSimple {
             return billingPeriod;
         }
 
-        public DateTime getRequestedDate() {
-            return DefaultClock.toUTCDateTime(requestedDate);
+        public LocalDate getRequestedDate() {
+            return requestedDate;
         }
 
         public String getProduct() {
@@ -271,33 +280,32 @@ public class EntitlementJsonWithEvents extends EntitlementJsonSimple {
         this.newEvents = newEvents;
     }
 
-    /*
 
-    STEPH_ENT
-
-    public EntitlementJsonWithEvents(final SubscriptionBase data,
-                                      @Nullable final List<SubscriptionReadEventJson> events,
-                                      @Nullable final List<SubscriptionNewEventJson> newEvents,
-                                      @Nullable final List<SubscriptionDeletedEventJson> deletedEvents,
-                                      @Nullable final List<AuditLog> auditLogs) {
-        this(data.getId().toString(), events, newEvents, deletedEvents, toAuditLogJson(auditLogs));
-    }
-
-    public EntitlementJsonWithEvents(final UUID accountId, final UUID bundleId, final UUID entitlementId, final SubscriptionBaseTimeline input,
-                                      final List<AuditLog> bundleAuditLogs, final Map<UUID, List<AuditLog>> subscriptionEventsAuditLogs) {
-        super(input. input.getId().toString(), toAuditLogJson(bundleAuditLogs));
+    public EntitlementJsonWithEvents(final Subscription input,
+                                     final List<SubscriptionEvent> subscriptionEvents,
+                                     final List<AuditLog> bundleAuditLogs, final Map<UUID, List<AuditLog>> subscriptionEventsAuditLogs) {
+        super(input.getAccountId().toString(), input.getBundleId().toString(), input.getId().toString(), input.getExternalKey(), toAuditLogJson(bundleAuditLogs));
 
         this.events = new LinkedList<SubscriptionReadEventJson>();
-        for (final ExistingEvent event : input.getExistingEvents()) {
-            final PlanPhaseSpecifier spec = event.getPlanPhaseSpecifier();
-            this.events.add(new SubscriptionReadEventJson(event.getEventId().toString(), spec.getBillingPeriod().toString(), event.getRequestedDate(), event.getEffectiveDate(),
-                                                          spec.getProductName(), spec.getPriceListName(), event.getSubscriptionTransitionType().toString(), spec.getPhaseType().toString(),
-                                                          toAuditLogJson(subscriptionEventsAuditLogs.get(event.getEventId()))));
+        for (SubscriptionEvent cur : subscriptionEvents) {
+            final String eventId = cur.getId().toString();
+            final BillingPeriod billingPeriod = cur.getNextBillingPeriod() != null ? cur.getNextBillingPeriod() : cur.getPrevBillingPeriod();
+            final Product product = cur.getNextProduct() != null ? cur.getNextProduct() : cur.getPrevProduct();
+            final PriceList priceList = cur.getNextPriceList() != null ? cur.getNextPriceList() : cur.getPrevPriceList();
+            final PlanPhase phase = cur.getNextPhase() != null ? cur.getNextPhase() : cur.getPrevPhase();
+            this.events.add(new SubscriptionReadEventJson(cur.getId().toString(),
+                                                          billingPeriod != null ? billingPeriod.toString() : null,
+                                                          cur.getRequestedDate(),
+                                                          cur.getEffectiveDate(),
+                                                          product != null ? product.toString() : null,
+                                                          priceList != null ? priceList.getName() : null,
+                                                          cur.getSubscriptionEventType().toString(),
+                                                          phase != null ? phase.getName() : null,
+                                                          toAuditLogJson(subscriptionEventsAuditLogs.get(cur.getId()))));
         }
         this.newEvents = null;
         this.deletedEvents = null;
     }
-    */
 
 
     public List<SubscriptionReadEventJson> getEvents() {

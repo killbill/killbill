@@ -17,9 +17,9 @@
 package com.ning.billing.subscription.events.phase;
 
 
-import com.ning.billing.subscription.events.SubscriptionEvent;
+import com.ning.billing.subscription.events.SubscriptionBaseEvent;
 
-public interface PhaseEvent extends SubscriptionEvent {
+public interface PhaseEvent extends SubscriptionBaseEvent {
 
     public String getPhase();
 }

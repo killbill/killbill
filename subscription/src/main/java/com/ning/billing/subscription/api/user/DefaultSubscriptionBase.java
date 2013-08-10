@@ -46,8 +46,8 @@ import com.ning.billing.subscription.api.user.SubscriptionBaseTransitionDataIter
 import com.ning.billing.subscription.api.user.SubscriptionBaseTransitionDataIterator.Order;
 import com.ning.billing.subscription.api.user.SubscriptionBaseTransitionDataIterator.TimeLimit;
 import com.ning.billing.subscription.api.user.SubscriptionBaseTransitionDataIterator.Visibility;
-import com.ning.billing.subscription.events.SubscriptionEvent;
-import com.ning.billing.subscription.events.SubscriptionEvent.EventType;
+import com.ning.billing.subscription.events.SubscriptionBaseEvent;
+import com.ning.billing.subscription.events.SubscriptionBaseEvent.EventType;
 import com.ning.billing.subscription.events.phase.PhaseEvent;
 import com.ning.billing.subscription.events.user.ApiEvent;
 import com.ning.billing.subscription.events.user.ApiEventType;
@@ -86,10 +86,10 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     private LinkedList<SubscriptionBaseTransition> transitions;
 
     // Low level events are ONLY used for Repair APIs
-    protected List<SubscriptionEvent> events;
+    protected List<SubscriptionBaseEvent> events;
 
 
-    public List<SubscriptionEvent> getEvents() {
+    public List<SubscriptionBaseEvent> getEvents() {
         return events;
     }
 
@@ -381,7 +381,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     }
 
 
-    public SubscriptionBaseTransitionData getTransitionFromEvent(final SubscriptionEvent event, final int seqId) {
+    public SubscriptionBaseTransitionData getTransitionFromEvent(final SubscriptionBaseEvent event, final int seqId) {
         if (transitions == null || event == null) {
             return null;
         }
@@ -522,7 +522,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                 "Failed to find CurrentPhaseStart id = %s", getId().toString()));
     }
 
-    public void rebuildTransitions(final List<SubscriptionEvent> inputEvents, final Catalog catalog) {
+    public void rebuildTransitions(final List<SubscriptionBaseEvent> inputEvents, final Catalog catalog) {
 
         if (inputEvents == null) {
             return;
@@ -548,7 +548,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
 
         transitions = new LinkedList<SubscriptionBaseTransition>();
 
-        for (final SubscriptionEvent cur : inputEvents) {
+        for (final SubscriptionBaseEvent cur : inputEvents) {
 
             if (!cur.isActive() || cur.getActiveVersion() < activeVersion) {
                 continue;

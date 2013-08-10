@@ -27,7 +27,7 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.subscription.api.migration.SubscriptionBaseMigrationApi.SubscriptionMigrationCase;
 import com.ning.billing.subscription.api.migration.SubscriptionBaseMigrationApiException;
-import com.ning.billing.subscription.events.SubscriptionEvent.EventType;
+import com.ning.billing.subscription.events.SubscriptionBaseEvent.EventType;
 import com.ning.billing.subscription.events.user.ApiEventType;
 
 import com.google.inject.Inject;

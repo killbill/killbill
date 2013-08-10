@@ -33,7 +33,7 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.subscription.SubscriptionTestSuiteWithEmbeddedDB;
-import com.ning.billing.subscription.events.SubscriptionEvent;
+import com.ning.billing.subscription.events.SubscriptionBaseEvent;
 import com.ning.billing.subscription.events.phase.PhaseEvent;
 
 import static org.testng.Assert.assertEquals;
@@ -65,11 +65,11 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
             // In addition to Alignment phase we also test SubscriptionBaseTransition eventIds and created dates.
             // Keep tracks of row events to compare with ids and created dates returned by SubscriptionBaseTransition later.
             //
-            final List<SubscriptionEvent> events = subscription.getEvents();
+            final List<SubscriptionBaseEvent> events = subscription.getEvents();
             Assert.assertEquals(events.size(), 2);
 
-            final SubscriptionEvent trialEvent = events.get(0);
-            final SubscriptionEvent phaseEvent = events.get(1);
+            final SubscriptionBaseEvent trialEvent = events.get(0);
+            final SubscriptionBaseEvent phaseEvent = events.get(1);
 
 
             assertEquals(subscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
@@ -165,7 +165,7 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
             assertEquals(currentPhase.getPhaseType(), PhaseType.TRIAL);
             assertTrue(testListener.isCompleted(5000));
 
-            final List<SubscriptionEvent> events = dao.getPendingEventsForSubscription(subscription.getId(), internalCallContext);
+            final List<SubscriptionBaseEvent> events = dao.getPendingEventsForSubscription(subscription.getId(), internalCallContext);
             assertNotNull(events);
             testUtil.printEvents(events);
             assertTrue(events.size() == 1);

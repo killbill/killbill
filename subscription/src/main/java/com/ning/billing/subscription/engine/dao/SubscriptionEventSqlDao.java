@@ -25,7 +25,7 @@ import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
 import com.ning.billing.subscription.engine.dao.model.SubscriptionEventModelDao;
-import com.ning.billing.subscription.events.SubscriptionEvent;
+import com.ning.billing.subscription.events.SubscriptionBaseEvent;
 import com.ning.billing.util.audit.ChangeType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
@@ -34,7 +34,7 @@ import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 
 @EntitySqlDaoStringTemplate
-public interface SubscriptionEventSqlDao extends EntitySqlDao<SubscriptionEventModelDao, SubscriptionEvent> {
+public interface SubscriptionEventSqlDao extends EntitySqlDao<SubscriptionEventModelDao, SubscriptionBaseEvent> {
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)

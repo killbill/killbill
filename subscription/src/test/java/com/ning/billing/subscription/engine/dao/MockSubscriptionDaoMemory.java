@@ -45,8 +45,8 @@ import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.subscription.api.user.SubscriptionBuilder;
 import com.ning.billing.subscription.engine.core.DefaultSubscriptionBaseService;
 import com.ning.billing.subscription.engine.core.SubscriptionNotificationKey;
-import com.ning.billing.subscription.events.SubscriptionEvent;
-import com.ning.billing.subscription.events.SubscriptionEvent.EventType;
+import com.ning.billing.subscription.events.SubscriptionBaseEvent;
+import com.ning.billing.subscription.events.SubscriptionBaseEvent.EventType;
 import com.ning.billing.subscription.events.user.ApiEvent;
 import com.ning.billing.subscription.events.user.ApiEventType;
 import com.ning.billing.notificationq.api.NotificationEvent;
@@ -67,7 +67,7 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
 
     private final List<SubscriptionBaseBundle> bundles;
     private final List<SubscriptionBase> subscriptions;
-    private final TreeSet<SubscriptionEvent> events;
+    private final TreeSet<SubscriptionBaseEvent> events;
     private final Clock clock;
     private final NotificationQueueService notificationQueueService;
     private final CatalogService catalogService;
@@ -82,7 +82,7 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
         this.notificationQueueService = notificationQueueService;
         this.bundles = new ArrayList<SubscriptionBaseBundle>();
         this.subscriptions = new ArrayList<SubscriptionBase>();
-        this.events = new TreeSet<SubscriptionEvent>();
+        this.events = new TreeSet<SubscriptionBaseEvent>();
     }
 
     public void reset() {
@@ -166,11 +166,11 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
     }
 
     @Override
-    public void createSubscription(final DefaultSubscriptionBase subscription, final List<SubscriptionEvent> initialEvents,
+    public void createSubscription(final DefaultSubscriptionBase subscription, final List<SubscriptionBaseEvent> initialEvents,
                                    final InternalCallContext context) {
         synchronized (events) {
             events.addAll(initialEvents);
-            for (final SubscriptionEvent cur : initialEvents) {
+            for (final SubscriptionBaseEvent cur : initialEvents) {
                 recordFutureNotificationFromTransaction(null, cur.getEffectiveDate(), new SubscriptionNotificationKey(cur.getId()), context);
             }
         }
@@ -179,10 +179,10 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
     }
 
     @Override
-    public void recreateSubscription(final DefaultSubscriptionBase subscription, final List<SubscriptionEvent> recreateEvents, final InternalCallContext context) {
+    public void recreateSubscription(final DefaultSubscriptionBase subscription, final List<SubscriptionBaseEvent> recreateEvents, final InternalCallContext context) {
         synchronized (events) {
             events.addAll(recreateEvents);
-            for (final SubscriptionEvent cur : recreateEvents) {
+            for (final SubscriptionBaseEvent cur : recreateEvents) {
                 recordFutureNotificationFromTransaction(null, cur.getEffectiveDate(), new SubscriptionNotificationKey(cur.getId()), context);
             }
         }
@@ -200,10 +200,10 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
     }
 
     @Override
-    public List<SubscriptionEvent> getEventsForSubscription(final UUID subscriptionId, final InternalTenantContext context) {
+    public List<SubscriptionBaseEvent> getEventsForSubscription(final UUID subscriptionId, final InternalTenantContext context) {
         synchronized (events) {
-            final List<SubscriptionEvent> results = new LinkedList<SubscriptionEvent>();
-            for (final SubscriptionEvent cur : events) {
+            final List<SubscriptionBaseEvent> results = new LinkedList<SubscriptionBaseEvent>();
+            for (final SubscriptionBaseEvent cur : events) {
                 if (cur.getSubscriptionId().equals(subscriptionId)) {
                     results.add(cur);
                 }
@@ -213,10 +213,10 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
     }
 
     @Override
-    public List<SubscriptionEvent> getPendingEventsForSubscription(final UUID subscriptionId, final InternalTenantContext context) {
+    public List<SubscriptionBaseEvent> getPendingEventsForSubscription(final UUID subscriptionId, final InternalTenantContext context) {
         synchronized (events) {
-            final List<SubscriptionEvent> results = new LinkedList<SubscriptionEvent>();
-            for (final SubscriptionEvent cur : events) {
+            final List<SubscriptionBaseEvent> results = new LinkedList<SubscriptionBaseEvent>();
+            for (final SubscriptionBaseEvent cur : events) {
                 if (cur.isActive() &&
                     cur.getEffectiveDate().isAfter(clock.getUTCNow()) &&
                     cur.getSubscriptionId().equals(subscriptionId)) {
@@ -239,7 +239,7 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
     }
 
     @Override
-    public void createNextPhaseEvent(final DefaultSubscriptionBase subscription, final SubscriptionEvent nextPhase, final InternalCallContext context) {
+    public void createNextPhaseEvent(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent nextPhase, final InternalCallContext context) {
         cancelNextPhaseEvent(subscription.getId(), context);
         insertEvent(nextPhase, context);
     }
@@ -271,7 +271,7 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
     }
 
     @Override
-    public void cancelSubscription(final DefaultSubscriptionBase subscription, final SubscriptionEvent cancelEvent,
+    public void cancelSubscription(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent cancelEvent,
                                    final InternalCallContext context, final int seqId) {
         synchronized (events) {
             cancelNextPhaseEvent(subscription.getId(), context);
@@ -280,7 +280,7 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
     }
 
     @Override
-    public void cancelSubscriptions(final List<DefaultSubscriptionBase> subscriptions, final List<SubscriptionEvent> cancelEvents, final InternalCallContext context) {
+    public void cancelSubscriptions(final List<DefaultSubscriptionBase> subscriptions, final List<SubscriptionBaseEvent> cancelEvents, final InternalCallContext context) {
         synchronized (events) {
             for (int i = 0; i < subscriptions.size(); i++) {
                 cancelSubscription(subscriptions.get(i), cancelEvents.get(i), context, 0);
@@ -289,18 +289,18 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
     }
 
     @Override
-    public void changePlan(final DefaultSubscriptionBase subscription, final List<SubscriptionEvent> changeEvents, final InternalCallContext context) {
+    public void changePlan(final DefaultSubscriptionBase subscription, final List<SubscriptionBaseEvent> changeEvents, final InternalCallContext context) {
         synchronized (events) {
             cancelNextChangeEvent(subscription.getId());
             cancelNextPhaseEvent(subscription.getId(), context);
             events.addAll(changeEvents);
-            for (final SubscriptionEvent cur : changeEvents) {
+            for (final SubscriptionBaseEvent cur : changeEvents) {
                 recordFutureNotificationFromTransaction(null, cur.getEffectiveDate(), new SubscriptionNotificationKey(cur.getId()), context);
             }
         }
     }
 
-    private void insertEvent(final SubscriptionEvent event, final InternalCallContext context) {
+    private void insertEvent(final SubscriptionBaseEvent event, final InternalCallContext context) {
         synchronized (events) {
             events.add(event);
             recordFutureNotificationFromTransaction(null, event.getEffectiveDate(), new SubscriptionNotificationKey(event.getId()), context);
@@ -316,9 +316,9 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
 
         synchronized (events) {
 
-            final Iterator<SubscriptionEvent> it = events.descendingIterator();
+            final Iterator<SubscriptionBaseEvent> it = events.descendingIterator();
             while (it.hasNext()) {
-                final SubscriptionEvent cur = it.next();
+                final SubscriptionBaseEvent cur = it.next();
                 if (cur.getSubscriptionId() != subscriptionId) {
                     continue;
                 }
@@ -336,9 +336,9 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
 
         synchronized (events) {
 
-            final Iterator<SubscriptionEvent> it = events.descendingIterator();
+            final Iterator<SubscriptionBaseEvent> it = events.descendingIterator();
             while (it.hasNext()) {
-                final SubscriptionEvent cur = it.next();
+                final SubscriptionBaseEvent cur = it.next();
                 if (cur.getSubscriptionId() != subscriptionId) {
                     continue;
                 }
@@ -353,14 +353,14 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
     }
 
     @Override
-    public void uncancelSubscription(final DefaultSubscriptionBase subscription, final List<SubscriptionEvent> uncancelEvents,
+    public void uncancelSubscription(final DefaultSubscriptionBase subscription, final List<SubscriptionBaseEvent> uncancelEvents,
                                      final InternalCallContext context) {
 
         synchronized (events) {
             boolean foundCancel = false;
-            final Iterator<SubscriptionEvent> it = events.descendingIterator();
+            final Iterator<SubscriptionBaseEvent> it = events.descendingIterator();
             while (it.hasNext()) {
-                final SubscriptionEvent cur = it.next();
+                final SubscriptionBaseEvent cur = it.next();
                 if (cur.getSubscriptionId() != subscription.getId()) {
                     continue;
                 }
@@ -372,7 +372,7 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
                 }
             }
             if (foundCancel) {
-                for (final SubscriptionEvent cur : uncancelEvents) {
+                for (final SubscriptionBaseEvent cur : uncancelEvents) {
                     insertEvent(cur, context);
                 }
             }
@@ -387,7 +387,7 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
                 final DefaultSubscriptionBaseBundle bundleData = curBundle.getData();
                 for (final SubscriptionMigrationData curSubscription : curBundle.getSubscriptions()) {
                     final DefaultSubscriptionBase subData = curSubscription.getData();
-                    for (final SubscriptionEvent curEvent : curSubscription.getInitialEvents()) {
+                    for (final SubscriptionBaseEvent curEvent : curSubscription.getInitialEvents()) {
                         events.add(curEvent);
                         recordFutureNotificationFromTransaction(null, curEvent.getEffectiveDate(),
                                                                 new SubscriptionNotificationKey(curEvent.getId()), context);
@@ -401,9 +401,9 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
     }
 
     @Override
-    public SubscriptionEvent getEventById(final UUID eventId, final InternalTenantContext context) {
+    public SubscriptionBaseEvent getEventById(final UUID eventId, final InternalTenantContext context) {
         synchronized (events) {
-            for (final SubscriptionEvent cur : events) {
+            for (final SubscriptionBaseEvent cur : events) {
                 if (cur.getId().equals(eventId)) {
                     return cur;
                 }
@@ -426,7 +426,7 @@ public class MockSubscriptionDaoMemory implements SubscriptionDao {
     }
 
     @Override
-    public Map<UUID, List<SubscriptionEvent>> getEventsForBundle(final UUID bundleId, final InternalTenantContext context) {
+    public Map<UUID, List<SubscriptionBaseEvent>> getEventsForBundle(final UUID bundleId, final InternalTenantContext context) {
         return null;
     }
 

@@ -23,7 +23,7 @@ import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.subscription.api.user.DefaultSubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBuilder;
 import com.ning.billing.subscription.engine.dao.SubscriptionDao;
-import com.ning.billing.subscription.events.SubscriptionEvent;
+import com.ning.billing.subscription.events.SubscriptionBaseEvent;
 import com.ning.billing.clock.Clock;
 
 import com.google.common.base.Function;
@@ -57,7 +57,7 @@ public class SubscriptionApiBase {
         return new DefaultSubscriptionBase((DefaultSubscriptionBase) internalSubscription, apiService, clock);
     }
 
-    protected DefaultSubscriptionBase createSubscriptionForApiUse(SubscriptionBuilder builder, List<SubscriptionEvent> events) {
+    protected DefaultSubscriptionBase createSubscriptionForApiUse(SubscriptionBuilder builder, List<SubscriptionBaseEvent> events) {
         final DefaultSubscriptionBase subscription = new DefaultSubscriptionBase(builder, apiService, clock);
         if (events.size() > 0) {
             subscription.rebuildTransitions(events, catalogService.getFullCatalog());

@@ -34,8 +34,8 @@ import com.ning.billing.subscription.api.user.DefaultSubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBaseTransitionData;
 import com.ning.billing.subscription.engine.addon.AddonUtils;
 import com.ning.billing.subscription.engine.dao.SubscriptionDao;
-import com.ning.billing.subscription.events.SubscriptionEvent;
-import com.ning.billing.subscription.events.SubscriptionEvent.EventType;
+import com.ning.billing.subscription.events.SubscriptionBaseEvent;
+import com.ning.billing.subscription.events.SubscriptionBaseEvent.EventType;
 import com.ning.billing.subscription.events.phase.PhaseEvent;
 import com.ning.billing.subscription.events.phase.PhaseEventData;
 import com.ning.billing.subscription.events.user.ApiEvent;
@@ -107,7 +107,7 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
                     }
 
                     final SubscriptionNotificationKey key = (SubscriptionNotificationKey) inputKey;
-                    final SubscriptionEvent event = dao.getEventById(key.getEventId(), internalCallContextFactory.createInternalTenantContext(tenantRecordId, accountRecordId));
+                    final SubscriptionBaseEvent event = dao.getEventById(key.getEventId(), internalCallContextFactory.createInternalTenantContext(tenantRecordId, accountRecordId));
                     if (event == null) {
                         // This can be expected if the event is soft deleted (is_active = 0)
                         log.info("Failed to extract event for notification key {}", inputKey);
@@ -141,7 +141,7 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
     }
 
     @Override
-    public void processEventReady(final SubscriptionEvent event, final int seqId, final InternalCallContext context) {
+    public void processEventReady(final SubscriptionBaseEvent event, final int seqId, final InternalCallContext context) {
         if (!event.isActive()) {
             return;
         }

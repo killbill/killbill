@@ -51,7 +51,7 @@ import com.ning.billing.subscription.api.migration.SubscriptionBaseMigrationApi.
 import com.ning.billing.subscription.api.timeline.SubscriptionBaseRepairException;
 import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline;
 import com.ning.billing.subscription.engine.dao.SubscriptionDao;
-import com.ning.billing.subscription.events.SubscriptionEvent;
+import com.ning.billing.subscription.events.SubscriptionBaseEvent;
 import com.ning.billing.subscription.events.phase.PhaseEvent;
 import com.ning.billing.subscription.events.user.ApiEvent;
 import com.ning.billing.subscription.events.user.ApiEventType;
@@ -116,7 +116,7 @@ public class TestSubscriptionHelper {
     }
 
     public void checkNextPhaseChange(final DefaultSubscriptionBase subscription, final int expPendingEvents, final DateTime expPhaseChange) {
-        final List<SubscriptionEvent> events = dao.getPendingEventsForSubscription(subscription.getId(), callContext);
+        final List<SubscriptionBaseEvent> events = dao.getPendingEventsForSubscription(subscription.getId(), callContext);
         assertNotNull(events);
         printEvents(events);
         assertEquals(events.size(), expPendingEvents);
@@ -124,7 +124,7 @@ public class TestSubscriptionHelper {
             boolean foundPhase = false;
             boolean foundChange = false;
 
-            for (final SubscriptionEvent cur : events) {
+            for (final SubscriptionBaseEvent cur : events) {
                 if (cur instanceof PhaseEvent) {
                     assertEquals(foundPhase, false);
                     foundPhase = true;
@@ -227,8 +227,8 @@ public class TestSubscriptionHelper {
         return new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, priceList, phaseType);
     }
 
-    public void printEvents(final List<SubscriptionEvent> events) {
-        for (final SubscriptionEvent cur : events) {
+    public void printEvents(final List<SubscriptionBaseEvent> events) {
+        for (final SubscriptionBaseEvent cur : events) {
             log.debug("Inspect event " + cur);
         }
     }

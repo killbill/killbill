@@ -33,7 +33,7 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.subscription.SubscriptionTestSuiteWithEmbeddedDB;
-import com.ning.billing.subscription.events.SubscriptionEvent;
+import com.ning.billing.subscription.events.SubscriptionBaseEvent;
 import com.ning.billing.subscription.events.user.ApiEvent;
 import com.ning.billing.util.svcapi.subscription.SubscriptionBillingApiException;
 
@@ -140,7 +140,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
             testUtil.checkNextPhaseChange(subscription, 2, nextExpectedPhaseChange);
 
             // ALSO VERIFY PENDING CHANGE EVENT
-            final List<SubscriptionEvent> events = dao.getPendingEventsForSubscription(subscription.getId(), internalCallContext);
+            final List<SubscriptionBaseEvent> events = dao.getPendingEventsForSubscription(subscription.getId(), internalCallContext);
             assertTrue(events.get(0) instanceof ApiEvent);
 
             // MOVE TO EOT

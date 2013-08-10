@@ -19,32 +19,32 @@ package com.ning.billing.subscription.api.user;
 import java.util.LinkedList;
 import java.util.List;
 
-import com.ning.billing.subscription.events.SubscriptionEvent;
+import com.ning.billing.subscription.events.SubscriptionBaseEvent;
 
 
 public class SubscriptionEvents {
     public static final long INITIAL_VERSION = 1;
 
-    private final List<SubscriptionEvent> events;
+    private final List<SubscriptionBaseEvent> events;
 
     private long activeVersion;
 
     public SubscriptionEvents() {
-        this.events = new LinkedList<SubscriptionEvent>();
+        this.events = new LinkedList<SubscriptionBaseEvent>();
         this.activeVersion = INITIAL_VERSION;
     }
 
-    public void addEvent(final SubscriptionEvent ev) {
+    public void addEvent(final SubscriptionBaseEvent ev) {
         events.add(ev);
     }
 
-    public List<SubscriptionEvent> getCurrentView() {
+    public List<SubscriptionBaseEvent> getCurrentView() {
         return getViewForVersion(activeVersion);
     }
 
-    public List<SubscriptionEvent> getViewForVersion(final long version) {
-        final LinkedList<SubscriptionEvent> result = new LinkedList<SubscriptionEvent>();
-        for (final SubscriptionEvent cur : events) {
+    public List<SubscriptionBaseEvent> getViewForVersion(final long version) {
+        final LinkedList<SubscriptionBaseEvent> result = new LinkedList<SubscriptionBaseEvent>();
+        for (final SubscriptionBaseEvent cur : events) {
             if (cur.getActiveVersion() == version) {
                 result.add(cur);
             }

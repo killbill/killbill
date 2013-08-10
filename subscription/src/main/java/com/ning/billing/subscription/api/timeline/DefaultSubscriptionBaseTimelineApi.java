@@ -45,7 +45,7 @@ import com.ning.billing.subscription.api.user.DefaultSubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBaseTransitionData;
 import com.ning.billing.subscription.engine.addon.AddonUtils;
 import com.ning.billing.subscription.engine.dao.SubscriptionDao;
-import com.ning.billing.subscription.events.SubscriptionEvent;
+import com.ning.billing.subscription.events.SubscriptionBaseEvent;
 import com.ning.billing.subscription.glue.DefaultSubscriptionModule;
 import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline.NewEvent;
 import com.ning.billing.subscription.api.SubscriptionBase;
@@ -171,7 +171,7 @@ public class DefaultSubscriptionBaseTimelineApi extends SubscriptionApiBase impl
                 final SubscriptionBaseTimeline curRepair = findAndCreateSubscriptionRepair(cur.getId(), input.getSubscriptions());
                 if (curRepair != null) {
                     final SubscriptionDataRepair curInputRepair = ((SubscriptionDataRepair) cur);
-                    final List<SubscriptionEvent> remaining = getRemainingEventsAndValidateDeletedEvents(curInputRepair, firstDeletedBPEventTime, curRepair.getDeletedEvents());
+                    final List<SubscriptionBaseEvent> remaining = getRemainingEventsAndValidateDeletedEvents(curInputRepair, firstDeletedBPEventTime, curRepair.getDeletedEvents());
 
                     final boolean isPlanRecreate = (curRepair.getNewEvents().size() > 0
                                                     && (curRepair.getNewEvents().get(0).getSubscriptionTransitionType() == SubscriptionBaseTransitionType.CREATE
@@ -339,7 +339,7 @@ public class DefaultSubscriptionBaseTimelineApi extends SubscriptionApiBase impl
         return newEventSet;
     }
 
-    private List<SubscriptionEvent> getRemainingEventsAndValidateDeletedEvents(final SubscriptionDataRepair data, final DateTime firstBPDeletedTime,
+    private List<SubscriptionBaseEvent> getRemainingEventsAndValidateDeletedEvents(final SubscriptionDataRepair data, final DateTime firstBPDeletedTime,
                                                                               final List<SubscriptionBaseTimeline.DeletedEvent> deletedEvents)
             throws SubscriptionBaseRepairException {
         if (deletedEvents == null || deletedEvents.size() == 0) {
@@ -347,8 +347,8 @@ public class DefaultSubscriptionBaseTimelineApi extends SubscriptionApiBase impl
         }
 
         int nbDeleted = 0;
-        final LinkedList<SubscriptionEvent> result = new LinkedList<SubscriptionEvent>();
-        for (final SubscriptionEvent cur : data.getEvents()) {
+        final LinkedList<SubscriptionBaseEvent> result = new LinkedList<SubscriptionBaseEvent>();
+        for (final SubscriptionBaseEvent cur : data.getEvents()) {
 
             boolean foundDeletedEvent = false;
             for (final SubscriptionBaseTimeline.DeletedEvent d : deletedEvents) {
@@ -474,7 +474,7 @@ public class DefaultSubscriptionBaseTimelineApi extends SubscriptionApiBase impl
         return null;
     }
 
-    private SubscriptionDataRepair createSubscriptionDataRepair(final DefaultSubscriptionBase curData, final DateTime newBundleStartDate, final DateTime newSubscriptionStartDate, final List<SubscriptionEvent> initialEvents) {
+    private SubscriptionDataRepair createSubscriptionDataRepair(final DefaultSubscriptionBase curData, final DateTime newBundleStartDate, final DateTime newSubscriptionStartDate, final List<SubscriptionBaseEvent> initialEvents) {
         final SubscriptionBuilder builder = new SubscriptionBuilder(curData);
         builder.setActiveVersion(curData.getActiveVersion() + 1);
         if (newBundleStartDate != null) {
@@ -484,7 +484,7 @@ public class DefaultSubscriptionBaseTimelineApi extends SubscriptionApiBase impl
             builder.setAlignStartDate(newSubscriptionStartDate);
         }
         if (initialEvents.size() > 0) {
-            for (final SubscriptionEvent cur : initialEvents) {
+            for (final SubscriptionBaseEvent cur : initialEvents) {
                 cur.setActiveVersion(builder.getActiveVersion());
             }
         }

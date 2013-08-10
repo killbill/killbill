@@ -19,12 +19,12 @@ package com.ning.billing.subscription.api.timeline;
 import java.util.List;
 import java.util.UUID;
 
-import com.ning.billing.subscription.events.SubscriptionEvent;
+import com.ning.billing.subscription.events.SubscriptionBaseEvent;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 
 public interface RepairSubscriptionLifecycleDao {
 
-    public void initializeRepair(UUID subscriptionId, List<SubscriptionEvent> initialEvents, InternalTenantContext context);
+    public void initializeRepair(UUID subscriptionId, List<SubscriptionBaseEvent> initialEvents, InternalTenantContext context);
 
     public void cleanup(InternalTenantContext context);
 }

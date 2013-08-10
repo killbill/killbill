@@ -16,10 +16,10 @@
 
 package com.ning.billing.subscription.events.user;
 
-import com.ning.billing.subscription.events.SubscriptionEvent;
+import com.ning.billing.subscription.events.SubscriptionBaseEvent;
 
 
-public interface ApiEvent extends SubscriptionEvent {
+public interface ApiEvent extends SubscriptionBaseEvent {
 
     public String getEventPlan();
 

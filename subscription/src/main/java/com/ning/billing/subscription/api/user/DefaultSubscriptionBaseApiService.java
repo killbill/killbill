@@ -45,7 +45,7 @@ import com.ning.billing.subscription.api.SubscriptionBaseApiService;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.engine.addon.AddonUtils;
 import com.ning.billing.subscription.engine.dao.SubscriptionDao;
-import com.ning.billing.subscription.events.SubscriptionEvent;
+import com.ning.billing.subscription.events.SubscriptionBaseEvent;
 import com.ning.billing.subscription.events.phase.PhaseEvent;
 import com.ning.billing.subscription.events.phase.PhaseEventData;
 import com.ning.billing.subscription.events.user.ApiEvent;
@@ -151,7 +151,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
             final PhaseEvent nextPhaseEvent = (nextTimedPhase != null) ?
                                               PhaseEventData.createNextPhaseEvent(nextTimedPhase.getPhase().getName(), subscription, processedDate, nextTimedPhase.getStartPhase()) :
                                               null;
-            final List<SubscriptionEvent> events = new ArrayList<SubscriptionEvent>();
+            final List<SubscriptionBaseEvent> events = new ArrayList<SubscriptionBaseEvent>();
             events.add(creationEvent);
             if (nextPhaseEvent != null) {
                 events.add(nextPhaseEvent);
@@ -208,7 +208,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         validateRequestedDate(subscription, now, requestedDate);
         final DateTime effectiveDate = subscription.getPlanChangeEffectiveDate(policy, requestedDate);
 
-        final SubscriptionEvent cancelEvent = new ApiEventCancel(new ApiEventBuilder()
+        final SubscriptionBaseEvent cancelEvent = new ApiEventCancel(new ApiEventBuilder()
                                                                         .setSubscriptionId(subscription.getId())
                                                                         .setActiveVersion(subscription.getActiveVersion())
                                                                         .setProcessedDate(now)
@@ -232,7 +232,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         }
 
         final DateTime now = clock.getUTCNow();
-        final SubscriptionEvent uncancelEvent = new ApiEventUncancel(new ApiEventBuilder()
+        final SubscriptionBaseEvent uncancelEvent = new ApiEventUncancel(new ApiEventBuilder()
                                                                             .setSubscriptionId(subscription.getId())
                                                                             .setActiveVersion(subscription.getActiveVersion())
                                                                             .setProcessedDate(now)
@@ -240,7 +240,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                                                                             .setEffectiveDate(now)
                                                                             .setFromDisk(true));
 
-        final List<SubscriptionEvent> uncancelEvents = new ArrayList<SubscriptionEvent>();
+        final List<SubscriptionBaseEvent> uncancelEvents = new ArrayList<SubscriptionBaseEvent>();
         uncancelEvents.add(uncancelEvent);
 
         final TimedPhase nextTimedPhase = planAligner.getNextTimedPhase(subscription, now, now);
@@ -332,7 +332,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
         final TimedPhase currentTimedPhase = planAligner.getCurrentTimedPhaseOnChange(subscription, newPlan, newPriceList.getName(), requestedDate, effectiveDate);
 
-        final SubscriptionEvent changeEvent = new ApiEventChange(new ApiEventBuilder()
+        final SubscriptionBaseEvent changeEvent = new ApiEventChange(new ApiEventBuilder()
                                                                         .setSubscriptionId(subscription.getId())
                                                                         .setEventPlan(newPlan.getName())
                                                                         .setEventPlanPhase(currentTimedPhase.getPhase().getName())
@@ -348,7 +348,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                                           PhaseEventData.createNextPhaseEvent(nextTimedPhase.getPhase().getName(), subscription, now, nextTimedPhase.getStartPhase()) :
                                           null;
 
-        final List<SubscriptionEvent> changeEvents = new ArrayList<SubscriptionEvent>();
+        final List<SubscriptionBaseEvent> changeEvents = new ArrayList<SubscriptionBaseEvent>();
         // Only add the PHASE if it does not coincide with the CHANGE, if not this is 'just' a CHANGE.
         if (nextPhaseEvent != null && !nextPhaseEvent.getEffectiveDate().equals(changeEvent.getEffectiveDate())) {
             changeEvents.add(nextPhaseEvent);
@@ -378,7 +378,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         final List<SubscriptionBase> subscriptions = dao.getSubscriptions(baseSubscription.getBundleId(), context);
 
         final List<DefaultSubscriptionBase> subscriptionsToBeCancelled = new LinkedList<DefaultSubscriptionBase>();
-        final List<SubscriptionEvent> cancelEvents = new LinkedList<SubscriptionEvent>();
+        final List<SubscriptionBaseEvent> cancelEvents = new LinkedList<SubscriptionBaseEvent>();
 
         for (final SubscriptionBase subscription : subscriptions) {
             final DefaultSubscriptionBase cur = (DefaultSubscriptionBase) subscription;
@@ -394,7 +394,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                 //
                 // Perform AO cancellation using the effectiveDate of the BP
                 //
-                final SubscriptionEvent cancelEvent = new ApiEventCancel(new ApiEventBuilder()
+                final SubscriptionBaseEvent cancelEvent = new ApiEventCancel(new ApiEventBuilder()
                                                                                 .setSubscriptionId(cur.getId())
                                                                                 .setActiveVersion(cur.getActiveVersion())
                                                                                 .setProcessedDate(now)

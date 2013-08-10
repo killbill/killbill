@@ -27,7 +27,7 @@ import org.testng.annotations.Test;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.subscription.SubscriptionTestSuiteNoDB;
-import com.ning.billing.subscription.events.SubscriptionEvent;
+import com.ning.billing.subscription.events.SubscriptionBaseEvent;
 import com.ning.billing.subscription.events.user.ApiEventType;
 
 public class TestTimedMigration extends SubscriptionTestSuiteNoDB {
@@ -35,7 +35,7 @@ public class TestTimedMigration extends SubscriptionTestSuiteNoDB {
     @Test(groups = "fast")
     public void testConstructor() throws Exception {
         final DateTime eventTime = new DateTime(DateTimeZone.UTC);
-        final SubscriptionEvent.EventType eventType = SubscriptionEvent.EventType.API_USER;
+        final SubscriptionBaseEvent.EventType eventType = SubscriptionBaseEvent.EventType.API_USER;
         final ApiEventType apiEventType = ApiEventType.CREATE;
         final Plan plan = Mockito.mock(Plan.class);
         final PlanPhase phase = Mockito.mock(PlanPhase.class);

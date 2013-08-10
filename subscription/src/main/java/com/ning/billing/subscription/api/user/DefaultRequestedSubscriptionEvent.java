@@ -21,7 +21,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
-import com.ning.billing.subscription.events.SubscriptionEvent;
+import com.ning.billing.subscription.events.SubscriptionBaseEvent;
 import com.ning.billing.util.events.RequestedSubscriptionInternalEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -56,7 +56,7 @@ public class DefaultRequestedSubscriptionEvent extends DefaultSubscriptionEvent 
     }
 
     public DefaultRequestedSubscriptionEvent(final DefaultSubscriptionBase subscription,
-                                             final SubscriptionEvent nextEvent,
+                                             final SubscriptionBaseEvent nextEvent,
                                              final Long searchKey1,
                                              final Long searchKey2,
                                              final UUID userToken) {

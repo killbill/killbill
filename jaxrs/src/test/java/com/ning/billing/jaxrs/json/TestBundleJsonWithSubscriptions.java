@@ -99,9 +99,9 @@ public class TestBundleJsonWithSubscriptions extends JaxrsTestSuiteNoDB {
         Mockito.when(bundleBaseTimeline.getExternalKey()).thenReturn(externalKey);
         Mockito.when(bundleBaseTimeline.getSubscriptions()).thenReturn(ImmutableList.<SubscriptionBaseTimeline>of(subscriptionTimeline));
 
-        final BundleJsonWithSubscriptions bundleJsonWithSubscriptions = new BundleJsonWithSubscriptions(bundleBaseTimeline, null,
+        final BundleJsonWithSubscriptions bundleJsonWithSubscriptions = null; /* STEPH_ENT new BundleJsonWithSubscriptions(bundleBaseTimeline, null,
                                                                                                         ImmutableMap.<UUID, List<AuditLog>>of(),
-                                                                                                        ImmutableMap.<UUID, List<AuditLog>>of());
+                                                                                                        ImmutableMap.<UUID, List<AuditLog>>of()); */
         Assert.assertEquals(bundleJsonWithSubscriptions.getBundleId(), bundleId.toString());
         Assert.assertEquals(bundleJsonWithSubscriptions.getExternalKey(), externalKey);
         Assert.assertEquals(bundleJsonWithSubscriptions.getSubscriptions().size(), 1);
@@ -123,9 +123,9 @@ public class TestBundleJsonWithSubscriptions extends JaxrsTestSuiteNoDB {
         Mockito.when(bundle.getId()).thenReturn(bundleId);
         Mockito.when(bundle.getExternalKey()).thenReturn(externalKey);
 
-        final BundleJsonWithSubscriptions bundleJsonWithSubscriptions = new BundleJsonWithSubscriptions(bundle, null,
+        final BundleJsonWithSubscriptions bundleJsonWithSubscriptions = null; /* new BundleJsonWithSubscriptions(bundle, null,
                                                                                                         ImmutableMap.<UUID, List<AuditLog>>of(),
-                                                                                                        ImmutableMap.<UUID, List<AuditLog>>of());
+                                                                                                        ImmutableMap.<UUID, List<AuditLog>>of()); */
         Assert.assertEquals(bundleJsonWithSubscriptions.getBundleId(), bundleId.toString());
         Assert.assertEquals(bundleJsonWithSubscriptions.getExternalKey(), externalKey);
         Assert.assertEquals(bundleJsonWithSubscriptions.getSubscriptions().size(), 0);

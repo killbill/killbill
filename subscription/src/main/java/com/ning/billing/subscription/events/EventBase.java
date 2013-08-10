@@ -22,7 +22,7 @@ import org.joda.time.DateTime;
 
 import com.ning.billing.subscription.events.user.ApiEvent;
 
-public abstract class EventBase implements SubscriptionEvent {
+public abstract class EventBase implements SubscriptionBaseEvent {
 
     private final long totalOrdering;
     private final UUID uuid;
@@ -124,7 +124,7 @@ public abstract class EventBase implements SubscriptionEvent {
     // - If all that is not enough return consistent by random ordering based on UUID
     //
     @Override
-    public int compareTo(final SubscriptionEvent other) {
+    public int compareTo(final SubscriptionBaseEvent other) {
         if (other == null) {
             throw new IllegalArgumentException("IEvent is compared to a null instance");
         }
@@ -152,10 +152,10 @@ public abstract class EventBase implements SubscriptionEvent {
 
     @Override
     public boolean equals(final Object other) {
-        if (!(other instanceof SubscriptionEvent)) {
+        if (!(other instanceof SubscriptionBaseEvent)) {
             return false;
         }
-        return (this.compareTo((SubscriptionEvent) other) == 0);
+        return (this.compareTo((SubscriptionBaseEvent) other) == 0);
     }
 
     @Override

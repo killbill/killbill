@@ -50,8 +50,8 @@ public class TestSubscriptionJsonWithEvents extends JaxrsTestSuiteNoDB {
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
         final EntitlementJsonWithEvents.SubscriptionReadEventJson newEvent = new EntitlementJsonWithEvents.SubscriptionReadEventJson(eventId.toString(),
                                                                                                                                        BillingPeriod.NO_BILLING_PERIOD.toString(),
-                                                                                                                                       requestedDate,
-                                                                                                                                       effectiveDate,
+                                                                                                                                       requestedDate.toLocalDate(),
+                                                                                                                                       effectiveDate.toLocalDate(),
                                                                                                                                        UUID.randomUUID().toString(),
                                                                                                                                        UUID.randomUUID().toString(),
                                                                                                                                        SubscriptionBaseTransitionType.CREATE.toString(),
@@ -78,8 +78,8 @@ public class TestSubscriptionJsonWithEvents extends JaxrsTestSuiteNoDB {
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
         final EntitlementJsonWithEvents.SubscriptionReadEventJson newEvent = new EntitlementJsonWithEvents.SubscriptionReadEventJson(eventId.toString(),
                                                                                                                                        BillingPeriod.NO_BILLING_PERIOD.toString(),
-                                                                                                                                       requestedDate,
-                                                                                                                                       effectiveDate,
+                                                                                                                                       requestedDate.toLocalDate(),
+                                                                                                                                       effectiveDate.toLocalDate(),
                                                                                                                                        UUID.randomUUID().toString(),
                                                                                                                                        UUID.randomUUID().toString(),
                                                                                                                                        SubscriptionBaseTransitionType.CREATE.toString(),

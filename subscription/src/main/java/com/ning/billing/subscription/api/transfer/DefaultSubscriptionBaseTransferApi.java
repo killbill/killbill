@@ -40,7 +40,7 @@ import com.ning.billing.subscription.api.user.DefaultSubscriptionBaseBundle;
 import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.subscription.api.user.SubscriptionBuilder;
 import com.ning.billing.subscription.engine.dao.SubscriptionDao;
-import com.ning.billing.subscription.events.SubscriptionEvent;
+import com.ning.billing.subscription.events.SubscriptionBaseEvent;
 import com.ning.billing.subscription.events.phase.PhaseEventData;
 import com.ning.billing.subscription.events.user.ApiEventBuilder;
 import com.ning.billing.subscription.events.user.ApiEventCancel;
@@ -76,10 +76,10 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
-    private SubscriptionEvent createEvent(final boolean firstEvent, final ExistingEvent existingEvent, final DefaultSubscriptionBase subscription, final DateTime transferDate, final CallContext context)
+    private SubscriptionBaseEvent createEvent(final boolean firstEvent, final ExistingEvent existingEvent, final DefaultSubscriptionBase subscription, final DateTime transferDate, final CallContext context)
             throws CatalogApiException {
 
-        SubscriptionEvent newEvent = null;
+        SubscriptionBaseEvent newEvent = null;
 
         final Catalog catalog = catalogService.getFullCatalog();
 
@@ -137,13 +137,13 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
     }
 
     @VisibleForTesting
-    List<SubscriptionEvent> toEvents(final List<ExistingEvent> existingEvents, final DefaultSubscriptionBase subscription,
+    List<SubscriptionBaseEvent> toEvents(final List<ExistingEvent> existingEvents, final DefaultSubscriptionBase subscription,
                                     final DateTime transferDate, final CallContext context) throws SubscriptionBaseTransferApiException {
 
         try {
-            final List<SubscriptionEvent> result = new LinkedList<SubscriptionEvent>();
+            final List<SubscriptionBaseEvent> result = new LinkedList<SubscriptionBaseEvent>();
 
-            SubscriptionEvent event = null;
+            SubscriptionBaseEvent event = null;
             ExistingEvent prevEvent = null;
             boolean firstEvent = true;
             for (ExistingEvent cur : existingEvents) {
@@ -234,7 +234,7 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
                                                          effectiveTransferDate.isBefore(oldSubscription.getChargedThroughDate()) ?
                                                          oldSubscription.getChargedThroughDate() : effectiveTransferDate;
 
-                    final SubscriptionEvent cancelEvent = new ApiEventCancel(new ApiEventBuilder()
+                    final SubscriptionBaseEvent cancelEvent = new ApiEventCancel(new ApiEventBuilder()
                                                                                     .setSubscriptionId(cur.getId())
                                                                                     .setActiveVersion(cur.getActiveVersion())
                                                                                     .setProcessedDate(clock.getUTCNow())
@@ -259,9 +259,9 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
                                                                                               .setCategory(productCategory)
                                                                                               .setBundleStartDate(effectiveTransferDate)
                                                                                               .setAlignStartDate(subscriptionAlignStartDate),
-                                                                                      ImmutableList.<SubscriptionEvent>of());
+                                                                                      ImmutableList.<SubscriptionBaseEvent>of());
 
-                final List<SubscriptionEvent> events = toEvents(existingEvents, defaultSubscriptionBase, effectiveTransferDate, context);
+                final List<SubscriptionBaseEvent> events = toEvents(existingEvents, defaultSubscriptionBase, effectiveTransferDate, context);
                 final SubscriptionMigrationData curData = new SubscriptionMigrationData(defaultSubscriptionBase, events, null);
                 subscriptionMigrationDataList.add(curData);
             }

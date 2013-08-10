@@ -40,8 +40,8 @@ import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimelineApi;
 import com.ning.billing.subscription.api.user.DefaultSubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBuilder;
 import com.ning.billing.subscription.engine.dao.SubscriptionDao;
-import com.ning.billing.subscription.events.SubscriptionEvent;
-import com.ning.billing.subscription.events.SubscriptionEvent.EventType;
+import com.ning.billing.subscription.events.SubscriptionBaseEvent;
+import com.ning.billing.subscription.events.SubscriptionBaseEvent.EventType;
 import com.ning.billing.subscription.events.user.ApiEventTransfer;
 import com.ning.billing.subscription.events.user.ApiEventType;
 import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline.ExistingEvent;
@@ -79,7 +79,7 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
         final DefaultSubscriptionBase subscription = new DefaultSubscriptionBase(subscriptionBuilder);
 
         final DateTime transferDate = subscriptionStartTime.plusDays(10);
-        final List<SubscriptionEvent> events = transferApi.toEvents(existingEvents, subscription, transferDate, callContext);
+        final List<SubscriptionBaseEvent> events = transferApi.toEvents(existingEvents, subscription, transferDate, callContext);
 
         Assert.assertEquals(events.size(), 0);
     }
@@ -94,7 +94,7 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
         final DefaultSubscriptionBase subscription = new DefaultSubscriptionBase(subscriptionBuilder);
 
         final DateTime transferDate = subscriptionStartTime.plusHours(1);
-        final List<SubscriptionEvent> events = transferApi.toEvents(existingEvents, subscription, transferDate, callContext);
+        final List<SubscriptionBaseEvent> events = transferApi.toEvents(existingEvents, subscription, transferDate, callContext);
 
         Assert.assertEquals(events.size(), 1);
         Assert.assertEquals(events.get(0).getType(), EventType.API_USER);
@@ -108,7 +108,7 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
         final DateTime transferDate = clock.getUTCNow();
         final DateTime migrateSubscriptionEventEffectiveDate = transferDate.minusDays(10);
         final DateTime migrateBillingEventEffectiveDate = migrateSubscriptionEventEffectiveDate.plusDays(1);
-        final List<SubscriptionEvent> events = transferBundle(migrateSubscriptionEventEffectiveDate, migrateBillingEventEffectiveDate, transferDate);
+        final List<SubscriptionBaseEvent> events = transferBundle(migrateSubscriptionEventEffectiveDate, migrateBillingEventEffectiveDate, transferDate);
 
         Assert.assertEquals(events.size(), 1);
         Assert.assertEquals(events.get(0).getType(), EventType.API_USER);
@@ -122,7 +122,7 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
         final DateTime transferDate = clock.getUTCNow();
         final DateTime migrateSubscriptionEventEffectiveDate = transferDate.minusDays(10);
         final DateTime migrateBillingEventEffectiveDate = migrateSubscriptionEventEffectiveDate;
-        final List<SubscriptionEvent> events = transferBundle(migrateSubscriptionEventEffectiveDate, migrateBillingEventEffectiveDate, transferDate);
+        final List<SubscriptionBaseEvent> events = transferBundle(migrateSubscriptionEventEffectiveDate, migrateBillingEventEffectiveDate, transferDate);
 
         Assert.assertEquals(events.size(), 1);
         Assert.assertEquals(events.get(0).getType(), EventType.API_USER);
@@ -136,7 +136,7 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
         final DateTime transferDate = clock.getUTCNow();
         final DateTime migrateSubscriptionEventEffectiveDate = transferDate.minusDays(10);
         final DateTime migrateBillingEventEffectiveDate = migrateSubscriptionEventEffectiveDate.plusDays(20);
-        final List<SubscriptionEvent> events = transferBundle(migrateSubscriptionEventEffectiveDate, migrateBillingEventEffectiveDate, transferDate);
+        final List<SubscriptionBaseEvent> events = transferBundle(migrateSubscriptionEventEffectiveDate, migrateBillingEventEffectiveDate, transferDate);
 
         Assert.assertEquals(events.size(), 1);
         Assert.assertEquals(events.get(0).getType(), EventType.API_USER);
@@ -150,7 +150,7 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
         final DateTime transferDate = clock.getUTCNow();
         final DateTime migrateSubscriptionEventEffectiveDate = transferDate.plusDays(10);
         final DateTime migrateBillingEventEffectiveDate = migrateSubscriptionEventEffectiveDate.plusDays(20);
-        final List<SubscriptionEvent> events = transferBundle(migrateSubscriptionEventEffectiveDate, migrateBillingEventEffectiveDate, transferDate);
+        final List<SubscriptionBaseEvent> events = transferBundle(migrateSubscriptionEventEffectiveDate, migrateBillingEventEffectiveDate, transferDate);
 
         Assert.assertEquals(events.size(), 1);
         Assert.assertEquals(events.get(0).getType(), EventType.API_USER);
@@ -158,7 +158,7 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
         Assert.assertEquals(((ApiEventTransfer) events.get(0)).getEventType(), ApiEventType.TRANSFER);
     }
 
-    private List<SubscriptionEvent> transferBundle(final DateTime migrateSubscriptionEventEffectiveDate, final DateTime migrateBillingEventEffectiveDate,
+    private List<SubscriptionBaseEvent> transferBundle(final DateTime migrateSubscriptionEventEffectiveDate, final DateTime migrateBillingEventEffectiveDate,
                                                   final DateTime transferDate) throws SubscriptionBaseTransferApiException {
         final ImmutableList<ExistingEvent> existingEvents = createMigrateEvents(migrateSubscriptionEventEffectiveDate, migrateBillingEventEffectiveDate);
         final SubscriptionBuilder subscriptionBuilder = new SubscriptionBuilder();

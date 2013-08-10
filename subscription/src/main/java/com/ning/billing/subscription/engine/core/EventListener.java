@@ -16,12 +16,12 @@
 
 package com.ning.billing.subscription.engine.core;
 
-import com.ning.billing.subscription.events.SubscriptionEvent;
+import com.ning.billing.subscription.events.SubscriptionBaseEvent;
 import com.ning.billing.util.callcontext.InternalCallContext;
 
 
 public interface EventListener {
 
-    public void processEventReady(final SubscriptionEvent event, final int seqId, final InternalCallContext context);
+    public void processEventReady(final SubscriptionBaseEvent event, final int seqId, final InternalCallContext context);
 
 }

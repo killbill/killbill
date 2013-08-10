@@ -38,8 +38,8 @@ import com.ning.billing.subscription.api.user.DefaultSubscriptionBase;
 import com.ning.billing.subscription.api.user.DefaultSubscriptionBaseBundle;
 import com.ning.billing.subscription.api.user.SubscriptionBuilder;
 import com.ning.billing.subscription.engine.dao.SubscriptionDao;
-import com.ning.billing.subscription.events.SubscriptionEvent;
-import com.ning.billing.subscription.events.SubscriptionEvent.EventType;
+import com.ning.billing.subscription.events.SubscriptionBaseEvent;
+import com.ning.billing.subscription.events.SubscriptionBaseEvent.EventType;
 import com.ning.billing.subscription.events.phase.PhaseEvent;
 import com.ning.billing.subscription.events.phase.PhaseEventData;
 import com.ning.billing.subscription.events.user.ApiEvent;
@@ -138,7 +138,7 @@ public class DefaultSubscriptionBaseMigrationApi extends SubscriptionApiBase imp
             throws SubscriptionBaseMigrationApiException {
         final TimedMigration[] events = migrationAligner.getEventsMigration(input, now);
         final DateTime migrationStartDate = events[0].getEventTime();
-        final List<SubscriptionEvent> emptyEvents = Collections.emptyList();
+        final List<SubscriptionBaseEvent> emptyEvents = Collections.emptyList();
         final DefaultSubscriptionBase defaultSubscriptionBase = createSubscriptionForApiUse(new SubscriptionBuilder()
                                                                                       .setId(UUID.randomUUID())
                                                                                       .setBundleId(bundleId)
@@ -154,7 +154,7 @@ public class DefaultSubscriptionBaseMigrationApi extends SubscriptionApiBase imp
             throws SubscriptionBaseMigrationApiException {
         final TimedMigration[] events = migrationAligner.getEventsMigration(input, now);
         final DateTime migrationStartDate = events[0].getEventTime();
-        final List<SubscriptionEvent> emptyEvents = Collections.emptyList();
+        final List<SubscriptionBaseEvent> emptyEvents = Collections.emptyList();
         final DefaultSubscriptionBase defaultSubscriptionBase = createSubscriptionForApiUse(new SubscriptionBuilder()
                                                                                       .setId(UUID.randomUUID())
                                                                                       .setBundleId(bundleId)
@@ -165,14 +165,14 @@ public class DefaultSubscriptionBaseMigrationApi extends SubscriptionApiBase imp
         return new SubscriptionMigrationData(defaultSubscriptionBase, toEvents(defaultSubscriptionBase, now, ctd, events, context), ctd);
     }
 
-    private List<SubscriptionEvent> toEvents(final DefaultSubscriptionBase defaultSubscriptionBase, final DateTime now, final DateTime ctd, final TimedMigration[] migrationEvents, final CallContext context) {
+    private List<SubscriptionBaseEvent> toEvents(final DefaultSubscriptionBase defaultSubscriptionBase, final DateTime now, final DateTime ctd, final TimedMigration[] migrationEvents, final CallContext context) {
 
 
         if (ctd == null) {
             throw new SubscriptionBaseError(String.format("Could not create migration billing event ctd = %s", ctd));
         }
 
-        final List<SubscriptionEvent> events = new ArrayList<SubscriptionEvent>(migrationEvents.length);
+        final List<SubscriptionBaseEvent> events = new ArrayList<SubscriptionBaseEvent>(migrationEvents.length);
 
         ApiEventMigrateBilling apiEventMigrateBilling = null;
 
@@ -238,8 +238,8 @@ public class DefaultSubscriptionBaseMigrationApi extends SubscriptionApiBase imp
             events.add(apiEventMigrateBilling);
         }
 
-        Collections.sort(events, new Comparator<SubscriptionEvent>() {
-            int compForApiType(final SubscriptionEvent o1, final SubscriptionEvent o2, final ApiEventType type) {
+        Collections.sort(events, new Comparator<SubscriptionBaseEvent>() {
+            int compForApiType(final SubscriptionBaseEvent o1, final SubscriptionBaseEvent o2, final ApiEventType type) {
                 ApiEventType apiO1 = null;
                 if (o1.getType() == EventType.API_USER) {
                     apiO1 = ((ApiEvent) o1).getEventType();
@@ -258,7 +258,7 @@ public class DefaultSubscriptionBaseMigrationApi extends SubscriptionApiBase imp
             }
 
             @Override
-            public int compare(final SubscriptionEvent o1, final SubscriptionEvent o2) {
+            public int compare(final SubscriptionBaseEvent o1, final SubscriptionBaseEvent o2) {
 
                 int comp = o1.getEffectiveDate().compareTo(o2.getEffectiveDate());
                 if (comp == 0) {

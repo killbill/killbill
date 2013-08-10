@@ -34,7 +34,7 @@ import com.ning.billing.subscription.api.timeline.SubscriptionDataRepair;
 import com.ning.billing.subscription.api.transfer.TransferCancelData;
 import com.ning.billing.subscription.api.user.DefaultSubscriptionBase;
 import com.ning.billing.subscription.api.user.DefaultSubscriptionBaseBundle;
-import com.ning.billing.subscription.events.SubscriptionEvent;
+import com.ning.billing.subscription.events.SubscriptionBaseEvent;
 import com.ning.billing.subscription.exceptions.SubscriptionBaseError;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
@@ -52,15 +52,15 @@ public class RepairSubscriptionDao implements SubscriptionDao, RepairSubscriptio
 
     private static final class SubscriptionEventWithOrderingId {
 
-        private final SubscriptionEvent event;
+        private final SubscriptionBaseEvent event;
         private final long orderingId;
 
-        public SubscriptionEventWithOrderingId(final SubscriptionEvent event, final long orderingId) {
+        public SubscriptionEventWithOrderingId(final SubscriptionBaseEvent event, final long orderingId) {
             this.event = event;
             this.orderingId = orderingId;
         }
 
-        public SubscriptionEvent getEvent() {
+        public SubscriptionBaseEvent getEvent() {
             return event;
         }
 
@@ -89,7 +89,7 @@ public class RepairSubscriptionDao implements SubscriptionDao, RepairSubscriptio
         private final Set<SubscriptionEventWithOrderingId> events;
         private long curOrderingId;
 
-        public SubscriptionRepairEvent(final List<SubscriptionEvent> initialEvents) {
+        public SubscriptionRepairEvent(final List<SubscriptionBaseEvent> initialEvents) {
             this.events = new TreeSet<SubscriptionEventWithOrderingId>(new Comparator<SubscriptionEventWithOrderingId>() {
                 @Override
                 public int compare(final SubscriptionEventWithOrderingId o1, final SubscriptionEventWithOrderingId o2) {
@@ -122,17 +122,17 @@ public class RepairSubscriptionDao implements SubscriptionDao, RepairSubscriptio
             }
         }
 
-        public List<SubscriptionEvent> getEvents() {
-            return new ArrayList<SubscriptionEvent>(Collections2.transform(events, new Function<SubscriptionEventWithOrderingId, SubscriptionEvent>() {
+        public List<SubscriptionBaseEvent> getEvents() {
+            return new ArrayList<SubscriptionBaseEvent>(Collections2.transform(events, new Function<SubscriptionEventWithOrderingId, SubscriptionBaseEvent>() {
                 @Override
-                public SubscriptionEvent apply(SubscriptionEventWithOrderingId in) {
+                public SubscriptionBaseEvent apply(SubscriptionEventWithOrderingId in) {
                     return in.getEvent();
                 }
             }));
         }
 
-        public void addEvents(final List<SubscriptionEvent> newEvents) {
-            for (final SubscriptionEvent cur : newEvents) {
+        public void addEvents(final List<SubscriptionBaseEvent> newEvents) {
+            for (final SubscriptionBaseEvent cur : newEvents) {
                 events.add(new SubscriptionEventWithOrderingId(cur, curOrderingId++));
             }
         }
@@ -151,29 +151,29 @@ public class RepairSubscriptionDao implements SubscriptionDao, RepairSubscriptio
     }
 
     @Override
-    public List<SubscriptionEvent> getEventsForSubscription(final UUID subscriptionId, final InternalTenantContext context) {
+    public List<SubscriptionBaseEvent> getEventsForSubscription(final UUID subscriptionId, final InternalTenantContext context) {
         final SubscriptionRepairEvent target = getRepairSubscriptionEvents(subscriptionId);
-        return new LinkedList<SubscriptionEvent>(target.getEvents());
+        return new LinkedList<SubscriptionBaseEvent>(target.getEvents());
     }
 
     @Override
-    public void createSubscription(final DefaultSubscriptionBase subscription, final List<SubscriptionEvent> createEvents, final InternalCallContext context) {
+    public void createSubscription(final DefaultSubscriptionBase subscription, final List<SubscriptionBaseEvent> createEvents, final InternalCallContext context) {
         addEvents(subscription.getId(), createEvents);
     }
 
     @Override
-    public void recreateSubscription(final DefaultSubscriptionBase subscription, final List<SubscriptionEvent> recreateEvents, final InternalCallContext context) {
+    public void recreateSubscription(final DefaultSubscriptionBase subscription, final List<SubscriptionBaseEvent> recreateEvents, final InternalCallContext context) {
         addEvents(subscription.getId(), recreateEvents);
     }
 
     @Override
-    public void cancelSubscription(final DefaultSubscriptionBase subscription, final SubscriptionEvent cancelEvent, final InternalCallContext context, final int cancelSeq) {
+    public void cancelSubscription(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent cancelEvent, final InternalCallContext context, final int cancelSeq) {
         final UUID subscriptionId = subscription.getId();
         final long activeVersion = cancelEvent.getActiveVersion();
         addEvents(subscriptionId, Collections.singletonList(cancelEvent));
         final SubscriptionRepairEvent target = getRepairSubscriptionEvents(subscriptionId);
         boolean foundCancelEvent = false;
-        for (final SubscriptionEvent cur : target.getEvents()) {
+        for (final SubscriptionBaseEvent cur : target.getEvents()) {
             if (cur.getId().equals(cancelEvent.getId())) {
                 foundCancelEvent = true;
             } else if (foundCancelEvent) {
@@ -183,16 +183,16 @@ public class RepairSubscriptionDao implements SubscriptionDao, RepairSubscriptio
     }
 
     @Override
-    public void cancelSubscriptions(final List<DefaultSubscriptionBase> subscriptions, final List<SubscriptionEvent> cancelEvents, final InternalCallContext context) {
+    public void cancelSubscriptions(final List<DefaultSubscriptionBase> subscriptions, final List<SubscriptionBaseEvent> cancelEvents, final InternalCallContext context) {
     }
 
     @Override
-    public void changePlan(final DefaultSubscriptionBase subscription, final List<SubscriptionEvent> changeEvents, final InternalCallContext context) {
+    public void changePlan(final DefaultSubscriptionBase subscription, final List<SubscriptionBaseEvent> changeEvents, final InternalCallContext context) {
         addEvents(subscription.getId(), changeEvents);
     }
 
     @Override
-    public void initializeRepair(final UUID subscriptionId, final List<SubscriptionEvent> initialEvents, final InternalTenantContext context) {
+    public void initializeRepair(final UUID subscriptionId, final List<SubscriptionBaseEvent> initialEvents, final InternalTenantContext context) {
         final Map<UUID, SubscriptionRepairEvent> map = getRepairMap();
         if (map.get(subscriptionId) == null) {
             final SubscriptionRepairEvent value = new SubscriptionRepairEvent(initialEvents);
@@ -208,13 +208,13 @@ public class RepairSubscriptionDao implements SubscriptionDao, RepairSubscriptio
         map.clear();
     }
 
-    private void addEvents(final UUID subscriptionId, final List<SubscriptionEvent> events) {
+    private void addEvents(final UUID subscriptionId, final List<SubscriptionBaseEvent> events) {
         final SubscriptionRepairEvent target = getRepairSubscriptionEvents(subscriptionId);
         target.addEvents(events);
     }
 
     @Override
-    public void uncancelSubscription(final DefaultSubscriptionBase subscription, final List<SubscriptionEvent> uncancelEvents, final InternalCallContext context) {
+    public void uncancelSubscription(final DefaultSubscriptionBase subscription, final List<SubscriptionBaseEvent> uncancelEvents, final InternalCallContext context) {
         throw new SubscriptionBaseError(NOT_IMPLEMENTED);
     }
 
@@ -270,22 +270,22 @@ public class RepairSubscriptionDao implements SubscriptionDao, RepairSubscriptio
     }
 
     @Override
-    public void createNextPhaseEvent(final DefaultSubscriptionBase subscription, final SubscriptionEvent nextPhase, final InternalCallContext context) {
+    public void createNextPhaseEvent(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent nextPhase, final InternalCallContext context) {
         throw new SubscriptionBaseError(NOT_IMPLEMENTED);
     }
 
     @Override
-    public SubscriptionEvent getEventById(final UUID eventId, final InternalTenantContext context) {
+    public SubscriptionBaseEvent getEventById(final UUID eventId, final InternalTenantContext context) {
         throw new SubscriptionBaseError(NOT_IMPLEMENTED);
     }
 
     @Override
-    public Map<UUID, List<SubscriptionEvent>> getEventsForBundle(final UUID bundleId, final InternalTenantContext context) {
+    public Map<UUID, List<SubscriptionBaseEvent>> getEventsForBundle(final UUID bundleId, final InternalTenantContext context) {
         throw new SubscriptionBaseError(NOT_IMPLEMENTED);
     }
 
     @Override
-    public List<SubscriptionEvent> getPendingEventsForSubscription(final UUID subscriptionId, final InternalTenantContext context) {
+    public List<SubscriptionBaseEvent> getPendingEventsForSubscription(final UUID subscriptionId, final InternalTenantContext context) {
         throw new SubscriptionBaseError(NOT_IMPLEMENTED);
     }
 

@@ -27,7 +27,7 @@ import com.ning.billing.subscription.api.transfer.TransferCancelData;
 import com.ning.billing.subscription.api.user.DefaultSubscriptionBase;
 import com.ning.billing.subscription.api.user.DefaultSubscriptionBaseBundle;
 import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
-import com.ning.billing.subscription.events.SubscriptionEvent;
+import com.ning.billing.subscription.events.SubscriptionBaseEvent;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
@@ -61,28 +61,28 @@ public interface SubscriptionDao {
     public void updateChargedThroughDate(DefaultSubscriptionBase subscription, InternalCallContext context);
 
     // Event apis
-    public void createNextPhaseEvent(DefaultSubscriptionBase subscription, SubscriptionEvent nextPhase, InternalCallContext context);
+    public void createNextPhaseEvent(DefaultSubscriptionBase subscription, SubscriptionBaseEvent nextPhase, InternalCallContext context);
 
-    public SubscriptionEvent getEventById(UUID eventId, InternalTenantContext context);
+    public SubscriptionBaseEvent getEventById(UUID eventId, InternalTenantContext context);
 
-    public Map<UUID, List<SubscriptionEvent>> getEventsForBundle(UUID bundleId, InternalTenantContext context);
+    public Map<UUID, List<SubscriptionBaseEvent>> getEventsForBundle(UUID bundleId, InternalTenantContext context);
 
-    public List<SubscriptionEvent> getEventsForSubscription(UUID subscriptionId, InternalTenantContext context);
+    public List<SubscriptionBaseEvent> getEventsForSubscription(UUID subscriptionId, InternalTenantContext context);
 
-    public List<SubscriptionEvent> getPendingEventsForSubscription(UUID subscriptionId, InternalTenantContext context);
+    public List<SubscriptionBaseEvent> getPendingEventsForSubscription(UUID subscriptionId, InternalTenantContext context);
 
     // SubscriptionBase creation, cancellation, changePlan apis
-    public void createSubscription(DefaultSubscriptionBase subscription, List<SubscriptionEvent> initialEvents, InternalCallContext context);
+    public void createSubscription(DefaultSubscriptionBase subscription, List<SubscriptionBaseEvent> initialEvents, InternalCallContext context);
 
-    public void recreateSubscription(DefaultSubscriptionBase subscription, List<SubscriptionEvent> recreateEvents, InternalCallContext context);
+    public void recreateSubscription(DefaultSubscriptionBase subscription, List<SubscriptionBaseEvent> recreateEvents, InternalCallContext context);
 
-    public void cancelSubscription(DefaultSubscriptionBase subscription, SubscriptionEvent cancelEvent, InternalCallContext context, int cancelSeq);
+    public void cancelSubscription(DefaultSubscriptionBase subscription, SubscriptionBaseEvent cancelEvent, InternalCallContext context, int cancelSeq);
 
-    public void cancelSubscriptions(final List<DefaultSubscriptionBase> subscriptions, final List<SubscriptionEvent> cancelEvents, final InternalCallContext context);
+    public void cancelSubscriptions(final List<DefaultSubscriptionBase> subscriptions, final List<SubscriptionBaseEvent> cancelEvents, final InternalCallContext context);
 
-    public void uncancelSubscription(DefaultSubscriptionBase subscription, List<SubscriptionEvent> uncancelEvents, InternalCallContext context);
+    public void uncancelSubscription(DefaultSubscriptionBase subscription, List<SubscriptionBaseEvent> uncancelEvents, InternalCallContext context);
 
-    public void changePlan(DefaultSubscriptionBase subscription, List<SubscriptionEvent> changeEvents, InternalCallContext context);
+    public void changePlan(DefaultSubscriptionBase subscription, List<SubscriptionBaseEvent> changeEvents, InternalCallContext context);
 
     public void migrate(UUID accountId, AccountMigrationData data, InternalCallContext context);
 

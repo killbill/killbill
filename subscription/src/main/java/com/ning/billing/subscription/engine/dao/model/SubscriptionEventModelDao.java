@@ -20,8 +20,8 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.subscription.events.SubscriptionEvent;
-import com.ning.billing.subscription.events.SubscriptionEvent.EventType;
+import com.ning.billing.subscription.events.SubscriptionBaseEvent;
+import com.ning.billing.subscription.events.SubscriptionBaseEvent.EventType;
 import com.ning.billing.subscription.events.EventBaseBuilder;
 import com.ning.billing.subscription.events.phase.PhaseEvent;
 import com.ning.billing.subscription.events.phase.PhaseEventBuilder;
@@ -42,7 +42,7 @@ import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.EntityBase;
 import com.ning.billing.util.entity.dao.EntityModelDao;
 
-public class SubscriptionEventModelDao extends EntityBase implements EntityModelDao<SubscriptionEvent> {
+public class SubscriptionEventModelDao extends EntityBase implements EntityModelDao<SubscriptionBaseEvent> {
 
     private long totalOrdering;
     private EventType eventType;
@@ -78,7 +78,7 @@ public class SubscriptionEventModelDao extends EntityBase implements EntityModel
         this.isActive = active;
     }
 
-    public SubscriptionEventModelDao(final SubscriptionEvent src) {
+    public SubscriptionEventModelDao(final SubscriptionBaseEvent src) {
         super(src.getId(), src.getCreatedDate(), src.getUpdatedDate());
         this.totalOrdering = src.getTotalOrdering();
         this.eventType = src.getType();
@@ -142,7 +142,7 @@ public class SubscriptionEventModelDao extends EntityBase implements EntityModel
         return isActive;
     }
 
-    public static SubscriptionEvent toSubscriptionEvent(final SubscriptionEventModelDao src) {
+    public static SubscriptionBaseEvent toSubscriptionEvent(final SubscriptionEventModelDao src) {
 
         if (src == null) {
             return null;
@@ -162,7 +162,7 @@ public class SubscriptionEventModelDao extends EntityBase implements EntityModel
                 .setActiveVersion(src.getCurrentVersion())
                 .setActive(src.isActive());
 
-        SubscriptionEvent result = null;
+        SubscriptionBaseEvent result = null;
         if (src.getEventType() == EventType.PHASE) {
             result = new PhaseEventData(new PhaseEventBuilder(base).setPhaseName(src.getPhaseName()));
         } else if (src.getEventType() == EventType.API_USER) {

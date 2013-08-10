@@ -23,7 +23,7 @@ import org.joda.time.DateTime;
 import com.ning.billing.util.entity.Entity;
 
 
-public interface SubscriptionEvent extends Comparable<SubscriptionEvent>, Entity {
+public interface SubscriptionBaseEvent extends Comparable<SubscriptionBaseEvent>, Entity {
 
     public enum EventType {
         API_USER,

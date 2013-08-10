@@ -38,8 +38,8 @@ import com.ning.billing.subscription.api.user.SubscriptionBuilder;
 import com.ning.billing.subscription.api.user.DefaultSubscriptionBase;
 import com.ning.billing.subscription.engine.addon.AddonUtils;
 import com.ning.billing.subscription.engine.dao.SubscriptionDao;
-import com.ning.billing.subscription.events.SubscriptionEvent;
-import com.ning.billing.subscription.events.SubscriptionEvent.EventType;
+import com.ning.billing.subscription.events.SubscriptionBaseEvent;
+import com.ning.billing.subscription.events.SubscriptionBaseEvent.EventType;
 import com.ning.billing.subscription.events.user.ApiEventBuilder;
 import com.ning.billing.subscription.events.user.ApiEventCancel;
 import com.ning.billing.subscription.api.user.SubscriptionState;
@@ -56,11 +56,11 @@ public class SubscriptionDataRepair extends DefaultSubscriptionBase {
     private final Clock clock;
     private final SubscriptionDao repairDao;
     private final CatalogService catalogService;
-    private final List<SubscriptionEvent> initialEvents;
+    private final List<SubscriptionBaseEvent> initialEvents;
     private final InternalCallContextFactory internalCallContextFactory;
 
 
-    public SubscriptionDataRepair(final SubscriptionBuilder builder, final List<SubscriptionEvent> initialEvents, final SubscriptionBaseApiService apiService,
+    public SubscriptionDataRepair(final SubscriptionBuilder builder, final List<SubscriptionBaseEvent> initialEvents, final SubscriptionBaseApiService apiService,
                                   final SubscriptionDao dao, final Clock clock, final AddonUtils addonUtils, final CatalogService catalogService,
                                   final InternalCallContextFactory internalCallContextFactory) {
         super(builder, apiService, clock);
@@ -88,7 +88,7 @@ public class SubscriptionDataRepair extends DefaultSubscriptionBase {
 
     DateTime getLastUserEventEffectiveDate() {
         DateTime res = null;
-        for (final SubscriptionEvent cur : events) {
+        for (final SubscriptionBaseEvent cur : events) {
             if (cur.getActiveVersion() != getActiveVersion()) {
                 break;
             }
@@ -176,7 +176,7 @@ public class SubscriptionDataRepair extends DefaultSubscriptionBase {
                 addonUtils.isAddonIncluded(baseProduct, addonCurrentPlan) ||
                 !addonUtils.isAddonAvailable(baseProduct, addonCurrentPlan)) {
 
-                final SubscriptionEvent cancelEvent = new ApiEventCancel(new ApiEventBuilder()
+                final SubscriptionBaseEvent cancelEvent = new ApiEventCancel(new ApiEventBuilder()
                                                                                 .setSubscriptionId(cur.getId())
                                                                                 .setActiveVersion(cur.getActiveVersion())
                                                                                 .setProcessedDate(now)
@@ -196,18 +196,18 @@ public class SubscriptionDataRepair extends DefaultSubscriptionBase {
         }
     }
 
-    public List<SubscriptionEvent> getEvents() {
+    public List<SubscriptionBaseEvent> getEvents() {
         return events;
     }
 
-    public List<SubscriptionEvent> getInitialEvents() {
+    public List<SubscriptionBaseEvent> getInitialEvents() {
         return initialEvents;
     }
 
-    public Collection<SubscriptionEvent> getNewEvents() {
-        return Collections2.filter(events, new Predicate<SubscriptionEvent>() {
+    public Collection<SubscriptionBaseEvent> getNewEvents() {
+        return Collections2.filter(events, new Predicate<SubscriptionBaseEvent>() {
             @Override
-            public boolean apply(final SubscriptionEvent input) {
+            public boolean apply(final SubscriptionBaseEvent input) {
                 return !initialEvents.contains(input);
             }
         });

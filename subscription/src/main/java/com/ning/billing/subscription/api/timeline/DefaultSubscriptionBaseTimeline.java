@@ -34,7 +34,7 @@ import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.subscription.api.user.SubscriptionBaseTransitionData;
-import com.ning.billing.subscription.events.SubscriptionEvent;
+import com.ning.billing.subscription.events.SubscriptionBaseEvent;
 import com.ning.billing.subscription.events.phase.PhaseEvent;
 import com.ning.billing.subscription.events.user.ApiEvent;
 import com.ning.billing.subscription.events.user.ApiEventType;
@@ -78,7 +78,7 @@ public class DefaultSubscriptionBaseTimeline implements SubscriptionBaseTimeline
         this.activeVersion = input.getActiveVersion();
     }
 
-    private List<ExistingEvent> toExistingEvents(final Catalog catalog, final long activeVersion, final ProductCategory category, final List<SubscriptionEvent> events)
+    private List<ExistingEvent> toExistingEvents(final Catalog catalog, final long activeVersion, final ProductCategory category, final List<SubscriptionBaseEvent> events)
             throws CatalogApiException {
 
         final List<ExistingEvent> result = new LinkedList<SubscriptionBaseTimeline.ExistingEvent>();
@@ -90,7 +90,7 @@ public class DefaultSubscriptionBaseTimeline implements SubscriptionBaseTimeline
 
         DateTime startDate = null;
 
-        for (final SubscriptionEvent cur : events) {
+        for (final SubscriptionBaseEvent cur : events) {
 
             // First active event is used to figure out which catalog version to use.
             //startDate = (startDate == null && cur.getActiveVersion() == activeVersion) ?  cur.getEffectiveDate() : startDate;
@@ -180,7 +180,7 @@ public class DefaultSubscriptionBaseTimeline implements SubscriptionBaseTimeline
 
     /*
 
-    private List<ExistingEvent> toExistingEvents(final Catalog catalog, final long processingVersion, final ProductCategory category, final List<SubscriptionEvent> events, List<ExistingEvent> result)
+    private List<ExistingEvent> toExistingEvents(final Catalog catalog, final long processingVersion, final ProductCategory category, final List<SubscriptionBaseEvent> events, List<ExistingEvent> result)
         throws CatalogApiException {
 
 
@@ -191,7 +191,7 @@ public class DefaultSubscriptionBaseTimeline implements SubscriptionBaseTimeline
 
         DateTime startDate = null;
 
-        for (final SubscriptionEvent cur : events) {
+        for (final SubscriptionBaseEvent cur : events) {
 
             if (processingVersion != cur.getActiveVersion()) {
                 continue;

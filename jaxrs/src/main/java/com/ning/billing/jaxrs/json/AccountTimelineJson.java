@@ -27,6 +27,8 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import com.ning.billing.account.api.Account;
+import com.ning.billing.entitlement.api.Subscription;
+import com.ning.billing.entitlement.api.SubscriptionBundle;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
@@ -64,7 +66,7 @@ public class AccountTimelineJson {
         this.payments = payments;
     }
 
-    private String getBundleExternalKey(final UUID invoiceId, final List<Invoice> invoices, final List<BundleBaseTimeline> bundles) {
+    private String getBundleExternalKey(final UUID invoiceId, final List<Invoice> invoices, final List<SubscriptionBundle> bundles) {
         for (final Invoice cur : invoices) {
             if (cur.getId().equals(invoiceId)) {
                 return getBundleExternalKey(cur, bundles);
@@ -73,7 +75,7 @@ public class AccountTimelineJson {
         return null;
     }
 
-    private String getBundleExternalKey(final Invoice invoice, final List<BundleBaseTimeline> bundles) {
+    private String getBundleExternalKey(final Invoice invoice, final List<SubscriptionBundle> bundles) {
         final Set<UUID> b = new HashSet<UUID>();
         for (final InvoiceItem cur : invoice.getInvoiceItems()) {
             b.add(cur.getBundleId());
@@ -81,7 +83,7 @@ public class AccountTimelineJson {
         boolean first = true;
         final StringBuilder tmp = new StringBuilder();
         for (final UUID cur : b) {
-            for (final BundleBaseTimeline bt : bundles) {
+            for (final SubscriptionBundle bt : bundles) {
                 if (bt.getId().equals(cur)) {
                     if (!first) {
                         tmp.append(",");
@@ -95,8 +97,10 @@ public class AccountTimelineJson {
         return tmp.toString();
     }
 
+
+
     public AccountTimelineJson(final Account account, final List<Invoice> invoices, final List<Payment> payments,
-                               final List<BundleBaseTimeline> bundlesTimeline, final Multimap<UUID, Refund> refundsByPayment,
+                               final List<SubscriptionBundle> bundlesTimeline, final Multimap<UUID, Refund> refundsByPayment,
                                final Multimap<UUID, InvoicePayment> chargebacksByPayment, @Nullable final AuditLogsForInvoices invoicesAuditLogs,
                                @Nullable final AuditLogsForPayments paymentsAuditLogs, @Nullable final AuditLogsForRefunds refundsAuditLogs,
                                @Nullable final AuditLogsForInvoicePayments chargebacksAuditLogs, @Nullable final AuditLogsForBundles bundlesAuditLogs) {
@@ -111,7 +115,7 @@ public class AccountTimelineJson {
              bundlesAuditLogs == null ? ImmutableMap.<UUID, List<AuditLog>>of() : bundlesAuditLogs.getSubscriptionEventsAuditLogs());
     }
 
-    public AccountTimelineJson(final Account account, final List<Invoice> invoices, final List<Payment> payments, final List<BundleBaseTimeline> bundles,
+    public AccountTimelineJson(final Account account, final List<Invoice> invoices, final List<Payment> payments, final List<SubscriptionBundle> bundles,
                                final Multimap<UUID, Refund> refundsByPayment, final Multimap<UUID, InvoicePayment> chargebacksByPayment,
                                final Map<UUID, List<AuditLog>> invoiceAuditLogs, final Map<UUID, List<AuditLog>> invoiceItemsAuditLogs,
                                final Map<UUID, List<AuditLog>> paymentsAuditLogs, final Map<UUID, List<AuditLog>> refundsAuditLogs,
@@ -119,7 +123,7 @@ public class AccountTimelineJson {
                                final Map<UUID, List<AuditLog>> subscriptionsAuditLogs, final Map<UUID, List<AuditLog>> subscriptionEventsAuditLogs) {
         this.account = new AccountJsonSimple(account.getId().toString(), account.getExternalKey());
         this.bundles = new LinkedList<BundleJsonWithSubscriptions>();
-        for (final BundleBaseTimeline bundle : bundles) {
+        for (final SubscriptionBundle bundle : bundles) {
             final List<AuditLog> bundleAuditLogs = bundlesAuditLogs.get(bundle.getId());
             final BundleJsonWithSubscriptions jsonWithSubscriptions = new BundleJsonWithSubscriptions(bundle, bundleAuditLogs,
                                                                                                       subscriptionsAuditLogs, subscriptionEventsAuditLogs);

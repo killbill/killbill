@@ -23,7 +23,7 @@ import org.joda.time.DateTime;
 import com.ning.billing.subscription.api.user.SubscriptionBuilder;
 import com.ning.billing.subscription.api.user.DefaultSubscriptionBaseBundle;
 import com.ning.billing.subscription.api.user.DefaultSubscriptionBase;
-import com.ning.billing.subscription.events.SubscriptionEvent;
+import com.ning.billing.subscription.events.SubscriptionBaseEvent;
 
 
 public class AccountMigrationData {
@@ -63,10 +63,10 @@ public class AccountMigrationData {
     public static class SubscriptionMigrationData {
 
         private final DefaultSubscriptionBase data;
-        private final List<SubscriptionEvent> initialEvents;
+        private final List<SubscriptionBaseEvent> initialEvents;
 
         public SubscriptionMigrationData(final DefaultSubscriptionBase data,
-                                         final List<SubscriptionEvent> initialEvents,
+                                         final List<SubscriptionBaseEvent> initialEvents,
                                          final DateTime ctd) {
             super();
             // Set CTD to subscription object from MIGRATION_BILLING event
@@ -82,7 +82,7 @@ public class AccountMigrationData {
             return data;
         }
 
-        public List<SubscriptionEvent> getInitialEvents() {
+        public List<SubscriptionBaseEvent> getInitialEvents() {
             return initialEvents;
         }
     }

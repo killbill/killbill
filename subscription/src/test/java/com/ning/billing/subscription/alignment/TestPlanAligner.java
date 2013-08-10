@@ -38,7 +38,7 @@ import com.ning.billing.subscription.api.user.DefaultSubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.subscription.api.user.SubscriptionBaseTransition;
 import com.ning.billing.subscription.api.user.SubscriptionBuilder;
-import com.ning.billing.subscription.events.SubscriptionEvent;
+import com.ning.billing.subscription.events.SubscriptionBaseEvent;
 import com.ning.billing.subscription.events.user.ApiEventBase;
 import com.ning.billing.subscription.events.user.ApiEventBuilder;
 import com.ning.billing.subscription.events.user.ApiEventType;
@@ -174,12 +174,12 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
 
         // Create the transitions
         final DefaultSubscriptionBase defaultSubscriptionBase = new DefaultSubscriptionBase(builder, null, clock);
-        final SubscriptionEvent event = createSubscriptionEvent(builder.getAlignStartDate(),
+        final SubscriptionBaseEvent event = createSubscriptionEvent(builder.getAlignStartDate(),
                                                                 productName,
                                                                 phaseType,
                                                                 ApiEventType.CREATE,
                                                                 defaultSubscriptionBase.getActiveVersion());
-        defaultSubscriptionBase.rebuildTransitions(ImmutableList.<SubscriptionEvent>of(event), catalogService.getFullCatalog());
+        defaultSubscriptionBase.rebuildTransitions(ImmutableList.<SubscriptionBaseEvent>of(event), catalogService.getFullCatalog());
 
         Assert.assertEquals(defaultSubscriptionBase.getAllTransitions().size(), 1);
         Assert.assertNull(defaultSubscriptionBase.getAllTransitions().get(0).getPreviousPhase());
@@ -193,18 +193,18 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
                                     final String previousProductName,
                                     final String newProductName,
                                     final PhaseType commonPhaseType) {
-        final SubscriptionEvent previousEvent = createSubscriptionEvent(defaultSubscriptionBase.getStartDate(),
+        final SubscriptionBaseEvent previousEvent = createSubscriptionEvent(defaultSubscriptionBase.getStartDate(),
                                                                         previousProductName,
                                                                         commonPhaseType,
                                                                         ApiEventType.CREATE,
                                                                         defaultSubscriptionBase.getActiveVersion());
-        final SubscriptionEvent event = createSubscriptionEvent(effectiveChangeDate,
+        final SubscriptionBaseEvent event = createSubscriptionEvent(effectiveChangeDate,
                                                                 newProductName,
                                                                 commonPhaseType,
                                                                 ApiEventType.CHANGE,
                                                                 defaultSubscriptionBase.getActiveVersion());
 
-        defaultSubscriptionBase.rebuildTransitions(ImmutableList.<SubscriptionEvent>of(previousEvent, event), catalogService.getFullCatalog());
+        defaultSubscriptionBase.rebuildTransitions(ImmutableList.<SubscriptionBaseEvent>of(previousEvent, event), catalogService.getFullCatalog());
 
         final List<SubscriptionBaseTransition> newTransitions = defaultSubscriptionBase.getAllTransitions();
         Assert.assertEquals(newTransitions.size(), 2);
@@ -213,7 +213,7 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
         Assert.assertNotNull(newTransitions.get(1).getNextPhase());
     }
 
-    private SubscriptionEvent createSubscriptionEvent(final DateTime effectiveDate,
+    private SubscriptionBaseEvent createSubscriptionEvent(final DateTime effectiveDate,
                                                       final String productName,
                                                       final PhaseType phaseType,
                                                       final ApiEventType apiEventType,
