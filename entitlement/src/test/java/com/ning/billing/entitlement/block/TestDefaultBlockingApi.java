@@ -18,6 +18,7 @@ package com.ning.billing.entitlement.block;
 
 import com.ning.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
 import com.ning.billing.entitlement.api.BlockingState;
+import com.ning.billing.entitlement.api.BlockingStateType;
 import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.tweak.HandleCallback;
@@ -53,11 +54,11 @@ public class TestDefaultBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
             }
         });
 
-        final BlockingState blockingState = new DefaultBlockingState(UUID.randomUUID(), bundleId, "BLOCKED", "myService", true, true, true, internalCallContext.getCreatedDate(), null);
+        final BlockingState blockingState = new DefaultBlockingState(UUID.randomUUID(), bundleId, BlockingStateType.ACCOUNT, "BLOCKED", "myService", true, true, true, internalCallContext.getCreatedDate(), null);
         blockingInternalApi.setBlockingState(blockingState, internalCallContext);
 
         // Verify the blocking state was applied
-        final BlockingState resultState = blockingInternalApi.getBlockingStateFor(bundleId, internalCallContext);
+        final BlockingState resultState = blockingInternalApi.getBlockingStateForService(bundleId, "myService", internalCallContext);
 
         Assert.assertEquals(resultState.getStateName(), blockingState.getStateName());
         // Verify the account_record_id was populated

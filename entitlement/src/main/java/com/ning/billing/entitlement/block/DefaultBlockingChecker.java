@@ -16,6 +16,7 @@
 
 package com.ning.billing.entitlement.block;
 
+import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.ErrorCode;
@@ -74,7 +75,7 @@ public class DefaultBlockingChecker implements BlockingChecker {
 
     private static final Object TYPE_SUBSCRIPTION = "Subscription";
     private static final Object TYPE_BUNDLE = "Bundle";
-    private static final Object TYPE_ACCOUNT = "ACCOUNT";
+    private static final Object TYPE_ACCOUNT = "Account";
 
     private static final Object ACTION_CHANGE = "Change";
     private static final Object ACTION_ENTITLEMENT = "Entitlement";
@@ -139,8 +140,10 @@ public class DefaultBlockingChecker implements BlockingChecker {
     private BlockingAggregator getBlockedStateForId(final UUID blockableId, final InternalTenantContext context) {
         final BlockingAggregator result = new BlockingAggregator();
         if (blockableId != null) {
-            final BlockingState blockableState = dao.getBlockingStateFor(blockableId, context);
-            result.or(blockableState);
+            final List<BlockingState> blockableState = dao.getBlockingState(blockableId, context);
+            for (BlockingState cur : blockableState) {
+                result.or(cur);
+            }
         }
         return result;
     }

@@ -26,6 +26,7 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
 import com.ning.billing.entitlement.api.BlockingState;
+import com.ning.billing.entitlement.api.BlockingStateType;
 import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 
@@ -47,19 +48,21 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         final boolean blockEntitlement = false;
         final boolean blockBilling = false;
 
-        final BlockingState state1 = new DefaultBlockingState(uuid, overdueStateName, service, blockChange, blockEntitlement, blockBilling);
+        final BlockingState state1 = new DefaultBlockingState(uuid, BlockingStateType.ACCOUNT,overdueStateName, service, blockChange, blockEntitlement, blockBilling);
         blockingInternalApi.setBlockingState(state1, internalCallContext);
         clock.setDeltaFromReality(1000 * 3600 * 24);
 
         final String overdueStateName2 = "NoReallyThisCantGoOn";
-        final BlockingState state2 = new DefaultBlockingState(uuid, overdueStateName2, service, blockChange, blockEntitlement, blockBilling);
+        final BlockingState state2 = new DefaultBlockingState(uuid, BlockingStateType.ACCOUNT, overdueStateName2, service, blockChange, blockEntitlement, blockBilling);
         blockingInternalApi.setBlockingState(state2, internalCallContext);
 
         final SubscriptionBaseBundle bundle = Mockito.mock(SubscriptionBaseBundle.class);
         Mockito.when(bundle.getId()).thenReturn(uuid);
 
-        Assert.assertEquals(blockingInternalApi.getBlockingStateFor(bundle, internalCallContext).getStateName(), overdueStateName2);
-        Assert.assertEquals(blockingInternalApi.getBlockingStateFor(bundle.getId(), internalCallContext).getStateName(), overdueStateName2);
+        Assert.assertEquals(blockingInternalApi.getBlockingStateForService(bundle, service, internalCallContext).getStateName(), overdueStateName2);
+        Assert.assertEquals(blockingInternalApi.getBlockingStateForService(bundle.getId(), service, internalCallContext).getStateName(), overdueStateName2);
+
+
     }
 
     @Test(groups = "slow")
@@ -72,20 +75,20 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         final boolean blockEntitlement = false;
         final boolean blockBilling = false;
 
-        final BlockingState state1 = new DefaultBlockingState(uuid, overdueStateName, service, blockChange, blockEntitlement, blockBilling);
+        final BlockingState state1 = new DefaultBlockingState(uuid, BlockingStateType.ACCOUNT, overdueStateName, service, blockChange, blockEntitlement, blockBilling);
         blockingInternalApi.setBlockingState(state1, internalCallContext);
 
         clock.setDeltaFromReality(1000 * 3600 * 24);
 
         final String overdueStateName2 = "NoReallyThisCantGoOn";
-        final BlockingState state2 = new DefaultBlockingState(uuid, overdueStateName2, service, blockChange, blockEntitlement, blockBilling);
+        final BlockingState state2 = new DefaultBlockingState(uuid, BlockingStateType.ACCOUNT, overdueStateName2, service, blockChange, blockEntitlement, blockBilling);
         blockingInternalApi.setBlockingState(state2, internalCallContext);
 
         final SubscriptionBaseBundle bundle = Mockito.mock(SubscriptionBaseBundle.class);
         Mockito.when(bundle.getId()).thenReturn(uuid);
 
-        final List<BlockingState> history1 = blockingInternalApi.getBlockingHistory(bundle, internalCallContext);
-        final List<BlockingState> history2 = blockingInternalApi.getBlockingHistory(bundle.getId(), internalCallContext);
+        final List<BlockingState> history1 = blockingInternalApi.getBlockingHistoryForService(bundle, service, internalCallContext);
+        final List<BlockingState> history2 = blockingInternalApi.getBlockingHistoryForService(bundle.getId(), service, internalCallContext);
 
         Assert.assertEquals(history1.size(), 2);
         Assert.assertEquals(history1.get(0).getStateName(), overdueStateName);

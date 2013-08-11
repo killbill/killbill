@@ -24,6 +24,7 @@ import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.entitlement.api.Blockable;
 import com.ning.billing.overdue.OverdueApiException;
+import com.ning.billing.overdue.OverdueService;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.OverdueUserApi;
 import com.ning.billing.overdue.config.OverdueConfig;
@@ -61,7 +62,7 @@ public class DefaultOverdueUserApi implements OverdueUserApi {
     @Override
     public OverdueState getOverdueStateFor(final Account overdueable, final TenantContext context) throws OverdueException {
         try {
-            final String stateName = accessApi.getBlockingStateFor(overdueable, internalCallContextFactory.createInternalTenantContext(context)).getStateName();
+            final String stateName = accessApi.getBlockingStateForService(overdueable, OverdueService.OVERDUE_SERVICE_NAME, internalCallContextFactory.createInternalTenantContext(context)).getStateName();
             final OverdueStateSet states = overdueConfig.getBundleStateSet();
             return states.findState(stateName);
         } catch (OverdueApiException e) {

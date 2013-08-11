@@ -235,6 +235,12 @@ public class DefaultAccount extends EntityBase implements Account {
         return new DefaultMutableAccountData(this);
     }
 
+    @Override
+    public BlockingState getBlockingState() {
+        // STEPH_ENT How to return blocking state??????
+        return null;
+    }
+
     /**
      * @param currentAccount existing account data
      * @return merged account data
@@ -414,9 +420,4 @@ public class DefaultAccount extends EntityBase implements Account {
         return result;
     }
 
-    @Override
-    public BlockingState getBlockingState() {
-        // STEPH_ENT How to return blocking state??????
-        return null;
-    }
 }

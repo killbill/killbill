@@ -27,9 +27,50 @@ import com.ning.billing.clock.Clock;
 
 public interface BlockingStateDao {
 
-    public BlockingState getBlockingStateFor(UUID blockableId, InternalTenantContext context);
+    /**
+     * Returns the current state for that specific service
+     *
+     * @param blockableId
+     * @param serviceName
+     * @param context
+     * @return
+     */
+    public BlockingState getBlockingStateForService(UUID blockableId, String serviceName, InternalTenantContext context);
 
-    public List<BlockingState> getBlockingHistoryFor(UUID blockableId, InternalTenantContext context);
+    /**
+     * Returns the current state across all the services
+     *
+     * @param blockableId
+     * @param context
+     * @return
+     */
+    public List<BlockingState> getBlockingState(UUID blockableId, InternalTenantContext context);
 
-    <T extends Blockable> void setBlockingState(BlockingState state, Clock clock, InternalCallContext context);
+    /**
+     * Returns the state history  for that specific service
+     *
+     * @param blockableId
+     * @param serviceName
+     * @param context
+     * @return
+     */
+    public List<BlockingState> getBlockingHistoryForService(UUID blockableId, String serviceName, InternalTenantContext context);
+
+    /**
+     * Returns the state history across all the services
+     *
+     * @param blockableId
+     * @param context
+     * @return
+     */
+    public List<BlockingState> getBlockingHistory(UUID blockableId, InternalTenantContext context);
+
+    /**
+     * Sets a new state for a specific service
+     *
+     * @param state
+     * @param clock
+     * @param context
+     */
+    void setBlockingState(BlockingState state, Clock clock, InternalCallContext context);
 }

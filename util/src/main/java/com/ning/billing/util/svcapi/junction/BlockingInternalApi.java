@@ -26,14 +26,14 @@ import com.ning.billing.util.callcontext.InternalTenantContext;
 
 public interface BlockingInternalApi {
 
-    public BlockingState getBlockingStateFor(Blockable overdueable, InternalTenantContext context);
+    public BlockingState getBlockingStateForService(Blockable overdueable, String serviceName, InternalTenantContext context);
 
-    public BlockingState getBlockingStateFor(UUID overdueableId, InternalTenantContext context);
+    public BlockingState getBlockingStateForService(UUID overdueableId, String serviceName, InternalTenantContext context);
 
-    public List<BlockingState> getBlockingHistory(Blockable overdueable, InternalTenantContext context);
+    public List<BlockingState> getBlockingHistoryForService(Blockable overdueable, String serviceName, InternalTenantContext context);
 
-    public List<BlockingState> getBlockingHistory(UUID overdueableId, InternalTenantContext context);
+    public List<BlockingState> getBlockingHistoryForService(UUID overdueableId, String serviceName, InternalTenantContext context);
 
-    public <T extends Blockable> void setBlockingState(BlockingState state, InternalCallContext context);
+    public void setBlockingState(BlockingState state, InternalCallContext context);
 
 }

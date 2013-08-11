@@ -21,6 +21,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import com.ning.billing.entitlement.api.BlockingState;
+import com.ning.billing.entitlement.api.BlockingStateType;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.EntityBase;
@@ -30,16 +31,18 @@ import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 public class BlockingStateModelDao extends EntityBase implements EntityModelDao<BlockingState>{
 
     private final UUID blockableId;
+    private final BlockingStateType type;
     private final String state;
     private final String service;
     private final Boolean blockChange;
     private final Boolean blockEntitlement;
     private final Boolean blockBilling;
 
-    public BlockingStateModelDao(final UUID id, final UUID blockableId, final String state, final String service, final Boolean blockChange, final Boolean blockEntitlement,
+    public BlockingStateModelDao(final UUID id, final UUID blockableId, final BlockingStateType blockingStateType, final String state, final String service, final Boolean blockChange, final Boolean blockEntitlement,
                                  final Boolean blockBilling, final DateTime createDate, final DateTime updateDate) {
         super(id, createDate, updateDate);
         this.blockableId = blockableId;
+        this.type = blockingStateType;
         this.state = state;
         this.service = service;
         this.blockChange = blockChange;
@@ -48,7 +51,7 @@ public class BlockingStateModelDao extends EntityBase implements EntityModelDao<
     }
 
     public BlockingStateModelDao(final BlockingState src, InternalCallContext context) {
-        this(src.getId(), src.getBlockedId(), src.getStateName(), src.getService(), src.isBlockChange(),
+        this(src.getId(), src.getBlockedId(), src.getType(), src.getStateName(), src.getService(), src.isBlockChange(),
              src.isBlockEntitlement(), src.isBlockBilling(), context.getCreatedDate(), context.getUpdatedDate());
     }
 
@@ -76,11 +79,15 @@ public class BlockingStateModelDao extends EntityBase implements EntityModelDao<
         return blockBilling;
     }
 
+    public BlockingStateType getType() {
+        return type;
+    }
+
     public static BlockingState toBlockingState(BlockingStateModelDao src) {
         if (src == null) {
             return null;
         }
-        return new DefaultBlockingState(src.getId(), src.getBlockableId(),src.getState(), src.getService(), src.getBlockChange(), src.getBlockEntitlement(), src.getBlockBilling(),
+        return new DefaultBlockingState(src.getId(), src.getBlockableId(), src.getType(), src.getState(), src.getService(), src.getBlockChange(), src.getBlockEntitlement(), src.getBlockBilling(),
                                  src.getCreatedDate(), src.getUpdatedDate());
     }
 

@@ -29,6 +29,7 @@ import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.PriceListSet;
+import com.ning.billing.entitlement.api.BlockingStateType;
 import com.ning.billing.entitlement.dao.MockBlockingStateDao;
 import com.ning.billing.junction.JunctionTestSuiteNoDB;
 import com.ning.billing.entitlement.api.BlockingState;
@@ -181,8 +182,8 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
         final Account account = createAccount(32);
 
         final List<BlockingState> blockingStates = new ArrayList<BlockingState>();
-        blockingStates.add(new DefaultBlockingState(UUID.randomUUID(), bunId, DISABLED_BUNDLE, "test", true, true, true, now.plusDays(1), null));
-        blockingStates.add(new DefaultBlockingState(UUID.randomUUID(), bunId, CLEAR_BUNDLE, "test", false, false, false, now.plusDays(2), null));
+        blockingStates.add(new DefaultBlockingState(UUID.randomUUID(), bunId, BlockingStateType.BUNDLE,  DISABLED_BUNDLE, "test", true, true, true, now.plusDays(1), null));
+        blockingStates.add(new DefaultBlockingState(UUID.randomUUID(), bunId, BlockingStateType.BUNDLE, CLEAR_BUNDLE, "test", false, false, false, now.plusDays(2), null));
 
         ((MockBlockingStateDao) blockingStateDao).setBlockingStates(bunId, blockingStates);
         final SortedSet<BillingEvent> events = billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), internalCallContext);

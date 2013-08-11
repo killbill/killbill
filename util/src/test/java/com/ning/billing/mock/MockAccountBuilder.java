@@ -26,6 +26,7 @@ import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.MutableAccountData;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.entitlement.api.BlockingState;
+import com.ning.billing.entitlement.api.BlockingStateType;
 import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 
 public class MockAccountBuilder {
@@ -321,7 +322,7 @@ public class MockAccountBuilder {
 
             @Override
             public BlockingState getBlockingState() {
-                return  DefaultBlockingState.getClearState();
+                return  DefaultBlockingState.getClearState(BlockingStateType.ACCOUNT);
             }
 
             @Override

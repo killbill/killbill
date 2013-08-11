@@ -17,7 +17,10 @@
 package com.ning.billing.entitlement.api.svcs;
 
 import com.google.inject.Inject;
+
+import com.ning.billing.account.api.Account;
 import com.ning.billing.clock.Clock;
+import com.ning.billing.entitlement.api.BlockingStateType;
 import com.ning.billing.entitlement.dao.BlockingStateDao;
 import com.ning.billing.entitlement.api.Blockable;
 import com.ning.billing.entitlement.api.BlockingState;
@@ -41,31 +44,40 @@ public class DefaultInternalBlockingApi implements BlockingInternalApi {
     }
 
     @Override
-    public BlockingState getBlockingStateFor(final Blockable overdueable, final InternalTenantContext context) {
-        BlockingState state = dao.getBlockingStateFor(overdueable.getId(), context);
+    public BlockingState getBlockingStateForService(final Blockable overdueable, final String serviceName, final InternalTenantContext context) {
+        BlockingState state = dao.getBlockingStateForService(overdueable.getId(), serviceName, context);
         if (state == null) {
-            state = DefaultBlockingState.getClearState();
+            state = DefaultBlockingState.getClearState(getBlockingStateType(overdueable));
         }
         return state;
     }
 
     @Override
-    public BlockingState getBlockingStateFor(final UUID overdueableId, final InternalTenantContext context) {
-        return dao.getBlockingStateFor(overdueableId, context);
+    public BlockingState getBlockingStateForService(final UUID overdueableId, final String serviceName, final InternalTenantContext context) {
+        return dao.getBlockingStateForService(overdueableId, serviceName, context);
     }
 
     @Override
-    public List<BlockingState> getBlockingHistory(final Blockable overdueable, final InternalTenantContext context) {
-        return dao.getBlockingHistoryFor(overdueable.getId(), context);
+    public List<BlockingState> getBlockingHistoryForService(final Blockable overdueable, final String serviceName, final InternalTenantContext context) {
+        return dao.getBlockingHistoryForService(overdueable.getId(), serviceName, context);
     }
 
     @Override
-    public List<BlockingState> getBlockingHistory(final UUID overdueableId, final InternalTenantContext context) {
-        return dao.getBlockingHistoryFor(overdueableId, context);
+    public List<BlockingState> getBlockingHistoryForService(final UUID overdueableId, final String serviceName, final InternalTenantContext context) {
+        return dao.getBlockingHistoryForService(overdueableId, serviceName, context);
     }
 
     @Override
-    public <T extends Blockable> void setBlockingState(final BlockingState state, final InternalCallContext context) {
+    public void setBlockingState(final BlockingState state, final InternalCallContext context) {
         dao.setBlockingState(state, clock, context);
+    }
+
+    BlockingStateType getBlockingStateType(final Blockable overdueable) {
+        if (overdueable instanceof Account) {
+            return BlockingStateType.ACCOUNT;
+        }
+        // STEPH this is here to ve rify there are no service trying to block on something different than ACCOUNT level
+        // All the other entities
+        throw new RuntimeException("Unexpected blockable type");
     }
 }

@@ -22,31 +22,68 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
+import com.ning.billing.clock.Clock;
 import com.ning.billing.entitlement.api.Blockable;
 import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.clock.Clock;
+
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
 
 public class MockBlockingStateDao implements BlockingStateDao {
 
     private final Map<UUID, List<BlockingState>> blockingStates = new HashMap<UUID, List<BlockingState>>();
 
     @Override
-    public BlockingState getBlockingStateFor(final UUID blockableId, final InternalTenantContext context) {
-        final List<BlockingState> blockingStates = getBlockingHistoryFor(blockableId, context);
-        return blockingStates == null ? null : blockingStates.get(blockingStates.size() - 1);
+    public BlockingState getBlockingStateForService(final UUID blockableId, final String serviceName, final InternalTenantContext context) {
+        final List<BlockingState> states = getBlockingHistory(blockableId, context);
+        if (states == null) {
+            return null;
+        }
+        final ImmutableList<BlockingState> filtered = ImmutableList.<BlockingState>copyOf(Collections2.filter(states, new Predicate<BlockingState>() {
+            @Override
+            public boolean apply(@Nullable final BlockingState input) {
+                return input.getService().equals(serviceName);
+            }
+        }));
+        return filtered.size() == 0 ? null : filtered.get(filtered.size() - 1);
     }
 
     @Override
-    public List<BlockingState> getBlockingHistoryFor(final UUID overdueableId, final InternalTenantContext context) {
+    public List<BlockingState> getBlockingState(final UUID blockableId, final InternalTenantContext context) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public List<BlockingState> getBlockingHistoryForService(final UUID overdueableId, final String serviceName, final InternalTenantContext context) {
+        final List<BlockingState> states = blockingStates.get(overdueableId);
+        if (states == null) {
+            return null;
+        }
+        final ImmutableList<BlockingState> filtered = ImmutableList.<BlockingState>copyOf(Collections2.filter(states, new Predicate<BlockingState>() {
+            @Override
+            public boolean apply(@Nullable final BlockingState input) {
+                return input.getService().equals(serviceName);
+            }
+        }));
+
+        // Note! The returned list cannot be immutable!
+        return states == null ? new ArrayList<BlockingState>() : new ArrayList<BlockingState>(filtered);
+    }
+
+    @Override
+    public List<BlockingState> getBlockingHistory(final UUID overdueableId, final InternalTenantContext context) {
         final List<BlockingState> states = blockingStates.get(overdueableId);
         // Note! The returned list cannot be immutable!
         return states == null ? new ArrayList<BlockingState>() : states;
     }
 
     @Override
-    public synchronized <T extends Blockable> void setBlockingState(final BlockingState state, final Clock clock, final InternalCallContext context) {
+    public synchronized void setBlockingState(final BlockingState state, final Clock clock, final InternalCallContext context) {
         if (blockingStates.get(state.getBlockedId()) == null) {
             blockingStates.put(state.getBlockedId(), new ArrayList<BlockingState>());
         }

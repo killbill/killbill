@@ -17,8 +17,8 @@
 package com.ning.billing.overdue.wrapper;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.entitlement.api.Blockable;
 import com.ning.billing.overdue.OverdueApiException;
+import com.ning.billing.overdue.OverdueService;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.applicator.OverdueStateApplicator;
 import com.ning.billing.overdue.calculator.BillingStateCalculator;
@@ -57,7 +57,7 @@ public class OverdueWrapper {
         }
 
         final BillingState billingState = billingState(context);
-        final String previousOverdueStateName = api.getBlockingStateFor(overdueable, context).getStateName();
+        final String previousOverdueStateName = api.getBlockingStateForService(overdueable, OverdueService.OVERDUE_SERVICE_NAME, context).getStateName();
         final OverdueState nextOverdueState = overdueStateSet.calculateOverdueState(billingState, clock.getToday(billingState.getAccountTimeZone()));
 
         overdueStateApplicator.apply(overdueStateSet.getFirstState(), billingState, overdueable, previousOverdueStateName, nextOverdueState, context);
@@ -66,7 +66,7 @@ public class OverdueWrapper {
     }
 
     public void clear(final InternalCallContext context) throws OverdueException, OverdueApiException {
-        final String previousOverdueStateName = api.getBlockingStateFor(overdueable, context).getStateName();
+        final String previousOverdueStateName = api.getBlockingStateForService(overdueable, OverdueService.OVERDUE_SERVICE_NAME, context).getStateName();
         overdueStateApplicator.clear(overdueable, previousOverdueStateName, overdueStateSet.getClearState(), context);
     }
 

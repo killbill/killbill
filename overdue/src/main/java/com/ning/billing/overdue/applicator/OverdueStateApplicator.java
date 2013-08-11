@@ -34,6 +34,7 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.catalog.api.BillingActionPolicy;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.entitlement.api.BlockingStateType;
 import com.ning.billing.entitlement.api.Entitlement;
 import com.ning.billing.entitlement.api.EntitlementApi;
 import com.ning.billing.entitlement.api.EntitlementApiException;
@@ -172,6 +173,7 @@ public class OverdueStateApplicator<T extends Blockable> {
     protected void storeNewState(final Account blockable, final OverdueState nextOverdueState, final InternalCallContext context) throws OverdueException {
         try {
             blockingApi.setBlockingState(new DefaultBlockingState(blockable.getId(),
+                                                                  BlockingStateType.ACCOUNT,
                                                                   nextOverdueState.getName(),
                                                                   OverdueService.OVERDUE_SERVICE_NAME,
                                                                   blockChanges(nextOverdueState),

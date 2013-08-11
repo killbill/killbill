@@ -19,6 +19,7 @@ package com.ning.billing.entitlement.block;
 import java.util.UUID;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.entitlement.EntitlementTestSuiteNoDB;
+import com.ning.billing.entitlement.api.BlockingStateType;
 import com.ning.billing.entitlement.dao.MockBlockingStateDao;
 import com.ning.billing.entitlement.api.BlockingApiException;
 import com.ning.billing.entitlement.api.BlockingState;
@@ -66,18 +67,18 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
     }
 
     private void setStateBundle(final boolean bC, final boolean bE, final boolean bB) {
-        final BlockingState bundleState = new DefaultBlockingState(bundle.getId(), "state", "test-service", bC, bE, bB);
+        final BlockingState bundleState = new DefaultBlockingState(bundle.getId(), BlockingStateType.ACCOUNT,"state", "test-service", bC, bE, bB);
         Mockito.when(bundle.getBlockingState()).thenReturn(bundleState);
         blockingStateDao.setBlockingState(bundleState, clock, internalCallContext);
     }
 
     private void setStateAccount(final boolean bC, final boolean bE, final boolean bB) {
-        final BlockingState accountState = new DefaultBlockingState(account.getId(), "state", "test-service", bC, bE, bB);
+        final BlockingState accountState = new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, "state", "test-service", bC, bE, bB);
         blockingStateDao.setBlockingState(accountState, clock, internalCallContext);
     }
 
     private void setStateSubscription(final boolean bC, final boolean bE, final boolean bB) {
-        final BlockingState subscriptionState = new DefaultBlockingState(subscription.getId(), "state", "test-service", bC, bE, bB);
+        final BlockingState subscriptionState = new DefaultBlockingState(subscription.getId(), BlockingStateType.SUBSCRIPTION, "state", "test-service", bC, bE, bB);
         Mockito.when(subscription.getBlockingState()).thenReturn(subscriptionState);
         blockingStateDao.setBlockingState(subscriptionState, clock, internalCallContext);
     }
