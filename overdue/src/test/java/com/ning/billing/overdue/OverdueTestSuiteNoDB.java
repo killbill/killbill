@@ -56,8 +56,6 @@ public abstract class OverdueTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     @Inject
     protected DefaultOverdueService service;
     @Inject
-    protected SubscriptionBaseInternalApi subscriptionApi;
-    @Inject
     protected PersistentBus bus;
     @Inject
     protected InternalCallContextFactory internalCallContextFactory;

@@ -35,7 +35,9 @@ public class MockAccountModule extends AbstractModule implements AccountModule {
 
     @Override
     public void installAccountUserApi() {
+        // STEPH_ENT RealImplementation for accountUserApi
         bind(AccountUserApi.class).annotatedWith(RealImplementation.class).toInstance(Mockito.mock(AccountUserApi.class));
+        bind(AccountUserApi.class).toInstance(Mockito.mock(AccountUserApi.class));
     }
 
     @Override

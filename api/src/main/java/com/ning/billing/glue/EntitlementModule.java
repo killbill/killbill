@@ -23,5 +23,7 @@ public interface EntitlementModule {
 
     public void installEntitlementApi();
 
+    public void installSubscriptionApi();
+
     public void installBlockingChecker();
 }

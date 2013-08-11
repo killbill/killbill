@@ -58,8 +58,6 @@ public abstract class OverdueTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     @Inject
     protected DefaultOverdueService service;
     @Inject
-    protected SubscriptionBaseInternalApi subscriptionApi;
-    @Inject
     protected CacheControllerDispatcher cacheControllerDispatcher;
     @Inject
     protected PersistentBus bus;

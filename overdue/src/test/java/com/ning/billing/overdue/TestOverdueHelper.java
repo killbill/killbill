@@ -49,7 +49,7 @@ public class TestOverdueHelper {
 
     private final String configXml =
             "<overdueConfig>" +
-            "   <bundleOverdueStates>" +
+            "   <accountOverdueStates>" +
             "       <state name=\"OD3\">" +
             "           <condition>" +
             "               <timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
@@ -89,19 +89,18 @@ public class TestOverdueHelper {
             "               <unit>DAYS</unit><number>100</number>" + // this number is intentionally too high
             "           </autoReevaluationInterval>" +
             "       </state>" +
-            "   </bundleOverdueStates>" +
+            "   </accountOverdueStates>" +
             "</overdueConfig>";
 
     private final AccountInternalApi accountInternalApi;
-    private final SubscriptionBaseInternalApi subscriptionInternalApi;
     private final InvoiceInternalApi invoiceInternalApi;
     private final BlockingInternalApi blockingInternalApi;
 
     @Inject
-    public TestOverdueHelper(final AccountInternalApi accountInternalApi, final SubscriptionBaseInternalApi subscriptionInternalApi,
-                             final InvoiceInternalApi invoiceInternalApi, final BlockingInternalApi blockingInternalApi) {
+    public TestOverdueHelper(final AccountInternalApi accountInternalApi,
+                             final InvoiceInternalApi invoiceInternalApi,
+                             final BlockingInternalApi blockingInternalApi) {
         this.accountInternalApi = accountInternalApi;
-        this.subscriptionInternalApi = subscriptionInternalApi;
         this.invoiceInternalApi = invoiceInternalApi;
         this.blockingInternalApi = blockingInternalApi;
     }
@@ -118,10 +117,7 @@ public class TestOverdueHelper {
         Assert.assertEquals(result.isBlockBilling(), state.disableEntitlementAndChangesBlocked());
     }
 
-    public SubscriptionBaseBundle createBundle(final LocalDate dateOfLastUnPaidInvoice) throws SubscriptionBaseApiException, AccountApiException {
-        final SubscriptionBaseBundle bundle = Mockito.mock(SubscriptionBaseBundle.class);
-        final UUID bundleId = UUID.randomUUID();
-        Mockito.when(bundle.getId()).thenReturn(bundleId);
+    public Account createAccount(final LocalDate dateOfLastUnPaidInvoice) throws SubscriptionBaseApiException, AccountApiException {
 
         final UUID accountId = UUID.randomUUID();
         final Account account = Mockito.mock(Account.class);
@@ -129,15 +125,12 @@ public class TestOverdueHelper {
         Mockito.when(account.getTimeZone()).thenReturn(DateTimeZone.UTC);
         Mockito.when(accountInternalApi.getAccountById(Mockito.eq(account.getId()), Mockito.<InternalTenantContext>any())).thenReturn(account);
 
-        Mockito.when(bundle.getAccountId()).thenReturn(accountId);
-
         final Invoice invoice = Mockito.mock(Invoice.class);
         Mockito.when(invoice.getInvoiceDate()).thenReturn(dateOfLastUnPaidInvoice);
         Mockito.when(invoice.getBalance()).thenReturn(BigDecimal.TEN);
         Mockito.when(invoice.getId()).thenReturn(UUID.randomUUID());
 
         final InvoiceItem item = Mockito.mock(InvoiceItem.class);
-        Mockito.when(item.getBundleId()).thenReturn(bundleId);
         final List<InvoiceItem> items = new ArrayList<InvoiceItem>();
         items.add(item);
 
@@ -147,13 +140,7 @@ public class TestOverdueHelper {
         invoices.add(invoice);
         Mockito.when(invoiceInternalApi.getUnpaidInvoicesByAccountId(Mockito.<UUID>any(), Mockito.<LocalDate>any(), Mockito.<InternalTenantContext>any())).thenReturn(invoices);
 
-        final SubscriptionBase base = Mockito.mock(SubscriptionBase.class);
-        Mockito.when(base.getCurrentPlan()).thenReturn(MockPlan.createBicycleNoTrialEvergreen1USD());
-        Mockito.when(base.getCurrentPriceList()).thenReturn(new MockPriceList());
-        Mockito.when(base.getCurrentPhase()).thenReturn(MockPlan.createBicycleNoTrialEvergreen1USD().getFinalPhase());
-        Mockito.when(subscriptionInternalApi.getBaseSubscription(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(base);
-
-        return bundle;
+        return account;
     }
 
     public String getConfigXml() {

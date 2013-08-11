@@ -34,13 +34,10 @@ public class OverdueDispatcher {
 
     Logger log = LoggerFactory.getLogger(OverdueDispatcher.class);
 
-    private final SubscriptionBaseInternalApi subscriptionApi;
     private final OverdueWrapperFactory factory;
 
     @Inject
-    public OverdueDispatcher(final SubscriptionBaseInternalApi subscriptionApi,
-                             final OverdueWrapperFactory factory) {
-        this.subscriptionApi = subscriptionApi;
+    public OverdueDispatcher(final OverdueWrapperFactory factory) {
         this.factory = factory;
     }
 
@@ -49,10 +46,7 @@ public class OverdueDispatcher {
     }
 
     public void clearOverdueForAccount(final UUID accountId, final InternalCallContext context) {
-        final List<SubscriptionBaseBundle> bundles = subscriptionApi.getBundlesForAccount(accountId, context);
-        for (final SubscriptionBaseBundle bundle : bundles) {
-            clearOverdue(bundle.getId(), context);
-        }
+        clearOverdue(accountId, context);
     }
 
     public void processOverdue(final UUID blockableId, final InternalCallContext context) {

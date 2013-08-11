@@ -26,6 +26,7 @@ import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.ning.billing.account.api.Account;
 import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.OverdueTestSuiteWithEmbeddedDB;
@@ -45,28 +46,25 @@ public class TestOverdueStateApplicator extends OverdueTestSuiteWithEmbeddedDB {
         final OverdueConfig config = XMLLoader.getObjectFromStreamNoValidation(is, OverdueConfig.class);
         overdueWrapperFactory.setOverdueConfig(config);
 
-        final SubscriptionBaseBundle bundle = Mockito.mock(SubscriptionBaseBundle.class);
-        Mockito.when(bundle.getId()).thenReturn(UUID.randomUUID());
+        final Account account = Mockito.mock(Account.class);
+        Mockito.when(account.getId()).thenReturn(UUID.randomUUID());
 
-        /*
-        // STEPH_ENT
-        OverdueState<SubscriptionBaseBundle> state;
+        OverdueState state;
 
         state = config.getBundleStateSet().findState("OD1");
-        applicator.apply(null, null, bundle, DefaultBlockingState.CLEAR_STATE_NAME, state, internalCallContext);
+        applicator.apply(null, null, account, DefaultBlockingState.CLEAR_STATE_NAME, state, internalCallContext);
         testOverdueHelper.checkStateApplied(state);
         checkBussEvent("OD1");
 
         state = config.getBundleStateSet().findState("OD2");
-        applicator.apply(null, null, bundle, DefaultBlockingState.CLEAR_STATE_NAME, state, internalCallContext);
+        applicator.apply(null, null, account, DefaultBlockingState.CLEAR_STATE_NAME, state, internalCallContext);
         testOverdueHelper.checkStateApplied(state);
         checkBussEvent("OD2");
 
         state = config.getBundleStateSet().findState("OD3");
-        applicator.apply(null, null, bundle, DefaultBlockingState.CLEAR_STATE_NAME, state, internalCallContext);
+        applicator.apply(null, null, account, DefaultBlockingState.CLEAR_STATE_NAME, state, internalCallContext);
         testOverdueHelper.checkStateApplied(state);
         checkBussEvent("OD3");
-        */
     }
 
     private void checkBussEvent(final String state) throws Exception {

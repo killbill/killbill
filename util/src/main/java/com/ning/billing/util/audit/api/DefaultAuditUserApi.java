@@ -67,7 +67,7 @@ public class DefaultAuditUserApi implements AuditUserApi {
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
-    public DefaultAuditUserApi(final AuditDao auditDao, final SubscriptionBaseTimelineApi timelineApi, final InternalCallContextFactory internalCallContextFactory) {
+    public DefaultAuditUserApi(final AuditDao auditDao, final InternalCallContextFactory internalCallContextFactory) {
         this.auditDao = auditDao;
         this.internalCallContextFactory = internalCallContextFactory;
     }

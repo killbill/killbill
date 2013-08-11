@@ -82,8 +82,8 @@ public class BillingStateCalculator {
         return new BillingState(account.getId(), numberOfUnpaidInvoices, unpaidInvoiceBalance, dateOfEarliestUnpaidInvoice, account.getTimeZone(), idOfEarliestUnpaidInvoice, responseForLastFailedPayment, tags);
     }
 
-
-    private Invoice earliest(final SortedSet<Invoice> unpaidInvoices) {
+    // Package scope for testing
+    Invoice earliest(final SortedSet<Invoice> unpaidInvoices) {
         try {
             return unpaidInvoices.first();
         } catch (NoSuchElementException e) {
@@ -91,7 +91,7 @@ public class BillingStateCalculator {
         }
     }
 
-    private BigDecimal sumBalance(final SortedSet<Invoice> unpaidInvoices) {
+    BigDecimal sumBalance(final SortedSet<Invoice> unpaidInvoices) {
         BigDecimal sum = BigDecimal.ZERO;
         for (final Invoice unpaidInvoice : unpaidInvoices) {
             sum = sum.add(unpaidInvoice.getBalance());
@@ -99,7 +99,7 @@ public class BillingStateCalculator {
         return sum;
     }
 
-    private SortedSet<Invoice> unpaidInvoicesForAccount(final UUID accountId, final DateTimeZone accountTimeZone, final InternalTenantContext context) {
+    SortedSet<Invoice> unpaidInvoicesForAccount(final UUID accountId, final DateTimeZone accountTimeZone, final InternalTenantContext context) {
         final Collection<Invoice> invoices = invoiceApi.getUnpaidInvoicesByAccountId(accountId, clock.getToday(accountTimeZone), context);
         final SortedSet<Invoice> sortedInvoices = new TreeSet<Invoice>(new InvoiceDateComparator());
         sortedInvoices.addAll(invoices);

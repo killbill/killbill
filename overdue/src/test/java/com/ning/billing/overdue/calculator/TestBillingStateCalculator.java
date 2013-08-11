@@ -31,7 +31,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.overdue.OverdueTestSuiteNoDB;
@@ -51,8 +50,7 @@ public class TestBillingStateCalculator extends OverdueTestSuiteNoDB {
         Mockito.when(accountApi.getAccountById(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(account);
     }
 
-    /*
-    public BillingStateCalculator<SubscriptionBaseBundle> createBSCalc() {
+    public BillingStateCalculator createBSCalc() {
         now = new LocalDate();
         final Collection<Invoice> invoices = new ArrayList<Invoice>();
         invoices.add(createInvoice(now, BigDecimal.ZERO, null));
@@ -61,15 +59,15 @@ public class TestBillingStateCalculator extends OverdueTestSuiteNoDB {
 
         Mockito.when(invoiceApi.getUnpaidInvoicesByAccountId(Mockito.<UUID>any(), Mockito.<LocalDate>any(), Mockito.<InternalTenantContext>any())).thenReturn(invoices);
 
-        return new BillingStateCalculator<SubscriptionBaseBundle>(invoiceApi, clock) {
+        return new BillingStateCalculator(invoiceApi, clock) {
             @Override
-            public BillingState<SubscriptionBaseBundle> calculateBillingState(final SubscriptionBaseBundle overdueable,
-                                                                          final InternalTenantContext context) {
+            public BillingState calculateBillingState(final Account overdueable,
+                                                      final InternalTenantContext context) {
                 return null;
             }
         };
     }
-*/
+
     public Invoice createInvoice(final LocalDate date, final BigDecimal balance, final List<InvoiceItem> invoiceItems) {
         final Invoice invoice = Mockito.mock(Invoice.class);
         Mockito.when(invoice.getBalance()).thenReturn(balance);
@@ -80,12 +78,9 @@ public class TestBillingStateCalculator extends OverdueTestSuiteNoDB {
         return invoice;
     }
 
-    /*
-
-    STEPH_ENT
     @Test(groups = "fast")
     public void testUnpaidInvoices() {
-        final BillingStateCalculator<SubscriptionBaseBundle> calc = createBSCalc();
+        final BillingStateCalculator calc = createBSCalc();
         final SortedSet<Invoice> invoices = calc.unpaidInvoicesForAccount(new UUID(0L, 0L), DateTimeZone.UTC, internalCallContext);
 
         Assert.assertEquals(invoices.size(), 3);
@@ -95,16 +90,15 @@ public class TestBillingStateCalculator extends OverdueTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testSum() {
-        final BillingStateCalculator<SubscriptionBaseBundle> calc = createBSCalc();
+        final BillingStateCalculator calc = createBSCalc();
         final SortedSet<Invoice> invoices = calc.unpaidInvoicesForAccount(new UUID(0L, 0L), DateTimeZone.UTC, internalCallContext);
         Assert.assertEquals(new BigDecimal("110.0").compareTo(calc.sumBalance(invoices)), 0);
     }
 
     @Test(groups = "fast")
     public void testEarliest() {
-        final BillingStateCalculator<SubscriptionBaseBundle> calc = createBSCalc();
+        final BillingStateCalculator calc = createBSCalc();
         final SortedSet<Invoice> invoices = calc.unpaidInvoicesForAccount(new UUID(0L, 0L), DateTimeZone.UTC, internalCallContext);
         Assert.assertEquals(calc.earliest(invoices).getInvoiceDate(), now);
     }
-*/
 }

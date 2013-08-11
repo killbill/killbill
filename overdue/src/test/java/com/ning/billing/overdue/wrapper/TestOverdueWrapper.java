@@ -22,6 +22,7 @@ import java.io.InputStream;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.ning.billing.account.api.Account;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.OverdueTestSuiteWithEmbeddedDB;
 import com.ning.billing.overdue.config.OverdueConfig;
@@ -37,25 +38,25 @@ public class TestOverdueWrapper extends OverdueTestSuiteWithEmbeddedDB {
         final OverdueConfig config = XMLLoader.getObjectFromStreamNoValidation(is, OverdueConfig.class);
         overdueWrapperFactory.setOverdueConfig(config);
 
-        SubscriptionBaseBundle bundle;
+        Account account;
         OverdueWrapper wrapper;
         OverdueState state;
 
         state = config.getBundleStateSet().findState("OD1");
-        bundle = testOverdueHelper.createBundle(clock.getUTCToday().minusDays(31));
-        wrapper = null; // STEPH_ENT account overdueWrapperFactory.createOverdueWrapperFor(bundle);
+        account = testOverdueHelper.createAccount(clock.getUTCToday().minusDays(31));
+        wrapper = overdueWrapperFactory.createOverdueWrapperFor(account);
         wrapper.refresh(internalCallContext);
         testOverdueHelper.checkStateApplied(state);
 
         state = config.getBundleStateSet().findState("OD2");
-        bundle = testOverdueHelper.createBundle(clock.getUTCToday().minusDays(41));
-        wrapper = null; // STEPH_ENToverdueWrapperFactory.createOverdueWrapperFor(bundle);
+        account = testOverdueHelper.createAccount(clock.getUTCToday().minusDays(41));
+        wrapper = overdueWrapperFactory.createOverdueWrapperFor(account);
         wrapper.refresh(internalCallContext);
         testOverdueHelper.checkStateApplied(state);
 
         state = config.getBundleStateSet().findState("OD3");
-        bundle = testOverdueHelper.createBundle(clock.getUTCToday().minusDays(51));
-        wrapper = null; // STEPH_ENToverdueWrapperFactory.createOverdueWrapperFor(bundle);
+        account = testOverdueHelper.createAccount(clock.getUTCToday().minusDays(51));
+        wrapper = overdueWrapperFactory.createOverdueWrapperFor(account);
         wrapper.refresh(internalCallContext);
         testOverdueHelper.checkStateApplied(state);
     }
@@ -64,15 +65,15 @@ public class TestOverdueWrapper extends OverdueTestSuiteWithEmbeddedDB {
     public void testWrapperNoConfig() throws Exception {
         overdueWrapperFactory.setOverdueConfig(null);
 
-        final SubscriptionBaseBundle bundle;
+        final Account account;
         final OverdueWrapper wrapper;
         final OverdueState state;
 
         final InputStream is = new ByteArrayInputStream(testOverdueHelper.getConfigXml().getBytes());
         final OverdueConfig config = XMLLoader.getObjectFromStreamNoValidation(is, OverdueConfig.class);
         state = config.getBundleStateSet().findState(DefaultBlockingState.CLEAR_STATE_NAME);
-        bundle = testOverdueHelper.createBundle(clock.getUTCToday().minusDays(31));
-        wrapper = null; // STEPH_ENT overdueWrapperFactory.createOverdueWrapperFor(bundle);
+        account = testOverdueHelper.createAccount(clock.getUTCToday().minusDays(31));
+        wrapper = overdueWrapperFactory.createOverdueWrapperFor(account);
         final OverdueState result = wrapper.refresh(internalCallContext);
 
         Assert.assertEquals(result.getName(), state.getName());
