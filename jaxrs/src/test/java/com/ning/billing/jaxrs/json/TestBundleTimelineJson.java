@@ -17,11 +17,11 @@
 package com.ning.billing.jaxrs.json;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -30,11 +30,13 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
-import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline;
+import com.ning.billing.entitlement.api.Subscription;
+import com.ning.billing.entitlement.api.SubscriptionBundleTimeline.SubscriptionEvent;
 import com.ning.billing.jaxrs.JaxrsTestSuiteNoDB;
+import com.ning.billing.util.audit.AuditLog;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 public class TestBundleTimelineJson extends JaxrsTestSuiteNoDB {
 
@@ -60,26 +62,21 @@ public class TestBundleTimelineJson extends JaxrsTestSuiteNoDB {
     }
 
     private BundleJsonWithSubscriptions createBundleWithSubscriptions() {
-        final SubscriptionBaseTimeline.ExistingEvent event = Mockito.mock(SubscriptionBaseTimeline.ExistingEvent.class);
         final DateTime effectiveDate = clock.getUTCNow();
         final UUID eventId = UUID.randomUUID();
         final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier(UUID.randomUUID().toString(), ProductCategory.BASE,
                                                                              BillingPeriod.NO_BILLING_PERIOD, UUID.randomUUID().toString(),
                                                                              PhaseType.EVERGREEN);
-        Mockito.when(event.getEffectiveDate()).thenReturn(effectiveDate);
-        Mockito.when(event.getEventId()).thenReturn(eventId);
-        Mockito.when(event.getSubscriptionTransitionType()).thenReturn(SubscriptionBaseTransitionType.CREATE);
-        Mockito.when(event.getPlanPhaseSpecifier()).thenReturn(planPhaseSpecifier);
-
-        final SubscriptionBaseTimeline subscriptionTimeline = Mockito.mock(SubscriptionBaseTimeline.class);
-        Mockito.when(subscriptionTimeline.getId()).thenReturn(UUID.randomUUID());
-        Mockito.when(subscriptionTimeline.getExistingEvents()).thenReturn(ImmutableList.<SubscriptionBaseTimeline.ExistingEvent>of(event));
-
+        final UUID accountId = UUID.randomUUID();
         final UUID bundleId = UUID.randomUUID();
+        final UUID entitlementId = UUID.randomUUID();
         final String externalKey = UUID.randomUUID().toString();
-        final EntitlementJsonWithEvents subscription = null; // STEPH_ENT new EntitlementJsonWithEvents(bundleId, subscriptionTimeline, null, ImmutableMap.<UUID, List<AuditLog>>of());
 
-        return new BundleJsonWithSubscriptions(bundleId.toString(), externalKey, ImmutableList.<EntitlementJsonWithEvents>of(subscription), null);
+
+        // STEPH_ENT once DefaultSubscription exists...
+        final Subscription subscription = null;
+        final EntitlementJsonWithEvents entitlementJsonWithEvents = new EntitlementJsonWithEvents(subscription, ImmutableList.<SubscriptionEvent>of(), ImmutableList.<AuditLog>of(), ImmutableMap.<UUID, List<AuditLog>>of());
+        return new BundleJsonWithSubscriptions(bundleId.toString(), externalKey, ImmutableList.<EntitlementJsonWithEvents>of(entitlementJsonWithEvents), null);
     }
 
     private InvoiceJsonSimple createInvoice() {

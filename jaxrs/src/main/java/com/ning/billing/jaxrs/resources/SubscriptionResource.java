@@ -48,7 +48,6 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                     @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException {
         final UUID uuid = UUID.fromString(subscriptionId);
         final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(uuid, context.createContext(request));
-        // STEPH_ENT missing info in SubscriptionJsonNoEvents (billing dates,...)
         final SubscriptionJsonNoEvents json = new SubscriptionJsonNoEvents(subscription, null);
         return Response.status(Status.OK).entity(json).build();
     }

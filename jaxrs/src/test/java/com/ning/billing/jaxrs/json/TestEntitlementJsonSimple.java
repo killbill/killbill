@@ -26,19 +26,25 @@ import com.ning.billing.jaxrs.JaxrsTestSuiteNoDB;
 
 import static com.ning.billing.jaxrs.JaxrsTestUtils.createAuditLogsJson;
 
-public class TestSubscriptionJsonSimple extends JaxrsTestSuiteNoDB {
+public class TestEntitlementJsonSimple extends JaxrsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testJson() throws Exception {
-        final String subscriptionId = UUID.randomUUID().toString();
+        final String accountId = UUID.randomUUID().toString();
+        final String bundleId = UUID.randomUUID().toString();
+        final String entitlementId = UUID.randomUUID().toString();
+        final String externalKey = "externalkey";
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
-        final EntitlementJsonSimple subscriptionJsonSimple = null; // STEPH_ENT new EntitlementJsonSimple(subscriptionId, auditLogs);
-        Assert.assertEquals(subscriptionJsonSimple.getEntitlementId(), subscriptionId);
-        Assert.assertEquals(subscriptionJsonSimple.getAuditLogs(), auditLogs);
+        final EntitlementJsonSimple entitlementJsonSimple = new EntitlementJsonSimple(accountId, bundleId, entitlementId, externalKey, auditLogs);
+        Assert.assertEquals(entitlementJsonSimple.getAccountId(), accountId);
+        Assert.assertEquals(entitlementJsonSimple.getBundleId(), bundleId);
+        Assert.assertEquals(entitlementJsonSimple.getEntitlementId(), entitlementId);
+        Assert.assertEquals(entitlementJsonSimple.getExternalKey(), externalKey);
+        Assert.assertEquals(entitlementJsonSimple.getAuditLogs(), auditLogs);
 
-        final String asJson = mapper.writeValueAsString(subscriptionJsonSimple);
+        final String asJson = mapper.writeValueAsString(entitlementJsonSimple);
 
         final EntitlementJsonSimple fromJson = mapper.readValue(asJson, EntitlementJsonSimple.class);
-        Assert.assertEquals(fromJson, subscriptionJsonSimple);
+        Assert.assertEquals(fromJson, entitlementJsonSimple);
     }
 }

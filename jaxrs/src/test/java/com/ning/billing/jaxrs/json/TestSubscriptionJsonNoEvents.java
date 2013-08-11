@@ -21,6 +21,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
 import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -41,78 +42,38 @@ public class TestSubscriptionJsonNoEvents extends JaxrsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testJson() throws Exception {
-        final String subscriptionId = UUID.randomUUID().toString();
+        final String accountId = UUID.randomUUID().toString();
+        final String entitlementId = UUID.randomUUID().toString();
         final String bundleId = UUID.randomUUID().toString();
-        final DateTime startDate = new DateTime(DateTimeZone.UTC);
+        final String externalKey = "ecternalKey";
+        final LocalDate startDate = new LocalDate();
+        final LocalDate cancelDate = new LocalDate();
+        final LocalDate billingStartDate = new LocalDate();
+        final LocalDate billingEndDate = new LocalDate();
         final String productName = UUID.randomUUID().toString();
         final String productCategory = UUID.randomUUID().toString();
         final String billingPeriod = UUID.randomUUID().toString();
         final String priceList = UUID.randomUUID().toString();
-        final DateTime chargedThroughDate = new DateTime(DateTimeZone.UTC);
+        final LocalDate chargedThroughDate = new LocalDate();
         final DateTime endDate = new DateTime(DateTimeZone.UTC);
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
-        final EntitlementJsonNoEvents subscriptionJsonNoEvents = null; /* STEPH_ENT new EntitlementJsonNoEvents(subscriptionId, bundleId, startDate,
-                                                                                               productName, productCategory, billingPeriod,
-                                                                                               priceList, chargedThroughDate, endDate,
-                                                                                               auditLogs); */
-        Assert.assertEquals(subscriptionJsonNoEvents.getEntitlementId(), subscriptionId);
+        final SubscriptionJsonNoEvents subscriptionJsonNoEvents = new SubscriptionJsonNoEvents(accountId, bundleId, entitlementId, externalKey, startDate, productName,
+                                                                                               productCategory, billingPeriod, priceList, cancelDate, auditLogs, chargedThroughDate,
+                                                                                               billingStartDate, billingEndDate, new Integer(1), "OK");
+
+        Assert.assertEquals(subscriptionJsonNoEvents.getEntitlementId(), entitlementId);
         Assert.assertEquals(subscriptionJsonNoEvents.getBundleId(), bundleId);
         Assert.assertEquals(subscriptionJsonNoEvents.getStartDate(), startDate);
         Assert.assertEquals(subscriptionJsonNoEvents.getProductName(), productName);
         Assert.assertEquals(subscriptionJsonNoEvents.getProductCategory(), productCategory);
         Assert.assertEquals(subscriptionJsonNoEvents.getBillingPeriod(), billingPeriod);
         Assert.assertEquals(subscriptionJsonNoEvents.getPriceList(), priceList);
-        // STEPH_ENT
-        //Assert.assertEquals(subscriptionJsonNoEvents.getChargedThroughDate(), chargedThroughDate);
+        Assert.assertEquals(subscriptionJsonNoEvents.getChargedThroughDate(), chargedThroughDate);
         Assert.assertEquals(subscriptionJsonNoEvents.getAuditLogs(), auditLogs);
 
         final String asJson = mapper.writeValueAsString(subscriptionJsonNoEvents);
 
-        final EntitlementJsonNoEvents fromJson = mapper.readValue(asJson, EntitlementJsonNoEvents.class);
+        final SubscriptionJsonNoEvents fromJson = mapper.readValue(asJson, SubscriptionJsonNoEvents.class);
         Assert.assertEquals(fromJson, subscriptionJsonNoEvents);
-    }
-
-    @Test(groups = "fast")
-    public void testFromSubscriptionSubscription() throws Exception {
-        final Product product = Mockito.mock(Product.class);
-        Mockito.when(product.getName()).thenReturn(UUID.randomUUID().toString());
-        Mockito.when(product.getCategory()).thenReturn(ProductCategory.STANDALONE);
-
-        final InternationalPrice price = Mockito.mock(InternationalPrice.class);
-        final PlanPhase planPhase = Mockito.mock(PlanPhase.class);
-        Mockito.when(planPhase.getRecurringPrice()).thenReturn(price);
-
-        final Plan plan = Mockito.mock(Plan.class);
-        Mockito.when(plan.getProduct()).thenReturn(product);
-        Mockito.when(plan.getName()).thenReturn(UUID.randomUUID().toString());
-        Mockito.when(plan.getBillingPeriod()).thenReturn(BillingPeriod.QUARTERLY);
-        Mockito.when(plan.getFinalPhase()).thenReturn(planPhase);
-
-        final PriceList priceList = Mockito.mock(PriceList.class);
-
-        final SubscriptionBase subscription = Mockito.mock(SubscriptionBase.class);
-        Mockito.when(subscription.getId()).thenReturn(UUID.randomUUID());
-        Mockito.when(subscription.getBundleId()).thenReturn(UUID.randomUUID());
-        Mockito.when(subscription.getStartDate()).thenReturn(new DateTime(DateTimeZone.UTC));
-        Mockito.when(subscription.getCurrentPlan()).thenReturn(plan);
-        Mockito.when(subscription.getCurrentPriceList()).thenReturn(priceList);
-        Mockito.when(subscription.getChargedThroughDate()).thenReturn(new DateTime(DateTimeZone.UTC));
-        final String productName = product.getName();
-        Mockito.when(subscription.getLastActiveProductName()).thenReturn(productName);
-        final String productCategory = plan.getProduct().getCategory().toString();
-        Mockito.when(subscription.getLastActiveCategoryName()).thenReturn(productCategory);
-        final String billingPeriod = plan.getBillingPeriod().toString();
-        Mockito.when(subscription.getLastActiveBillingPeriod()).thenReturn(billingPeriod);
-
-        final EntitlementJsonNoEvents subscriptionJsonNoEvents = null; // STEPH_ENT new EntitlementJsonNoEvents(subscription, null);
-        Assert.assertEquals(subscriptionJsonNoEvents.getEntitlementId(), subscription.getId().toString());
-        Assert.assertEquals(subscriptionJsonNoEvents.getStartDate(), subscription.getStartDate());
-        Assert.assertEquals(subscriptionJsonNoEvents.getBundleId(), subscription.getBundleId().toString());
-        Assert.assertEquals(subscriptionJsonNoEvents.getProductName(), subscription.getCurrentPlan().getProduct().getName());
-        Assert.assertEquals(subscriptionJsonNoEvents.getProductCategory(), subscription.getCurrentPlan().getProduct().getCategory().toString());
-        Assert.assertEquals(subscriptionJsonNoEvents.getBillingPeriod(), subscription.getCurrentPlan().getBillingPeriod().toString());
-        // STEPH_ENT
-        //Assert.assertEquals(subscriptionJsonNoEvents.getChargedThroughDate(), subscription.getChargedThroughDate());
-        Assert.assertNull(subscriptionJsonNoEvents.getAuditLogs());
     }
 }

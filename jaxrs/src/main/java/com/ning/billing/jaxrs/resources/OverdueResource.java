@@ -36,9 +36,6 @@ import com.ning.billing.overdue.OverdueApiException;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.OverdueUserApi;
 import com.ning.billing.overdue.config.api.OverdueException;
-import com.ning.billing.subscription.api.SubscriptionBase;
-import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
-import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.util.api.AuditUserApi;
 import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.api.TagUserApi;
@@ -77,10 +74,8 @@ public class OverdueResource extends JaxRsResourceBase {
         final TenantContext tenantContext = context.createContext(request);
 
         final Account account = accountUserApi.getAccountById(UUID.fromString(accountId), tenantContext);
-        //final OverdueState<Account> overdueState = null;  STEPH_ENT overdueApi.getOverdueStateFor(account, tenantContext);
+        final OverdueState overdueState = overdueApi.getOverdueStateFor(account, tenantContext);
 
-        //return Response.status(Status.OK).entity(new OverdueStateJson(overdueState)).build();
-        return null;
+        return Response.status(Status.OK).entity(new OverdueStateJson(overdueState)).build();
     }
-
 }
