@@ -38,6 +38,5 @@ public class TestEntitlementModule extends DefaultEntitlementModule {
         super.configure();
         install(new CacheModule(configSource));
         install(new CallContextModule());
-        install(new MockAccountModule());
     }
 }

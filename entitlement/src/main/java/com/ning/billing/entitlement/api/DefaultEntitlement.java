@@ -117,7 +117,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         if (entitlementBlockingState != null && entitlementBlockingState.getStateName().equals(DefaultEntitlementApi.ENT_STATE_CANCELLED)) {
             return new LocalDate(entitlementBlockingState.getCreatedDate(), accountTimeZone);
         }
-        return new LocalDate(subscriptionBase.getEndDate(), accountTimeZone);
+        return subscriptionBase.getEndDate() != null ? new LocalDate(subscriptionBase.getEndDate(), accountTimeZone) : null;
     }
 
     @Override

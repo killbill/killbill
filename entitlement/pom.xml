@@ -51,6 +51,10 @@
         </dependency>
         <dependency>
             <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-account</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing</groupId>
             <artifactId>killbill-api</artifactId>
         </dependency>
         <dependency>

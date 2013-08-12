@@ -88,11 +88,11 @@ public class DefaultEntitlementApi implements EntitlementApi {
 
     @Override
     public Entitlement createBaseEntitlement(final UUID accountId, final PlanPhaseSpecifier planPhaseSpecifier, final String externalKey, final CallContext callContext) throws EntitlementApiException {
-        final InternalCallContext context = internalCallContextFactory.createInternalCallContext(callContext);
+        final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(accountId, callContext);
         try {
-            final Account account = accountApi.getAccountById(accountId, context);
-            final SubscriptionBaseBundle bundle = subscriptionInternalApi.createBundleForAccount(accountId, externalKey, context);
-            final SubscriptionBase subscription = subscriptionInternalApi.createSubscription(bundle.getId(), planPhaseSpecifier, clock.getUTCNow(), context);
+            final Account account = accountApi.getAccountById(accountId, contextWithValidAccountRecordId);
+            final SubscriptionBaseBundle bundle = subscriptionInternalApi.createBundleForAccount(accountId, externalKey, contextWithValidAccountRecordId);
+            final SubscriptionBase subscription = subscriptionInternalApi.createSubscription(bundle.getId(), planPhaseSpecifier, clock.getUTCNow(), contextWithValidAccountRecordId);
             return new DefaultEntitlement(accountApi, subscription, accountId, bundle.getExternalKey(), false, null, account.getTimeZone(), internalCallContextFactory, clock, checker);
         } catch (SubscriptionBaseApiException e) {
             throw new EntitlementApiException(e);
@@ -196,7 +196,7 @@ public class DefaultEntitlementApi implements EntitlementApi {
     private List<Entitlement> getAllEntitlementsForBundleId(final UUID bundleId, final UUID accountId, final String externalKey, final InternalTenantContext context) throws EntitlementApiException {
 
         try {
-            final Account account = accountApi.getAccountById(bundleId, context);
+            final Account account = accountApi.getAccountById(accountId, context);
             final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(bundleId, context);
             return ImmutableList.<Entitlement>copyOf(Collections2.transform(subscriptions, new Function<SubscriptionBase, Entitlement>() {
                 @Nullable

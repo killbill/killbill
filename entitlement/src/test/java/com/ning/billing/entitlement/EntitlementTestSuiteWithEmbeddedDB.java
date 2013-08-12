@@ -17,8 +17,10 @@
 package com.ning.billing.entitlement;
 
 import java.net.URL;
+import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -27,16 +29,20 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
 import com.ning.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
+import com.ning.billing.account.api.AccountData;
+import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.api.TestApiListener;
 import com.ning.billing.api.TestListenerStatus;
 import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.catalog.DefaultCatalogService;
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogService;
+import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.clock.ClockMock;
 import com.ning.billing.entitlement.api.EntitlementApi;
 import com.ning.billing.entitlement.dao.BlockingStateDao;
 import com.ning.billing.entitlement.glue.TestEntitlementModuleWithEmbeddedDB;
+import com.ning.billing.mock.MockAccountBuilder;
 import com.ning.billing.subscription.api.SubscriptionBaseService;
 import com.ning.billing.subscription.engine.core.DefaultSubscriptionBaseService;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
@@ -57,6 +63,8 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
 
     protected static final Logger log = LoggerFactory.getLogger(EntitlementTestSuiteWithEmbeddedDB.class);
 
+    @Inject
+    protected AccountUserApi accountApi;
     @Inject
     protected AccountInternalApi accountInternalApi;
     @Inject
@@ -183,5 +191,21 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
 
     private void stopSubscriptionService(final SubscriptionBaseService subscriptionBaseService) throws Exception {
         ((DefaultSubscriptionBaseService) subscriptionBaseService).stop();
+    }
+
+
+    protected AccountData getAccountData(final int billingDay) {
+        return new MockAccountBuilder().name(UUID.randomUUID().toString().substring(1, 8))
+                                       .firstNameLength(6)
+                                       .email(UUID.randomUUID().toString().substring(1, 8))
+                                       .phone(UUID.randomUUID().toString().substring(1, 8))
+                                       .migrated(false)
+                                       .isNotifiedForInvoices(false)
+                                       .externalKey(UUID.randomUUID().toString().substring(1, 8))
+                                       .billingCycleDayLocal(billingDay)
+                                       .currency(Currency.USD)
+                                       .paymentMethodId(UUID.randomUUID())
+                                       .timeZone(DateTimeZone.UTC)
+                                       .build();
     }
 }

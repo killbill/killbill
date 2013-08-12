@@ -17,10 +17,12 @@
 package com.ning.billing.entitlement.glue;
 
 import com.ning.billing.GuicyKillbillTestWithEmbeddedDBModule;
+import com.ning.billing.account.glue.DefaultAccountModule;
 import com.ning.billing.api.TestApiListener;
 import com.ning.billing.api.TestListenerStatus;
 import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.entitlement.EntitlementTestListenerStatus;
+import com.ning.billing.glue.AccountModule;
 import com.ning.billing.subscription.glue.DefaultSubscriptionModule;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.NonEntityDaoModule;
@@ -37,6 +39,7 @@ public class TestEntitlementModuleWithEmbeddedDB extends TestEntitlementModule {
     @Override
     protected void configure() {
         super.configure();
+        install(new DefaultAccountModule(configSource));
         install(new GuicyKillbillTestWithEmbeddedDBModule());
         install(new NonEntityDaoModule());
         install(new BusModule(configSource));

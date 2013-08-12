@@ -20,6 +20,7 @@ import com.ning.billing.GuicyKillbillTestNoDBModule;
 import com.ning.billing.catalog.MockCatalogModule;
 import com.ning.billing.entitlement.dao.BlockingStateDao;
 import com.ning.billing.entitlement.dao.MockBlockingStateDao;
+import com.ning.billing.mock.glue.MockAccountModule;
 import com.ning.billing.mock.glue.MockNonEntityDaoModule;
 import com.ning.billing.mock.glue.MockSubscriptionModule;
 import com.ning.billing.mock.glue.MockTagModule;
@@ -41,6 +42,7 @@ public class TestEntitlementModuleNoDB extends TestEntitlementModule {
         install(new MockTagModule());
         install(new MockSubscriptionModule());
         install(new MockCatalogModule());
+        install(new MockAccountModule());
     }
 
     @Override
