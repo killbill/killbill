@@ -17,8 +17,14 @@
 package com.ning.billing.entitlement.glue;
 
 import com.ning.billing.GuicyKillbillTestWithEmbeddedDBModule;
+import com.ning.billing.api.TestApiListener;
+import com.ning.billing.api.TestListenerStatus;
+import com.ning.billing.catalog.glue.CatalogModule;
+import com.ning.billing.entitlement.EntitlementTestListenerStatus;
+import com.ning.billing.subscription.glue.DefaultSubscriptionModule;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.NonEntityDaoModule;
+import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.TagStoreModule;
 import org.skife.config.ConfigSource;
 
@@ -35,5 +41,11 @@ public class TestEntitlementModuleWithEmbeddedDB extends TestEntitlementModule {
         install(new NonEntityDaoModule());
         install(new BusModule(configSource));
         install(new TagStoreModule());
+        install(new CatalogModule(configSource));
+        install(new NotificationQueueModule(configSource));
+        install(new DefaultSubscriptionModule(configSource));
+
+        bind(TestListenerStatus.class).to(EntitlementTestListenerStatus.class).asEagerSingleton();
+        bind(TestApiListener.class).asEagerSingleton();
     }
 }

@@ -17,9 +17,11 @@
 package com.ning.billing.entitlement.glue;
 
 import com.ning.billing.GuicyKillbillTestNoDBModule;
+import com.ning.billing.catalog.MockCatalogModule;
 import com.ning.billing.entitlement.dao.BlockingStateDao;
 import com.ning.billing.entitlement.dao.MockBlockingStateDao;
 import com.ning.billing.mock.glue.MockNonEntityDaoModule;
+import com.ning.billing.mock.glue.MockSubscriptionModule;
 import com.ning.billing.mock.glue.MockTagModule;
 import com.ning.billing.util.bus.InMemoryBusModule;
 import org.skife.config.ConfigSource;
@@ -37,6 +39,8 @@ public class TestEntitlementModuleNoDB extends TestEntitlementModule {
         install(new MockNonEntityDaoModule());
         install(new InMemoryBusModule(configSource));
         install(new MockTagModule());
+        install(new MockSubscriptionModule());
+        install(new MockCatalogModule());
     }
 
     @Override
