@@ -22,6 +22,24 @@ import com.ning.billing.util.callcontext.InternalTenantContext;
 
 public interface BlockingChecker {
 
+    public static final Object TYPE_SUBSCRIPTION = "Subscription";
+    public static final Object TYPE_BUNDLE = "Bundle";
+    public static final Object TYPE_ACCOUNT = "Account";
+
+    public static final Object ACTION_CHANGE = "Change";
+    public static final Object ACTION_ENTITLEMENT = "Entitlement";
+    public static final Object ACTION_BILLING = "Billing";
+
+
+    public interface BlockingAggregator {
+        public boolean isBlockChange();
+        public boolean isBlockEntitlement();
+        public boolean isBlockBilling();
+    }
+
+    // Only throws if we can't find the blockable enties
+    public BlockingAggregator getBlockedStatus(Blockable blockable, InternalTenantContext context) throws BlockingApiException;
+
     public void checkBlockedChange(Blockable blockable, InternalTenantContext context) throws BlockingApiException;
 
     public void checkBlockedEntitlement(Blockable blockable, InternalTenantContext context) throws BlockingApiException;

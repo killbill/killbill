@@ -19,6 +19,7 @@ package com.ning.billing.entitlement.api;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 
 import com.ning.billing.account.api.Account;
@@ -47,19 +48,127 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     private final SubscriptionBase subscriptionBase;
     private final InternalCallContextFactory internalCallContextFactory;
     private final Clock clock;
+    private final boolean isBlocked;
+    private final BlockingState entitlementBlockingState;
     private final BlockingChecker checker;
     private final UUID accountId;
     private final String externalKey;
+    private final DateTimeZone accountTimeZone;
 
-    public DefaultEntitlement(final AccountInternalApi accountApi, final SubscriptionBase subscriptionBase, final UUID accountId, final String externalKey, final InternalCallContextFactory internalCallContextFactory, final Clock clock, final BlockingChecker checker) {
+    public DefaultEntitlement(final AccountInternalApi accountApi, final SubscriptionBase subscriptionBase, final UUID accountId,
+                              final String externalKey, final boolean isBlocked, final BlockingState entitlementBlockingState, final DateTimeZone accountTimeZone,
+                              final InternalCallContextFactory internalCallContextFactory,
+                              final Clock clock, final BlockingChecker checker) {
         super(subscriptionBase.getId(), subscriptionBase.getCreatedDate(), subscriptionBase.getUpdatedDate());
         this.accountApi = accountApi;
         this.subscriptionBase = subscriptionBase;
         this.accountId = accountId;
         this.externalKey = externalKey;
+        this.isBlocked = isBlocked;
+        this.entitlementBlockingState = entitlementBlockingState;
+        this.accountTimeZone = accountTimeZone;
         this.internalCallContextFactory = internalCallContextFactory;
         this.clock = clock;
         this.checker = checker;
+    }
+
+    // STEPH_ENT should be remove but beatrix tests need to be changed
+    public SubscriptionBase getSubscriptionBase() {
+        return subscriptionBase;
+    }
+
+    @Override
+    public UUID getBaseEntitlementId() {
+        return subscriptionBase.getId();
+    }
+
+    @Override
+    public UUID getBundleId() {
+        return subscriptionBase.getBundleId();
+    }
+
+    @Override
+    public UUID getAccountId() {
+        return accountId;
+    }
+
+    @Override
+    public String getExternalKey() {
+        return externalKey;
+    }
+
+    @Override
+    public EntitlementState getState() {
+        return isBlocked ? EntitlementState.BLOCKED : subscriptionBase.getState();
+    }
+
+    @Override
+    public EntitlementSourceType getSourceType() {
+        return subscriptionBase.getSourceType();
+    }
+
+    @Override
+    public LocalDate getEffectiveStartDate() {
+        return new LocalDate(subscriptionBase.getStartDate(), accountTimeZone);
+    }
+
+    @Override
+    public LocalDate getEffectiveEndDate() {
+        if (entitlementBlockingState != null && entitlementBlockingState.getStateName().equals(DefaultEntitlementApi.ENT_STATE_CANCELLED)) {
+            return new LocalDate(entitlementBlockingState.getCreatedDate(), accountTimeZone);
+        }
+        return new LocalDate(subscriptionBase.getEndDate(), accountTimeZone);
+    }
+
+    @Override
+    public LocalDate getRequestedEndDate() {
+        // STEPH_ENT
+        return null; //subscriptionBase.;
+    }
+
+    @Override
+    public Product getProduct() {
+        return subscriptionBase.getCurrentPlan().getProduct();
+    }
+
+    @Override
+    public Plan getPlan() {
+        return subscriptionBase.getCurrentPlan();
+    }
+
+    @Override
+    public PriceList getPriceList() {
+        return subscriptionBase.getCurrentPriceList();
+    }
+
+    @Override
+    public PlanPhase getCurrentPhase() {
+        return subscriptionBase.getCurrentPhase();
+    }
+
+    @Override
+    public ProductCategory getProductCategory() {
+        return subscriptionBase.getCategory();
+    }
+
+    @Override
+    public Product getLastActiveProduct() {
+        return subscriptionBase.getLastActiveProduct();
+    }
+
+    @Override
+    public Plan getLastActivePlan() {
+        return subscriptionBase.getLastActivePlan();
+    }
+
+    @Override
+    public PriceList getLastActivePriceList() {
+        return subscriptionBase.getLastActivePriceList();
+    }
+
+    @Override
+    public ProductCategory getLastActiveProductCategory() {
+        return subscriptionBase.getLastActiveCategory();
     }
 
 
@@ -139,101 +248,6 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         return false;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
-
-    @Override
-    public UUID getBaseEntitlementId() {
-        return subscriptionBase.getId();
-    }
-
-    @Override
-    public UUID getBundleId() {
-        return subscriptionBase.getBundleId();
-    }
-
-    @Override
-    public UUID getAccountId() {
-        return accountId;
-    }
-
-    // STEPH_ENT should be remove but beatrix tests need to be changed
-    public SubscriptionBase getSubscriptionBase() {
-        return subscriptionBase;
-    }
-
-    @Override
-    public String getExternalKey() {
-        return externalKey;
-    }
-
-    @Override
-    public EntitlementState getState() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
-
-    @Override
-    public EntitlementSourceType getSourceType() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
-
-    @Override
-    public LocalDate getEffectiveStartDate() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
-
-    @Override
-    public LocalDate getEffectiveEndDate() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
-
-    @Override
-    public LocalDate getRequestedEndDate() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
-
-    @Override
-    public Product getProduct() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
-
-    @Override
-    public Plan getPlan() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
-
-    @Override
-    public PriceList getPriceList() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
-
-    @Override
-    public PlanPhase getCurrentPhase() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
-
-    @Override
-    public ProductCategory getProductCategory() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
-
-    @Override
-    public Product getLastActiveProduct() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
-
-    @Override
-    public Plan getLastActivePlan() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
-
-    @Override
-    public PriceList getLastActivePriceList() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
-
-    @Override
-    public String getLastActiveProductCategory() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
 
 
     /**

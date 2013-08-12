@@ -59,10 +59,10 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
             final DateTime future = clock.getUTCNow();
             testListener.pushExpectedEvent(NextEvent.CANCEL);
 
-            assertEquals(subscription.getLastActiveProductName(), prod);
-            assertEquals(subscription.getLastActivePriceListName(), planSet);
+            assertEquals(subscription.getLastActiveProduct(), prod);
+            assertEquals(subscription.getLastActivePriceList(), planSet);
             assertEquals(subscription.getLastActiveBillingPeriod(), term.toString());
-            assertEquals(subscription.getLastActiveCategoryName(), "BASE");
+            assertEquals(subscription.getLastActiveCategory(), "BASE");
 
 
             // CANCEL in trial period to get IMM policy
@@ -70,10 +70,10 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
             currentPhase = subscription.getCurrentPhase();
             testListener.isCompleted(3000);
 
-            assertEquals(subscription.getLastActiveProductName(), prod);
-            assertEquals(subscription.getLastActivePriceListName(), planSet);
+            assertEquals(subscription.getLastActiveProduct(), prod);
+            assertEquals(subscription.getLastActivePriceList(), planSet);
             assertEquals(subscription.getLastActiveBillingPeriod(), term.toString());
-            assertEquals(subscription.getLastActiveCategoryName(), "BASE");
+            assertEquals(subscription.getLastActiveCategory(), "BASE");
 
 
             assertNull(currentPhase);
@@ -116,10 +116,10 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
             subscriptionInternalApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate, internalCallContext);
             subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
 
-            assertEquals(subscription.getLastActiveProductName(), prod);
-            assertEquals(subscription.getLastActivePriceListName(), planSet);
+            assertEquals(subscription.getLastActiveProduct(), prod);
+            assertEquals(subscription.getLastActivePriceList(), planSet);
             assertEquals(subscription.getLastActiveBillingPeriod(), term.toString());
-            assertEquals(subscription.getLastActiveCategoryName(), "BASE");
+            assertEquals(subscription.getLastActiveCategory(), "BASE");
 
             // CANCEL
             testListener.setNonExpectedMode();
@@ -129,10 +129,10 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
             testListener.reset();
 
 
-            assertEquals(subscription.getLastActiveProductName(), prod);
-            assertEquals(subscription.getLastActivePriceListName(), planSet);
+            assertEquals(subscription.getLastActiveProduct(), prod);
+            assertEquals(subscription.getLastActivePriceList(), planSet);
             assertEquals(subscription.getLastActiveBillingPeriod(), term.toString());
-            assertEquals(subscription.getLastActiveCategoryName(), "BASE");
+            assertEquals(subscription.getLastActiveCategory(), "BASE");
 
             final DateTime futureEndDate = subscription.getFutureEndDate();
             Assert.assertNotNull(futureEndDate);
@@ -150,10 +150,10 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
             assertNull(currentPhase);
             testUtil.checkNextPhaseChange(subscription, 0, null);
 
-            assertEquals(subscription.getLastActiveProductName(), prod);
-            assertEquals(subscription.getLastActivePriceListName(), planSet);
+            assertEquals(subscription.getLastActiveProduct(), prod);
+            assertEquals(subscription.getLastActivePriceList(), planSet);
             assertEquals(subscription.getLastActiveBillingPeriod(), term.toString());
-            assertEquals(subscription.getLastActiveCategoryName(), "BASE");
+            assertEquals(subscription.getLastActiveCategory(), "BASE");
 
 
             assertListenerStatus();

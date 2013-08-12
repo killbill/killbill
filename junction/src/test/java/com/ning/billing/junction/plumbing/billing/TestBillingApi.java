@@ -30,6 +30,7 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.entitlement.api.BlockingStateType;
+import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.entitlement.dao.MockBlockingStateDao;
 import com.ning.billing.junction.JunctionTestSuiteNoDB;
 import com.ning.billing.entitlement.api.BlockingState;
@@ -277,7 +278,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
         final PriceList nextPriceList = catalog.findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME, now);
 
         final EffectiveSubscriptionInternalEvent t = new MockEffectiveSubscriptionEvent(
-                eventId, subId, bunId, then, now, null, null, null, null, SubscriptionState.ACTIVE,
+                eventId, subId, bunId, then, now, null, null, null, null, EntitlementState.ACTIVE,
                 nextPlan.getName(), nextPhase.getName(),
                 nextPriceList.getName(), 1L,
                 SubscriptionBaseTransitionType.CREATE, 1, null, 1L, 2L, null);

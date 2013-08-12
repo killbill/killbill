@@ -31,6 +31,7 @@ import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.Product;
+import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.subscription.SubscriptionTestSuiteWithEmbeddedDB;
 import com.ning.billing.subscription.api.migration.SubscriptionBaseMigrationApi.AccountMigration;
 import com.ning.billing.subscription.api.migration.SubscriptionBaseMigrationApiException;
@@ -97,7 +98,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
             assertTrue(testListener.isCompleted(3000));
 
             final SubscriptionBase oldBaseSubscription = subscriptionInternalApi.getBaseSubscription(bundle.getId(), internalCallContext);
-            assertTrue(oldBaseSubscription.getState() == SubscriptionState.CANCELLED);
+            assertTrue(oldBaseSubscription.getState() == EntitlementState.CANCELLED);
             // The MIGRATE_BILLING event should have been invalidated
             assertEquals(subscriptionInternalApi.getBillingTransitions(oldBaseSubscription, internalCallContext).size(), 0);
             //assertEquals(subscriptionInternalApi.getBillingTransitions(oldBaseSubscription, internalCallContext).get(0).getTransitionType(), SubscriptionBaseTransitionType.CANCEL);

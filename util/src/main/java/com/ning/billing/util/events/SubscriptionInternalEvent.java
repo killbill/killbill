@@ -20,6 +20,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.subscription.api.user.SubscriptionState;
 
@@ -38,7 +39,7 @@ public interface SubscriptionInternalEvent extends BusInternalEvent {
 
     DateTime getEffectiveTransitionTime();
 
-    SubscriptionState getPreviousState();
+    EntitlementState getPreviousState();
 
     String getPreviousPlan();
 
@@ -50,7 +51,7 @@ public interface SubscriptionInternalEvent extends BusInternalEvent {
 
     String getNextPhase();
 
-    SubscriptionState getNextState();
+    EntitlementState getNextState();
 
     String getNextPriceList();
 

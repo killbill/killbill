@@ -23,6 +23,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.GuicyKillbillTestSuiteNoDB;
+import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.subscription.api.timeline.DefaultRepairSubscriptionEvent;
 import com.ning.billing.subscription.api.user.DefaultEffectiveSubscriptionEvent;
 import com.ning.billing.subscription.api.user.SubscriptionState;
@@ -38,7 +39,7 @@ public class TestEventJson extends GuicyKillbillTestSuiteNoDB {
     public void testSubscriptionEvent() throws Exception {
 
         final EffectiveSubscriptionInternalEvent e = new DefaultEffectiveSubscriptionEvent(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), new DateTime(), new DateTime(),
-                                                                                           SubscriptionState.ACTIVE, "pro", "TRIAL", "DEFAULT", SubscriptionState.CANCELLED, null, null, null, 3L,
+                                                                                           EntitlementState.ACTIVE, "pro", "TRIAL", "DEFAULT", EntitlementState.CANCELLED, null, null, null, 3L,
                                                                                            SubscriptionBaseTransitionType.CANCEL, 0, new DateTime(), 1L, 2L, null);
 
         final String json = mapper.writeValueAsString(e);

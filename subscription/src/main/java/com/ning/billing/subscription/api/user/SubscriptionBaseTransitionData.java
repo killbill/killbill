@@ -23,6 +23,7 @@ import org.joda.time.DateTime;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PriceList;
+import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.subscription.events.SubscriptionBaseEvent.EventType;
 import com.ning.billing.subscription.events.user.ApiEventType;
@@ -37,7 +38,7 @@ public class SubscriptionBaseTransitionData implements SubscriptionBaseTransitio
     private final ApiEventType apiEventType;
     private final DateTime requestedTransitionTime;
     private final DateTime effectiveTransitionTime;
-    private final SubscriptionState previousState;
+    private final EntitlementState previousState;
     private final PriceList previousPriceList;
     private final UUID previousEventId;
     private final DateTime previousEventCreatedDate;
@@ -45,7 +46,7 @@ public class SubscriptionBaseTransitionData implements SubscriptionBaseTransitio
     private final PlanPhase previousPhase;
     private final UUID nextEventId;
     private final DateTime nextEventCreatedDate;
-    private final SubscriptionState nextState;
+    private final EntitlementState nextState;
     private final PriceList nextPriceList;
     private final Plan nextPlan;
     private final PlanPhase nextPhase;
@@ -62,13 +63,13 @@ public class SubscriptionBaseTransitionData implements SubscriptionBaseTransitio
                                           final DateTime effectiveTransitionTime,
                                           final UUID previousEventId,
                                           final DateTime previousEventCreatedDate,
-                                          final SubscriptionState previousState,
+                                          final EntitlementState previousState,
                                           final Plan previousPlan,
                                           final PlanPhase previousPhase,
                                           final PriceList previousPriceList,
                                           final UUID nextEventId,
                                           final DateTime nextEventCreatedDate,
-                                          final SubscriptionState nextState,
+                                          final EntitlementState nextState,
                                           final Plan nextPlan,
                                           final PlanPhase nextPhase,
                                           final PriceList nextPriceList,
@@ -147,7 +148,7 @@ public class SubscriptionBaseTransitionData implements SubscriptionBaseTransitio
     }
 
     @Override
-    public SubscriptionState getPreviousState() {
+    public EntitlementState getPreviousState() {
         return previousState;
     }
 
@@ -182,7 +183,7 @@ public class SubscriptionBaseTransitionData implements SubscriptionBaseTransitio
     }
 
     @Override
-    public SubscriptionState getNextState() {
+    public EntitlementState getNextState() {
         return nextState;
     }
 

@@ -20,6 +20,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 
@@ -38,11 +39,11 @@ public class DefaultEffectiveSubscriptionEvent extends DefaultSubscriptionEvent 
                                              @JsonProperty("bundleId") final UUID bundleId,
                                              @JsonProperty("requestedTransitionTime") final DateTime requestedTransitionTime,
                                              @JsonProperty("effectiveTransitionTime") final DateTime effectiveTransitionTime,
-                                             @JsonProperty("previousState") final SubscriptionState previousState,
+                                             @JsonProperty("previousState") final EntitlementState previousState,
                                              @JsonProperty("previousPlan") final String previousPlan,
                                              @JsonProperty("previousPhase") final String previousPhase,
                                              @JsonProperty("previousPriceList") final String previousPriceList,
-                                             @JsonProperty("nextState") final SubscriptionState nextState,
+                                             @JsonProperty("nextState") final EntitlementState nextState,
                                              @JsonProperty("nextPlan") final String nextPlan,
                                              @JsonProperty("nextPhase") final String nextPhase,
                                              @JsonProperty("nextPriceList") final String nextPriceList,

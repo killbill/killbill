@@ -26,6 +26,7 @@ import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.DefaultEntitlement;
+import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionState;
@@ -87,6 +88,6 @@ public class TestOverdueWithSubscriptionCancellation extends TestOverdueBase {
         checkODState("OD1");
 
         final SubscriptionBase cancelledBaseSubscription = ((DefaultEntitlement) entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext)).getSubscriptionBase();
-        assertTrue(cancelledBaseSubscription.getState() == SubscriptionState.CANCELLED);
+        assertTrue(cancelledBaseSubscription.getState() == EntitlementState.CANCELLED);
     }
 }

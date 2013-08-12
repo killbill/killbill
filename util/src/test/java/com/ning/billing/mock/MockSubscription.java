@@ -29,12 +29,13 @@ import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceList;
+import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.entitlement.api.Entitlement.EntitlementSourceType;
+import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBaseTransition;
-import com.ning.billing.subscription.api.user.SubscriptionSourceType;
-import com.ning.billing.subscription.api.user.SubscriptionState;
 import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
@@ -45,7 +46,7 @@ public class MockSubscription implements SubscriptionBase {
 
     private final UUID id;
     private final UUID bundleId;
-    private final SubscriptionState state;
+    private final EntitlementState state;
     private Plan plan;
     private final PlanPhase phase;
     private final DateTime startDate;
@@ -54,14 +55,14 @@ public class MockSubscription implements SubscriptionBase {
     public MockSubscription(final UUID id, final UUID bundleId, final Plan plan, final DateTime startDate, final List<EffectiveSubscriptionInternalEvent> transitions) {
         this.id = id;
         this.bundleId = bundleId;
-        this.state = SubscriptionState.ACTIVE;
+        this.state = EntitlementState.ACTIVE;
         this.plan = plan;
         this.phase = null;
         this.startDate = startDate;
         this.transitions = transitions;
     }
 
-    public MockSubscription(final SubscriptionState state, final Plan plan, final PlanPhase phase) {
+    public MockSubscription(final EntitlementState state, final Plan plan, final PlanPhase phase) {
         this.id = UUID.randomUUID();
         this.bundleId = UUID.randomUUID();
         this.state = state;
@@ -129,7 +130,7 @@ public class MockSubscription implements SubscriptionBase {
     }
 
     @Override
-    public SubscriptionState getState() {
+    public EntitlementState getState() {
         return state;
     }
 
@@ -184,27 +185,27 @@ public class MockSubscription implements SubscriptionBase {
     }
 
     @Override
-    public SubscriptionSourceType getSourceType() {
+    public EntitlementSourceType getSourceType() {
         return sub.getSourceType();
     }
 
     @Override
-    public String getLastActiveProductName() {
-        return sub.getLastActiveProductName();
+    public Product getLastActiveProduct() {
+        return sub.getLastActiveProduct();
     }
 
     @Override
-    public String getLastActivePriceListName() {
-        return sub.getLastActivePriceListName();
+    public PriceList getLastActivePriceList() {
+        return sub.getLastActivePriceList();
     }
 
     @Override
-    public String getLastActiveCategoryName() {
-        return sub.getLastActiveCategoryName();
+    public ProductCategory getLastActiveCategory() {
+        return sub.getLastActiveCategory();
     }
 
     @Override
-    public String getLastActiveBillingPeriod() {
+    public BillingPeriod getLastActiveBillingPeriod() {
         return null;
     }
 

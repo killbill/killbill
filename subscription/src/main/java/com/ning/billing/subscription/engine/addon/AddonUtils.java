@@ -23,6 +23,7 @@ import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.Product;
+import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.subscription.api.user.DefaultSubscriptionBase;
 import com.ning.billing.subscription.exceptions.SubscriptionBaseError;
 import com.ning.billing.subscription.api.user.SubscriptionState;
@@ -41,7 +42,7 @@ public class AddonUtils {
     public void checkAddonCreationRights(final DefaultSubscriptionBase baseSubscription, final Plan targetAddOnPlan)
             throws SubscriptionBaseApiException, CatalogApiException {
 
-        if (baseSubscription.getState() != SubscriptionState.ACTIVE) {
+        if (baseSubscription.getState() != EntitlementState.ACTIVE) {
             throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_AO_BP_NON_ACTIVE, targetAddOnPlan.getName());
         }
 

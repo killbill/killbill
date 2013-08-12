@@ -30,6 +30,7 @@ import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.subscription.api.SubscriptionBaseApiService;
 import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
@@ -155,7 +156,7 @@ public class SubscriptionDataRepair extends DefaultSubscriptionBase {
             return;
         }
 
-        final Product baseProduct = (getState() == SubscriptionState.CANCELLED) ?
+        final Product baseProduct = (getState() == EntitlementState.CANCELLED) ?
                                     null : getCurrentPlan().getProduct();
         addAddonCancellationIfRequired(addOnSubscriptionInRepair, baseProduct, effectiveDate, context);
     }
@@ -167,7 +168,7 @@ public class SubscriptionDataRepair extends DefaultSubscriptionBase {
         final Iterator<SubscriptionDataRepair> it = addOnSubscriptionInRepair.iterator();
         while (it.hasNext()) {
             final SubscriptionDataRepair cur = it.next();
-            if (cur.getState() == SubscriptionState.CANCELLED ||
+            if (cur.getState() == EntitlementState.CANCELLED ||
                 cur.getCategory() != ProductCategory.ADD_ON) {
                 continue;
             }

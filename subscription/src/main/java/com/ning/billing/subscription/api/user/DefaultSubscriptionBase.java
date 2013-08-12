@@ -36,9 +36,12 @@ import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceList;
+import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.entitlement.api.BlockingState;
+import com.ning.billing.entitlement.api.Entitlement.EntitlementSourceType;
+import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.subscription.api.SubscriptionBaseApiService;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
@@ -138,13 +141,13 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     }
 
     @Override
-    public SubscriptionState getState() {
+    public EntitlementState getState() {
         return (getPreviousTransition() == null) ? null
                                                  : getPreviousTransition().getNextState();
     }
 
     @Override
-    public SubscriptionSourceType getSourceType() {
+    public EntitlementSourceType getSourceType() {
         if (transitions == null) {
             return null;
         }
@@ -152,11 +155,11 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         switch (initialTransition.getApiEventType()) {
             case MIGRATE_BILLING:
             case MIGRATE_ENTITLEMENT:
-                return SubscriptionSourceType.MIGRATED;
+                return EntitlementSourceType.MIGRATED;
             case TRANSFER:
-                return SubscriptionSourceType.TRANSFERED;
+                return EntitlementSourceType.TRANSFERRED;
             default:
-                return SubscriptionSourceType.NATIVE;
+                return EntitlementSourceType.NATIVE;
         }
     }
 
@@ -182,7 +185,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     @Override
     public DateTime getEndDate() {
         final SubscriptionBaseTransition latestTransition = getPreviousTransition();
-        if (latestTransition.getNextState() == SubscriptionState.CANCELLED) {
+        if (latestTransition.getNextState() == EntitlementState.CANCELLED) {
             return latestTransition.getEffectiveTransitionTime();
         }
         return null;
@@ -257,38 +260,38 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     }
 
     @Override
-    public String getLastActiveProductName() {
-        if (getState() == SubscriptionState.CANCELLED) {
+    public Product getLastActiveProduct() {
+        if (getState() == EntitlementState.CANCELLED) {
             final SubscriptionBaseTransition data = getPreviousTransition();
-            return data.getPreviousPlan().getProduct().getName();
+            return data.getPreviousPlan().getProduct();
         } else {
-            return getCurrentPlan().getProduct().getName();
+            return getCurrentPlan().getProduct();
         }
     }
 
     @Override
-    public String getLastActivePriceListName() {
-        if (getState() == SubscriptionState.CANCELLED) {
+    public PriceList getLastActivePriceList() {
+        if (getState() == EntitlementState.CANCELLED) {
             final SubscriptionBaseTransition data = getPreviousTransition();
-            return data.getPreviousPriceList().getName();
+            return data.getPreviousPriceList();
         } else {
-            return getCurrentPriceList().getName();
+            return getCurrentPriceList();
         }
     }
 
     @Override
-    public String getLastActiveCategoryName() {
-        if (getState() == SubscriptionState.CANCELLED) {
+    public ProductCategory getLastActiveCategory() {
+        if (getState() == EntitlementState.CANCELLED) {
             final SubscriptionBaseTransition data = getPreviousTransition();
-            return data.getPreviousPlan().getProduct().getCategory().name();
+            return data.getPreviousPlan().getProduct().getCategory();
         } else {
-            return getCurrentPlan().getProduct().getCategory().name();
+            return getCurrentPlan().getProduct().getCategory();
         }
     }
 
     @Override
     public Plan getLastActivePlan() {
-        if (getState() == SubscriptionState.CANCELLED) {
+        if (getState() == EntitlementState.CANCELLED) {
             final SubscriptionBaseTransition data = getPreviousTransition();
             return data.getPreviousPlan();
         } else {
@@ -297,12 +300,12 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     }
 
     @Override
-    public String getLastActiveBillingPeriod() {
-        if (getState() == SubscriptionState.CANCELLED) {
+    public BillingPeriod getLastActiveBillingPeriod() {
+        if (getState() == EntitlementState.CANCELLED) {
             final SubscriptionBaseTransition data = getPreviousTransition();
-            return data.getPreviousPlan().getBillingPeriod().name();
+            return data.getPreviousPlan().getBillingPeriod();
         } else {
-            return getCurrentPlan().getBillingPeriod().name();
+            return getCurrentPlan().getBillingPeriod();
         }
     }
 
@@ -534,14 +537,14 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
 
         UUID nextEventId = null;
         DateTime nextCreatedDate = null;
-        SubscriptionState nextState = null;
+        EntitlementState nextState = null;
         String nextPlanName = null;
         String nextPhaseName = null;
         String nextPriceListName = null;
 
         UUID prevEventId = null;
         DateTime prevCreatedDate = null;
-        SubscriptionState previousState = null;
+        EntitlementState previousState = null;
         PriceList previousPriceList = null;
         Plan previousPlan = null;
         PlanPhase previousPhase = null;
@@ -585,7 +588,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                             previousPlan = null;
                             previousPhase = null;
                             previousPriceList = null;
-                            nextState = SubscriptionState.ACTIVE;
+                            nextState = EntitlementState.ACTIVE;
                             nextPlanName = userEV.getEventPlan();
                             nextPhaseName = userEV.getEventPlanPhase();
                             nextPriceListName = userEV.getPriceList();
@@ -596,7 +599,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                             nextPriceListName = userEV.getPriceList();
                             break;
                         case CANCEL:
-                            nextState = SubscriptionState.CANCELLED;
+                            nextState = EntitlementState.CANCELLED;
                             nextPlanName = null;
                             nextPhaseName = null;
                             break;

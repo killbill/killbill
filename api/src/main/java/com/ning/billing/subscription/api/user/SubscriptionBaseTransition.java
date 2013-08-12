@@ -23,6 +23,7 @@ import org.joda.time.DateTime;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PriceList;
+import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 
 public interface SubscriptionBaseTransition {
@@ -31,9 +32,9 @@ public interface SubscriptionBaseTransition {
 
     public UUID getBundleId();
 
-    public SubscriptionState getPreviousState();
+    public EntitlementState getPreviousState();
 
-    public SubscriptionState getNextState();
+    public EntitlementState getNextState();
 
     public UUID getPreviousEventId();
 

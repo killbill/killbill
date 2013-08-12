@@ -37,6 +37,7 @@ import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.clock.Clock;
 import com.ning.billing.clock.DefaultClock;
+import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.subscription.api.SubscriptionApiBase;
 import com.ning.billing.subscription.api.user.DefaultEffectiveSubscriptionEvent;
 import com.ning.billing.subscription.api.user.DefaultSubscriptionBase;
@@ -111,7 +112,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
             switch (plan.getProduct().getCategory()) {
                 case BASE:
                     if (baseSubscription != null) {
-                        if (baseSubscription.getState() == SubscriptionState.ACTIVE) {
+                        if (baseSubscription.getState() == EntitlementState.ACTIVE) {
                             throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_BP_EXISTS, bundleId);
                         } else {
                             // If we do create on an existing CANCELLED BP, this is equivalent to call recreate on that SubscriptionBase.
@@ -277,7 +278,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
             }
 
             // If ADDON is cancelled, skip
-            if (cur.getState() == SubscriptionState.CANCELLED) {
+            if (cur.getState() == EntitlementState.CANCELLED) {
                 continue;
             }
 

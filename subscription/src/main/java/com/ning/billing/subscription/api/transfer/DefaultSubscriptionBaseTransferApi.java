@@ -29,6 +29,7 @@ import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.subscription.api.SubscriptionApiBase;
 import com.ning.billing.subscription.api.SubscriptionBaseApiService;
 import com.ning.billing.subscription.api.migration.AccountMigrationData.BundleMigrationData;
@@ -218,7 +219,7 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
             for (final SubscriptionBaseTimeline cur : bundleBaseTimeline.getSubscriptions()) {
                 final DefaultSubscriptionBase oldSubscription = (DefaultSubscriptionBase) dao.getSubscriptionFromId(cur.getId(), fromInternalCallContext);
                 // Skip already cancelled subscriptions
-                if (oldSubscription.getState() == SubscriptionState.CANCELLED) {
+                if (oldSubscription.getState() == EntitlementState.CANCELLED) {
                     continue;
                 }
                 final List<ExistingEvent> existingEvents = cur.getExistingEvents();

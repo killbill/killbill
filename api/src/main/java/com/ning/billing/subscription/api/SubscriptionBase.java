@@ -11,11 +11,13 @@ import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceList;
+import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.Blockable;
+import com.ning.billing.entitlement.api.Entitlement.EntitlementSourceType;
+import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.subscription.api.user.SubscriptionBaseTransition;
-import com.ning.billing.subscription.api.user.SubscriptionSourceType;
 import com.ning.billing.subscription.api.user.SubscriptionState;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.entity.Entity;
@@ -44,9 +46,9 @@ public interface SubscriptionBase extends Entity, Blockable {
 
     public UUID getBundleId();
 
-    public SubscriptionState getState();
+    public EntitlementState getState();
 
-    public SubscriptionSourceType getSourceType();
+    public EntitlementSourceType getSourceType();
 
     public DateTime getStartDate();
 
@@ -62,13 +64,13 @@ public interface SubscriptionBase extends Entity, Blockable {
 
     public PlanPhase getCurrentPhase();
 
-    public String getLastActiveProductName();
+    public Product getLastActiveProduct();
 
-    public String getLastActivePriceListName();
+    public PriceList getLastActivePriceList();
 
-    public String getLastActiveCategoryName();
+    public ProductCategory getLastActiveCategory();
 
-    public String getLastActiveBillingPeriod();
+    public BillingPeriod getLastActiveBillingPeriod();
 
     public DateTime getChargedThroughDate();
 

@@ -20,6 +20,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.subscription.api.user.SubscriptionState;
 import com.ning.billing.util.events.BusEventBase;
@@ -37,11 +38,11 @@ public class MockEffectiveSubscriptionEvent extends BusEventBase implements Effe
     private final UUID eventId;
     private final DateTime requestedTransitionTime;
     private final DateTime effectiveTransitionTime;
-    private final SubscriptionState previousState;
+    private final EntitlementState previousState;
     private final String previousPriceList;
     private final String previousPlan;
     private final String previousPhase;
-    private final SubscriptionState nextState;
+    private final EntitlementState nextState;
     private final String nextPriceList;
     private final String nextPlan;
     private final String nextPhase;
@@ -57,11 +58,11 @@ public class MockEffectiveSubscriptionEvent extends BusEventBase implements Effe
                                           @JsonProperty("bundleId") final UUID bundleId,
                                           @JsonProperty("requestedTransitionTime") final DateTime requestedTransitionTime,
                                           @JsonProperty("effectiveTransitionTime") final DateTime effectiveTransitionTime,
-                                          @JsonProperty("previousState") final SubscriptionState previousState,
+                                          @JsonProperty("previousState") final EntitlementState previousState,
                                           @JsonProperty("previousPlan") final String previousPlan,
                                           @JsonProperty("previousPhase") final String previousPhase,
                                           @JsonProperty("previousPriceList") final String previousPriceList,
-                                          @JsonProperty("nextState") final SubscriptionState nextState,
+                                          @JsonProperty("nextState") final EntitlementState nextState,
                                           @JsonProperty("nextPlan") final String nextPlan,
                                           @JsonProperty("nextPhase") final String nextPhase,
                                           @JsonProperty("nextPriceList") final String nextPriceList,
@@ -117,7 +118,7 @@ public class MockEffectiveSubscriptionEvent extends BusEventBase implements Effe
 
 
     @Override
-    public SubscriptionState getPreviousState() {
+    public EntitlementState getPreviousState() {
         return previousState;
     }
 
@@ -142,7 +143,7 @@ public class MockEffectiveSubscriptionEvent extends BusEventBase implements Effe
     }
 
     @Override
-    public SubscriptionState getNextState() {
+    public EntitlementState getNextState() {
         return nextState;
     }
 

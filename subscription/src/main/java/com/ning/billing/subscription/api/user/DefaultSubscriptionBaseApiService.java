@@ -39,6 +39,7 @@ import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.subscription.alignment.PlanAligner;
 import com.ning.billing.subscription.alignment.TimedPhase;
 import com.ning.billing.subscription.api.SubscriptionBaseApiService;
@@ -99,8 +100,8 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
     @Override
     public boolean recreatePlan(final DefaultSubscriptionBase subscription, final PlanPhaseSpecifier spec, final DateTime requestedDateWithMs, final CallContext context)
             throws SubscriptionBaseApiException {
-        final SubscriptionState currentState = subscription.getState();
-        if (currentState != null && currentState != SubscriptionState.CANCELLED) {
+        final EntitlementState currentState = subscription.getState();
+        if (currentState != null && currentState != EntitlementState.CANCELLED) {
             throw new SubscriptionBaseApiException(ErrorCode.SUB_RECREATE_BAD_STATE, subscription.getId(), currentState);
         }
 
@@ -170,8 +171,8 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
     @Override
     public boolean cancel(final DefaultSubscriptionBase subscription, final DateTime requestedDateWithMs, final CallContext context) throws SubscriptionBaseApiException {
         try {
-            final SubscriptionState currentState = subscription.getState();
-            if (currentState != SubscriptionState.ACTIVE) {
+            final EntitlementState currentState = subscription.getState();
+            if (currentState != EntitlementState.ACTIVE) {
                 throw new SubscriptionBaseApiException(ErrorCode.SUB_CANCEL_BAD_STATE, subscription.getId(), currentState);
             }
             final DateTime now = clock.getUTCNow();
@@ -194,8 +195,8 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
     @Override
     public boolean cancelWithPolicy(final DefaultSubscriptionBase subscription, final DateTime requestedDateWithMs, final BillingActionPolicy policy, final CallContext context) throws SubscriptionBaseApiException {
-        final SubscriptionState currentState = subscription.getState();
-        if (currentState != SubscriptionState.ACTIVE) {
+        final EntitlementState currentState = subscription.getState();
+        if (currentState != EntitlementState.ACTIVE) {
             throw new SubscriptionBaseApiException(ErrorCode.SUB_CANCEL_BAD_STATE, subscription.getId(), currentState);
         }
         final DateTime now = clock.getUTCNow();
@@ -373,7 +374,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
             return 0;
         }
 
-        final Product baseProduct = (baseSubscription.getState() == SubscriptionState.CANCELLED) ? null : baseSubscription.getCurrentPlan().getProduct();
+        final Product baseProduct = (baseSubscription.getState() == EntitlementState.CANCELLED) ? null : baseSubscription.getCurrentPlan().getProduct();
 
         final List<SubscriptionBase> subscriptions = dao.getSubscriptions(baseSubscription.getBundleId(), context);
 
@@ -382,7 +383,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
         for (final SubscriptionBase subscription : subscriptions) {
             final DefaultSubscriptionBase cur = (DefaultSubscriptionBase) subscription;
-            if (cur.getState() == SubscriptionState.CANCELLED ||
+            if (cur.getState() == EntitlementState.CANCELLED ||
                 cur.getCategory() != ProductCategory.ADD_ON) {
                 continue;
             }
@@ -425,8 +426,8 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
     }
 
     private void validateSubscriptionState(final DefaultSubscriptionBase subscription) throws SubscriptionBaseApiException {
-        final SubscriptionState currentState = subscription.getState();
-        if (currentState != SubscriptionState.ACTIVE) {
+        final EntitlementState currentState = subscription.getState();
+        if (currentState != EntitlementState.ACTIVE) {
             throw new SubscriptionBaseApiException(ErrorCode.SUB_CHANGE_NON_ACTIVE, subscription.getId(), currentState);
         }
         if (subscription.isSubscriptionFutureCancelled()) {

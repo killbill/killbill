@@ -57,8 +57,8 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
                                 final boolean blockChange,
                                 final boolean blockEntitlement,
                                 final boolean blockBilling,
-                                final DateTime timestamp,
-                                final DateTime createDate) {
+                                final DateTime createDate,
+                                final DateTime updatedDate) {
         super(id, createDate, null);
         this.blockingId = blockingId;
         this.type = type;
@@ -67,7 +67,7 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
         this.blockChange = blockChange;
         this.blockEntitlement = blockEntitlement;
         this.blockBilling = blockBilling;
-        this.timestamp = timestamp;
+        this.timestamp = updatedDate;
     }
 
     public DefaultBlockingState(final UUID blockingId,
