@@ -44,7 +44,7 @@ import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline.Delet
 import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline.ExistingEvent;
 import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline.NewEvent;
 import com.ning.billing.subscription.api.SubscriptionBase;
-import com.ning.billing.subscription.api.user.SubscriptionState;
+import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 
 import static org.testng.Assert.assertEquals;
@@ -197,7 +197,7 @@ public class TestRepairBP extends SubscriptionTestSuiteWithEmbeddedDB {
         assertEquals(realRunBaseSubscription.getBundleId(), bundle.getId());
         assertEquals(realRunBaseSubscription.getStartDate(), startDate);
 
-        assertEquals(realRunBaseSubscription.getState(), SubscriptionState.CANCELLED);
+        assertEquals(realRunBaseSubscription.getState(), EntitlementState.CANCELLED);
 
         assertListenerStatus();
     }

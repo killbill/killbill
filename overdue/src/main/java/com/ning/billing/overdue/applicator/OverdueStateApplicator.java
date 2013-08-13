@@ -178,7 +178,8 @@ public class OverdueStateApplicator<T extends Blockable> {
                                                                   OverdueService.OVERDUE_SERVICE_NAME,
                                                                   blockChanges(nextOverdueState),
                                                                   blockEntitlement(nextOverdueState),
-                                                                  blockBilling(nextOverdueState)),
+                                                                  blockBilling(nextOverdueState),
+                                                                  clock.getUTCNow()),
                                          context);
         } catch (Exception e) {
             throw new OverdueException(e, ErrorCode.OVERDUE_CAT_ERROR_ENCOUNTERED, blockable.getId(), blockable.getClass().getName());

@@ -186,7 +186,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
 
     @Override
-    public boolean cancelEntitlementWithPolicy(final EntitlementActionPolicy entitlementBillingActionPolicy, final CallContext callContext) throws EntitlementApiException {
+    public boolean cancelEntitlementWithPolicy(final EntitlementActionPolicy entitlementPolicy, final CallContext callContext) throws EntitlementApiException {
         return false;
     }
 
@@ -196,7 +196,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     }
 
     @Override
-    public boolean cancelEntitlementWithPolicyOverrideBillingPolicy(final EntitlementActionPolicy policy, final BillingActionPolicy billingPolicy, final CallContext context) throws EntitlementApiException {
+    public boolean cancelEntitlementWithPolicyOverrideBillingPolicy(final EntitlementActionPolicy entitlementPolicy, final BillingActionPolicy billingPolicy, final CallContext context) throws EntitlementApiException {
         return false;  //To change body of implemented methods use File | Settings | File Templates.
     }
 

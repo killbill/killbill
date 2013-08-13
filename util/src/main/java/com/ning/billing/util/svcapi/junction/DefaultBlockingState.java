@@ -20,6 +20,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.clock.Clock;
 import com.ning.billing.entitlement.api.BlockingState;
 import com.ning.billing.entitlement.api.BlockingStateType;
 import com.ning.billing.util.entity.EntityBase;
@@ -40,10 +41,10 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
     private final DateTime timestamp;
     private final BlockingStateType type;
 
-    public static BlockingState getClearState(final BlockingStateType type) {
+    public static BlockingState getClearState(final BlockingStateType type, final Clock clock) {
         if (clearState == null) {
             // STEPH_ENT should we not always have a service name?
-            clearState = new DefaultBlockingState(null, type, CLEAR_STATE_NAME, null, false, false, false);
+            clearState = new DefaultBlockingState(null, null, type, CLEAR_STATE_NAME, null, false, false, false, clock.getUTCNow(), clock.getUTCNow());
         }
         return clearState;
     }
@@ -59,7 +60,7 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
                                 final boolean blockBilling,
                                 final DateTime createDate,
                                 final DateTime updatedDate) {
-        super(id, createDate, null);
+        super(id, createDate, updatedDate);
         this.blockingId = blockingId;
         this.type = type;
         this.stateName = stateName;
@@ -67,16 +68,16 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
         this.blockChange = blockChange;
         this.blockEntitlement = blockEntitlement;
         this.blockBilling = blockBilling;
-        this.timestamp = updatedDate;
+        this.timestamp = createDate;
     }
-
     public DefaultBlockingState(final UUID blockingId,
                                 final BlockingStateType type,
                                  final String stateName,
                                  final String service,
                                  final boolean blockChange,
                                  final boolean blockEntitlement,
-                                 final boolean blockBilling) {
+                                 final boolean blockBilling,
+                                 final DateTime createDate) {
         this(UUID.randomUUID(),
              blockingId,
              type,
@@ -85,8 +86,8 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
              blockChange,
              blockEntitlement,
              blockBilling,
-             null,
-             null);
+             createDate,
+             createDate);
     }
 
     @Override

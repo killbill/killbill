@@ -26,7 +26,7 @@ import com.ning.billing.GuicyKillbillTestSuiteNoDB;
 import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.subscription.api.timeline.DefaultRepairSubscriptionEvent;
 import com.ning.billing.subscription.api.user.DefaultEffectiveSubscriptionEvent;
-import com.ning.billing.subscription.api.user.SubscriptionState;
+import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 import com.ning.billing.util.events.RepairSubscriptionInternalEvent;
 import com.ning.billing.util.jackson.ObjectMapper;

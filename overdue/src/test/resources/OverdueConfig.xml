@@ -17,10 +17,10 @@
 
 <overdueConfig xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:noNamespaceSchemaLocation="CatalogSchema.xsd ">
-	<bundleOverdueStates>
+	<accountOverdueStates>
 		<state name="Clear">
 			<isClearState>true</isClearState>
 		</state>
-	</bundleOverdueStates>
+	</accountOverdueStates>
 </overdueConfig>
 

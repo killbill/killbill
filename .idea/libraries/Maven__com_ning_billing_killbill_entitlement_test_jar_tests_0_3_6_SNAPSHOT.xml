@@ -4,9 +4,11 @@
       <root url="jar://$MAVEN_REPOSITORY$/com/ning/billing/killbill-entitlement/0.3.6-SNAPSHOT/killbill-entitlement-0.3.6-SNAPSHOT-tests.jar!/" />
     </CLASSES>
     <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/entitlement/killbill-entitlement-0.3.6-SNAPSHOT-test-javadoc.jar!/" />
       <root url="jar://$MAVEN_REPOSITORY$/com/ning/billing/killbill-entitlement/0.3.6-SNAPSHOT/killbill-entitlement-0.3.6-SNAPSHOT-test-javadoc.jar!/" />
     </JAVADOC>
     <SOURCES>
+      <root url="jar://$PROJECT_DIR$/entitlement/killbill-entitlement-0.3.6-SNAPSHOT-test-sources.jar!/" />
       <root url="jar://$MAVEN_REPOSITORY$/com/ning/billing/killbill-entitlement/0.3.6-SNAPSHOT/killbill-entitlement-0.3.6-SNAPSHOT-test-sources.jar!/" />
     </SOURCES>
   </library>

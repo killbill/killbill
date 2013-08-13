@@ -36,7 +36,7 @@ import com.ning.billing.subscription.api.user.SubscriptionBaseTransition;
 import com.ning.billing.subscription.api.user.SubscriptionBaseTransitionData;
 import com.ning.billing.subscription.events.user.ApiEventType;
 import com.ning.billing.subscription.api.SubscriptionBase;
-import com.ning.billing.subscription.api.user.SubscriptionState;
+import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -69,7 +69,7 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
             assertEquals(subscription.getEndDate(), null);
             assertEquals(subscription.getCurrentPriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
             assertEquals(subscription.getCurrentPhase().getPhaseType(), PhaseType.EVERGREEN);
-            assertEquals(subscription.getState(), SubscriptionState.ACTIVE);
+            assertEquals(subscription.getState(), EntitlementState.ACTIVE);
             assertEquals(subscription.getCurrentPlan().getName(), "shotgun-annual");
             assertEquals(subscription.getChargedThroughDate(), startDate.plusYears(1));
 
@@ -106,7 +106,7 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
             assertEquals(baseSubscription.getEndDate(), null);
             assertEquals(baseSubscription.getCurrentPriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
             assertEquals(baseSubscription.getCurrentPhase().getPhaseType(), PhaseType.EVERGREEN);
-            assertEquals(baseSubscription.getState(), SubscriptionState.ACTIVE);
+            assertEquals(baseSubscription.getState(), EntitlementState.ACTIVE);
             assertEquals(baseSubscription.getCurrentPlan().getName(), "shotgun-annual");
             assertEquals(baseSubscription.getChargedThroughDate(), initalBPStart.plusYears(1));
 
@@ -118,7 +118,7 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
             assertEquals(aoSubscription.getEndDate(), null);
             assertEquals(aoSubscription.getCurrentPriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
             assertEquals(aoSubscription.getCurrentPhase().getPhaseType(), PhaseType.DISCOUNT);
-            assertEquals(aoSubscription.getState(), SubscriptionState.ACTIVE);
+            assertEquals(aoSubscription.getState(), EntitlementState.ACTIVE);
             assertEquals(aoSubscription.getCurrentPlan().getName(), "telescopic-scope-monthly");
             assertEquals(aoSubscription.getChargedThroughDate(), initalAddonStart.plusMonths(1));
 
@@ -152,7 +152,7 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
             assertTrue(subscription.getStartDate().compareTo(startDate) == 0);
             assertEquals(subscription.getCurrentPriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
             assertEquals(subscription.getCurrentPhase().getPhaseType(), PhaseType.EVERGREEN);
-            assertEquals(subscription.getState(), SubscriptionState.ACTIVE);
+            assertEquals(subscription.getState(), EntitlementState.ACTIVE);
             assertEquals(subscription.getCurrentPlan().getName(), "assault-rifle-annual");
             assertEquals(subscription.getChargedThroughDate(), startDate.plusYears(1));
 
@@ -168,7 +168,7 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
             assertNotNull(subscription.getEndDate());
             assertEquals(subscription.getCurrentPriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
             assertEquals(subscription.getCurrentPhase(), null);
-            assertEquals(subscription.getState(), SubscriptionState.CANCELLED);
+            assertEquals(subscription.getState(), EntitlementState.CANCELLED);
             assertNull(subscription.getCurrentPlan());
 
             assertListenerStatus();
@@ -199,7 +199,7 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
             assertEquals(subscription.getEndDate(), null);
             assertEquals(subscription.getCurrentPriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
             assertEquals(subscription.getCurrentPhase().getPhaseType(), PhaseType.TRIAL);
-            assertEquals(subscription.getState(), SubscriptionState.ACTIVE);
+            assertEquals(subscription.getState(), EntitlementState.ACTIVE);
             assertEquals(subscription.getCurrentPlan().getName(), "assault-rifle-monthly");
             assertEquals(subscription.getChargedThroughDate(), trialDate.plusDays(30));
 
@@ -214,7 +214,7 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
             assertEquals(subscription.getEndDate(), null);
             assertEquals(subscription.getCurrentPriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
             assertEquals(subscription.getCurrentPhase().getPhaseType(), PhaseType.EVERGREEN);
-            assertEquals(subscription.getState(), SubscriptionState.ACTIVE);
+            assertEquals(subscription.getState(), EntitlementState.ACTIVE);
             assertEquals(subscription.getCurrentPlan().getName(), "assault-rifle-monthly");
             assertEquals(subscription.getCurrentPhase().getName(), "assault-rifle-monthly-evergreen");
 
@@ -246,7 +246,7 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
             assertEquals(subscription.getEndDate(), null);
             assertEquals(subscription.getCurrentPriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
             assertEquals(subscription.getCurrentPhase().getPhaseType(), PhaseType.EVERGREEN);
-            assertEquals(subscription.getState(), SubscriptionState.ACTIVE);
+            assertEquals(subscription.getState(), EntitlementState.ACTIVE);
             assertEquals(subscription.getCurrentPlan().getName(), "assault-rifle-monthly");
 
             testListener.pushExpectedEvent(NextEvent.CHANGE);
@@ -261,7 +261,7 @@ public class TestMigration extends SubscriptionTestSuiteWithEmbeddedDB {
             assertEquals(subscription.getCurrentPriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
 
             assertEquals(subscription.getCurrentPhase().getPhaseType(), PhaseType.EVERGREEN);
-            assertEquals(subscription.getState(), SubscriptionState.ACTIVE);
+            assertEquals(subscription.getState(), EntitlementState.ACTIVE);
             assertEquals(subscription.getCurrentPlan().getName(), "shotgun-annual");
 
             assertListenerStatus();

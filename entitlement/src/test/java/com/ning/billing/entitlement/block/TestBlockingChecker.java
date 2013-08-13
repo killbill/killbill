@@ -67,18 +67,18 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
     }
 
     private void setStateBundle(final boolean bC, final boolean bE, final boolean bB) {
-        final BlockingState bundleState = new DefaultBlockingState(bundle.getId(), BlockingStateType.ACCOUNT,"state", "test-service", bC, bE, bB);
+        final BlockingState bundleState = new DefaultBlockingState(bundle.getId(), BlockingStateType.BUNDLE,"state", "test-service", bC, bE, bB, clock.getUTCNow());
         Mockito.when(bundle.getBlockingState()).thenReturn(bundleState);
         blockingStateDao.setBlockingState(bundleState, clock, internalCallContext);
     }
 
     private void setStateAccount(final boolean bC, final boolean bE, final boolean bB) {
-        final BlockingState accountState = new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, "state", "test-service", bC, bE, bB);
+        final BlockingState accountState = new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, "state", "test-service", bC, bE, bB, clock.getUTCNow());
         blockingStateDao.setBlockingState(accountState, clock, internalCallContext);
     }
 
     private void setStateSubscription(final boolean bC, final boolean bE, final boolean bB) {
-        final BlockingState subscriptionState = new DefaultBlockingState(subscription.getId(), BlockingStateType.SUBSCRIPTION, "state", "test-service", bC, bE, bB);
+        final BlockingState subscriptionState = new DefaultBlockingState(subscription.getId(), BlockingStateType.SUBSCRIPTION, "state", "test-service", bC, bE, bB, clock.getUTCNow());
         Mockito.when(subscription.getBlockingState()).thenReturn(subscriptionState);
         blockingStateDao.setBlockingState(subscriptionState, clock, internalCallContext);
     }
@@ -93,6 +93,7 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
         blockingChecker.checkBlockedBilling(subscription, internalCallContext);
 
         //BLOCKED SUBSCRIPTION
+        clock.addDays(1);
         setStateSubscription(true, false, false);
         blockingChecker.checkBlockedEntitlement(subscription, internalCallContext);
         blockingChecker.checkBlockedBilling(subscription, internalCallContext);
@@ -103,6 +104,7 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
             //Expected behavior
         }
 
+        clock.addDays(1);
         setStateSubscription(false, true, false);
         blockingChecker.checkBlockedChange(subscription, internalCallContext);
         blockingChecker.checkBlockedBilling(subscription, internalCallContext);
@@ -113,6 +115,7 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
             //Expected behavior
         }
 
+        clock.addDays(1);
         setStateSubscription(false, false, true);
         blockingChecker.checkBlockedChange(subscription, internalCallContext);
         blockingChecker.checkBlockedEntitlement(subscription, internalCallContext);
@@ -124,6 +127,7 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
         }
 
         //BLOCKED BUNDLE
+        clock.addDays(1);
         setStateSubscription(false, false, false);
         setStateBundle(true, false, false);
         blockingChecker.checkBlockedEntitlement(subscription, internalCallContext);
@@ -135,6 +139,7 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
             //Expected behavior
         }
 
+        clock.addDays(1);
         setStateBundle(false, true, false);
         blockingChecker.checkBlockedChange(subscription, internalCallContext);
         blockingChecker.checkBlockedBilling(subscription, internalCallContext);
@@ -145,6 +150,7 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
             //Expected behavior
         }
 
+        clock.addDays(1);
         setStateBundle(false, false, true);
         blockingChecker.checkBlockedChange(subscription, internalCallContext);
         blockingChecker.checkBlockedEntitlement(subscription, internalCallContext);
@@ -156,6 +162,7 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
         }
 
         //BLOCKED ACCOUNT
+        clock.addDays(1);
         setStateSubscription(false, false, false);
         setStateBundle(false, false, false);
         setStateAccount(true, false, false);
@@ -168,6 +175,7 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
             //Expected behavior
         }
 
+        clock.addDays(1);
         setStateAccount(false, true, false);
         blockingChecker.checkBlockedChange(subscription, internalCallContext);
         blockingChecker.checkBlockedBilling(subscription, internalCallContext);
@@ -178,6 +186,7 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
             //Expected behavior
         }
 
+        clock.addDays(1);
         setStateAccount(false, false, true);
         blockingChecker.checkBlockedChange(subscription, internalCallContext);
         blockingChecker.checkBlockedEntitlement(subscription, internalCallContext);
@@ -199,6 +208,7 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
         blockingChecker.checkBlockedBilling(bundle, internalCallContext);
 
         //BLOCKED BUNDLE
+        clock.addDays(1);
         setStateSubscription(false, false, false);
         setStateBundle(true, false, false);
         blockingChecker.checkBlockedEntitlement(bundle, internalCallContext);
@@ -210,6 +220,7 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
             //Expected behavior
         }
 
+        clock.addDays(1);
         setStateBundle(false, true, false);
         blockingChecker.checkBlockedChange(bundle, internalCallContext);
         blockingChecker.checkBlockedBilling(bundle, internalCallContext);
@@ -220,6 +231,7 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
             //Expected behavior
         }
 
+        clock.addDays(1);
         setStateBundle(false, false, true);
         blockingChecker.checkBlockedChange(bundle, internalCallContext);
         blockingChecker.checkBlockedEntitlement(bundle, internalCallContext);
@@ -231,6 +243,7 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
         }
 
         //BLOCKED ACCOUNT
+        clock.addDays(1);
         setStateSubscription(false, false, false);
         setStateBundle(false, false, false);
         setStateAccount(true, false, false);
@@ -243,6 +256,7 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
             //Expected behavior
         }
 
+        clock.addDays(1);
         setStateAccount(false, true, false);
         blockingChecker.checkBlockedChange(bundle, internalCallContext);
         blockingChecker.checkBlockedBilling(bundle, internalCallContext);
@@ -253,6 +267,7 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
             //Expected behavior
         }
 
+        clock.addDays(1);
         setStateAccount(false, false, true);
         blockingChecker.checkBlockedChange(bundle, internalCallContext);
         blockingChecker.checkBlockedEntitlement(bundle, internalCallContext);
@@ -264,9 +279,7 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
         }
     }
 
-    /*
 
-    STEPH_ENT
     @Test(groups = "fast")
     public void testAccountChecker() throws Exception {
         setStateAccount(false, false, false);
@@ -277,6 +290,7 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
         blockingChecker.checkBlockedBilling(account, internalCallContext);
 
         //BLOCKED ACCOUNT
+        clock.addDays(1);
         setStateSubscription(false, false, false);
         setStateBundle(false, false, false);
         setStateAccount(true, false, false);
@@ -289,6 +303,7 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
             //Expected behavior
         }
 
+        clock.addDays(1);
         setStateAccount(false, true, false);
         blockingChecker.checkBlockedChange(account, internalCallContext);
         blockingChecker.checkBlockedBilling(account, internalCallContext);
@@ -299,6 +314,7 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
             //Expected behavior
         }
 
+        clock.addDays(1);
         setStateAccount(false, false, true);
         blockingChecker.checkBlockedChange(account, internalCallContext);
         blockingChecker.checkBlockedEntitlement(account, internalCallContext);
@@ -309,6 +325,4 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
             //Expected behavior
         }
     }
-
-    */
 }

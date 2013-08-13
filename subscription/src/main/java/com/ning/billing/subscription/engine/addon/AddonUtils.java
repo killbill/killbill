@@ -26,7 +26,7 @@ import com.ning.billing.catalog.api.Product;
 import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.subscription.api.user.DefaultSubscriptionBase;
 import com.ning.billing.subscription.exceptions.SubscriptionBaseError;
-import com.ning.billing.subscription.api.user.SubscriptionState;
+import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 
 import com.google.inject.Inject;

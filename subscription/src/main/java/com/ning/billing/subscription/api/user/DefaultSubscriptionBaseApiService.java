@@ -267,7 +267,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         final DateTime requestedDate = (requestedDateWithMs != null) ? DefaultClock.truncateMs(requestedDateWithMs) : now;
 
         validateRequestedDate(subscription, now, requestedDate);
-        validateSubscriptionState(subscription);
+        validateEntitlementState(subscription);
 
         final PlanChangeResult planChangeResult = getPlanChangeResult(subscription, productName, term, priceList, requestedDate);
         final BillingActionPolicy policy = planChangeResult.getPolicy();
@@ -287,7 +287,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         final DateTime requestedDate = (requestedDateWithMs != null) ? DefaultClock.truncateMs(requestedDateWithMs) : now;
 
         validateRequestedDate(subscription, now, requestedDate);
-        validateSubscriptionState(subscription);
+        validateEntitlementState(subscription);
 
         final PlanChangeResult planChangeResult = getPlanChangeResult(subscription, productName, term, priceList, requestedDate);
 
@@ -425,7 +425,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         }
     }
 
-    private void validateSubscriptionState(final DefaultSubscriptionBase subscription) throws SubscriptionBaseApiException {
+    private void validateEntitlementState(final DefaultSubscriptionBase subscription) throws SubscriptionBaseApiException {
         final EntitlementState currentState = subscription.getState();
         if (currentState != EntitlementState.ACTIVE) {
             throw new SubscriptionBaseApiException(ErrorCode.SUB_CHANGE_NON_ACTIVE, subscription.getId(), currentState);

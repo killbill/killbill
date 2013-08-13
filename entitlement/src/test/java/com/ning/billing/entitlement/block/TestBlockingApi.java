@@ -48,12 +48,12 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         final boolean blockEntitlement = false;
         final boolean blockBilling = false;
 
-        final BlockingState state1 = new DefaultBlockingState(uuid, BlockingStateType.ACCOUNT,overdueStateName, service, blockChange, blockEntitlement, blockBilling);
+        final BlockingState state1 = new DefaultBlockingState(uuid, BlockingStateType.ACCOUNT,overdueStateName, service, blockChange, blockEntitlement, blockBilling, clock.getUTCNow());
         blockingInternalApi.setBlockingState(state1, internalCallContext);
         clock.setDeltaFromReality(1000 * 3600 * 24);
 
         final String overdueStateName2 = "NoReallyThisCantGoOn";
-        final BlockingState state2 = new DefaultBlockingState(uuid, BlockingStateType.ACCOUNT, overdueStateName2, service, blockChange, blockEntitlement, blockBilling);
+        final BlockingState state2 = new DefaultBlockingState(uuid, BlockingStateType.ACCOUNT, overdueStateName2, service, blockChange, blockEntitlement, blockBilling, clock.getUTCNow());
         blockingInternalApi.setBlockingState(state2, internalCallContext);
 
         final SubscriptionBaseBundle bundle = Mockito.mock(SubscriptionBaseBundle.class);
@@ -75,13 +75,13 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         final boolean blockEntitlement = false;
         final boolean blockBilling = false;
 
-        final BlockingState state1 = new DefaultBlockingState(uuid, BlockingStateType.ACCOUNT, overdueStateName, service, blockChange, blockEntitlement, blockBilling);
+        final BlockingState state1 = new DefaultBlockingState(uuid, BlockingStateType.ACCOUNT, overdueStateName, service, blockChange, blockEntitlement, blockBilling, clock.getUTCNow());
         blockingInternalApi.setBlockingState(state1, internalCallContext);
 
         clock.setDeltaFromReality(1000 * 3600 * 24);
 
         final String overdueStateName2 = "NoReallyThisCantGoOn";
-        final BlockingState state2 = new DefaultBlockingState(uuid, BlockingStateType.ACCOUNT, overdueStateName2, service, blockChange, blockEntitlement, blockBilling);
+        final BlockingState state2 = new DefaultBlockingState(uuid, BlockingStateType.ACCOUNT, overdueStateName2, service, blockChange, blockEntitlement, blockBilling, clock.getUTCNow());
         blockingInternalApi.setBlockingState(state2, internalCallContext);
 
         final SubscriptionBaseBundle bundle = Mockito.mock(SubscriptionBaseBundle.class);

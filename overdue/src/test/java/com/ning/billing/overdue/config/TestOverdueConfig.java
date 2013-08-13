@@ -31,7 +31,7 @@ public class TestOverdueConfig extends OverdueTestSuiteNoDB {
     @Test(groups = "fast")
     public void testParseConfig() throws Exception {
         final String xml = "<overdueConfig>" +
-                           "   <bundleOverdueStates>" +
+                           "   <accountOverdueStates>" +
                            "       <state name=\"OD1\">" +
                            "           <condition>" +
                            "               <timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
@@ -61,7 +61,7 @@ public class TestOverdueConfig extends OverdueTestSuiteNoDB {
                            "               <subject>ToTo</subject><templateName>Titi</templateName>" +
                            "           </enterStateEmailNotification>" +
                            "       </state>" +
-                           "   </bundleOverdueStates>" +
+                           "   </accountOverdueStates>" +
                            "</overdueConfig>";
         final InputStream is = new ByteArrayInputStream(xml.getBytes());
         final OverdueConfig c = XMLLoader.getObjectFromStreamNoValidation(is, OverdueConfig.class);

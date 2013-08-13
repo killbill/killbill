@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ning.billing.ErrorCode;
+import com.ning.billing.ObjectType;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.catalog.api.BillingActionPolicy;
@@ -44,7 +45,7 @@ import com.ning.billing.entitlement.dao.BlockingStateDao;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
-import com.ning.billing.subscription.api.user.SubscriptionState;
+import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
@@ -224,23 +225,25 @@ public class DefaultEntitlementApi implements EntitlementApi {
 
     @Override
     public void block(final UUID bundleId, final LocalDate effectiveDate, final CallContext context) throws EntitlementApiException {
-        final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(context);
-        final BlockingState currentState =  blockingStateDao.getBlockingStateForService(bundleId, EntitlementService.ENTITLEMENT_SERVICE_NAME, internalContext);
+
+        final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(bundleId, ObjectType.BUNDLE, context);
+        final BlockingState currentState =  blockingStateDao.getBlockingStateForService(bundleId, EntitlementService.ENTITLEMENT_SERVICE_NAME, contextWithValidAccountRecordId);
         if (currentState != null && currentState.getStateName().equals(ENT_STATE_BLOCKED)) {
             throw new EntitlementApiException(ErrorCode.ENT_ALREADY_BLOCKED, bundleId);
         }
-        blockingStateDao.setBlockingState(new DefaultBlockingState(bundleId, BlockingStateType.BUNDLE, ENT_STATE_BLOCKED, EntitlementService.ENTITLEMENT_SERVICE_NAME, true, true, true), clock, internalContext);
+        blockingStateDao.setBlockingState(new DefaultBlockingState(bundleId, BlockingStateType.BUNDLE, ENT_STATE_BLOCKED, EntitlementService.ENTITLEMENT_SERVICE_NAME, true, true, true, clock.getUTCNow()), clock, contextWithValidAccountRecordId);
     }
 
     @Override
     public void unblock(final UUID bundleId, final LocalDate effectiveDate, final CallContext context) throws EntitlementApiException {
-        final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(context);
-        final BlockingState currentState =  blockingStateDao.getBlockingStateForService(bundleId, EntitlementService.ENTITLEMENT_SERVICE_NAME, internalContext);
+
+        final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(bundleId, ObjectType.BUNDLE, context);
+        final BlockingState currentState =  blockingStateDao.getBlockingStateForService(bundleId, EntitlementService.ENTITLEMENT_SERVICE_NAME, contextWithValidAccountRecordId);
         if (currentState == null || currentState.getStateName().equals(ENT_STATE_CLEAR)) {
             // Nothing to do.
             return;
         }
-        blockingStateDao.setBlockingState(new DefaultBlockingState(bundleId, BlockingStateType.BUNDLE, ENT_STATE_CLEAR, EntitlementService.ENTITLEMENT_SERVICE_NAME, false, false, false), clock, internalContext);
+        blockingStateDao.setBlockingState(new DefaultBlockingState(bundleId, BlockingStateType.BUNDLE, ENT_STATE_CLEAR, EntitlementService.ENTITLEMENT_SERVICE_NAME, false, false, false, clock.getUTCNow()), clock, contextWithValidAccountRecordId);
     }
 
 

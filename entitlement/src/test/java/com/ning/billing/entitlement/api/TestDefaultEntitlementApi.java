@@ -1,5 +1,7 @@
 package com.ning.billing.entitlement.api;
 
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.List;
 
 import org.joda.time.LocalDate;
@@ -23,10 +25,13 @@ import static org.testng.Assert.assertNull;
 
 public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedDB {
 
+
     @Test(groups = "slow")
     public void testCreateEntitlementWithCheck() {
 
         try {
+
+
             final LocalDate initialDate = new LocalDate(2013, 8, 7);
             clock.setDay(initialDate);
 
@@ -198,6 +203,15 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
             final Entitlement telescopicEntitlement2 = entitlementApi.getEntitlementForId(telescopicEntitlement.getId(), callContext);
             assertEquals(telescopicEntitlement2.getState(), EntitlementState.BLOCKED);
 
+            // Check we can't block in a blocked state
+            try {
+                entitlementApi.block(baseEntitlement.getBundleId(), new LocalDate(clock.getUTCNow()), callContext);
+                Assert.fail("Should not have succeeded to block in a blocked state");
+            } catch (EntitlementApiException e) {
+                assertEquals(e.getCode(), ErrorCode.ENT_ALREADY_BLOCKED.getCode());
+            }
+
+
             final List<Entitlement> bundleEntitlements2 = entitlementApi.getAllEntitlementsForBundle(telescopicEntitlement2.getBundleId(), callContext);
             assertEquals(bundleEntitlements2.size(), 2);
             for (Entitlement cur : bundleEntitlements2) {
@@ -215,6 +229,9 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
             clock.addDays(3);
             entitlementApi.unblock(baseEntitlement.getBundleId(), new LocalDate(), callContext);
 
+            // Verify call is idempotent
+            entitlementApi.unblock(baseEntitlement.getBundleId(), new LocalDate(), callContext);
+
             // Verify blocking state
             final Entitlement baseEntitlement3 = entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
             assertEquals(baseEntitlement3.getState(), EntitlementState.ACTIVE);
@@ -227,6 +244,8 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
             for (Entitlement cur : bundleEntitlements3) {
                 assertEquals(cur.getState(), EntitlementState.ACTIVE);
             }
+
+            // STEPH_ENT wait for semantics to clarify and write the tests
         } catch (AccountApiException e) {
             Assert.fail("Test failed " + e.getMessage());
         } catch (EntitlementApiException e) {

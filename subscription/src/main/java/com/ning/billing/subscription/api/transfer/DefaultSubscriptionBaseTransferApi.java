@@ -52,7 +52,7 @@ import com.ning.billing.subscription.api.timeline.SubscriptionBaseRepairExceptio
 import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline;
 import com.ning.billing.subscription.api.timeline.SubscriptionBaseTimeline.ExistingEvent;
 
-import com.ning.billing.subscription.api.user.SubscriptionState;
+import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;

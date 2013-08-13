@@ -93,8 +93,8 @@ public class BlockingCalculator {
         final SortedSet<BillingEvent> billingEventsToRemove = new TreeSet<BillingEvent>();
 
         for (final UUID bundleId : bundleMap.keySet()) {
-            final List<BlockingState> blockingEvents = blockingApi.getBlockingHistoryForService(bundleId, OverdueService.OVERDUE_SERVICE_NAME, context);
-            blockingEvents.addAll(blockingApi.getBlockingHistoryForService(account.getId(), OverdueService.OVERDUE_SERVICE_NAME, context));
+            final List<BlockingState> blockingEvents = blockingApi.getBlockingHistory(bundleId, context);
+            blockingEvents.addAll(blockingApi.getBlockingHistory(account.getId(),context));
             final List<DisabledDuration> blockingDurations = createBlockingDurations(blockingEvents);
 
             for (final SubscriptionBase subscription : bundleMap.get(bundleId)) {

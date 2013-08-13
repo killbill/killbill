@@ -28,6 +28,7 @@ import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PriceListSet;
+import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.subscription.SubscriptionTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.svcapi.subscription.SubscriptionBillingApiException;
 
@@ -59,10 +60,10 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
             final DateTime future = clock.getUTCNow();
             testListener.pushExpectedEvent(NextEvent.CANCEL);
 
-            assertEquals(subscription.getLastActiveProduct(), prod);
-            assertEquals(subscription.getLastActivePriceList(), planSet);
-            assertEquals(subscription.getLastActiveBillingPeriod(), term.toString());
-            assertEquals(subscription.getLastActiveCategory(), "BASE");
+            assertEquals(subscription.getLastActiveProduct().getName(), prod);
+            assertEquals(subscription.getLastActivePriceList().getName(), planSet);
+            assertEquals(subscription.getLastActiveBillingPeriod(), term);
+            assertEquals(subscription.getLastActiveCategory(), ProductCategory.BASE);
 
 
             // CANCEL in trial period to get IMM policy
@@ -70,10 +71,10 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
             currentPhase = subscription.getCurrentPhase();
             testListener.isCompleted(3000);
 
-            assertEquals(subscription.getLastActiveProduct(), prod);
-            assertEquals(subscription.getLastActivePriceList(), planSet);
-            assertEquals(subscription.getLastActiveBillingPeriod(), term.toString());
-            assertEquals(subscription.getLastActiveCategory(), "BASE");
+            assertEquals(subscription.getLastActiveProduct().getName(), prod);
+            assertEquals(subscription.getLastActivePriceList().getName(), planSet);
+            assertEquals(subscription.getLastActiveBillingPeriod(), term);
+            assertEquals(subscription.getLastActiveCategory(), ProductCategory.BASE);
 
 
             assertNull(currentPhase);
@@ -116,10 +117,10 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
             subscriptionInternalApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate, internalCallContext);
             subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
 
-            assertEquals(subscription.getLastActiveProduct(), prod);
-            assertEquals(subscription.getLastActivePriceList(), planSet);
-            assertEquals(subscription.getLastActiveBillingPeriod(), term.toString());
-            assertEquals(subscription.getLastActiveCategory(), "BASE");
+            assertEquals(subscription.getLastActiveProduct().getName(), prod);
+            assertEquals(subscription.getLastActivePriceList().getName(), planSet);
+            assertEquals(subscription.getLastActiveBillingPeriod(), term);
+            assertEquals(subscription.getLastActiveCategory(), ProductCategory.BASE);
 
             // CANCEL
             testListener.setNonExpectedMode();
@@ -129,10 +130,10 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
             testListener.reset();
 
 
-            assertEquals(subscription.getLastActiveProduct(), prod);
-            assertEquals(subscription.getLastActivePriceList(), planSet);
-            assertEquals(subscription.getLastActiveBillingPeriod(), term.toString());
-            assertEquals(subscription.getLastActiveCategory(), "BASE");
+            assertEquals(subscription.getLastActiveProduct().getName(), prod);
+            assertEquals(subscription.getLastActivePriceList().getName(), planSet);
+            assertEquals(subscription.getLastActiveBillingPeriod(), term);
+            assertEquals(subscription.getLastActiveCategory(), ProductCategory.BASE);
 
             final DateTime futureEndDate = subscription.getFutureEndDate();
             Assert.assertNotNull(futureEndDate);
@@ -150,10 +151,10 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
             assertNull(currentPhase);
             testUtil.checkNextPhaseChange(subscription, 0, null);
 
-            assertEquals(subscription.getLastActiveProduct(), prod);
-            assertEquals(subscription.getLastActivePriceList(), planSet);
-            assertEquals(subscription.getLastActiveBillingPeriod(), term.toString());
-            assertEquals(subscription.getLastActiveCategory(), "BASE");
+            assertEquals(subscription.getLastActiveProduct().getName(), prod);
+            assertEquals(subscription.getLastActivePriceList().getName(), planSet);
+            assertEquals(subscription.getLastActiveBillingPeriod(), term);
+            assertEquals(subscription.getLastActiveCategory(), ProductCategory.BASE);
 
 
             assertListenerStatus();

@@ -49,7 +49,7 @@ import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.subscription.api.user.SubscriptionBaseTransition;
 import com.ning.billing.subscription.api.user.SubscriptionBuilder;
 import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
-import com.ning.billing.subscription.api.user.SubscriptionState;
+import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.subscription.api.user.SubscriptionStatusDryRun;
 import com.ning.billing.subscription.api.user.SubscriptionStatusDryRun.DryRunChangeReason;
 import com.ning.billing.subscription.api.user.SubscriptionBaseTransitionData;

@@ -18,7 +18,7 @@ import com.ning.billing.entitlement.api.Entitlement.EntitlementSourceType;
 import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.subscription.api.user.SubscriptionBaseApiException;
 import com.ning.billing.subscription.api.user.SubscriptionBaseTransition;
-import com.ning.billing.subscription.api.user.SubscriptionState;
+import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.entity.Entity;
 

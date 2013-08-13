@@ -39,7 +39,7 @@ import com.ning.billing.mock.MockSubscription;
 import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.subscription.api.SubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
-import com.ning.billing.subscription.api.user.SubscriptionState;
+import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;

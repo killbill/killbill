@@ -55,14 +55,26 @@ public class MockBlockingStateDao implements BlockingStateDao {
 
     @Override
     public List<BlockingState> getBlockingState(final UUID blockableId, final InternalTenantContext context) {
-        throw new UnsupportedOperationException();
+        final List<BlockingState> blockingStatesForId = blockingStates.get(blockableId);
+        if (blockingStatesForId == null) {
+            return new ArrayList<BlockingState>();
+        }
+
+        final Map<String, BlockingState> tmp  = new HashMap<String, BlockingState>();
+        for (BlockingState cur : blockingStatesForId) {
+            final BlockingState curStateForService = tmp.get(cur.getService());
+            if (curStateForService == null || curStateForService.getCreatedDate().compareTo(cur.getCreatedDate()) < 0) {
+                tmp.put(cur.getService(), cur);
+            }
+        }
+        return new ArrayList<BlockingState>(tmp.values());
     }
 
     @Override
     public List<BlockingState> getBlockingHistoryForService(final UUID overdueableId, final String serviceName, final InternalTenantContext context) {
         final List<BlockingState> states = blockingStates.get(overdueableId);
         if (states == null) {
-            return null;
+            return new ArrayList<BlockingState>();
         }
         final ImmutableList<BlockingState> filtered = ImmutableList.<BlockingState>copyOf(Collections2.filter(states, new Predicate<BlockingState>() {
             @Override
@@ -90,7 +102,7 @@ public class MockBlockingStateDao implements BlockingStateDao {
         blockingStates.get(state.getBlockedId()).add(state);
     }
 
-    public synchronized <T extends Blockable> void setBlockingStates(final UUID blockedId, final List<BlockingState> states) {
+    public synchronized void setBlockingStates(final UUID blockedId, final List<BlockingState> states) {
         blockingStates.put(blockedId, states);
     }
 

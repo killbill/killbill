@@ -39,7 +39,7 @@ import com.ning.billing.subscription.api.user.DefaultSubscriptionBase;
 import com.ning.billing.subscription.api.user.SubscriptionBaseBundle;
 import com.ning.billing.subscription.api.SubscriptionBaseTransitionType;
 import com.ning.billing.subscription.api.SubscriptionBase;
-import com.ning.billing.subscription.api.user.SubscriptionState;
+import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -77,7 +77,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
             assertEquals(subscription.getEndDate(), null);
             assertEquals(subscription.getCurrentPriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
             assertEquals(subscription.getCurrentPhase().getPhaseType(), PhaseType.EVERGREEN);
-            assertEquals(subscription.getState(), SubscriptionState.ACTIVE);
+            assertEquals(subscription.getState(), EntitlementState.ACTIVE);
             assertEquals(subscription.getCurrentPlan().getName(), "shotgun-annual");
             assertEquals(subscription.getChargedThroughDate(), startDate.plusYears(1));
             // WE should see MIGRATE_ENTITLEMENT and then MIGRATE_BILLING in the future
@@ -355,7 +355,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         final String aoProduct1 = "Telescopic-Scope";
         final BillingPeriod aoTerm1 = BillingPeriod.MONTHLY;
         final DefaultSubscriptionBase aoSubscription1 = testUtil.createSubscription(bundle, aoProduct1, aoTerm1, basePriceList);
-        assertEquals(aoSubscription1.getState(), SubscriptionState.ACTIVE);
+        assertEquals(aoSubscription1.getState(), EntitlementState.ACTIVE);
 
         // MOVE ANOTHER 25 DAYS AND CREATE AO2 [ BP STILL IN TRIAL]
         // LASER-SCOPE IS SUBSCRIPTION ALIGN SO EVERGREN WILL ONLY START IN A MONTH
@@ -363,7 +363,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         final String aoProduct2 = "Laser-Scope";
         final BillingPeriod aoTerm2 = BillingPeriod.MONTHLY;
         final DefaultSubscriptionBase aoSubscription2 = testUtil.createSubscription(bundle, aoProduct2, aoTerm2, basePriceList);
-        assertEquals(aoSubscription2.getState(), SubscriptionState.ACTIVE);
+        assertEquals(aoSubscription2.getState(), EntitlementState.ACTIVE);
 
         // MOVE AFTER TRIAL AND AO DISCOUNT PHASE [LASER SCOPE STILL IN DISCOUNT]
         testListener.pushExpectedEvent(NextEvent.PHASE);
@@ -449,7 +449,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         final String aoProduct1 = "Telescopic-Scope";
         final BillingPeriod aoTerm1 = BillingPeriod.MONTHLY;
         final DefaultSubscriptionBase aoSubscription1 = testUtil.createSubscription(bundle, aoProduct1, aoTerm1, basePriceList);
-        assertEquals(aoSubscription1.getState(), SubscriptionState.ACTIVE);
+        assertEquals(aoSubscription1.getState(), EntitlementState.ACTIVE);
 
         testListener.pushExpectedEvent(NextEvent.PHASE);
         testListener.pushExpectedEvent(NextEvent.PHASE);

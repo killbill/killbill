@@ -322,7 +322,7 @@ public class MockAccountBuilder {
 
             @Override
             public BlockingState getBlockingState() {
-                return  DefaultBlockingState.getClearState(BlockingStateType.ACCOUNT);
+                return  null; // STEPH_ENT do we need it ? DefaultBlockingState.getClearState(BlockingStateType.ACCOUNT, );
             }
 
             @Override

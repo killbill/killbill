@@ -43,7 +43,7 @@ import com.ning.billing.subscription.events.SubscriptionBaseEvent;
 import com.ning.billing.subscription.events.SubscriptionBaseEvent.EventType;
 import com.ning.billing.subscription.events.user.ApiEventBuilder;
 import com.ning.billing.subscription.events.user.ApiEventCancel;
-import com.ning.billing.subscription.api.user.SubscriptionState;
+import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.clock.Clock;

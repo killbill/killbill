@@ -29,7 +29,7 @@ import com.ning.billing.entitlement.api.DefaultEntitlement;
 import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.subscription.api.SubscriptionBase;
-import com.ning.billing.subscription.api.user.SubscriptionState;
+import com.ning.billing.entitlement.api.Entitlement.EntitlementState;
 import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 
 import static junit.framework.Assert.assertTrue;
@@ -41,7 +41,7 @@ public class TestOverdueWithSubscriptionCancellation extends TestOverdueBase {
     @Override
     public String getOverdueConfig() {
         final String configXml = "<overdueConfig>" +
-                                 "   <bundleOverdueStates>" +
+                                 "   <accountOverdueStates>" +
                                  "       <state name=\"OD1\">" +
                                  "           <condition>" +
                                  "               <timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
@@ -56,7 +56,7 @@ public class TestOverdueWithSubscriptionCancellation extends TestOverdueBase {
                                  "               <unit>DAYS</unit><number>5</number>" +
                                  "           </autoReevaluationInterval>" +
                                  "       </state>" +
-                                 "   </bundleOverdueStates>" +
+                                 "   </accountOverdueStates>" +
                                  "</overdueConfig>";
         return configXml;
     }

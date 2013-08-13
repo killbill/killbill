@@ -51,7 +51,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
     @Override
     public String getOverdueConfig() {
         final String configXml = "<overdueConfig>" +
-                                 "   <bundleOverdueStates>" +
+                                 "   <accountOverdueStates>" +
                                  "       <state name=\"OD3\">" +
                                  "           <condition>" +
                                  "               <timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
@@ -91,7 +91,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
                                  "               <unit>DAYS</unit><number>5</number>" +
                                  "           </autoReevaluationInterval>" +
                                  "       </state>" +
-                                 "   </bundleOverdueStates>" +
+                                 "   </accountOverdueStates>" +
                                  "</overdueConfig>";
 
         return configXml;

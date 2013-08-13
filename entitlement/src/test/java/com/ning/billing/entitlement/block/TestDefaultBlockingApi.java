@@ -37,19 +37,17 @@ public class TestDefaultBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         getDBI().withHandle(new HandleCallback<Void>() {
             @Override
             public Void withHandle(final Handle handle) throws Exception {
-                handle.execute("DROP TABLE IF EXISTS bundles;\n" +
-                        "CREATE TABLE bundles (\n" +
-                        "    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,\n" +
-                        "    id char(36) NOT NULL,\n" +
-                        "    external_key varchar(64) NOT NULL,\n" +
-                        "    account_id char(36) NOT NULL,\n" +
-                        "    last_sys_update_date datetime,\n" +
-                        "    account_record_id int(11) unsigned default null,\n" +
-                        "    tenant_record_id int(11) unsigned default null,\n" +
-                        "    PRIMARY KEY(record_id)\n" +
-                        ") ENGINE=innodb;");
-                handle.execute("insert into bundles (id, external_key, account_id, account_record_id) values (?, 'foo', ?, ?)",
-                        bundleId.toString(), UUID.randomUUID().toString(), internalCallContext.getAccountRecordId());
+                handle.execute("insert into bundles (id, external_key, account_id, created_by, created_date, updated_by, updated_date, account_record_id, tenant_record_id) " +
+                               "values (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                        bundleId.toString(),
+                        "foo",
+                        UUID.randomUUID().toString(),
+                        "zozo",
+                        internalCallContext.getCreatedDate().toDate(),
+                        "zozo",
+                        internalCallContext.getCreatedDate().toDate(),
+                        internalCallContext.getAccountRecordId(),
+                        internalCallContext.getTenantRecordId());
                 return null;
             }
         });
