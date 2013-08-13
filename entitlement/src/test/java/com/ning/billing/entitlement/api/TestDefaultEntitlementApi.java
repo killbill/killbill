@@ -6,6 +6,7 @@ import org.joda.time.LocalDate;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -165,4 +166,71 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         }
     }
 
+
+    @Test(groups = "slow")
+    public void testBlockUnblock() {
+
+        try {
+
+            final LocalDate initialDate = new LocalDate(2013, 8, 7);
+            clock.setDay(initialDate);
+
+            final Account account = accountApi.createAccount(getAccountData(7), callContext);
+
+            final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+
+            // Create entitlement and check each field
+            final Entitlement baseEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), callContext);
+
+            clock.addDays(1);
+
+            final PlanPhaseSpecifier spec1 = new PlanPhaseSpecifier("Telescopic-Scope", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+            final Entitlement telescopicEntitlement = entitlementApi.addEntitlement(baseEntitlement.getBundleId(), spec1, callContext);
+
+            // Block all entitlement in the bundle
+            clock.addDays(5);
+            entitlementApi.block(baseEntitlement.getBundleId(), new LocalDate(clock.getUTCNow()), callContext);
+
+            // Verify blocking state
+            final Entitlement baseEntitlement2 = entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
+            assertEquals(baseEntitlement2.getState(), EntitlementState.BLOCKED);
+
+            final Entitlement telescopicEntitlement2 = entitlementApi.getEntitlementForId(telescopicEntitlement.getId(), callContext);
+            assertEquals(telescopicEntitlement2.getState(), EntitlementState.BLOCKED);
+
+            final List<Entitlement> bundleEntitlements2 = entitlementApi.getAllEntitlementsForBundle(telescopicEntitlement2.getBundleId(), callContext);
+            assertEquals(bundleEntitlements2.size(), 2);
+            for (Entitlement cur : bundleEntitlements2) {
+                assertEquals(cur.getState(), EntitlementState.BLOCKED);
+            }
+
+            // Try to add an ADD_ON, it should fail
+            try {
+                final PlanPhaseSpecifier spec3 = new PlanPhaseSpecifier("Telescopic-Scope", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+                final Entitlement telescopicEntitlement3 = entitlementApi.addEntitlement(baseEntitlement.getBundleId(), spec1, callContext);
+            } catch (EntitlementApiException e) {
+                assertEquals(e.getCode(), ErrorCode.BLOCK_BLOCKED_ACTION.getCode());
+            }
+
+            clock.addDays(3);
+            entitlementApi.unblock(baseEntitlement.getBundleId(), new LocalDate(), callContext);
+
+            // Verify blocking state
+            final Entitlement baseEntitlement3 = entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
+            assertEquals(baseEntitlement3.getState(), EntitlementState.ACTIVE);
+
+            final Entitlement telescopicEntitlement3 = entitlementApi.getEntitlementForId(telescopicEntitlement.getId(), callContext);
+            assertEquals(telescopicEntitlement3.getState(), EntitlementState.ACTIVE);
+
+            final List<Entitlement> bundleEntitlements3 = entitlementApi.getAllEntitlementsForBundle(telescopicEntitlement2.getBundleId(), callContext);
+            assertEquals(bundleEntitlements3.size(), 2);
+            for (Entitlement cur : bundleEntitlements3) {
+                assertEquals(cur.getState(), EntitlementState.ACTIVE);
+            }
+        } catch (AccountApiException e) {
+            Assert.fail("Test failed " + e.getMessage());
+        } catch (EntitlementApiException e) {
+            Assert.fail("Test failed " + e.getMessage());
+        }
+    }
 }

@@ -43,12 +43,19 @@ limit 1
 
 getBlockingState() ::= <<
  select
- <allTableFields()>
+ <allTableFields("t.")>
  from
- <tableName()>
- where blockable_id = :blockableId
- <AND_CHECK_TENANT()>
- order by record_id asc
+ <tableName()> t
+ join (
+   select max(record_id) record_id
+         , service
+         from blocking_states
+         where blockable_id = :blockableId
+         <AND_CHECK_TENANT()>
+         group by service
+ ) tmp
+ on t.record_id = tmp.record_id
+ order by t.record_id asc
  ;
  >>
 

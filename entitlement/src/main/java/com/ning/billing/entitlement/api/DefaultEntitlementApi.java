@@ -223,7 +223,7 @@ public class DefaultEntitlementApi implements EntitlementApi {
     }
 
     @Override
-    public void block(final UUID bundleId, final String serviceName, final LocalDate effectiveDate, final CallContext context) throws EntitlementApiException {
+    public void block(final UUID bundleId, final LocalDate effectiveDate, final CallContext context) throws EntitlementApiException {
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(context);
         final BlockingState currentState =  blockingStateDao.getBlockingStateForService(bundleId, EntitlementService.ENTITLEMENT_SERVICE_NAME, internalContext);
         if (currentState != null && currentState.getStateName().equals(ENT_STATE_BLOCKED)) {
@@ -233,7 +233,7 @@ public class DefaultEntitlementApi implements EntitlementApi {
     }
 
     @Override
-    public void unblock(final UUID bundleId, final String serviceName, final LocalDate effectiveDate, final CallContext context) throws EntitlementApiException {
+    public void unblock(final UUID bundleId, final LocalDate effectiveDate, final CallContext context) throws EntitlementApiException {
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(context);
         final BlockingState currentState =  blockingStateDao.getBlockingStateForService(bundleId, EntitlementService.ENTITLEMENT_SERVICE_NAME, internalContext);
         if (currentState == null || currentState.getStateName().equals(ENT_STATE_CLEAR)) {
