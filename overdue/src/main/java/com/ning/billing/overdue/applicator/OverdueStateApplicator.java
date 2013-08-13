@@ -33,6 +33,7 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.bus.api.PersistentBus;
 import com.ning.billing.catalog.api.ActionPolicy;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.overdue.OverdueCancellationPolicy;
 import com.ning.billing.subscription.api.user.SubscriptionUserApiException;
 import com.ning.billing.subscription.api.user.Subscription;
 import com.ning.billing.subscription.api.user.SubscriptionBundle;
@@ -41,7 +42,6 @@ import com.ning.billing.entitlement.api.BlockingApiException;
 import com.ning.billing.entitlement.api.Type;
 import com.ning.billing.ovedue.notification.OverdueCheckPoster;
 import com.ning.billing.overdue.OverdueApiException;
-import com.ning.billing.overdue.OverdueCancellationPolicicy;
 import com.ning.billing.overdue.OverdueService;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.config.api.BillingState;
@@ -203,7 +203,7 @@ public class OverdueStateApplicator<T extends Blockable> {
     }
 
     private void cancelSubscriptionsIfRequired(final T blockable, final OverdueState<T> nextOverdueState, final InternalCallContext context) throws OverdueException {
-        if (nextOverdueState.getSubscriptionCancellationPolicy() == OverdueCancellationPolicicy.NONE) {
+        if (nextOverdueState.getSubscriptionCancellationPolicy() == OverdueCancellationPolicy.NONE) {
             return;
         }
         try {

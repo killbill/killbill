@@ -28,7 +28,7 @@
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.1.0" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.1.0" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-core:2.1.0" level="project" />
-    <orderEntry type="library" name="Maven: com.ning.billing:killbill-api:0.4.0" level="project" />
+    <orderEntry type="library" name="Maven: com.ning.billing:killbill-api:0.4.1-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: joda-time:joda-time:2.0" level="project" />
     <orderEntry type="module" module-name="killbill-internal-api" />
     <orderEntry type="library" name="Maven: com.ning.billing.plugin:killbill-plugin-api-payment:0.3.0" level="project" />
@@ -54,6 +54,9 @@
     <orderEntry type="library" name="Maven: org.apache.commons:commons-email:1.2" level="project" />
     <orderEntry type="library" name="Maven: javax.mail:mail:1.4.1" level="project" />
     <orderEntry type="library" name="Maven: javax.activation:activation:1.1" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.shiro:shiro-core:1.2.2" level="project" />
+    <orderEntry type="library" name="Maven: commons-beanutils:commons-beanutils:1.8.3" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.shiro:shiro-guice:1.2.2" level="project" />
     <orderEntry type="module" module-name="killbill-beatrix" />
     <orderEntry type="module" module-name="killbill-catalog" />
     <orderEntry type="module" module-name="killbill-entitlement" />
@@ -63,8 +66,6 @@
     <orderEntry type="module" module-name="killbill-payment" />
     <orderEntry type="module" module-name="killbill-subscription" />
     <orderEntry type="module" module-name="killbill-tenant" />
-    <orderEntry type="library" name="Maven: org.apache.shiro:shiro-core:1.2.1" level="project" />
-    <orderEntry type="library" name="Maven: commons-beanutils:commons-beanutils:1.8.3" level="project" />
     <orderEntry type="module" module-name="killbill-usage" />
     <orderEntry type="library" name="Maven: commons-io:commons-io:2.1" level="project" />
     <orderEntry type="module" module-name="killbill-beatrix" scope="TEST" production-on-test="" />
@@ -121,7 +122,7 @@
     <orderEntry type="library" scope="PROVIDED" name="Maven: javax.servlet:javax.servlet-api:3.0.1" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: mysql:mysql-connector-mxj:5.0.12" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: mysql:mysql-connector-mxj-db-files:5.0.12" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.shiro:shiro-web:1.2.1" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.shiro:shiro-web:1.2.2" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.eclipse.jetty:jetty-deploy:8.1.11.v20130520" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.eclipse.jetty:jetty-webapp:8.1.11.v20130520" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.eclipse.jetty:jetty-xml:8.1.11.v20130520" level="project" />

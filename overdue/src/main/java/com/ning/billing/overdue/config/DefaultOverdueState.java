@@ -29,7 +29,7 @@ import com.ning.billing.catalog.api.TimeUnit;
 import com.ning.billing.entitlement.api.Blockable;
 import com.ning.billing.overdue.EmailNotification;
 import com.ning.billing.overdue.OverdueApiException;
-import com.ning.billing.overdue.OverdueCancellationPolicicy;
+import com.ning.billing.overdue.OverdueCancellationPolicy;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.util.config.catalog.ValidatingConfig;
 import com.ning.billing.util.config.catalog.ValidationError;
@@ -57,7 +57,7 @@ public class DefaultOverdueState<T extends Blockable> extends ValidatingConfig<O
     private Boolean disableEntitlement = false;
 
     @XmlElement(required = false, name = "subscriptionCancellationPolicy")
-    private OverdueCancellationPolicicy subscriptionCancellationPolicy = OverdueCancellationPolicicy.NONE;
+    private OverdueCancellationPolicy subscriptionCancellationPolicy = OverdueCancellationPolicy.NONE;
 
     @XmlElement(required = false, name = "isClearState")
     private Boolean isClearState = false;
@@ -96,7 +96,7 @@ public class DefaultOverdueState<T extends Blockable> extends ValidatingConfig<O
     }
 
     @Override
-    public OverdueCancellationPolicicy getSubscriptionCancellationPolicy() {
+    public OverdueCancellationPolicy getSubscriptionCancellationPolicy() {
         return subscriptionCancellationPolicy;
     }
 
@@ -133,7 +133,7 @@ public class DefaultOverdueState<T extends Blockable> extends ValidatingConfig<O
         return this;
     }
 
-    public DefaultOverdueState<T> setSubscriptionCancellationPolicy(final OverdueCancellationPolicicy policy) {
+    public DefaultOverdueState<T> setSubscriptionCancellationPolicy(final OverdueCancellationPolicy policy) {
         this.subscriptionCancellationPolicy = policy;
         return this;
     }
