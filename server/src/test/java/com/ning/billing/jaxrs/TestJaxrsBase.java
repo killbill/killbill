@@ -29,6 +29,9 @@ import javax.servlet.Servlet;
 import com.ning.billing.DBTestingHelper;
 import com.ning.billing.commons.embeddeddb.EmbeddedDB;
 import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
+
+import org.apache.shiro.web.env.EnvironmentLoaderListener;
+import org.apache.shiro.web.servlet.ShiroFilter;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.joda.time.LocalDate;
 import org.skife.config.ConfigSource;
@@ -75,6 +78,7 @@ import com.ning.billing.util.glue.ExportModule;
 import com.ning.billing.util.glue.NonEntityDaoModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.RecordIdModule;
+import com.ning.billing.util.glue.SecurityModule;
 import com.ning.billing.util.glue.TagStoreModule;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
@@ -85,6 +89,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Module;
 
 import static org.testng.Assert.assertNotNull;
@@ -222,6 +227,7 @@ public class TestJaxrsBase extends KillbillClient {
             install(new UsageModule(configSource));
             install(new RecordIdModule());
             installClock();
+            install(new SecurityModule());
         }
     }
 
@@ -234,6 +240,8 @@ public class TestJaxrsBase extends KillbillClient {
         busHandler.reset();
         clock.resetDeltaFromReality();
         clock.setDay(new LocalDate(2012, 8, 25));
+
+        loginAsAdmin();
 
         // Recreate the tenant (tables have been cleaned-up)
         createTenant(DEFAULT_API_KEY, DEFAULT_API_SECRET);
@@ -288,13 +296,16 @@ public class TestJaxrsBase extends KillbillClient {
         return new Iterable<EventListener>() {
             @Override
             public Iterator<EventListener> iterator() {
-                return ImmutableList.<EventListener>of(listener).iterator();
+                // Note! This needs to be in sync with web.xml
+                return ImmutableList.<EventListener>of(listener,
+                                                       new EnvironmentLoaderListener()).iterator();
             }
         };
     }
 
     protected Map<FilterHolder, String> getFilters() {
-        return new HashMap<FilterHolder, String>();
+        // Note! This needs to be in sync with web.xml
+        return ImmutableMap.<FilterHolder, String>of(new FilterHolder(new ShiroFilter()), "/*");
     }
 
     @AfterSuite(groups = "slow")

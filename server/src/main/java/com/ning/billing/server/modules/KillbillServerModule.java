@@ -65,6 +65,7 @@ import com.ning.billing.util.glue.GlobalLockerModule;
 import com.ning.billing.util.glue.NonEntityDaoModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.RecordIdModule;
+import com.ning.billing.util.glue.SecurityModule;
 import com.ning.billing.util.glue.TagStoreModule;
 
 import com.google.inject.AbstractModule;
@@ -146,6 +147,7 @@ public class KillbillServerModule extends AbstractModule {
         install(new DefaultOSGIModule(configSource));
         install(new UsageModule(configSource));
         install(new RecordIdModule());
+        install(new SecurityModule());
 
         installClock();
     }

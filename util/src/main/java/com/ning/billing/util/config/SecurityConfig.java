@@ -14,16 +14,16 @@
  * under the License.
  */
 
-package com.ning.billing.util.security;
+package com.ning.billing.util.config;
 
-import org.apache.shiro.aop.AnnotationResolver;
-import org.apache.shiro.authz.aop.AuthorizingAnnotationMethodInterceptor;
+import org.skife.config.Config;
+import org.skife.config.Default;
+import org.skife.config.Description;
 
-import com.ning.billing.security.api.SecurityApi;
+public interface SecurityConfig extends KillbillConfig {
 
-public class PermissionAnnotationMethodInterceptor extends AuthorizingAnnotationMethodInterceptor {
-
-    public PermissionAnnotationMethodInterceptor(final SecurityApi securityApi, final AnnotationResolver resolver) {
-        super(new PermissionAnnotationHandler(securityApi), resolver);
-    }
+    @Config("killbill.security.shiroResourcePath")
+    @Default("classpath:shiro.ini")
+    @Description("Path to the shiro.ini file (classpath, url or file resource)")
+    public String getShiroResourcePath();
 }

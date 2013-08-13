@@ -22,7 +22,12 @@ import java.lang.reflect.Method;
 import org.apache.shiro.aop.AnnotationMethodInterceptor;
 import org.apache.shiro.aop.AnnotationResolver;
 import org.apache.shiro.guice.aop.ShiroAopModule;
+import org.skife.config.ConfigSource;
+import org.skife.config.ConfigurationObjectFactory;
+import org.skife.config.SimplePropertyConfigSource;
 
+import com.ning.billing.security.api.SecurityApi;
+import com.ning.billing.util.config.SecurityConfig;
 import com.ning.billing.util.security.AnnotationHierarchicalResolver;
 import com.ning.billing.util.security.AopAllianceMethodInterceptorAdapter;
 import com.ning.billing.util.security.PermissionAnnotationMethodInterceptor;
@@ -34,6 +39,36 @@ public class SecurityModule extends ShiroAopModule {
 
     private final AnnotationHierarchicalResolver resolver = new AnnotationHierarchicalResolver();
 
+    private final ConfigSource configSource;
+
+    private SecurityConfig securityConfig;
+    private SecurityApi securityApi;
+
+    public SecurityModule() {
+        this(new SimplePropertyConfigSource(System.getProperties()));
+    }
+
+    public SecurityModule(final ConfigSource configSource) {
+        super();
+        this.configSource = configSource;
+    }
+
+    // LAME - the configure method is final in ShiroAopModule so we piggy back configureInterceptors
+    private void doConfigure() {
+        installConfig();
+        installSecurityApi();
+    }
+
+    private void installConfig() {
+        securityConfig = new ConfigurationObjectFactory(configSource).build(SecurityConfig.class);
+        bind(SecurityConfig.class).toInstance(securityConfig);
+    }
+
+    private void installSecurityApi() {
+        securityApi = new SecurityApiProvider(securityConfig).get();
+        bind(SecurityApi.class).toInstance(securityApi);
+    }
+
     @Override
     protected AnnotationResolver createAnnotationResolver() {
         return resolver;
@@ -41,9 +76,11 @@ public class SecurityModule extends ShiroAopModule {
 
     @Override
     protected void configureInterceptors(final AnnotationResolver resolver) {
-        super.configureInterceptors(resolver);
+        // HACK
+        doConfigure();
 
-        bindShiroInterceptorWithHierarchy(new PermissionAnnotationMethodInterceptor(resolver));
+        super.configureInterceptors(resolver);
+        bindShiroInterceptorWithHierarchy(new PermissionAnnotationMethodInterceptor(securityApi, resolver));
     }
 
     // Similar to bindShiroInterceptor but will look for annotations in the class hierarchy

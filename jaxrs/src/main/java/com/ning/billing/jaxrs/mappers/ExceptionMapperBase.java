@@ -73,6 +73,19 @@ public abstract class ExceptionMapperBase {
                        .build();
     }
 
+    protected Response buildAuthorizationErrorResponse(final Exception e, final UriInfo uriInfo) {
+        // Log the full stacktrace
+        log.warn("Authorization error", e);
+        return buildAuthorizationErrorResponse(exceptionToString(e), uriInfo);
+    }
+
+    private Response buildAuthorizationErrorResponse(final String error, final UriInfo uriInfo) {
+        return Response.status(Status.UNAUTHORIZED) // TODO Forbidden?
+                       .entity(error)
+                       .type(MediaType.TEXT_PLAIN_TYPE)
+                       .build();
+    }
+
     protected Response buildInternalErrorResponse(final Exception e, final UriInfo uriInfo) {
         // Log the full stacktrace
         log.warn("Internal error", e);

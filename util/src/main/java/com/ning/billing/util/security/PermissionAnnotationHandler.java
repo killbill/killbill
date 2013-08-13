@@ -23,15 +23,24 @@ import java.lang.annotation.Annotation;
 
 import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.authz.aop.AuthorizingAnnotationHandler;
-import org.apache.shiro.subject.Subject;
 
-import com.ning.billing.security.Logical;
+import com.ning.billing.security.Permission;
 import com.ning.billing.security.RequiresPermissions;
+import com.ning.billing.security.SecurityApiException;
+import com.ning.billing.security.api.SecurityApi;
+import com.ning.billing.util.callcontext.DefaultTenantContext;
+import com.ning.billing.util.callcontext.TenantContext;
+
+import com.google.common.collect.ImmutableList;
 
 public class PermissionAnnotationHandler extends AuthorizingAnnotationHandler {
 
-    public PermissionAnnotationHandler() {
+    private final TenantContext context = new DefaultTenantContext(null);
+    private final SecurityApi securityApi;
+
+    public PermissionAnnotationHandler(final SecurityApi securityApi) {
         super(RequiresPermissions.class);
+        this.securityApi = securityApi;
     }
 
     public void assertAuthorized(final Annotation annotation) throws AuthorizationException {
@@ -40,28 +49,15 @@ public class PermissionAnnotationHandler extends AuthorizingAnnotationHandler {
         }
 
         final RequiresPermissions requiresPermissions = (RequiresPermissions) annotation;
-        final String[] permissions = new String[requiresPermissions.value().length];
-        for (int i = 0; i < permissions.length; i++) {
-            permissions[i] = requiresPermissions.value()[i].toString();
-        }
-
-        final Subject subject = getSubject();
-        if (permissions.length == 1) {
-            subject.checkPermission(permissions[0]);
-        } else if (Logical.AND.equals(requiresPermissions.logical())) {
-            subject.checkPermissions(permissions);
-        } else if (Logical.OR.equals(requiresPermissions.logical())) {
-            boolean hasAtLeastOnePermission = false;
-            for (final String permission : permissions) {
-                if (subject.isPermitted(permission)) {
-                    hasAtLeastOnePermission = true;
-                    break;
-                }
-            }
-
-            // Cause the exception if none match
-            if (!hasAtLeastOnePermission) {
-                getSubject().checkPermission(permissions[0]);
+        try {
+            securityApi.checkCurrentUserPermissions(ImmutableList.<Permission>copyOf(requiresPermissions.value()), requiresPermissions.logical(), context);
+        } catch (SecurityApiException e) {
+            if (e.getCause() != null && e.getCause() instanceof AuthorizationException) {
+                throw (AuthorizationException) e.getCause();
+            } else if (e.getCause() != null) {
+                throw new AuthorizationException(e.getCause());
+            } else {
+                throw new AuthorizationException(e);
             }
         }
     }

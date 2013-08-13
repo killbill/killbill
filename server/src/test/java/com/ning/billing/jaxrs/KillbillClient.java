@@ -67,6 +67,8 @@ import com.ning.http.client.AsyncCompletionHandler;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
 import com.ning.http.client.ListenableFuture;
+import com.ning.http.client.Realm;
+import com.ning.http.client.Realm.AuthScheme;
 import com.ning.http.client.Response;
 import com.ning.jetty.core.CoreConfig;
 
@@ -75,6 +77,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.TypeLiteral;
 
 import static com.ning.billing.jaxrs.resources.JaxrsResource.ACCOUNTS;
 import static com.ning.billing.jaxrs.resources.JaxrsResource.BUNDLES;
@@ -109,6 +112,10 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
     protected String DEFAULT_API_SECRET = UUID.randomUUID().toString();
     protected String apiKey = DEFAULT_API_KEY;
     protected String apiSecret = DEFAULT_API_SECRET;
+
+    // RBAC information, if enabled
+    protected String username = null;
+    protected String password = null;
 
     // Context information to be passed around
     protected static final String createdBy = "Toto";
@@ -162,6 +169,40 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         final Response response = doPost(uri, null, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
         return response.getHeader("Location");
+    }
+
+    //
+    // SECURITY UTILITIES
+    //
+
+    protected void loginAsAdmin() {
+        this.username = "tester";
+        this.password = "tester";
+    }
+
+    protected void logout() {
+        this.username = null;
+        this.password = null;
+    }
+
+    protected List<String> getPermissions(@Nullable final String username, @Nullable final String password) throws Exception {
+        final String oldUsername = this.username;
+        final String oldPassword = this.password;
+
+        this.username = username;
+        this.password = password;
+
+        final Response response = doGet(JaxrsResource.SECURITY_PATH + "/permissions", DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+
+        this.username = oldUsername;
+        this.password = oldPassword;
+
+        final String baseJson = response.getResponseBody();
+        final List<String> objFromJson = mapper.readValue(baseJson, new TypeReference<List<String>>() {});
+        Assert.assertNotNull(objFromJson);
+
+        return objFromJson;
     }
 
     //
@@ -997,6 +1038,16 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
             builder.addHeader(JaxrsResource.HDR_CREATED_BY, createdBy);
             builder.addHeader(JaxrsResource.HDR_REASON, reason);
             builder.addHeader(JaxrsResource.HDR_COMMENT, comment);
+        }
+
+        if (username != null && password != null) {
+            final Realm realm = new Realm.RealmBuilder()
+                    .setPrincipal(username)
+                    .setPassword(password)
+                    .setUsePreemptiveAuth(true)
+                    .setScheme(AuthScheme.BASIC)
+                    .build();
+            builder.setRealm(realm);
         }
 
         Response response = null;

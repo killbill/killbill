@@ -96,6 +96,9 @@ public interface JaxrsResource {
     public static final String BUNDLES = "bundles";
     public static final String BUNDLES_PATH = PREFIX + "/" + BUNDLES;
 
+    public static final String SECURITY = "security";
+    public static final String SECURITY_PATH = PREFIX + "/" + SECURITY;
+
     public static final String SUBSCRIPTIONS = "subscriptions";
     public static final String SUBSCRIPTIONS_PATH = PREFIX + "/" + SUBSCRIPTIONS;
 

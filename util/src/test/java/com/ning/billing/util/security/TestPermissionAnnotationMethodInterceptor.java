@@ -131,33 +131,4 @@ public class TestPermissionAnnotationMethodInterceptor extends UtilTestSuiteNoDB
         login("stephane");
         aopedTester.createRefund();
     }
-
-    private void login(final String username) {
-        logout();
-
-        final AuthenticationToken token = new UsernamePasswordToken(username, "password");
-        final Subject currentUser = SecurityUtils.getSubject();
-        currentUser.login(token);
-    }
-
-    private void logout() {
-        final Subject currentUser = SecurityUtils.getSubject();
-        if (currentUser.isAuthenticated()) {
-            currentUser.logout();
-        }
-    }
-
-    private void configureShiro() {
-        final Ini config = new Ini();
-        config.addSection("users");
-        config.getSection("users").put("pierre", "password, creditor");
-        config.getSection("users").put("stephane", "password, refunder");
-        config.addSection("roles");
-        config.getSection("roles").put("creditor", Permission.INVOICE_CAN_CREDIT.toString());
-        config.getSection("roles").put("refunder", Permission.PAYMENT_CAN_REFUND.toString());
-
-        final Factory<SecurityManager> factory = new IniSecurityManagerFactory(config);
-        final SecurityManager securityManager = factory.getInstance();
-        SecurityUtils.setSecurityManager(securityManager);
-    }
 }
