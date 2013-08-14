@@ -60,4 +60,23 @@ public class TestEntitlementDateHelper extends EntitlementTestSuiteNoDB {
         Assert.assertEquals(targetDate, expectedDate);
     }
 
+
+
+    @Test(groups = "fast")
+    public void testWithAccountInUtcPlus5() throws EntitlementApiException {
+
+        final LocalDate inputDate = new LocalDate(2013, 8, 7);
+
+        final DateTimeZone timeZoneUtcMinus8 = DateTimeZone.forOffsetHours(+5);
+        Mockito.when(account.getTimeZone()).thenReturn(timeZoneUtcMinus8);
+
+        // We also use a reference time of 20, 28, 10, 0 -> DateTime in accountTimeZone will be (2013, 8, 7, 20, 28, 10)
+        final DateTime refererenceDateTime = new DateTime(2013, 1, 1, 20, 28, 10, 0, DateTimeZone.UTC);
+        final DateTime targetDate = dateHelper.fromLocalDateAndReferenceTime(inputDate, refererenceDateTime, internalCallContext);
+
+        // And so that datetime in UTC becomes expectedDate below
+        final DateTime expectedDate = new DateTime(2013, 8, 7, 15, 28, 10, 0, DateTimeZone.UTC);
+        Assert.assertEquals(targetDate, expectedDate);
+    }
+
 }
