@@ -23,7 +23,7 @@ HERE=`cd \`dirname $0\`; pwd`
 TOP=$HERE/..
 SERVER=$TOP/server
 
-PROPERTIES="$SERVER/src/main/resources/killbill-server.properties"
+PROPERTIES=${PROPERTIES-"$SERVER/src/main/resources/killbill-server.properties"}
 
 DEBUG_OPTS_ECLIPSE=" -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=12345 "
 DEBUG_OPTS_ECLIPSE_WAIT=" -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=12345 "
